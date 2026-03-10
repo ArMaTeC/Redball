@@ -107,14 +107,28 @@ jobs:
     - name: Build MSI
       shell: bash
       run: |
+        set -e
         VERSION="${{ needs.tag.outputs.version }}"
         cd installer
-        wix.exe build Redball.wxs -o "../dist/Redball-${VERSION}.msi" -ext WixToolset.UI.wixext -d "ProductVersion=${VERSION}" || true
-        echo "WiX exit code: $?"
+        echo "=== Building MSI v${VERSION} ==="
+        wix.exe build Redball.wxs \
+          -o "../dist/Redball-${VERSION}.msi" \
+          -ext WixToolset.UI.wixext \
+          -d "ProductVersion=${VERSION}" 2>&1 || {
+          echo "ERROR: WiX build failed with exit code $?"
+          exit 1
+        }
         cd ..
-        ls -la dist/ || true
-        cp "dist/Redball-${VERSION}.msi" "dist/Redball.msi" 2>/dev/null || cp dist/*.msi "dist/Redball.msi" 2>/dev/null || echo "No MSI found"
-        test -f "dist/Redball.msi"
+        echo "=== Build output ==="
+        ls -la dist/
+        # Verify no external cab files (cab must be embedded in MSI)
+        if ls dist/*.cab 2>/dev/null; then
+          echo "ERROR: External cab files found - EmbedCab not working!"
+          exit 1
+        fi
+        echo "OK: No external cab files (embedded in MSI)"
+        cp "dist/Redball-${VERSION}.msi" "dist/Redball.msi"
+        echo "MSI size: $(stat -c%s dist/Redball.msi 2>/dev/null || stat -f%z dist/Redball.msi) bytes"
 
     - name: Upload unsigned MSI
       uses: actions/upload-artifact@v4
