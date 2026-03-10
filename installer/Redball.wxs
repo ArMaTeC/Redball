@@ -6,7 +6,7 @@
            Version="$(var.ProductVersion)"
            UpgradeCode="A7A9B089-9D1D-4F8A-86DB-6FE89B6F99B0"
            Scope="perUser">
-    <Media Id="1" Cabinet="Redball.cab" EmbedCab="yes" />
+    <MediaTemplate EmbedCab="yes" CabinetTemplate="Redball{0}.cab" />
 
     <!-- UI pages (Welcome, License, Feature selection, InstallDir, Progress, Exit) -->
     <ui:WixUI Id="WixUI_FeatureTree" />
