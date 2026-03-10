@@ -1,0 +1,9 @@
+{
+  "HeartbeatSeconds": 59,
+  "PreventDisplaySleep": true,
+  "UseHeartbeatKeypress": true,
+  "DefaultDuration": 60,
+  "LogPath": "Redball.log",
+  "MaxLogSizeMB": 10,
+  "ShowBalloonOnStart": true
+}
