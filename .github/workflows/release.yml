@@ -90,7 +90,7 @@ jobs:
         $wixDir = Join-Path $env:USERPROFILE '.dotnet\tools'
         echo "$wixDir" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         $wix = Join-Path $wixDir 'wix.exe'
-        & $wix extension add -g WixToolset.UI.wixext
+        & $wix extension add -g WixToolset.UI.wixext/4.0.5
         & $wix --version
 
     - name: Verify WiX
