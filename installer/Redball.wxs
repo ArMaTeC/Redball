@@ -42,6 +42,13 @@
                   Execute="immediate"
                   Return="asyncNoWait" />
 
+    <!-- Clear Installed property in UI after install so ExitDialog checkbox shows on upgrades too -->
+    <CustomAction Id="ClearInstalled" Property="Installed" Value="" />
+    <InstallUISequence>
+      <Custom Action="ClearInstalled" After="ExecuteAction"
+              Condition="NOT REMOVE" />
+    </InstallUISequence>
+
     <!-- Wire the launch action into the install sequence (fires after install completes) -->
     <InstallExecuteSequence>
       <Custom Action="LaunchApp" After="InstallFinalize"
