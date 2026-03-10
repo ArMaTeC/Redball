@@ -84,88 +84,45 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Install WiX Toolset
-      shell: pwsh
+      shell: powershell
       run: |
-        Write-Host "=== Installing WiX Toolset ==="
-        
-        # Install WiX toolset
         dotnet tool install --global wix --version 4.0.5
-        if ($LASTEXITCODE -ne 0) { throw "Failed to install WiX toolset" }
-        
-        # Get the WiX path
-        $wixDir = "$env:USERPROFILE\.dotnet\tools"
-        $wixExe = "$wixDir\wix.exe"
-        
-        Write-Host "=== WiX installed at: $wixExe ==="
-        
-        # Add to PATH for current session
+        $wixDir = Join-Path $env:USERPROFILE '.dotnet\tools'
+        # Persist WiX path for all subsequent steps
+        Add-Content -Path $env:GITHUB_PATH -Value $wixDir
         $env:PATH = "$wixDir;$env:PATH"
-        
-        # Verify wix.exe exists
-        if (-not (Test-Path $wixExe)) {
-          throw "wix.exe not found at expected path: $wixExe"
-        }
-        
-        # Check WiX version
-        Write-Host "=== WiX Version ==="
-        & $wixExe --version
-        
-        # Install required WiX extensions
-        Write-Host "=== Installing WiX Extensions ==="
-        & $wixExe extension add -g WixToolset.UI.wixext
-        if ($LASTEXITCODE -ne 0) { Write-Warning "Extension install may have issues, continuing..." }
-        
-        # List installed extensions
-        Write-Host "=== Installed WiX Extensions ==="
-        & $wixExe extension list -g
-        
-        Write-Host "=== WiX Setup Complete ==="
+        # Install WiX UI extension
+        & (Join-Path $wixDir 'wix.exe') extension add -g WixToolset.UI.wixext
+        # Verify
+        & (Join-Path $wixDir 'wix.exe') --version
+        & (Join-Path $wixDir 'wix.exe') extension list -g
 
     - name: Build MSI
-      shell: pwsh
+      shell: powershell
       run: |
         $version = '${{ needs.tag.outputs.version }}'
-        Write-Host "=== Building MSI for version: $version ==="
-        
-        # Ensure dist directory exists
-        New-Item -ItemType Directory -Path './dist' -Force | Out-Null
-        Write-Host "=== Dist directory ready ==="
-        
-        # Check what files we have
-        Write-Host "=== Files in installer directory ==="
-        Get-ChildItem ./installer/ | Select-Object Name
-        
-        # Run the build script with explicit WiX path
-        $wixDir = "$env:USERPROFILE\.dotnet\tools"
-        Write-Host "=== Running Build-MSI.ps1 with WixBinPath: $wixDir ==="
-        
-        & ./installer/Build-MSI.ps1 -Version $version -WixBinPath $wixDir
-        
-        Write-Host "=== Build script completed with exit code: $LASTEXITCODE ==="
-        
-        # Check what was created
-        Write-Host "=== Contents of dist directory ==="
-        Get-ChildItem ./dist/ -ErrorAction SilentlyContinue | Select-Object Name, Length
-        
-        # Verify MSI was created
-        $msiPaths = @(
-          "./dist/Redball-$version.msi",
-          "./dist/Redball.msi"
-        )
-        $found = $false
-        foreach ($path in $msiPaths) {
-          if (Test-Path $path) {
-            Write-Host "✓ Found MSI at: $path"
-            $found = $true
-            Copy-Item $path './dist/Redball.msi' -Force
-            break
-          }
+        Write-Host "Building MSI version $version"
+        try {
+          & .\installer\Build-MSI.ps1 -Version $version
         }
-        if (-not $found) {
-          Write-Error "❌ MSI file not found after build"
+        catch {
+          Write-Host "BUILD ERROR: $_"
+          Write-Host $_.ScriptStackTrace
           exit 1
         }
-        Write-Host "✓ MSI build complete"
+        if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+          Write-Host "Build-MSI.ps1 exited with code $LASTEXITCODE"
+          exit $LASTEXITCODE
+        }
+        # Verify MSI output
+        $msi = Get-ChildItem .\dist\*.msi -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $msi) {
+          Write-Host "ERROR: No MSI found in dist/"
+          Get-ChildItem .\dist\ -ErrorAction SilentlyContinue
+          exit 1
+        }
+        Write-Host "MSI built: $($msi.FullName) ($($msi.Length) bytes)"
+        Copy-Item $msi.FullName '.\dist\Redball.msi' -Force
 
     - name: Upload unsigned MSI
       uses: actions/upload-artifact@v4
