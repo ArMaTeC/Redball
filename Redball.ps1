@@ -76,7 +76,7 @@ param(
     [switch]$ExitOnComplete
 )
 
-$script:VERSION = '2.0.39'
+$script:VERSION = '2.0.40'
 $script:APP_NAME = 'Redball'
 $script:IsPS7 = $PSVersionTable.PSVersion.Major -ge 7
 
@@ -5178,7 +5178,7 @@ if ($script:config.TypeThingEnabled) {
                 })
             $typeThingInitTimer.Start()
         }
-        Write-RedballLog -Level 'INFO' -Message "TypeThing: Initialized ($($script:config.TypeThingStartHotkey) to type clipboard)"
+        Write-RedballLog -Level 'INFO' -Message "TypeThing: Initialized (Start: $($script:config.TypeThingStartHotkey), Stop: $($script:config.TypeThingStopHotkey))"
     }
     catch {
         Write-RedballLog -Level 'WARN' -Message "TypeThing: Initialization failed: $_"
