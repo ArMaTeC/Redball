@@ -76,7 +76,7 @@ param(
     [switch]$ExitOnComplete
 )
 
-$script:VERSION = '2.0.37'
+$script:VERSION = '2.0.38'
 $script:APP_NAME = 'Redball'
 $script:IsPS7 = $PSVersionTable.PSVersion.Major -ge 7
 
@@ -1525,7 +1525,16 @@ function Show-RedballSettings {
             # Re-register hotkeys if they changed
             if ($oldTTStartHk -ne $script:config.TypeThingStartHotkey -or $oldTTStopHk -ne $script:config.TypeThingStopHotkey) {
                 Unregister-TypeThingHotkeys
+                $script:state.TypeThingHotkeysRegistered = $false
                 Register-TypeThingHotkeys
+                
+                # Update menu item text to show new hotkeys
+                if ($script:state.TypeThingMenuType) {
+                    $script:state.TypeThingMenuType.Text = "Type Clipboard `t$($script:config.TypeThingStartHotkey)"
+                }
+                if ($script:state.TypeThingMenuStop) {
+                    $script:state.TypeThingMenuStop.Text = "Stop Typing `t$($script:config.TypeThingStopHotkey)"
+                }
             }
 
             Save-RedballConfig -Path $ConfigPath
