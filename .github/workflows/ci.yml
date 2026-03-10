@@ -45,6 +45,20 @@ jobs:
         $config.CodeCoverage.Enabled = $true
         $config.CodeCoverage.OutputPath = "./coverage.xml"
         $result = Invoke-Pester -Configuration $config
+        
+        # Output results to step summary
+        $summary = "## Pester Test Results`n"
+        $summary += "- **Passed:** $($result.PassedCount)`n"
+        $summary += "- **Failed:** $($result.FailedCount)`n"
+        $summary += "- **Skipped:** $($result.SkippedCount)`n`n"
+        if ($result.FailedCount -gt 0) {
+          $summary += "### Failed Tests`n"
+          foreach ($f in $result.Failed) {
+            $summary += "- **$($f.ExpandedName)**: ``$($f.ErrorRecord)```n"
+          }
+        }
+        $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+        
         if ($result.FailedCount -gt 0) {
           throw "Pester tests failed: $($result.FailedCount)"
         }
