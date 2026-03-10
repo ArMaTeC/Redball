@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="Redball"
+           Manufacturer="GCI Network Solutions"
+           Version="$(var.ProductVersion)"
+           UpgradeCode="A7A9B089-9D1D-4F8A-86DB-6FE89B6F99B0"
+           Scope="perUser">
+    <MediaTemplate />
+
+    <!-- UI pages (Welcome, License, Feature selection, InstallDir, Progress, Exit) -->
+    <ui:WixUI Id="WixUI_FeatureTree" />
+    <WixVariable Id="WixUILicenseRtf" Value="Redball-License.rtf" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+    <Icon Id="RedballIcon" SourceFile="Redball.ico" />
+    <Property Id="ARPPRODUCTICON" Value="RedballIcon" />
+
+    <!-- Find powershell.exe via AppSearch (evaluated before installation begins) -->
+    <Property Id="POWERSHELLEXE">
+      <DirectorySearch Id="FindPSDir" Path="[SystemFolder]WindowsPowerShell\v1.0">
+        <FileSearch Name="powershell.exe" />
+      </DirectorySearch>
+    </Property>
+
+    <!-- Find wscript.exe for hidden-window launch at install completion -->
+    <Property Id="WSCRIPTEXE">
+      <DirectorySearch Id="FindWSDir" Path="[SystemFolder]">
+        <FileSearch Name="wscript.exe" />
+      </DirectorySearch>
+    </Property>
+
+    <!-- Launch after install checkbox on exit dialog (checked by default) -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Redball after installation" />
+    <!-- Secure=yes allows this UI-set value to flow from the UI server to the execute server -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" Secure="yes" />
+
+    <!-- Type-50 CA: use wscript.exe //B to launch PowerShell with a hidden window (avoids black console flash) -->
+    <CustomAction Id="LaunchApp"
+                  Property="WSCRIPTEXE"
+                  ExeCommand="//B //nologo &quot;[INSTALLFOLDER]Launch-Redball.vbs&quot;"
+                  Execute="immediate"
+                  Return="asyncNoWait" />
+
+    <!-- Run after all files are installed; skip on uninstall -->
+    <InstallExecuteSequence>
+      <Custom Action="LaunchApp" After="InstallFinalize" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX AND NOT REMOVE" />
+    </InstallExecuteSequence>
+
+    <!-- Installation layout -->
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="INSTALLFOLDER" Name="Redball" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="RedballMenuFolder" Name="Redball" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+    <StandardDirectory Id="StartupFolder" />
+
+    <!-- Feature tree gives installer-UI and CLI config support via ADDLOCAL -->
+    <Feature Id="MainFeature" Title="Redball Core" Description="Core Redball files" Level="1">
+      <ComponentGroupRef Id="CoreComponents" />
+      <ComponentGroupRef Id="ShortcutComponents" />
+      <ComponentGroupRef Id="FileAssociationComponents" />
+    </Feature>
+
+    <Feature Id="ConfigFeature" Title="Default Behavior Options" Description="Set default Redball behavior at install time" Level="1">
+      <Feature Id="CfgStartWithWindows" Title="Start with Windows" Description="Install a startup shortcut" Level="2">
+        <ComponentGroupRef Id="StartupShortcutComponents" />
+      </Feature>
+      <Feature Id="CfgStartMinimized" Title="Start Minimized by Default" Description="Sets installer default for minimized launch" Level="2">
+        <ComponentGroupRef Id="CfgMinimizedComponents" />
+      </Feature>
+      <Feature Id="CfgExitOnComplete" Title="Exit on Timed Completion" Description="Sets installer default for auto-exit" Level="2">
+        <ComponentGroupRef Id="CfgExitOnCompleteComponents" />
+      </Feature>
+      <Feature Id="CfgBatteryAware" Title="Enable Battery-Aware Mode" Description="Sets installer default battery-aware mode" Level="2">
+        <ComponentGroupRef Id="CfgBatteryAwareComponents" />
+      </Feature>
+      <Feature Id="CfgNetworkAware" Title="Enable Network-Aware Mode" Description="Sets installer default network-aware mode" Level="2">
+        <ComponentGroupRef Id="CfgNetworkAwareComponents" />
+      </Feature>
+      <Feature Id="CfgIdleDetection" Title="Enable Idle Detection" Description="Sets installer default idle detection mode" Level="2">
+        <ComponentGroupRef Id="CfgIdleDetectionComponents" />
+      </Feature>
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="CoreComponents" Directory="INSTALLFOLDER">
+      <Component Id="ScriptComponent" Guid="B7A5E9D4-7C3C-4E3B-A8A4-7A6D6E3B9E61">
+        <File Id="RedballScript" Source="..\Redball.ps1" KeyPath="yes" />
+      </Component>
+
+      <Component Id="ReadmeComponent" Guid="CFA8E35A-0DF4-4D9F-8669-7865E96AFB95">
+        <File Id="ReadmeFile" Source="..\README.md" KeyPath="yes" />
+      </Component>
+
+      <Component Id="LaunchVbsComponent" Guid="3D6A2B1C-8F4E-4A9D-B5C7-2E1F9D3A4B6E">
+        <File Id="LaunchVbs" Source="Launch-Redball.vbs" KeyPath="yes" />
+      </Component>
+
+      <Component Id="InstalledMarkerComponent" Guid="4B9B1F2A-5B5E-4C3A-95D7-6DBE8468D8E1">
+        <RegistryValue Root="HKCU" Key="Software\Redball" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="ShortcutComponents" Directory="RedballMenuFolder">
+      <Component Id="StartMenuShortcutComponent" Guid="5F6DDFD1-E6C7-4DC7-8E40-3FBC1F0FEAF8">
+        <Shortcut Id="StartMenuShortcut"
+                  Name="Redball"
+                  Description="Launch Redball keep-awake utility"
+                  Target="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe"
+                  Arguments="-ExecutionPolicy Bypass -WindowStyle Hidden -File &quot;[INSTALLFOLDER]Redball.ps1&quot;"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="RemoveMenuFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\Redball" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+
+      <Component Id="DesktopShortcutComponent" Guid="91F1505B-3B86-4D0F-953B-C2FB0F4A9A53" Directory="DesktopFolder">
+        <Shortcut Id="DesktopShortcut"
+                  Name="Redball"
+                  Description="Launch Redball keep-awake utility"
+                  Target="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe"
+                  Arguments="-ExecutionPolicy Bypass -WindowStyle Hidden -File &quot;[INSTALLFOLDER]Redball.ps1&quot;"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKCU" Key="Software\Redball" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="StartupShortcutComponents" Directory="StartupFolder">
+      <Component Id="StartupShortcutComponent" Guid="B9E89FA1-62EA-4761-93E2-3A8A0A701B5C">
+        <Shortcut Id="StartupShortcut"
+                  Name="Redball"
+                  Description="Start Redball when Windows signs in"
+                  Target="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe"
+                  Arguments="-ExecutionPolicy Bypass -WindowStyle Hidden -File &quot;[INSTALLFOLDER]Redball.ps1&quot; -Minimized"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKCU" Key="Software\Redball" Name="StartupShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="FileAssociationComponents" Directory="INSTALLFOLDER">
+      <Component Id="FileAssociationComponent" Guid="2EBA1ED6-E31D-4B64-B67C-75C12C8A8B88">
+        <RegistryKey Root="HKCU" Key="Software\Classes\.redball">
+          <RegistryValue Type="string" Value="Redball.Config" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\Redball.Config">
+          <RegistryValue Type="string" Value="Redball Configuration File" />
+          <RegistryKey Key="shell\open\command">
+            <RegistryValue Type="string" Value="&quot;[SystemFolder]WindowsPowerShell\v1.0\powershell.exe&quot; -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]Redball.ps1&quot; -ConfigPath &quot;%1&quot;" />
+          </RegistryKey>
+        </RegistryKey>
+      </Component>
+    </ComponentGroup>
+
+    <!-- Installer-selected defaults written to registry (consumed by Redball on startup) -->
+    <ComponentGroup Id="CfgMinimizedComponents" Directory="INSTALLFOLDER">
+      <Component Id="CfgMinimizedComponent" Guid="5A41D031-69A2-40BE-B2A6-38AE3D04D62D">
+        <RegistryValue Root="HKCU" Key="Software\Redball\InstallerDefaults" Name="Minimized" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="CfgExitOnCompleteComponents" Directory="INSTALLFOLDER">
+      <Component Id="CfgExitOnCompleteComponent" Guid="5A6CEB6D-EA19-4C7E-AF8D-1A2E2E378DE5">
+        <RegistryValue Root="HKCU" Key="Software\Redball\InstallerDefaults" Name="ExitOnComplete" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="CfgBatteryAwareComponents" Directory="INSTALLFOLDER">
+      <Component Id="CfgBatteryAwareComponent" Guid="CD37D16F-F652-4FD9-B541-B89F3076848A">
+        <RegistryValue Root="HKCU" Key="Software\Redball\InstallerDefaults" Name="BatteryAware" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="CfgNetworkAwareComponents" Directory="INSTALLFOLDER">
+      <Component Id="CfgNetworkAwareComponent" Guid="C53D69CF-9370-4A4E-94B4-19662BCA5F17">
+        <RegistryValue Root="HKCU" Key="Software\Redball\InstallerDefaults" Name="NetworkAware" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="CfgIdleDetectionComponents" Directory="INSTALLFOLDER">
+      <Component Id="CfgIdleDetectionComponent" Guid="90CC4352-C1F4-48D1-B60A-99729AF5EA7A">
+        <RegistryValue Root="HKCU" Key="Software\Redball\InstallerDefaults" Name="IdleDetection" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
