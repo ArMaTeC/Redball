@@ -75,19 +75,13 @@ jobs:
         $config.CodeCoverage.OutputPath = "./coverage.xml"
         $result = Invoke-Pester -Configuration $config
         
-        # Write detailed failure report
-        $report = "Pester Results: Passed=$($result.PassedCount) Failed=$($result.FailedCount) Skipped=$($result.SkippedCount)`r`n"
+        # Write detailed failure report with annotations
         if ($result.FailedCount -gt 0) {
           foreach ($f in $result.Failed) {
-            $report += "`r`n--- FAILED: $($f.ExpandedName) ---`r`n"
-            $report += "Error: $($f.ErrorRecord)`r`n"
-            $report += "At: $($f.ErrorRecord.ScriptStackTrace)`r`n"
+            $errMsg = "$($f.ErrorRecord)" -replace "`r`n"," " -replace "`n"," "
+            $stackMsg = "$($f.ErrorRecord.ScriptStackTrace)" -replace "`r`n"," | " -replace "`n"," | "
+            Write-Host "::error title=$($f.ExpandedName)::$errMsg -- STACK: $stackMsg"
           }
-        }
-        $report | Out-File -FilePath "./test-errors.txt" -Encoding utf8
-        Write-Host $report
-        
-        if ($result.FailedCount -gt 0) {
           throw "Pester tests failed: $($result.FailedCount)"
         }
         

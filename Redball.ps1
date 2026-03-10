@@ -3,6 +3,7 @@
 <#
 .SYNOPSIS
     Redball - A system tray utility to prevent Windows from going to sleep.
+    CI diagnostic build
 .DESCRIPTION
     Redball prevents your Windows computer from sleeping using the SetThreadExecutionState API.
     It provides a system tray icon for easy control and optional F15 keypress heartbeat.
@@ -171,6 +172,23 @@ $script:state = [ordered]@{
     ActiveBeforeIdle = $false
     SessionId = [guid]::NewGuid().ToString()
     KeepAwakeRunspaceInfo = $null
+    # TypeThing - Clipboard Typer state
+    TypeThingIsTyping = $false
+    TypeThingShouldStop = $false
+    TypeThingText = ''
+    TypeThingIndex = 0
+    TypeThingTotalChars = 0
+    TypeThingStartTime = $null
+    TypeThingTimer = $null
+    TypeThingCountdown = $null
+    TypeThingCountdownRemaining = 0
+    TypeThingMenuType = $null
+    TypeThingMenuStop = $null
+    TypeThingMenuStatus = $null
+    TypeThingHotkeyWindow = $null
+    TypeThingHotkeyStartId = 100
+    TypeThingHotkeyStopId = 101
+    TypeThingHotkeysRegistered = $false
 }
 
 $_detectedLocale = try { (Get-Culture).TwoLetterISOLanguageName } catch { 'en' }
@@ -202,6 +220,19 @@ $script:config = @{
     UpdateRepoName = 'Redball'
     UpdateChannel = 'stable'
     VerifyUpdateSignature = $false
+    # TypeThing - Clipboard Typer settings
+    TypeThingEnabled = $true
+    TypeThingMinDelayMs = 30
+    TypeThingMaxDelayMs = 120
+    TypeThingStartDelaySec = 3
+    TypeThingStartHotkey = 'Ctrl+Shift+V'
+    TypeThingStopHotkey = 'Ctrl+Shift+X'
+    TypeThingTheme = 'dark'
+    TypeThingAddRandomPauses = $true
+    TypeThingRandomPauseChance = 5
+    TypeThingRandomPauseMaxMs = 500
+    TypeThingTypeNewlines = $true
+    TypeThingNotifications = $true
 }
 
 $script:locales = @{}
@@ -1328,6 +1359,38 @@ function Show-RedballSettings {
 
         $tabs.TabPages.Add($tabAdvanced)
 
+        # ============ TYPETHING TAB ============
+        $tabTypeThing = New-Object System.Windows.Forms.TabPage
+        $tabTypeThing.Text = 'TypeThing'
+        $tabTypeThing.AutoScroll = $true
+        $panelTypeThing = New-Object System.Windows.Forms.Panel
+        $panelTypeThing.Dock = 'Fill'
+        $panelTypeThing.AutoScroll = $true
+        $tabTypeThing.Controls.Add($panelTypeThing)
+
+        Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingEnabled' 'Enable TypeThing' `
+            'Enable the clipboard typing feature (type clipboard with a hotkey).' 'bool' $script:config.TypeThingEnabled
+        Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingMinDelayMs' 'Min Delay (ms)' `
+            'Minimum delay between keystrokes in milliseconds.' 'number' $script:config.TypeThingMinDelayMs @{Min=10;Max=1000}
+        Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingMaxDelayMs' 'Max Delay (ms)' `
+            'Maximum delay between keystrokes in milliseconds.' 'number' $script:config.TypeThingMaxDelayMs @{Min=10;Max=2000}
+        Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingStartDelaySec' 'Start Delay (seconds)' `
+            'Countdown before typing begins after pressing the hotkey.' 'number' $script:config.TypeThingStartDelaySec @{Min=0;Max=30}
+        Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingStartHotkey' 'Start Hotkey' `
+            'Keyboard shortcut to begin typing clipboard contents.' 'text' $script:config.TypeThingStartHotkey
+        Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingStopHotkey' 'Stop Hotkey' `
+            'Keyboard shortcut to emergency-stop typing.' 'text' $script:config.TypeThingStopHotkey
+        Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingAddRandomPauses' 'Random Pauses' `
+            'Add occasional longer pauses for more realistic typing.' 'bool' $script:config.TypeThingAddRandomPauses
+        Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingTypeNewlines' 'Type Newlines' `
+            'Press Enter when a newline character is encountered.' 'bool' $script:config.TypeThingTypeNewlines
+        Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingNotifications' 'Show Notifications' `
+            'Display tray notifications when typing starts and finishes.' 'bool' $script:config.TypeThingNotifications
+        Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingTheme' 'Settings Theme' `
+            'Theme for the TypeThing settings dialog.' 'dropdown' $script:config.TypeThingTheme @{Items=@('light','dark','hacker')}
+
+        $tabs.TabPages.Add($tabTypeThing)
+
         # ============ BUTTON PANEL ============
         $buttonPanel = New-Object System.Windows.Forms.Panel
         $buttonPanel.Dock = 'Bottom'
@@ -1412,6 +1475,26 @@ function Show-RedballSettings {
                 $script:state.HeartbeatTimer.Interval = $script:state.HeartbeatSeconds * 1000
             }
 
+            # Apply TypeThing settings
+            $oldTTStartHk = $script:config.TypeThingStartHotkey
+            $oldTTStopHk = $script:config.TypeThingStopHotkey
+            $script:config.TypeThingEnabled = $script:settingsControls['TypeThingEnabled'].Checked
+            $script:config.TypeThingMinDelayMs = [int]$script:settingsControls['TypeThingMinDelayMs'].Value
+            $script:config.TypeThingMaxDelayMs = [int]$script:settingsControls['TypeThingMaxDelayMs'].Value
+            $script:config.TypeThingStartDelaySec = [int]$script:settingsControls['TypeThingStartDelaySec'].Value
+            $script:config.TypeThingStartHotkey = $script:settingsControls['TypeThingStartHotkey'].Text
+            $script:config.TypeThingStopHotkey = $script:settingsControls['TypeThingStopHotkey'].Text
+            $script:config.TypeThingAddRandomPauses = $script:settingsControls['TypeThingAddRandomPauses'].Checked
+            $script:config.TypeThingTypeNewlines = $script:settingsControls['TypeThingTypeNewlines'].Checked
+            $script:config.TypeThingNotifications = $script:settingsControls['TypeThingNotifications'].Checked
+            $script:config.TypeThingTheme = $script:settingsControls['TypeThingTheme'].SelectedItem
+
+            # Re-register hotkeys if they changed
+            if ($oldTTStartHk -ne $script:config.TypeThingStartHotkey -or $oldTTStopHk -ne $script:config.TypeThingStopHotkey) {
+                Unregister-TypeThingHotkeys
+                Register-TypeThingHotkeys
+            }
+
             Save-RedballConfig -Path $ConfigPath
             Update-RedballUI
             Write-RedballLog -Level 'INFO' -Message 'Settings updated via dialog.'
@@ -1421,6 +1504,1140 @@ function Show-RedballSettings {
     }
     catch {
         Write-RedballLog -Level 'ERROR' -Message "Settings dialog error: $_"
+    }
+}
+
+function Show-AboutDialog {
+    <#
+    .SYNOPSIS
+        Displays the About dialog with version info and update check.
+    .DESCRIPTION
+        Shows current Redball version, checks GitHub for the latest release,
+        and provides a button to download updates if available.
+    #>
+    try {
+        $form = New-Object System.Windows.Forms.Form
+        $form.Text = "About $($script:APP_NAME)"
+        $form.Size = New-Object System.Drawing.Size(420, 340)
+        $form.StartPosition = 'CenterScreen'
+        $form.FormBorderStyle = 'FixedDialog'
+        $form.MaximizeBox = $false
+        $form.MinimizeBox = $false
+        $form.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+        $form.ForeColor = [System.Drawing.Color]::White
+        $form.Font = New-Object System.Drawing.Font('Segoe UI', 9)
+        $form.ShowInTaskbar = $true
+        $form.TopMost = $true
+
+        $titleLabel = New-Object System.Windows.Forms.Label
+        $titleLabel.Text = $script:APP_NAME
+        $titleLabel.Font = New-Object System.Drawing.Font('Segoe UI', 20, [System.Drawing.FontStyle]::Bold)
+        $titleLabel.ForeColor = [System.Drawing.Color]::FromArgb(230, 60, 60)
+        $titleLabel.Location = New-Object System.Drawing.Point(20, 15)
+        $titleLabel.AutoSize = $true
+        $form.Controls.Add($titleLabel)
+
+        $versionLabel = New-Object System.Windows.Forms.Label
+        $versionLabel.Text = "Version $($script:VERSION)"
+        $versionLabel.Font = New-Object System.Drawing.Font('Segoe UI', 11)
+        $versionLabel.ForeColor = [System.Drawing.Color]::FromArgb(180, 180, 180)
+        $versionLabel.Location = New-Object System.Drawing.Point(22, 55)
+        $versionLabel.AutoSize = $true
+        $form.Controls.Add($versionLabel)
+
+        $descLabel = New-Object System.Windows.Forms.Label
+        $descLabel.Text = 'Keep-awake utility with display sleep prevention, heartbeat keypress, and clipboard typing.'
+        $descLabel.Font = New-Object System.Drawing.Font('Segoe UI', 9)
+        $descLabel.ForeColor = [System.Drawing.Color]::FromArgb(160, 160, 160)
+        $descLabel.Location = New-Object System.Drawing.Point(22, 85)
+        $descLabel.Size = New-Object System.Drawing.Size(370, 36)
+        $form.Controls.Add($descLabel)
+
+        $separator = New-Object System.Windows.Forms.Label
+        $separator.BorderStyle = 'Fixed3D'
+        $separator.Location = New-Object System.Drawing.Point(20, 125)
+        $separator.Size = New-Object System.Drawing.Size(370, 2)
+        $form.Controls.Add($separator)
+
+        $latestLabel = New-Object System.Windows.Forms.Label
+        $latestLabel.Text = 'Latest release: not checked'
+        $latestLabel.Font = New-Object System.Drawing.Font('Segoe UI', 10)
+        $latestLabel.ForeColor = [System.Drawing.Color]::FromArgb(180, 180, 180)
+        $latestLabel.Location = New-Object System.Drawing.Point(22, 140)
+        $latestLabel.Size = New-Object System.Drawing.Size(370, 22)
+        $form.Controls.Add($latestLabel)
+
+        $updateStatusLabel = New-Object System.Windows.Forms.Label
+        $updateStatusLabel.Text = ''
+        $updateStatusLabel.Font = New-Object System.Drawing.Font('Segoe UI', 9)
+        $updateStatusLabel.Location = New-Object System.Drawing.Point(22, 165)
+        $updateStatusLabel.Size = New-Object System.Drawing.Size(370, 22)
+        $form.Controls.Add($updateStatusLabel)
+
+        $releaseNotesBox = New-Object System.Windows.Forms.TextBox
+        $releaseNotesBox.Multiline = $true
+        $releaseNotesBox.ReadOnly = $true
+        $releaseNotesBox.ScrollBars = 'Vertical'
+        $releaseNotesBox.Location = New-Object System.Drawing.Point(22, 192)
+        $releaseNotesBox.Size = New-Object System.Drawing.Size(370, 55)
+        $releaseNotesBox.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
+        $releaseNotesBox.ForeColor = [System.Drawing.Color]::FromArgb(200, 200, 200)
+        $releaseNotesBox.BorderStyle = 'FixedSingle'
+        $releaseNotesBox.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
+        $releaseNotesBox.Visible = $false
+        $form.Controls.Add($releaseNotesBox)
+
+        $checkButton = New-Object System.Windows.Forms.Button
+        $checkButton.Text = 'Check for Updates'
+        $checkButton.Size = New-Object System.Drawing.Size(150, 32)
+        $checkButton.Location = New-Object System.Drawing.Point(22, 258)
+        $checkButton.FlatStyle = 'Flat'
+        $checkButton.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
+        $checkButton.ForeColor = [System.Drawing.Color]::White
+        $checkButton.Cursor = [System.Windows.Forms.Cursors]::Hand
+        $form.Controls.Add($checkButton)
+
+        $downloadButton = New-Object System.Windows.Forms.Button
+        $downloadButton.Text = 'Download Update'
+        $downloadButton.Size = New-Object System.Drawing.Size(150, 32)
+        $downloadButton.Location = New-Object System.Drawing.Point(180, 258)
+        $downloadButton.FlatStyle = 'Flat'
+        $downloadButton.BackColor = [System.Drawing.Color]::FromArgb(50, 150, 50)
+        $downloadButton.ForeColor = [System.Drawing.Color]::White
+        $downloadButton.Cursor = [System.Windows.Forms.Cursors]::Hand
+        $downloadButton.Visible = $false
+        $form.Controls.Add($downloadButton)
+
+        $closeButton = New-Object System.Windows.Forms.Button
+        $closeButton.Text = 'Close'
+        $closeButton.Size = New-Object System.Drawing.Size(80, 32)
+        $closeButton.Location = New-Object System.Drawing.Point(310, 258)
+        $closeButton.FlatStyle = 'Flat'
+        $closeButton.ForeColor = [System.Drawing.Color]::White
+        $closeButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+        $form.CancelButton = $closeButton
+        $form.Controls.Add($closeButton)
+
+        $script:aboutReleaseUrl = $null
+
+        $checkButton.add_Click({
+            try {
+                $checkButton.Enabled = $false
+                $checkButton.Text = 'Checking...'
+                $form.Refresh()
+
+                $status = Test-RedballUpdateAvailable
+
+                if ($status.LatestVersion) {
+                    $latestLabel.Text = "Latest release: v$($status.LatestVersion)"
+                }
+                else {
+                    $latestLabel.Text = 'Latest release: unable to retrieve'
+                    $updateStatusLabel.Text = if ($status.Reason) { $status.Reason } else { 'Check your network connection.' }
+                    $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 180, 50)
+                    $checkButton.Text = 'Retry'
+                    $checkButton.Enabled = $true
+                    return
+                }
+
+                if ($status.UpdateAvailable) {
+                    $updateStatusLabel.Text = "Update available! v$($status.CurrentVersion) -> v$($status.LatestVersion)"
+                    $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(100, 220, 100)
+                    $downloadButton.Visible = $true
+                    if ($status.Release -and $status.Release.html_url) {
+                        $script:aboutReleaseUrl = $status.Release.html_url
+                    }
+                    if ($status.Release -and $status.Release.body) {
+                        $releaseNotesBox.Text = $status.Release.body -replace '\r\n?', "`r`n"
+                        $releaseNotesBox.Visible = $true
+                    }
+                }
+                else {
+                    $updateStatusLabel.Text = 'You are running the latest version.'
+                    $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(100, 220, 100)
+                }
+
+                $checkButton.Text = 'Check Again'
+                $checkButton.Enabled = $true
+            }
+            catch {
+                $updateStatusLabel.Text = "Error checking: $_"
+                $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 100, 100)
+                $checkButton.Text = 'Retry'
+                $checkButton.Enabled = $true
+                Write-RedballLog -Level 'WARN' -Message "About dialog update check error: $_"
+            }
+        })
+
+        $downloadButton.add_Click({
+            try {
+                if ($script:aboutReleaseUrl) {
+                    Start-Process $script:aboutReleaseUrl
+                }
+                else {
+                    $owner = $script:config.UpdateRepoOwner
+                    $repo = $script:config.UpdateRepoName
+                    Start-Process "https://github.com/$owner/$repo/releases/latest"
+                }
+            }
+            catch {
+                Write-RedballLog -Level 'WARN' -Message "About dialog download error: $_"
+            }
+        })
+
+        [void]$form.ShowDialog()
+        $form.Dispose()
+    }
+    catch {
+        Write-RedballLog -Level 'ERROR' -Message "About dialog error: $_"
+    }
+}
+
+# --- TypeThing - Clipboard Typer ---
+
+function ConvertTo-HotkeyParams {
+    <#
+    .SYNOPSIS
+        Parses a hotkey string like "Ctrl+Shift+V" into modifier flags and virtual key code.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [string]$HotkeyString
+    )
+    $parts = $HotkeyString -split '\+'
+    [uint32]$modifiers = 0
+    [uint32]$vk = 0
+
+    $vkMap = @{
+        'A'=0x41;'B'=0x42;'C'=0x43;'D'=0x44;'E'=0x45;'F'=0x46;'G'=0x47;'H'=0x48
+        'I'=0x49;'J'=0x4A;'K'=0x4B;'L'=0x4C;'M'=0x4D;'N'=0x4E;'O'=0x4F;'P'=0x50
+        'Q'=0x51;'R'=0x52;'S'=0x53;'T'=0x54;'U'=0x55;'V'=0x56;'W'=0x57;'X'=0x58
+        'Y'=0x59;'Z'=0x5A
+        '0'=0x30;'1'=0x31;'2'=0x32;'3'=0x33;'4'=0x34;'5'=0x35;'6'=0x36;'7'=0x37
+        '8'=0x38;'9'=0x39
+        'F1'=0x70;'F2'=0x71;'F3'=0x72;'F4'=0x73;'F5'=0x74;'F6'=0x75;'F7'=0x76
+        'F8'=0x77;'F9'=0x78;'F10'=0x79;'F11'=0x7A;'F12'=0x7B
+        'Pause'=0x13;'Space'=0x20;'Escape'=0x1B;'Enter'=0x0D;'Tab'=0x09
+        'Insert'=0x2D;'Delete'=0x2E;'Home'=0x24;'End'=0x23
+        'PageUp'=0x21;'PageDown'=0x22
+        'Left'=0x25;'Up'=0x26;'Right'=0x27;'Down'=0x28
+        'NumPad0'=0x60;'NumPad1'=0x61;'NumPad2'=0x62;'NumPad3'=0x63;'NumPad4'=0x64
+        'NumPad5'=0x65;'NumPad6'=0x66;'NumPad7'=0x67;'NumPad8'=0x68;'NumPad9'=0x69
+        'OemTilde'=0xC0;'OemMinus'=0xBD;'OemPlus'=0xBB
+    }
+
+    foreach ($part in $parts) {
+        $trimmed = $part.Trim()
+        switch ($trimmed) {
+            'Ctrl'    { $modifiers = $modifiers -bor 0x0002 }
+            'Control' { $modifiers = $modifiers -bor 0x0002 }
+            'Alt'     { $modifiers = $modifiers -bor 0x0001 }
+            'Shift'   { $modifiers = $modifiers -bor 0x0004 }
+            'Win'     { $modifiers = $modifiers -bor 0x0008 }
+            default {
+                if ($vkMap.ContainsKey($trimmed)) {
+                    $vk = $vkMap[$trimmed]
+                }
+                else {
+                    Write-RedballLog -Level 'WARN' -Message "TypeThing: Unknown hotkey part '$trimmed'"
+                }
+            }
+        }
+    }
+    return @{ Modifiers = $modifiers; VirtualKey = $vk }
+}
+
+function Register-TypeThingHotkeys {
+    <#
+    .SYNOPSIS
+        Registers TypeThing global hotkeys for start and stop typing.
+    #>
+    if (-not $script:config.TypeThingEnabled) { return }
+    if ($script:state.TypeThingHotkeysRegistered) { return }
+    if (-not $script:state.TypeThingHotkeyWindow) { return }
+
+    $handle = $script:state.TypeThingHotkeyWindow.Handle
+
+    try {
+        $startParams = ConvertTo-HotkeyParams -HotkeyString $script:config.TypeThingStartHotkey
+        if ($startParams.VirtualKey -gt 0) {
+            $result = [HotkeyHelper]::RegisterHotKey($handle, $script:state.TypeThingHotkeyStartId,
+                $startParams.Modifiers, $startParams.VirtualKey)
+            if ($result) {
+                Write-RedballLog -Level 'INFO' -Message "TypeThing: Start hotkey registered ($($script:config.TypeThingStartHotkey))"
+            }
+            else {
+                Write-RedballLog -Level 'WARN' -Message "TypeThing: Failed to register start hotkey ($($script:config.TypeThingStartHotkey)) - may be in use"
+            }
+        }
+
+        $stopParams = ConvertTo-HotkeyParams -HotkeyString $script:config.TypeThingStopHotkey
+        if ($stopParams.VirtualKey -gt 0) {
+            $result = [HotkeyHelper]::RegisterHotKey($handle, $script:state.TypeThingHotkeyStopId,
+                $stopParams.Modifiers, $stopParams.VirtualKey)
+            if ($result) {
+                Write-RedballLog -Level 'INFO' -Message "TypeThing: Stop hotkey registered ($($script:config.TypeThingStopHotkey))"
+            }
+            else {
+                Write-RedballLog -Level 'WARN' -Message "TypeThing: Failed to register stop hotkey ($($script:config.TypeThingStopHotkey)) - may be in use"
+            }
+        }
+
+        $script:state.TypeThingHotkeysRegistered = $true
+    }
+    catch {
+        Write-RedballLog -Level 'WARN' -Message "TypeThing: Hotkey registration error: $_"
+    }
+}
+
+function Unregister-TypeThingHotkeys {
+    <#
+    .SYNOPSIS
+        Unregisters TypeThing global hotkeys.
+    #>
+    if (-not $script:state.TypeThingHotkeysRegistered) { return }
+    if (-not $script:state.TypeThingHotkeyWindow) { return }
+
+    $handle = $script:state.TypeThingHotkeyWindow.Handle
+    try {
+        [HotkeyHelper]::UnregisterHotKey($handle, $script:state.TypeThingHotkeyStartId) | Out-Null
+        [HotkeyHelper]::UnregisterHotKey($handle, $script:state.TypeThingHotkeyStopId) | Out-Null
+        $script:state.TypeThingHotkeysRegistered = $false
+        Write-RedballLog -Level 'INFO' -Message 'TypeThing: Hotkeys unregistered'
+    }
+    catch {
+        Write-RedballLog -Level 'DEBUG' -Message "TypeThing: Hotkey unregistration skipped: $_"
+    }
+}
+
+function Get-ClipboardText {
+    <#
+    .SYNOPSIS
+        Gets text content from the clipboard with retry logic.
+    #>
+    for ($attempt = 0; $attempt -lt 2; $attempt++) {
+        try {
+            $text = [System.Windows.Forms.Clipboard]::GetText()
+            if ([string]::IsNullOrEmpty($text)) { return $null }
+            return $text
+        }
+        catch {
+            if ($attempt -eq 0) {
+                Start-Sleep -Milliseconds 100
+            }
+            else {
+                Write-RedballLog -Level 'DEBUG' -Message "TypeThing: Clipboard access failed: $_"
+                return $null
+            }
+        }
+    }
+    return $null
+}
+
+function Send-TypeThingChar {
+    <#
+    .SYNOPSIS
+        Sends a single character via SendInput using KEYEVENTF_UNICODE.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [char]$Character
+    )
+
+    try {
+        $charCode = [uint16]$Character
+
+        # Handle newlines
+        if ($Character -eq "`n" -or $Character -eq "`r") {
+            if (-not $script:config.TypeThingTypeNewlines) { return }
+            # Send VK_RETURN keydown
+            $inputDown = New-Object INPUT
+            $inputDown.type = [TypeThingInput]::INPUT_KEYBOARD
+            $inputDown.ki = New-Object KEYBDINPUT
+            $inputDown.ki.wVk = [TypeThingInput]::VK_RETURN
+            $inputDown.ki.dwFlags = 0
+            # Send VK_RETURN keyup
+            $inputUp = New-Object INPUT
+            $inputUp.type = [TypeThingInput]::INPUT_KEYBOARD
+            $inputUp.ki = New-Object KEYBDINPUT
+            $inputUp.ki.wVk = [TypeThingInput]::VK_RETURN
+            $inputUp.ki.dwFlags = [TypeThingInput]::KEYEVENTF_KEYUP
+            [TypeThingInput]::SendInput(2, @($inputDown, $inputUp), [System.Runtime.InteropServices.Marshal]::SizeOf([type][INPUT])) | Out-Null
+            return
+        }
+
+        # Handle tab
+        if ($Character -eq "`t") {
+            $inputDown = New-Object INPUT
+            $inputDown.type = [TypeThingInput]::INPUT_KEYBOARD
+            $inputDown.ki = New-Object KEYBDINPUT
+            $inputDown.ki.wVk = [TypeThingInput]::VK_TAB
+            $inputDown.ki.dwFlags = 0
+            $inputUp = New-Object INPUT
+            $inputUp.type = [TypeThingInput]::INPUT_KEYBOARD
+            $inputUp.ki = New-Object KEYBDINPUT
+            $inputUp.ki.wVk = [TypeThingInput]::VK_TAB
+            $inputUp.ki.dwFlags = [TypeThingInput]::KEYEVENTF_KEYUP
+            [TypeThingInput]::SendInput(2, @($inputDown, $inputUp), [System.Runtime.InteropServices.Marshal]::SizeOf([type][INPUT])) | Out-Null
+            return
+        }
+
+        # Skip other control characters
+        if ([char]::IsControl($Character)) { return }
+
+        # Send unicode character via KEYEVENTF_UNICODE
+        $inputDown = New-Object INPUT
+        $inputDown.type = [TypeThingInput]::INPUT_KEYBOARD
+        $inputDown.ki = New-Object KEYBDINPUT
+        $inputDown.ki.wVk = 0
+        $inputDown.ki.wScan = $charCode
+        $inputDown.ki.dwFlags = [TypeThingInput]::KEYEVENTF_UNICODE
+
+        $inputUp = New-Object INPUT
+        $inputUp.type = [TypeThingInput]::INPUT_KEYBOARD
+        $inputUp.ki = New-Object KEYBDINPUT
+        $inputUp.ki.wVk = 0
+        $inputUp.ki.wScan = $charCode
+        $inputUp.ki.dwFlags = ([TypeThingInput]::KEYEVENTF_UNICODE -bor [TypeThingInput]::KEYEVENTF_KEYUP)
+
+        $sent = [TypeThingInput]::SendInput(2, @($inputDown, $inputUp), [System.Runtime.InteropServices.Marshal]::SizeOf([type][INPUT]))
+        if ($sent -eq 0) {
+            Write-RedballLog -Level 'DEBUG' -Message 'TypeThing: SendInput returned 0 - keystroke may have failed'
+        }
+    }
+    catch {
+        Write-RedballLog -Level 'DEBUG' -Message "TypeThing: Send char failed: $_"
+    }
+}
+
+function Start-TypeThingTyping {
+    <#
+    .SYNOPSIS
+        Reads the clipboard and begins simulated typing with a countdown.
+    #>
+    if ($script:state.TypeThingIsTyping) { return }
+    if ($script:state.IsShuttingDown) { return }
+    if (-not $script:config.TypeThingEnabled) { return }
+
+    $text = Get-ClipboardText
+    if (-not $text) {
+        if ($script:config.TypeThingNotifications -and $script:state.NotifyIcon) {
+            try {
+                $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing', 'Clipboard is empty - copy some text first', [System.Windows.Forms.ToolTipIcon]::Warning)
+            } catch {}
+        }
+        Write-RedballLog -Level 'INFO' -Message 'TypeThing: Clipboard empty, nothing to type'
+        return
+    }
+
+    # Warn on very large clipboard
+    if ($text.Length -gt 10000) {
+        $confirmResult = [System.Windows.Forms.MessageBox]::Show(
+            "The clipboard contains $($text.Length) characters. This may take a while.`n`nContinue?",
+            'TypeThing - Large Clipboard',
+            [System.Windows.Forms.MessageBoxButtons]::YesNo,
+            [System.Windows.Forms.MessageBoxIcon]::Warning)
+        if ($confirmResult -ne [System.Windows.Forms.DialogResult]::Yes) { return }
+    }
+
+    $script:state.TypeThingIsTyping = $true
+    $script:state.TypeThingShouldStop = $false
+    $script:state.TypeThingText = $text
+    $script:state.TypeThingIndex = 0
+    $script:state.TypeThingTotalChars = $text.Length
+    $script:state.TypeThingStartTime = Get-Date
+
+    # Update menu items
+    if ($script:state.TypeThingMenuType) { $script:state.TypeThingMenuType.Enabled = $false }
+    if ($script:state.TypeThingMenuStop) { $script:state.TypeThingMenuStop.Enabled = $true }
+    if ($script:state.TypeThingMenuStatus) { $script:state.TypeThingMenuStatus.Text = "Status: Typing 0/$($text.Length) chars..." }
+
+    Write-RedballLog -Level 'INFO' -Message "TypeThing: Starting to type $($text.Length) characters"
+
+    $delaySec = $script:config.TypeThingStartDelaySec
+    if ($delaySec -gt 0) {
+        $script:state.TypeThingCountdownRemaining = $delaySec
+
+        if ($script:config.TypeThingNotifications -and $script:state.NotifyIcon) {
+            try {
+                $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing',
+                    "Typing in $delaySec seconds... ($($script:config.TypeThingStopHotkey) to cancel)",
+                    [System.Windows.Forms.ToolTipIcon]::Info)
+            } catch {}
+        }
+
+        # Create countdown timer
+        if (-not $script:state.TypeThingCountdown) {
+            $script:state.TypeThingCountdown = New-Object System.Windows.Forms.Timer
+            $script:state.TypeThingCountdown.Interval = 1000
+            $script:state.TypeThingCountdown.add_Tick({
+                $script:state.TypeThingCountdownRemaining--
+                if ($script:state.TypeThingShouldStop) {
+                    $script:state.TypeThingCountdown.Stop()
+                    return
+                }
+                if ($script:state.TypeThingMenuStatus) {
+                    $script:state.TypeThingMenuStatus.Text = "Status: Typing in $($script:state.TypeThingCountdownRemaining)s..."
+                }
+                if ($script:state.TypeThingCountdownRemaining -le 0) {
+                    $script:state.TypeThingCountdown.Stop()
+                    Start-TypeThingTimer
+                }
+            })
+        }
+        $script:state.TypeThingCountdown.Start()
+    }
+    else {
+        Start-TypeThingTimer
+    }
+}
+
+function Start-TypeThingTimer {
+    <#
+    .SYNOPSIS
+        Creates and starts the per-character typing timer.
+    #>
+    if (-not $script:state.TypeThingTimer) {
+        $script:state.TypeThingTimer = New-Object System.Windows.Forms.Timer
+        $script:state.TypeThingTimer.add_Tick({
+            if ($script:state.TypeThingShouldStop -or $script:state.IsShuttingDown) {
+                Stop-TypeThingTyping
+                return
+            }
+
+            if ($script:state.TypeThingIndex -ge $script:state.TypeThingTotalChars) {
+                Complete-TypeThingTyping
+                return
+            }
+
+            try {
+                $char = $script:state.TypeThingText[$script:state.TypeThingIndex]
+                # Skip \r when followed by \n (Windows \r\n) to avoid double-Enter
+                if ($char -eq "`r" -and ($script:state.TypeThingIndex + 1) -lt $script:state.TypeThingTotalChars -and $script:state.TypeThingText[$script:state.TypeThingIndex + 1] -eq "`n") {
+                    $script:state.TypeThingIndex++
+                    return
+                }
+                Send-TypeThingChar -Character $char
+                $script:state.TypeThingIndex++
+
+                # Calculate next delay
+                $minDelay = [Math]::Max(10, $script:config.TypeThingMinDelayMs)
+                $maxDelay = [Math]::Max($minDelay + 1, $script:config.TypeThingMaxDelayMs)
+                $delay = Get-Random -Minimum $minDelay -Maximum $maxDelay
+
+                # Random pause for human-like feel
+                if ($script:config.TypeThingAddRandomPauses) {
+                    $roll = Get-Random -Maximum 100
+                    if ($roll -lt $script:config.TypeThingRandomPauseChance) {
+                        $delay += Get-Random -Maximum ([Math]::Max(1, $script:config.TypeThingRandomPauseMaxMs))
+                    }
+                }
+
+                $script:state.TypeThingTimer.Interval = $delay
+
+                # Update status periodically (every 10 chars to reduce overhead)
+                if ($script:state.TypeThingIndex % 10 -eq 0 -and $script:state.TypeThingMenuStatus) {
+                    $script:state.TypeThingMenuStatus.Text = "Status: Typing $($script:state.TypeThingIndex)/$($script:state.TypeThingTotalChars) chars..."
+                }
+            }
+            catch {
+                Write-RedballLog -Level 'WARN' -Message "TypeThing: Error during typing: $_"
+                Stop-TypeThingTyping
+            }
+        })
+    }
+
+    $minDelay = [Math]::Max(10, $script:config.TypeThingMinDelayMs)
+    $maxDelay = [Math]::Max($minDelay + 1, $script:config.TypeThingMaxDelayMs)
+    $script:state.TypeThingTimer.Interval = Get-Random -Minimum $minDelay -Maximum $maxDelay
+    $script:state.TypeThingTimer.Start()
+
+    if ($script:state.TypeThingMenuStatus) {
+        $script:state.TypeThingMenuStatus.Text = "Status: Typing 0/$($script:state.TypeThingTotalChars) chars..."
+    }
+}
+
+function Stop-TypeThingTyping {
+    <#
+    .SYNOPSIS
+        Immediately stops typing and resets state.
+    #>
+    $script:state.TypeThingShouldStop = $true
+
+    if ($script:state.TypeThingTimer) {
+        $script:state.TypeThingTimer.Stop()
+    }
+    if ($script:state.TypeThingCountdown) {
+        $script:state.TypeThingCountdown.Stop()
+    }
+
+    $typed = $script:state.TypeThingIndex
+    $total = $script:state.TypeThingTotalChars
+
+    # Clear sensitive data from memory
+    $script:state.TypeThingText = ''
+    $script:state.TypeThingIndex = 0
+    $script:state.TypeThingTotalChars = 0
+    $script:state.TypeThingIsTyping = $false
+    $script:state.TypeThingShouldStop = $false
+    $script:state.TypeThingStartTime = $null
+
+    # Update menu items
+    if ($script:state.TypeThingMenuType) { $script:state.TypeThingMenuType.Enabled = $true }
+    if ($script:state.TypeThingMenuStop) { $script:state.TypeThingMenuStop.Enabled = $false }
+    if ($script:state.TypeThingMenuStatus) { $script:state.TypeThingMenuStatus.Text = 'Status: Idle' }
+
+    if ($typed -gt 0) {
+        Write-RedballLog -Level 'INFO' -Message "TypeThing: Stopped by user at $typed/$total chars"
+        if ($script:config.TypeThingNotifications -and $script:state.NotifyIcon) {
+            try {
+                $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing',
+                    "Typing stopped ($typed/$total characters typed)",
+                    [System.Windows.Forms.ToolTipIcon]::Warning)
+            } catch {}
+        }
+    }
+}
+
+function Complete-TypeThingTyping {
+    <#
+    .SYNOPSIS
+        Called when typing finishes all characters successfully.
+    #>
+    if ($script:state.TypeThingTimer) {
+        $script:state.TypeThingTimer.Stop()
+    }
+
+    $total = $script:state.TypeThingTotalChars
+    $elapsed = if ($script:state.TypeThingStartTime) {
+        ((Get-Date) - $script:state.TypeThingStartTime).TotalSeconds
+    } else { 0 }
+    $elapsedStr = [Math]::Round($elapsed, 1)
+
+    # Clear sensitive data from memory
+    $script:state.TypeThingText = ''
+    $script:state.TypeThingIndex = 0
+    $script:state.TypeThingTotalChars = 0
+    $script:state.TypeThingIsTyping = $false
+    $script:state.TypeThingShouldStop = $false
+    $script:state.TypeThingStartTime = $null
+
+    # Update menu items
+    if ($script:state.TypeThingMenuType) { $script:state.TypeThingMenuType.Enabled = $true }
+    if ($script:state.TypeThingMenuStop) { $script:state.TypeThingMenuStop.Enabled = $false }
+    if ($script:state.TypeThingMenuStatus) { $script:state.TypeThingMenuStatus.Text = 'Status: Idle' }
+
+    Write-RedballLog -Level 'INFO' -Message "TypeThing: Completed $total chars in ${elapsedStr}s"
+
+    if ($script:config.TypeThingNotifications -and $script:state.NotifyIcon) {
+        try {
+            $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing',
+                "Typing complete ($total characters in ${elapsedStr}s)",
+                [System.Windows.Forms.ToolTipIcon]::Info)
+        } catch {}
+    }
+}
+
+# --- TypeThing Theme Engine ---
+
+$script:TypeThingThemes = @{
+    light = @{
+        Background = [System.Drawing.Color]::FromArgb(245, 245, 245)
+        Surface = [System.Drawing.Color]::White
+        Text = [System.Drawing.Color]::FromArgb(26, 26, 26)
+        Accent = [System.Drawing.Color]::FromArgb(0, 120, 215)
+        SecondaryText = [System.Drawing.Color]::FromArgb(102, 102, 102)
+        Border = [System.Drawing.Color]::FromArgb(204, 204, 204)
+        Active = [System.Drawing.Color]::FromArgb(40, 167, 69)
+        Stopped = [System.Drawing.Color]::FromArgb(220, 53, 69)
+        FontName = 'Segoe UI'
+    }
+    dark = @{
+        Background = [System.Drawing.Color]::FromArgb(30, 30, 30)
+        Surface = [System.Drawing.Color]::FromArgb(45, 45, 45)
+        Text = [System.Drawing.Color]::FromArgb(224, 224, 224)
+        Accent = [System.Drawing.Color]::FromArgb(79, 195, 247)
+        SecondaryText = [System.Drawing.Color]::FromArgb(153, 153, 153)
+        Border = [System.Drawing.Color]::FromArgb(68, 68, 68)
+        Active = [System.Drawing.Color]::FromArgb(76, 175, 80)
+        Stopped = [System.Drawing.Color]::FromArgb(244, 67, 54)
+        FontName = 'Segoe UI'
+    }
+    hacker = @{
+        Background = [System.Drawing.Color]::FromArgb(10, 10, 10)
+        Surface = [System.Drawing.Color]::FromArgb(17, 17, 17)
+        Text = [System.Drawing.Color]::FromArgb(0, 255, 0)
+        Accent = [System.Drawing.Color]::FromArgb(0, 255, 65)
+        SecondaryText = [System.Drawing.Color]::FromArgb(0, 143, 17)
+        Border = [System.Drawing.Color]::FromArgb(0, 59, 0)
+        Active = [System.Drawing.Color]::FromArgb(0, 255, 65)
+        Stopped = [System.Drawing.Color]::FromArgb(255, 0, 64)
+        FontName = 'Consolas'
+    }
+}
+
+function Get-TypeThingTheme {
+    param([string]$ThemeName = $script:config.TypeThingTheme)
+    if ($script:TypeThingThemes.ContainsKey($ThemeName)) {
+        return $script:TypeThingThemes[$ThemeName]
+    }
+    return $script:TypeThingThemes['dark']
+}
+
+function Set-TypeThingFormTheme {
+    <#
+    .SYNOPSIS
+        Applies a theme to a WinForms form and its child controls recursively.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [System.Windows.Forms.Control]$Control,
+        [Parameter(Mandatory)]
+        [hashtable]$Theme
+    )
+    $Control.BackColor = $Theme.Background
+    $Control.ForeColor = $Theme.Text
+    $font = New-Object System.Drawing.Font($Theme.FontName, 9)
+
+    foreach ($child in $Control.Controls) {
+        if ($child -is [System.Windows.Forms.Button]) {
+            $child.BackColor = $Theme.Accent
+            $child.ForeColor = [System.Drawing.Color]::White
+            $child.FlatStyle = 'Flat'
+            $child.FlatAppearance.BorderColor = $Theme.Border
+            $child.Font = $font
+        }
+        elseif ($child -is [System.Windows.Forms.TextBox] -or $child -is [System.Windows.Forms.NumericUpDown]) {
+            $child.BackColor = $Theme.Surface
+            $child.ForeColor = $Theme.Text
+            $child.Font = $font
+        }
+        elseif ($child -is [System.Windows.Forms.CheckBox]) {
+            $child.ForeColor = $Theme.Text
+            $child.Font = $font
+        }
+        elseif ($child -is [System.Windows.Forms.ComboBox]) {
+            $child.BackColor = $Theme.Surface
+            $child.ForeColor = $Theme.Text
+            $child.Font = $font
+        }
+        elseif ($child -is [System.Windows.Forms.Label]) {
+            $child.ForeColor = $Theme.Text
+            $child.Font = $font
+        }
+        elseif ($child -is [System.Windows.Forms.GroupBox]) {
+            $child.ForeColor = $Theme.Accent
+            $child.Font = New-Object System.Drawing.Font($Theme.FontName, 9, [System.Drawing.FontStyle]::Bold)
+            Set-TypeThingFormTheme -Control $child -Theme $Theme
+        }
+        elseif ($child -is [System.Windows.Forms.Panel]) {
+            $child.BackColor = $Theme.Background
+            Set-TypeThingFormTheme -Control $child -Theme $Theme
+        }
+    }
+}
+
+function Show-TypeThingSettings {
+    <#
+    .SYNOPSIS
+        Displays the TypeThing settings dialog with theme support.
+    #>
+    try {
+        $theme = Get-TypeThingTheme
+        $fontName = $theme.FontName
+        $baseFont = New-Object System.Drawing.Font($fontName, 9)
+        $boldFont = New-Object System.Drawing.Font($fontName, 9, [System.Drawing.FontStyle]::Bold)
+        $headerFont = New-Object System.Drawing.Font($fontName, 10, [System.Drawing.FontStyle]::Bold)
+
+        $form = New-Object System.Windows.Forms.Form
+        $form.Text = 'TypeThing Settings'
+        $form.Size = New-Object System.Drawing.Size(460, 620)
+        $form.StartPosition = 'CenterScreen'
+        $form.FormBorderStyle = 'FixedDialog'
+        $form.MaximizeBox = $false
+        $form.MinimizeBox = $false
+        $form.Font = $baseFont
+        $form.BackColor = $theme.Background
+        $form.ForeColor = $theme.Text
+
+        $panel = New-Object System.Windows.Forms.Panel
+        $panel.AutoScroll = $true
+        $panel.Dock = 'Fill'
+        $panel.Padding = New-Object System.Windows.Forms.Padding(15, 10, 15, 60)
+        $form.Controls.Add($panel)
+
+        $y = 10
+
+        # === Typing Speed Group ===
+        $grpSpeed = New-Object System.Windows.Forms.GroupBox
+        $grpSpeed.Text = 'Typing Speed'
+        $grpSpeed.Location = New-Object System.Drawing.Point(10, $y)
+        $grpSpeed.Size = New-Object System.Drawing.Size(410, 145)
+        $grpSpeed.ForeColor = $theme.Accent
+        $grpSpeed.Font = $boldFont
+        $panel.Controls.Add($grpSpeed)
+
+        $lblMinDelay = New-Object System.Windows.Forms.Label
+        $lblMinDelay.Text = 'Min Delay (ms):'
+        $lblMinDelay.Location = New-Object System.Drawing.Point(15, 25)
+        $lblMinDelay.AutoSize = $true
+        $lblMinDelay.Font = $baseFont
+        $lblMinDelay.ForeColor = $theme.Text
+        $grpSpeed.Controls.Add($lblMinDelay)
+
+        $nudMinDelay = New-Object System.Windows.Forms.NumericUpDown
+        $nudMinDelay.Location = New-Object System.Drawing.Point(200, 22)
+        $nudMinDelay.Size = New-Object System.Drawing.Size(80, 25)
+        $nudMinDelay.Minimum = 10; $nudMinDelay.Maximum = 1000
+        $nudMinDelay.Value = [Math]::Max(10, [Math]::Min(1000, $script:config.TypeThingMinDelayMs))
+        $nudMinDelay.BackColor = $theme.Surface; $nudMinDelay.ForeColor = $theme.Text
+        $nudMinDelay.Font = $baseFont
+        $grpSpeed.Controls.Add($nudMinDelay)
+
+        $lblMaxDelay = New-Object System.Windows.Forms.Label
+        $lblMaxDelay.Text = 'Max Delay (ms):'
+        $lblMaxDelay.Location = New-Object System.Drawing.Point(15, 55)
+        $lblMaxDelay.AutoSize = $true
+        $lblMaxDelay.Font = $baseFont
+        $lblMaxDelay.ForeColor = $theme.Text
+        $grpSpeed.Controls.Add($lblMaxDelay)
+
+        $nudMaxDelay = New-Object System.Windows.Forms.NumericUpDown
+        $nudMaxDelay.Location = New-Object System.Drawing.Point(200, 52)
+        $nudMaxDelay.Size = New-Object System.Drawing.Size(80, 25)
+        $nudMaxDelay.Minimum = 10; $nudMaxDelay.Maximum = 2000
+        $nudMaxDelay.Value = [Math]::Max(10, [Math]::Min(2000, $script:config.TypeThingMaxDelayMs))
+        $nudMaxDelay.BackColor = $theme.Surface; $nudMaxDelay.ForeColor = $theme.Text
+        $nudMaxDelay.Font = $baseFont
+        $grpSpeed.Controls.Add($nudMaxDelay)
+
+        $lblWpm = New-Object System.Windows.Forms.Label
+        $avgDelay = ($nudMinDelay.Value + $nudMaxDelay.Value) / 2
+        $wpm = if ($avgDelay -gt 0) { [Math]::Round(60000 / $avgDelay / 5) } else { 0 }
+        $lblWpm.Text = "Approx speed: ~$wpm WPM"
+        $lblWpm.Location = New-Object System.Drawing.Point(15, 85)
+        $lblWpm.AutoSize = $true
+        $lblWpm.Font = $baseFont
+        $lblWpm.ForeColor = $theme.SecondaryText
+        $grpSpeed.Controls.Add($lblWpm)
+
+        # Update WPM when values change
+        $wpmUpdate = {
+            $avg = ($nudMinDelay.Value + $nudMaxDelay.Value) / 2
+            $w = if ($avg -gt 0) { [Math]::Round(60000 / $avg / 5) } else { 0 }
+            $lblWpm.Text = "Approx speed: ~$w WPM"
+        }
+        $nudMinDelay.add_ValueChanged($wpmUpdate)
+        $nudMaxDelay.add_ValueChanged($wpmUpdate)
+
+        $lblStartDelay = New-Object System.Windows.Forms.Label
+        $lblStartDelay.Text = 'Start Delay (seconds):'
+        $lblStartDelay.Location = New-Object System.Drawing.Point(15, 115)
+        $lblStartDelay.AutoSize = $true
+        $lblStartDelay.Font = $baseFont
+        $lblStartDelay.ForeColor = $theme.Text
+        $grpSpeed.Controls.Add($lblStartDelay)
+
+        $nudStartDelay = New-Object System.Windows.Forms.NumericUpDown
+        $nudStartDelay.Location = New-Object System.Drawing.Point(200, 112)
+        $nudStartDelay.Size = New-Object System.Drawing.Size(80, 25)
+        $nudStartDelay.Minimum = 0; $nudStartDelay.Maximum = 30
+        $nudStartDelay.Value = [Math]::Max(0, [Math]::Min(30, $script:config.TypeThingStartDelaySec))
+        $nudStartDelay.BackColor = $theme.Surface; $nudStartDelay.ForeColor = $theme.Text
+        $nudStartDelay.Font = $baseFont
+        $grpSpeed.Controls.Add($nudStartDelay)
+
+        $y += 155
+
+        # === Behaviour Group ===
+        $grpBehaviour = New-Object System.Windows.Forms.GroupBox
+        $grpBehaviour.Text = 'Behaviour'
+        $grpBehaviour.Location = New-Object System.Drawing.Point(10, $y)
+        $grpBehaviour.Size = New-Object System.Drawing.Size(410, 155)
+        $grpBehaviour.ForeColor = $theme.Accent
+        $grpBehaviour.Font = $boldFont
+        $panel.Controls.Add($grpBehaviour)
+
+        $chkRandomPauses = New-Object System.Windows.Forms.CheckBox
+        $chkRandomPauses.Text = 'Add random pauses for realism'
+        $chkRandomPauses.Checked = $script:config.TypeThingAddRandomPauses
+        $chkRandomPauses.Location = New-Object System.Drawing.Point(15, 25)
+        $chkRandomPauses.AutoSize = $true
+        $chkRandomPauses.Font = $baseFont
+        $chkRandomPauses.ForeColor = $theme.Text
+        $grpBehaviour.Controls.Add($chkRandomPauses)
+
+        $lblPauseChance = New-Object System.Windows.Forms.Label
+        $lblPauseChance.Text = 'Random pause chance (%):'
+        $lblPauseChance.Location = New-Object System.Drawing.Point(15, 55)
+        $lblPauseChance.AutoSize = $true
+        $lblPauseChance.Font = $baseFont
+        $lblPauseChance.ForeColor = $theme.Text
+        $grpBehaviour.Controls.Add($lblPauseChance)
+
+        $nudPauseChance = New-Object System.Windows.Forms.NumericUpDown
+        $nudPauseChance.Location = New-Object System.Drawing.Point(250, 52)
+        $nudPauseChance.Size = New-Object System.Drawing.Size(60, 25)
+        $nudPauseChance.Minimum = 1; $nudPauseChance.Maximum = 50
+        $nudPauseChance.Value = [Math]::Max(1, [Math]::Min(50, $script:config.TypeThingRandomPauseChance))
+        $nudPauseChance.BackColor = $theme.Surface; $nudPauseChance.ForeColor = $theme.Text
+        $nudPauseChance.Font = $baseFont
+        $grpBehaviour.Controls.Add($nudPauseChance)
+
+        $lblPauseMax = New-Object System.Windows.Forms.Label
+        $lblPauseMax.Text = 'Random pause max (ms):'
+        $lblPauseMax.Location = New-Object System.Drawing.Point(15, 85)
+        $lblPauseMax.AutoSize = $true
+        $lblPauseMax.Font = $baseFont
+        $lblPauseMax.ForeColor = $theme.Text
+        $grpBehaviour.Controls.Add($lblPauseMax)
+
+        $nudPauseMax = New-Object System.Windows.Forms.NumericUpDown
+        $nudPauseMax.Location = New-Object System.Drawing.Point(250, 82)
+        $nudPauseMax.Size = New-Object System.Drawing.Size(80, 25)
+        $nudPauseMax.Minimum = 50; $nudPauseMax.Maximum = 3000
+        $nudPauseMax.Value = [Math]::Max(50, [Math]::Min(3000, $script:config.TypeThingRandomPauseMaxMs))
+        $nudPauseMax.BackColor = $theme.Surface; $nudPauseMax.ForeColor = $theme.Text
+        $nudPauseMax.Font = $baseFont
+        $grpBehaviour.Controls.Add($nudPauseMax)
+
+        $chkNewlines = New-Object System.Windows.Forms.CheckBox
+        $chkNewlines.Text = 'Type newline characters'
+        $chkNewlines.Checked = $script:config.TypeThingTypeNewlines
+        $chkNewlines.Location = New-Object System.Drawing.Point(15, 115)
+        $chkNewlines.AutoSize = $true
+        $chkNewlines.Font = $baseFont
+        $chkNewlines.ForeColor = $theme.Text
+        $grpBehaviour.Controls.Add($chkNewlines)
+
+        $chkNotify = New-Object System.Windows.Forms.CheckBox
+        $chkNotify.Text = 'Show tray notifications'
+        $chkNotify.Checked = $script:config.TypeThingNotifications
+        $chkNotify.Location = New-Object System.Drawing.Point(215, 115)
+        $chkNotify.AutoSize = $true
+        $chkNotify.Font = $baseFont
+        $chkNotify.ForeColor = $theme.Text
+        $grpBehaviour.Controls.Add($chkNotify)
+
+        $y += 165
+
+        # === Hotkeys Group ===
+        $grpHotkeys = New-Object System.Windows.Forms.GroupBox
+        $grpHotkeys.Text = 'Hotkeys'
+        $grpHotkeys.Location = New-Object System.Drawing.Point(10, $y)
+        $grpHotkeys.Size = New-Object System.Drawing.Size(410, 120)
+        $grpHotkeys.ForeColor = $theme.Accent
+        $grpHotkeys.Font = $boldFont
+        $panel.Controls.Add($grpHotkeys)
+
+        $lblStartHk = New-Object System.Windows.Forms.Label
+        $lblStartHk.Text = 'Start typing:'
+        $lblStartHk.Location = New-Object System.Drawing.Point(15, 28)
+        $lblStartHk.AutoSize = $true
+        $lblStartHk.Font = $baseFont
+        $lblStartHk.ForeColor = $theme.Text
+        $grpHotkeys.Controls.Add($lblStartHk)
+
+        $txtStartHk = New-Object System.Windows.Forms.TextBox
+        $txtStartHk.Text = $script:config.TypeThingStartHotkey
+        $txtStartHk.Location = New-Object System.Drawing.Point(130, 25)
+        $txtStartHk.Size = New-Object System.Drawing.Size(160, 25)
+        $txtStartHk.ReadOnly = $true
+        $txtStartHk.BackColor = $theme.Surface
+        $txtStartHk.ForeColor = $theme.Text
+        $txtStartHk.Font = $baseFont
+        $txtStartHk.add_KeyDown({
+            param($sender, $e)
+            $e.SuppressKeyPress = $true
+            $e.Handled = $true
+            $parts = @()
+            if ($e.Control) { $parts += 'Ctrl' }
+            if ($e.Alt) { $parts += 'Alt' }
+            if ($e.Shift) { $parts += 'Shift' }
+            $keyName = $e.KeyCode.ToString()
+            if ($keyName -notin @('ControlKey','ShiftKey','Menu','Control','Shift','Alt')) {
+                $parts += $keyName
+                $sender.Text = $parts -join '+'
+            }
+        })
+        $grpHotkeys.Controls.Add($txtStartHk)
+
+        $lblStopHk = New-Object System.Windows.Forms.Label
+        $lblStopHk.Text = 'Stop typing:'
+        $lblStopHk.Location = New-Object System.Drawing.Point(15, 58)
+        $lblStopHk.AutoSize = $true
+        $lblStopHk.Font = $baseFont
+        $lblStopHk.ForeColor = $theme.Text
+        $grpHotkeys.Controls.Add($lblStopHk)
+
+        $txtStopHk = New-Object System.Windows.Forms.TextBox
+        $txtStopHk.Text = $script:config.TypeThingStopHotkey
+        $txtStopHk.Location = New-Object System.Drawing.Point(130, 55)
+        $txtStopHk.Size = New-Object System.Drawing.Size(160, 25)
+        $txtStopHk.ReadOnly = $true
+        $txtStopHk.BackColor = $theme.Surface
+        $txtStopHk.ForeColor = $theme.Text
+        $txtStopHk.Font = $baseFont
+        $txtStopHk.add_KeyDown({
+            param($sender, $e)
+            $e.SuppressKeyPress = $true
+            $e.Handled = $true
+            $parts = @()
+            if ($e.Control) { $parts += 'Ctrl' }
+            if ($e.Alt) { $parts += 'Alt' }
+            if ($e.Shift) { $parts += 'Shift' }
+            $keyName = $e.KeyCode.ToString()
+            if ($keyName -notin @('ControlKey','ShiftKey','Menu','Control','Shift','Alt')) {
+                $parts += $keyName
+                $sender.Text = $parts -join '+'
+            }
+        })
+        $grpHotkeys.Controls.Add($txtStopHk)
+
+        $lblHkHint = New-Object System.Windows.Forms.Label
+        $lblHkHint.Text = 'Click a field and press your desired key combination'
+        $lblHkHint.Location = New-Object System.Drawing.Point(15, 90)
+        $lblHkHint.AutoSize = $true
+        $lblHkHint.Font = New-Object System.Drawing.Font($fontName, 8)
+        $lblHkHint.ForeColor = $theme.SecondaryText
+        $grpHotkeys.Controls.Add($lblHkHint)
+
+        $y += 130
+
+        # === Appearance Group ===
+        $grpAppearance = New-Object System.Windows.Forms.GroupBox
+        $grpAppearance.Text = 'Appearance'
+        $grpAppearance.Location = New-Object System.Drawing.Point(10, $y)
+        $grpAppearance.Size = New-Object System.Drawing.Size(410, 60)
+        $grpAppearance.ForeColor = $theme.Accent
+        $grpAppearance.Font = $boldFont
+        $panel.Controls.Add($grpAppearance)
+
+        $lblTheme = New-Object System.Windows.Forms.Label
+        $lblTheme.Text = 'Theme:'
+        $lblTheme.Location = New-Object System.Drawing.Point(15, 28)
+        $lblTheme.AutoSize = $true
+        $lblTheme.Font = $baseFont
+        $lblTheme.ForeColor = $theme.Text
+        $grpAppearance.Controls.Add($lblTheme)
+
+        $cmbTheme = New-Object System.Windows.Forms.ComboBox
+        $cmbTheme.DropDownStyle = 'DropDownList'
+        $cmbTheme.Location = New-Object System.Drawing.Point(130, 25)
+        $cmbTheme.Size = New-Object System.Drawing.Size(120, 25)
+        $cmbTheme.BackColor = $theme.Surface
+        $cmbTheme.ForeColor = $theme.Text
+        $cmbTheme.Font = $baseFont
+        @('light', 'dark', 'hacker') | ForEach-Object { [void]$cmbTheme.Items.Add($_) }
+        $cmbTheme.SelectedItem = $script:config.TypeThingTheme
+        if ($cmbTheme.SelectedIndex -lt 0) { $cmbTheme.SelectedIndex = 1 }
+        $cmbTheme.add_SelectedIndexChanged({
+            $newTheme = Get-TypeThingTheme -ThemeName $cmbTheme.SelectedItem
+            Set-TypeThingFormTheme -Control $form -Theme $newTheme
+        })
+        $grpAppearance.Controls.Add($cmbTheme)
+
+        $y += 70
+
+        # === Buttons ===
+        $buttonPanel = New-Object System.Windows.Forms.Panel
+        $buttonPanel.Dock = 'Bottom'
+        $buttonPanel.Height = 50
+        $buttonPanel.BackColor = $theme.Background
+        $form.Controls.Add($buttonPanel)
+
+        $okButton = New-Object System.Windows.Forms.Button
+        $okButton.Text = 'OK'
+        $okButton.Size = New-Object System.Drawing.Size(90, 32)
+        $okButton.Location = New-Object System.Drawing.Point(155, 10)
+        $okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+        $okButton.FlatStyle = 'Flat'
+        $okButton.BackColor = $theme.Accent
+        $okButton.ForeColor = [System.Drawing.Color]::White
+        $okButton.Font = $boldFont
+        $form.AcceptButton = $okButton
+        $buttonPanel.Controls.Add($okButton)
+
+        $cancelButton = New-Object System.Windows.Forms.Button
+        $cancelButton.Text = 'Cancel'
+        $cancelButton.Size = New-Object System.Drawing.Size(90, 32)
+        $cancelButton.Location = New-Object System.Drawing.Point(255, 10)
+        $cancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+        $cancelButton.FlatStyle = 'Flat'
+        $cancelButton.BackColor = $theme.Surface
+        $cancelButton.ForeColor = $theme.Text
+        $cancelButton.Font = $baseFont
+        $form.CancelButton = $cancelButton
+        $buttonPanel.Controls.Add($cancelButton)
+
+        $resetButton = New-Object System.Windows.Forms.Button
+        $resetButton.Text = 'Reset'
+        $resetButton.Size = New-Object System.Drawing.Size(90, 32)
+        $resetButton.Location = New-Object System.Drawing.Point(355, 10)
+        $resetButton.FlatStyle = 'Flat'
+        $resetButton.BackColor = $theme.Stopped
+        $resetButton.ForeColor = [System.Drawing.Color]::White
+        $resetButton.Font = $baseFont
+        $resetButton.add_Click({
+            $nudMinDelay.Value = 30
+            $nudMaxDelay.Value = 120
+            $nudStartDelay.Value = 3
+            $chkRandomPauses.Checked = $true
+            $nudPauseChance.Value = 5
+            $nudPauseMax.Value = 500
+            $chkNewlines.Checked = $true
+            $chkNotify.Checked = $true
+            $txtStartHk.Text = 'Ctrl+Shift+V'
+            $txtStopHk.Text = 'Ctrl+Shift+X'
+            $cmbTheme.SelectedItem = 'dark'
+        })
+        $buttonPanel.Controls.Add($resetButton)
+
+        $result = $form.ShowDialog()
+
+        if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+            # Validate min < max
+            if ($nudMinDelay.Value -ge $nudMaxDelay.Value) {
+                [System.Windows.Forms.MessageBox]::Show(
+                    'Min delay must be less than max delay.',
+                    'TypeThing Settings',
+                    [System.Windows.Forms.MessageBoxButtons]::OK,
+                    [System.Windows.Forms.MessageBoxIcon]::Warning)
+                $form.Dispose()
+                Show-TypeThingSettings
+                return
+            }
+
+            $oldStartHk = $script:config.TypeThingStartHotkey
+            $oldStopHk = $script:config.TypeThingStopHotkey
+
+            $script:config.TypeThingMinDelayMs = [int]$nudMinDelay.Value
+            $script:config.TypeThingMaxDelayMs = [int]$nudMaxDelay.Value
+            $script:config.TypeThingStartDelaySec = [int]$nudStartDelay.Value
+            $script:config.TypeThingAddRandomPauses = $chkRandomPauses.Checked
+            $script:config.TypeThingRandomPauseChance = [int]$nudPauseChance.Value
+            $script:config.TypeThingRandomPauseMaxMs = [int]$nudPauseMax.Value
+            $script:config.TypeThingTypeNewlines = $chkNewlines.Checked
+            $script:config.TypeThingNotifications = $chkNotify.Checked
+            $script:config.TypeThingStartHotkey = $txtStartHk.Text
+            $script:config.TypeThingStopHotkey = $txtStopHk.Text
+            $script:config.TypeThingTheme = $cmbTheme.SelectedItem
+
+            Save-RedballConfig -Path $ConfigPath
+
+            # Re-register hotkeys if they changed
+            if ($oldStartHk -ne $txtStartHk.Text -or $oldStopHk -ne $txtStopHk.Text) {
+                Unregister-TypeThingHotkeys
+                Register-TypeThingHotkeys
+            }
+
+            Write-RedballLog -Level 'INFO' -Message 'TypeThing: Settings updated'
+        }
+
+        $form.Dispose()
+    }
+    catch {
+        Write-RedballLog -Level 'ERROR' -Message "TypeThing settings dialog error: $_"
     }
 }
 
@@ -1557,6 +2774,31 @@ function Exit-Application {
         Shuts down Redball cleanly.
     #>
     $script:state.IsShuttingDown = $true
+    
+    # TypeThing cleanup - stop typing and unregister hotkeys
+    try {
+        if ($script:state.TypeThingIsTyping) {
+            Stop-TypeThingTyping
+        }
+        if ($script:state.TypeThingTimer) {
+            $script:state.TypeThingTimer.Stop()
+            $script:state.TypeThingTimer.Dispose()
+            $script:state.TypeThingTimer = $null
+        }
+        if ($script:state.TypeThingCountdown) {
+            $script:state.TypeThingCountdown.Stop()
+            $script:state.TypeThingCountdown.Dispose()
+            $script:state.TypeThingCountdown = $null
+        }
+        Unregister-TypeThingHotkeys
+        if ($script:state.TypeThingHotkeyWindow) {
+            $script:state.TypeThingHotkeyWindow.Destroy()
+            $script:state.TypeThingHotkeyWindow = $null
+        }
+    }
+    catch {
+        Write-RedballLog -Level 'DEBUG' -Message "TypeThing cleanup skipped: $_"
+    }
     
     # CRITICAL: Hide icon IMMEDIATELY before any other cleanup
     if ($script:state.NotifyIcon) {
@@ -2000,6 +3242,66 @@ catch {
     Write-RedballLog -Level 'DEBUG' -Message "Hotkey helper type initialization skipped: $_"
 }
 
+# --- TypeThing SendInput Interop ---
+
+$typeThingInteropSignature = @"
+using System;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct KEYBDINPUT {
+    public ushort wVk;
+    public ushort wScan;
+    public uint dwFlags;
+    public uint time;
+    public IntPtr dwExtraInfo;
+}
+
+[StructLayout(LayoutKind.Explicit)]
+public struct INPUT {
+    [FieldOffset(0)] public uint type;
+    [FieldOffset(4)] public KEYBDINPUT ki;
+}
+
+public static class TypeThingInput {
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+    public const uint INPUT_KEYBOARD = 1;
+    public const uint KEYEVENTF_KEYUP = 0x0002;
+    public const uint KEYEVENTF_UNICODE = 0x0004;
+    public const ushort VK_RETURN = 0x0D;
+    public const ushort VK_TAB = 0x09;
+}
+
+public class HotkeyMessageWindow : NativeWindow {
+    public event Action<int> HotkeyPressed;
+
+    public HotkeyMessageWindow() {
+        CreateHandle(new CreateParams());
+    }
+
+    protected override void WndProc(ref Message m) {
+        if (m.Msg == 0x0312) {
+            if (HotkeyPressed != null) HotkeyPressed(m.WParam.ToInt32());
+        }
+        base.WndProc(ref m);
+    }
+
+    public void Destroy() {
+        DestroyHandle();
+    }
+}
+"@
+
+try {
+    Add-Type -TypeDefinition $typeThingInteropSignature -ReferencedAssemblies System.Windows.Forms -Language CSharp -ErrorAction SilentlyContinue
+}
+catch {
+    Write-RedballLog -Level 'DEBUG' -Message "TypeThing interop type initialization skipped: $_"
+}
+
 function Register-GlobalHotkey {
     param([IntPtr]$WindowHandle)
     try {
@@ -2181,6 +3483,66 @@ $idleMenuItem.add_Click({
 $script:state.IdleMenuItem = $idleMenuItem
 [void]$contextMenu.Items.Add($idleMenuItem)
 
+# --- TypeThing Submenu ---
+if ($script:config.TypeThingEnabled) {
+    [void]$contextMenu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator))
+
+    $typeThingMenu = New-Object System.Windows.Forms.ToolStripMenuItem 'TypeThing'
+    $typeThingMenu.AccessibleName = 'TypeThing Clipboard Typer'
+
+    $typeThingTypeItem = New-Object System.Windows.Forms.ToolStripMenuItem "Type Clipboard`t$($script:config.TypeThingStartHotkey)"
+    $typeThingTypeItem.AccessibleName = 'Type clipboard contents'
+    $typeThingTypeItem.add_Click({
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            Start-TypeThingTyping
+        }
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "TypeThing: Type menu error: $_"
+        }
+    })
+    $script:state.TypeThingMenuType = $typeThingTypeItem
+    [void]$typeThingMenu.DropDownItems.Add($typeThingTypeItem)
+
+    $typeThingStopItem = New-Object System.Windows.Forms.ToolStripMenuItem "Stop Typing`t$($script:config.TypeThingStopHotkey)"
+    $typeThingStopItem.AccessibleName = 'Emergency stop typing'
+    $typeThingStopItem.Enabled = $false
+    $typeThingStopItem.add_Click({
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            Stop-TypeThingTyping
+        }
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "TypeThing: Stop menu error: $_"
+        }
+    })
+    $script:state.TypeThingMenuStop = $typeThingStopItem
+    [void]$typeThingMenu.DropDownItems.Add($typeThingStopItem)
+
+    [void]$typeThingMenu.DropDownItems.Add((New-Object System.Windows.Forms.ToolStripSeparator))
+
+    $typeThingStatusItem = New-Object System.Windows.Forms.ToolStripMenuItem 'Status: Idle'
+    $typeThingStatusItem.Enabled = $false
+    $script:state.TypeThingMenuStatus = $typeThingStatusItem
+    [void]$typeThingMenu.DropDownItems.Add($typeThingStatusItem)
+
+    [void]$typeThingMenu.DropDownItems.Add((New-Object System.Windows.Forms.ToolStripSeparator))
+
+    $typeThingSettingsItem = New-Object System.Windows.Forms.ToolStripMenuItem 'TypeThing Settings...'
+    $typeThingSettingsItem.add_Click({
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            Show-TypeThingSettings
+        }
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "TypeThing: Settings menu error: $_"
+        }
+    })
+    [void]$typeThingMenu.DropDownItems.Add($typeThingSettingsItem)
+
+    [void]$contextMenu.Items.Add($typeThingMenu)
+}
+
 [void]$contextMenu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator))
 
 $settingsMenuItem = New-Object System.Windows.Forms.ToolStripMenuItem 'Settings...'
@@ -2197,6 +3559,21 @@ $settingsMenuItem.add_Click({
     }
 })
 [void]$contextMenu.Items.Add($settingsMenuItem)
+
+$aboutMenuItem = New-Object System.Windows.Forms.ToolStripMenuItem 'About...'
+$aboutMenuItem.ShortcutKeyDisplayString = 'A'
+$aboutMenuItem.AccessibleName = 'About Redball'
+$aboutMenuItem.AccessibleDescription = 'View version information and check for updates'
+$aboutMenuItem.add_Click({
+    try {
+        if ($script:state.IsShuttingDown) { return }
+        Show-AboutDialog
+    }
+    catch {
+        Write-RedballLog -Level 'WARN' -Message "About menu error: $_"
+    }
+})
+[void]$contextMenu.Items.Add($aboutMenuItem)
 
 [void]$contextMenu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator))
 [void]$contextMenu.Items.Add($exitMenuItem)
@@ -3673,6 +5050,33 @@ $script:state.StartTime = Get-Date
 $script:performanceMetrics.StartTime = Get-Date
 
 Update-RedballUI
+
+# --- TypeThing Initialization ---
+if ($script:config.TypeThingEnabled) {
+    try {
+        $script:state.TypeThingHotkeyWindow = New-Object HotkeyMessageWindow
+        $script:state.TypeThingHotkeyWindow.add_HotkeyPressed({
+            param($hotkeyId)
+            try {
+                if ($script:state.IsShuttingDown) { return }
+                if ($hotkeyId -eq $script:state.TypeThingHotkeyStartId) {
+                    Start-TypeThingTyping
+                }
+                elseif ($hotkeyId -eq $script:state.TypeThingHotkeyStopId) {
+                    Stop-TypeThingTyping
+                }
+            }
+            catch {
+                Write-RedballLog -Level 'WARN' -Message "TypeThing: Hotkey handler error: $_"
+            }
+        })
+        Register-TypeThingHotkeys
+        Write-RedballLog -Level 'INFO' -Message "TypeThing: Initialized ($($script:config.TypeThingStartHotkey) to type clipboard)"
+    }
+    catch {
+        Write-RedballLog -Level 'WARN' -Message "TypeThing: Initialization failed: $_"
+    }
+}
 
 # Clear crash flag on clean exit
 $onProcessExit = {
