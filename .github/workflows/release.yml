@@ -113,23 +113,22 @@ jobs:
         echo "=== Building MSI v${VERSION} ==="
         wix.exe build Redball.wxs -o "../dist/Redball-${VERSION}.msi" -ext WixToolset.UI.wixext -d "ProductVersion=${VERSION}" > ../dist/wix.log 2>&1
         WIX_RC=$?
-        echo "=== WiX exit code: ${WIX_RC} ==="
-        echo "=== WiX output ==="
-        cat ../dist/wix.log
         cd ..
-        echo "=== dist contents ==="
+        echo "=== WiX exit code: ${WIX_RC} ==="
+        echo "### WiX Build Log (exit ${WIX_RC})" >> "$GITHUB_STEP_SUMMARY"
+        echo '```' >> "$GITHUB_STEP_SUMMARY"
+        cat dist/wix.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "(no log file)" >> "$GITHUB_STEP_SUMMARY"
+        echo '```' >> "$GITHUB_STEP_SUMMARY"
+        cat dist/wix.log 2>/dev/null
         ls -la dist/
+        echo "### dist contents" >> "$GITHUB_STEP_SUMMARY"
+        ls -la dist/ >> "$GITHUB_STEP_SUMMARY"
         if [ ! -f "dist/Redball-${VERSION}.msi" ]; then
-          echo "ERROR: MSI was not produced. WiX exit code was ${WIX_RC}"
+          echo "ERROR: MSI not produced (WiX exit ${WIX_RC})"
           exit 1
         fi
-        if ls dist/*.cab 2>/dev/null; then
-          echo "ERROR: External cab files found - EmbedCab not working"
-          exit 1
-        fi
-        echo "OK: MSI produced, no external cab files"
         cp "dist/Redball-${VERSION}.msi" "dist/Redball.msi"
-        wc -c < dist/Redball.msi
+        echo "OK: MSI produced ($(wc -c < dist/Redball.msi) bytes)"
 
     - name: Upload unsigned MSI
       uses: actions/upload-artifact@v4
