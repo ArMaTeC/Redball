@@ -35,6 +35,32 @@ jobs:
         Import-Module Pester -RequiredVersion 5.5.0
         Get-Module Pester | Select-Object Name, Version
         
+    - name: Check Environment
+      shell: powershell
+      run: |
+        Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
+        Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
+        $scriptPath = Join-Path $PWD 'Redball.ps1'
+        $tokens = $null; $parseErrors = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseFile($scriptPath, [ref]$tokens, [ref]$parseErrors)
+        $funcs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
+        Write-Host "Found $($funcs.Count) functions in Redball.ps1"
+        $targetFuncs = @('ConvertTo-HotkeyParams','Stop-TypeThingTyping','Start-TypeThingTyping','Get-TypeThingTheme','Complete-TypeThingTyping')
+        foreach ($name in $targetFuncs) {
+          $found = $funcs | Where-Object { $_.Name -eq $name }
+          if ($found) { Write-Host "OK: $name found at line $($found.Extent.StartLineNumber)" }
+          else { Write-Host "MISSING: $name" }
+        }
+        # Test loading
+        foreach ($f in $funcs) {
+          try { Invoke-Expression $f.Extent.Text }
+          catch { Write-Host "LOAD FAIL: $($f.Name) - $_" }
+        }
+        foreach ($name in $targetFuncs) {
+          if (Get-Command $name -ErrorAction SilentlyContinue) { Write-Host "LOADED: $name" }
+          else { Write-Host "NOT LOADED: $name" }
+        }
+
     - name: Run Pester Tests
       shell: powershell
       run: |
