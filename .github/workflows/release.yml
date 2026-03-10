@@ -105,31 +105,34 @@ jobs:
         mkdir -p dist
 
     - name: Build MSI
-      shell: bash
+      shell: pwsh
       run: |
-        VERSION="${{ needs.tag.outputs.version }}"
-        cd installer
-        echo "=== Building MSI v${VERSION} ==="
-        wix.exe build Redball.wxs \
-          -o "../dist/Redball-${VERSION}.msi" \
-          -ext WixToolset.UI.wixext \
-          -d "ProductVersion=${VERSION}" 2>&1 | tee ../dist/wix-build.log
-        WIX_RC=${PIPESTATUS[0]}
-        echo "=== WiX exit code: ${WIX_RC} ==="
-        if [ "$WIX_RC" -ne 0 ]; then
-          echo "ERROR: WiX build failed"
+        $ErrorActionPreference = 'Continue'
+        $version = '${{ needs.tag.outputs.version }}'
+        Set-Location installer
+        Write-Host "=== Building MSI v${version} ==="
+        $output = & wix.exe build Redball.wxs -o "../dist/Redball-${version}.msi" -ext WixToolset.UI.wixext -d "ProductVersion=${version}" 2>&1
+        $wixExit = $LASTEXITCODE
+        Write-Host "=== WiX output ==="
+        $output | ForEach-Object { Write-Host $_ }
+        Write-Host "=== WiX exit code: ${wixExit} ==="
+        if ($wixExit -ne 0) {
+          Write-Host "ERROR: WiX build failed with exit code ${wixExit}"
           exit 1
-        fi
-        cd ..
-        echo "=== Build output ==="
-        ls -la dist/
+        }
+        Set-Location ..
+        Write-Host "=== Build output ==="
+        Get-ChildItem dist/
         # Verify no external cab files
-        if ls dist/*.cab 2>/dev/null; then
-          echo "ERROR: External cab files found - EmbedCab not working"
+        $cabs = Get-ChildItem dist/*.cab -ErrorAction SilentlyContinue
+        if ($cabs) {
+          Write-Host "ERROR: External cab files found - EmbedCab not working"
           exit 1
-        fi
-        cp "dist/Redball-${VERSION}.msi" "dist/Redball.msi"
-        echo "MSI size: $(wc -c < dist/Redball.msi) bytes"
+        }
+        Write-Host "OK: No external cab files"
+        Copy-Item "dist/Redball-${version}.msi" "dist/Redball.msi"
+        $size = (Get-Item "dist/Redball.msi").Length
+        Write-Host "MSI size: ${size} bytes"
 
     - name: Upload unsigned MSI
       uses: actions/upload-artifact@v4
