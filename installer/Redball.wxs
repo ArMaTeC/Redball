@@ -42,10 +42,11 @@
                   Execute="immediate"
                   Return="asyncNoWait" />
 
-    <!-- Run after all files are installed; skip on uninstall -->
-    <InstallExecuteSequence>
-      <Custom Action="LaunchApp" After="InstallFinalize" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX AND NOT REMOVE" />
-    </InstallExecuteSequence>
+    <!-- Fire the launch action when user clicks Finish with checkbox ticked -->
+    <UI>
+      <Publish Dialog="ExitDlg" Control="Finish" Event="DoAction" Value="LaunchApp"
+              Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+    </UI>
 
     <!-- Installation layout -->
     <StandardDirectory Id="LocalAppDataFolder">
