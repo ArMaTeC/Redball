@@ -187,6 +187,8 @@ $script:config = @{
     MinimizeOnStart = $false
     BatteryAware = $false
     BatteryThreshold = 20
+    NetworkAware = $false
+    IdleDetection = $false
     AutoExitOnComplete = $false
     ScheduleEnabled = $false
     ScheduleStartTime = '09:00'
@@ -739,6 +741,8 @@ function Import-RedballConfig {
         $script:state.HeartbeatSeconds = $script:config.HeartbeatSeconds
         $script:state.BatteryAware = $script:config.BatteryAware
         $script:state.BatteryThreshold = $script:config.BatteryThreshold
+        $script:state.NetworkAware = $script:config.NetworkAware
+        $script:state.IdleDetection = $script:config.IdleDetection
 
         Write-RedballLog -Level 'INFO' -Message "Configuration loaded from: $Path"
     }
@@ -770,6 +774,8 @@ function Save-RedballConfig {
         $script:config.HeartbeatSeconds = $script:state.HeartbeatSeconds
         $script:config.BatteryAware = $script:state.BatteryAware
         $script:config.BatteryThreshold = $script:state.BatteryThreshold
+        $script:config.NetworkAware = $script:state.NetworkAware
+        $script:config.IdleDetection = $script:state.IdleDetection
 
         $configDir = Split-Path -Path $Path -Parent
         if ($configDir -and -not (Test-Path $configDir)) {
@@ -1069,6 +1075,18 @@ function Update-RedballUI {
             $script:state.HeartbeatMenuItem.Checked = $script:state.UseHeartbeatKeypress
         }
         
+        if ($script:state.BatteryMenuItem -and $script:state.BatteryMenuItem.Checked -ne $script:state.BatteryAware) {
+            $script:state.BatteryMenuItem.Checked = $script:state.BatteryAware
+        }
+        
+        if ($script:state.NetworkMenuItem -and $script:state.NetworkMenuItem.Checked -ne $script:state.NetworkAware) {
+            $script:state.NetworkMenuItem.Checked = $script:state.NetworkAware
+        }
+        
+        if ($script:state.IdleMenuItem -and $script:state.IdleMenuItem.Checked -ne $script:state.IdleDetection) {
+            $script:state.IdleMenuItem.Checked = $script:state.IdleDetection
+        }
+        
         $statusText = "Status: $detailText"
         if ($script:state.StatusMenuItem.Text -ne $statusText) {
             $script:state.StatusMenuItem.Text = $statusText
@@ -1076,6 +1094,333 @@ function Update-RedballUI {
     }
     catch {
         Write-RedballLog -Level 'WARN' -Message "UI update failed: $_"
+    }
+}
+
+function Show-RedballSettings {
+    <#
+    .SYNOPSIS
+        Displays a tabbed settings dialog for all Redball configuration options.
+    .DESCRIPTION
+        Opens a WinForms dialog with tabs for General, Power & Monitoring,
+        Schedule, and Advanced settings. Each setting includes a description.
+        Changes are saved to the config file when OK is clicked.
+    .EXAMPLE
+        Show-RedballSettings
+        Opens the settings dialog.
+    #>
+    try {
+        $form = New-Object System.Windows.Forms.Form
+        $form.Text = "Redball Settings"
+        $form.Size = New-Object System.Drawing.Size(520, 530)
+        $form.StartPosition = 'CenterScreen'
+        $form.FormBorderStyle = 'FixedDialog'
+        $form.MaximizeBox = $false
+        $form.MinimizeBox = $false
+        $form.Font = New-Object System.Drawing.Font('Segoe UI', 9)
+        $form.BackColor = [System.Drawing.Color]::FromArgb(245, 245, 245)
+
+        $tabs = New-Object System.Windows.Forms.TabControl
+        $tabs.Dock = 'Fill'
+        $tabs.Padding = New-Object System.Drawing.Point(12, 6)
+
+        # --- Helper to add a setting row ---
+        $script:settingsControls = @{}
+        $yTracker = @{}
+
+        function Add-SettingRow {
+            param($Panel, $TabKey, $Key, $Label, $Description, $Type, $Value, $Options)
+            if (-not $yTracker[$TabKey]) { $yTracker[$TabKey] = 10 }
+            $y = $yTracker[$TabKey]
+
+            $lbl = New-Object System.Windows.Forms.Label
+            $lbl.Text = $Label
+            $lbl.Font = New-Object System.Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Bold)
+            $lbl.Location = New-Object System.Drawing.Point(14, $y)
+            $lbl.AutoSize = $true
+            $Panel.Controls.Add($lbl)
+            $y += 20
+
+            $desc = New-Object System.Windows.Forms.Label
+            $desc.Text = $Description
+            $desc.ForeColor = [System.Drawing.Color]::FromArgb(100, 100, 100)
+            $desc.Location = New-Object System.Drawing.Point(14, $y)
+            $desc.Size = New-Object System.Drawing.Size(440, 18)
+            $Panel.Controls.Add($desc)
+            $y += 22
+
+            switch ($Type) {
+                'bool' {
+                    $chk = New-Object System.Windows.Forms.CheckBox
+                    $chk.Text = 'Enabled'
+                    $chk.Checked = [bool]$Value
+                    $chk.Location = New-Object System.Drawing.Point(14, $y)
+                    $chk.AutoSize = $true
+                    $Panel.Controls.Add($chk)
+                    $script:settingsControls[$Key] = $chk
+                    $y += 28
+                }
+                'number' {
+                    $nud = New-Object System.Windows.Forms.NumericUpDown
+                    $nud.Location = New-Object System.Drawing.Point(14, $y)
+                    $nud.Size = New-Object System.Drawing.Size(100, 25)
+                    $nud.Minimum = if ($Options -and $null -ne $Options.Min) { $Options.Min } else { 0 }
+                    $nud.Maximum = if ($Options -and $null -ne $Options.Max) { $Options.Max } else { 9999 }
+                    $nud.Value = [math]::Max($nud.Minimum, [math]::Min($nud.Maximum, [decimal]$Value))
+                    $Panel.Controls.Add($nud)
+                    $script:settingsControls[$Key] = $nud
+                    $y += 32
+                }
+                'text' {
+                    $txt = New-Object System.Windows.Forms.TextBox
+                    $txt.Text = [string]$Value
+                    $txt.Location = New-Object System.Drawing.Point(14, $y)
+                    $txt.Size = New-Object System.Drawing.Size(200, 25)
+                    $Panel.Controls.Add($txt)
+                    $script:settingsControls[$Key] = $txt
+                    $y += 32
+                }
+                'dropdown' {
+                    $cmb = New-Object System.Windows.Forms.ComboBox
+                    $cmb.DropDownStyle = 'DropDownList'
+                    $cmb.Location = New-Object System.Drawing.Point(14, $y)
+                    $cmb.Size = New-Object System.Drawing.Size(200, 25)
+                    if ($Options -and $Options.Items) {
+                        $Options.Items | ForEach-Object { [void]$cmb.Items.Add($_) }
+                    }
+                    $cmb.SelectedItem = [string]$Value
+                    if ($cmb.SelectedIndex -lt 0 -and $cmb.Items.Count -gt 0) { $cmb.SelectedIndex = 0 }
+                    $Panel.Controls.Add($cmb)
+                    $script:settingsControls[$Key] = $cmb
+                    $y += 32
+                }
+                'time' {
+                    $txt = New-Object System.Windows.Forms.TextBox
+                    $txt.Text = [string]$Value
+                    $txt.Location = New-Object System.Drawing.Point(14, $y)
+                    $txt.Size = New-Object System.Drawing.Size(80, 25)
+                    $Panel.Controls.Add($txt)
+                    $hintLbl = New-Object System.Windows.Forms.Label
+                    $hintLbl.Text = '(HH:mm format)'
+                    $hintLbl.ForeColor = [System.Drawing.Color]::Gray
+                    $hintLbl.Location = New-Object System.Drawing.Point(100, ($y + 3))
+                    $hintLbl.AutoSize = $true
+                    $Panel.Controls.Add($hintLbl)
+                    $script:settingsControls[$Key] = $txt
+                    $y += 32
+                }
+                'days' {
+                    $clb = New-Object System.Windows.Forms.CheckedListBox
+                    $clb.Location = New-Object System.Drawing.Point(14, $y)
+                    $clb.Size = New-Object System.Drawing.Size(200, 112)
+                    $clb.CheckOnClick = $true
+                    $allDays = @('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                    foreach ($day in $allDays) {
+                        $idx = $clb.Items.Add($day)
+                        if ($Value -contains $day) {
+                            $clb.SetItemChecked($idx, $true)
+                        }
+                    }
+                    $Panel.Controls.Add($clb)
+                    $script:settingsControls[$Key] = $clb
+                    $y += 120
+                }
+            }
+            $y += 6
+            $yTracker[$TabKey] = $y
+        }
+
+        # ============ GENERAL TAB ============
+        $tabGeneral = New-Object System.Windows.Forms.TabPage
+        $tabGeneral.Text = 'General'
+        $tabGeneral.AutoScroll = $true
+        $panelGeneral = New-Object System.Windows.Forms.Panel
+        $panelGeneral.Dock = 'Fill'
+        $panelGeneral.AutoScroll = $true
+        $tabGeneral.Controls.Add($panelGeneral)
+
+        Add-SettingRow $panelGeneral 'General' 'DefaultDuration' 'Default Duration (minutes)' `
+            'Default number of minutes for timed keep-awake mode.' 'number' $script:config.DefaultDuration @{Min=1;Max=720}
+        Add-SettingRow $panelGeneral 'General' 'HeartbeatSeconds' 'Heartbeat Interval (seconds)' `
+            'How often to send the F15 keypress and refresh the keep-awake state.' 'number' $script:config.HeartbeatSeconds @{Min=10;Max=300}
+        Add-SettingRow $panelGeneral 'General' 'ShowBalloonOnStart' 'Show Notification on Start' `
+            'Display a tray notification when Redball starts keeping your PC awake.' 'bool' $script:config.ShowBalloonOnStart
+        Add-SettingRow $panelGeneral 'General' 'MinimizeOnStart' 'Start Minimized' `
+            'Start Redball minimized to the system tray without showing a window.' 'bool' $script:config.MinimizeOnStart
+        Add-SettingRow $panelGeneral 'General' 'AutoExitOnComplete' 'Exit When Timer Completes' `
+            'Automatically close Redball when a timed keep-awake period finishes.' 'bool' $script:config.AutoExitOnComplete
+        Add-SettingRow $panelGeneral 'General' 'Locale' 'Language' `
+            'Display language for menus and notifications.' 'dropdown' $script:config.Locale @{Items=@('en','es','fr','de')}
+
+        $tabs.TabPages.Add($tabGeneral)
+
+        # ============ POWER & MONITORING TAB ============
+        $tabPower = New-Object System.Windows.Forms.TabPage
+        $tabPower.Text = 'Power && Monitoring'
+        $tabPower.AutoScroll = $true
+        $panelPower = New-Object System.Windows.Forms.Panel
+        $panelPower.Dock = 'Fill'
+        $panelPower.AutoScroll = $true
+        $tabPower.Controls.Add($panelPower)
+
+        Add-SettingRow $panelPower 'Power' 'PreventDisplaySleep' 'Prevent Display Sleep' `
+            'Keep the display on in addition to preventing system sleep.' 'bool' $script:config.PreventDisplaySleep
+        Add-SettingRow $panelPower 'Power' 'UseHeartbeatKeypress' 'Use F15 Heartbeat Keypress' `
+            'Periodically send an invisible F15 key to prevent idle detection by apps like Teams.' 'bool' $script:config.UseHeartbeatKeypress
+        Add-SettingRow $panelPower 'Power' 'BatteryAware' 'Battery-Aware Mode' `
+            'Automatically pause keep-awake when battery drops below the threshold.' 'bool' $script:state.BatteryAware
+        Add-SettingRow $panelPower 'Power' 'BatteryThreshold' 'Battery Threshold (%)' `
+            'Battery percentage at which to auto-pause when on battery power.' 'number' $script:state.BatteryThreshold @{Min=5;Max=95}
+        Add-SettingRow $panelPower 'Power' 'NetworkAware' 'Network-Aware Mode' `
+            'Automatically pause keep-awake when the network connection is lost.' 'bool' $script:state.NetworkAware
+        Add-SettingRow $panelPower 'Power' 'IdleDetection' 'Idle Detection (30 min)' `
+            'Automatically pause when no mouse or keyboard input for 30 minutes.' 'bool' $script:state.IdleDetection
+        Add-SettingRow $panelPower 'Power' 'PresentationModeDetection' 'Presentation Mode Detection' `
+            'Auto-activate keep-awake when PowerPoint or Teams presenting is detected.' 'bool' $script:config.PresentationModeDetection
+
+        $tabs.TabPages.Add($tabPower)
+
+        # ============ SCHEDULE TAB ============
+        $tabSchedule = New-Object System.Windows.Forms.TabPage
+        $tabSchedule.Text = 'Schedule'
+        $tabSchedule.AutoScroll = $true
+        $panelSchedule = New-Object System.Windows.Forms.Panel
+        $panelSchedule.Dock = 'Fill'
+        $panelSchedule.AutoScroll = $true
+        $tabSchedule.Controls.Add($panelSchedule)
+
+        Add-SettingRow $panelSchedule 'Schedule' 'ScheduleEnabled' 'Enable Scheduled Operation' `
+            'Automatically activate and deactivate keep-awake on a daily schedule.' 'bool' $script:config.ScheduleEnabled
+        Add-SettingRow $panelSchedule 'Schedule' 'ScheduleStartTime' 'Start Time' `
+            'Time of day to automatically start keeping the PC awake.' 'time' $script:config.ScheduleStartTime
+        Add-SettingRow $panelSchedule 'Schedule' 'ScheduleStopTime' 'Stop Time' `
+            'Time of day to automatically stop keeping the PC awake.' 'time' $script:config.ScheduleStopTime
+        Add-SettingRow $panelSchedule 'Schedule' 'ScheduleDays' 'Active Days' `
+            'Which days of the week the schedule should be active.' 'days' $script:config.ScheduleDays
+
+        $tabs.TabPages.Add($tabSchedule)
+
+        # ============ ADVANCED TAB ============
+        $tabAdvanced = New-Object System.Windows.Forms.TabPage
+        $tabAdvanced.Text = 'Advanced'
+        $tabAdvanced.AutoScroll = $true
+        $panelAdvanced = New-Object System.Windows.Forms.Panel
+        $panelAdvanced.Dock = 'Fill'
+        $panelAdvanced.AutoScroll = $true
+        $tabAdvanced.Controls.Add($panelAdvanced)
+
+        Add-SettingRow $panelAdvanced 'Advanced' 'MaxLogSizeMB' 'Max Log File Size (MB)' `
+            'Log file is rotated when it exceeds this size. Old logs are kept as backups.' 'number' $script:config.MaxLogSizeMB @{Min=1;Max=100}
+        Add-SettingRow $panelAdvanced 'Advanced' 'ProcessIsolation' 'Process Isolation' `
+            'Run the keep-awake API call in a separate runspace for extra reliability.' 'bool' $script:config.ProcessIsolation
+        Add-SettingRow $panelAdvanced 'Advanced' 'EnablePerformanceMetrics' 'Performance Metrics' `
+            'Track internal performance metrics (CPU, memory) for diagnostics.' 'bool' $script:config.EnablePerformanceMetrics
+        Add-SettingRow $panelAdvanced 'Advanced' 'EnableTelemetry' 'Anonymous Telemetry' `
+            'Send anonymous usage statistics to help improve Redball.' 'bool' $script:config.EnableTelemetry
+        Add-SettingRow $panelAdvanced 'Advanced' 'UpdateChannel' 'Update Channel' `
+            'Which release channel to check for updates.' 'dropdown' $script:config.UpdateChannel @{Items=@('stable','beta')}
+        Add-SettingRow $panelAdvanced 'Advanced' 'VerifyUpdateSignature' 'Verify Update Signatures' `
+            'Require valid digital signatures on downloaded updates before installing.' 'bool' $script:config.VerifyUpdateSignature
+        Add-SettingRow $panelAdvanced 'Advanced' 'UpdateRepoOwner' 'Update Repository Owner' `
+            'GitHub account or organization that hosts Redball releases.' 'text' $script:config.UpdateRepoOwner
+        Add-SettingRow $panelAdvanced 'Advanced' 'UpdateRepoName' 'Update Repository Name' `
+            'GitHub repository name used for checking updates.' 'text' $script:config.UpdateRepoName
+
+        $tabs.TabPages.Add($tabAdvanced)
+
+        # ============ BUTTON PANEL ============
+        $buttonPanel = New-Object System.Windows.Forms.Panel
+        $buttonPanel.Dock = 'Bottom'
+        $buttonPanel.Height = 50
+
+        $okButton = New-Object System.Windows.Forms.Button
+        $okButton.Text = 'OK'
+        $okButton.Size = New-Object System.Drawing.Size(90, 30)
+        $okButton.Location = New-Object System.Drawing.Point(310, 10)
+        $okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+        $okButton.FlatStyle = 'Flat'
+        $okButton.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
+        $okButton.ForeColor = [System.Drawing.Color]::White
+        $form.AcceptButton = $okButton
+
+        $cancelButton = New-Object System.Windows.Forms.Button
+        $cancelButton.Text = 'Cancel'
+        $cancelButton.Size = New-Object System.Drawing.Size(90, 30)
+        $cancelButton.Location = New-Object System.Drawing.Point(408, 10)
+        $cancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+        $cancelButton.FlatStyle = 'Flat'
+        $form.CancelButton = $cancelButton
+
+        $buttonPanel.Controls.Add($okButton)
+        $buttonPanel.Controls.Add($cancelButton)
+
+        $form.Controls.Add($tabs)
+        $form.Controls.Add($buttonPanel)
+
+        $result = $form.ShowDialog()
+
+        if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+            # Apply General settings
+            $script:config.DefaultDuration = [int]$script:settingsControls['DefaultDuration'].Value
+            $script:config.HeartbeatSeconds = [int]$script:settingsControls['HeartbeatSeconds'].Value
+            $script:config.ShowBalloonOnStart = $script:settingsControls['ShowBalloonOnStart'].Checked
+            $script:config.MinimizeOnStart = $script:settingsControls['MinimizeOnStart'].Checked
+            $script:config.AutoExitOnComplete = $script:settingsControls['AutoExitOnComplete'].Checked
+            $script:config.Locale = $script:settingsControls['Locale'].SelectedItem
+
+            # Apply Power & Monitoring settings
+            $script:config.PreventDisplaySleep = $script:settingsControls['PreventDisplaySleep'].Checked
+            $script:state.PreventDisplaySleep = $script:config.PreventDisplaySleep
+            $script:config.UseHeartbeatKeypress = $script:settingsControls['UseHeartbeatKeypress'].Checked
+            $script:state.UseHeartbeatKeypress = $script:config.UseHeartbeatKeypress
+            $script:config.BatteryAware = $script:settingsControls['BatteryAware'].Checked
+            $script:state.BatteryAware = $script:config.BatteryAware
+            $script:config.BatteryThreshold = [int]$script:settingsControls['BatteryThreshold'].Value
+            $script:state.BatteryThreshold = $script:config.BatteryThreshold
+            $script:config.NetworkAware = $script:settingsControls['NetworkAware'].Checked
+            $script:state.NetworkAware = $script:config.NetworkAware
+            $script:config.IdleDetection = $script:settingsControls['IdleDetection'].Checked
+            $script:state.IdleDetection = $script:config.IdleDetection
+            $script:config.PresentationModeDetection = $script:settingsControls['PresentationModeDetection'].Checked
+
+            # Apply Schedule settings
+            $script:config.ScheduleEnabled = $script:settingsControls['ScheduleEnabled'].Checked
+            $script:config.ScheduleStartTime = $script:settingsControls['ScheduleStartTime'].Text
+            $script:config.ScheduleStopTime = $script:settingsControls['ScheduleStopTime'].Text
+            $checkedDays = @()
+            $daysControl = $script:settingsControls['ScheduleDays']
+            for ($i = 0; $i -lt $daysControl.Items.Count; $i++) {
+                if ($daysControl.GetItemChecked($i)) {
+                    $checkedDays += $daysControl.Items[$i]
+                }
+            }
+            $script:config.ScheduleDays = $checkedDays
+
+            # Apply Advanced settings
+            $script:config.MaxLogSizeMB = [int]$script:settingsControls['MaxLogSizeMB'].Value
+            $script:config.ProcessIsolation = $script:settingsControls['ProcessIsolation'].Checked
+            $script:config.EnablePerformanceMetrics = $script:settingsControls['EnablePerformanceMetrics'].Checked
+            $script:config.EnableTelemetry = $script:settingsControls['EnableTelemetry'].Checked
+            $script:config.UpdateChannel = $script:settingsControls['UpdateChannel'].SelectedItem
+            $script:config.VerifyUpdateSignature = $script:settingsControls['VerifyUpdateSignature'].Checked
+            $script:config.UpdateRepoOwner = $script:settingsControls['UpdateRepoOwner'].Text
+            $script:config.UpdateRepoName = $script:settingsControls['UpdateRepoName'].Text
+
+            # Sync heartbeat interval to state and running timer
+            $script:state.HeartbeatSeconds = $script:config.HeartbeatSeconds
+            if ($script:state.HeartbeatTimer) {
+                $script:state.HeartbeatTimer.Interval = $script:state.HeartbeatSeconds * 1000
+            }
+
+            Save-RedballConfig -Path $ConfigPath
+            Update-RedballUI
+            Write-RedballLog -Level 'INFO' -Message 'Settings updated via dialog.'
+        }
+
+        $form.Dispose()
+    }
+    catch {
+        Write-RedballLog -Level 'ERROR' -Message "Settings dialog error: $_"
     }
 }
 
@@ -1753,6 +2098,8 @@ $batteryMenuItem.add_Click({
     try {
         if ($script:state.IsShuttingDown) { return }
         $script:state.BatteryAware = $batteryMenuItem.Checked
+        $script:config.BatteryAware = $batteryMenuItem.Checked
+        Save-RedballConfig -Path $ConfigPath
         Write-RedballLog -Level 'INFO' -Message "Battery-aware mode: $($script:state.BatteryAware)"
         Update-RedballUI
     }
@@ -1799,6 +2146,8 @@ $networkMenuItem.add_Click({
     try {
         if ($script:state.IsShuttingDown) { return }
         $script:state.NetworkAware = $networkMenuItem.Checked
+        $script:config.NetworkAware = $networkMenuItem.Checked
+        Save-RedballConfig -Path $ConfigPath
         Write-RedballLog -Level 'INFO' -Message "Network-aware mode: $($script:state.NetworkAware)"
         Update-RedballUI
     }
@@ -1820,6 +2169,8 @@ $idleMenuItem.add_Click({
     try {
         if ($script:state.IsShuttingDown) { return }
         $script:state.IdleDetection = $idleMenuItem.Checked
+        $script:config.IdleDetection = $idleMenuItem.Checked
+        Save-RedballConfig -Path $ConfigPath
         Write-RedballLog -Level 'INFO' -Message "Idle detection: $($script:state.IdleDetection)"
         Update-RedballUI
     }
@@ -1829,6 +2180,23 @@ $idleMenuItem.add_Click({
 })
 $script:state.IdleMenuItem = $idleMenuItem
 [void]$contextMenu.Items.Add($idleMenuItem)
+
+[void]$contextMenu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator))
+
+$settingsMenuItem = New-Object System.Windows.Forms.ToolStripMenuItem 'Settings...'
+$settingsMenuItem.ShortcutKeyDisplayString = 'G'
+$settingsMenuItem.AccessibleName = 'Open Settings Dialog'
+$settingsMenuItem.AccessibleDescription = 'Open the full settings dialog to configure all Redball options'
+$settingsMenuItem.add_Click({
+    try {
+        if ($script:state.IsShuttingDown) { return }
+        Show-RedballSettings
+    }
+    catch {
+        Write-RedballLog -Level 'WARN' -Message "Settings menu error: $_"
+    }
+})
+[void]$contextMenu.Items.Add($settingsMenuItem)
 
 [void]$contextMenu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator))
 [void]$contextMenu.Items.Add($exitMenuItem)

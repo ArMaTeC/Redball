@@ -1,0 +1,148 @@
+name: Build & Sign Release
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Redball.ps1'
+      - 'installer/**'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  actions: read
+
+jobs:
+  tag:
+    name: Auto-Tag Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tag.outputs.VERSION }}
+      tag: ${{ steps.tag.outputs.TAG }}
+      created: ${{ steps.tag.outputs.CREATED }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Extract version and create tag
+      id: tag
+      shell: bash
+      run: |
+        # Extract version from Redball.ps1
+        VERSION=$(grep -oP "VERSION = '\K[\d.]+" Redball.ps1 || echo "2.0.0")
+        TAG="v${VERSION}"
+        echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+
+        # Check if this tag already exists
+        if git rev-parse "$TAG" >/dev/null 2>&1; then
+          echo "Tag $TAG already exists — skipping."
+          echo "CREATED=false" >> "$GITHUB_OUTPUT"
+        else
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+          echo "Created and pushed tag: $TAG"
+          echo "CREATED=true" >> "$GITHUB_OUTPUT"
+        fi
+
+  build:
+    name: Build Installer
+    needs: tag
+    if: needs.tag.outputs.created == 'true'
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install WiX Toolset
+      shell: pwsh
+      run: |
+        dotnet tool install --global wix --version 4.0.5
+        wix extension add WixToolset.UI.wixext/4.0.5 -g
+
+    - name: Build MSI
+      shell: pwsh
+      run: |
+        $version = '${{ needs.tag.outputs.version }}'
+        & ./installer/Build-MSI.ps1 -Version $version
+
+    - name: Prepare signing artifact
+      shell: pwsh
+      run: |
+        $version = '${{ needs.tag.outputs.version }}'
+        $msiSource = "./dist/Redball-$version.msi"
+        if (-not (Test-Path $msiSource)) {
+            $msiSource = './dist/Redball.msi'
+        }
+        Copy-Item $msiSource './dist/Redball.msi' -Force -ErrorAction SilentlyContinue
+
+    - name: Upload unsigned MSI
+      uses: actions/upload-artifact@v4
+      with:
+        name: redball-unsigned
+        path: ./dist/Redball.msi
+        retention-days: 7
+
+  sign:
+    name: Sign with SignPath
+    needs: [tag, build]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download unsigned artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: redball-unsigned
+        path: ./artifacts
+
+    - name: Submit MSI for signing
+      uses: signpath/github-action-submit-signing-request@v1
+      with:
+        api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+        organization-id: '${{ secrets.SIGNPATH_ORG_ID }}'
+        project-slug: 'redball'
+        signing-policy-slug: 'release-signing'
+        artifact-configuration-slug: 'Redball-MSI'
+        github-artifact-id: 'redball-unsigned'
+        wait-for-completion: true
+        output-artifact-directory: './signed'
+        wait-for-completion-timeout-in-seconds: 600
+
+    - name: Upload signed artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: redball-signed
+        path: ./signed/
+        retention-days: 90
+
+  release:
+    name: Create GitHub Release
+    needs: [tag, sign]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download signed artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: redball-signed
+        path: ./release
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ needs.tag.outputs.tag }}
+        files: ./release/Redball.msi
+        generate_release_notes: true
+        draft: false
+        prerelease: false
