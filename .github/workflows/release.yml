@@ -73,6 +73,8 @@ jobs:
     needs: tag
     if: needs.tag.outputs.created == 'true'
     runs-on: windows-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
 
     steps:
     - name: Checkout repository
@@ -131,6 +133,7 @@ jobs:
         echo "OK: MSI produced ($(wc -c < dist/Redball.msi) bytes)"
 
     - name: Upload unsigned MSI
+      id: upload
       uses: actions/upload-artifact@v4
       with:
         name: redball-unsigned
@@ -138,9 +141,40 @@ jobs:
         retention-days: 7
         if-no-files-found: error
 
+  sign:
+    name: Sign MSI
+    needs: [tag, build]
+    runs-on: ubuntu-latest
+    if: needs.tag.outputs.created == 'true'
+    permissions:
+      id-token: write
+      actions: read
+
+    steps:
+    - name: Submit signing request to SignPath
+      uses: signpath/github-action-submit-signing-request@v1
+      with:
+        api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+        organization-id: '54610b87-ea22-4e3b-90ae-34fba7b90267'
+        project-slug: 'redball'
+        signing-policy-slug: 'redball'
+        artifact-configuration-slug: 'Redball-MSI'
+        github-artifact-id: '${{ needs.build.outputs.artifact-id }}'
+        wait-for-completion: true
+        output-artifact-directory: './signed'
+        wait-for-completion-timeout-in-seconds: 600
+
+    - name: Upload signed MSI
+      uses: actions/upload-artifact@v4
+      with:
+        name: redball-signed
+        path: ./signed/Redball.msi
+        retention-days: 7
+        if-no-files-found: error
+
   release:
     name: Create GitHub Release
-    needs: [tag, build]
+    needs: [tag, sign]
     runs-on: ubuntu-latest
     if: needs.tag.outputs.created == 'true'
 
@@ -148,10 +182,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Download unsigned MSI
+    - name: Download signed MSI
       uses: actions/download-artifact@v4
       with:
-        name: redball-unsigned
+        name: redball-signed
         path: ./release
 
     - name: Verify MSI exists
@@ -159,7 +193,7 @@ jobs:
       run: |
         ls -la ./release/
         if [ ! -f "./release/Redball.msi" ]; then
-          echo "ERROR: Redball.msi not found"
+          echo "ERROR: Signed Redball.msi not found"
           exit 1
         fi
 
