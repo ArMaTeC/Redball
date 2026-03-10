@@ -84,45 +84,31 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Install WiX Toolset
-      shell: powershell
+      shell: cmd
       run: |
         dotnet tool install --global wix --version 4.0.5
-        $wixDir = Join-Path $env:USERPROFILE '.dotnet\tools'
-        # Persist WiX path for all subsequent steps
-        Add-Content -Path $env:GITHUB_PATH -Value $wixDir
-        $env:PATH = "$wixDir;$env:PATH"
-        # Install WiX UI extension
-        & (Join-Path $wixDir 'wix.exe') extension add -g WixToolset.UI.wixext
-        # Verify
-        & (Join-Path $wixDir 'wix.exe') --version
-        & (Join-Path $wixDir 'wix.exe') extension list -g
+        "%USERPROFILE%\.dotnet\tools\wix.exe" extension add -g WixToolset.UI.wixext
+        "%USERPROFILE%\.dotnet\tools\wix.exe" --version
+        "%USERPROFILE%\.dotnet\tools\wix.exe" extension list -g
 
     - name: Build MSI
-      shell: powershell
+      shell: cmd
       run: |
-        $version = '${{ needs.tag.outputs.version }}'
-        Write-Host "Building MSI version $version"
-        try {
-          & .\installer\Build-MSI.ps1 -Version $version
-        }
-        catch {
-          Write-Host "BUILD ERROR: $_"
-          Write-Host $_.ScriptStackTrace
-          exit 1
-        }
-        if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
-          Write-Host "Build-MSI.ps1 exited with code $LASTEXITCODE"
-          exit $LASTEXITCODE
-        }
-        # Verify MSI output
-        $msi = Get-ChildItem .\dist\*.msi -ErrorAction SilentlyContinue | Select-Object -First 1
-        if (-not $msi) {
-          Write-Host "ERROR: No MSI found in dist/"
-          Get-ChildItem .\dist\ -ErrorAction SilentlyContinue
-          exit 1
-        }
-        Write-Host "MSI built: $($msi.FullName) ($($msi.Length) bytes)"
-        Copy-Item $msi.FullName '.\dist\Redball.msi' -Force
+        set VERSION=${{ needs.tag.outputs.version }}
+        echo Building MSI for version %VERSION%
+        if not exist dist mkdir dist
+        set WIX=%USERPROFILE%\.dotnet\tools\wix.exe
+        echo Using WiX at: %WIX%
+        echo Files in installer directory:
+        dir installer\
+        "%WIX%" build installer\Redball.wxs -o dist\Redball-%VERSION%.msi -ext WixToolset.UI.wixext -d ProductVersion=%VERSION%
+        if %ERRORLEVEL% neq 0 (
+          echo WiX build failed with error %ERRORLEVEL%
+          exit /b %ERRORLEVEL%
+        )
+        echo Build succeeded
+        copy "dist\Redball-%VERSION%.msi" "dist\Redball.msi"
+        dir dist\
 
     - name: Upload unsigned MSI
       uses: actions/upload-artifact@v4
