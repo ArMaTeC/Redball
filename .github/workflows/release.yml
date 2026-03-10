@@ -188,14 +188,14 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Download signed MSI
-      if: needs.sign.result == 'success'
+      if: needs.sign.outputs.signed == 'true'
       uses: actions/download-artifact@v4
       with:
         name: redball-signed
         path: ./release
 
     - name: Download unsigned MSI (fallback)
-      if: needs.sign.result != 'success'
+      if: needs.sign.outputs.signed != 'true'
       uses: actions/download-artifact@v4
       with:
         name: redball-unsigned
@@ -205,7 +205,7 @@ jobs:
       shell: bash
       run: |
         ls -la ./release/
-        SIGNED="${{ needs.sign.result == 'success' && 'SIGNED' || 'UNSIGNED' }}"
+        SIGNED="${{ needs.sign.outputs.signed == 'true' && 'SIGNED' || 'UNSIGNED' }}"
         echo "MSI is ${SIGNED}"
         if [ ! -f "./release/Redball.msi" ]; then
           echo "ERROR: Redball.msi not found"
