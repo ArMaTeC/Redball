@@ -57,6 +57,8 @@ jobs:
     needs: tag
     if: needs.tag.outputs.created == 'true'
     runs-on: windows-latest
+    outputs:
+      artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
 
     steps:
     - name: Checkout repository
@@ -66,13 +68,39 @@ jobs:
       shell: pwsh
       run: |
         dotnet tool install --global wix --version 4.0.5
-        wix extension add WixToolset.UI.wixext/4.0.5 -g
+        # Verify installation and add to PATH if needed
+        $wixPath = Join-Path $env:USERPROFILE '.dotnet\tools'
+        if ($env:PATH -notlike "*$wixPath*") {
+          $env:PATH = "$wixPath;$env:PATH"
+          echo "$wixPath" | Out-File -FilePath $env:GITHUB_PATH -Append
+        }
+        # Verify wix is accessible
+        $wix = Get-Command wix.exe -ErrorAction SilentlyContinue
+        if (-not $wix) {
+          throw "wix.exe not found in PATH after installation"
+        }
+        Write-Host "WiX version: $(wix.exe --version)"
 
     - name: Build MSI
       shell: pwsh
       run: |
         $version = '${{ needs.tag.outputs.version }}'
+        Write-Host "Building MSI for version: $version"
         & ./installer/Build-MSI.ps1 -Version $version
+        if ($LASTEXITCODE -ne 0) {
+          throw "MSI build failed with exit code $LASTEXITCODE"
+        }
+        # Verify MSI was created
+        $msiPath = "./dist/Redball-$version.msi"
+        if (-not (Test-Path $msiPath)) {
+          $msiPath = "./dist/Redball.msi"
+        }
+        if (Test-Path $msiPath) {
+          Write-Host "MSI created successfully: $msiPath"
+          Get-Item $msiPath | Select-Object Name, Length, LastWriteTime
+        } else {
+          throw "MSI file not found after build"
+        }
 
     - name: Prepare signing artifact
       shell: pwsh
@@ -86,10 +114,12 @@ jobs:
 
     - name: Upload unsigned MSI
       uses: actions/upload-artifact@v4
+      id: upload-artifact
       with:
         name: redball-unsigned
         path: ./dist/Redball.msi
         retention-days: 7
+        if-no-files-found: error
 
   sign:
     name: Sign with SignPath
@@ -111,7 +141,7 @@ jobs:
         project-slug: 'redball'
         signing-policy-slug: 'release-signing'
         artifact-configuration-slug: 'Redball-MSI'
-        github-artifact-id: 'redball-unsigned'
+        github-artifact-id: '${{ needs.build.outputs.artifact-id }}'
         wait-for-completion: true
         output-artifact-directory: './signed'
         wait-for-completion-timeout-in-seconds: 600
