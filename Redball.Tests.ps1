@@ -21,14 +21,26 @@ BeforeAll {
 
     $functionAsts = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
     foreach ($functionAst in $functionAsts) {
-        Invoke-Expression $functionAst.Extent.Text
+        try { Invoke-Expression $functionAst.Extent.Text }
+        catch { Write-Warning "Failed to load function $($functionAst.Name): $_" }
     }
 
     # Initialize TypeThing themes for theme tests (script-level variable not loaded by AST function extractor)
-    $script:TypeThingThemes = @{
-        light = @{ Background = [System.Drawing.Color]::FromArgb(245, 245, 245); Surface = [System.Drawing.Color]::White; Text = [System.Drawing.Color]::FromArgb(33, 33, 33); Accent = [System.Drawing.Color]::FromArgb(0, 120, 212); FontName = 'Segoe UI'; FontSize = 11 }
-        dark = @{ Background = [System.Drawing.Color]::FromArgb(30, 30, 30); Surface = [System.Drawing.Color]::FromArgb(45, 45, 45); Text = [System.Drawing.Color]::FromArgb(204, 204, 204); Accent = [System.Drawing.Color]::FromArgb(0, 120, 212); FontName = 'Segoe UI'; FontSize = 11 }
-        hacker = @{ Background = [System.Drawing.Color]::Black; Surface = [System.Drawing.Color]::FromArgb(10, 10, 10); Text = [System.Drawing.Color]::FromArgb(0, 255, 0); Accent = [System.Drawing.Color]::FromArgb(0, 200, 0); FontName = 'Consolas'; FontSize = 11 }
+    # Use try/catch for System.Drawing types which may not be available on headless CI
+    try {
+        $script:TypeThingThemes = @{
+            light = @{ Background = [System.Drawing.Color]::FromArgb(245, 245, 245); Surface = [System.Drawing.Color]::White; Text = [System.Drawing.Color]::FromArgb(33, 33, 33); Accent = [System.Drawing.Color]::FromArgb(0, 120, 212); FontName = 'Segoe UI'; FontSize = 11 }
+            dark = @{ Background = [System.Drawing.Color]::FromArgb(30, 30, 30); Surface = [System.Drawing.Color]::FromArgb(45, 45, 45); Text = [System.Drawing.Color]::FromArgb(204, 204, 204); Accent = [System.Drawing.Color]::FromArgb(0, 120, 212); FontName = 'Segoe UI'; FontSize = 11 }
+            hacker = @{ Background = [System.Drawing.Color]::Black; Surface = [System.Drawing.Color]::FromArgb(10, 10, 10); Text = [System.Drawing.Color]::FromArgb(0, 255, 0); Accent = [System.Drawing.Color]::FromArgb(0, 200, 0); FontName = 'Consolas'; FontSize = 11 }
+        }
+    }
+    catch {
+        # Fallback without System.Drawing types for headless CI
+        $script:TypeThingThemes = @{
+            light = @{ Background = 'LightGray'; Surface = 'White'; Text = 'Black'; Accent = 'Blue'; FontName = 'Segoe UI'; FontSize = 11 }
+            dark = @{ Background = 'DarkGray'; Surface = 'Gray'; Text = 'White'; Accent = 'Blue'; FontName = 'Segoe UI'; FontSize = 11 }
+            hacker = @{ Background = 'Black'; Surface = 'Black'; Text = 'Green'; Accent = 'Green'; FontName = 'Consolas'; FontSize = 11 }
+        }
     }
 
     if (-not (Get-Command Import-RedballConfig -ErrorAction SilentlyContinue)) {
