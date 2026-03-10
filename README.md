@@ -4,7 +4,7 @@
 [![PS7 Compatible](https://img.shields.io/badge/PowerShell_7-Compatible-blueviolet.svg)](https://github.com/PowerShell/PowerShell)
 [![Windows](https://img.shields.io/badge/Platform-Windows_8.1%2B-0078D6.svg)](https://www.microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/karl-lawrence/Redball/release.yml?label=Build)](../../actions/workflows/release.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/ArMaTeC/Redball/release.yml?label=Build)](https://github.com/ArMaTeC/Redball/actions/workflows/release.yml)
 
 > A system tray utility to prevent Windows from sleeping, with style.
 
@@ -12,7 +12,7 @@ Redball is a PowerShell-based system tray application that keeps your Windows co
 
 ![Redball Icon](installer/redball.png)
 
-> **[Full Documentation Wiki](wiki/Home.md)** — Comprehensive guides for every feature, function, and configuration option.
+> **[Full Documentation Wiki](https://github.com/ArMaTeC/Redball/wiki)** — Comprehensive guides for every feature, function, and configuration option.
 
 ## Features
 
@@ -64,7 +64,7 @@ Redball is a PowerShell-based system tray application that keeps your Windows co
 
 ### Option A — MSI Installer (Recommended)
 
-Download the latest `Redball.msi` from the [Releases](../../releases) page and run it. The installer provides:
+Download the latest `Redball.msi` from the [Releases](https://github.com/ArMaTeC/Redball/releases) page and run it. The installer provides:
 
 - Per-user installation to `%LocalAppData%\Redball`
 - Start Menu and Desktop shortcuts
@@ -580,7 +580,7 @@ This happens when running from ISE or VS Code without saving. Either:
 ### Development Setup
 
 ```powershell
-git clone https://github.com/karl-lawrence/Redball.git
+git clone https://github.com/ArMaTeC/Redball.git
 cd Redball
 
 # Run in development mode
@@ -638,6 +638,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ## Support
 
-- [Report bugs](../../issues)
-- [Request features](../../issues)
-- [Discussions](../../discussions)
+- [Report bugs](https://github.com/ArMaTeC/Redball/issues)
+- [Request features](https://github.com/ArMaTeC/Redball/issues)
+- [Discussions](https://github.com/ArMaTeC/Redball/discussions)

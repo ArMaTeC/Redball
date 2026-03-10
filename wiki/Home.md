@@ -33,4 +33,4 @@ Welcome to the Redball wiki — the complete documentation for every feature, fu
 
 ## Version
 
-Current version: **2.0.29**
+Current version: **2.0.30**
