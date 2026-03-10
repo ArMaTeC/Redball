@@ -76,7 +76,7 @@ param(
     [switch]$ExitOnComplete
 )
 
-$script:VERSION = '2.0.38'
+$script:VERSION = '2.0.39'
 $script:APP_NAME = 'Redball'
 $script:IsPS7 = $PSVersionTable.PSVersion.Major -ge 7
 
@@ -4416,6 +4416,8 @@ function Install-RedballUpdate {
 
         if ($RestartAfterUpdate) {
             Start-Process -FilePath 'powershell.exe' -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`""
+            # Exit current instance cleanly
+            Exit-Application
         }
 
         return $true
