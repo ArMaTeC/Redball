@@ -567,6 +567,38 @@ $script:embeddedLocales = @'
     "ErrorSetActiveState": "Aktivierungsstatus fehlgeschlagen",
     "ErrorSwitchState": "Statuswechsel fehlgeschlagen",
     "ErrorTimedAwake": "Timer-Start fehlgeschlagen"
+  },
+  "bl": {
+    "AppName": "Redball",
+    "TrayTooltipActive": "Redball (Jacked In)",
+    "TrayTooltipPaused": "Redball (Offline)",
+    "MenuPause": "Pull the Plug",
+    "MenuResume": "Jack Back In",
+    "MenuPreventDisplaySleep": "Keep The Lights On",
+    "MenuUseF15Heartbeat": "Synth Pulse F15",
+    "MenuStayAwakeFor": "Run For",
+    "MenuStayAwakeIndefinitely": "Run Until Flatline",
+    "MenuExit": "Kill Process",
+    "StatusActive": "Online",
+    "StatusPaused": "Offline",
+    "StatusDisplayOn": "Lit Up",
+    "StatusDisplayNormal": "Standard",
+    "StatusF15On": "Pulse On",
+    "StatusF15Off": "No Pulse",
+    "StatusMinLeft": "ticks left",
+    "StatusUnavailable": "Signal Lost",
+    "BalloonStarted": "Redball jacked in - keeping the system lit",
+    "BalloonPaused": "Redball pulled the plug",
+    "BalloonResumed": "Redball back online",
+    "LogStarted": "Redball initialized",
+    "LogPaused": "Redball offline",
+    "LogResumed": "Redball reconnected",
+    "LogExited": "Redball terminated",
+    "ErrorIconCreate": "Icon construct failed",
+    "ErrorUIUpdate": "Interface glitch",
+    "ErrorSetActiveState": "Failed to bring online",
+    "ErrorSwitchState": "State transition error",
+    "ErrorTimedAwake": "Timer protocol failed"
   }
 }
 '@
@@ -2273,7 +2305,7 @@ function Show-TypeThingSettings {
         $grpSpeed.Location = New-Object System.Drawing.Point(10, $y)
         $grpSpeed.Size = New-Object System.Drawing.Size(410, 145)
         $grpSpeed.ForeColor = $theme.Accent
-        $grpSpeed.Font = $boldFont
+        $grpSpeed.Font = $headerFont
         $panel.Controls.Add($grpSpeed)
 
         $lblMinDelay = New-Object System.Windows.Forms.Label
@@ -2354,7 +2386,7 @@ function Show-TypeThingSettings {
         $grpBehaviour.Location = New-Object System.Drawing.Point(10, $y)
         $grpBehaviour.Size = New-Object System.Drawing.Size(410, 155)
         $grpBehaviour.ForeColor = $theme.Accent
-        $grpBehaviour.Font = $boldFont
+        $grpBehaviour.Font = $headerFont
         $panel.Controls.Add($grpBehaviour)
 
         $chkRandomPauses = New-Object System.Windows.Forms.CheckBox
@@ -2426,7 +2458,7 @@ function Show-TypeThingSettings {
         $grpHotkeys.Location = New-Object System.Drawing.Point(10, $y)
         $grpHotkeys.Size = New-Object System.Drawing.Size(410, 120)
         $grpHotkeys.ForeColor = $theme.Accent
-        $grpHotkeys.Font = $boldFont
+        $grpHotkeys.Font = $headerFont
         $panel.Controls.Add($grpHotkeys)
 
         $lblStartHk = New-Object System.Windows.Forms.Label
@@ -2446,7 +2478,7 @@ function Show-TypeThingSettings {
         $txtStartHk.ForeColor = $theme.Text
         $txtStartHk.Font = $baseFont
         $txtStartHk.add_KeyDown({
-            param($sender, $e)
+            param($eventSender, $e)
             $e.SuppressKeyPress = $true
             $e.Handled = $true
             $parts = @()
@@ -2456,7 +2488,7 @@ function Show-TypeThingSettings {
             $keyName = $e.KeyCode.ToString()
             if ($keyName -notin @('ControlKey','ShiftKey','Menu','Control','Shift','Alt')) {
                 $parts += $keyName
-                $sender.Text = $parts -join '+'
+                $eventSender.Text = $parts -join '+'
             }
         })
         $grpHotkeys.Controls.Add($txtStartHk)
@@ -2478,7 +2510,7 @@ function Show-TypeThingSettings {
         $txtStopHk.ForeColor = $theme.Text
         $txtStopHk.Font = $baseFont
         $txtStopHk.add_KeyDown({
-            param($sender, $e)
+            param($eventSender, $e)
             $e.SuppressKeyPress = $true
             $e.Handled = $true
             $parts = @()
@@ -2488,7 +2520,7 @@ function Show-TypeThingSettings {
             $keyName = $e.KeyCode.ToString()
             if ($keyName -notin @('ControlKey','ShiftKey','Menu','Control','Shift','Alt')) {
                 $parts += $keyName
-                $sender.Text = $parts -join '+'
+                $eventSender.Text = $parts -join '+'
             }
         })
         $grpHotkeys.Controls.Add($txtStopHk)
@@ -2509,7 +2541,7 @@ function Show-TypeThingSettings {
         $grpAppearance.Location = New-Object System.Drawing.Point(10, $y)
         $grpAppearance.Size = New-Object System.Drawing.Size(410, 60)
         $grpAppearance.ForeColor = $theme.Accent
-        $grpAppearance.Font = $boldFont
+        $grpAppearance.Font = $headerFont
         $panel.Controls.Add($grpAppearance)
 
         $lblTheme = New-Object System.Windows.Forms.Label
