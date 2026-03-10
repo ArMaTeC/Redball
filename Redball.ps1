@@ -3,7 +3,6 @@
 <#
 .SYNOPSIS
     Redball - A system tray utility to prevent Windows from going to sleep.
-    CI diagnostic build
 .DESCRIPTION
     Redball prevents your Windows computer from sleeping using the SetThreadExecutionState API.
     It provides a system tray icon for easy control and optional F15 keypress heartbeat.

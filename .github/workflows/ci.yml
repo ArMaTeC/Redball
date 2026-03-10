@@ -35,32 +35,6 @@ jobs:
         Import-Module Pester -RequiredVersion 5.5.0
         Get-Module Pester | Select-Object Name, Version
         
-    - name: Check Environment
-      shell: powershell
-      run: |
-        Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
-        Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
-        $scriptPath = Join-Path $PWD 'Redball.ps1'
-        $tokens = $null; $parseErrors = $null
-        $ast = [System.Management.Automation.Language.Parser]::ParseFile($scriptPath, [ref]$tokens, [ref]$parseErrors)
-        $funcs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
-        Write-Host "Found $($funcs.Count) functions in Redball.ps1"
-        $targetFuncs = @('ConvertTo-HotkeyParams','Stop-TypeThingTyping','Start-TypeThingTyping','Get-TypeThingTheme','Complete-TypeThingTyping')
-        foreach ($name in $targetFuncs) {
-          $found = $funcs | Where-Object { $_.Name -eq $name }
-          if ($found) { Write-Host "OK: $name found at line $($found.Extent.StartLineNumber)" }
-          else { Write-Host "MISSING: $name" }
-        }
-        # Test loading
-        foreach ($f in $funcs) {
-          try { Invoke-Expression $f.Extent.Text }
-          catch { Write-Host "LOAD FAIL: $($f.Name) - $_" }
-        }
-        foreach ($name in $targetFuncs) {
-          if (Get-Command $name -ErrorAction SilentlyContinue) { Write-Host "LOADED: $name" }
-          else { Write-Host "NOT LOADED: $name" }
-        }
-
     - name: Run Pester Tests
       shell: powershell
       run: |
@@ -75,12 +49,10 @@ jobs:
         $config.CodeCoverage.OutputPath = "./coverage.xml"
         $result = Invoke-Pester -Configuration $config
         
-        # Write detailed failure report with annotations
         if ($result.FailedCount -gt 0) {
           foreach ($f in $result.Failed) {
             $errMsg = "$($f.ErrorRecord)" -replace "`r`n"," " -replace "`n"," "
-            $stackMsg = "$($f.ErrorRecord.ScriptStackTrace)" -replace "`r`n"," | " -replace "`n"," | "
-            Write-Host "::error title=$($f.ExpandedName)::$errMsg -- STACK: $stackMsg"
+            Write-Host "::error title=$($f.ExpandedName)::$errMsg"
           }
           throw "Pester tests failed: $($result.FailedCount)"
         }
@@ -90,9 +62,7 @@ jobs:
       if: always()
       with:
         name: test-results
-        path: |
-          ./test-results.xml
-          ./test-errors.txt
+        path: ./test-results.xml
         
     - name: Upload Coverage
       uses: actions/upload-artifact@v4

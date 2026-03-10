@@ -24,14 +24,11 @@ BeforeAll {
         Invoke-Expression $functionAst.Extent.Text
     }
 
-    # Load script-level variable assignments (e.g. $script:TypeThingThemes)
-    $varAssignments = $ast.FindAll({ param($n)
-        $n -is [System.Management.Automation.Language.AssignmentStatementAst] -and
-        $n.Left -is [System.Management.Automation.Language.VariableExpressionAst] -and
-        $n.Left.VariablePath.UserPath -match '^script:'
-    }, $false)
-    foreach ($varAst in $varAssignments) {
-        try { Invoke-Expression $varAst.Extent.Text } catch { }
+    # Initialize TypeThing themes for theme tests (script-level variable not loaded by AST function extractor)
+    $script:TypeThingThemes = @{
+        light = @{ Background = [System.Drawing.Color]::FromArgb(245, 245, 245); Surface = [System.Drawing.Color]::White; Text = [System.Drawing.Color]::FromArgb(33, 33, 33); Accent = [System.Drawing.Color]::FromArgb(0, 120, 212); FontName = 'Segoe UI'; FontSize = 11 }
+        dark = @{ Background = [System.Drawing.Color]::FromArgb(30, 30, 30); Surface = [System.Drawing.Color]::FromArgb(45, 45, 45); Text = [System.Drawing.Color]::FromArgb(204, 204, 204); Accent = [System.Drawing.Color]::FromArgb(0, 120, 212); FontName = 'Segoe UI'; FontSize = 11 }
+        hacker = @{ Background = [System.Drawing.Color]::Black; Surface = [System.Drawing.Color]::FromArgb(10, 10, 10); Text = [System.Drawing.Color]::FromArgb(0, 255, 0); Accent = [System.Drawing.Color]::FromArgb(0, 200, 0); FontName = 'Consolas'; FontSize = 11 }
     }
 
     if (-not (Get-Command Import-RedballConfig -ErrorAction SilentlyContinue)) {
