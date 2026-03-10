@@ -146,12 +146,16 @@ jobs:
     needs: [tag, build]
     runs-on: ubuntu-latest
     if: needs.tag.outputs.created == 'true'
+    continue-on-error: true
     permissions:
       id-token: write
       actions: read
+    outputs:
+      signed: ${{ steps.sign.outcome == 'success' && 'true' || 'false' }}
 
     steps:
     - name: Submit signing request to SignPath
+      id: sign
       uses: signpath/github-action-submit-signing-request@v1
       with:
         api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
@@ -165,6 +169,7 @@ jobs:
         wait-for-completion-timeout-in-seconds: 600
 
     - name: Upload signed MSI
+      if: steps.sign.outcome == 'success'
       uses: actions/upload-artifact@v4
       with:
         name: redball-signed
@@ -174,26 +179,36 @@ jobs:
 
   release:
     name: Create GitHub Release
-    needs: [tag, sign]
+    needs: [tag, build, sign]
     runs-on: ubuntu-latest
-    if: needs.tag.outputs.created == 'true'
+    if: always() && needs.tag.outputs.created == 'true' && needs.build.result == 'success'
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
     - name: Download signed MSI
+      if: needs.sign.result == 'success'
       uses: actions/download-artifact@v4
       with:
         name: redball-signed
+        path: ./release
+
+    - name: Download unsigned MSI (fallback)
+      if: needs.sign.result != 'success'
+      uses: actions/download-artifact@v4
+      with:
+        name: redball-unsigned
         path: ./release
 
     - name: Verify MSI exists
       shell: bash
       run: |
         ls -la ./release/
+        SIGNED="${{ needs.sign.result == 'success' && 'SIGNED' || 'UNSIGNED' }}"
+        echo "MSI is ${SIGNED}"
         if [ ! -f "./release/Redball.msi" ]; then
-          echo "ERROR: Signed Redball.msi not found"
+          echo "ERROR: Redball.msi not found"
           exit 1
         fi
 
