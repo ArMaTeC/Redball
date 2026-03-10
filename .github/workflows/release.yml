@@ -97,12 +97,22 @@ jobs:
       run: wix --version
 
     - name: Build MSI
+      shell: pwsh
       run: |
         $version = '${{ needs.tag.outputs.version }}'
         New-Item -ItemType Directory -Path dist -Force | Out-Null
         Push-Location installer
-        wix build Redball.wxs -o "..\dist\Redball-$version.msi" -ext WixToolset.UI.wixext -d "ProductVersion=$version"
+        Write-Host "CWD: $(Get-Location)"
+        Write-Host "Version: $version"
+        Write-Host "Files:"
+        Get-ChildItem | ForEach-Object { Write-Host "  $($_.Name)" }
+        $output = & wix build Redball.wxs -o "..\dist\Redball-$version.msi" -ext WixToolset.UI.wixext -d "ProductVersion=$version" 2>&1 | Out-String
+        $exitCode = $LASTEXITCODE
         Pop-Location
+        "## WiX Build Output`nExit code: $exitCode`n``````text`n$output`n```````n" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+        Write-Host "WiX exit code: $exitCode"
+        Write-Host $output
+        if ($exitCode -ne 0) { exit $exitCode }
         Copy-Item "dist\Redball-$version.msi" "dist\Redball.msi" -Force
         Get-ChildItem dist\*.msi
 
