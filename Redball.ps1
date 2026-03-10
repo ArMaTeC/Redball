@@ -76,7 +76,7 @@ param(
     [switch]$ExitOnComplete
 )
 
-$script:VERSION = '2.0.34'
+$script:VERSION = '2.0.35'
 $script:APP_NAME = 'Redball'
 $script:IsPS7 = $PSVersionTable.PSVersion.Major -ge 7
 
