@@ -76,7 +76,7 @@ param(
     [switch]$ExitOnComplete
 )
 
-$script:VERSION = '2.0.31'
+$script:VERSION = '2.0.32'
 $script:APP_NAME = 'Redball'
 $script:IsPS7 = $PSVersionTable.PSVersion.Major -ge 7
 
@@ -1704,16 +1704,28 @@ function Show-AboutDialog {
 
         $downloadButton.add_Click({
                 try {
-                    if ($script:aboutReleaseUrl) {
-                        Start-Process $script:aboutReleaseUrl
+                    $downloadButton.Enabled = $false
+                    $downloadButton.Text = 'Updating...'
+                    $form.Refresh()
+                    
+                    $result = Install-RedballUpdate -RestartAfterUpdate
+                    if ($result) {
+                        $updateStatusLabel.Text = 'Update downloaded. Restarting...'
+                        $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(100, 220, 100)
+                        $form.Close()
                     }
                     else {
-                        $owner = $script:config.UpdateRepoOwner
-                        $repo = $script:config.UpdateRepoName
-                        Start-Process "https://github.com/$owner/$repo/releases/latest"
+                        $updateStatusLabel.Text = 'Update failed. Try manual download.'
+                        $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 100, 100)
+                        $downloadButton.Text = 'Download Update'
+                        $downloadButton.Enabled = $true
                     }
                 }
                 catch {
+                    $updateStatusLabel.Text = "Update error: $_"
+                    $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 100, 100)
+                    $downloadButton.Text = 'Download Update'
+                    $downloadButton.Enabled = $true
                     Write-RedballLog -Level 'WARN' -Message "About dialog download error: $_"
                 }
             })
@@ -2678,7 +2690,16 @@ function Show-TypeThingSettings {
             # Re-register hotkeys if they changed
             if ($oldStartHk -ne $txtStartHk.Text -or $oldStopHk -ne $txtStopHk.Text) {
                 Unregister-TypeThingHotkeys
+                $script:state.TypeThingHotkeysRegistered = $false
                 Register-TypeThingHotkeys
+                
+                # Update menu item text to show new hotkeys
+                if ($script:state.TypeThingMenuType) {
+                    $script:state.TypeThingMenuType.Text = "Type Clipboard `t$($script:config.TypeThingStartHotkey)"
+                }
+                if ($script:state.TypeThingMenuStop) {
+                    $script:state.TypeThingMenuStop.Text = "Stop Typing `t$($script:config.TypeThingStopHotkey)"
+                }
             }
 
             Write-RedballLog -Level 'INFO' -Message 'TypeThing: Settings updated'
@@ -3540,7 +3561,7 @@ if ($script:config.TypeThingEnabled) {
     $typeThingMenu = New-Object System.Windows.Forms.ToolStripMenuItem 'TypeThing'
     $typeThingMenu.AccessibleName = 'TypeThing Clipboard Typer'
 
-    $typeThingTypeItem = New-Object System.Windows.Forms.ToolStripMenuItem "Type Clipboard`t$($script:config.TypeThingStartHotkey)"
+    $typeThingTypeItem = New-Object System.Windows.Forms.ToolStripMenuItem "Type Clipboard `t$($script:config.TypeThingStartHotkey)"
     $typeThingTypeItem.AccessibleName = 'Type clipboard contents'
     $typeThingTypeItem.add_Click({
             try {
@@ -3554,7 +3575,7 @@ if ($script:config.TypeThingEnabled) {
     $script:state.TypeThingMenuType = $typeThingTypeItem
     [void]$typeThingMenu.DropDownItems.Add($typeThingTypeItem)
 
-    $typeThingStopItem = New-Object System.Windows.Forms.ToolStripMenuItem "Stop Typing`t$($script:config.TypeThingStopHotkey)"
+    $typeThingStopItem = New-Object System.Windows.Forms.ToolStripMenuItem "Stop Typing `t$($script:config.TypeThingStopHotkey)"
     $typeThingStopItem.AccessibleName = 'Emergency stop typing'
     $typeThingStopItem.Enabled = $false
     $typeThingStopItem.add_Click({
