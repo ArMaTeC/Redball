@@ -23,18 +23,18 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Setup PowerShell
-      shell: pwsh
+      shell: powershell
       run: |
         $PSVersionTable
         
     - name: Install Pester
-      shell: pwsh
+      shell: powershell
       run: |
         Install-Module -Name Pester -Force -SkipPublisherCheck -MinimumVersion 5.0
         Get-Module Pester -ListAvailable
         
     - name: Run Pester Tests
-      shell: pwsh
+      shell: powershell
       run: |
         $config = New-PesterConfiguration
         $config.Run.Path = "./Redball.Tests.ps1"
