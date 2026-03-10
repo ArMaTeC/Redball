@@ -44,8 +44,8 @@
 
     <!-- Fire the launch action when user clicks Finish with checkbox ticked -->
     <UI>
-      <Publish Dialog="ExitDlg" Control="Finish" Event="DoAction" Value="LaunchApp"
-              Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApp"
+              Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT REMOVE" />
     </UI>
 
     <!-- Installation layout -->
