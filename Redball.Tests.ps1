@@ -29,16 +29,16 @@ BeforeAll {
     # Use try/catch for System.Drawing types which may not be available on headless CI
     try {
         $script:TypeThingThemes = @{
-            light = @{ Background = [System.Drawing.Color]::FromArgb(245, 245, 245); Surface = [System.Drawing.Color]::White; Text = [System.Drawing.Color]::FromArgb(33, 33, 33); Accent = [System.Drawing.Color]::FromArgb(0, 120, 212); FontName = 'Segoe UI'; FontSize = 11 }
-            dark = @{ Background = [System.Drawing.Color]::FromArgb(30, 30, 30); Surface = [System.Drawing.Color]::FromArgb(45, 45, 45); Text = [System.Drawing.Color]::FromArgb(204, 204, 204); Accent = [System.Drawing.Color]::FromArgb(0, 120, 212); FontName = 'Segoe UI'; FontSize = 11 }
+            light  = @{ Background = [System.Drawing.Color]::FromArgb(245, 245, 245); Surface = [System.Drawing.Color]::White; Text = [System.Drawing.Color]::FromArgb(33, 33, 33); Accent = [System.Drawing.Color]::FromArgb(0, 120, 212); FontName = 'Segoe UI'; FontSize = 11 }
+            dark   = @{ Background = [System.Drawing.Color]::FromArgb(30, 30, 30); Surface = [System.Drawing.Color]::FromArgb(45, 45, 45); Text = [System.Drawing.Color]::FromArgb(204, 204, 204); Accent = [System.Drawing.Color]::FromArgb(0, 120, 212); FontName = 'Segoe UI'; FontSize = 11 }
             hacker = @{ Background = [System.Drawing.Color]::Black; Surface = [System.Drawing.Color]::FromArgb(10, 10, 10); Text = [System.Drawing.Color]::FromArgb(0, 255, 0); Accent = [System.Drawing.Color]::FromArgb(0, 200, 0); FontName = 'Consolas'; FontSize = 11 }
         }
     }
     catch {
         # Fallback without System.Drawing types for headless CI
         $script:TypeThingThemes = @{
-            light = @{ Background = 'LightGray'; Surface = 'White'; Text = 'Black'; Accent = 'Blue'; FontName = 'Segoe UI'; FontSize = 11 }
-            dark = @{ Background = 'DarkGray'; Surface = 'Gray'; Text = 'White'; Accent = 'Blue'; FontName = 'Segoe UI'; FontSize = 11 }
+            light  = @{ Background = 'LightGray'; Surface = 'White'; Text = 'Black'; Accent = 'Blue'; FontName = 'Segoe UI'; FontSize = 11 }
+            dark   = @{ Background = 'DarkGray'; Surface = 'Gray'; Text = 'White'; Accent = 'Blue'; FontName = 'Segoe UI'; FontSize = 11 }
             hacker = @{ Background = 'Black'; Surface = 'Black'; Text = 'Green'; Accent = 'Green'; FontName = 'Consolas'; FontSize = 11 }
         }
     }
@@ -71,90 +71,90 @@ BeforeAll {
 
     function Reset-TestState {
         $script:state = [ordered]@{
-            Active = $true
-            PreventDisplaySleep = $true
-            UseHeartbeatKeypress = $true
-            HeartbeatSeconds = 59
-            Until = $null
-            NotifyIcon = $null
-            Context = $null
-            HeartbeatTimer = $null
-            DurationTimer = $null
-            ToggleMenuItem = $null
-            DisplayMenuItem = $null
-            HeartbeatMenuItem = $null
-            StatusMenuItem = $null
-            BatteryMenuItem = $null
-            StartupMenuItem = $null
-            PreviousIcon = $null
-            IsShuttingDown = $false
-            LastStatusText = ''
-            LastIconState = ''
-            UiUpdatePending = $false
-            BatteryAware = $false
-            BatteryThreshold = 20
-            OnBattery = $false
-            AutoPausedBattery = $false
-            NetworkAware = $false
-            AutoPausedNetwork = $false
-            ActiveBeforeNetwork = $false
-            IdleDetection = $false
-            IdleThresholdMinutes = 30
-            AutoPausedIdle = $false
-            AutoPausedPresentation = $false
-            AutoPausedSchedule = $false
-            ManualOverride = $false
-            StartTime = $null
-            ActiveBeforeBattery = $false
-            ActiveBeforeIdle = $false
-            SessionId = [guid]::NewGuid().ToString()
-            KeepAwakeRunspaceInfo = $null
-            TypeThingIsTyping = $false
-            TypeThingShouldStop = $false
-            TypeThingText = ''
-            TypeThingIndex = 0
-            TypeThingTotalChars = 0
-            TypeThingStartTime = $null
-            TypeThingTimer = $null
-            TypeThingCountdown = $null
+            Active                      = $true
+            PreventDisplaySleep         = $true
+            UseHeartbeatKeypress        = $true
+            HeartbeatSeconds            = 59
+            Until                       = $null
+            NotifyIcon                  = $null
+            Context                     = $null
+            HeartbeatTimer              = $null
+            DurationTimer               = $null
+            ToggleMenuItem              = $null
+            DisplayMenuItem             = $null
+            HeartbeatMenuItem           = $null
+            StatusMenuItem              = $null
+            BatteryMenuItem             = $null
+            StartupMenuItem             = $null
+            PreviousIcon                = $null
+            IsShuttingDown              = $false
+            LastStatusText              = ''
+            LastIconState               = ''
+            UiUpdatePending             = $false
+            BatteryAware                = $false
+            BatteryThreshold            = 20
+            OnBattery                   = $false
+            AutoPausedBattery           = $false
+            NetworkAware                = $false
+            AutoPausedNetwork           = $false
+            ActiveBeforeNetwork         = $false
+            IdleDetection               = $false
+            IdleThresholdMinutes        = 30
+            AutoPausedIdle              = $false
+            AutoPausedPresentation      = $false
+            AutoPausedSchedule          = $false
+            ManualOverride              = $false
+            StartTime                   = $null
+            ActiveBeforeBattery         = $false
+            ActiveBeforeIdle            = $false
+            SessionId                   = [guid]::NewGuid().ToString()
+            KeepAwakeRunspaceInfo       = $null
+            TypeThingIsTyping           = $false
+            TypeThingShouldStop         = $false
+            TypeThingText               = ''
+            TypeThingIndex              = 0
+            TypeThingTotalChars         = 0
+            TypeThingStartTime          = $null
+            TypeThingTimer              = $null
+            TypeThingCountdown          = $null
             TypeThingCountdownRemaining = 0
-            TypeThingMenuType = $null
-            TypeThingMenuStop = $null
-            TypeThingMenuStatus = $null
-            TypeThingHotkeyWindow = $null
-            TypeThingHotkeyStartId = 100
-            TypeThingHotkeyStopId = 101
-            TypeThingHotkeysRegistered = $false
+            TypeThingMenuType           = $null
+            TypeThingMenuStop           = $null
+            TypeThingMenuStatus         = $null
+            TypeThingHotkeyWindow       = $null
+            TypeThingHotkeyStartId      = 100
+            TypeThingHotkeyStopId       = 101
+            TypeThingHotkeysRegistered  = $false
         }
     }
 
     function Reset-TestConfig {
         $script:config = @{
-            HeartbeatSeconds = 59
-            PreventDisplaySleep = $true
-            UseHeartbeatKeypress = $true
-            LogPath = 'TestDrive:\test.log'
-            MaxLogSizeMB = 10
-            ScheduleEnabled = $false
-            ScheduleStartTime = '09:00'
-            ScheduleStopTime = '18:00'
-            ScheduleDays = @('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
-            PresentationModeDetection = $false
-            EnablePerformanceMetrics = $false
-            EnableTelemetry = $false
-            ProcessIsolation = $false
-            TypeThingEnabled = $true
-            TypeThingMinDelayMs = 30
-            TypeThingMaxDelayMs = 120
-            TypeThingStartDelaySec = 3
-            TypeThingStartHotkey = 'Ctrl+Shift+V'
-            TypeThingStopHotkey = 'Ctrl+Shift+X'
-            TypeThingTheme = 'dark'
-            TypeThingAddRandomPauses = $true
+            HeartbeatSeconds           = 59
+            PreventDisplaySleep        = $true
+            UseHeartbeatKeypress       = $true
+            LogPath                    = 'TestDrive:\test.log'
+            MaxLogSizeMB               = 10
+            ScheduleEnabled            = $false
+            ScheduleStartTime          = '09:00'
+            ScheduleStopTime           = '18:00'
+            ScheduleDays               = @('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
+            PresentationModeDetection  = $false
+            EnablePerformanceMetrics   = $false
+            EnableTelemetry            = $false
+            ProcessIsolation           = $false
+            TypeThingEnabled           = $true
+            TypeThingMinDelayMs        = 30
+            TypeThingMaxDelayMs        = 120
+            TypeThingStartDelaySec     = 3
+            TypeThingStartHotkey       = 'Ctrl+Shift+V'
+            TypeThingStopHotkey        = 'Ctrl+Shift+X'
+            TypeThingTheme             = 'dark'
+            TypeThingAddRandomPauses   = $true
             TypeThingRandomPauseChance = 5
-            TypeThingRandomPauseMaxMs = 500
-            TypeThingTypeNewlines = $true
-            TypeThingNotifications = $true
+            TypeThingRandomPauseMaxMs  = 500
+            TypeThingTypeNewlines      = $true
+            TypeThingNotifications     = $true
         }
     }
 
@@ -219,7 +219,7 @@ Describe "Configuration Management" {
     It "Loads existing config values" {
         $testConfigPath = "TestDrive:\test_config.json"
         $testConfig = @{
-            HeartbeatSeconds = 30
+            HeartbeatSeconds    = 30
             PreventDisplaySleep = $false
         } | ConvertTo-Json
         
@@ -362,7 +362,7 @@ Describe "Input Validation" {
     It "Requires mandatory parameter for timed awake" {
         $cmd = Get-Command Start-TimedAwake
         $cmd.Parameters['Minutes'].Attributes | Where-Object { $_ -is [Parameter] } | 
-            ForEach-Object { $_.Mandatory | Should -Be $true }
+        ForEach-Object { $_.Mandatory | Should -Be $true }
     }
 }
 
@@ -388,10 +388,11 @@ Describe "Error Handling" {
 Describe "UI Updates" {
     BeforeEach {
         $script:state.NotifyIcon = [pscustomobject]@{
-            Icon = $null
-            Text = ''
+            Icon       = $null
+            Text       = ''
             IsDisposed = $false
         }
+        Add-Member -InputObject $script:state.NotifyIcon -MemberType ScriptMethod -Name ShowBalloonTip -Value { param($a, $b, $c, $d) }
         $script:state.ToggleMenuItem = [pscustomobject]@{ Text = '' }
         $script:state.DisplayMenuItem = [pscustomobject]@{ Checked = $false }
         $script:state.HeartbeatMenuItem = [pscustomobject]@{ Checked = $false }
