@@ -24,6 +24,16 @@ BeforeAll {
         Invoke-Expression $functionAst.Extent.Text
     }
 
+    # Load script-level variable assignments (e.g. $script:TypeThingThemes)
+    $varAssignments = $ast.FindAll({ param($n)
+        $n -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+        $n.Left -is [System.Management.Automation.Language.VariableExpressionAst] -and
+        $n.Left.VariablePath.UserPath -match '^script:'
+    }, $false)
+    foreach ($varAst in $varAssignments) {
+        try { Invoke-Expression $varAst.Extent.Text } catch { }
+    }
+
     if (-not (Get-Command Import-RedballConfig -ErrorAction SilentlyContinue)) {
         function Import-RedballConfig {
             param([string]$Path = (Join-Path $PSScriptRoot 'Redball.json'))
@@ -90,6 +100,22 @@ BeforeAll {
             ActiveBeforeIdle = $false
             SessionId = [guid]::NewGuid().ToString()
             KeepAwakeRunspaceInfo = $null
+            TypeThingIsTyping = $false
+            TypeThingShouldStop = $false
+            TypeThingText = ''
+            TypeThingIndex = 0
+            TypeThingTotalChars = 0
+            TypeThingStartTime = $null
+            TypeThingTimer = $null
+            TypeThingCountdown = $null
+            TypeThingCountdownRemaining = 0
+            TypeThingMenuType = $null
+            TypeThingMenuStop = $null
+            TypeThingMenuStatus = $null
+            TypeThingHotkeyWindow = $null
+            TypeThingHotkeyStartId = 100
+            TypeThingHotkeyStopId = 101
+            TypeThingHotkeysRegistered = $false
         }
     }
 
@@ -108,6 +134,18 @@ BeforeAll {
             EnablePerformanceMetrics = $false
             EnableTelemetry = $false
             ProcessIsolation = $false
+            TypeThingEnabled = $true
+            TypeThingMinDelayMs = 30
+            TypeThingMaxDelayMs = 120
+            TypeThingStartDelaySec = 3
+            TypeThingStartHotkey = 'Ctrl+Shift+V'
+            TypeThingStopHotkey = 'Ctrl+Shift+X'
+            TypeThingTheme = 'dark'
+            TypeThingAddRandomPauses = $true
+            TypeThingRandomPauseChance = 5
+            TypeThingRandomPauseMaxMs = 500
+            TypeThingTypeNewlines = $true
+            TypeThingNotifications = $true
         }
     }
 
@@ -192,7 +230,8 @@ Describe "Configuration Management" {
 
 Describe "Logging" {
     BeforeEach {
-        $testLogPath = "TestDrive:\test.log"
+        # Resolve TestDrive to real filesystem path for System.IO.File compatibility
+        $testLogPath = Join-Path $TestDrive 'test.log'
         $script:config.LogPath = $testLogPath
         if (Test-Path $testLogPath) {
             Remove-Item $testLogPath -Force
@@ -200,7 +239,8 @@ Describe "Logging" {
     }
     
     It "Writes log entry with timestamp" {
-        $testLogPath = "TestDrive:\test.log"
+        $testLogPath = Join-Path $TestDrive 'test.log'
+        $script:config.LogPath = $testLogPath
         Write-RedballLog -Level 'INFO' -Message 'Test message'
         
         $content = Get-Content $testLogPath -Raw
@@ -208,18 +248,20 @@ Describe "Logging" {
     }
     
     It "Rotates log when size exceeds limit" {
-        $testLogPath = "TestDrive:\test.log"
+        $testLogPath = Join-Path $TestDrive 'test.log'
+        $script:config.LogPath = $testLogPath
         # Create oversized log
         "A" * (11MB) | Set-Content $testLogPath
         
         Write-RedballLog -Level 'INFO' -Message 'After rotation'
         
-        $backupExists = Get-ChildItem "TestDrive:\" -Filter "*.bak" | Where-Object { $_.Name -like "test.log.*" }
+        $backupExists = Get-ChildItem $TestDrive -Filter "*.bak" | Where-Object { $_.Name -like "test.log.*" }
         $backupExists | Should -Not -BeNullOrEmpty
     }
     
     It "Handles all log levels" {
-        $testLogPath = "TestDrive:\test.log"
+        $testLogPath = Join-Path $TestDrive 'test.log'
+        $script:config.LogPath = $testLogPath
         Write-RedballLog -Level 'DEBUG' -Message 'Debug'
         Write-RedballLog -Level 'INFO' -Message 'Info'
         Write-RedballLog -Level 'WARN' -Message 'Warn'
@@ -563,9 +605,175 @@ Describe "Presentation Mode Detection" {
     }
 }
 
+Describe "TypeThing - Hotkey Parser" {
+    BeforeEach {
+        Reset-TestState
+        Reset-TestConfig
+    }
+
+    It "Parses Ctrl+Shift+V correctly" {
+        $result = ConvertTo-HotkeyParams -HotkeyString 'Ctrl+Shift+V'
+        $result.Modifiers | Should -Be (0x0002 -bor 0x0004)  # MOD_CONTROL | MOD_SHIFT
+        $result.VirtualKey | Should -Be 0x56  # V
+    }
+
+    It "Parses Ctrl+Alt+Pause correctly" {
+        $result = ConvertTo-HotkeyParams -HotkeyString 'Ctrl+Alt+Pause'
+        $result.Modifiers | Should -Be (0x0002 -bor 0x0001)  # MOD_CONTROL | MOD_ALT
+        $result.VirtualKey | Should -Be 0x13  # VK_PAUSE
+    }
+
+    It "Parses single key correctly" {
+        $result = ConvertTo-HotkeyParams -HotkeyString 'F12'
+        $result.Modifiers | Should -Be 0
+        $result.VirtualKey | Should -Be 0x7B  # F12
+    }
+
+    It "Handles unknown key gracefully" {
+        Mock Write-RedballLog {}
+        $result = ConvertTo-HotkeyParams -HotkeyString 'Ctrl+UnknownKey'
+        $result.Modifiers | Should -Be 0x0002  # MOD_CONTROL
+        $result.VirtualKey | Should -Be 0
+    }
+}
+
+Describe "TypeThing - Clipboard Access" {
+    It "Returns null on empty clipboard" {
+        # Clipboard access may fail in headless CI environments
+        try {
+            $result = Get-ClipboardText
+            # Should return $null or empty string when clipboard is empty
+            ($null -eq $result -or $result -eq '') | Should -Be $true
+        }
+        catch {
+            Set-ItResult -Skipped -Because "Clipboard not available in this environment"
+        }
+    }
+}
+
+Describe "TypeThing - Typing State Management" {
+    BeforeEach {
+        Reset-TestState
+        Reset-TestConfig
+    }
+
+    It "Stop-TypeThingTyping resets state correctly" {
+        $script:state.TypeThingIsTyping = $true
+        $script:state.TypeThingShouldStop = $false
+        $script:state.TypeThingText = 'test data'
+        $script:state.TypeThingIndex = 5
+        $script:state.TypeThingTotalChars = 9
+
+        Stop-TypeThingTyping
+
+        $script:state.TypeThingIsTyping | Should -Be $false
+        $script:state.TypeThingShouldStop | Should -Be $false
+        $script:state.TypeThingText | Should -Be ''
+        $script:state.TypeThingIndex | Should -Be 0
+        $script:state.TypeThingTotalChars | Should -Be 0
+    }
+
+    It "Complete-TypeThingTyping resets state and clears text" {
+        $script:state.TypeThingIsTyping = $true
+        $script:state.TypeThingText = 'sensitive clipboard data'
+        $script:state.TypeThingTotalChars = 24
+        $script:state.TypeThingStartTime = (Get-Date).AddSeconds(-5)
+
+        Complete-TypeThingTyping
+
+        $script:state.TypeThingIsTyping | Should -Be $false
+        $script:state.TypeThingText | Should -Be ''
+        $script:state.TypeThingTotalChars | Should -Be 0
+        $script:state.TypeThingStartTime | Should -BeNullOrEmpty
+    }
+
+    It "Start-TypeThingTyping does nothing when already typing" {
+        $script:state.TypeThingIsTyping = $true
+        Mock Get-ClipboardText { return 'test' }
+
+        Start-TypeThingTyping
+
+        # Should not have changed text since already typing
+        $script:state.TypeThingText | Should -Not -Be 'test'
+    }
+
+    It "Start-TypeThingTyping does nothing when disabled" {
+        $script:config.TypeThingEnabled = $false
+        Mock Get-ClipboardText { return 'test' }
+
+        Start-TypeThingTyping
+
+        $script:state.TypeThingIsTyping | Should -Be $false
+    }
+
+    It "Start-TypeThingTyping does nothing when shutting down" {
+        $script:state.IsShuttingDown = $true
+        Mock Get-ClipboardText { return 'test' }
+
+        Start-TypeThingTyping
+
+        $script:state.TypeThingIsTyping | Should -Be $false
+    }
+}
+
+Describe "TypeThing - Theme Engine" {
+    It "Returns dark theme by default" {
+        $script:config.TypeThingTheme = 'dark'
+        $theme = Get-TypeThingTheme
+        $theme | Should -Not -BeNullOrEmpty
+        $theme.FontName | Should -Be 'Segoe UI'
+    }
+
+    It "Returns hacker theme" {
+        $theme = Get-TypeThingTheme -ThemeName 'hacker'
+        $theme | Should -Not -BeNullOrEmpty
+        $theme.FontName | Should -Be 'Consolas'
+    }
+
+    It "Falls back to dark for unknown theme" {
+        $theme = Get-TypeThingTheme -ThemeName 'nonexistent'
+        $theme | Should -Not -BeNullOrEmpty
+        $theme.FontName | Should -Be 'Segoe UI'
+    }
+
+    It "Has all three themes defined" {
+        $script:TypeThingThemes.ContainsKey('light') | Should -Be $true
+        $script:TypeThingThemes.ContainsKey('dark') | Should -Be $true
+        $script:TypeThingThemes.ContainsKey('hacker') | Should -Be $true
+    }
+}
+
+Describe "TypeThing - Config Defaults" {
+    BeforeEach {
+        Reset-TestConfig
+    }
+
+    It "Has all required TypeThing config keys" {
+        $script:config.ContainsKey('TypeThingEnabled') | Should -Be $true
+        $script:config.ContainsKey('TypeThingMinDelayMs') | Should -Be $true
+        $script:config.ContainsKey('TypeThingMaxDelayMs') | Should -Be $true
+        $script:config.ContainsKey('TypeThingStartDelaySec') | Should -Be $true
+        $script:config.ContainsKey('TypeThingStartHotkey') | Should -Be $true
+        $script:config.ContainsKey('TypeThingStopHotkey') | Should -Be $true
+        $script:config.ContainsKey('TypeThingTheme') | Should -Be $true
+        $script:config.ContainsKey('TypeThingAddRandomPauses') | Should -Be $true
+        $script:config.ContainsKey('TypeThingTypeNewlines') | Should -Be $true
+        $script:config.ContainsKey('TypeThingNotifications') | Should -Be $true
+    }
+
+    It "Min delay is less than max delay" {
+        $script:config.TypeThingMinDelayMs | Should -BeLessThan $script:config.TypeThingMaxDelayMs
+    }
+
+    It "Start delay is reasonable" {
+        $script:config.TypeThingStartDelaySec | Should -BeGreaterOrEqual 0
+        $script:config.TypeThingStartDelaySec | Should -BeLessOrEqual 30
+    }
+}
+
 AfterAll {
     # Cleanup any test files
-    if (Test-Path "TestDrive:\test.log") {
-        Remove-Item "TestDrive:\test.log" -Force -ErrorAction SilentlyContinue
+    if ($TestDrive -and (Test-Path (Join-Path $TestDrive 'test.log'))) {
+        Remove-Item (Join-Path $TestDrive 'test.log') -Force -ErrorAction SilentlyContinue
     }
 }

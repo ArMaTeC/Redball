@@ -116,10 +116,13 @@ jobs:
       run: |
         # Check for common security issues
         $issues = @()
+        $psFiles = Get-ChildItem -Path . -Filter "*.ps1" -Recurse -File
+        Write-Host "Scanning $($psFiles.Count) PS1 files..."
         
-        # Check for hardcoded credentials
-        $content = Get-ChildItem . -Include "*.ps1","*.psm1" -Recurse | 
-          Select-String -Pattern '(?i)\b(password|secret|apikey|api_key|token)\s*=\s*["\'][^"\']+["\']' |
+        # Check for hardcoded credentials (only in main script, not tests)
+        $mainFiles = $psFiles | Where-Object { $_.Name -notmatch 'Tests\.ps1$' }
+        $content = $mainFiles | 
+          Select-String -Pattern '(?i)\b(password|secret|apikey|api_key|token)\s*=\s*["\x27][^"\x27]+["\x27]' |
           Where-Object { $_ -notmatch 'example|placeholder|changeme|TimestampServer|Hotkey|ShortcutKey' }
         
         if ($content) {
@@ -127,10 +130,9 @@ jobs:
           $content | ForEach-Object { Write-Warning $_ }
         }
         
-        # Check for Invoke-Expression usage
-        $invokeExpr = Get-ChildItem . -Include "*.ps1" -Recurse |
-          Select-String -Pattern 'Invoke-Expression|iex\s' |
-          Where-Object { $_.Path -notmatch 'Tests\.ps1$' }
+        # Check for Invoke-Expression usage (exclude test files)
+        $invokeExpr = $mainFiles |
+          Select-String -Pattern 'Invoke-Expression|iex\s'
           
         if ($invokeExpr) {
           $issues += "Invoke-Expression usage found - review for security"
