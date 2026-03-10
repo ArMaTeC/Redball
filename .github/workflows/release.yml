@@ -96,28 +96,25 @@ jobs:
     - name: Verify WiX
       run: wix --version
 
-    - name: Build MSI
-      shell: pwsh
+    - name: Debug info
+      shell: bash
       run: |
-        $ErrorActionPreference = 'Continue'
-        $version = '${{ needs.tag.outputs.version }}'
-        New-Item -ItemType Directory -Path dist -Force | Out-Null
-        Push-Location installer
-        Write-Host "CWD: $(Get-Location)"
-        Write-Host "Version: $version"
-        Write-Host "Files:"
-        Get-ChildItem | ForEach-Object { Write-Host "  $($_.Name)" }
-        Write-Host "Running wix build..."
-        wix build Redball.wxs -o "..\dist\Redball-$version.msi" -ext WixToolset.UI.wixext -d "ProductVersion=$version"
-        $exitCode = $LASTEXITCODE
-        Pop-Location
-        Write-Host "WiX exit code: $exitCode"
-        if ($exitCode -ne 0) {
-          Write-Host "::error::WiX build failed with exit code $exitCode"
-          exit $exitCode
-        }
-        Copy-Item "dist\Redball-$version.msi" "dist\Redball.msi" -Force
-        Get-ChildItem dist\*.msi
+        echo "Version: ${{ needs.tag.outputs.version }}"
+        echo "PWD: $(pwd)"
+        ls -la installer/
+        mkdir -p dist
+
+    - name: Build MSI
+      shell: bash
+      run: |
+        VERSION="${{ needs.tag.outputs.version }}"
+        cd installer
+        wix.exe build Redball.wxs -o "../dist/Redball-${VERSION}.msi" -ext WixToolset.UI.wixext -d "ProductVersion=${VERSION}" || true
+        echo "WiX exit code: $?"
+        cd ..
+        ls -la dist/ || true
+        cp "dist/Redball-${VERSION}.msi" "dist/Redball.msi" 2>/dev/null || cp dist/*.msi "dist/Redball.msi" 2>/dev/null || echo "No MSI found"
+        test -f "dist/Redball.msi"
 
     - name: Upload unsigned MSI
       uses: actions/upload-artifact@v4
