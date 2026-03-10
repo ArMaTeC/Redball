@@ -140,7 +140,8 @@ jobs:
         
         # Check for Invoke-Expression usage (exclude test files)
         $invokeExpr = $mainFiles |
-          Select-String -Pattern 'Invoke-Expression|iex\s'
+          Select-String -Pattern 'Invoke-Expression|iex\s' |
+          Where-Object { $_.FileName -notmatch 'Tests\.ps1$' }
           
         if ($invokeExpr) {
           $issues += "Invoke-Expression usage found - review for security"

@@ -126,6 +126,14 @@ BeforeAll {
             TypeThingHotkeyStopId       = 101
             TypeThingHotkeysRegistered  = $false
         }
+        # Add mock NotifyIcon with ShowBalloonTip method for tests
+        $script:state.NotifyIcon = [pscustomobject]@{
+            Icon    = $null
+            Text    = ''
+            Visible = $false
+        }
+        Add-Member -InputObject $script:state.NotifyIcon -MemberType ScriptMethod -Name ShowBalloonTip -Value { param($a, $b, $c, $d) }
+        Add-Member -InputObject $script:state.NotifyIcon -MemberType ScriptMethod -Name Dispose -Value { }
     }
 
     function Reset-TestConfig {
@@ -470,6 +478,7 @@ Describe "Cleanup and Shutdown" {
 
 Describe "Battery-Aware Mode" {
     BeforeEach {
+        Reset-TestState
         $script:state.BatteryAware = $true
         $script:state.BatteryThreshold = 20
         $script:state.AutoPausedBattery = $false
@@ -501,6 +510,7 @@ Describe "Battery-Aware Mode" {
 
 Describe "Network-Aware Mode" {
     BeforeEach {
+        Reset-TestState
         $script:state.NetworkAware = $true
         $script:state.AutoPausedNetwork = $false
     }
@@ -518,6 +528,7 @@ Describe "Network-Aware Mode" {
 
 Describe "Idle Detection" {
     BeforeEach {
+        Reset-TestState
         $script:state.IdleDetection = $true
         $script:state.IdleThresholdMinutes = 30
         $script:state.AutoPausedIdle = $false
@@ -586,6 +597,7 @@ Describe "Session State Management" {
 
 Describe "Scheduled Operation" {
     BeforeEach {
+        Reset-TestState
         $script:config.ScheduleEnabled = $true
         $script:config.ScheduleStartTime = '09:00'
         $script:config.ScheduleStopTime = '18:00'
@@ -603,6 +615,7 @@ Describe "Scheduled Operation" {
 
 Describe "Presentation Mode Detection" {
     BeforeEach {
+        Reset-TestState
         $script:config.PresentationModeDetection = $true
     }
     
