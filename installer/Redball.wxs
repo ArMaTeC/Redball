@@ -44,9 +44,8 @@
 
     <!-- Wire the launch action into the install sequence (fires after install completes) -->
     <InstallExecuteSequence>
-      <Custom Action="LaunchApp" After="InstallFinalize">
-        WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT REMOVE
-      </Custom>
+      <Custom Action="LaunchApp" After="InstallFinalize"
+              Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT REMOVE" />
     </InstallExecuteSequence>
 
     <!-- Installation layout -->
