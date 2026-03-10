@@ -86,33 +86,68 @@ jobs:
     - name: Install WiX Toolset
       shell: pwsh
       run: |
+        Write-Host "=== Installing WiX Toolset ==="
+        
         # Install WiX toolset
         dotnet tool install --global wix --version 4.0.5
+        if ($LASTEXITCODE -ne 0) { throw "Failed to install WiX toolset" }
         
-        # Refresh PATH
-        $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
+        # Get the WiX path
+        $wixDir = "$env:USERPROFILE\.dotnet\tools"
+        $wixExe = "$wixDir\wix.exe"
         
-        # Install required WiX extensions globally
-        & "$env:USERPROFILE\.dotnet\tools\wix.exe" extension add -g WixToolset.UI.wixext/4.0.5
+        Write-Host "=== WiX installed at: $wixExe ==="
         
-        # Verify installation
-        & "$env:USERPROFILE\.dotnet\tools\wix.exe" --version
-        & "$env:USERPROFILE\.dotnet\tools\wix.exe" extension list -g
+        # Add to PATH for current session
+        $env:PATH = "$wixDir;$env:PATH"
+        
+        # Verify wix.exe exists
+        if (-not (Test-Path $wixExe)) {
+          throw "wix.exe not found at expected path: $wixExe"
+        }
+        
+        # Check WiX version
+        Write-Host "=== WiX Version ==="
+        & $wixExe --version
+        
+        # Install required WiX extensions
+        Write-Host "=== Installing WiX Extensions ==="
+        & $wixExe extension add -g WixToolset.UI.wixext
+        if ($LASTEXITCODE -ne 0) { Write-Warning "Extension install may have issues, continuing..." }
+        
+        # List installed extensions
+        Write-Host "=== Installed WiX Extensions ==="
+        & $wixExe extension list -g
+        
+        Write-Host "=== WiX Setup Complete ==="
 
     - name: Build MSI
       shell: pwsh
       run: |
         $version = '${{ needs.tag.outputs.version }}'
-        Write-Host "Building MSI for version: $version"
+        Write-Host "=== Building MSI for version: $version ==="
         
         # Ensure dist directory exists
         New-Item -ItemType Directory -Path './dist' -Force | Out-Null
+        Write-Host "=== Dist directory ready ==="
+        
+        # Check what files we have
+        Write-Host "=== Files in installer directory ==="
+        Get-ChildItem ./installer/ | Select-Object Name
         
         # Run the build script with explicit WiX path
-        $wixPath = "$env:USERPROFILE\.dotnet\tools\wix.exe"
-        & ./installer/Build-MSI.ps1 -Version $version -WixBinPath "$env:USERPROFILE\.dotnet\tools"
+        $wixDir = "$env:USERPROFILE\.dotnet\tools"
+        Write-Host "=== Running Build-MSI.ps1 with WixBinPath: $wixDir ==="
         
-        # Check if build succeeded by looking for output
+        & ./installer/Build-MSI.ps1 -Version $version -WixBinPath $wixDir
+        
+        Write-Host "=== Build script completed with exit code: $LASTEXITCODE ==="
+        
+        # Check what was created
+        Write-Host "=== Contents of dist directory ==="
+        Get-ChildItem ./dist/ -ErrorAction SilentlyContinue | Select-Object Name, Length
+        
+        # Verify MSI was created
         $msiPaths = @(
           "./dist/Redball-$version.msi",
           "./dist/Redball.msi"
@@ -122,14 +157,12 @@ jobs:
           if (Test-Path $path) {
             Write-Host "✓ Found MSI at: $path"
             $found = $true
-            # Ensure we have a standardized filename
             Copy-Item $path './dist/Redball.msi' -Force
             break
           }
         }
         if (-not $found) {
-          Write-Error "❌ MSI file not found after build. Contents of ./dist/:"
-          Get-ChildItem ./dist/ -ErrorAction SilentlyContinue | Format-Table
+          Write-Error "❌ MSI file not found after build"
           exit 1
         }
         Write-Host "✓ MSI build complete"
