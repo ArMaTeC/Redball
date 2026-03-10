@@ -107,13 +107,15 @@ jobs:
     - name: Build MSI
       shell: bash
       run: |
+        set +e
         VERSION="${{ needs.tag.outputs.version }}"
         cd installer
         echo "=== Building MSI v${VERSION} ==="
-        wix.exe build Redball.wxs -o "../dist/Redball-${VERSION}.msi" -ext WixToolset.UI.wixext -d "ProductVersion=${VERSION}" > ../dist/wix.log 2>&1; WIX_RC=$?
+        wix.exe build Redball.wxs -o "../dist/Redball-${VERSION}.msi" -ext WixToolset.UI.wixext -d "ProductVersion=${VERSION}" > ../dist/wix.log 2>&1
+        WIX_RC=$?
         echo "=== WiX exit code: ${WIX_RC} ==="
         echo "=== WiX output ==="
-        cat ../dist/wix.log || true
+        cat ../dist/wix.log
         cd ..
         echo "=== dist contents ==="
         ls -la dist/
