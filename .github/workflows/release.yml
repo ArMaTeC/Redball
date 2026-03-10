@@ -40,11 +40,12 @@ jobs:
       shell: bash
       run: |
         # Use input version if provided (manual trigger), otherwise extract from script
-        if [ -n "${{ github.event.inputs.version }}" ]; then
-          VERSION="${{ github.event.inputs.version }}"
+        INPUT_VERSION="${{ github.event.inputs.version }}"
+        if [ -n "$INPUT_VERSION" ]; then
+          VERSION="$INPUT_VERSION"
         else
-          # Extract version from Redball.ps1
-          VERSION=$(grep -oP "VERSION = '\K[\d.]+" Redball.ps1 || echo "2.0.0")
+          # Extract version from Redball.ps1 - look for $script:VERSION
+          VERSION=$(grep -oP '\$script:VERSION = '\''\K[\d.]+' Redball.ps1 || echo "2.0.0")
         fi
         
         echo "Using version: $VERSION"
@@ -72,107 +73,70 @@ jobs:
     needs: tag
     if: needs.tag.outputs.created == 'true'
     runs-on: windows-latest
-    outputs:
-      artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
     - name: Install WiX Toolset
       shell: pwsh
       run: |
         dotnet tool install --global wix --version 4.0.5
-        # Verify installation and add to PATH if needed
-        $wixPath = Join-Path $env:USERPROFILE '.dotnet\tools'
-        if ($env:PATH -notlike "*$wixPath*") {
-          $env:PATH = "$wixPath;$env:PATH"
-          echo "$wixPath" | Out-File -FilePath $env:GITHUB_PATH -Append
-        }
-        # Verify wix is accessible
-        $wix = Get-Command wix.exe -ErrorAction SilentlyContinue
-        if (-not $wix) {
-          throw "wix.exe not found in PATH after installation"
-        }
-        Write-Host "WiX version: $(wix.exe --version)"
+        # Add to PATH for current session
+        $wixPath = "$env:USERPROFILE\.dotnet\tools"
+        $env:PATH = "$wixPath;$env:PATH"
+        # Verify
+        wix.exe --version
 
     - name: Build MSI
       shell: pwsh
       run: |
         $version = '${{ needs.tag.outputs.version }}'
         Write-Host "Building MSI for version: $version"
+        
+        # Ensure dist directory exists
+        New-Item -ItemType Directory -Path './dist' -Force | Out-Null
+        
+        # Run the build script
         & ./installer/Build-MSI.ps1 -Version $version
-        if ($LASTEXITCODE -ne 0) {
-          throw "MSI build failed with exit code $LASTEXITCODE"
-        }
+        
         # Verify MSI was created
-        $msiPath = "./dist/Redball-$version.msi"
-        if (-not (Test-Path $msiPath)) {
-          $msiPath = "./dist/Redball.msi"
+        $msiPaths = @(
+          "./dist/Redball-$version.msi",
+          "./dist/Redball.msi"
+        )
+        $found = $false
+        foreach ($path in $msiPaths) {
+          if (Test-Path $path) {
+            Write-Host "Found MSI at: $path"
+            $found = $true
+            # Copy to standard name
+            Copy-Item $path './dist/Redball.msi' -Force
+            break
+          }
         }
-        if (Test-Path $msiPath) {
-          Write-Host "MSI created successfully: $msiPath"
-          Get-Item $msiPath | Select-Object Name, Length, LastWriteTime
-        } else {
-          throw "MSI file not found after build"
+        if (-not $found) {
+          Write-Error "MSI file not found after build"
+          Get-ChildItem ./dist/ -ErrorAction SilentlyContinue
+          exit 1
         }
-
-    - name: Prepare signing artifact
-      shell: pwsh
-      run: |
-        $version = '${{ needs.tag.outputs.version }}'
-        $msiSource = "./dist/Redball-$version.msi"
-        if (-not (Test-Path $msiSource)) {
-            $msiSource = './dist/Redball.msi'
-        }
-        Copy-Item $msiSource './dist/Redball.msi' -Force -ErrorAction SilentlyContinue
 
     - name: Upload unsigned MSI
       uses: actions/upload-artifact@v4
-      id: upload-artifact
       with:
         name: redball-unsigned
         path: ./dist/Redball.msi
         retention-days: 7
         if-no-files-found: error
 
-  sign:
-    name: Sign with SignPath
-    needs: [tag, build]
-    runs-on: ubuntu-latest
-    if: needs.tag.outputs.created == 'true'
-    continue-on-error: true
-
-    steps:
-    - name: Download unsigned artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: redball-unsigned
-        path: ./artifacts
-
-    - name: Submit MSI for signing
-      uses: signpath/github-action-submit-signing-request@v1
-      with:
-        api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
-        organization-id: '${{ secrets.SIGNPATH_ORG_ID }}'
-        project-slug: 'redball'
-        signing-policy-slug: 'release-signing'
-        artifact-configuration-slug: 'Redball-MSI'
-        github-artifact-id: '${{ needs.build.outputs.artifact-id }}'
-        wait-for-completion: true
-        output-artifact-directory: './signed'
-        wait-for-completion-timeout-in-seconds: 600
-
-    - name: Upload signed artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: redball-signed
-        path: ./signed/
-        retention-days: 90
-
   release:
     name: Create GitHub Release
-    needs: [tag, build, sign]
+    needs: [tag, build]
     runs-on: ubuntu-latest
     if: needs.tag.outputs.created == 'true'
 
@@ -180,19 +144,20 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Download unsigned artifacts (fallback)
+    - name: Download unsigned MSI
       uses: actions/download-artifact@v4
-      if: needs.sign.result == 'failure' || needs.sign.result == 'skipped'
       with:
         name: redball-unsigned
         path: ./release
 
-    - name: Download signed artifacts
-      uses: actions/download-artifact@v4
-      if: needs.sign.result == 'success'
-      with:
-        name: redball-signed
-        path: ./release
+    - name: Verify MSI exists
+      shell: bash
+      run: |
+        ls -la ./release/
+        if [ ! -f "./release/Redball.msi" ]; then
+          echo "ERROR: Redball.msi not found"
+          exit 1
+        fi
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
