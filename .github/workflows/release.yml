@@ -84,31 +84,27 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Install WiX Toolset
-      shell: cmd
+      shell: pwsh
       run: |
         dotnet tool install --global wix --version 4.0.5
-        "%USERPROFILE%\.dotnet\tools\wix.exe" extension add -g WixToolset.UI.wixext
-        "%USERPROFILE%\.dotnet\tools\wix.exe" --version
-        "%USERPROFILE%\.dotnet\tools\wix.exe" extension list -g
+        $wixDir = Join-Path $env:USERPROFILE '.dotnet\tools'
+        echo "$wixDir" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        $wix = Join-Path $wixDir 'wix.exe'
+        & $wix extension add -g WixToolset.UI.wixext
+        & $wix --version
+
+    - name: Verify WiX
+      run: wix --version
 
     - name: Build MSI
-      shell: cmd
       run: |
-        set VERSION=${{ needs.tag.outputs.version }}
-        echo Building MSI for version %VERSION%
-        if not exist dist mkdir dist
-        set WIX=%USERPROFILE%\.dotnet\tools\wix.exe
-        echo Using WiX at: %WIX%
-        echo Files in installer directory:
-        dir installer\
-        "%WIX%" build installer\Redball.wxs -o dist\Redball-%VERSION%.msi -ext WixToolset.UI.wixext -d ProductVersion=%VERSION%
-        if %ERRORLEVEL% neq 0 (
-          echo WiX build failed with error %ERRORLEVEL%
-          exit /b %ERRORLEVEL%
-        )
-        echo Build succeeded
-        copy "dist\Redball-%VERSION%.msi" "dist\Redball.msi"
-        dir dist\
+        $version = '${{ needs.tag.outputs.version }}'
+        New-Item -ItemType Directory -Path dist -Force | Out-Null
+        Push-Location installer
+        wix build Redball.wxs -o "..\dist\Redball-$version.msi" -ext WixToolset.UI.wixext -d "ProductVersion=$version"
+        Pop-Location
+        Copy-Item "dist\Redball-$version.msi" "dist\Redball.msi" -Force
+        Get-ChildItem dist\*.msi
 
     - name: Upload unsigned MSI
       uses: actions/upload-artifact@v4
