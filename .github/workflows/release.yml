@@ -86,12 +86,18 @@ jobs:
     - name: Install WiX Toolset
       shell: pwsh
       run: |
+        # Install WiX toolset
         dotnet tool install --global wix --version 4.0.5
-        # Add to PATH for current session
-        $wixPath = "$env:USERPROFILE\.dotnet\tools"
-        $env:PATH = "$wixPath;$env:PATH"
-        # Verify
-        wix.exe --version
+        
+        # Refresh PATH
+        $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
+        
+        # Install required WiX extensions globally
+        & "$env:USERPROFILE\.dotnet\tools\wix.exe" extension add -g WixToolset.UI.wixext/4.0.5
+        
+        # Verify installation
+        & "$env:USERPROFILE\.dotnet\tools\wix.exe" --version
+        & "$env:USERPROFILE\.dotnet\tools\wix.exe" extension list -g
 
     - name: Build MSI
       shell: pwsh
@@ -102,10 +108,11 @@ jobs:
         # Ensure dist directory exists
         New-Item -ItemType Directory -Path './dist' -Force | Out-Null
         
-        # Run the build script
-        & ./installer/Build-MSI.ps1 -Version $version
+        # Run the build script with explicit WiX path
+        $wixPath = "$env:USERPROFILE\.dotnet\tools\wix.exe"
+        & ./installer/Build-MSI.ps1 -Version $version -WixBinPath "$env:USERPROFILE\.dotnet\tools"
         
-        # Verify MSI was created
+        # Check if build succeeded by looking for output
         $msiPaths = @(
           "./dist/Redball-$version.msi",
           "./dist/Redball.msi"
@@ -113,18 +120,19 @@ jobs:
         $found = $false
         foreach ($path in $msiPaths) {
           if (Test-Path $path) {
-            Write-Host "Found MSI at: $path"
+            Write-Host "✓ Found MSI at: $path"
             $found = $true
-            # Copy to standard name
+            # Ensure we have a standardized filename
             Copy-Item $path './dist/Redball.msi' -Force
             break
           }
         }
         if (-not $found) {
-          Write-Error "MSI file not found after build"
-          Get-ChildItem ./dist/ -ErrorAction SilentlyContinue
+          Write-Error "❌ MSI file not found after build. Contents of ./dist/:"
+          Get-ChildItem ./dist/ -ErrorAction SilentlyContinue | Format-Table
           exit 1
         }
+        Write-Host "✓ MSI build complete"
 
     - name: Upload unsigned MSI
       uses: actions/upload-artifact@v4
