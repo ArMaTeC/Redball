@@ -76,16 +76,18 @@ param(
     [switch]$ExitOnComplete
 )
 
-$script:VERSION = '2.0.30'
+$script:VERSION = '2.0.31'
 $script:APP_NAME = 'Redball'
 $script:IsPS7 = $PSVersionTable.PSVersion.Major -ge 7
 
 # Resolve script root once - works in direct run, ps2exe EXE, and dot-source contexts
 $script:AppRoot = if ($PSScriptRoot -and $PSScriptRoot -is [string] -and (Test-Path $PSScriptRoot)) {
     $PSScriptRoot
-} elseif ($MyInvocation.MyCommand.Path) {
+}
+elseif ($MyInvocation.MyCommand.Path) {
     Split-Path -Parent $MyInvocation.MyCommand.Path
-} else {
+}
+else {
     (Get-Location).Path
 }
 
@@ -133,105 +135,105 @@ $ES_SYSTEM_REQUIRED = [uint32]1
 $ES_DISPLAY_REQUIRED = [uint32]2
 
 $script:state = [ordered]@{
-    Active = $true
-    PreventDisplaySleep = $true
-    UseHeartbeatKeypress = $true
-    HeartbeatSeconds = 59
-    Until = $null
-    NotifyIcon = $null
-    Context = $null
-    HeartbeatTimer = $null
-    DurationTimer = $null
-    ToggleMenuItem = $null
-    DisplayMenuItem = $null
-    HeartbeatMenuItem = $null
-    StatusMenuItem = $null
-    BatteryMenuItem = $null
-    StartupMenuItem = $null
-    PreviousIcon = $null
-    IsShuttingDown = $false
-    LastStatusText = ''
-    LastIconState = ''
-    UiUpdatePending = $false
-    BatteryAware = $false
-    BatteryThreshold = 20
-    OnBattery = $false
-    AutoPausedBattery = $false
-    NetworkAware = $false
-    AutoPausedNetwork = $false
-    ActiveBeforeNetwork = $false
-    IdleDetection = $false
-    IdleThresholdMinutes = 30
-    AutoPausedIdle = $false
-    AutoPausedPresentation = $false
-    AutoPausedSchedule = $false
-    ManualOverride = $false
-    StartTime = $null
-    ActiveBeforeBattery = $false
-    ActiveBeforeIdle = $false
-    SessionId = [guid]::NewGuid().ToString()
-    KeepAwakeRunspaceInfo = $null
+    Active                      = $true
+    PreventDisplaySleep         = $true
+    UseHeartbeatKeypress        = $true
+    HeartbeatSeconds            = 59
+    Until                       = $null
+    NotifyIcon                  = $null
+    Context                     = $null
+    HeartbeatTimer              = $null
+    DurationTimer               = $null
+    ToggleMenuItem              = $null
+    DisplayMenuItem             = $null
+    HeartbeatMenuItem           = $null
+    StatusMenuItem              = $null
+    BatteryMenuItem             = $null
+    StartupMenuItem             = $null
+    PreviousIcon                = $null
+    IsShuttingDown              = $false
+    LastStatusText              = ''
+    LastIconState               = ''
+    UiUpdatePending             = $false
+    BatteryAware                = $false
+    BatteryThreshold            = 20
+    OnBattery                   = $false
+    AutoPausedBattery           = $false
+    NetworkAware                = $false
+    AutoPausedNetwork           = $false
+    ActiveBeforeNetwork         = $false
+    IdleDetection               = $false
+    IdleThresholdMinutes        = 30
+    AutoPausedIdle              = $false
+    AutoPausedPresentation      = $false
+    AutoPausedSchedule          = $false
+    ManualOverride              = $false
+    StartTime                   = $null
+    ActiveBeforeBattery         = $false
+    ActiveBeforeIdle            = $false
+    SessionId                   = [guid]::NewGuid().ToString()
+    KeepAwakeRunspaceInfo       = $null
     # TypeThing - Clipboard Typer state
-    TypeThingIsTyping = $false
-    TypeThingShouldStop = $false
-    TypeThingText = ''
-    TypeThingIndex = 0
-    TypeThingTotalChars = 0
-    TypeThingStartTime = $null
-    TypeThingTimer = $null
-    TypeThingCountdown = $null
+    TypeThingIsTyping           = $false
+    TypeThingShouldStop         = $false
+    TypeThingText               = ''
+    TypeThingIndex              = 0
+    TypeThingTotalChars         = 0
+    TypeThingStartTime          = $null
+    TypeThingTimer              = $null
+    TypeThingCountdown          = $null
     TypeThingCountdownRemaining = 0
-    TypeThingMenuType = $null
-    TypeThingMenuStop = $null
-    TypeThingMenuStatus = $null
-    TypeThingHotkeyWindow = $null
-    TypeThingHotkeyStartId = 100
-    TypeThingHotkeyStopId = 101
-    TypeThingHotkeysRegistered = $false
+    TypeThingMenuType           = $null
+    TypeThingMenuStop           = $null
+    TypeThingMenuStatus         = $null
+    TypeThingHotkeyWindow       = $null
+    TypeThingHotkeyStartId      = 100
+    TypeThingHotkeyStopId       = 101
+    TypeThingHotkeysRegistered  = $false
 }
 
 $_detectedLocale = try { (Get-Culture).TwoLetterISOLanguageName } catch { 'en' }
 
 $script:config = @{
-    HeartbeatSeconds = 59
-    PreventDisplaySleep = $true
-    UseHeartbeatKeypress = $true
-    DefaultDuration = 60
-    LogPath = (Join-Path $script:AppRoot 'Redball.log')
-    MaxLogSizeMB = 10
-    ShowBalloonOnStart = $true
-    Locale = $_detectedLocale
-    MinimizeOnStart = $false
-    BatteryAware = $false
-    BatteryThreshold = 20
-    NetworkAware = $false
-    IdleDetection = $false
-    AutoExitOnComplete = $false
-    ScheduleEnabled = $false
-    ScheduleStartTime = '09:00'
-    ScheduleStopTime = '18:00'
-    ScheduleDays = @('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
-    PresentationModeDetection = $false
-    EnablePerformanceMetrics = $false
-    EnableTelemetry = $false
-    ProcessIsolation = $false
-    UpdateRepoOwner = 'karl-lawrence'
-    UpdateRepoName = 'Redball'
-    UpdateChannel = 'stable'
-    VerifyUpdateSignature = $false
+    HeartbeatSeconds           = 59
+    PreventDisplaySleep        = $true
+    UseHeartbeatKeypress       = $true
+    DefaultDuration            = 60
+    LogPath                    = (Join-Path $script:AppRoot 'Redball.log')
+    MaxLogSizeMB               = 10
+    ShowBalloonOnStart         = $true
+    Locale                     = $_detectedLocale
+    MinimizeOnStart            = $false
+    BatteryAware               = $false
+    BatteryThreshold           = 20
+    NetworkAware               = $false
+    IdleDetection              = $false
+    AutoExitOnComplete         = $false
+    ScheduleEnabled            = $false
+    ScheduleStartTime          = '09:00'
+    ScheduleStopTime           = '18:00'
+    ScheduleDays               = @('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
+    PresentationModeDetection  = $false
+    EnablePerformanceMetrics   = $false
+    EnableTelemetry            = $false
+    ProcessIsolation           = $false
+    UpdateRepoOwner            = 'karl-lawrence'
+    UpdateRepoName             = 'Redball'
+    UpdateChannel              = 'stable'
+    VerifyUpdateSignature      = $false
     # TypeThing - Clipboard Typer settings
-    TypeThingEnabled = $true
-    TypeThingMinDelayMs = 30
-    TypeThingMaxDelayMs = 120
-    TypeThingStartDelaySec = 3
-    TypeThingStartHotkey = 'Ctrl+Shift+V'
-    TypeThingStopHotkey = 'Ctrl+Shift+X'
-    TypeThingTheme = 'dark'
-    TypeThingAddRandomPauses = $true
+    TypeThingEnabled           = $true
+    TypeThingMinDelayMs        = 30
+    TypeThingMaxDelayMs        = 120
+    TypeThingStartDelaySec     = 3
+    TypeThingStartHotkey       = 'Ctrl+Shift+V'
+    TypeThingStopHotkey        = 'Ctrl+Shift+X'
+    TypeThingTheme             = 'dark'
+    TypeThingAddRandomPauses   = $true
     TypeThingRandomPauseChance = 5
-    TypeThingRandomPauseMaxMs = 500
-    TypeThingTypeNewlines = $true
-    TypeThingNotifications = $true
+    TypeThingRandomPauseMaxMs  = 500
+    TypeThingTypeNewlines      = $true
+    TypeThingNotifications     = $true
 }
 
 $script:locales = @{}
@@ -306,10 +308,10 @@ function Get-RedballProcess {
         $_.ProcessId -ne $currentPID -and $_.CommandLine -like '*Redball.ps1*'
     } | ForEach-Object {
         [PSCustomObject]@{
-            ProcessId = $_.ProcessId
-            Name = $_.Name
+            ProcessId   = $_.ProcessId
+            Name        = $_.Name
             CommandLine = $_.CommandLine
-            StartTime = $_.CreationDate
+            StartTime   = $_.CreationDate
         }
     }
 }
@@ -975,25 +977,25 @@ function Get-CustomTrayIcon {
         $colors = switch ($State) {
             'active' {
                 @{  # Bright Red
-                    Dark = [System.Drawing.Color]::FromArgb(139, 0, 0)
-                    Base = [System.Drawing.Color]::FromArgb(220, 20, 60)
-                    Light = [System.Drawing.Color]::FromArgb(255, 99, 71)
+                    Dark      = [System.Drawing.Color]::FromArgb(139, 0, 0)
+                    Base      = [System.Drawing.Color]::FromArgb(220, 20, 60)
+                    Light     = [System.Drawing.Color]::FromArgb(255, 99, 71)
                     Highlight = [System.Drawing.Color]::FromArgb(255, 160, 122)
                 }
             }
             'timed' {
                 @{  # Orange/Red gradient
-                    Dark = [System.Drawing.Color]::FromArgb(180, 50, 0)
-                    Base = [System.Drawing.Color]::FromArgb(255, 140, 0)
-                    Light = [System.Drawing.Color]::FromArgb(255, 180, 60)
+                    Dark      = [System.Drawing.Color]::FromArgb(180, 50, 0)
+                    Base      = [System.Drawing.Color]::FromArgb(255, 140, 0)
+                    Light     = [System.Drawing.Color]::FromArgb(255, 180, 60)
                     Highlight = [System.Drawing.Color]::FromArgb(255, 215, 100)
                 }
             }
             'paused' {
                 @{  # Dark Red/Gray
-                    Dark = [System.Drawing.Color]::FromArgb(80, 20, 20)
-                    Base = [System.Drawing.Color]::FromArgb(120, 40, 40)
-                    Light = [System.Drawing.Color]::FromArgb(160, 60, 60)
+                    Dark      = [System.Drawing.Color]::FromArgb(80, 20, 20)
+                    Base      = [System.Drawing.Color]::FromArgb(120, 40, 40)
+                    Light     = [System.Drawing.Color]::FromArgb(160, 60, 60)
                     Highlight = [System.Drawing.Color]::FromArgb(180, 80, 80)
                 }
             }
@@ -1276,7 +1278,7 @@ function Show-RedballSettings {
                     $clb.Location = New-Object System.Drawing.Point(14, $y)
                     $clb.Size = New-Object System.Drawing.Size(200, 112)
                     $clb.CheckOnClick = $true
-                    $allDays = @('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                    $allDays = @('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
                     foreach ($day in $allDays) {
                         $idx = $clb.Items.Add($day)
                         if ($Value -contains $day) {
@@ -1302,9 +1304,9 @@ function Show-RedballSettings {
         $tabGeneral.Controls.Add($panelGeneral)
 
         Add-SettingRow $panelGeneral 'General' 'DefaultDuration' 'Default Duration (minutes)' `
-            'Default number of minutes for timed keep-awake mode.' 'number' $script:config.DefaultDuration @{Min=1;Max=720}
+            'Default number of minutes for timed keep-awake mode.' 'number' $script:config.DefaultDuration @{Min = 1; Max = 720 }
         Add-SettingRow $panelGeneral 'General' 'HeartbeatSeconds' 'Heartbeat Interval (seconds)' `
-            'How often to send the F15 keypress and refresh the keep-awake state.' 'number' $script:config.HeartbeatSeconds @{Min=10;Max=300}
+            'How often to send the F15 keypress and refresh the keep-awake state.' 'number' $script:config.HeartbeatSeconds @{Min = 10; Max = 300 }
         Add-SettingRow $panelGeneral 'General' 'ShowBalloonOnStart' 'Show Notification on Start' `
             'Display a tray notification when Redball starts keeping your PC awake.' 'bool' $script:config.ShowBalloonOnStart
         Add-SettingRow $panelGeneral 'General' 'MinimizeOnStart' 'Start Minimized' `
@@ -1312,7 +1314,7 @@ function Show-RedballSettings {
         Add-SettingRow $panelGeneral 'General' 'AutoExitOnComplete' 'Exit When Timer Completes' `
             'Automatically close Redball when a timed keep-awake period finishes.' 'bool' $script:config.AutoExitOnComplete
         Add-SettingRow $panelGeneral 'General' 'Locale' 'Language' `
-            'Display language for menus and notifications.' 'dropdown' $script:config.Locale @{Items=@('en','es','fr','de')}
+            'Display language for menus and notifications.' 'dropdown' $script:config.Locale @{Items = @('en', 'es', 'fr', 'de') }
 
         $tabs.TabPages.Add($tabGeneral)
 
@@ -1332,7 +1334,7 @@ function Show-RedballSettings {
         Add-SettingRow $panelPower 'Power' 'BatteryAware' 'Battery-Aware Mode' `
             'Automatically pause keep-awake when battery drops below the threshold.' 'bool' $script:state.BatteryAware
         Add-SettingRow $panelPower 'Power' 'BatteryThreshold' 'Battery Threshold (%)' `
-            'Battery percentage at which to auto-pause when on battery power.' 'number' $script:state.BatteryThreshold @{Min=5;Max=95}
+            'Battery percentage at which to auto-pause when on battery power.' 'number' $script:state.BatteryThreshold @{Min = 5; Max = 95 }
         Add-SettingRow $panelPower 'Power' 'NetworkAware' 'Network-Aware Mode' `
             'Automatically pause keep-awake when the network connection is lost.' 'bool' $script:state.NetworkAware
         Add-SettingRow $panelPower 'Power' 'IdleDetection' 'Idle Detection (30 min)' `
@@ -1372,7 +1374,7 @@ function Show-RedballSettings {
         $tabAdvanced.Controls.Add($panelAdvanced)
 
         Add-SettingRow $panelAdvanced 'Advanced' 'MaxLogSizeMB' 'Max Log File Size (MB)' `
-            'Log file is rotated when it exceeds this size. Old logs are kept as backups.' 'number' $script:config.MaxLogSizeMB @{Min=1;Max=100}
+            'Log file is rotated when it exceeds this size. Old logs are kept as backups.' 'number' $script:config.MaxLogSizeMB @{Min = 1; Max = 100 }
         Add-SettingRow $panelAdvanced 'Advanced' 'ProcessIsolation' 'Process Isolation' `
             'Run the keep-awake API call in a separate runspace for extra reliability.' 'bool' $script:config.ProcessIsolation
         Add-SettingRow $panelAdvanced 'Advanced' 'EnablePerformanceMetrics' 'Performance Metrics' `
@@ -1380,7 +1382,7 @@ function Show-RedballSettings {
         Add-SettingRow $panelAdvanced 'Advanced' 'EnableTelemetry' 'Anonymous Telemetry' `
             'Send anonymous usage statistics to help improve Redball.' 'bool' $script:config.EnableTelemetry
         Add-SettingRow $panelAdvanced 'Advanced' 'UpdateChannel' 'Update Channel' `
-            'Which release channel to check for updates.' 'dropdown' $script:config.UpdateChannel @{Items=@('stable','beta')}
+            'Which release channel to check for updates.' 'dropdown' $script:config.UpdateChannel @{Items = @('stable', 'beta') }
         Add-SettingRow $panelAdvanced 'Advanced' 'VerifyUpdateSignature' 'Verify Update Signatures' `
             'Require valid digital signatures on downloaded updates before installing.' 'bool' $script:config.VerifyUpdateSignature
         Add-SettingRow $panelAdvanced 'Advanced' 'UpdateRepoOwner' 'Update Repository Owner' `
@@ -1402,11 +1404,11 @@ function Show-RedballSettings {
         Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingEnabled' 'Enable TypeThing' `
             'Enable the clipboard typing feature (type clipboard with a hotkey).' 'bool' $script:config.TypeThingEnabled
         Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingMinDelayMs' 'Min Delay (ms)' `
-            'Minimum delay between keystrokes in milliseconds.' 'number' $script:config.TypeThingMinDelayMs @{Min=10;Max=1000}
+            'Minimum delay between keystrokes in milliseconds.' 'number' $script:config.TypeThingMinDelayMs @{Min = 10; Max = 1000 }
         Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingMaxDelayMs' 'Max Delay (ms)' `
-            'Maximum delay between keystrokes in milliseconds.' 'number' $script:config.TypeThingMaxDelayMs @{Min=10;Max=2000}
+            'Maximum delay between keystrokes in milliseconds.' 'number' $script:config.TypeThingMaxDelayMs @{Min = 10; Max = 2000 }
         Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingStartDelaySec' 'Start Delay (seconds)' `
-            'Countdown before typing begins after pressing the hotkey.' 'number' $script:config.TypeThingStartDelaySec @{Min=0;Max=30}
+            'Countdown before typing begins after pressing the hotkey.' 'number' $script:config.TypeThingStartDelaySec @{Min = 0; Max = 30 }
         Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingStartHotkey' 'Start Hotkey' `
             'Keyboard shortcut to begin typing clipboard contents.' 'text' $script:config.TypeThingStartHotkey
         Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingStopHotkey' 'Stop Hotkey' `
@@ -1418,7 +1420,7 @@ function Show-RedballSettings {
         Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingNotifications' 'Show Notifications' `
             'Display tray notifications when typing starts and finishes.' 'bool' $script:config.TypeThingNotifications
         Add-SettingRow $panelTypeThing 'TypeThing' 'TypeThingTheme' 'Settings Theme' `
-            'Theme for the TypeThing settings dialog.' 'dropdown' $script:config.TypeThingTheme @{Items=@('light','dark','hacker')}
+            'Theme for the TypeThing settings dialog.' 'dropdown' $script:config.TypeThingTheme @{Items = @('light', 'dark', 'hacker') }
 
         $tabs.TabPages.Add($tabTypeThing)
 
@@ -1652,69 +1654,69 @@ function Show-AboutDialog {
         $script:aboutReleaseUrl = $null
 
         $checkButton.add_Click({
-            try {
-                $checkButton.Enabled = $false
-                $checkButton.Text = 'Checking...'
-                $form.Refresh()
+                try {
+                    $checkButton.Enabled = $false
+                    $checkButton.Text = 'Checking...'
+                    $form.Refresh()
 
-                $status = Test-RedballUpdateAvailable
+                    $status = Test-RedballUpdateAvailable
 
-                if ($status.LatestVersion) {
-                    $latestLabel.Text = "Latest release: v$($status.LatestVersion)"
+                    if ($status.LatestVersion) {
+                        $latestLabel.Text = "Latest release: v$($status.LatestVersion)"
+                    }
+                    else {
+                        $latestLabel.Text = 'Latest release: unable to retrieve'
+                        $updateStatusLabel.Text = if ($status.Reason) { $status.Reason } else { 'Check your network connection.' }
+                        $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 180, 50)
+                        $checkButton.Text = 'Retry'
+                        $checkButton.Enabled = $true
+                        return
+                    }
+
+                    if ($status.UpdateAvailable) {
+                        $updateStatusLabel.Text = "Update available! v$($status.CurrentVersion) -> v$($status.LatestVersion)"
+                        $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(100, 220, 100)
+                        $downloadButton.Visible = $true
+                        if ($status.Release -and $status.Release.html_url) {
+                            $script:aboutReleaseUrl = $status.Release.html_url
+                        }
+                        if ($status.Release -and $status.Release.body) {
+                            $releaseNotesBox.Text = $status.Release.body -replace '\r\n?', "`r`n"
+                            $releaseNotesBox.Visible = $true
+                        }
+                    }
+                    else {
+                        $updateStatusLabel.Text = 'You are running the latest version.'
+                        $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(100, 220, 100)
+                    }
+
+                    $checkButton.Text = 'Check Again'
+                    $checkButton.Enabled = $true
                 }
-                else {
-                    $latestLabel.Text = 'Latest release: unable to retrieve'
-                    $updateStatusLabel.Text = if ($status.Reason) { $status.Reason } else { 'Check your network connection.' }
-                    $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 180, 50)
+                catch {
+                    $updateStatusLabel.Text = "Error checking: $_"
+                    $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 100, 100)
                     $checkButton.Text = 'Retry'
                     $checkButton.Enabled = $true
-                    return
+                    Write-RedballLog -Level 'WARN' -Message "About dialog update check error: $_"
                 }
-
-                if ($status.UpdateAvailable) {
-                    $updateStatusLabel.Text = "Update available! v$($status.CurrentVersion) -> v$($status.LatestVersion)"
-                    $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(100, 220, 100)
-                    $downloadButton.Visible = $true
-                    if ($status.Release -and $status.Release.html_url) {
-                        $script:aboutReleaseUrl = $status.Release.html_url
-                    }
-                    if ($status.Release -and $status.Release.body) {
-                        $releaseNotesBox.Text = $status.Release.body -replace '\r\n?', "`r`n"
-                        $releaseNotesBox.Visible = $true
-                    }
-                }
-                else {
-                    $updateStatusLabel.Text = 'You are running the latest version.'
-                    $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(100, 220, 100)
-                }
-
-                $checkButton.Text = 'Check Again'
-                $checkButton.Enabled = $true
-            }
-            catch {
-                $updateStatusLabel.Text = "Error checking: $_"
-                $updateStatusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 100, 100)
-                $checkButton.Text = 'Retry'
-                $checkButton.Enabled = $true
-                Write-RedballLog -Level 'WARN' -Message "About dialog update check error: $_"
-            }
-        })
+            })
 
         $downloadButton.add_Click({
-            try {
-                if ($script:aboutReleaseUrl) {
-                    Start-Process $script:aboutReleaseUrl
+                try {
+                    if ($script:aboutReleaseUrl) {
+                        Start-Process $script:aboutReleaseUrl
+                    }
+                    else {
+                        $owner = $script:config.UpdateRepoOwner
+                        $repo = $script:config.UpdateRepoName
+                        Start-Process "https://github.com/$owner/$repo/releases/latest"
+                    }
                 }
-                else {
-                    $owner = $script:config.UpdateRepoOwner
-                    $repo = $script:config.UpdateRepoName
-                    Start-Process "https://github.com/$owner/$repo/releases/latest"
+                catch {
+                    Write-RedballLog -Level 'WARN' -Message "About dialog download error: $_"
                 }
-            }
-            catch {
-                Write-RedballLog -Level 'WARN' -Message "About dialog download error: $_"
-            }
-        })
+            })
 
         [void]$form.ShowDialog()
         $form.Dispose()
@@ -1740,31 +1742,31 @@ function ConvertTo-HotkeyParams {
     [uint32]$vk = 0
 
     $vkMap = @{
-        'A'=0x41;'B'=0x42;'C'=0x43;'D'=0x44;'E'=0x45;'F'=0x46;'G'=0x47;'H'=0x48
-        'I'=0x49;'J'=0x4A;'K'=0x4B;'L'=0x4C;'M'=0x4D;'N'=0x4E;'O'=0x4F;'P'=0x50
-        'Q'=0x51;'R'=0x52;'S'=0x53;'T'=0x54;'U'=0x55;'V'=0x56;'W'=0x57;'X'=0x58
-        'Y'=0x59;'Z'=0x5A
-        '0'=0x30;'1'=0x31;'2'=0x32;'3'=0x33;'4'=0x34;'5'=0x35;'6'=0x36;'7'=0x37
-        '8'=0x38;'9'=0x39
-        'F1'=0x70;'F2'=0x71;'F3'=0x72;'F4'=0x73;'F5'=0x74;'F6'=0x75;'F7'=0x76
-        'F8'=0x77;'F9'=0x78;'F10'=0x79;'F11'=0x7A;'F12'=0x7B
-        'Pause'=0x13;'Space'=0x20;'Escape'=0x1B;'Enter'=0x0D;'Tab'=0x09
-        'Insert'=0x2D;'Delete'=0x2E;'Home'=0x24;'End'=0x23
-        'PageUp'=0x21;'PageDown'=0x22
-        'Left'=0x25;'Up'=0x26;'Right'=0x27;'Down'=0x28
-        'NumPad0'=0x60;'NumPad1'=0x61;'NumPad2'=0x62;'NumPad3'=0x63;'NumPad4'=0x64
-        'NumPad5'=0x65;'NumPad6'=0x66;'NumPad7'=0x67;'NumPad8'=0x68;'NumPad9'=0x69
-        'OemTilde'=0xC0;'OemMinus'=0xBD;'OemPlus'=0xBB
+        'A' = 0x41; 'B' = 0x42; 'C' = 0x43; 'D' = 0x44; 'E' = 0x45; 'F' = 0x46; 'G' = 0x47; 'H' = 0x48
+        'I' = 0x49; 'J' = 0x4A; 'K' = 0x4B; 'L' = 0x4C; 'M' = 0x4D; 'N' = 0x4E; 'O' = 0x4F; 'P' = 0x50
+        'Q' = 0x51; 'R' = 0x52; 'S' = 0x53; 'T' = 0x54; 'U' = 0x55; 'V' = 0x56; 'W' = 0x57; 'X' = 0x58
+        'Y' = 0x59; 'Z' = 0x5A
+        '0' = 0x30; '1' = 0x31; '2' = 0x32; '3' = 0x33; '4' = 0x34; '5' = 0x35; '6' = 0x36; '7' = 0x37
+        '8' = 0x38; '9' = 0x39
+        'F1' = 0x70; 'F2' = 0x71; 'F3' = 0x72; 'F4' = 0x73; 'F5' = 0x74; 'F6' = 0x75; 'F7' = 0x76
+        'F8' = 0x77; 'F9' = 0x78; 'F10' = 0x79; 'F11' = 0x7A; 'F12' = 0x7B
+        'Pause' = 0x13; 'Space' = 0x20; 'Escape' = 0x1B; 'Enter' = 0x0D; 'Tab' = 0x09
+        'Insert' = 0x2D; 'Delete' = 0x2E; 'Home' = 0x24; 'End' = 0x23
+        'PageUp' = 0x21; 'PageDown' = 0x22
+        'Left' = 0x25; 'Up' = 0x26; 'Right' = 0x27; 'Down' = 0x28
+        'NumPad0' = 0x60; 'NumPad1' = 0x61; 'NumPad2' = 0x62; 'NumPad3' = 0x63; 'NumPad4' = 0x64
+        'NumPad5' = 0x65; 'NumPad6' = 0x66; 'NumPad7' = 0x67; 'NumPad8' = 0x68; 'NumPad9' = 0x69
+        'OemTilde' = 0xC0; 'OemMinus' = 0xBD; 'OemPlus' = 0xBB
     }
 
     foreach ($part in $parts) {
         $trimmed = $part.Trim()
         switch ($trimmed) {
-            'Ctrl'    { $modifiers = $modifiers -bor 0x0002 }
+            'Ctrl' { $modifiers = $modifiers -bor 0x0002 }
             'Control' { $modifiers = $modifiers -bor 0x0002 }
-            'Alt'     { $modifiers = $modifiers -bor 0x0001 }
-            'Shift'   { $modifiers = $modifiers -bor 0x0004 }
-            'Win'     { $modifiers = $modifiers -bor 0x0008 }
+            'Alt' { $modifiers = $modifiers -bor 0x0001 }
+            'Shift' { $modifiers = $modifiers -bor 0x0004 }
+            'Win' { $modifiers = $modifiers -bor 0x0008 }
             default {
                 if ($vkMap.ContainsKey($trimmed)) {
                     $vk = $vkMap[$trimmed]
@@ -1788,6 +1790,13 @@ function Register-TypeThingHotkeys {
     if (-not $script:state.TypeThingHotkeyWindow) { return }
 
     $handle = $script:state.TypeThingHotkeyWindow.Handle
+    if ($handle -eq [IntPtr]::Zero) {
+        Write-RedballLog -Level 'WARN' -Message "TypeThing: Hotkey window handle not ready, skipping registration"
+        return
+    }
+
+    $startRegistered = $false
+    $stopRegistered = $false
 
     try {
         $startParams = ConvertTo-HotkeyParams -HotkeyString $script:config.TypeThingStartHotkey
@@ -1795,6 +1804,7 @@ function Register-TypeThingHotkeys {
             $result = [HotkeyHelper]::RegisterHotKey($handle, $script:state.TypeThingHotkeyStartId,
                 $startParams.Modifiers, $startParams.VirtualKey)
             if ($result) {
+                $startRegistered = $true
                 Write-RedballLog -Level 'INFO' -Message "TypeThing: Start hotkey registered ($($script:config.TypeThingStartHotkey))"
             }
             else {
@@ -1807,6 +1817,7 @@ function Register-TypeThingHotkeys {
             $result = [HotkeyHelper]::RegisterHotKey($handle, $script:state.TypeThingHotkeyStopId,
                 $stopParams.Modifiers, $stopParams.VirtualKey)
             if ($result) {
+                $stopRegistered = $true
                 Write-RedballLog -Level 'INFO' -Message "TypeThing: Stop hotkey registered ($($script:config.TypeThingStopHotkey))"
             }
             else {
@@ -1814,7 +1825,10 @@ function Register-TypeThingHotkeys {
             }
         }
 
-        $script:state.TypeThingHotkeysRegistered = $true
+        # Only mark as registered if at least one hotkey was successfully registered
+        if ($startRegistered -or $stopRegistered) {
+            $script:state.TypeThingHotkeysRegistered = $true
+        }
     }
     catch {
         Write-RedballLog -Level 'WARN' -Message "TypeThing: Hotkey registration error: $_"
@@ -1955,7 +1969,8 @@ function Start-TypeThingTyping {
         if ($script:config.TypeThingNotifications -and $script:state.NotifyIcon) {
             try {
                 $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing', 'Clipboard is empty - copy some text first', [System.Windows.Forms.ToolTipIcon]::Warning)
-            } catch {}
+            }
+            catch {}
         }
         Write-RedballLog -Level 'INFO' -Message 'TypeThing: Clipboard empty, nothing to type'
         return
@@ -1994,7 +2009,8 @@ function Start-TypeThingTyping {
                 $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing',
                     "Typing in $delaySec seconds... ($($script:config.TypeThingStopHotkey) to cancel)",
                     [System.Windows.Forms.ToolTipIcon]::Info)
-            } catch {}
+            }
+            catch {}
         }
 
         # Create countdown timer
@@ -2002,19 +2018,19 @@ function Start-TypeThingTyping {
             $script:state.TypeThingCountdown = New-Object System.Windows.Forms.Timer
             $script:state.TypeThingCountdown.Interval = 1000
             $script:state.TypeThingCountdown.add_Tick({
-                $script:state.TypeThingCountdownRemaining--
-                if ($script:state.TypeThingShouldStop) {
-                    $script:state.TypeThingCountdown.Stop()
-                    return
-                }
-                if ($script:state.TypeThingMenuStatus) {
-                    $script:state.TypeThingMenuStatus.Text = "Status: Typing in $($script:state.TypeThingCountdownRemaining)s..."
-                }
-                if ($script:state.TypeThingCountdownRemaining -le 0) {
-                    $script:state.TypeThingCountdown.Stop()
-                    Start-TypeThingTimer
-                }
-            })
+                    $script:state.TypeThingCountdownRemaining--
+                    if ($script:state.TypeThingShouldStop) {
+                        $script:state.TypeThingCountdown.Stop()
+                        return
+                    }
+                    if ($script:state.TypeThingMenuStatus) {
+                        $script:state.TypeThingMenuStatus.Text = "Status: Typing in $($script:state.TypeThingCountdownRemaining)s..."
+                    }
+                    if ($script:state.TypeThingCountdownRemaining -le 0) {
+                        $script:state.TypeThingCountdown.Stop()
+                        Start-TypeThingTimer
+                    }
+                })
         }
         $script:state.TypeThingCountdown.Start()
     }
@@ -2031,51 +2047,51 @@ function Start-TypeThingTimer {
     if (-not $script:state.TypeThingTimer) {
         $script:state.TypeThingTimer = New-Object System.Windows.Forms.Timer
         $script:state.TypeThingTimer.add_Tick({
-            if ($script:state.TypeThingShouldStop -or $script:state.IsShuttingDown) {
-                Stop-TypeThingTyping
-                return
-            }
-
-            if ($script:state.TypeThingIndex -ge $script:state.TypeThingTotalChars) {
-                Complete-TypeThingTyping
-                return
-            }
-
-            try {
-                $char = $script:state.TypeThingText[$script:state.TypeThingIndex]
-                # Skip \r when followed by \n (Windows \r\n) to avoid double-Enter
-                if ($char -eq "`r" -and ($script:state.TypeThingIndex + 1) -lt $script:state.TypeThingTotalChars -and $script:state.TypeThingText[$script:state.TypeThingIndex + 1] -eq "`n") {
-                    $script:state.TypeThingIndex++
+                if ($script:state.TypeThingShouldStop -or $script:state.IsShuttingDown) {
+                    Stop-TypeThingTyping
                     return
                 }
-                Send-TypeThingChar -Character $char
-                $script:state.TypeThingIndex++
 
-                # Calculate next delay
-                $minDelay = [Math]::Max(10, $script:config.TypeThingMinDelayMs)
-                $maxDelay = [Math]::Max($minDelay + 1, $script:config.TypeThingMaxDelayMs)
-                $delay = Get-Random -Minimum $minDelay -Maximum $maxDelay
+                if ($script:state.TypeThingIndex -ge $script:state.TypeThingTotalChars) {
+                    Complete-TypeThingTyping
+                    return
+                }
 
-                # Random pause for human-like feel
-                if ($script:config.TypeThingAddRandomPauses) {
-                    $roll = Get-Random -Maximum 100
-                    if ($roll -lt $script:config.TypeThingRandomPauseChance) {
-                        $delay += Get-Random -Maximum ([Math]::Max(1, $script:config.TypeThingRandomPauseMaxMs))
+                try {
+                    $char = $script:state.TypeThingText[$script:state.TypeThingIndex]
+                    # Skip \r when followed by \n (Windows \r\n) to avoid double-Enter
+                    if ($char -eq "`r" -and ($script:state.TypeThingIndex + 1) -lt $script:state.TypeThingTotalChars -and $script:state.TypeThingText[$script:state.TypeThingIndex + 1] -eq "`n") {
+                        $script:state.TypeThingIndex++
+                        return
+                    }
+                    Send-TypeThingChar -Character $char
+                    $script:state.TypeThingIndex++
+
+                    # Calculate next delay
+                    $minDelay = [Math]::Max(10, $script:config.TypeThingMinDelayMs)
+                    $maxDelay = [Math]::Max($minDelay + 1, $script:config.TypeThingMaxDelayMs)
+                    $delay = Get-Random -Minimum $minDelay -Maximum $maxDelay
+
+                    # Random pause for human-like feel
+                    if ($script:config.TypeThingAddRandomPauses) {
+                        $roll = Get-Random -Maximum 100
+                        if ($roll -lt $script:config.TypeThingRandomPauseChance) {
+                            $delay += Get-Random -Maximum ([Math]::Max(1, $script:config.TypeThingRandomPauseMaxMs))
+                        }
+                    }
+
+                    $script:state.TypeThingTimer.Interval = $delay
+
+                    # Update status periodically (every 10 chars to reduce overhead)
+                    if ($script:state.TypeThingIndex % 10 -eq 0 -and $script:state.TypeThingMenuStatus) {
+                        $script:state.TypeThingMenuStatus.Text = "Status: Typing $($script:state.TypeThingIndex)/$($script:state.TypeThingTotalChars) chars..."
                     }
                 }
-
-                $script:state.TypeThingTimer.Interval = $delay
-
-                # Update status periodically (every 10 chars to reduce overhead)
-                if ($script:state.TypeThingIndex % 10 -eq 0 -and $script:state.TypeThingMenuStatus) {
-                    $script:state.TypeThingMenuStatus.Text = "Status: Typing $($script:state.TypeThingIndex)/$($script:state.TypeThingTotalChars) chars..."
+                catch {
+                    Write-RedballLog -Level 'WARN' -Message "TypeThing: Error during typing: $_"
+                    Stop-TypeThingTyping
                 }
-            }
-            catch {
-                Write-RedballLog -Level 'WARN' -Message "TypeThing: Error during typing: $_"
-                Stop-TypeThingTyping
-            }
-        })
+            })
     }
 
     $minDelay = [Math]::Max(10, $script:config.TypeThingMinDelayMs)
@@ -2125,7 +2141,8 @@ function Stop-TypeThingTyping {
                 $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing',
                     "Typing stopped ($typed/$total characters typed)",
                     [System.Windows.Forms.ToolTipIcon]::Warning)
-            } catch {}
+            }
+            catch {}
         }
     }
 }
@@ -2142,7 +2159,8 @@ function Complete-TypeThingTyping {
     $total = $script:state.TypeThingTotalChars
     $elapsed = if ($script:state.TypeThingStartTime) {
         ((Get-Date) - $script:state.TypeThingStartTime).TotalSeconds
-    } else { 0 }
+    }
+    else { 0 }
     $elapsedStr = [Math]::Round($elapsed, 1)
 
     # Clear sensitive data from memory
@@ -2165,45 +2183,46 @@ function Complete-TypeThingTyping {
             $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing',
                 "Typing complete ($total characters in ${elapsedStr}s)",
                 [System.Windows.Forms.ToolTipIcon]::Info)
-        } catch {}
+        }
+        catch {}
     }
 }
 
 # --- TypeThing Theme Engine ---
 
 $script:TypeThingThemes = @{
-    light = @{
-        Background = [System.Drawing.Color]::FromArgb(245, 245, 245)
-        Surface = [System.Drawing.Color]::White
-        Text = [System.Drawing.Color]::FromArgb(26, 26, 26)
-        Accent = [System.Drawing.Color]::FromArgb(0, 120, 215)
+    light  = @{
+        Background    = [System.Drawing.Color]::FromArgb(245, 245, 245)
+        Surface       = [System.Drawing.Color]::White
+        Text          = [System.Drawing.Color]::FromArgb(26, 26, 26)
+        Accent        = [System.Drawing.Color]::FromArgb(0, 120, 215)
         SecondaryText = [System.Drawing.Color]::FromArgb(102, 102, 102)
-        Border = [System.Drawing.Color]::FromArgb(204, 204, 204)
-        Active = [System.Drawing.Color]::FromArgb(40, 167, 69)
-        Stopped = [System.Drawing.Color]::FromArgb(220, 53, 69)
-        FontName = 'Segoe UI'
+        Border        = [System.Drawing.Color]::FromArgb(204, 204, 204)
+        Active        = [System.Drawing.Color]::FromArgb(40, 167, 69)
+        Stopped       = [System.Drawing.Color]::FromArgb(220, 53, 69)
+        FontName      = 'Segoe UI'
     }
-    dark = @{
-        Background = [System.Drawing.Color]::FromArgb(30, 30, 30)
-        Surface = [System.Drawing.Color]::FromArgb(45, 45, 45)
-        Text = [System.Drawing.Color]::FromArgb(224, 224, 224)
-        Accent = [System.Drawing.Color]::FromArgb(79, 195, 247)
+    dark   = @{
+        Background    = [System.Drawing.Color]::FromArgb(30, 30, 30)
+        Surface       = [System.Drawing.Color]::FromArgb(45, 45, 45)
+        Text          = [System.Drawing.Color]::FromArgb(224, 224, 224)
+        Accent        = [System.Drawing.Color]::FromArgb(79, 195, 247)
         SecondaryText = [System.Drawing.Color]::FromArgb(153, 153, 153)
-        Border = [System.Drawing.Color]::FromArgb(68, 68, 68)
-        Active = [System.Drawing.Color]::FromArgb(76, 175, 80)
-        Stopped = [System.Drawing.Color]::FromArgb(244, 67, 54)
-        FontName = 'Segoe UI'
+        Border        = [System.Drawing.Color]::FromArgb(68, 68, 68)
+        Active        = [System.Drawing.Color]::FromArgb(76, 175, 80)
+        Stopped       = [System.Drawing.Color]::FromArgb(244, 67, 54)
+        FontName      = 'Segoe UI'
     }
     hacker = @{
-        Background = [System.Drawing.Color]::FromArgb(10, 10, 10)
-        Surface = [System.Drawing.Color]::FromArgb(17, 17, 17)
-        Text = [System.Drawing.Color]::FromArgb(0, 255, 0)
-        Accent = [System.Drawing.Color]::FromArgb(0, 255, 65)
+        Background    = [System.Drawing.Color]::FromArgb(10, 10, 10)
+        Surface       = [System.Drawing.Color]::FromArgb(17, 17, 17)
+        Text          = [System.Drawing.Color]::FromArgb(0, 255, 0)
+        Accent        = [System.Drawing.Color]::FromArgb(0, 255, 65)
         SecondaryText = [System.Drawing.Color]::FromArgb(0, 143, 17)
-        Border = [System.Drawing.Color]::FromArgb(0, 59, 0)
-        Active = [System.Drawing.Color]::FromArgb(0, 255, 65)
-        Stopped = [System.Drawing.Color]::FromArgb(255, 0, 64)
-        FontName = 'Consolas'
+        Border        = [System.Drawing.Color]::FromArgb(0, 59, 0)
+        Active        = [System.Drawing.Color]::FromArgb(0, 255, 65)
+        Stopped       = [System.Drawing.Color]::FromArgb(255, 0, 64)
+        FontName      = 'Consolas'
     }
 }
 
@@ -2478,19 +2497,19 @@ function Show-TypeThingSettings {
         $txtStartHk.ForeColor = $theme.Text
         $txtStartHk.Font = $baseFont
         $txtStartHk.add_KeyDown({
-            param($eventSender, $e)
-            $e.SuppressKeyPress = $true
-            $e.Handled = $true
-            $parts = @()
-            if ($e.Control) { $parts += 'Ctrl' }
-            if ($e.Alt) { $parts += 'Alt' }
-            if ($e.Shift) { $parts += 'Shift' }
-            $keyName = $e.KeyCode.ToString()
-            if ($keyName -notin @('ControlKey','ShiftKey','Menu','Control','Shift','Alt')) {
-                $parts += $keyName
-                $eventSender.Text = $parts -join '+'
-            }
-        })
+                param($eventSender, $e)
+                $e.SuppressKeyPress = $true
+                $e.Handled = $true
+                $parts = @()
+                if ($e.Control) { $parts += 'Ctrl' }
+                if ($e.Alt) { $parts += 'Alt' }
+                if ($e.Shift) { $parts += 'Shift' }
+                $keyName = $e.KeyCode.ToString()
+                if ($keyName -notin @('ControlKey', 'ShiftKey', 'Menu', 'Control', 'Shift', 'Alt')) {
+                    $parts += $keyName
+                    $eventSender.Text = $parts -join '+'
+                }
+            })
         $grpHotkeys.Controls.Add($txtStartHk)
 
         $lblStopHk = New-Object System.Windows.Forms.Label
@@ -2510,19 +2529,19 @@ function Show-TypeThingSettings {
         $txtStopHk.ForeColor = $theme.Text
         $txtStopHk.Font = $baseFont
         $txtStopHk.add_KeyDown({
-            param($eventSender, $e)
-            $e.SuppressKeyPress = $true
-            $e.Handled = $true
-            $parts = @()
-            if ($e.Control) { $parts += 'Ctrl' }
-            if ($e.Alt) { $parts += 'Alt' }
-            if ($e.Shift) { $parts += 'Shift' }
-            $keyName = $e.KeyCode.ToString()
-            if ($keyName -notin @('ControlKey','ShiftKey','Menu','Control','Shift','Alt')) {
-                $parts += $keyName
-                $eventSender.Text = $parts -join '+'
-            }
-        })
+                param($eventSender, $e)
+                $e.SuppressKeyPress = $true
+                $e.Handled = $true
+                $parts = @()
+                if ($e.Control) { $parts += 'Ctrl' }
+                if ($e.Alt) { $parts += 'Alt' }
+                if ($e.Shift) { $parts += 'Shift' }
+                $keyName = $e.KeyCode.ToString()
+                if ($keyName -notin @('ControlKey', 'ShiftKey', 'Menu', 'Control', 'Shift', 'Alt')) {
+                    $parts += $keyName
+                    $eventSender.Text = $parts -join '+'
+                }
+            })
         $grpHotkeys.Controls.Add($txtStopHk)
 
         $lblHkHint = New-Object System.Windows.Forms.Label
@@ -2563,9 +2582,9 @@ function Show-TypeThingSettings {
         $cmbTheme.SelectedItem = $script:config.TypeThingTheme
         if ($cmbTheme.SelectedIndex -lt 0) { $cmbTheme.SelectedIndex = 1 }
         $cmbTheme.add_SelectedIndexChanged({
-            $newTheme = Get-TypeThingTheme -ThemeName $cmbTheme.SelectedItem
-            Set-TypeThingFormTheme -Control $form -Theme $newTheme
-        })
+                $newTheme = Get-TypeThingTheme -ThemeName $cmbTheme.SelectedItem
+                Set-TypeThingFormTheme -Control $form -Theme $newTheme
+            })
         $grpAppearance.Controls.Add($cmbTheme)
 
         $y += 70
@@ -2610,18 +2629,18 @@ function Show-TypeThingSettings {
         $resetButton.ForeColor = [System.Drawing.Color]::White
         $resetButton.Font = $baseFont
         $resetButton.add_Click({
-            $nudMinDelay.Value = 30
-            $nudMaxDelay.Value = 120
-            $nudStartDelay.Value = 3
-            $chkRandomPauses.Checked = $true
-            $nudPauseChance.Value = 5
-            $nudPauseMax.Value = 500
-            $chkNewlines.Checked = $true
-            $chkNotify.Checked = $true
-            $txtStartHk.Text = 'Ctrl+Shift+V'
-            $txtStopHk.Text = 'Ctrl+Shift+X'
-            $cmbTheme.SelectedItem = 'dark'
-        })
+                $nudMinDelay.Value = 30
+                $nudMaxDelay.Value = 120
+                $nudStartDelay.Value = 3
+                $chkRandomPauses.Checked = $true
+                $nudPauseChance.Value = 5
+                $nudPauseMax.Value = 500
+                $chkNewlines.Checked = $true
+                $chkNotify.Checked = $true
+                $txtStartHk.Text = 'Ctrl+Shift+V'
+                $txtStopHk.Text = 'Ctrl+Shift+X'
+                $cmbTheme.SelectedItem = 'dark'
+            })
         $buttonPanel.Controls.Add($resetButton)
 
         $result = $form.ShowDialog()
@@ -2734,7 +2753,7 @@ function Set-ActiveState {
 
         Send-RedballTelemetry -TelemetryEvent 'StateChanged' -Data @{
             Active = $script:state.Active
-            Timed = [bool]$script:state.Until
+            Timed  = [bool]$script:state.Until
         }
 
         Update-RedballUI
@@ -2944,13 +2963,13 @@ function Save-RedballState {
     if (-not $Path) { $Path = Join-Path $script:AppRoot 'Redball.state.json' }
     try {
         $stateData = @{
-            Active = $script:state.Active
-            PreventDisplaySleep = $script:state.PreventDisplaySleep
+            Active               = $script:state.Active
+            PreventDisplaySleep  = $script:state.PreventDisplaySleep
             UseHeartbeatKeypress = $script:state.UseHeartbeatKeypress
-            Until = if ($script:state.Until) { $script:state.Until.ToString('o') } else { $null }
-            BatteryAware = $script:state.BatteryAware
-            BatteryThreshold = $script:state.BatteryThreshold
-            SavedAt = (Get-Date).ToString('o')
+            Until                = if ($script:state.Until) { $script:state.Until.ToString('o') } else { $null }
+            BatteryAware         = $script:state.BatteryAware
+            BatteryThreshold     = $script:state.BatteryThreshold
+            SavedAt              = (Get-Date).ToString('o')
         }
         $stateData | ConvertTo-Json | Set-Content -Path $Path -Encoding UTF8
     }
@@ -3160,8 +3179,8 @@ function Get-BatteryStatus {
             $estimatedCharge = $battery.EstimatedChargeRemaining
             
             $script:lastBatteryResult = @{
-                HasBattery = $true
-                OnBattery = $isOnBattery
+                HasBattery    = $true
+                OnBattery     = $isOnBattery
                 ChargePercent = $estimatedCharge
                 BatteryStatus = $battery.BatteryStatus
             }
@@ -3224,17 +3243,17 @@ function Update-BatteryAwareState {
 function Get-RedballStatus {
     $battery = Get-BatteryStatus
     $status = @{
-        Version = $script:VERSION
-        Active = $script:state.Active
-        Until = if ($script:state.Until) { $script:state.Until.ToString('o') } else { $null }
-        PreventDisplaySleep = $script:state.PreventDisplaySleep
+        Version              = $script:VERSION
+        Active               = $script:state.Active
+        Until                = if ($script:state.Until) { $script:state.Until.ToString('o') } else { $null }
+        PreventDisplaySleep  = $script:state.PreventDisplaySleep
         UseHeartbeatKeypress = $script:state.UseHeartbeatKeypress
-        BatteryAware = $script:state.BatteryAware
-        OnBattery = $battery.OnBattery
-        BatteryPercent = if ($battery.HasBattery) { $battery.ChargePercent } else { $null }
-        HasBattery = $battery.HasBattery
-        AutoPausedBattery = $script:state.AutoPausedBattery
-        Uptime = if ($script:state.StartTime) { ([DateTime]::Now - $script:state.StartTime).ToString() } else { $null }
+        BatteryAware         = $script:state.BatteryAware
+        OnBattery            = $battery.OnBattery
+        BatteryPercent       = if ($battery.HasBattery) { $battery.ChargePercent } else { $null }
+        HasBattery           = $battery.HasBattery
+        AutoPausedBattery    = $script:state.AutoPausedBattery
+        Uptime               = if ($script:state.StartTime) { ([DateTime]::Now - $script:state.StartTime).ToString() } else { $null }
     }
     return $status | ConvertTo-Json -Depth 3
 }
@@ -3394,8 +3413,8 @@ foreach ($duration in @(15, 30, 60, 120)) {
     $durationItem = New-Object System.Windows.Forms.ToolStripMenuItem "$duration minutes"
     $durationItem.Tag = $duration
     $durationItem.add_Click({
-        Start-TimedAwake -Minutes ([int]$this.Tag)
-    })
+            Start-TimedAwake -Minutes ([int]$this.Tag)
+        })
     [void]$stayAwakeMenuItem.DropDownItems.Add($durationItem)
 }
 
@@ -3403,8 +3422,8 @@ $alwaysOnMenuItem = New-Object System.Windows.Forms.ToolStripMenuItem 'Stay Awak
 $alwaysOnMenuItem.ShortcutKeyDisplayString = 'I'
 $alwaysOnMenuItem.AccessibleName = 'Stay awake indefinitely'
 $alwaysOnMenuItem.add_Click({
-    Set-ActiveState -Active:$true -Until $null
-})
+        Set-ActiveState -Active:$true -Until $null
+    })
 
 $exitMenuItem = New-Object System.Windows.Forms.ToolStripMenuItem 'Exit'
 $exitMenuItem.ShortcutKeyDisplayString = 'X'
@@ -3428,18 +3447,18 @@ $batteryMenuItem.ShortcutKeyDisplayString = 'B'
 $batteryMenuItem.AccessibleName = 'Battery Aware Mode Toggle'
 $batteryMenuItem.AccessibleDescription = 'Auto-pause when battery is low to save power'
 $batteryMenuItem.add_Click({
-    try {
-        if ($script:state.IsShuttingDown) { return }
-        $script:state.BatteryAware = $batteryMenuItem.Checked
-        $script:config.BatteryAware = $batteryMenuItem.Checked
-        Save-RedballConfig -Path $ConfigPath
-        Write-RedballLog -Level 'INFO' -Message "Battery-aware mode: $($script:state.BatteryAware)"
-        Update-RedballUI
-    }
-    catch {
-        Write-RedballLog -Level 'WARN' -Message "Battery toggle error: $_"
-    }
-})
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            $script:state.BatteryAware = $batteryMenuItem.Checked
+            $script:config.BatteryAware = $batteryMenuItem.Checked
+            Save-RedballConfig -Path $ConfigPath
+            Write-RedballLog -Level 'INFO' -Message "Battery-aware mode: $($script:state.BatteryAware)"
+            Update-RedballUI
+        }
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "Battery toggle error: $_"
+        }
+    })
 $script:state.BatteryMenuItem = $batteryMenuItem
 [void]$contextMenu.Items.Add($batteryMenuItem)
 
@@ -3451,20 +3470,20 @@ $startupMenuItem.ShortcutKeyDisplayString = 'S'
 $startupMenuItem.AccessibleName = 'Startup Toggle'
 $startupMenuItem.AccessibleDescription = 'Launch Redball automatically when Windows starts'
 $startupMenuItem.add_Click({
-    try {
-        if ($script:state.IsShuttingDown) { return }
-        if ($startupMenuItem.Checked) {
-            Install-RedballStartup
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            if ($startupMenuItem.Checked) {
+                Install-RedballStartup
+            }
+            else {
+                Uninstall-RedballStartup
+            }
+            Update-RedballUI
         }
-        else {
-            Uninstall-RedballStartup
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "Startup toggle error: $_"
         }
-        Update-RedballUI
-    }
-    catch {
-        Write-RedballLog -Level 'WARN' -Message "Startup toggle error: $_"
-    }
-})
+    })
 $script:state.StartupMenuItem = $startupMenuItem
 [void]$contextMenu.Items.Add($startupMenuItem)
 
@@ -3476,18 +3495,18 @@ $networkMenuItem.ShortcutKeyDisplayString = 'N'
 $networkMenuItem.AccessibleName = 'Network Aware Mode Toggle'
 $networkMenuItem.AccessibleDescription = 'Auto-pause when network disconnects'
 $networkMenuItem.add_Click({
-    try {
-        if ($script:state.IsShuttingDown) { return }
-        $script:state.NetworkAware = $networkMenuItem.Checked
-        $script:config.NetworkAware = $networkMenuItem.Checked
-        Save-RedballConfig -Path $ConfigPath
-        Write-RedballLog -Level 'INFO' -Message "Network-aware mode: $($script:state.NetworkAware)"
-        Update-RedballUI
-    }
-    catch {
-        Write-RedballLog -Level 'WARN' -Message "Network toggle error: $_"
-    }
-})
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            $script:state.NetworkAware = $networkMenuItem.Checked
+            $script:config.NetworkAware = $networkMenuItem.Checked
+            Save-RedballConfig -Path $ConfigPath
+            Write-RedballLog -Level 'INFO' -Message "Network-aware mode: $($script:state.NetworkAware)"
+            Update-RedballUI
+        }
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "Network toggle error: $_"
+        }
+    })
 $script:state.NetworkMenuItem = $networkMenuItem
 [void]$contextMenu.Items.Add($networkMenuItem)
 
@@ -3499,18 +3518,18 @@ $idleMenuItem.ShortcutKeyDisplayString = 'L'
 $idleMenuItem.AccessibleName = 'Idle Detection Toggle'
 $idleMenuItem.AccessibleDescription = 'Auto-pause when user idle for 30 minutes'
 $idleMenuItem.add_Click({
-    try {
-        if ($script:state.IsShuttingDown) { return }
-        $script:state.IdleDetection = $idleMenuItem.Checked
-        $script:config.IdleDetection = $idleMenuItem.Checked
-        Save-RedballConfig -Path $ConfigPath
-        Write-RedballLog -Level 'INFO' -Message "Idle detection: $($script:state.IdleDetection)"
-        Update-RedballUI
-    }
-    catch {
-        Write-RedballLog -Level 'WARN' -Message "Idle toggle error: $_"
-    }
-})
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            $script:state.IdleDetection = $idleMenuItem.Checked
+            $script:config.IdleDetection = $idleMenuItem.Checked
+            Save-RedballConfig -Path $ConfigPath
+            Write-RedballLog -Level 'INFO' -Message "Idle detection: $($script:state.IdleDetection)"
+            Update-RedballUI
+        }
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "Idle toggle error: $_"
+        }
+    })
 $script:state.IdleMenuItem = $idleMenuItem
 [void]$contextMenu.Items.Add($idleMenuItem)
 
@@ -3524,14 +3543,14 @@ if ($script:config.TypeThingEnabled) {
     $typeThingTypeItem = New-Object System.Windows.Forms.ToolStripMenuItem "Type Clipboard`t$($script:config.TypeThingStartHotkey)"
     $typeThingTypeItem.AccessibleName = 'Type clipboard contents'
     $typeThingTypeItem.add_Click({
-        try {
-            if ($script:state.IsShuttingDown) { return }
-            Start-TypeThingTyping
-        }
-        catch {
-            Write-RedballLog -Level 'WARN' -Message "TypeThing: Type menu error: $_"
-        }
-    })
+            try {
+                if ($script:state.IsShuttingDown) { return }
+                Start-TypeThingTyping
+            }
+            catch {
+                Write-RedballLog -Level 'WARN' -Message "TypeThing: Type menu error: $_"
+            }
+        })
     $script:state.TypeThingMenuType = $typeThingTypeItem
     [void]$typeThingMenu.DropDownItems.Add($typeThingTypeItem)
 
@@ -3539,14 +3558,14 @@ if ($script:config.TypeThingEnabled) {
     $typeThingStopItem.AccessibleName = 'Emergency stop typing'
     $typeThingStopItem.Enabled = $false
     $typeThingStopItem.add_Click({
-        try {
-            if ($script:state.IsShuttingDown) { return }
-            Stop-TypeThingTyping
-        }
-        catch {
-            Write-RedballLog -Level 'WARN' -Message "TypeThing: Stop menu error: $_"
-        }
-    })
+            try {
+                if ($script:state.IsShuttingDown) { return }
+                Stop-TypeThingTyping
+            }
+            catch {
+                Write-RedballLog -Level 'WARN' -Message "TypeThing: Stop menu error: $_"
+            }
+        })
     $script:state.TypeThingMenuStop = $typeThingStopItem
     [void]$typeThingMenu.DropDownItems.Add($typeThingStopItem)
 
@@ -3561,14 +3580,14 @@ if ($script:config.TypeThingEnabled) {
 
     $typeThingSettingsItem = New-Object System.Windows.Forms.ToolStripMenuItem 'TypeThing Settings...'
     $typeThingSettingsItem.add_Click({
-        try {
-            if ($script:state.IsShuttingDown) { return }
-            Show-TypeThingSettings
-        }
-        catch {
-            Write-RedballLog -Level 'WARN' -Message "TypeThing: Settings menu error: $_"
-        }
-    })
+            try {
+                if ($script:state.IsShuttingDown) { return }
+                Show-TypeThingSettings
+            }
+            catch {
+                Write-RedballLog -Level 'WARN' -Message "TypeThing: Settings menu error: $_"
+            }
+        })
     [void]$typeThingMenu.DropDownItems.Add($typeThingSettingsItem)
 
     [void]$contextMenu.Items.Add($typeThingMenu)
@@ -3581,14 +3600,14 @@ $settingsMenuItem.ShortcutKeyDisplayString = 'G'
 $settingsMenuItem.AccessibleName = 'Open Settings Dialog'
 $settingsMenuItem.AccessibleDescription = 'Open the full settings dialog to configure all Redball options'
 $settingsMenuItem.add_Click({
-    try {
-        if ($script:state.IsShuttingDown) { return }
-        Show-RedballSettings
-    }
-    catch {
-        Write-RedballLog -Level 'WARN' -Message "Settings menu error: $_"
-    }
-})
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            Show-RedballSettings
+        }
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "Settings menu error: $_"
+        }
+    })
 [void]$contextMenu.Items.Add($settingsMenuItem)
 
 $aboutMenuItem = New-Object System.Windows.Forms.ToolStripMenuItem 'About...'
@@ -3596,14 +3615,14 @@ $aboutMenuItem.ShortcutKeyDisplayString = 'A'
 $aboutMenuItem.AccessibleName = 'About Redball'
 $aboutMenuItem.AccessibleDescription = 'View version information and check for updates'
 $aboutMenuItem.add_Click({
-    try {
-        if ($script:state.IsShuttingDown) { return }
-        Show-AboutDialog
-    }
-    catch {
-        Write-RedballLog -Level 'WARN' -Message "About menu error: $_"
-    }
-})
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            Show-AboutDialog
+        }
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "About menu error: $_"
+        }
+    })
 [void]$contextMenu.Items.Add($aboutMenuItem)
 
 [void]$contextMenu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator))
@@ -3618,23 +3637,23 @@ $script:state.NotifyIcon = $notifyIcon
 $heartbeatTimer = New-Object System.Windows.Forms.Timer
 $heartbeatTimer.Interval = $script:state.HeartbeatSeconds * 1000
 $heartbeatTimer.add_Tick({
-    try {
-        if ($script:state.IsShuttingDown) { return }
-        if ($script:state.Active) {
-            Set-KeepAwakeState -Enable:$true
-            Send-HeartbeatKey
-            Update-RedballUI
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            if ($script:state.Active) {
+                Set-KeepAwakeState -Enable:$true
+                Send-HeartbeatKey
+                Update-RedballUI
+            }
         }
-    }
-    catch [System.Management.Automation.PipelineStoppedException] {
-        # IDE stopped script - exit gracefully
-        $script:state.HeartbeatTimer.Stop()
-        Exit-Application
-    }
-    catch {
-        Write-RedballLog -Level 'DEBUG' -Message "Heartbeat timer tick ignored error: $_"
-    }
-})
+        catch [System.Management.Automation.PipelineStoppedException] {
+            # IDE stopped script - exit gracefully
+            $script:state.HeartbeatTimer.Stop()
+            Exit-Application
+        }
+        catch {
+            Write-RedballLog -Level 'DEBUG' -Message "Heartbeat timer tick ignored error: $_"
+        }
+    })
 $heartbeatTimer.Start()
 $script:state.HeartbeatTimer = $heartbeatTimer
 
@@ -3643,49 +3662,49 @@ $script:state.HeartbeatTimer = $heartbeatTimer
 $durationTimer = New-Object System.Windows.Forms.Timer
 $durationTimer.Interval = 1000
 $durationTimer.add_Tick({
-    try {
-        if ($script:state.IsShuttingDown) { return }
+        try {
+            if ($script:state.IsShuttingDown) { return }
         
-    # Check battery, network, idle, and schedule state
-    if ($script:state.BatteryAware) {
-        Update-BatteryAwareState
-    }
-    if ($script:state.NetworkAware) {
-        Update-NetworkAwareState
-    }
-    if ($script:state.IdleDetection) {
-        Update-IdleAwareState
-    }
-    if ($script:config.ScheduleEnabled) {
-        Update-ScheduleState
-    }
-    if ($script:config.PresentationModeDetection) {
-        Update-PresentationModeState
-    }
+            # Check battery, network, idle, and schedule state
+            if ($script:state.BatteryAware) {
+                Update-BatteryAwareState
+            }
+            if ($script:state.NetworkAware) {
+                Update-NetworkAwareState
+            }
+            if ($script:state.IdleDetection) {
+                Update-IdleAwareState
+            }
+            if ($script:config.ScheduleEnabled) {
+                Update-ScheduleState
+            }
+            if ($script:config.PresentationModeDetection) {
+                Update-PresentationModeState
+            }
         
-        # Check if timed mode expired
-        if ($script:state.Active -and $script:state.Until -and (Get-Date) -ge $script:state.Until) {
-            Set-ActiveState -Active:$false
+            # Check if timed mode expired
+            if ($script:state.Active -and $script:state.Until -and (Get-Date) -ge $script:state.Until) {
+                Set-ActiveState -Active:$false
             
-            # Auto-exit if configured
-            if ($script:config.AutoExitOnComplete) {
-                Send-RedballToast -Title 'Redball' -Message 'Timed keep-awake completed. Exiting.'
-                Start-Sleep -Seconds 2
-                Exit-Application
+                # Auto-exit if configured
+                if ($script:config.AutoExitOnComplete) {
+                    Send-RedballToast -Title 'Redball' -Message 'Timed keep-awake completed. Exiting.'
+                    Start-Sleep -Seconds 2
+                    Exit-Application
+                }
+            }
+            else {
+                Update-RedballUI
             }
         }
-        else {
-            Update-RedballUI
+        catch [System.Management.Automation.PipelineStoppedException] {
+            $script:state.DurationTimer.Stop()
+            Exit-Application
         }
-    }
-    catch [System.Management.Automation.PipelineStoppedException] {
-        $script:state.DurationTimer.Stop()
-        Exit-Application
-    }
-    catch {
-        Write-RedballLog -Level 'DEBUG' -Message "Duration timer tick ignored error: $_"
-    }
-})
+        catch {
+            Write-RedballLog -Level 'DEBUG' -Message "Duration timer tick ignored error: $_"
+        }
+    })
 $durationTimer.Start()
 $script:state.DurationTimer = $durationTimer
 
@@ -3779,8 +3798,8 @@ function Get-NetworkStatus {
         $adapter = Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.HardwareInterface -eq $true } | Select-Object -First 1
         if ($adapter) {
             return @{
-                IsConnected = $true
-                Name = $adapter.Name
+                IsConnected   = $true
+                Name          = $adapter.Name
                 InterfaceType = $adapter.InterfaceDescription
             }
         }
@@ -3930,9 +3949,9 @@ function Update-PresentationModeState {
 # --- Performance Metrics ---
 
 $script:performanceMetrics = @{
-    StartTime = $null
+    StartTime      = $null
     HeartbeatCount = 0
-    LastMetricLog = $null
+    LastMetricLog  = $null
 }
 
 function Update-PerformanceMetrics {
@@ -3959,16 +3978,17 @@ function Update-PerformanceMetrics {
                 $process = Get-Process -Id $PID
                 $uptime = if ($script:performanceMetrics.StartTime) {
                     ($now - $script:performanceMetrics.StartTime).ToString('hh\:mm\:ss')
-                } else { 'N/A' }
+                }
+                else { 'N/A' }
                 
                 $metrics = @{
-                    Timestamp = $now.ToString('o')
-                    Uptime = $uptime
+                    Timestamp  = $now.ToString('o')
+                    Uptime     = $uptime
                     Heartbeats = $script:performanceMetrics.HeartbeatCount
-                    CPU = [math]::Round($process.TotalProcessorTime.TotalSeconds, 2)
-                    MemoryMB = [math]::Round($process.WorkingSet64 / 1MB, 2)
-                    Handles = $process.HandleCount
-                    Data = $Data
+                    CPU        = [math]::Round($process.TotalProcessorTime.TotalSeconds, 2)
+                    MemoryMB   = [math]::Round($process.WorkingSet64 / 1MB, 2)
+                    Handles    = $process.HandleCount
+                    Data       = $Data
                 }
                 
                 Write-RedballLog -Level 'INFO' -Message "METRICS: $($metrics | ConvertTo-Json -Compress)"
@@ -4295,10 +4315,10 @@ function Test-RedballUpdateAvailable {
         if (-not $release) {
             return @{
                 UpdateAvailable = $false
-                CurrentVersion = $script:VERSION
-                LatestVersion = $null
-                Release = $null
-                Reason = 'Unable to query latest release'
+                CurrentVersion  = $script:VERSION
+                LatestVersion   = $null
+                Release         = $null
+                Reason          = 'Unable to query latest release'
             }
         }
 
@@ -4307,20 +4327,20 @@ function Test-RedballUpdateAvailable {
 
         return @{
             UpdateAvailable = ($latest -gt $current)
-            CurrentVersion = $current.ToString()
-            LatestVersion = $latest.ToString()
-            Release = $release
-            Reason = $null
+            CurrentVersion  = $current.ToString()
+            LatestVersion   = $latest.ToString()
+            Release         = $release
+            Reason          = $null
         }
     }
     catch {
         Write-RedballLog -Level 'WARN' -Message "Failed to evaluate update status: $_"
         return @{
             UpdateAvailable = $false
-            CurrentVersion = $script:VERSION
-            LatestVersion = $null
-            Release = $null
-            Reason = "Version parse/evaluation failed: $_"
+            CurrentVersion  = $script:VERSION
+            LatestVersion   = $null
+            Release         = $null
+            Reason          = "Version parse/evaluation failed: $_"
         }
     }
 }
@@ -4386,16 +4406,16 @@ function Export-RedballSettings {
     )
     try {
         $settings = @{
-            Config = $script:config
-            State = @{
-                BatteryAware = $script:state.BatteryAware
-                BatteryThreshold = $script:state.BatteryThreshold
-                NetworkAware = $script:state.NetworkAware
-                IdleDetection = $script:state.IdleDetection
+            Config     = $script:config
+            State      = @{
+                BatteryAware         = $script:state.BatteryAware
+                BatteryThreshold     = $script:state.BatteryThreshold
+                NetworkAware         = $script:state.NetworkAware
+                IdleDetection        = $script:state.IdleDetection
                 IdleThresholdMinutes = $script:state.IdleThresholdMinutes
             }
             ExportedAt = (Get-Date).ToString('o')
-            Version = $script:VERSION
+            Version    = $script:VERSION
         }
         
         $json = $settings | ConvertTo-Json -Depth 5
@@ -4773,7 +4793,8 @@ function Show-RedballSettingsDialog {
             if ($chkStartup.Checked -ne (Test-RedballStartup)) {
                 if ($chkStartup.Checked) {
                     Install-RedballStartup | Out-Null
-                } else {
+                }
+                else {
                     Uninstall-RedballStartup | Out-Null
                 }
             }
@@ -4808,11 +4829,11 @@ function Send-RedballTelemetry {
     
     try {
         $telemetry = @{
-            Version = $script:VERSION
-            Event = $TelemetryEvent
+            Version   = $script:VERSION
+            Event     = $TelemetryEvent
             Timestamp = (Get-Date).ToString('o')
             SessionId = $script:state.SessionId
-            Data = $Data
+            Data      = $Data
         } | ConvertTo-Json -Compress
         
         # Log locally (in a real implementation, this would send to analytics endpoint)
@@ -4844,9 +4865,9 @@ function Start-KeepAwakeRunspace {
         
         # Add script to maintain keep-awake state
         $powershell.AddScript({
-            param($Interval)
+                param($Interval)
 
-            $signature = @"
+                $signature = @"
 using System;
 using System.Runtime.InteropServices;
 namespace Win32 {
@@ -4856,13 +4877,13 @@ namespace Win32 {
     }
 }
 "@
-            Add-Type -TypeDefinition $signature -Language CSharp -ErrorAction SilentlyContinue
+                Add-Type -TypeDefinition $signature -Language CSharp -ErrorAction SilentlyContinue
 
-            while ($true) {
-                [Win32.Power]::SetThreadExecutionState(0x80000003)  # ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED
-                Start-Sleep -Seconds $Interval
-            }
-        }).AddArgument($script:config.HeartbeatSeconds)
+                while ($true) {
+                    [Win32.Power]::SetThreadExecutionState(0x80000003)  # ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED
+                    Start-Sleep -Seconds $Interval
+                }
+            }).AddArgument($script:config.HeartbeatSeconds)
         
         # Start asynchronously
         $asyncResult = $powershell.BeginInvoke()
@@ -4901,59 +4922,59 @@ function Stop-KeepAwakeRunspace {
 }
 
 $toggleMenuItem.add_Click({
-    try {
-        if ($script:state.IsShuttingDown) { return }
-        Switch-ActiveState
-    }
-    catch {
-        Write-RedballLog -Level 'WARN' -Message "Toggle error: $_"
-    }
-})
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            Switch-ActiveState
+        }
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "Toggle error: $_"
+        }
+    })
 
 $displayMenuItem.add_Click({
-    try {
-        if ($script:state.IsShuttingDown) { return }
-        $script:state.PreventDisplaySleep = $displayMenuItem.Checked
-        if ($script:state.Active) {
-            Set-KeepAwakeState -Enable:$true
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            $script:state.PreventDisplaySleep = $displayMenuItem.Checked
+            if ($script:state.Active) {
+                Set-KeepAwakeState -Enable:$true
+            }
+            Update-RedballUI
         }
-        Update-RedballUI
-    }
-    catch {
-        Write-RedballLog -Level 'WARN' -Message "Display toggle error: $_"
-    }
-})
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "Display toggle error: $_"
+        }
+    })
 
 $heartbeatMenuItem.add_Click({
-    try {
-        if ($script:state.IsShuttingDown) { return }
-        $script:state.UseHeartbeatKeypress = $heartbeatMenuItem.Checked
-        Update-RedballUI
-    }
-    catch {
-        Write-RedballLog -Level 'WARN' -Message "Heartbeat toggle error: $_"
-    }
-})
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            $script:state.UseHeartbeatKeypress = $heartbeatMenuItem.Checked
+            Update-RedballUI
+        }
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "Heartbeat toggle error: $_"
+        }
+    })
 
 $exitMenuItem.add_Click({
-    try {
-        Exit-Application
-    }
-    catch {
-        # Force exit if graceful fails
-        [Environment]::Exit(0)
-    }
-})
+        try {
+            Exit-Application
+        }
+        catch {
+            # Force exit if graceful fails
+            [Environment]::Exit(0)
+        }
+    })
 
 $notifyIcon.add_DoubleClick({
-    try {
-        if ($script:state.IsShuttingDown) { return }
-        Switch-ActiveState
-    }
-    catch {
-        Write-RedballLog -Level 'WARN' -Message "Double-click error: $_"
-    }
-})
+        try {
+            if ($script:state.IsShuttingDown) { return }
+            Switch-ActiveState
+        }
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "Double-click error: $_"
+        }
+    })
 
 # Note: Global hotkey support would require a proper NativeWindow subclass with WndProc override
 # This is disabled for now to prevent runtime errors
@@ -5087,21 +5108,44 @@ if ($script:config.TypeThingEnabled) {
     try {
         $script:state.TypeThingHotkeyWindow = New-Object HotkeyMessageWindow
         $script:state.TypeThingHotkeyWindow.add_HotkeyPressed({
-            param($hotkeyId)
-            try {
-                if ($script:state.IsShuttingDown) { return }
-                if ($hotkeyId -eq $script:state.TypeThingHotkeyStartId) {
-                    Start-TypeThingTyping
+                param($hotkeyId)
+                try {
+                    if ($script:state.IsShuttingDown) { return }
+                    if ($hotkeyId -eq $script:state.TypeThingHotkeyStartId) {
+                        Start-TypeThingTyping
+                    }
+                    elseif ($hotkeyId -eq $script:state.TypeThingHotkeyStopId) {
+                        Stop-TypeThingTyping
+                    }
                 }
-                elseif ($hotkeyId -eq $script:state.TypeThingHotkeyStopId) {
-                    Stop-TypeThingTyping
+                catch {
+                    Write-RedballLog -Level 'WARN' -Message "TypeThing: Hotkey handler error: $_"
                 }
-            }
-            catch {
-                Write-RedballLog -Level 'WARN' -Message "TypeThing: Hotkey handler error: $_"
-            }
-        })
+            })
+        # Try to register immediately, but if handle isn't ready, retry via timer
         Register-TypeThingHotkeys
+        if (-not $script:state.TypeThingHotkeysRegistered) {
+            # Create a timer to retry registration after the message pump starts
+            $typeThingInitTimer = New-Object System.Windows.Forms.Timer
+            $typeThingInitTimer.Interval = 500
+            $retryCount = 0
+            $maxRetries = 10
+            $typeThingInitTimer.add_Tick({
+                    $retryCount++
+                    if ($script:state.TypeThingHotkeysRegistered -or $retryCount -gt $maxRetries -or $script:state.IsShuttingDown) {
+                        $typeThingInitTimer.Stop()
+                        $typeThingInitTimer.Dispose()
+                        return
+                    }
+                    Register-TypeThingHotkeys
+                    if ($script:state.TypeThingHotkeysRegistered) {
+                        $typeThingInitTimer.Stop()
+                        $typeThingInitTimer.Dispose()
+                        Write-RedballLog -Level 'INFO' -Message "TypeThing: Hotkeys registered after retry"
+                    }
+                })
+            $typeThingInitTimer.Start()
+        }
         Write-RedballLog -Level 'INFO' -Message "TypeThing: Initialized ($($script:config.TypeThingStartHotkey) to type clipboard)"
     }
     catch {
