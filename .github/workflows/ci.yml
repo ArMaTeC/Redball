@@ -22,7 +22,6 @@ jobs:
     strategy:
       matrix:
         shell:
-          - powershell
           - pwsh
       fail-fast: false
     defaults:
