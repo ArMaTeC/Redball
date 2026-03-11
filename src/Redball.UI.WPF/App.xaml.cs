@@ -22,7 +22,7 @@ public partial class App : Application
     public App()
     {
         // Setup crash logging before anything else
-        var appRoot = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".";
+        var appRoot = AppContext.BaseDirectory;
         _logPath = Path.Combine(appRoot, "Redball.UI.log");
         
         AppDomain.CurrentDomain.UnhandledException += (sender, e) => 

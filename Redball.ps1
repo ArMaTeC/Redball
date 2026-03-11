@@ -3609,7 +3609,7 @@ if ($Uninstall) {
 if ($UseModernUI) {
     Write-RedballLog -Level 'INFO' -Message 'Starting Redball v3.0 with modern WPF UI'
     try {
-        $wpfPath = Join-Path $script:AppRoot 'dist\wpf\Redball.UI.WPF.exe'
+        $wpfPath = Join-Path $script:AppRoot 'dist\wpf-publish\Redball.UI.WPF.exe'
         if (Test-Path $wpfPath) {
             Start-Process -FilePath $wpfPath -WindowStyle Hidden
             Write-Output 'Redball v3.0 modern UI started. Use tray icon to control.'

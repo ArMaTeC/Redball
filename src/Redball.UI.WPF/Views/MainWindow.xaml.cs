@@ -29,11 +29,27 @@ public partial class MainWindow : Window
         {
             // Load icon from file path relative to executable
             var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "redball.ico");
+            System.Diagnostics.Debug.WriteLine($"[Redball] Looking for icon at: {iconPath}");
+            System.Diagnostics.Debug.WriteLine($"[Redball] Icon exists: {File.Exists(iconPath)}");
+            
             if (File.Exists(iconPath))
             {
-                _trayIcon.IconSource = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+                try
+                {
+                    _trayIcon.IconSource = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+                    System.Diagnostics.Debug.WriteLine("[Redball] Icon loaded successfully");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Redball] Icon load failed: {ex.Message}");
+                }
             }
             _trayIcon.Visibility = Visibility.Visible;
+            System.Diagnostics.Debug.WriteLine("[Redball] Tray icon visibility set to Visible");
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine("[Redball] ERROR: TrayIcon not found!");
         }
     }
 
