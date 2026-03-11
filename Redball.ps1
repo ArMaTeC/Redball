@@ -76,7 +76,7 @@ param(
     [switch]$ExitOnComplete
 )
 
-$script:VERSION = '2.0.41'
+$script:VERSION = '2.0.42'
 $script:APP_NAME = 'Redball'
 $script:IsPS7 = $PSVersionTable.PSVersion.Major -ge 7
 
@@ -1829,8 +1829,12 @@ function Register-TypeThingHotkeys {
                 Write-RedballLog -Level 'INFO' -Message "TypeThing: Start hotkey registered ($($script:config.TypeThingStartHotkey))"
             }
             else {
-                Write-RedballLog -Level 'WARN' -Message "TypeThing: Failed to register start hotkey ($($script:config.TypeThingStartHotkey)) - may be in use"
+                $err = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
+                Write-RedballLog -Level 'WARN' -Message "TypeThing: Failed to register start hotkey ($($script:config.TypeThingStartHotkey)) - Win32 error: $err (modifiers=$($startParams.Modifiers) vk=0x$($startParams.VirtualKey.ToString('X2')))"
             }
+        }
+        else {
+            Write-RedballLog -Level 'WARN' -Message "TypeThing: Start hotkey '$($script:config.TypeThingStartHotkey)' parsed to VK=0 - check hotkey string format"
         }
 
         $stopParams = ConvertTo-HotkeyParams -HotkeyString $script:config.TypeThingStopHotkey
@@ -1842,8 +1846,12 @@ function Register-TypeThingHotkeys {
                 Write-RedballLog -Level 'INFO' -Message "TypeThing: Stop hotkey registered ($($script:config.TypeThingStopHotkey))"
             }
             else {
-                Write-RedballLog -Level 'WARN' -Message "TypeThing: Failed to register stop hotkey ($($script:config.TypeThingStopHotkey)) - may be in use"
+                $err = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
+                Write-RedballLog -Level 'WARN' -Message "TypeThing: Failed to register stop hotkey ($($script:config.TypeThingStopHotkey)) - Win32 error: $err (modifiers=$($stopParams.Modifiers) vk=0x$($stopParams.VirtualKey.ToString('X2')))"
             }
+        }
+        else {
+            Write-RedballLog -Level 'WARN' -Message "TypeThing: Stop hotkey '$($script:config.TypeThingStopHotkey)' parsed to VK=0 - check hotkey string format"
         }
 
         # Only mark as registered if at least one hotkey was successfully registered
@@ -1912,39 +1920,48 @@ function Send-TypeThingChar {
 
     try {
         $charCode = [uint16]$Character
+        $cbSize = [System.Runtime.InteropServices.Marshal]::SizeOf([type][INPUT])
 
         # Handle newlines
         if ($Character -eq "`n" -or $Character -eq "`r") {
             if (-not $script:config.TypeThingTypeNewlines) { return }
-            # Send VK_RETURN keydown
+            # Build KEYBDINPUT structs fully before assigning to INPUT
+            # (PowerShell returns copies of nested value types, so $input.ki.wVk = x does NOT work)
+            $kiDown = New-Object KEYBDINPUT
+            $kiDown.wVk = [TypeThingInput]::VK_RETURN
+            $kiDown.dwFlags = 0
             $inputDown = New-Object INPUT
             $inputDown.type = [TypeThingInput]::INPUT_KEYBOARD
-            $inputDown.ki = New-Object KEYBDINPUT
-            $inputDown.ki.wVk = [TypeThingInput]::VK_RETURN
-            $inputDown.ki.dwFlags = 0
-            # Send VK_RETURN keyup
+            $inputDown.ki = $kiDown
+
+            $kiUp = New-Object KEYBDINPUT
+            $kiUp.wVk = [TypeThingInput]::VK_RETURN
+            $kiUp.dwFlags = [TypeThingInput]::KEYEVENTF_KEYUP
             $inputUp = New-Object INPUT
             $inputUp.type = [TypeThingInput]::INPUT_KEYBOARD
-            $inputUp.ki = New-Object KEYBDINPUT
-            $inputUp.ki.wVk = [TypeThingInput]::VK_RETURN
-            $inputUp.ki.dwFlags = [TypeThingInput]::KEYEVENTF_KEYUP
-            [TypeThingInput]::SendInput(2, @($inputDown, $inputUp), [System.Runtime.InteropServices.Marshal]::SizeOf([type][INPUT])) | Out-Null
+            $inputUp.ki = $kiUp
+
+            [TypeThingInput]::SendInput(2, @($inputDown, $inputUp), $cbSize) | Out-Null
             return
         }
 
         # Handle tab
         if ($Character -eq "`t") {
+            $kiDown = New-Object KEYBDINPUT
+            $kiDown.wVk = [TypeThingInput]::VK_TAB
+            $kiDown.dwFlags = 0
             $inputDown = New-Object INPUT
             $inputDown.type = [TypeThingInput]::INPUT_KEYBOARD
-            $inputDown.ki = New-Object KEYBDINPUT
-            $inputDown.ki.wVk = [TypeThingInput]::VK_TAB
-            $inputDown.ki.dwFlags = 0
+            $inputDown.ki = $kiDown
+
+            $kiUp = New-Object KEYBDINPUT
+            $kiUp.wVk = [TypeThingInput]::VK_TAB
+            $kiUp.dwFlags = [TypeThingInput]::KEYEVENTF_KEYUP
             $inputUp = New-Object INPUT
             $inputUp.type = [TypeThingInput]::INPUT_KEYBOARD
-            $inputUp.ki = New-Object KEYBDINPUT
-            $inputUp.ki.wVk = [TypeThingInput]::VK_TAB
-            $inputUp.ki.dwFlags = [TypeThingInput]::KEYEVENTF_KEYUP
-            [TypeThingInput]::SendInput(2, @($inputDown, $inputUp), [System.Runtime.InteropServices.Marshal]::SizeOf([type][INPUT])) | Out-Null
+            $inputUp.ki = $kiUp
+
+            [TypeThingInput]::SendInput(2, @($inputDown, $inputUp), $cbSize) | Out-Null
             return
         }
 
@@ -1952,23 +1969,26 @@ function Send-TypeThingChar {
         if ([char]::IsControl($Character)) { return }
 
         # Send unicode character via KEYEVENTF_UNICODE
+        $kiDown = New-Object KEYBDINPUT
+        $kiDown.wVk = 0
+        $kiDown.wScan = $charCode
+        $kiDown.dwFlags = [TypeThingInput]::KEYEVENTF_UNICODE
         $inputDown = New-Object INPUT
         $inputDown.type = [TypeThingInput]::INPUT_KEYBOARD
-        $inputDown.ki = New-Object KEYBDINPUT
-        $inputDown.ki.wVk = 0
-        $inputDown.ki.wScan = $charCode
-        $inputDown.ki.dwFlags = [TypeThingInput]::KEYEVENTF_UNICODE
+        $inputDown.ki = $kiDown
 
+        $kiUp = New-Object KEYBDINPUT
+        $kiUp.wVk = 0
+        $kiUp.wScan = $charCode
+        $kiUp.dwFlags = ([TypeThingInput]::KEYEVENTF_UNICODE -bor [TypeThingInput]::KEYEVENTF_KEYUP)
         $inputUp = New-Object INPUT
         $inputUp.type = [TypeThingInput]::INPUT_KEYBOARD
-        $inputUp.ki = New-Object KEYBDINPUT
-        $inputUp.ki.wVk = 0
-        $inputUp.ki.wScan = $charCode
-        $inputUp.ki.dwFlags = ([TypeThingInput]::KEYEVENTF_UNICODE -bor [TypeThingInput]::KEYEVENTF_KEYUP)
+        $inputUp.ki = $kiUp
 
-        $sent = [TypeThingInput]::SendInput(2, @($inputDown, $inputUp), [System.Runtime.InteropServices.Marshal]::SizeOf([type][INPUT]))
+        $sent = [TypeThingInput]::SendInput(2, @($inputDown, $inputUp), $cbSize)
         if ($sent -eq 0) {
-            Write-RedballLog -Level 'DEBUG' -Message 'TypeThing: SendInput returned 0 - keystroke may have failed'
+            $err = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
+            Write-RedballLog -Level 'DEBUG' -Message "TypeThing: SendInput returned 0 (Win32 error: $err) - keystroke may have failed"
         }
     }
     catch {
@@ -3324,6 +3344,10 @@ catch {
 
 # --- TypeThing SendInput Interop ---
 
+# Determine correct INPUT struct layout for current platform (32-bit vs 64-bit)
+$inputFieldOffset = if ([IntPtr]::Size -eq 8) { 8 } else { 4 }
+$inputStructSize = if ([IntPtr]::Size -eq 8) { 40 } else { 28 }
+
 $typeThingInteropSignature = @"
 using System;
 using System.Runtime.InteropServices;
@@ -3338,10 +3362,10 @@ public struct KEYBDINPUT {
     public IntPtr dwExtraInfo;
 }
 
-[StructLayout(LayoutKind.Explicit)]
+[StructLayout(LayoutKind.Explicit, Size = $inputStructSize)]
 public struct INPUT {
     [FieldOffset(0)] public uint type;
-    [FieldOffset(4)] public KEYBDINPUT ki;
+    [FieldOffset($inputFieldOffset)] public KEYBDINPUT ki;
 }
 
 public static class TypeThingInput {
