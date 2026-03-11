@@ -1,0 +1,14 @@
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\Redball.UI.WPF.csproj.AssemblyReference.cache
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\Themes\Controls.baml
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\Themes\DarkTheme.baml
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\Themes\LightTheme.baml
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\Views\AboutWindow.baml
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\Views\AboutWindow.g.cs
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\Views\MainWindow.g.cs
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\GeneratedInternalTypeHelper.g.cs
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\Redball.UI.WPF_MarkupCompile.cache
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\Redball.UI.WPF_MarkupCompile.lref
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\Views\SettingsWindow.baml
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\App.baml
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\Views\SettingsWindow.g.cs
+C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\obj\Debug\net8.0-windows\win-x64\App.g.cs

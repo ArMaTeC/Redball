@@ -1,7 +1,7 @@
 # Check for parse errors in Redball.ps1
 $tokens = $null
 $parseErrors = $null
-$ast = [System.Management.Automation.Language.Parser]::ParseFile('Redball.ps1', [ref]$tokens, [ref]$parseErrors)
+$null = [System.Management.Automation.Language.Parser]::ParseFile('Redball.ps1', [ref]$tokens, [ref]$parseErrors)
 if ($parseErrors) {
     Write-Host 'Parse errors found:'
     $parseErrors | ForEach-Object {

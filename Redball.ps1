@@ -694,6 +694,22 @@ function Get-LocalizedString {
         if ($script:locales.ContainsKey('en') -and $script:locales['en'].ContainsKey($Key)) {
             return $script:locales['en'][$Key]
         }
+        # Hardcoded English fallbacks for core strings
+        $fallbacks = @{
+            'StatusActive'        = 'Active'
+            'StatusPaused'        = 'Paused'
+            'StatusDisplayOn'     = 'Display On'
+            'StatusDisplayNormal' = 'Display Normal'
+            'StatusF15On'         = 'F15 On'
+            'StatusF15Off'        = 'F15 Off'
+            'StatusMinLeft'       = 'min left'
+            'StatusUnavailable'   = 'Status Unavailable'
+            'MenuPause'           = 'Pause Keep-Awake'
+            'MenuResume'          = 'Resume Keep-Awake'
+        }
+        if ($fallbacks.ContainsKey($Key)) {
+            return $fallbacks[$Key]
+        }
         return $Key  # Return key name if translation not found
     }
     catch {
@@ -792,6 +808,337 @@ function Write-RedballLog {
         # Total failure - write to verbose stream as last resort
         Write-Verbose "CRITICAL: Log write failed completely. Entry: $logEntry"
     }
+}
+
+function Write-VerboseLog {
+    <#
+    .SYNOPSIS
+        Writes verbose log messages to file and console when verbose logging is enabled.
+    .DESCRIPTION
+        Logs detailed diagnostic messages to a separate verbose log file and outputs
+        to the verbose stream. Only logs when VerboseLogging is enabled in config.
+        Includes source tagging for easier debugging.
+    .PARAMETER Message
+        The message to log.
+    .PARAMETER Source
+        Optional source identifier for the log entry (e.g., "Core", "TypeThing").
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [string]$Message,
+        [string]$Source = 'General'
+    )
+    
+    if (-not $script:config.VerboseLogging) { return }
+    
+    $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
+    $logEntry = "[$timestamp] [$Source] $Message"
+    
+    # Output to verbose stream
+    Write-Verbose $logEntry
+    
+    # Write to verbose log file
+    try {
+        $verboseLogPath = Join-Path $script:AppRoot 'Redball.verbose.log'
+        Add-Content -Path $verboseLogPath -Value $logEntry -ErrorAction SilentlyContinue
+    }
+    catch {
+        # Silently fail - verbose logging is not critical
+    }
+}
+
+function Set-KeepAwakeState {
+    <#
+    .SYNOPSIS
+        Sets the Windows execution state to prevent or allow sleep.
+    .DESCRIPTION
+        Uses the SetThreadExecutionState Win32 API to control system sleep behavior.
+        When enabled, prevents the system from sleeping and optionally prevents
+        the display from turning off.
+    .PARAMETER Enable
+        $true to prevent sleep, $false to allow normal sleep behavior.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [bool]$Enable
+    )
+    
+    try {
+        if (-not ([System.Management.Automation.PSTypeName]'Win32.Power').Type) {
+            $signature = @"
+using System;
+using System.Runtime.InteropServices;
+namespace Win32 {
+    public static class Power {
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern uint SetThreadExecutionState(uint esFlags);
+        
+        public const uint ES_AWAYMODE_REQUIRED = 0x00000040;
+        public const uint ES_CONTINUOUS = 0x80000000;
+        public const uint ES_DISPLAY_REQUIRED = 0x00000002;
+        public const uint ES_SYSTEM_REQUIRED = 0x00000001;
+    }
+}
+"@
+            Add-Type -TypeDefinition $signature -Language CSharp -ErrorAction SilentlyContinue
+        }
+        
+        if ($Enable) {
+            $flags = [Win32.Power]::ES_CONTINUOUS -bor [Win32.Power]::ES_SYSTEM_REQUIRED
+            if ($script:state.PreventDisplaySleep) {
+                $flags = $flags -bor [Win32.Power]::ES_DISPLAY_REQUIRED
+            }
+            [Win32.Power]::SetThreadExecutionState($flags) | Out-Null
+            Write-VerboseLog -Message "Keep-awake state enabled (flags: 0x$($flags.ToString('X8')))" -Source "Power"
+        }
+        else {
+            $flags = [Win32.Power]::ES_CONTINUOUS
+            [Win32.Power]::SetThreadExecutionState($flags) | Out-Null
+            Write-VerboseLog -Message "Keep-awake state disabled" -Source "Power"
+        }
+    }
+    catch {
+        Write-RedballLog -Level 'ERROR' -Message "Failed to set keep-awake state: $_"
+    }
+}
+
+function Send-HeartbeatKey {
+    <#
+    .SYNOPSIS
+        Sends an F15 keypress to prevent idle detection.
+    .DESCRIPTION
+        Uses WScript.Shell to send an invisible F15 keypress.
+        This keeps the system awake without affecting work.
+    #>
+    try {
+        if (-not $script:wshShell) {
+            $script:wshShell = New-Object -ComObject WScript.Shell
+        }
+        $script:wshShell.SendKeys([char]127)  # F15 key
+        Write-VerboseLog -Message "F15 heartbeat sent" -Source "Heartbeat"
+    }
+    catch {
+        Write-RedballLog -Level 'DEBUG' -Message "Heartbeat key send failed: $_"
+    }
+}
+
+function Get-StatusText {
+    <#
+    .SYNOPSIS
+        Returns the current status text for the tooltip and menu.
+    .DESCRIPTION
+        Builds a status string showing Active/Paused state, display sleep status,
+        and F15 heartbeat status. Also shows time remaining if timer is set.
+    #>
+    try {
+        if ($script:state.Active) {
+            $statusActive = Get-LocalizedString -Key 'StatusActive'
+            $statusDisplay = if ($script:state.PreventDisplaySleep) { Get-LocalizedString -Key 'StatusDisplayOn' } else { Get-LocalizedString -Key 'StatusDisplayNormal' }
+            $statusF15 = if ($script:state.UseHeartbeatKeypress) { Get-LocalizedString -Key 'StatusF15On' } else { Get-LocalizedString -Key 'StatusF15Off' }
+            $result = "$statusActive | $statusDisplay | $statusF15"
+            
+            if ($script:state.Until) {
+                $minsLeft = [math]::Round(($script:state.Until - (Get-Date)).TotalMinutes)
+                $minText = Get-LocalizedString -Key 'StatusMinLeft'
+                $result += " | ${minsLeft}${minText}"
+            }
+            return $result
+        }
+        else {
+            $statusPaused = Get-LocalizedString -Key 'StatusPaused'
+            $statusDisplay = Get-LocalizedString -Key 'StatusDisplayNormal'
+            $statusF15 = Get-LocalizedString -Key 'StatusF15Off'
+            return "$statusPaused | $statusDisplay | $statusF15"
+        }
+    }
+    catch {
+        return Get-LocalizedString -Key 'StatusUnavailable'
+    }
+}
+
+function Get-CustomTrayIcon {
+    <#
+    .SYNOPSIS
+        Creates a custom tray icon for the specified state.
+    .DESCRIPTION
+        Generates a colored circle icon based on the state:
+        - active: Red circle
+        - timed: Orange circle
+        - paused: Gray circle
+    .PARAMETER State
+        The state to create an icon for: 'active', 'timed', or 'paused'.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [ValidateSet('active', 'timed', 'paused')]
+        [string]$State
+    )
+    
+    try {
+        # Define colors for each state
+        $colors = @{
+            active = [System.Drawing.Color]::FromArgb(220, 53, 69)   # Red
+            timed  = [System.Drawing.Color]::FromArgb(253, 126, 20) # Orange
+            paused = [System.Drawing.Color]::FromArgb(108, 117, 125) # Gray
+        }
+        
+        $color = $colors[$State]
+        $size = 16
+        $bitmap = New-Object System.Drawing.Bitmap($size, $size)
+        $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+        $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+        
+        # Fill background with transparent
+        $graphics.Clear([System.Drawing.Color]::Transparent)
+        
+        # Draw circle
+        $brush = New-Object System.Drawing.SolidBrush($color)
+        $graphics.FillEllipse($brush, 0, 0, $size - 1, $size - 1)
+        
+        # Draw border
+        $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(80, 80, 80), 1)
+        $graphics.DrawEllipse($pen, 0, 0, $size - 1, $size - 1)
+        
+        $graphics.Dispose()
+        $brush.Dispose()
+        $pen.Dispose()
+        
+        $iconHandle = $bitmap.GetHicon()
+        $icon = [System.Drawing.Icon]::FromHandle($iconHandle)
+        
+        # Store bitmap reference for cleanup
+        $script:lastIconBitmap = $bitmap
+        
+        return $icon
+    }
+    catch {
+        Write-RedballLog -Level 'WARN' -Message "Failed to create custom icon: $_"
+        return $null
+    }
+}
+
+function Update-RedballUI {
+    <#
+    .SYNOPSIS
+        Updates the tray icon and menu items to reflect current state.
+    .DESCRIPTION
+        Updates the NotifyIcon tooltip text, icon color, and menu item states
+        based on the current application state (active/paused, settings).
+        Thread-safe - can be called from any context.
+    #>
+    try {
+        if ($script:state.IsShuttingDown) { return }
+        
+        # Get status text for tooltip
+        $statusText = Get-StatusText
+        $script:state.NotifyIcon.Text = "Redball ($statusText)"
+        
+        # Determine icon state
+        $iconState = if ($script:state.Active) {
+            if ($script:state.Until) { 'timed' } else { 'active' }
+        }
+        else {
+            'paused'
+        }
+        
+        # Only update icon if state changed (reduce flicker)
+        if ($script:state.LastIconState -ne $iconState) {
+            $newIcon = Get-CustomTrayIcon -State $iconState
+            if ($newIcon) {
+                # Dispose previous icon to prevent memory leak
+                if ($script:state.PreviousIcon) {
+                    try { $script:state.PreviousIcon.Dispose() } catch {}
+                }
+                $script:state.PreviousIcon = $script:state.NotifyIcon.Icon
+                $script:state.NotifyIcon.Icon = $newIcon
+                $script:state.LastIconState = $iconState
+            }
+        }
+        
+        # Update menu items
+        $menuText = if ($script:state.Active) { Get-LocalizedString -Key 'MenuPause' } else { Get-LocalizedString -Key 'MenuResume' }
+        $script:state.ToggleMenuItem.Text = $menuText
+        $script:state.StatusMenuItem.Text = $statusText
+        $script:state.DisplayMenuItem.Checked = $script:state.PreventDisplaySleep
+        $script:state.HeartbeatMenuItem.Checked = $script:state.UseHeartbeatKeypress
+        $script:state.BatteryMenuItem.Checked = $script:state.BatteryAware
+        $script:state.NetworkMenuItem.Checked = $script:state.NetworkAware
+        $script:state.IdleMenuItem.Checked = $script:state.IdleDetection
+        
+        Write-VerboseLog -Message "UI updated - State:$iconState" -Source "UI"
+    }
+    catch {
+        Write-RedballLog -Level 'DEBUG' -Message "UI update skipped: $_"
+    }
+}
+
+function Write-FeatureUsageSummary {
+    <#
+    .SYNOPSIS
+        Logs a summary of feature usage before shutdown.
+    .DESCRIPTION
+        Records which features were used during the session for analytics.
+        Helps understand which features are popular.
+    #>
+    try {
+        $featuresUsed = @()
+        if ($script:state.BatteryAware) { $featuresUsed += 'BatteryAware' }
+        if ($script:state.NetworkAware) { $featuresUsed += 'NetworkAware' }
+        if ($script:state.IdleDetection) { $featuresUsed += 'IdleDetection' }
+        if ($script:state.UseHeartbeatKeypress) { $featuresUsed += 'F15Heartbeat' }
+        if ($script:config.TypeThingEnabled) { $featuresUsed += 'TypeThing' }
+        if ($script:config.ScheduleEnabled) { $featuresUsed += 'Schedule' }
+        if ($script:config.PresentationModeDetection) { $featuresUsed += 'PresentationMode' }
+        
+        if ($featuresUsed.Count -gt 0) {
+            Write-RedballLog -Level 'INFO' -Message "Features used this session: $($featuresUsed -join ', ')"
+        }
+        
+        Write-VerboseLog -Message "Feature usage summary logged" -Source "Analytics"
+    }
+    catch {
+        Write-RedballLog -Level 'DEBUG' -Message "Feature usage summary failed: $_"
+    }
+}
+
+function Get-TypeThingTheme {
+    <#
+    .SYNOPSIS
+        Returns theme settings for the TypeThing clipboard typer.
+    .DESCRIPTION
+        Retrieves color and font settings for the specified theme.
+        Falls back to 'dark' theme if the requested theme doesn't exist.
+    .PARAMETER ThemeName
+        The name of the theme to retrieve ('dark', 'light', or 'hacker').
+    #>
+    param(
+        [string]$ThemeName = $script:config.TypeThingTheme
+    )
+    
+    # Ensure themes are initialized
+    if (-not $script:TypeThingThemes) {
+        try {
+            $script:TypeThingThemes = @{
+                light  = @{ Background = [System.Drawing.Color]::FromArgb(245, 245, 245); Surface = [System.Drawing.Color]::White; Text = [System.Drawing.Color]::FromArgb(33, 33, 33); Accent = [System.Drawing.Color]::FromArgb(0, 120, 212); FontName = 'Segoe UI'; FontSize = 11 }
+                dark   = @{ Background = [System.Drawing.Color]::FromArgb(30, 30, 30); Surface = [System.Drawing.Color]::FromArgb(45, 45, 45); Text = [System.Drawing.Color]::FromArgb(204, 204, 204); Accent = [System.Drawing.Color]::FromArgb(0, 120, 212); FontName = 'Segoe UI'; FontSize = 11 }
+                hacker = @{ Background = [System.Drawing.Color]::Black; Surface = [System.Drawing.Color]::FromArgb(10, 10, 10); Text = [System.Drawing.Color]::FromArgb(0, 255, 0); Accent = [System.Drawing.Color]::FromArgb(0, 200, 0); FontName = 'Consolas'; FontSize = 11 }
+            }
+        }
+        catch {
+            # Fallback without System.Drawing types for headless environments
+            $script:TypeThingThemes = @{
+                light  = @{ Background = 'LightGray'; Surface = 'White'; Text = 'Black'; Accent = 'Blue'; FontName = 'Segoe UI'; FontSize = 11 }
+                dark   = @{ Background = 'DarkGray'; Surface = 'Gray'; Text = 'White'; Accent = 'Blue'; FontName = 'Segoe UI'; FontSize = 11 }
+                hacker = @{ Background = 'Black'; Surface = 'Black'; Text = 'Green'; Accent = 'Green'; FontName = 'Consolas'; FontSize = 11 }
+            }
+        }
+    }
+    
+    # Return requested theme or fallback to dark
+    if ($script:TypeThingThemes.ContainsKey($ThemeName)) {
+        return $script:TypeThingThemes[$ThemeName]
+    }
+    return $script:TypeThingThemes['dark']
 }
 
 function Import-RedballConfig {
@@ -2665,6 +3012,12 @@ function Test-RedballFileSignature {
 function Get-RedballLatestRelease {
     param([switch]$Force)
     try {
+        # Check if updates are disabled
+        if ($script:config.UpdateChannel -eq 'disabled') {
+            Write-VerboseLog -Message "Update check skipped - channel is disabled" -Source "Update"
+            return $null
+        }
+
         # Rate limiting: return cached result if checked within 5 minutes
         if (-not $Force -and $script:lastUpdateCheck -and $script:lastUpdateResult) {
             $elapsed = (Get-Date) - $script:lastUpdateCheck
@@ -2709,6 +3062,18 @@ function Get-RedballLatestRelease {
 
 function Test-RedballUpdateAvailable {
     try {
+        # Check if updates are disabled
+        if ($script:config.UpdateChannel -eq 'disabled') {
+            Write-VerboseLog -Message "Update check disabled by configuration" -Source "Update"
+            return @{
+                UpdateAvailable = $false
+                CurrentVersion  = $script:VERSION
+                LatestVersion   = $null
+                Release         = $null
+                Reason          = 'Update checks are disabled'
+            }
+        }
+
         $release = Get-RedballLatestRelease
         if (-not $release) {
             return @{

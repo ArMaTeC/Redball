@@ -83,9 +83,18 @@ Redball aims to be the most reliable, feature-rich, and user-friendly keep-awake
 - [ ] SCCM/Intune deployment guide
 - [ ] Centralized logging endpoint
 
-### 🔮 v3.0 — Next Generation (Future)
+### 🔮 v3.0 — Next Generation (In Progress)
 
-- [ ] WPF/MAUI UI modernization
+- [x] WPF UI project structure
+- [x] Modern tray icon with WPF (Hardcodet.NotifyIcon)
+- [x] Fluent Design System themes (Dark/Light)
+- [x] Settings dialog with tabbed interface
+- [x] Named pipe IPC for PowerShell communication
+- [ ] MAUI cross-platform support (Windows/macOS)
+- [ ] Acrylic/glass background effects
+- [ ] Smooth animations and transitions
+- [ ] Full accessibility (WCAG 2.1 AA)
+- [ ] PowerShell core integration testing
 
 ## Contributing
 

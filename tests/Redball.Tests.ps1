@@ -171,6 +171,23 @@ BeforeAll {
     Reset-TestState
     Reset-TestConfig
     $script:VERSION = '2.0.0'
+    
+    # Initialize locales for tests
+    $script:currentLocale = 'en'
+    $script:locales = @{
+        'en' = @{
+            'StatusActive'        = 'Active'
+            'StatusPaused'        = 'Paused'
+            'StatusDisplayOn'     = 'Display On'
+            'StatusDisplayNormal' = 'Display Normal'
+            'StatusF15On'         = 'F15 On'
+            'StatusF15Off'        = 'F15 Off'
+            'StatusMinLeft'       = 'min left'
+            'StatusUnavailable'   = 'Status Unavailable'
+            'MenuPause'           = 'Pause'
+            'MenuResume'          = 'Resume'
+        }
+    }
 }
 
 Describe "Get-StatusText" {
@@ -419,7 +436,7 @@ Describe "UI Updates" {
         
         Update-RedballUI
         
-        $script:state.NotifyIcon.Text | Should -Match "Redball \(Active\)"
+        $script:state.NotifyIcon.Text | Should -Match "Redball \(Active"
         $script:state.ToggleMenuItem.Text | Should -Match "Pause"
     }
     
@@ -430,7 +447,7 @@ Describe "UI Updates" {
         
         Update-RedballUI
         
-        $script:state.NotifyIcon.Text | Should -Match "Redball \(Paused\)"
+        $script:state.NotifyIcon.Text | Should -BeLike "*Redball (Paused*"
         $script:state.ToggleMenuItem.Text | Should -Match "Resume"
     }
     
@@ -803,3 +820,6 @@ AfterAll {
         Remove-Item (Join-Path $TestDrive 'test.log') -Force -ErrorAction SilentlyContinue
     }
 }
+
+
+

@@ -1,0 +1,247 @@
+<Window x:Class="Redball.UI.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Redball Settings"
+        Height="500" Width="700"
+        MinHeight="400" MinWidth="600"
+        WindowStartupLocation="CenterScreen"
+        Style="{StaticResource ModernWindow}"
+        Background="{StaticResource BackgroundBrush}"
+        Foreground="{StaticResource ForegroundBrush}">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40"
+                      CornerRadius="8"
+                      GlassFrameThickness="0"
+                      ResizeBorderThickness="8"/>
+    </WindowChrome.WindowChrome>
+
+    <Border Background="{StaticResource BackgroundBrush}" CornerRadius="8">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title Bar -->
+            <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8,8,0,0" Height="50">
+                <Grid>
+                    <TextBlock Text="Settings" FontSize="18" FontWeight="SemiBold"
+                              VerticalAlignment="Center" Margin="20,0"/>
+                    <Button Content="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="14"
+                           HorizontalAlignment="Right" Margin="0,0,10,0"
+                           Style="{StaticResource ModernButton}" Width="32" Height="32"
+                           Click="CloseButton_Click"/>
+                </Grid>
+            </Border>
+
+            <!-- Content Area -->
+            <Grid Grid.Row="1" Margin="20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Navigation -->
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+                    <StackPanel>
+                        <RadioButton x:Name="GeneralTab" Content="General" IsChecked="True"
+                                    Style="{StaticResource NavRadioButton}"
+                                    Checked="Tab_Checked"/>
+                        <RadioButton x:Name="BehaviorTab" Content="Behavior"
+                                    Style="{StaticResource NavRadioButton}"
+                                    Checked="Tab_Checked"/>
+                        <RadioButton x:Name="FeaturesTab" Content="Features"
+                                    Style="{StaticResource NavRadioButton}"
+                                    Checked="Tab_Checked"/>
+                        <RadioButton x:Name="TypeThingTab" Content="TypeThing"
+                                    Style="{StaticResource NavRadioButton}"
+                                    Checked="Tab_Checked"/>
+                        <RadioButton x:Name="UpdatesTab" Content="Updates"
+                                    Style="{StaticResource NavRadioButton}"
+                                    Checked="Tab_Checked"/>
+                        <RadioButton x:Name="AboutTab" Content="About"
+                                    Style="{StaticResource NavRadioButton}"
+                                    Checked="Tab_Checked"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Tab Content -->
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <!-- General Tab -->
+                            <StackPanel x:Name="GeneralPanel" Visibility="Visible">
+                            <TextBlock Text="General Settings" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                            <TextBlock Text="Theme" FontWeight="Medium" Margin="0,0,0,8"/>
+                            <ComboBox x:Name="ThemeCombo" Style="{StaticResource ModernComboBox}">
+                                <ComboBoxItem Content="System Default"/>
+                                <ComboBoxItem Content="Dark Mode" IsSelected="True"/>
+                                <ComboBoxItem Content="Light Mode"/>
+                            </ComboBox>
+
+                            <TextBlock Text="Language" FontWeight="Medium" Margin="0,16,0,8"/>
+                            <ComboBox x:Name="LanguageCombo" Style="{StaticResource ModernComboBox}">
+                                <ComboBoxItem Content="English" IsSelected="True"/>
+                                <ComboBoxItem Content="Espa&#xF1;ol"/>
+                                <ComboBoxItem Content="Fran&#xE7;ais"/>
+                                <ComboBoxItem Content="Deutsch"/>
+                            </ComboBox>
+
+                            <CheckBox Content="Minimize to tray on start" Margin="0,16,0,8"
+                                     Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox Content="Show balloon notifications" IsChecked="True"
+                                     Style="{StaticResource ModernCheckBox}"/>
+                        </StackPanel>
+
+                        <!-- Behavior Tab -->
+                        <StackPanel x:Name="BehaviorPanel" Visibility="Collapsed">
+                            <TextBlock Text="Behavior Settings" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                            <CheckBox Content="Prevent display sleep" IsChecked="True"
+                                     Style="{StaticResource ModernCheckBox}"/>
+                            <TextBlock Text="Keep the screen awake while Redball is active" FontSize="12"
+                                      Foreground="{StaticResource ForegroundSecondaryBrush}" Margin="24,0,0,16"/>
+
+                            <CheckBox Content="Use F15 heartbeat keypress" IsChecked="True"
+                                     Style="{StaticResource ModernCheckBox}"/>
+                            <TextBlock Text="Send invisible F15 keypress to prevent idle detection"
+                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Margin="24,0,0,16"/>
+
+                            <TextBlock Text="Default Duration (minutes)" FontWeight="Medium" Margin="0,8,0,8"/>
+                            <Slider Minimum="1" Maximum="720" Value="60" TickFrequency="30"
+                                   IsSnapToTickEnabled="True" Style="{StaticResource ModernSlider}"/>
+
+                            <CheckBox Content="Auto-exit after duration completes"
+                                     Style="{StaticResource ModernCheckBox}"/>
+                        </StackPanel>
+
+                        <!-- Features Tab -->
+                        <StackPanel x:Name="FeaturesPanel" Visibility="Collapsed">
+                            <TextBlock Text="Smart Features" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                            <CheckBox Content="Battery-aware mode" Style="{StaticResource ModernCheckBox}"/>
+                            <TextBlock Text="Pause when battery is below threshold"
+                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Margin="24,0,0,8"/>
+                            <TextBlock Text="Threshold: 20%" FontSize="12" Margin="24,0,0,16"/>
+
+                            <CheckBox Content="Network-aware mode" Style="{StaticResource ModernCheckBox}"/>
+                            <TextBlock Text="Pause when network disconnects"
+                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Margin="24,0,0,16"/>
+
+                            <CheckBox Content="Idle detection" Style="{StaticResource ModernCheckBox}"/>
+                            <TextBlock Text="Pause when user is idle"
+                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Margin="24,0,0,8"/>
+                            <TextBlock Text="Threshold: 30 minutes" FontSize="12" Margin="24,0,0,16"/>
+
+                            <CheckBox Content="Presentation mode detection" Style="{StaticResource ModernCheckBox}"/>
+                            <TextBlock Text="Auto-activate during PowerPoint/Teams presentations"
+                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Margin="24,0,0,16"/>
+
+                            <CheckBox Content="Scheduled operation" Style="{StaticResource ModernCheckBox}"/>
+                            <TextBlock Text="Active: Weekdays 09:00 - 18:00"
+                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Margin="24,0,0,16"/>
+                        </StackPanel>
+
+                        <!-- TypeThing Tab -->
+                        <StackPanel x:Name="TypeThingPanel" Visibility="Collapsed">
+                            <TextBlock Text="TypeThing (Clipboard Typer)" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                            <CheckBox Content="Enable TypeThing" IsChecked="True" Style="{StaticResource ModernCheckBox}"/>
+
+                            <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,16,0,8"/>
+                            <TextBox Text="Ctrl+Shift+V" Style="{StaticResource ModernTextBox}"/>
+
+                            <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,16,0,8"/>
+                            <TextBox Text="Ctrl+Shift+X" Style="{StaticResource ModernTextBox}"/>
+
+                            <TextBlock Text="Typing Speed" FontWeight="Medium" Margin="0,16,0,8"/>
+                            <Slider Minimum="10" Maximum="500" Value="120" TickFrequency="50"
+                                   IsSnapToTickEnabled="True" Style="{StaticResource ModernSlider}"/>
+
+                            <CheckBox Content="Add random pauses (human-like typing)" IsChecked="True"
+                                     Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox Content="Type newlines as Enter key" IsChecked="True"
+                                     Style="{StaticResource ModernCheckBox}"/>
+
+                            <TextBlock Text="Theme" FontWeight="Medium" Margin="0,16,0,8"/>
+                            <ComboBox SelectedIndex="1" Style="{StaticResource ModernComboBox}">
+                                <ComboBoxItem Content="Light"/>
+                                <ComboBoxItem Content="Dark"/>
+                                <ComboBoxItem Content="Hacker (Green)"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Updates Tab -->
+                        <StackPanel x:Name="UpdatesPanel" Visibility="Collapsed">
+                            <TextBlock Text="Updates" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                            <TextBlock Text="Update Channel" FontWeight="Medium" Margin="0,0,0,8"/>
+                            <ComboBox SelectedIndex="0" Style="{StaticResource ModernComboBox}">
+                                <ComboBoxItem Content="Stable (Recommended)"/>
+                                <ComboBoxItem Content="Beta"/>
+                                <ComboBoxItem Content="Disabled"/>
+                            </ComboBox>
+
+                            <CheckBox Content="Verify update signatures" Margin="0,16,0,8"
+                                     Style="{StaticResource ModernCheckBox}"/>
+                            <TextBlock Text="Only install signed updates from trusted sources"
+                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Margin="24,0,0,16"/>
+
+                            <Button Content="Check for Updates Now" Style="{StaticResource PrimaryButton}"
+                                   Margin="0,16,0,0" HorizontalAlignment="Left"/>
+
+                            <TextBlock Text="Current Version: 3.0.0" FontSize="12"
+                                      Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Margin="0,16,0,0"/>
+                        </StackPanel>
+
+                        <!-- About Tab -->
+                        <StackPanel x:Name="AboutPanel" Visibility="Collapsed">
+                            <TextBlock Text="About Redball" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                            <Image Source="/Assets/redball.png" Width="64" Height="64" Margin="0,0,0,16"/>
+
+                            <TextBlock Text="Redball v3.0.0" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Modern WPF Edition" FontSize="14" Foreground="{StaticResource AccentBrush}"
+                                      HorizontalAlignment="Center" Margin="0,4,0,16"/>
+
+                            <TextBlock Text="A system tray utility to prevent Windows from going to sleep."
+                                      TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,16"/>
+
+                            <TextBlock Text="&#xA9; 2024-2026 GCI Network Solutions" FontSize="12"
+                                      Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBlock Text="Licensed under MIT License" FontSize="12"
+                                      Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      HorizontalAlignment="Center" Margin="0,0,0,16"/>
+
+                            <Button Content="View on GitHub" Style="{StaticResource ModernButton}"
+                                   HorizontalAlignment="Center" Click="GitHubButton_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <!-- Footer -->
+            <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}" CornerRadius="0,0,8,8" Height="60">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,0">
+                    <Button Content="Cancel" Style="{StaticResource ModernButton}" Width="80" Margin="0,0,8,0"
+                           Click="CancelButton_Click"/>
+                    <Button Content="Save" Style="{StaticResource PrimaryButton}" Width="80"
+                           Click="SaveButton_Click"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>
