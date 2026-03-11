@@ -209,7 +209,7 @@
                         <StackPanel x:Name="AboutPanel" Visibility="Collapsed">
                             <TextBlock Text="About Redball" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
-                            <Image Source="/Assets/redball.png" Width="64" Height="64" Margin="0,0,0,16"/>
+                            <Image Source="/Assets/redball.ico" Width="64" Height="64" Margin="0,0,0,16"/>
 
                             <TextBlock Text="Redball v3.0.0" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
                             <TextBlock Text="Modern WPF Edition" FontSize="14" Foreground="{StaticResource AccentBrush}"

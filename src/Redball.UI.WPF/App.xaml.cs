@@ -197,6 +197,8 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         Log($"=== Redball.UI.WPF Exiting (code: {e.ApplicationExitCode}) ===");
+        _pipeReader?.Dispose();
+        _pipeWriter?.Dispose();
         _pipeServer?.Dispose();
         base.OnExit(e);
     }

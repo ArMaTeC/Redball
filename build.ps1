@@ -95,7 +95,7 @@ function Install-BuildModule {
     )
     
     $installParams = @{
-        Name = $Name
+        Name  = $Name
         Force = $true
         Scope = 'CurrentUser'
     }
@@ -169,14 +169,14 @@ function Step-RunSecurityScan {
     
     $issues = @()
     $psFiles = Get-ChildItem -Path $ProjectRoot -Filter '*.ps1' -Recurse -File | 
-        Where-Object { $_.Name -notmatch 'Tests\.ps1$' }
+    Where-Object { $_.Name -notmatch 'Tests\.ps1$|build\.ps1$' }
     
     Write-BuildStep "Scanning $($psFiles.Count) PS1 files..."
     
     # Check for hardcoded credentials
     $content = $psFiles |
-        Select-String -Pattern '(?i)\b(password|secret|apikey|api_key|token)\s*=\s*["\x27][^"\x27]+["\x27]' |
-        Where-Object { $_ -notmatch 'example|placeholder|changeme|TimestampServer|Hotkey|ShortcutKey' }
+    Select-String -Pattern '(?i)\b(password|secret|apikey|api_key|token)\s*=\s*["\x27][^"\x27]+["\x27]' |
+    Where-Object { $_ -notmatch 'example|placeholder|changeme|TimestampServer|Hotkey|ShortcutKey' }
     
     if ($content) {
         $issues += "Potential hardcoded credentials found"
@@ -185,7 +185,7 @@ function Step-RunSecurityScan {
     
     # Check for Invoke-Expression usage
     $invokeExpr = $psFiles |
-        Select-String -Pattern 'Invoke-Expression|iex\s'
+    Select-String -Pattern 'Invoke-Expression|iex\s'
     
     if ($invokeExpr) {
         $issues += "Invoke-Expression usage found - review for security"
@@ -238,7 +238,10 @@ function Step-RunTests {
     $config.TestResult.Enabled = $true
     $config.TestResult.OutputPath = Join-Path $DistPath 'test-results.xml'
     $config.CodeCoverage.Enabled = $true
+    $config.CodeCoverage.Path = (Join-Path $ProjectRoot 'Redball.ps1')
     $config.CodeCoverage.OutputPath = Join-Path $DistPath 'coverage.xml'
+    $config.CodeCoverage.UseBreakpoints = $false  # Required for accurate PS7 coverage
+    $config.CodeCoverage.CoveragePercentTarget = 40
     
     $result = Invoke-Pester -Configuration $config
     
@@ -261,6 +264,124 @@ function Step-RunTests {
     }
 }
 
+function Get-FileLockInfo {
+    param([string]$FilePath)
+    
+    if (-not (Test-Path $FilePath)) {
+        return $null
+    }
+    
+    # Method 1: Check loaded modules in running processes
+    $lockingProcesses = @()
+    foreach ($proc in Get-Process) {
+        try {
+            $modules = $proc.Modules | Where-Object { $_.FileName -like "*$FilePath*" -or $_.FileName -eq $FilePath }
+            if ($modules) {
+                $lockingProcesses += [PSCustomObject]@{
+                    ProcessName = $proc.ProcessName
+                    ProcessId   = $proc.Id
+                    Path        = $proc.Path
+                    Method      = 'Module'
+                }
+            }
+        }
+        catch { }
+    }
+    
+    # Method 2: Try to open file exclusively to confirm lock
+    try {
+        $stream = [System.IO.File]::Open($FilePath, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::None)
+        $stream.Close()
+        $stream.Dispose()
+    }
+    catch {
+        # File is locked - try to find process using WMI
+        try {
+            $fileName = Split-Path $FilePath -Leaf
+            $wmiQuery = "SELECT * FROM Win32_Process WHERE CommandLine LIKE '%$fileName%'"
+            $wmiProcesses = Get-WmiObject -Query $wmiQuery -ErrorAction SilentlyContinue
+            foreach ($wmiProc in $wmiProcesses) {
+                if ($wmiProc.ProcessId -ne $PID) {
+                    $lockingProcesses += [PSCustomObject]@{
+                        ProcessName = $wmiProc.Name
+                        ProcessId   = $wmiProc.ProcessId
+                        Path        = $wmiProc.ExecutablePath
+                        Method      = 'WMI'
+                    }
+                }
+            }
+        }
+        catch { }
+    }
+    
+    return $lockingProcesses | Select-Object -Unique -Property ProcessName, ProcessId, Path, Method
+}
+
+function Stop-LockingProcesses {
+    param([string]$FilePath)
+    
+    Write-BuildStep "Detecting processes locking file..."
+    $lockers = Get-FileLockInfo -FilePath $FilePath
+    
+    if (-not $lockers) {
+        # Fallback: Check common processes that might lock DLLs
+        $commonProcesses = @('Redball.UI.WPF', 'dotnet', 'MSBuild', 'VBCSCompiler', 'devenv', 'explorer')
+        foreach ($procName in $commonProcesses) {
+            $procs = Get-Process -Name $procName -ErrorAction SilentlyContinue
+            if ($procs) {
+                $lockers = $procs | Select-Object @{N = 'ProcessName'; E = { $_.ProcessName } }, 
+                @{N = 'ProcessId'; E = { $_.Id } }, 
+                @{N = 'Path'; E = { $_.Path } }, 
+                @{N = 'Method'; E = { 'Heuristic' } }
+                break
+            }
+        }
+    }
+    
+    if ($lockers) {
+        Write-Host "`n  Detected potential locking processes:" -ForegroundColor Yellow
+        $lockers | Format-Table -AutoSize | Out-String | Write-Host -ForegroundColor Yellow
+        
+        Write-BuildStep "Attempting to terminate locking processes..."
+        foreach ($locker in $lockers) {
+            try {
+                $proc = Get-Process -Id $locker.ProcessId -ErrorAction SilentlyContinue
+                if ($proc) {
+                    $proc | Stop-Process -Force -ErrorAction Stop
+                    Write-BuildSuccess "Terminated: $($locker.ProcessName) (PID: $($locker.ProcessId))"
+                }
+            }
+            catch {
+                Write-Warning "Failed to terminate $($locker.ProcessName): $_"
+            }
+        }
+        
+        Start-Sleep -Seconds 3
+        
+        # Verify lock is released
+        try {
+            $testStream = [System.IO.File]::Open($FilePath, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::None)
+            $testStream.Close()
+            $testStream.Dispose()
+            Write-BuildSuccess "File lock released"
+            return $true
+        }
+        catch {
+            Write-BuildError "File is still locked. Manual intervention required."
+            Write-Host "`n  Options to resolve:" -ForegroundColor Cyan
+            Write-Host "    1. Run: handle.exe $FilePath  (from Sysinternals)" -ForegroundColor Gray
+            Write-Host "    2. Close Visual Studio or other IDE instances" -ForegroundColor Gray
+            Write-Host "    3. Restart Windows Explorer or logoff/login" -ForegroundColor Gray
+            Write-Host "    4. Reboot computer" -ForegroundColor Gray
+            return $false
+        }
+    }
+    else {
+        Write-Warning "Could not identify locking process"
+        return $false
+    }
+}
+
 function Step-BuildWPF {
     Write-BuildHeader "Building WPF Application"
     
@@ -271,6 +392,34 @@ function Step-BuildWPF {
     if (-not (Test-Path $projectPath)) {
         Write-Warning "WPF project not found: $projectPath"
         return
+    }
+    
+    # Detect and resolve file locks before building
+    $objDir = Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'obj' $Configuration 'net8.0-windows' 'win-x64'
+    $dllPath = Join-Path $objDir 'Redball.UI.WPF.dll'
+    
+    if (Test-Path $dllPath) {
+        try {
+            $testStream = [System.IO.File]::Open($dllPath, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::None)
+            $testStream.Close()
+            $testStream.Dispose()
+        }
+        catch {
+            Write-Warning "DLL file is locked by another process"
+            $resolved = Stop-LockingProcesses -FilePath $dllPath
+            if (-not $resolved) {
+                throw "Cannot resolve file lock. Please close locking applications manually."
+            }
+        }
+    }
+    
+    # Also try to stop known processes
+    $runningProcesses = Get-Process -Name 'Redball.UI.WPF', 'Redball' -ErrorAction SilentlyContinue
+    if ($runningProcesses) {
+        Write-BuildStep "Stopping running Redball processes..."
+        $runningProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 2
+        Write-BuildSuccess "Processes stopped"
     }
     
     # Restore packages
@@ -336,75 +485,32 @@ function Step-BuildMSI {
 }
 
 function Step-CreateReleasePackage {
-    Write-BuildHeader "Creating Release Package"
+    Write-BuildHeader "Creating Release Artifacts"
     
-    $releaseName = "Redball-v$Version"
-    $releaseDir = Join-Path $DistPath $releaseName
-    $zipPath = Join-Path $DistPath "$releaseName.zip"
-    
-    # Clean up existing
-    if (Test-Path $releaseDir) {
-        Remove-Item $releaseDir -Recurse -Force
-    }
-    if (Test-Path $zipPath) {
-        Remove-Item $zipPath -Force
+    # MSI now contains everything - just verify it exists and show summary
+    $msiPath = Join-Path $DistPath "Redball-$Version.msi"
+    if (-not (Test-Path $msiPath)) {
+        throw "MSI not found: $msiPath"
     }
     
-    # Create release directory
-    New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
-    
-    # Copy core files
-    $filesToCopy = @(
-        'Redball.ps1'
-        'Redball.json'
-        'locales.json'
-        'README.md'
-        'LICENSE'
-        'docs/CHANGELOG.md'
-        'docs/THIRD-PARTY-NOTICES.md'
-    )
-    
-    foreach ($file in $filesToCopy) {
-        $source = Join-Path $ProjectRoot $file
-        if (Test-Path $source) {
-            Copy-Item $source $releaseDir -Force
-        }
-    }
-    
-    # Copy WPF executable if built
-    $wpfExe = Join-Path $DistPath 'wpf-publish' 'Redball.UI.WPF.exe'
-    if (Test-Path $wpfExe) {
-        $uiDir = Join-Path $releaseDir 'UI'
-        New-Item -ItemType Directory -Path $uiDir -Force | Out-Null
-        Copy-Item $wpfExe $uiDir -Force
-        # Copy any additional WPF files
-        $wpfPublishDir = Join-Path $DistPath 'wpf-publish'
-        Get-ChildItem $wpfPublishDir -File | Where-Object { $_.Extension -in '.dll', '.pdb', '.json' } | 
-            ForEach-Object { Copy-Item $_.FullName $uiDir -Force }
-    }
-    
-    # Create zip
-    Compress-Archive -Path $releaseDir -DestinationPath $zipPath -Force
-    
-    Write-BuildSuccess "Release package created: $zipPath"
-    
-    # Output summary
-    $zipInfo = Get-Item $zipPath
-    Write-Host "  Size: $([math]::Round($zipInfo.Length / 1MB, 2)) MB" -ForegroundColor Gray
+    $msiInfo = Get-Item $msiPath
+    Write-BuildSuccess "Release MSI ready: $($msiInfo.Name) ($([math]::Round($msiInfo.Length / 1MB, 2)) MB)"
+    Write-Host "  Location: $msiPath" -ForegroundColor Gray
+    Write-Host "  Contains: WPF Application + Core Files + Configuration" -ForegroundColor Gray
 }
 
 #endregion
 
 # Main Build Process
 try {
-    Write-Host @"
-    ____           __    __         ____        _ _     _       
-   / __ \___  ____/ /_  / /__      / __ )__  __(_) |   (_)___   
-  / /_/ / _ \/ __  / / / / _ \    / __  / / / / / /   / / __ \  
- / _, _/  __/ /_/ / /_/ /  __/   / /_/ / /_/ / / /___/ / /_/ /  
-/_/ |_|\___/\__,_/\__,_/\___/   /_____/\__,_/_/_/_____/ ____/   
-                                                      /_/        
-"@ -ForegroundColor Red
+    Write-Host @'
+  _____          _ _           _ _   ____        _ _     _ 
+ |  __ \        | | |         | | | |  _ \      (_) |   | |
+ | |__) |___  __| | |__   __ _| | | | |_) |_   _ _| | __| |
+ |  _  // _ \/ _` | '_ \ / _` | | | |  _ <| | | | | |/ _` |
+ | | \ \  __/ (_| | |_) | (_| | | | | |_) | |_| | | | (_| |
+ |_|  \_\___|\__,_|_.__/ \__,_|_|_| |____/ \__,_|_|_|\__,_|
+'@ -ForegroundColor Red
     
     Write-Host "  Building Redball v$Version ($Configuration)`n" -ForegroundColor Cyan
     
@@ -441,7 +547,7 @@ try {
         Write-Host "  Skipping tests ( -SkipTests )" -ForegroundColor Yellow
     }
     
-    # WPF Build
+    # WPF Build (required before MSI)
     if (-not $SkipWPF) {
         Step-BuildWPF
     }
@@ -449,16 +555,19 @@ try {
         Write-Host "  Skipping WPF build ( -SkipWPF )" -ForegroundColor Yellow
     }
     
-    # MSI Build
+    # MSI Build (requires WPF files)
     if (-not $SkipMSI) {
+        if ($SkipWPF) {
+            Write-Warning "WPF build skipped - MSI will use previously built files if available"
+        }
         Step-BuildMSI
     }
     else {
         Write-Host "  Skipping MSI build ( -SkipMSI )" -ForegroundColor Yellow
     }
     
-    # Release package (only if not skipping everything)
-    if ($BuildAll -or (-not $SkipWPF -and -not $SkipTests)) {
+    # Finalize release (MSI is now the primary artifact)
+    if (-not $SkipMSI -or $BuildAll) {
         Step-CreateReleasePackage
     }
     

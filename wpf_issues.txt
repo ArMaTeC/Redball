@@ -1,286 +1,221 @@
-# WPF Application Issues Analysis and Fix Plan
-# Generated: 2026-03-11
-# Log Source: dist/wpf-publish/Redball.UI.log
-# STATUS: Issues remain after rebuild - see CRITICAL FINDINGS below
+# WPF Project Fresh Scan - Issues and Fixes
+# Scan Date: 2026-03-11
+
+## Summary
+5 issues found across 5 files. All are fixable with targeted code changes.
 
 ---
 
-## CRITICAL FINDING: TWO WINDOWS BEING CREATED
+## Issue 1: Missing Image Asset
+**File:** `src/Redball.UI.WPF/Views/SettingsWindow.xaml:212`
+**Severity:** Medium
 
-**Root Cause Identified:**
-App.xaml has `StartupUri="Views/MainWindow.xaml"` which creates Window #1
-App.xaml.cs also creates `new Views.MainWindow()` which creates Window #2
+**Problem:**
+SettingsWindow references `/Assets/redball.png` but only `redball.ico` is included in the project.
 
-**Result:** Two MainWindow instances = Two tray icons
-
-**Fix:** Remove StartupUri from App.xaml (keep manual creation in App.xaml.cs)
-
----
-
-## Issue 1: TWO TRAY ICONS (CRITICAL)
-
-**Log Evidence:**
-```
-[15:40:00] === SetupTrayIcon called === (first instance)
-[15:40:00] === SetupTrayIcon called === (second instance!)
-```
-
-**Root Cause:** 
-- App.xaml StartupUri creates first MainWindow
-- App.xaml.cs OnStartup creates second MainWindow
-
-**Fix Required:**
-Remove from src/Redball.UI.WPF/App.xaml:
+**Current Code:**
 ```xml
-<!-- REMOVE: StartupUri="Views/MainWindow.xaml" -->
+<Image Source="/Assets/redball.png" Width="64" Height="64" Margin="0,0,0,16"/>
 ```
+
+**Fix:**
+Either:
+1. Add `redball.png` to the Assets folder and include in csproj:
+   ```xml
+   <Content Include="Assets\redball.png" CopyToOutputDirectory="PreserveNewest" />
+   ```
+2. Or change the reference to use the existing ICO file:
+   ```xml
+   <Image Source="/Assets/redball.ico" Width="64" Height="64" Margin="0,0,0,16"/>
+   ```
 
 ---
 
-## Issue 2: ICON NOT LOADING (HIGH)
+## Issue 2: Multiple Window Instances
+**File:** `src/Redball.UI.WPF/Views/MainWindow.xaml.cs:144,153`
+**Severity:** Medium
 
-**Log:** `ERROR loading icon: UriFormatException`
+**Problem:**
+ShowSettings() and ShowAbout() create new windows every time without checking if one is already open. Users can open unlimited duplicate windows.
 
-**Root Cause:** FileStream approach may not work with Hardcodet.NotifyIcon.Wpf
-
-**Fix to Try:**
-Replace FileStream loading with file:// URI scheme:
+**Current Code:**
 ```csharp
-var uri = new Uri($"file:///{foundPath.Replace('\\', '/')}");
-var bitmap = new BitmapImage(uri);
-bitmap.Freeze();
-_trayIcon.IconSource = bitmap;
+public void ShowSettings()
+{
+    Dispatcher.Invoke(() =>
+    {
+        var settings = new SettingsWindow();
+        settings.Show();
+    });
+}
+```
+
+**Fix:**
+Track window instances and activate existing windows:
+```csharp
+private SettingsWindow? _settingsWindow;
+private AboutWindow? _aboutWindow;
+
+public void ShowSettings()
+{
+    Dispatcher.Invoke(() =>
+    {
+        if (_settingsWindow != null && _settingsWindow.IsLoaded)
+        {
+            _settingsWindow.Activate();
+            _settingsWindow.Focus();
+            return;
+        }
+        _settingsWindow = new SettingsWindow();
+        _settingsWindow.Closed += (s, e) => _settingsWindow = null;
+        _settingsWindow.Show();
+    });
+}
+
+public void ShowAbout()
+{
+    Dispatcher.Invoke(() =>
+    {
+        if (_aboutWindow != null && _aboutWindow.IsLoaded)
+        {
+            _aboutWindow.Activate();
+            _aboutWindow.Focus();
+            return;
+        }
+        _aboutWindow = new AboutWindow();
+        _aboutWindow.Closed += (s, e) => _aboutWindow = null;
+        _aboutWindow.Show();
+    });
+}
 ```
 
 ---
 
-## Issue 3: SliderValueToWidthConverter NOT FOUND (HIGH)
+## Issue 3: Empty Catch Blocks
+**File:** `src/Redball.UI.WPF/Views/MainWindow.xaml.cs:27`
+**Severity:** Low
 
-**Log:** `Cannot find resource named 'SliderValueToWidthConverter'`
+**Problem:**
+Silent failure in Log method - errors are swallowed with no diagnostic output.
 
-**Root Cause:** 
-Controls.xaml references converter before App.xaml resources are loaded
+**Current Code:**
+```csharp
+private static void Log(string message)
+{
+    try
+    {
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        File.AppendAllText(LogPath, $"[{timestamp}] {message}{Environment.NewLine}");
+    }
+    catch { }
+}
+```
 
-**Fix Options:**
-- Add converter directly to Controls.xaml, OR
-- Remove StaticResource reference from Controls.xaml template
-
----
-
-## QUICK FIXES TO APPLY NOW
-
-### Fix 1: Remove duplicate window creation
-**File:** src/Redball.UI.WPF/App.xaml
-**Action:** Remove `StartupUri="Views/MainWindow.xaml"`
-
-### Fix 2: Fix icon loading
-**File:** src/Redball.UI.WPF/Views/MainWindow.xaml.cs
-**Action:** Replace FileStream with file:// URI
-
-### Fix 3: Fix converter
-**File:** src/Redball.UI.WPF/Themes/Controls.xaml
-**Action:** Add converter definition or remove StaticResource reference
-
----
-
-## REBUILD
-
-```powershell
-taskkill /F /IM Redball.UI.WPF.exe 2>nul
-dotnet build-server shutdown
-rmdir /S /Q "src\Redball.UI.WPF\obj"
-dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o dist/wpf-publish
-xcopy "src\Redball.UI.WPF\Assets\redball.ico" "dist\wpf-publish\Assets\" /Y
+**Fix:**
+```csharp
+private static void Log(string message)
+{
+    try
+    {
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        File.AppendAllText(LogPath, $"[{timestamp}] {message}{Environment.NewLine}");
+    }
+    catch (Exception ex)
+    {
+        System.Diagnostics.Debug.WriteLine($"Log failed: {ex.Message}");
+    }
+}
 ```
 
 ---
 
-## VERIFICATION
-- [ ] Only ONE tray icon
-- [ ] Icon shows RED BALL (not empty)
-- [ ] Settings opens without crash
-- [ ] All menu items work
+## Issue 4: Null Reference After Dispose
+**File:** `src/Redball.UI.WPF/Views/MainWindow.xaml.cs:162`
+**Severity:** Low
 
+**Problem:**
+_trayIcon is disposed but not set to null, risking ObjectDisposedException on subsequent access.
 
-## Issue 1: Icon Loading Failure (HIGH PRIORITY)
-
-**Symptom:** Tray icon appears as empty space (no icon visible)
-
-**Log Evidence:**
+**Current Code:**
+```csharp
+public void ExitApplication()
+{
+    if (_trayIcon != null)
+    {
+        _trayIcon.Dispose();
+    }
+    Application.Current.Shutdown();
+}
 ```
-[2026-03-11 15:40:00] ERROR loading icon: UriFormatException: Invalid URI: The format of the URI could not be determined.
+
+**Fix:**
+```csharp
+public void ExitApplication()
+{
+    if (_trayIcon != null)
+    {
+        _trayIcon.Dispose();
+        _trayIcon = null;
+    }
+    Application.Current.Shutdown();
+}
 ```
-
-**Root Cause:** 
-BitmapImage loading from file path using Uri fails with UriFormatException when using FileStream.
-
-**Fix Applied:**
-- Changed icon loading to use FileStream with BitmapCacheOption.OnLoad
-- Added proper bitmap freezing after loading
-
-**Files Modified:**
-- src/Redball.UI.WPF/Views/MainWindow.xaml.cs
-
-**Verification:**
-- Icon file exists at: dist/wpf-publish/Assets/redball.ico (210,491 bytes)
-- Need to rebuild with latest code changes
 
 ---
 
-## Issue 2: Duplicate Tray Icons (HIGH PRIORITY)
+## Issue 5: IPC Resource Leak
+**File:** `src/Redball.UI.WPF/App.xaml.cs:200`
+**Severity:** Medium
 
-**Symptom:** Two empty tray icon spaces appear instead of one
+**Problem:**
+OnExit only disposes _pipeServer but _pipeReader and _pipeWriter are not disposed, causing resource leak.
 
-**Log Evidence:**
-```
-[2026-03-11 15:40:00] === SetupTrayIcon called ===  (first call)
-[2026-03-11 15:40:00] Tray icon visibility set to Visible
-[2026-03-11 15:40:00] === SetupTrayIcon complete ===
-[2026-03-11 15:40:00] MainWindow loaded, hiding window...
-[2026-03-11 15:40:00] === SetupTrayIcon called ===  (second call!)
-[2026-03-11 15:40:00] Tray icon visibility set to Visible
-```
-
-**Root Cause:**
-1. MainWindow constructor subscribes to Loaded event
-2. OnWindowLoaded calls SetupTrayIcon (first call)
-3. App.xaml.cs shows MainWindow which triggers Loaded event again
-4. SetupTrayIcon called second time, creating duplicate icon
-
-**Fix Applied:**
-- Added _isTrayIconInitialized boolean flag
-- SetupTrayIcon returns early if already initialized
-
-**Files Modified:**
-- src/Redball.UI.WPF/Views/MainWindow.xaml.cs
-
----
-
-## Issue 3: Missing SliderValueToWidthConverter Resource (HIGH PRIORITY)
-
-**Symptom:** Settings window crashes when opened
-
-**Log Evidence:**
-```
-[2026-03-11 15:40:08] FATAL: Dispatcher exception - System.Windows.Markup.XamlParseException
- ---> System.Exception: Cannot find resource named 'SliderValueToWidthConverter'
+**Current Code:**
+```csharp
+protected override void OnExit(ExitEventArgs e)
+{
+    Log($"=== Redball.UI.WPF Exiting (code: {e.ApplicationExitCode}) ===");
+    _pipeServer?.Dispose();
+    base.OnExit(e);
+}
 ```
 
-**Root Cause:**
-SliderValueToWidthConverter is defined in Converters/SliderConverters.cs but not registered in App.xaml resources.
-
-**Fix Applied:**
-- Added xmlns:converters namespace to App.xaml
-- Added SliderValueToWidthConverter as application resource
-
-**Files Modified:**
-- src/Redball.UI.WPF/App.xaml
-
----
-
-## Issue 4: SettingsWindow Tab_Checked NullReferenceException (MEDIUM PRIORITY)
-
-**Symptom:** Settings window may crash during initialization
-
-**Root Cause:**
-Tab_Checked event fires during XAML loading before panel fields are initialized.
-
-**Fix Applied:**
-- Added null checks for all panel references in Tab_Checked method
-
-**Files Modified:**
-- src/Redball.UI.WPF/Views/SettingsWindow.xaml.cs
-
----
-
-## Issue 5: Window Visibility Prevents Tray Icon Initialization (FIXED)
-
-**Symptom:** Tray icon not appearing when window starts collapsed
-
-**Root Cause:**
-MainWindow.xaml had Visibility="Collapsed" preventing TaskbarIcon from initializing.
-
-**Fix Applied:**
-- Removed Visibility="Collapsed" from Window XAML
-- Window now starts visible then hides after Loaded event
-
-**Files Modified:**
-- src/Redball.UI.WPF/Views/MainWindow.xaml
-
----
-
-## Issue 6: File Locking Prevents Build (DEVELOPMENT ISSUE)
-
-**Symptom:** Build fails with "file in use by another process"
-
-**Log Evidence:**
-```
-error MSB3061: Unable to delete file "obj\Release\net8.0-windows\win-x64\Redball.UI.WPF.dll"
+**Fix:**
+```csharp
+protected override void OnExit(ExitEventArgs e)
+{
+    Log($"=== Redball.UI.WPF Exiting (code: {e.ApplicationExitCode}) ===");
+    _pipeReader?.Dispose();
+    _pipeWriter?.Dispose();
+    _pipeServer?.Dispose();
+    base.OnExit(e);
+}
 ```
 
-**Workaround:**
-- Kill Redball.UI.WPF.exe process before building
-- Run: taskkill /F /IM Redball.UI.WPF.exe
-- Or use dotnet build-server shutdown
+---
+
+## Additional Notes
+
+### Converter Implementation Issue
+**File:** `src/Redball.UI.WPF/Converters/SliderConverters.cs:14`
+
+The SliderValueToWidthConverter is incomplete - it just returns the value without calculating width. This will cause slider track fills to not display correctly.
+
+**Fix:** Implement proper calculation based on slider bounds and track width.
+
+### Theme Resource Risk
+**File:** `src/Redball.UI.WPF/ThemeManager.cs:31`
+
+If Application.Current is null when SetTheme is called, this will throw NullReferenceException. Add null check:
+```csharp
+if (Application.Current == null) return;
+```
 
 ---
 
-## REBUILD INSTRUCTIONS
-
-1. Kill running WPF process:
-   taskkill /F /IM Redball.UI.WPF.exe 2>nul
-
-2. Clear build cache:
-   dotnet build-server shutdown
-   rmdir /S /Q "src\Redball.UI.WPF\obj"
-
-3. Publish application:
-   dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o dist/wpf-publish
-
-4. Copy icon asset:
-   xcopy "src\Redball.UI.WPF\Assets\redball.ico" "dist\wpf-publish\Assets\" /Y
-
-5. Test:
-   Run dist/wpf-publish/Redball.UI.WPF.exe
-   Check Redball.UI.log for any remaining issues
-
----
-
-## VERIFICATION CHECKLIST
-
-- [ ] Only ONE tray icon appears
-- [ ] Tray icon shows red ball image (not empty)
-- [ ] Right-click on tray icon shows context menu
-- [ ] Settings menu item opens Settings window
-- [ ] About menu item opens About window
-- [ ] Settings window tabs work without crashing
-- [ ] Exit menu item closes application
-
----
-
-## FILES MODIFIED SUMMARY
-
-1. src/Redball.UI.WPF/App.xaml
-   - Added converters namespace
-   - Added SliderValueToWidthConverter resource
-
-2. src/Redball.UI.WPF/Views/MainWindow.xaml
-   - Removed Visibility="Collapsed"
-   - Changed TrayIcon Visibility to Visible
-
-3. src/Redball.UI.WPF/Views/MainWindow.xaml.cs
-   - Added file logging
-   - Added _isTrayIconInitialized flag
-   - Fixed icon loading with FileStream
-   - Added SetupTrayIcon duplicate call prevention
-
-4. src/Redball.UI.WPF/Views/SettingsWindow.xaml.cs
-   - Added null checks in Tab_Checked
-
-5. src/Redball.UI.WPF/ViewModels/MainViewModel.cs
-   - Added WeakReference<MainWindow> for command delegation
-   - Updated OpenSettings/ShowAbout to use MainWindow methods
-
-6. src/Redball.UI.WPF/App.xaml.cs
-   - Store MainWindow reference to prevent GC
-   - Proper window show/hide sequence for tray-only mode
+## Priority Fix Order
+1. **Issue 2** (Multiple Windows) - Most user-visible bug
+2. **Issue 1** (Missing Image) - UI polish issue  
+3. **Issue 5** (IPC Leak) - Resource cleanup
+4. **Issue 3** (Empty Catch) - Debugging support
+5. **Issue 4** (Null After Dispose) - Defensive coding

@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 <#requires -RunAsAdministrator#>
 <#
 # Copyright (c) 2024-2026 ArMaTeC / Redball Contributors
@@ -389,6 +389,7 @@ function Stop-RedballProcess {
             }
             catch {
                 # CloseMainWindow can fail for processes without windows
+                Write-Verbose "CloseMainWindow failed for process $ProcessId (process may not have a window)"
             }
         }
         
@@ -504,7 +505,7 @@ $script:embeddedLocales = @'
     "TrayTooltipPaused": "Redball (Pausado)",
     "MenuPause": "Pausar Mantener Despierto",
     "MenuResume": "Reanudar Mantener Despierto",
-    "MenuPreventDisplaySleep": "Prevenir Suspensión de Pantalla",
+    "MenuPreventDisplaySleep": "Prevenir SuspensiÃ³n de Pantalla",
     "MenuUseF15Heartbeat": "Usar Latido F15",
     "MenuStayAwakeFor": "Mantener Despierto Por",
     "MenuStayAwakeIndefinitely": "Mantener Despierto Hasta Pausar",
@@ -534,33 +535,33 @@ $script:embeddedLocales = @'
     "AppName": "Redball",
     "TrayTooltipActive": "Redball (Actif)",
     "TrayTooltipPaused": "Redball (En pause)",
-    "MenuPause": "Pause Garder Éveillé",
-    "MenuResume": "Reprendre Garder Éveillé",
-    "MenuPreventDisplaySleep": "Empêcher Veille Écran",
+    "MenuPause": "Pause Garder Ã‰veillÃ©",
+    "MenuResume": "Reprendre Garder Ã‰veillÃ©",
+    "MenuPreventDisplaySleep": "EmpÃªcher Veille Ã‰cran",
     "MenuUseF15Heartbeat": "Utiliser Battement F15",
-    "MenuStayAwakeFor": "Rester Éveillé Pendant",
-    "MenuStayAwakeIndefinitely": "Rester Éveillé Jusqu'à Pause",
+    "MenuStayAwakeFor": "Rester Ã‰veillÃ© Pendant",
+    "MenuStayAwakeIndefinitely": "Rester Ã‰veillÃ© Jusqu'Ã  Pause",
     "MenuExit": "Quitter",
     "StatusActive": "Actif",
     "StatusPaused": "En Pause",
-    "StatusDisplayOn": "Écran On",
-    "StatusDisplayNormal": "Écran Normal",
+    "StatusDisplayOn": "Ã‰cran On",
+    "StatusDisplayNormal": "Ã‰cran Normal",
     "StatusF15On": "F15 On",
     "StatusF15Off": "F15 Off",
     "StatusMinLeft": "min restantes",
     "StatusUnavailable": "Statut indisponible",
-    "BalloonStarted": "Redball démarré - maintient le système éveillé",
+    "BalloonStarted": "Redball dÃ©marrÃ© - maintient le systÃ¨me Ã©veillÃ©",
     "BalloonPaused": "Redball en pause",
     "BalloonResumed": "Redball repris",
-    "LogStarted": "Redball démarré",
+    "LogStarted": "Redball dÃ©marrÃ©",
     "LogPaused": "Redball en pause",
     "LogResumed": "Redball repris",
-    "LogExited": "Redball fermé",
-    "ErrorIconCreate": "Échec création icône",
-    "ErrorUIUpdate": "Échec mise à jour UI",
-    "ErrorSetActiveState": "Échec définition état actif",
-    "ErrorSwitchState": "Échec changement état",
-    "ErrorTimedAwake": "Échec démarrage minuterie"
+    "LogExited": "Redball fermÃ©",
+    "ErrorIconCreate": "Ã‰chec crÃ©ation icÃ´ne",
+    "ErrorUIUpdate": "Ã‰chec mise Ã  jour UI",
+    "ErrorSetActiveState": "Ã‰chec dÃ©finition Ã©tat actif",
+    "ErrorSwitchState": "Ã‰chec changement Ã©tat",
+    "ErrorTimedAwake": "Ã‰chec dÃ©marrage minuterie"
   },
   "de": {
     "AppName": "Redball",
@@ -570,7 +571,7 @@ $script:embeddedLocales = @'
     "MenuResume": "Wachhalten Fortsetzen",
     "MenuPreventDisplaySleep": "Bildschirmschutz Verhindern",
     "MenuUseF15Heartbeat": "F15-Tastendruck Nutzen",
-    "MenuStayAwakeFor": "Wachhalten Für",
+    "MenuStayAwakeFor": "Wachhalten FÃ¼r",
     "MenuStayAwakeIndefinitely": "Wachhalten Bis Pausiert",
     "MenuExit": "Beenden",
     "StatusActive": "Aktiv",
@@ -579,8 +580,8 @@ $script:embeddedLocales = @'
     "StatusDisplayNormal": "Bildschirm Normal",
     "StatusF15On": "F15 An",
     "StatusF15Off": "F15 Aus",
-    "StatusMinLeft": "min übrig",
-    "StatusUnavailable": "Status nicht verfügbar",
+    "StatusMinLeft": "min Ã¼brig",
+    "StatusUnavailable": "Status nicht verfÃ¼gbar",
     "BalloonStarted": "Redball gestartet - System wachgehalten",
     "BalloonPaused": "Redball pausiert",
     "BalloonResumed": "Redball fortgesetzt",
@@ -629,7 +630,7 @@ $script:embeddedLocales = @'
 }
 '@
 
-function Import-RedballLocales {
+function Import-RedballLocale {
     param([string]$Path = '')
     if (-not $Path) { $Path = Join-Path $script:AppRoot 'locales.json' }
     
@@ -756,6 +757,7 @@ function Write-RedballLog {
     }
     catch {
         # Can't create directory - will try fallback
+        Write-Verbose "Could not create log directory: $_"
     }
     
     # Try to write with retries
@@ -847,6 +849,7 @@ function Write-VerboseLog {
     }
     catch {
         # Silently fail - verbose logging is not critical
+        Write-Verbose "Verbose log write failed: $_"
     }
 }
 
@@ -861,10 +864,16 @@ function Set-KeepAwakeState {
     .PARAMETER Enable
         $true to prevent sleep, $false to allow normal sleep behavior.
     #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(Mandatory)]
         [bool]$Enable
     )
+    
+    $action = if ($Enable) { 'enable' } else { 'disable' }
+    if (-not $PSCmdlet.ShouldProcess('Windows execution state', "$action keep-awake")) {
+        return
+    }
     
     try {
         if (-not ([System.Management.Automation.PSTypeName]'Win32.Power').Type) {
@@ -1029,6 +1038,13 @@ function Update-RedballUI {
         based on the current application state (active/paused, settings).
         Thread-safe - can be called from any context.
     #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param()
+    
+    if (-not $PSCmdlet.ShouldProcess('Redball UI', 'Update tray icon and menu')) {
+        return
+    }
+    
     try {
         if ($script:state.IsShuttingDown) { return }
         
@@ -1050,7 +1066,7 @@ function Update-RedballUI {
             if ($newIcon) {
                 # Dispose previous icon to prevent memory leak
                 if ($script:state.PreviousIcon) {
-                    try { $script:state.PreviousIcon.Dispose() } catch {}
+                    try { $script:state.PreviousIcon.Dispose() } catch { Write-Verbose "Failed to dispose previous icon: $_" }
                 }
                 $script:state.PreviousIcon = $script:state.NotifyIcon.Icon
                 $script:state.NotifyIcon.Icon = $newIcon
@@ -1516,7 +1532,7 @@ function Exit-Application {
             $script:state.TypeThingCountdown.Dispose()
             $script:state.TypeThingCountdown = $null
         }
-        Unregister-TypeThingHotkeys
+        Unregister-TypeThingHotkey
         if ($script:state.TypeThingHotkeyWindow) {
             $script:state.TypeThingHotkeyWindow.Destroy()
             $script:state.TypeThingHotkeyWindow = $null
@@ -1966,7 +1982,7 @@ public class HotkeyHelper {
 "@
 
 try {
-    Add-Type -TypeDefinition $hotkeySignature -Language CSharp -ErrorAction SilentlyContinue
+    Add-Type -TypeDefinition $hotkeySignature -ReferencedAssemblies System.Windows.Forms -Language CSharp -ErrorAction SilentlyContinue
 }
 catch {
     Write-RedballLog -Level 'DEBUG' -Message "Hotkey helper type initialization skipped: $_"
@@ -2066,6 +2082,113 @@ function Unregister-GlobalHotkey {
     }
     catch {
         Write-RedballLog -Level 'DEBUG' -Message "Hotkey unregister skipped: $_"
+    }
+}
+
+# --- Settings Dialog Functions ---
+
+function Show-RedballSettings {
+    <#
+    .SYNOPSIS
+        Displays the main Redball settings dialog.
+    #>
+    try {
+        $form = New-Object System.Windows.Forms.Form
+        $form.Text = 'Redball Settings'
+        $form.Size = New-Object System.Drawing.Size(400, 300)
+        $form.StartPosition = 'CenterScreen'
+        $form.FormBorderStyle = 'FixedDialog'
+        $form.MaximizeBox = $false
+        $form.MinimizeBox = $false
+
+        $label = New-Object System.Windows.Forms.Label
+        $label.Text = "Redball Settings`n`nVersion: $($script:VERSION)"
+        $label.Location = New-Object System.Drawing.Point(10, 10)
+        $label.Size = New-Object System.Drawing.Size(370, 40)
+        $form.Controls.Add($label)
+
+        $okButton = New-Object System.Windows.Forms.Button
+        $okButton.Text = 'OK'
+        $okButton.Location = New-Object System.Drawing.Point(150, 220)
+        $okButton.Size = New-Object System.Drawing.Size(100, 30)
+        $okButton.Add_Click({ $form.Close() })
+        $form.Controls.Add($okButton)
+
+        Write-RedballLog -Level 'INFO' -Message 'Settings dialog opened'
+        $form.ShowDialog() | Out-Null
+    }
+    catch {
+        Write-RedballLog -Level 'WARN' -Message "Settings dialog error: $_"
+    }
+}
+
+function Show-TypeThingSettings {
+    <#
+    .SYNOPSIS
+        Displays the TypeThing settings dialog.
+    #>
+    try {
+        $form = New-Object System.Windows.Forms.Form
+        $form.Text = 'TypeThing Settings'
+        $form.Size = New-Object System.Drawing.Size(400, 300)
+        $form.StartPosition = 'CenterScreen'
+        $form.FormBorderStyle = 'FixedDialog'
+        $form.MaximizeBox = $false
+        $form.MinimizeBox = $false
+
+        $label = New-Object System.Windows.Forms.Label
+        $label.Text = "TypeThing Clipboard Typer Settings`n`nStart Hotkey: $($script:config.TypeThingStartHotkey)`nStop Hotkey: $($script:config.TypeThingStopHotkey)`n`nTypeThing Enabled: $($script:config.TypeThingEnabled)"
+        $label.Location = New-Object System.Drawing.Point(10, 10)
+        $label.Size = New-Object System.Drawing.Size(370, 100)
+        $form.Controls.Add($label)
+
+        $okButton = New-Object System.Windows.Forms.Button
+        $okButton.Text = 'OK'
+        $okButton.Location = New-Object System.Drawing.Point(150, 220)
+        $okButton.Size = New-Object System.Drawing.Size(100, 30)
+        $okButton.Add_Click({ $form.Close() })
+        $form.Controls.Add($okButton)
+
+        Write-RedballLog -Level 'INFO' -Message 'TypeThing settings dialog opened'
+        $form.ShowDialog() | Out-Null
+    }
+    catch {
+        Write-RedballLog -Level 'WARN' -Message "TypeThing settings dialog error: $_"
+    }
+}
+
+function Show-AboutDialog {
+    <#
+    .SYNOPSIS
+        Displays the About dialog with version info.
+    #>
+    try {
+        $form = New-Object System.Windows.Forms.Form
+        $form.Text = 'About Redball'
+        $form.Size = New-Object System.Drawing.Size(350, 200)
+        $form.StartPosition = 'CenterScreen'
+        $form.FormBorderStyle = 'FixedDialog'
+        $form.MaximizeBox = $false
+        $form.MinimizeBox = $false
+
+        $label = New-Object System.Windows.Forms.Label
+        $label.Text = "Redball Keep-Awake Utility`n`nVersion: $($script:VERSION)`n`ngithub.com/ArMaTeC/Redball"
+        $label.Location = New-Object System.Drawing.Point(10, 10)
+        $label.Size = New-Object System.Drawing.Size(320, 100)
+        $label.TextAlign = 'MiddleCenter'
+        $form.Controls.Add($label)
+
+        $okButton = New-Object System.Windows.Forms.Button
+        $okButton.Text = 'OK'
+        $okButton.Location = New-Object System.Drawing.Point(125, 120)
+        $okButton.Size = New-Object System.Drawing.Size(100, 30)
+        $okButton.Add_Click({ $form.Close() })
+        $form.Controls.Add($okButton)
+
+        $form.ShowDialog() | Out-Null
+    }
+    catch {
+        Write-RedballLog -Level 'WARN' -Message "About dialog error: $_"
     }
 }
 
@@ -2462,7 +2585,7 @@ catch {
     Write-RedballLog -Level 'DEBUG' -Message "Idle helper type initialization skipped: $_"
 }
 
-function Get-IdleTimeMinutes {
+function Get-IdleTimeMinute {
     try {
         $idleMs = [IdleHelper]::GetIdleTime()
         return [math]::Round($idleMs / 60000, 1)  # Convert to minutes
@@ -2478,7 +2601,7 @@ function Update-IdleAwareState {
 
     if (-not $script:state.IdleDetection) { return }
     
-    $idleMinutes = Get-IdleTimeMinutes
+    $idleMinutes = Get-IdleTimeMinute
     $threshold = $script:state.IdleThresholdMinutes
     
     if ($idleMinutes -gt $threshold -and $script:state.Active -and -not $script:state.AutoPausedIdle) {
@@ -2678,7 +2801,7 @@ $script:performanceMetrics = @{
     LastMetricLog  = $null
 }
 
-function Update-PerformanceMetrics {
+function Update-PerformanceMetric {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [string]$Action,
@@ -2800,7 +2923,7 @@ function Test-ExecutionPolicy {
 
 # --- Installer Defaults Import ---
 
-function Import-RedballInstallerDefaults {
+function Import-RedballInstallerDefault {
     try {
         $defaultsPath = 'HKCU:\Software\Redball\InstallerDefaults'
         if (-not (Test-Path $defaultsPath)) {
@@ -3170,7 +3293,7 @@ function Install-RedballUpdate {
 
 # --- Backup/Restore Settings ---
 
-function Export-RedballSettings {
+function Export-RedballSetting {
     param(
         [string]$Path = (Join-Path $script:AppRoot 'Redball.backup.json'),
         [switch]$Obfuscate = $false
@@ -3192,7 +3315,7 @@ function Export-RedballSettings {
         $json = $settings | ConvertTo-Json -Depth 5
         
         if ($Obfuscate) {
-            # Base64 obfuscation (not true encryption — do not rely on this for security)
+            # Base64 obfuscation (not true encryption â€” do not rely on this for security)
             $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
             $encoded = [Convert]::ToBase64String($bytes)
             $encoded | Set-Content -Path $Path -Encoding UTF8
@@ -3210,7 +3333,7 @@ function Export-RedballSettings {
     }
 }
 
-function Import-RedballSettings {
+function Import-RedballSetting {
     param(
         [string]$Path = (Join-Path $script:AppRoot 'Redball.backup.json'),
         [switch]$Obfuscated = $false
@@ -3477,20 +3600,29 @@ namespace Win32 {
 
 function Stop-KeepAwakeRunspace {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
-    param([hashtable]$RunspaceInfo)
+    param([object]$RunspaceInfo)
 
     if (-not $PSCmdlet.ShouldProcess('Redball process isolation worker', 'Stop keep-awake runspace')) {
         return
     }
     
     try {
-        if ($RunspaceInfo.PowerShell) {
-            $RunspaceInfo.PowerShell.Stop()
-            $RunspaceInfo.PowerShell.Dispose()
+        # Handle if passed an array or unexpected type
+        $info = $RunspaceInfo
+        if ($RunspaceInfo -is [System.Object[]] -and $RunspaceInfo.Count -gt 0) {
+            $info = $RunspaceInfo[0]
         }
-        if ($RunspaceInfo.Runspace) {
-            $RunspaceInfo.Runspace.Close()
-            $RunspaceInfo.Runspace.Dispose()
+        if (-not $info -or -not ($info -is [hashtable])) {
+            Write-RedballLog -Level 'DEBUG' -Message "Keep-awake runspace info not found or invalid type"
+            return
+        }
+        if ($info.PowerShell) {
+            $info.PowerShell.Stop()
+            $info.PowerShell.Dispose()
+        }
+        if ($info.Runspace) {
+            $info.Runspace.Close()
+            $info.Runspace.Dispose()
         }
         Write-RedballLog -Level 'INFO' -Message 'Keep-awake runspace stopped'
     }
@@ -3710,7 +3842,7 @@ Test-RedballFirstRun | Out-Null
 
 # --- TypeThing Functions ---
 
-function ConvertTo-HotkeyParams {
+function ConvertTo-HotkeyParam {
     <#
     .SYNOPSIS
         Parses a hotkey string like "Ctrl+Shift+V" into modifier flags and virtual key code.
@@ -3799,7 +3931,7 @@ function ConvertTo-HotkeyParams {
     return @{ Modifiers = $modifiers; VirtualKey = $vk }
 }
 
-function Register-TypeThingHotkeys {
+function Register-TypeThingHotkey {
     <#
     .SYNOPSIS
         Registers TypeThing global hotkeys for start and stop typing.
@@ -3812,7 +3944,7 @@ function Register-TypeThingHotkeys {
         Known issue: Some Alt combinations may be intercepted by Windows for menu access.
         If Alt hotkeys fail, try using Ctrl+Alt combinations instead.
     #>
-    Write-VerboseLog -Message "Register-TypeThingHotkeys called" -Source "Hotkey"
+    Write-VerboseLog -Message "Register-TypeThingHotkey called" -Source "Hotkey"
     
     if (-not $script:config.TypeThingEnabled) { 
         Write-VerboseLog -Message "TypeThing disabled, skipping hotkey registration" -Source "Hotkey"
@@ -3940,7 +4072,7 @@ function Register-TypeThingHotkeys {
     }
 }
 
-function Unregister-TypeThingHotkeys {
+function Unregister-TypeThingHotkey {
     <#
     .SYNOPSIS
         Unregisters TypeThing global hotkeys.
@@ -4077,6 +4209,13 @@ function Start-TypeThingTyping {
     .SYNOPSIS
         Reads the clipboard and begins simulated typing with a countdown.
     #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param()
+    
+    if (-not $PSCmdlet.ShouldProcess('clipboard content', 'Start TypeThing typing simulation')) {
+        return
+    }
+    
     Write-VerboseLog -Message "Start-TypeThingTyping called" -Source "TypeThing"
     
     if ($script:state.TypeThingIsTyping) { 
@@ -4181,6 +4320,13 @@ function Start-TypeThingTimer {
     .SYNOPSIS
         Creates and starts the per-character typing timer.
     #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param()
+    
+    if (-not $PSCmdlet.ShouldProcess('TypeThing timer', 'Start typing timer')) {
+        return
+    }
+    
     if (-not $script:state.TypeThingTimer) {
         $script:state.TypeThingTimer = New-Object System.Windows.Forms.Timer
         $script:state.TypeThingTimer.add_Tick({
@@ -4246,6 +4392,13 @@ function Stop-TypeThingTyping {
     .SYNOPSIS
         Immediately stops typing and resets state.
     #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param()
+    
+    if (-not $PSCmdlet.ShouldProcess('TypeThing typing', 'Stop typing simulation')) {
+        return
+    }
+    
     $script:state.TypeThingShouldStop = $true
 
     if ($script:state.TypeThingTimer) {
@@ -4360,7 +4513,7 @@ if ($script:config.TypeThingEnabled) {
             })
         # Try to register immediately, but if handle isn't ready, retry via timer
         Write-VerboseLog -Message "Attempting initial hotkey registration" -Source "TypeThing"
-        Register-TypeThingHotkeys
+        Register-TypeThingHotkey
         if (-not $script:state.TypeThingHotkeysRegistered) {
             Write-VerboseLog -Message "Initial registration failed, starting retry timer" -Source "TypeThing"
             # Create a timer to retry registration after the message pump starts
@@ -4377,7 +4530,7 @@ if ($script:config.TypeThingEnabled) {
                         $typeThingInitTimer.Dispose()
                         return
                     }
-                    Register-TypeThingHotkeys
+                    Register-TypeThingHotkey
                     if ($script:state.TypeThingHotkeysRegistered) {
                         $typeThingInitTimer.Stop()
                         $typeThingInitTimer.Dispose()

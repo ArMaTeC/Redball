@@ -17,6 +17,9 @@ public partial class MainWindow : Window
     private bool _isTrayIconInitialized;
     private static readonly string LogPath = Path.Combine(AppContext.BaseDirectory, "Redball.UI.log");
 
+    private Views.SettingsWindow? _settingsWindow;
+    private Views.AboutWindow? _aboutWindow;
+
     private static void Log(string message)
     {
         try
@@ -24,7 +27,10 @@ public partial class MainWindow : Window
             var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             File.AppendAllText(LogPath, $"[{timestamp}] {message}{Environment.NewLine}");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Log failed: {ex.Message}");
+        }
     }
 
     public MainWindow()
@@ -88,17 +94,18 @@ public partial class MainWindow : Window
                 {
                     Log($"Loading icon from: {foundPath}");
                     
-                    // Use FileStream for reliable loading
-                    using var stream = new FileStream(foundPath, FileMode.Open, FileAccess.Read);
+                    // Use file:// URI scheme for reliable loading
+                    var uriString = $"file:///{foundPath.Replace('\\', '/')}";
+                    var uri = new Uri(uriString, UriKind.Absolute);
                     var bitmap = new BitmapImage();
                     bitmap.BeginInit();
+                    bitmap.UriSource = uri;
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmap.StreamSource = stream;
                     bitmap.EndInit();
                     bitmap.Freeze();
                     
                     _trayIcon.IconSource = bitmap;
-                    Log("Icon loaded successfully via FileStream");
+                    Log("Icon loaded successfully via file:// URI");
                 }
                 catch (Exception ex)
                 {
@@ -140,8 +147,15 @@ public partial class MainWindow : Window
     {
         Dispatcher.Invoke(() =>
         {
-            var settings = new SettingsWindow();
-            settings.Show(); // Use Show instead of ShowDialog for non-modal
+            if (_settingsWindow != null && _settingsWindow.IsLoaded)
+            {
+                _settingsWindow.Activate();
+                _settingsWindow.Focus();
+                return;
+            }
+            _settingsWindow = new Views.SettingsWindow();
+            _settingsWindow.Closed += (s, e) => _settingsWindow = null;
+            _settingsWindow.Show();
         });
     }
 
@@ -149,8 +163,15 @@ public partial class MainWindow : Window
     {
         Dispatcher.Invoke(() =>
         {
-            var about = new AboutWindow();
-            about.Show(); // Use Show instead of ShowDialog for non-modal
+            if (_aboutWindow != null && _aboutWindow.IsLoaded)
+            {
+                _aboutWindow.Activate();
+                _aboutWindow.Focus();
+                return;
+            }
+            _aboutWindow = new Views.AboutWindow();
+            _aboutWindow.Closed += (s, e) => _aboutWindow = null;
+            _aboutWindow.Show();
         });
     }
 
@@ -159,6 +180,7 @@ public partial class MainWindow : Window
         if (_trayIcon != null)
         {
             _trayIcon.Dispose();
+            _trayIcon = null;
         }
         Application.Current.Shutdown();
     }

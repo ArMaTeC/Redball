@@ -555,7 +555,7 @@ Describe "Idle Detection" {
     }
     
     It "Gets idle time without errors" {
-        { Get-IdleTimeMinutes } | Should -Not -Throw
+        { Get-IdleTimeMinute } | Should -Not -Throw
     }
     
     It "Handles idle check without errors" {
@@ -655,26 +655,26 @@ Describe "TypeThing - Hotkey Parser" {
     }
 
     It "Parses Ctrl+Shift+V correctly" {
-        $result = ConvertTo-HotkeyParams -HotkeyString 'Ctrl+Shift+V'
+        $result = ConvertTo-HotkeyParam -HotkeyString 'Ctrl+Shift+V'
         $result.Modifiers | Should -Be (0x0002 -bor 0x0004)  # MOD_CONTROL | MOD_SHIFT
         $result.VirtualKey | Should -Be 0x56  # V
     }
 
     It "Parses Ctrl+Alt+Pause correctly" {
-        $result = ConvertTo-HotkeyParams -HotkeyString 'Ctrl+Alt+Pause'
+        $result = ConvertTo-HotkeyParam -HotkeyString 'Ctrl+Alt+Pause'
         $result.Modifiers | Should -Be (0x0002 -bor 0x0001)  # MOD_CONTROL | MOD_ALT
         $result.VirtualKey | Should -Be 0x13  # VK_PAUSE
     }
 
     It "Parses single key correctly" {
-        $result = ConvertTo-HotkeyParams -HotkeyString 'F12'
+        $result = ConvertTo-HotkeyParam -HotkeyString 'F12'
         $result.Modifiers | Should -Be 0
         $result.VirtualKey | Should -Be 0x7B  # F12
     }
 
     It "Handles unknown key gracefully" {
         Mock Write-RedballLog {}
-        $result = ConvertTo-HotkeyParams -HotkeyString 'Ctrl+UnknownKey'
+        $result = ConvertTo-HotkeyParam -HotkeyString 'Ctrl+UnknownKey'
         $result.Modifiers | Should -Be 0x0002  # MOD_CONTROL
         $result.VirtualKey | Should -Be 0
     }

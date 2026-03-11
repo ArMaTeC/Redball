@@ -37,10 +37,10 @@
     <!-- Secure=yes allows this UI-set value to flow from the UI server to the execute server -->
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" Secure="yes" />
 
-    <!-- Type-50 CA: use wscript.exe //B to launch PowerShell with a hidden window (avoids black console flash) -->
+    <!-- Launch application after installation -->
     <CustomAction Id="LaunchApp"
-                  Property="WSCRIPTEXE"
-                  ExeCommand="//B //nologo &quot;[INSTALLFOLDER]Launch-Redball.vbs&quot;"
+                  FileRef="WPFExecutable"
+                  ExeCommand=""
                   Execute="immediate"
                   Return="asyncNoWait" />
 
@@ -72,6 +72,7 @@
     <!-- Feature tree gives installer-UI and CLI config support via ADDLOCAL -->
     <Feature Id="MainFeature" Title="Redball Core" Description="Core Redball files" Level="1">
       <ComponentGroupRef Id="CoreComponents" />
+      <ComponentGroupRef Id="WPFComponents" />
       <ComponentGroupRef Id="ShortcutComponents" />
       <ComponentGroupRef Id="FileAssociationComponents" />
     </Feature>
@@ -129,13 +130,21 @@
       </Component>
     </ComponentGroup>
 
+    <ComponentGroup Id="WPFComponents" Directory="INSTALLFOLDER">
+      <Component Id="WPFExeComponent" Guid="C8D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F">
+        <File Id="WPFExecutable" Source="..\dist\wpf-publish\Redball.UI.WPF.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="WPFPdbComponent" Guid="D9E6F7A8-9B0C-1D2E-3F4A-5B6C7D8E9F0A">
+        <File Id="WPFPdbFile" Source="..\dist\wpf-publish\Redball.UI.WPF.pdb" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
     <ComponentGroup Id="ShortcutComponents" Directory="RedballMenuFolder">
       <Component Id="StartMenuShortcutComponent" Guid="5F6DDFD1-E6C7-4DC7-8E40-3FBC1F0FEAF8">
         <Shortcut Id="StartMenuShortcut"
                   Name="Redball"
                   Description="Launch Redball keep-awake utility"
-                  Target="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe"
-                  Arguments="-ExecutionPolicy Bypass -WindowStyle Hidden -File &quot;[INSTALLFOLDER]Redball.ps1&quot;"
+                  Target="[INSTALLFOLDER]Redball.UI.WPF.exe"
                   WorkingDirectory="INSTALLFOLDER" />
         <RemoveFolder Id="RemoveMenuFolder" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\Redball" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
@@ -145,8 +154,7 @@
         <Shortcut Id="DesktopShortcut"
                   Name="Redball"
                   Description="Launch Redball keep-awake utility"
-                  Target="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe"
-                  Arguments="-ExecutionPolicy Bypass -WindowStyle Hidden -File &quot;[INSTALLFOLDER]Redball.ps1&quot;"
+                  Target="[INSTALLFOLDER]Redball.UI.WPF.exe"
                   WorkingDirectory="INSTALLFOLDER" />
         <RegistryValue Root="HKCU" Key="Software\Redball" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
       </Component>
@@ -157,8 +165,7 @@
         <Shortcut Id="StartupShortcut"
                   Name="Redball"
                   Description="Start Redball when Windows signs in"
-                  Target="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe"
-                  Arguments="-ExecutionPolicy Bypass -WindowStyle Hidden -File &quot;[INSTALLFOLDER]Redball.ps1&quot; -Minimized"
+                  Target="[INSTALLFOLDER]Redball.UI.WPF.exe"
                   WorkingDirectory="INSTALLFOLDER" />
         <RegistryValue Root="HKCU" Key="Software\Redball" Name="StartupShortcut" Type="integer" Value="1" KeyPath="yes" />
       </Component>
@@ -172,7 +179,7 @@
         <RegistryKey Root="HKCU" Key="Software\Classes\Redball.Config">
           <RegistryValue Type="string" Value="Redball Configuration File" />
           <RegistryKey Key="shell\open\command">
-            <RegistryValue Type="string" Value="&quot;[SystemFolder]WindowsPowerShell\v1.0\powershell.exe&quot; -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]Redball.ps1&quot; -ConfigPath &quot;%1&quot;" />
+            <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]Redball.UI.WPF.exe&quot; -ConfigPath &quot;%1&quot;" />
           </RegistryKey>
         </RegistryKey>
       </Component>
