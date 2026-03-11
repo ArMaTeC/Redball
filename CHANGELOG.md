@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.1.0] - 2026-03-11
 
-### Added
+### Added (2.1.0)
 
 - **Config Validation**: `Test-RedballConfigSchema` validates and sanitizes all config values against expected types, ranges, and formats on startup
 - **First-Run Onboarding**: Welcome toast notification on first launch with guidance for new users
@@ -64,13 +64,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PS7 CI Matrix**: CI pipeline now tests on both PowerShell 5.1 and PowerShell 7
 - **Code Coverage Reporting**: CI pipeline reports code coverage percentage with threshold warnings
 
-### Fixed
+### Fixed (2.1.0)
 
 - **TypeThing SendInput Bug**: Fixed PowerShell nested value type copy issue where `$input.ki.wVk = value` silently modified a copy instead of the original struct — this was the root cause of typing producing no output
 - **INPUT Struct Alignment**: Fixed 64-bit struct layout (`FieldOffset` 4→8, size 28→40) for correct SendInput marshaling on 64-bit Windows
 - **Hotkey Debug Logging**: Added Win32 error codes and parsed VK values to hotkey registration failure messages
 
-### Security
+### Security (2.1.0)
 
 - **Input Sanitization**: All string config values are stripped of control characters on load
 - **Range Validation**: All numeric config values are clamped to safe ranges
@@ -79,7 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - 2024-03-09
 
-### Added
+### Added (2.0.0
 
 - **Branding**: "Redball" with new red ball icon
 - **3D Icon**: Custom-drawn 3D red sphere with specular highlight and shadow effects
@@ -97,7 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Help Documentation**: Full PowerShell help with `.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER`, `.EXAMPLE`
 - **Trap Handler**: Global trap for `PipelineStoppedException` with graceful exit
 
-### Changed
+### Changed (2.0.0)
 
 - **Icon System**: Replaced coffee cup design with 3D red ball
 - **Function Names**: Renamed `Update-Ui` to `Update-RedballUI`
@@ -106,7 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI Text**: Updated all references from "Redball" to "Redball"
 - **Tray Tooltip**: Now shows `[REDBALL] Redball`
 
-### Fixed
+### Fixed (2.0.0)
 
 - **Pipeline Stop Error**: No more "pipeline stopped" exception on external termination
 - **$PSScriptRoot Empty**: Added fallback to current directory when `$PSScriptRoot` is empty
@@ -114,7 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UInt32 Overflow**: Fixed constant definitions to prevent signed integer overflow
 - **DateTime Nullability**: Used `[Nullable[datetime]]` for proper null handling
 
-### Security
+### Security (2.0.0)
 
 - **Execution Policy**: Requires `-Version 5.1` and administrative privileges
 - **Error Suppression**: Sensitive error details only logged, not displayed to user
@@ -131,6 +131,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prevent display sleep toggle
 - Basic context menu with pause/resume
 
-[Unreleased]: https://github.com/username/redball/compare/v2.0.0...HEAD
-[2.0.0]: https://github.com/username/redball/compare/v1.0.0...v2.0.0
-[1.0.0]: https://github.com/username/redball/releases/tag/v1.0.0
+[Unreleased]: https://github.com/ArMaTeC/redball/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/ArMaTeC/redball/compare/v1.0.0...v2.0.0
+[1.0.0]: https://github.com/ArMaTeC/redball/releases/tag/v1.0.0

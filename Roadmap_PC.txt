@@ -1,0 +1,230 @@
+REDBALL - COMPREHENSIVE STATIC ANALYSIS & IMPLEMENTATION ROADMAP
+
+================================================================================
+STATUS: v2.1.1 Released - 35 of 50 items completed (Critical/High: 14/14 done)
+Generated: 2026-03-11 | Analyst: Senior Full-Stack Architect, Security Auditor & QA Lead
+Codebase: Redball.ps1 (5,471 lines), Redball.Tests.ps1 (803 lines), CI/CD workflows, installer, supporting files
+================================================================================
+
+
+ANALYSIS SUMMARY
+================================================================================
+
+Phase                     | Findings | Critical | High | Medium | Polish
+--------------------------|----------|----------|------|--------|-------
+1. Structural Integrity   | 14       | 1        | 5    | 5      | 3
+2. Security & Data Integ. | 8        | 2        | 3    | 2      | 1
+3. UI/UX & Accessibility  | 11       | 0        | 4    | 5      | 2
+4. Performance & Opt.      | 7        | 0        | 1    | 4      | 2
+5. Uniformity & Code Qual.| 10       | 0        | 2    | 5      | 3
+TOTAL                     | 50       | 3        | 15   | 21     | 11
+
+
+================================================================================
+PHASE 1: STRUCTURAL INTEGRITY & LOGIC DEEP SCAN
+================================================================================
+
+1.1 Missing Definitions & Ghost Calls
+---------------------------------------
+No ghost calls found. All function calls resolve to definitions within Redball.ps1.
+Functions like Get-ClipboardText, Get-RedballStatus, Switch-ActiveState,
+Set-ActiveState, Start-TimedAwake, Update-BatteryAwareState, Update-NetworkAwareState,
+Update-IdleAwareState, Update-ScheduleState, Update-PresentationModeState,
+Save-RedballState, Restore-RedballState, Test-RedballStartup, Install-RedballStartup,
+Uninstall-RedballStartup, and Get-IdleTimeMinutes are all defined within the script.
+
+
+1.2 Duplicate / Dead Code
+-------------------------
+
+#  | Task Name                        | File/Location      | Status
+---|----------------------------------|--------------------|------------------
+1  | Duplicate Settings Dialog        | Redball.ps1:4925   | [DONE] REMOVED v2.1.1
+   |                                  | vs 1390-1776       | Function deleted
+2  | Version Mismatch in Script Header| Redball.ps1:38 vs 84| Pending
+
+
+1.3 Swallowed Errors (Empty Catch Blocks)
+-----------------------------------------
+
+#  | Task Name                        | File/Location      | Status
+---|----------------------------------|--------------------|------------------
+3  | Empty catch in Unregister-GlobalHotkey | Redball.ps1:3666 | [DONE] FIXED v2.1.1
+4  | Empty catch in crash report writer   | Redball.ps1:4023 | [DONE] FIXED v2.1.1
+5  | Empty catch in Show-RedballError     | Redball.ps1:1079 | [DONE] FIXED v2.1.1
+6  | 5x Empty catch on ShowBalloonTip calls| Redball.ps1:2240 | [DONE] FIXED v2.1.1
+
+
+1.4 Closure Scope Bug
+---------------------
+
+#  | Task Name                               | File/Location      | Status
+---|-----------------------------------------|--------------------|------------------
+7  | TypeThing retry timer $retryCount closure| Redball.ps1:5439   | [DONE] FIXED v2.1.1
+
+
+1.5 Locale Detection Bug
+------------------------
+
+#  | Task Name                        | File/Location      | Status
+---|----------------------------------|--------------------|------------------
+8  | $env:LANG used for locale detect.| Redball.ps1:652     | [DONE] FIXED v2.1.1
+
+
+1.6 Embedded vs External Locale Mismatch
+-----------------------------------------
+
+#  | Task Name                        | File/Location      | Status
+---|----------------------------------|--------------------|------------------
+9  | bl locale missing from locales.json| Redball.ps1:578    | [DONE] FIXED v2.1.1
+
+
+1.7 Global Error Handling
+-------------------------
+
+#  | Task Name                        | File/Location      | Status
+---|----------------------------------|--------------------|------------------
+10 | Global exception handler present | Redball.ps1:3994    | [OK] No action needed
+
+
+1.8 Incomplete Logic
+--------------------
+
+#  | Task Name                        | File/Location      | Status
+---|----------------------------------|--------------------|------------------
+11 | Update-DarkModeUI is a no-op    | Redball.ps1:4907   | Pending
+12 | Update-HighContrastUI sets non-exist. config key | 4844 | Pending
+13 | Send-RedballTelemetry is a stub  | Redball.ps1:5123   | [DONE] FIXED v2.1.1
+14 | Export-RedballSettings -Encrypt  | Redball.ps1:4725   | [DONE] FIXED v2.1.1
+
+
+================================================================================
+PHASE 2: SECURITY & DATA INTEGRITY
+================================================================================
+
+#  | Task Name                        | File/Location      | Status
+---|----------------------------------|--------------------|------------------
+15 | Update repo owner/name editable  | Redball.ps1:1614   | [DONE] FIXED v2.1.1
+16 | No TLS version enforcement       | Redball.ps1:4672   | [DONE] FIXED v2.1.1
+17 | Base64 "encryption" misleads     | Redball.ps1:4725   | [DONE] FIXED v2.1.1
+18 | Config file not integrity-checked| Redball.ps1:794    | Pending
+19 | Log file may expose full paths   | Redball.ps1        | Pending
+20 | Invoke-Expression in test file   | Redball.Tests.ps1:24| [DONE] FIXED v2.1.1
+21 | No rate limiting on update checks| Redball.ps1:4591   | [DONE] FIXED v2.1.1
+22 | Downloaded update temp not cleaned| Redball.ps1:4668  | [DONE] FIXED v2.1.1
+
+
+================================================================================
+PHASE 3: UI/UX & ACCESSIBILITY
+================================================================================
+
+#  | Task Name                        | File/Location      | Status
+---|----------------------------------|--------------------|------------------
+23 | Two settings dialogs confuse     | Redball.ps1:1390   | [DONE] FIXED v2.1.1
+24 | About dialog ignores system theme| Redball.ps1:1794   | Pending
+25 | Main Settings dialog hardcodes light| 1411             | Pending
+26 | No loading indicator during update| Redball.ps1:1778   | Pending
+27 | Idle detection threshold hardcoded| Redball.ps1:3797   | [DONE] FIXED v2.1.1
+28 | No exit confirmation dialog      | Redball.ps1:5261   | Pending
+29 | bl locale not selectable in UI    | Redball.ps1:1543   | [DONE] FIXED v2.1.1
+30 | Settings dialog forms not disposed| Redball.ps1:1773  | [DONE] FIXED v2.1.1
+31 | Hardcoded pixel positions        | Redball.ps1:4930   | Pending
+32 | Accessible names and descriptions| Redball.ps1:3682   | Pending
+33 | No empty state for TypeThing     | Redball.ps1:3857   | [DONE] FIXED v2.1.1
+
+
+================================================================================
+PHASE 4: PERFORMANCE & OPTIMIZATION
+================================================================================
+
+#  | Task Name                        | File/Location      | Status
+---|----------------------------------|--------------------|------------------
+34 | GDI+ icon recreation every change| Redball.ps1:1188   | Pending
+35 | Battery check via CIM every sec  | Redball.ps1:3452   | [DONE] FIXED v2.1.1
+36 | Presentation mode scan every sec | Redball.ps1:4195  | [DONE] FIXED v2.1.1
+37 | Add-Type called repeatedly       | Redball.ps1:4801   | [DONE] FIXED v2.1.1
+38 | Log rotation check on every write| Redball.ps1:730    | [DONE] FIXED v2.1.1
+39 | Runspace worker has no clean stop| Redball.ps1:5184   | Pending
+40 | Embedded locale JSON parsed often| Redball.ps1:638    | Pending
+
+
+================================================================================
+PHASE 5: UNIFORMITY & CODE QUALITY
+================================================================================
+
+#  | Task Name                        | File/Location      | Status
+---|----------------------------------|--------------------|------------------
+41 | State/config duplication         | Redball.ps1:137    | [DONE] Documented
+42 | Mixed path resolution            | Redball.ps1:4307   | [DONE] FIXED v2.1.1
+43 | Magic numbers for hotkey IDs     | Redball.ps1:195    | [DONE] FIXED v2.1.1
+44 | Magic number for clipboard thres.| Redball.ps1:2247   | [DONE] FIXED v2.1.1
+45 | Magic hex value in runspace      | Redball.ps1:5185   | [DONE] FIXED v2.1.1
+46 | Hardcoded colors throughout      | Redball.ps1:1411   | Pending
+47 | Inconsistent error output        | Redball.ps1        | Pending
+48 | $ES_* constants not script-scoped| Redball.ps1:138    | [DONE] FIXED v2.1.1
+49 | DRY violation: balloon tip       | Redball.ps1:2236   | Pending
+50 | DRY violation: menu item click     | Redball.ps1:3732   | Pending
+
+
+================================================================================
+IMPLEMENTATION PRIORITY ORDER
+================================================================================
+
+IMMEDIATE (Critical + High - Fix before next release):
+--------------------------------------------------------
+[done]  #16 - Enforce TLS 1.2+ on all network calls
+[done]  #15 - Validate/restrict update repository configuration
+[done]  #7  - Fix TypeThing retry timer closure scope bug
+[done]  #8  - Fix $env:LANG locale detection to use Get-Culture
+[done]  #14/#17 - Rename -Encrypt to -Obfuscate
+[done]  #1/#23 - Remove duplicate Show-RedballSettingsDialog
+[done]  #22 - Clean up temp files after update download
+[done]  #21 - Add rate limiting / caching to update checks
+[done]  #3  - Log errors in Unregister-GlobalHotkey catch block
+        #41 - Resolve state/config duplication (architectural) (Documented)
+[done]  #42 - Standardize on $script:AppRoot for all path resolution
+        #26 - Add loading indicator for update check in About dialog
+        #31 - Fix hardcoded pixel layouts for DPI scaling
+[done]  #35 - Throttle battery CIM queries to 30-60 second intervals
+
+
+NEXT SPRINT (Medium - Improve quality and UX):
+----------------------------------------------
+        #2  - Fix version mismatch in .NOTES header
+[done]  #4  - Add fallback logging in crash report catch block
+[done]  #9  - Add bl locale to locales.json and dropdown
+        #11 - Implement or remove Update-DarkModeUI
+        #12 - Wire up UseSystemIcons config key
+        #18 - Add config file integrity hash
+        #19 - Sanitize file paths in log messages
+        #24/#25 - Apply system theme to all dialogs
+[done]  #27 - Dynamic idle threshold in menu text
+        #28 - Exit confirmation when active
+[done]  #30 - Fix form disposal in error paths
+[done]  #33 - Show "Disabled" status for TypeThing
+        #34 - Cache pre-rendered tray icons
+[done]  #36 - Throttle presentation mode process scans
+[done]  #37 - Move Add-Type to one-time initialization
+[done]  #38 - Throttle log rotation size checks
+        #46 - Unified theme system across all dialogs
+        #47 - Standardize error output patterns
+[done]  #48 - Script-scope ES constants
+        #49 - DRY: TypeThing notification helper
+        #50 - DRY: Safe click handler wrapper
+
+
+POLISH (Low priority - Code quality refinement):
+------------------------------------------------
+[done]  #5/#6  - Add DEBUG logging to empty balloon tip catches
+[done]  #13    - Rename Send-RedballTelemetry to clarify local-only
+[done]  #20    - Add safety comment to Invoke-Expression in tests
+[done]  #29    - Add bl to locale dropdown
+        #32    - Add AccessibleName to dialog input controls
+        #39    - Clean runspace stop mechanism
+        #40    - Cache parsed embedded locale JSON
+[done]  #43/#44/#45 - Replace magic numbers with named constants
+
+
+================================================================================
+END OF DOCUMENT
+================================================================================

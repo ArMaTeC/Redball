@@ -13,7 +13,7 @@ Redball aims to be the most reliable, feature-rich, and user-friendly keep-awake
 ### Why Redball over alternatives?
 
 | Feature | Redball | Caffeine | Mouse Jiggler | PowerToys Awake |
-|---------|---------|----------|---------------|-----------------|
+| --------- | --------- | ---------- | --------------- | ----------------- |
 | Context-aware (battery, network, idle) | ✅ | ❌ | ❌ | ❌ |
 | Scheduled operation | ✅ | ❌ | ❌ | ❌ |
 | Presentation mode detection | ✅ | ❌ | ❌ | ❌ |
@@ -86,10 +86,6 @@ Redball aims to be the most reliable, feature-rich, and user-friendly keep-awake
 ### 🔮 v3.0 — Next Generation (Future)
 
 - [ ] WPF/MAUI UI modernization
-- [ ] Cloud sync for settings across devices
-- [ ] REST API for remote status/control
-- [ ] macOS/Linux port (PowerShell Core)
-- [ ] Electron-based companion dashboard
 
 ## Contributing
 
