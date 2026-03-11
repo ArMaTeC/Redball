@@ -11,7 +11,7 @@ BeforeAll {
     Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
     Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
 
-    $scriptPath = Join-Path $PSScriptRoot 'Redball.ps1'
+    $scriptPath = Join-Path $PSScriptRoot '..' 'Redball.ps1' | Resolve-Path
     $tokens = $null
     $parseErrors = $null
     $ast = [System.Management.Automation.Language.Parser]::ParseFile($scriptPath, [ref]$tokens, [ref]$parseErrors)
