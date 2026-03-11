@@ -34,7 +34,7 @@ jobs:
       shell: ${{ matrix.shell }}
       run: |
         $PSVersionTable
-        
+
     - name: Install Pester
       shell: ${{ matrix.shell }}
       run: |
@@ -42,7 +42,7 @@ jobs:
         Install-Module -Name Pester -Force -SkipPublisherCheck -RequiredVersion 5.5.0
         Import-Module Pester -RequiredVersion 5.5.0
         Get-Module Pester | Select-Object Name, Version
-        
+
     - name: Run Pester Tests
       shell: ${{ matrix.shell }}
       run: |
@@ -56,7 +56,7 @@ jobs:
         $config.CodeCoverage.Enabled = $true
         $config.CodeCoverage.OutputPath = "./coverage-${{ matrix.shell }}.xml"
         $result = Invoke-Pester -Configuration $config
-        
+
         if ($result.FailedCount -gt 0) {
           foreach ($f in $result.Failed) {
             $errMsg = "$($f.ErrorRecord)" -replace "`r`n"," " -replace "`n"," "
