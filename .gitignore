@@ -1,5 +1,7 @@
 Redball.crash.flag
+Redball.crash.log
 Redball.log
+.redball-initialized
 typingthing.txt
 dist/Redball-test.msi
 dist/Redball-test.wixpdb

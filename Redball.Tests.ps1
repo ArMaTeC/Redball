@@ -21,6 +21,8 @@ BeforeAll {
 
     $functionAsts = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
     foreach ($functionAst in $functionAsts) {
+        # SAFETY: Invoke-Expression is used here to load individual functions from the AST without executing the full script.
+        # This is safe because the input is the script's own parsed AST, not user-supplied data.
         try { Invoke-Expression $functionAst.Extent.Text }
         catch { Write-Warning "Failed to load function $($functionAst.Name): $_" }
     }
@@ -267,6 +269,7 @@ Describe "Logging" {
     It "Rotates log when size exceeds limit" {
         $testLogPath = Join-Path $TestDrive 'test.log'
         $script:config.LogPath = $testLogPath
+        $script:logWriteCount = 0  # Reset counter so next write triggers rotation check
         # Create oversized log
         "A" * (11MB) | Set-Content $testLogPath
         

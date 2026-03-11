@@ -108,6 +108,18 @@
         <File Id="ReadmeFile" Source="..\README.md" KeyPath="yes" />
       </Component>
 
+      <Component Id="LocalesComponent" Guid="E1B2C3D4-5F6A-7B8C-9D0E-1F2A3B4C5D6E">
+        <File Id="LocalesFile" Source="..\locales.json" KeyPath="yes" />
+      </Component>
+
+      <Component Id="LicenseComponent" Guid="A2B3C4D5-6E7F-8A9B-0C1D-2E3F4A5B6C7D">
+        <File Id="LicenseFile" Source="..\LICENSE" KeyPath="yes" />
+      </Component>
+
+      <Component Id="ThirdPartyComponent" Guid="F3A4B5C6-7D8E-9F0A-1B2C-3D4E5F6A7B8C">
+        <File Id="ThirdPartyFile" Source="..\THIRD-PARTY-NOTICES.md" KeyPath="yes" />
+      </Component>
+
       <Component Id="LaunchVbsComponent" Guid="3D6A2B1C-8F4E-4A9D-B5C7-2E1F9D3A4B6E">
         <File Id="LaunchVbs" Source="Launch-Redball.vbs" KeyPath="yes" />
       </Component>

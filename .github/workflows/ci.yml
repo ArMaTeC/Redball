@@ -15,20 +15,24 @@ on:
 
 jobs:
   test:
-    name: Run Pester Tests
+    name: Run Pester Tests (${{ matrix.shell }})
     runs-on: windows-latest
+    strategy:
+      matrix:
+        shell: [powershell, pwsh]
+      fail-fast: false
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       
     - name: Setup PowerShell
-      shell: powershell
+      shell: ${{ matrix.shell }}
       run: |
         $PSVersionTable
         
     - name: Install Pester
-      shell: powershell
+      shell: ${{ matrix.shell }}
       run: |
         Remove-Module Pester -Force -ErrorAction SilentlyContinue
         Install-Module -Name Pester -Force -SkipPublisherCheck -RequiredVersion 5.5.0
@@ -36,7 +40,7 @@ jobs:
         Get-Module Pester | Select-Object Name, Version
         
     - name: Run Pester Tests
-      shell: powershell
+      shell: ${{ matrix.shell }}
       run: |
         Import-Module Pester -RequiredVersion 5.5.0
         $config = New-PesterConfiguration
@@ -44,9 +48,9 @@ jobs:
         $config.Run.PassThru = $true
         $config.Output.Verbosity = "Detailed"
         $config.TestResult.Enabled = $true
-        $config.TestResult.OutputPath = "./test-results.xml"
+        $config.TestResult.OutputPath = "./test-results-${{ matrix.shell }}.xml"
         $config.CodeCoverage.Enabled = $true
-        $config.CodeCoverage.OutputPath = "./coverage.xml"
+        $config.CodeCoverage.OutputPath = "./coverage-${{ matrix.shell }}.xml"
         $result = Invoke-Pester -Configuration $config
         
         if ($result.FailedCount -gt 0) {
@@ -57,19 +61,25 @@ jobs:
           throw "Pester tests failed: $($result.FailedCount)"
         }
         
+        # Enforce minimum code coverage threshold
+        if ($result.CodeCoverage -and $result.CodeCoverage.CoveragePercent -lt 40) {
+          Write-Host "::warning::Code coverage is $([math]::Round($result.CodeCoverage.CoveragePercent, 1))% (threshold: 40%)"
+        }
+        Write-Host "Code coverage: $([math]::Round($result.CodeCoverage.CoveragePercent, 1))%"
+        
     - name: Upload Test Results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-results
-        path: ./test-results.xml
+        name: test-results-${{ matrix.shell }}
+        path: ./test-results-${{ matrix.shell }}.xml
         
     - name: Upload Coverage
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: coverage-report
-        path: ./coverage.xml
+        name: coverage-report-${{ matrix.shell }}
+        path: ./coverage-${{ matrix.shell }}.xml
 
   lint:
     name: Lint PowerShell

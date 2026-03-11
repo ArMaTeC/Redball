@@ -1,6 +1,11 @@
 #requires -Version 5.1
 <#requires -RunAsAdministrator#>
 <#
+# Copyright (c) 2024-2026 GCI Network Solutions / Redball Contributors
+# Licensed under the MIT License. See LICENSE file in the project root.
+# https://github.com/ArMaTeC/Redball
+#>
+<#
 .SYNOPSIS
     Redball - A system tray utility to prevent Windows from going to sleep.
 .DESCRIPTION
@@ -30,7 +35,7 @@
     .\Redball.ps1 -Status | ConvertFrom-Json
     Get current Redball status programmatically.
 .NOTES
-    Version: 2.0.29
+    Version: 2.0.42
     Requires: PowerShell 5.1+, Windows 8.1+
 #>
 [CmdletBinding()]
@@ -130,10 +135,22 @@ namespace Win32 {
 
 Add-Type -TypeDefinition $signature -Language CSharp
 
-$ES_CONTINUOUS = [uint32]2147483648
-$ES_SYSTEM_REQUIRED = [uint32]1
-$ES_DISPLAY_REQUIRED = [uint32]2
+# Enforce TLS 1.2+ for all HTTPS requests (prevents TLS downgrade attacks)
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
 
+$script:ES_CONTINUOUS = [uint32]2147483648
+$script:ES_SYSTEM_REQUIRED = [uint32]1
+$script:ES_DISPLAY_REQUIRED = [uint32]2
+
+# Named constants for global hotkey IDs
+$script:HOTKEY_ID_TYPETHING_START = 100
+$script:HOTKEY_ID_TYPETHING_STOP = 101
+
+# NOTE: PreventDisplaySleep, UseHeartbeatKeypress, HeartbeatSeconds, BatteryAware,
+# BatteryThreshold, NetworkAware, IdleDetection are duplicated in both $script:state
+# and $script:config. Config is the persisted source; state is synced on load/save.
+# Future refactor: designate $script:config as single source of truth and remove
+# duplicate keys from $script:state.
 $script:state = [ordered]@{
     Active                      = $true
     PreventDisplaySleep         = $true
@@ -187,8 +204,8 @@ $script:state = [ordered]@{
     TypeThingMenuStop           = $null
     TypeThingMenuStatus         = $null
     TypeThingHotkeyWindow       = $null
-    TypeThingHotkeyStartId      = 100
-    TypeThingHotkeyStopId       = 101
+    TypeThingHotkeyStartId      = $script:HOTKEY_ID_TYPETHING_START
+    TypeThingHotkeyStopId       = $script:HOTKEY_ID_TYPETHING_STOP
     TypeThingHotkeysRegistered  = $false
 }
 
@@ -245,6 +262,8 @@ $script:singletonMutex = $null
 $script:wshShell = $null
 $script:lastBatteryCheck = $null
 $script:lastBatteryResult = @{ HasBattery = $false }
+$script:lastUpdateCheck = $null
+$script:lastUpdateResult = $null
 
 function Test-RedballInstanceRunning {
     <#
@@ -644,7 +663,7 @@ function Import-RedballLocales {
         }
         
         # Validate system locale exists, fallback to English
-        $systemLocale = ($env:LANG -split '_')[0]
+        $systemLocale = try { (Get-Culture).TwoLetterISOLanguageName } catch { 'en' }
         if ($script:locales.ContainsKey($systemLocale)) {
             $script:currentLocale = $systemLocale
         }
@@ -721,8 +740,10 @@ function Write-RedballLog {
     # Try to write with retries
     for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
         try {
-            # Check for log rotation before writing
-            if (Test-Path $script:config.LogPath) {
+            # Check for log rotation every 50 writes to reduce filesystem overhead
+            if (-not $script:logWriteCount) { $script:logWriteCount = 0 }
+            $script:logWriteCount++
+            if (($script:logWriteCount -eq 1 -or $script:logWriteCount % 50 -eq 0) -and (Test-Path $script:config.LogPath)) {
                 $logSize = (Get-Item $script:config.LogPath).Length / 1MB
                 if ($logSize -gt $script:config.MaxLogSizeMB) {
                     $backupPath = "$($script:config.LogPath).$(Get-Date -Format 'yyyyMMddHHmmss').bak"
@@ -854,6 +875,229 @@ function Save-RedballConfig {
     }
 }
 
+# --- Config Validation & Sanitization (Security + Backend) ---
+
+function Test-RedballConfigSchema {
+    <#
+    .SYNOPSIS
+        Validates and sanitizes configuration values against expected types and ranges.
+    .DESCRIPTION
+        Ensures all config values are within safe bounds. Resets invalid values to defaults
+        and logs warnings. Prevents injection via malformed config files.
+    #>
+    $defaults = @{
+        HeartbeatSeconds           = @{ Type = 'int'; Min = 10; Max = 300; Default = 59 }
+        BatteryThreshold           = @{ Type = 'int'; Min = 5; Max = 95; Default = 20 }
+        DefaultDuration            = @{ Type = 'int'; Min = 1; Max = 720; Default = 60 }
+        MaxLogSizeMB               = @{ Type = 'int'; Min = 1; Max = 100; Default = 10 }
+        TypeThingMinDelayMs        = @{ Type = 'int'; Min = 5; Max = 5000; Default = 30 }
+        TypeThingMaxDelayMs        = @{ Type = 'int'; Min = 10; Max = 10000; Default = 120 }
+        TypeThingStartDelaySec     = @{ Type = 'int'; Min = 0; Max = 30; Default = 3 }
+        TypeThingRandomPauseChance = @{ Type = 'int'; Min = 0; Max = 100; Default = 5 }
+        TypeThingRandomPauseMaxMs  = @{ Type = 'int'; Min = 0; Max = 5000; Default = 500 }
+    }
+    $boolKeys = @('PreventDisplaySleep', 'UseHeartbeatKeypress', 'ShowBalloonOnStart',
+        'MinimizeOnStart', 'BatteryAware', 'NetworkAware', 'IdleDetection',
+        'AutoExitOnComplete', 'ScheduleEnabled', 'PresentationModeDetection',
+        'EnablePerformanceMetrics', 'EnableTelemetry', 'ProcessIsolation',
+        'VerifyUpdateSignature', 'TypeThingEnabled', 'TypeThingAddRandomPauses',
+        'TypeThingTypeNewlines', 'TypeThingNotifications')
+    $stringKeys = @('LogPath', 'Locale', 'ScheduleStartTime', 'ScheduleStopTime',
+        'UpdateRepoOwner', 'UpdateRepoName', 'UpdateChannel',
+        'TypeThingStartHotkey', 'TypeThingStopHotkey', 'TypeThingTheme')
+    $issueCount = 0
+
+    foreach ($key in $defaults.Keys) {
+        $rule = $defaults[$key]
+        $val = $script:config[$key]
+        try {
+            $intVal = [int]$val
+            if ($intVal -lt $rule.Min -or $intVal -gt $rule.Max) {
+                Write-RedballLog -Level 'WARN' -Message "Config validation: '$key' value $intVal out of range [$($rule.Min)-$($rule.Max)], reset to $($rule.Default)"
+                $script:config[$key] = $rule.Default
+                $issueCount++
+            }
+        }
+        catch {
+            Write-RedballLog -Level 'WARN' -Message "Config validation: '$key' has invalid type, reset to $($rule.Default)"
+            $script:config[$key] = $rule.Default
+            $issueCount++
+        }
+    }
+
+    foreach ($key in $boolKeys) {
+        if ($script:config.ContainsKey($key) -and $script:config[$key] -isnot [bool]) {
+            try { $script:config[$key] = [bool]$script:config[$key] }
+            catch {
+                Write-RedballLog -Level 'WARN' -Message "Config validation: '$key' is not boolean, reset to `$false"
+                $script:config[$key] = $false
+                $issueCount++
+            }
+        }
+    }
+
+    foreach ($key in $stringKeys) {
+        if ($script:config.ContainsKey($key)) {
+            $val = $script:config[$key]
+            if ($val -isnot [string]) {
+                $script:config[$key] = [string]$val
+            }
+            # Sanitize strings: strip control characters except tab/newline
+            $script:config[$key] = ($script:config[$key] -replace '[\x00-\x08\x0B\x0C\x0E-\x1F]', '')
+        }
+    }
+
+    # Validate schedule time format
+    foreach ($timeKey in @('ScheduleStartTime', 'ScheduleStopTime')) {
+        if ($script:config[$timeKey] -notmatch '^\d{2}:\d{2}$') {
+            $default = if ($timeKey -eq 'ScheduleStartTime') { '09:00' } else { '18:00' }
+            Write-RedballLog -Level 'WARN' -Message "Config validation: '$timeKey' invalid format, reset to $default"
+            $script:config[$timeKey] = $default
+            $issueCount++
+        }
+    }
+
+    # Validate UpdateChannel
+    if ($script:config.UpdateChannel -notin @('stable', 'beta')) {
+        $script:config.UpdateChannel = 'stable'
+        $issueCount++
+    }
+
+    # Validate TypeThingTheme
+    if ($script:config.TypeThingTheme -notin @('light', 'dark', 'hacker')) {
+        $script:config.TypeThingTheme = 'dark'
+        $issueCount++
+    }
+
+    if ($issueCount -gt 0) {
+        Write-RedballLog -Level 'INFO' -Message "Config validation complete: $issueCount issue(s) corrected"
+    }
+    return $issueCount
+}
+
+# --- First-Run Onboarding (UX) ---
+
+function Test-RedballFirstRun {
+    <#
+    .SYNOPSIS
+        Detects first run and shows onboarding welcome message.
+    #>
+    $firstRunFlag = Join-Path $script:AppRoot '.redball-initialized'
+    if (Test-Path $firstRunFlag) { return $false }
+
+    try {
+        # Mark as initialized
+        (Get-Date).ToString('o') | Set-Content -Path $firstRunFlag -Encoding UTF8
+
+        # Show welcome toast
+        Send-RedballToast -Title 'Welcome to Redball!' -Message "Your PC will stay awake. Right-click the red ball icon to configure settings, timers, and smart features."
+        Write-RedballLog -Level 'INFO' -Message 'First run detected - welcome onboarding shown'
+        return $true
+    }
+    catch {
+        Write-RedballLog -Level 'DEBUG' -Message "First-run check skipped: $_"
+        return $false
+    }
+}
+
+# --- Feature Usage Counters (Analytics) ---
+
+$script:featureUsage = @{}
+
+function Update-FeatureUsage {
+    <#
+    .SYNOPSIS
+        Increments a feature usage counter for analytics.
+    .DESCRIPTION
+        Tracks which features are actually used per session. Counters are
+        logged at shutdown for opt-in analytics. No data is transmitted.
+    #>
+    param([string]$Feature)
+    if (-not $script:config.EnableTelemetry) { return }
+    if (-not $script:featureUsage.ContainsKey($Feature)) {
+        $script:featureUsage[$Feature] = 0
+    }
+    $script:featureUsage[$Feature]++
+}
+
+function Write-FeatureUsageSummary {
+    <#
+    .SYNOPSIS
+        Logs the feature usage summary at end of session.
+    #>
+    if (-not $script:config.EnableTelemetry -or $script:featureUsage.Count -eq 0) { return }
+    $summary = ($script:featureUsage.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ', '
+    Write-RedballLog -Level 'INFO' -Message "SESSION USAGE: $summary"
+}
+
+# --- Crash Reporting with Stack Traces (Analytics) ---
+
+function Write-CrashReport {
+    <#
+    .SYNOPSIS
+        Writes a detailed crash report with stack trace to a separate crash log.
+    #>
+    param(
+        [string]$Context,
+        [System.Management.Automation.ErrorRecord]$ErrorRecord
+    )
+    try {
+        $crashPath = Join-Path $script:AppRoot 'Redball.crash.log'
+        $report = @(
+            "=== CRASH REPORT ==="
+            "Timestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')"
+            "Version: $script:VERSION"
+            "Context: $Context"
+            "SessionId: $($script:state.SessionId)"
+            "Error: $($ErrorRecord.Exception.Message)"
+            "Type: $($ErrorRecord.Exception.GetType().FullName)"
+            "Position: $($ErrorRecord.InvocationInfo.PositionMessage)"
+            "Stack Trace:"
+            $ErrorRecord.ScriptStackTrace
+            "=== END CRASH REPORT ==="
+            ""
+        )
+        $report -join "`n" | Add-Content -Path $crashPath -Encoding UTF8
+        Write-RedballLog -Level 'ERROR' -Message "Crash report written to: $crashPath"
+    }
+    catch {
+        Write-RedballLog -Level 'ERROR' -Message "Failed to write crash report: $_"
+    }
+}
+
+# --- Centralized User Error Display (Frontend/UX) ---
+
+function Show-RedballError {
+    <#
+    .SYNOPSIS
+        Displays a user-friendly error message via toast notification.
+    .DESCRIPTION
+        Translates technical errors into user-friendly messages and shows them
+        via toast. Also logs the technical details for debugging.
+    #>
+    param(
+        [string]$UserMessage,
+        [string]$TechnicalDetail = '',
+        [string]$Severity = 'Warning'
+    )
+    if ($TechnicalDetail) {
+        Write-RedballLog -Level 'WARN' -Message "$UserMessage (Detail: $TechnicalDetail)"
+    }
+    if ($script:state.NotifyIcon -and -not $script:state.IsShuttingDown) {
+        try {
+            $icon = switch ($Severity) {
+                'Error' { [System.Windows.Forms.ToolTipIcon]::Error }
+                'Info' { [System.Windows.Forms.ToolTipIcon]::Info }
+                default { [System.Windows.Forms.ToolTipIcon]::Warning }
+            }
+            $script:state.NotifyIcon.ShowBalloonTip(3000, 'Redball', $UserMessage, $icon)
+        }
+        catch {
+            Write-RedballLog -Level 'DEBUG' -Message "Show-RedballError balloon tip failed: $_"
+        }
+    }
+}
+
 trap [System.Management.Automation.PipelineStoppedException] {
     Write-RedballLog -Level 'INFO' -Message 'Pipeline stopped - exiting gracefully'
     Exit-Application
@@ -885,15 +1129,15 @@ function Set-KeepAwakeState {
 
     try {
         if ($Enable) {
-            $flags = $ES_CONTINUOUS -bor $ES_SYSTEM_REQUIRED
+            $flags = $script:ES_CONTINUOUS -bor $script:ES_SYSTEM_REQUIRED
             if ($script:state.PreventDisplaySleep) {
-                $flags = $flags -bor $ES_DISPLAY_REQUIRED
+                $flags = $flags -bor $script:ES_DISPLAY_REQUIRED
             }
 
             [void][Win32.Power]::SetThreadExecutionState($flags)
         }
         else {
-            [void][Win32.Power]::SetThreadExecutionState($ES_CONTINUOUS)
+            [void][Win32.Power]::SetThreadExecutionState($script:ES_CONTINUOUS)
         }
     }
     catch {
@@ -1314,7 +1558,7 @@ function Show-RedballSettings {
         Add-SettingRow $panelGeneral 'General' 'AutoExitOnComplete' 'Exit When Timer Completes' `
             'Automatically close Redball when a timed keep-awake period finishes.' 'bool' $script:config.AutoExitOnComplete
         Add-SettingRow $panelGeneral 'General' 'Locale' 'Language' `
-            'Display language for menus and notifications.' 'dropdown' $script:config.Locale @{Items = @('en', 'es', 'fr', 'de') }
+            'Display language for menus and notifications.' 'dropdown' $script:config.Locale @{Items = @('en', 'es', 'fr', 'de', 'bl') }
 
         $tabs.TabPages.Add($tabGeneral)
 
@@ -1337,8 +1581,8 @@ function Show-RedballSettings {
             'Battery percentage at which to auto-pause when on battery power.' 'number' $script:state.BatteryThreshold @{Min = 5; Max = 95 }
         Add-SettingRow $panelPower 'Power' 'NetworkAware' 'Network-Aware Mode' `
             'Automatically pause keep-awake when the network connection is lost.' 'bool' $script:state.NetworkAware
-        Add-SettingRow $panelPower 'Power' 'IdleDetection' 'Idle Detection (30 min)' `
-            'Automatically pause when no mouse or keyboard input for 30 minutes.' 'bool' $script:state.IdleDetection
+        Add-SettingRow $panelPower 'Power' 'IdleDetection' "Idle Detection ($($script:state.IdleThresholdMinutes) min)" `
+            "Automatically pause when no mouse or keyboard input for $($script:state.IdleThresholdMinutes) minutes." 'bool' $script:state.IdleDetection
         Add-SettingRow $panelPower 'Power' 'PresentationModeDetection' 'Presentation Mode Detection' `
             'Auto-activate keep-awake when PowerPoint or Teams presenting is detected.' 'bool' $script:config.PresentationModeDetection
 
@@ -1546,6 +1790,9 @@ function Show-RedballSettings {
     }
     catch {
         Write-RedballLog -Level 'ERROR' -Message "Settings dialog error: $_"
+    }
+    finally {
+        if ($form -and -not $form.IsDisposed) { $form.Dispose() }
     }
 }
 
@@ -2011,14 +2258,17 @@ function Start-TypeThingTyping {
             try {
                 $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing', 'Clipboard is empty - copy some text first', [System.Windows.Forms.ToolTipIcon]::Warning)
             }
-            catch {}
+            catch {
+                Write-RedballLog -Level 'DEBUG' -Message "TypeThing balloon tip failed: $_"
+            }
         }
         Write-RedballLog -Level 'INFO' -Message 'TypeThing: Clipboard empty, nothing to type'
         return
     }
 
     # Warn on very large clipboard
-    if ($text.Length -gt 10000) {
+    $largeClipboardThreshold = if ($script:config.TypeThingLargeClipboardThreshold) { $script:config.TypeThingLargeClipboardThreshold } else { 10000 }
+    if ($text.Length -gt $largeClipboardThreshold) {
         $confirmResult = [System.Windows.Forms.MessageBox]::Show(
             "The clipboard contains $($text.Length) characters. This may take a while.`n`nContinue?",
             'TypeThing - Large Clipboard',
@@ -2051,7 +2301,9 @@ function Start-TypeThingTyping {
                     "Typing in $delaySec seconds... ($($script:config.TypeThingStopHotkey) to cancel)",
                     [System.Windows.Forms.ToolTipIcon]::Info)
             }
-            catch {}
+            catch {
+                Write-RedballLog -Level 'DEBUG' -Message "TypeThing balloon tip failed: $_"
+            }
         }
 
         # Create countdown timer
@@ -2183,7 +2435,9 @@ function Stop-TypeThingTyping {
                     "Typing stopped ($typed/$total characters typed)",
                     [System.Windows.Forms.ToolTipIcon]::Warning)
             }
-            catch {}
+            catch {
+                Write-RedballLog -Level 'DEBUG' -Message "TypeThing balloon tip failed: $_"
+            }
         }
     }
 }
@@ -2225,7 +2479,9 @@ function Complete-TypeThingTyping {
                 "Typing complete ($total characters in ${elapsedStr}s)",
                 [System.Windows.Forms.ToolTipIcon]::Info)
         }
-        catch {}
+        catch {
+            Write-RedballLog -Level 'DEBUG' -Message "TypeThing balloon tip failed: $_"
+        }
     }
 }
 
@@ -2801,7 +3057,7 @@ function Set-ActiveState {
             Set-KeepAwakeState -Enable:$script:state.Active
         }
 
-        Send-RedballTelemetry -TelemetryEvent 'StateChanged' -Data @{
+        Write-RedballTelemetryEvent -TelemetryEvent 'StateChanged' -Data @{
             Active = $script:state.Active
             Timed  = [bool]$script:state.Until
         }
@@ -2874,6 +3130,9 @@ function Exit-Application {
         Shuts down Redball cleanly.
     #>
     $script:state.IsShuttingDown = $true
+    
+    # Log feature usage summary before shutdown (Analytics)
+    Write-FeatureUsageSummary
     
     # TypeThing cleanup - stop typing and unregister hotkeys
     try {
@@ -3077,7 +3336,7 @@ function Restore-RedballState {
 
 function Install-RedballStartup {
     try {
-        $scriptPath = Join-Path $PSScriptRoot 'Redball.ps1'
+        $scriptPath = Join-Path $script:AppRoot 'Redball.ps1'
         $startupPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
         $shortcutPath = Join-Path $startupPath 'Redball.lnk'
         
@@ -3105,7 +3364,7 @@ function Install-RedballStartup {
             $shortcut.Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$scriptPath`" -Minimized"
         }
         
-        $shortcut.WorkingDirectory = $PSScriptRoot
+        $shortcut.WorkingDirectory = $script:AppRoot
         $shortcut.IconLocation = 'powershell.exe,0'
         $shortcut.Save()
         
@@ -3216,8 +3475,8 @@ function Get-BatteryStatus {
         $battery = Get-BatteryStatus
         Returns battery information hashtable.
     #>
-    # Return cached result if still fresh (30-second TTL)
-    if ($script:lastBatteryCheck -and ((Get-Date) - $script:lastBatteryCheck).TotalSeconds -lt 30) {
+    # Return cached result if still fresh (60-second TTL to reduce CIM overhead)
+    if ($script:lastBatteryCheck -and ((Get-Date) - $script:lastBatteryCheck).TotalSeconds -lt 60) {
         return $script:lastBatteryResult
     }
     
@@ -3434,7 +3693,9 @@ function Unregister-GlobalHotkey {
         $script:hotkeyRegistered = $false
         Write-RedballLog -Level 'INFO' -Message 'Global hotkey unregistered'
     }
-    catch {}
+    catch {
+        Write-RedballLog -Level 'DEBUG' -Message "Hotkey unregister skipped: $_"
+    }
 }
 
 $contextMenu = New-Object System.Windows.Forms.ContextMenuStrip
@@ -3565,12 +3826,12 @@ $script:state.NetworkMenuItem = $networkMenuItem
 [void]$contextMenu.Items.Add($networkMenuItem)
 
 # Idle Detection Menu Item
-$idleMenuItem = New-Object System.Windows.Forms.ToolStripMenuItem 'Idle Detection (30min)'
+$idleMenuItem = New-Object System.Windows.Forms.ToolStripMenuItem "Idle Detection ($($script:state.IdleThresholdMinutes)min)"
 $idleMenuItem.CheckOnClick = $true
 $idleMenuItem.Checked = $script:state.IdleDetection
 $idleMenuItem.ShortcutKeyDisplayString = 'L'
 $idleMenuItem.AccessibleName = 'Idle Detection Toggle'
-$idleMenuItem.AccessibleDescription = 'Auto-pause when user idle for 30 minutes'
+$idleMenuItem.AccessibleDescription = "Auto-pause when user idle for $($script:state.IdleThresholdMinutes) minutes"
 $idleMenuItem.add_Click({
         try {
             if ($script:state.IsShuttingDown) { return }
@@ -3625,7 +3886,8 @@ if ($script:config.TypeThingEnabled) {
 
     [void]$typeThingMenu.DropDownItems.Add((New-Object System.Windows.Forms.ToolStripSeparator))
 
-    $typeThingStatusItem = New-Object System.Windows.Forms.ToolStripMenuItem 'Status: Idle'
+    $typeThingStatusText = if ($script:config.TypeThingEnabled) { 'Status: Idle' } else { 'Status: Disabled' }
+    $typeThingStatusItem = New-Object System.Windows.Forms.ToolStripMenuItem $typeThingStatusText
     $typeThingStatusItem.Enabled = $false
     $script:state.TypeThingMenuStatus = $typeThingStatusItem
     [void]$typeThingMenu.DropDownItems.Add($typeThingStatusItem)
@@ -3775,6 +4037,25 @@ $onThreadException = [System.Threading.ThreadExceptionEventHandler] {
     else {
         # Log other exceptions but don't crash
         Write-RedballLog -Level 'ERROR' -Message "Unhandled exception: $($e.Exception.Message)"
+        # Write detailed crash report
+        try {
+            $crashPath = Join-Path $script:AppRoot 'Redball.crash.log'
+            $report = @(
+                "=== UNHANDLED EXCEPTION ==="
+                "Timestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')"
+                "Version: $script:VERSION"
+                "SessionId: $($script:state.SessionId)"
+                "Error: $($e.Exception.Message)"
+                "Type: $($e.Exception.GetType().FullName)"
+                "Stack: $($e.Exception.StackTrace)"
+                "=== END ==="
+                ""
+            )
+            $report -join "`n" | Add-Content -Path $crashPath -Encoding UTF8
+        }
+        catch {
+            Write-Verbose "Crash report write failed: $_"
+        }
     }
 }
 [System.Windows.Forms.Application]::add_ThreadException($onThreadException)
@@ -3946,13 +4227,23 @@ function Update-ScheduleState {
 
 # --- Presentation Mode Detection ---
 
+$script:lastPresentationCheck = $null
+$script:lastPresentationResult = @{ IsPresenting = $false }
+
 function Test-PresentationMode {
+    # Return cached result if checked within 10 seconds (process scans are expensive)
+    if ($script:lastPresentationCheck -and ((Get-Date) - $script:lastPresentationCheck).TotalSeconds -lt 10) {
+        return $script:lastPresentationResult
+    }
     try {
         # Check for PowerPoint presentation mode
         $powerPoint = Get-Process -Name "POWERPNT" -ErrorAction SilentlyContinue
         if ($powerPoint) {
             # PowerPoint is running
-            return @{ IsPresenting = $true; Source = 'PowerPoint' }
+            $result = @{ IsPresenting = $true; Source = 'PowerPoint' }
+            $script:lastPresentationResult = $result
+            $script:lastPresentationCheck = Get-Date
+            return $result
         }
         
         # Check for Teams screenshare ( Teams.exe with high CPU or specific window title)
@@ -3961,17 +4252,25 @@ function Test-PresentationMode {
             # Check if Teams window title contains "Sharing" or "Presenting"
             $teamsWindow = $teams.MainWindowTitle
             if ($teamsWindow -match "Sharing|Presenting|Screen sharing") {
-                return @{ IsPresenting = $true; Source = 'Teams' }
+                $result = @{ IsPresenting = $true; Source = 'Teams' }
+                $script:lastPresentationResult = $result
+                $script:lastPresentationCheck = Get-Date
+                return $result
             }
         }
         
         # Check Windows presentation settings (Windows 10/11)
         $presentationSettings = Get-ItemProperty -Path "HKCU:\Software\Microsoft\MobilePC\AdaptableSettings" -Name "PresentationMode" -ErrorAction SilentlyContinue
         if ($presentationSettings -and $presentationSettings.PresentationMode -eq 1) {
-            return @{ IsPresenting = $true; Source = 'Windows Presentation Mode' }
+            $result = @{ IsPresenting = $true; Source = 'Windows Presentation Mode' }
+            $script:lastPresentationResult = $result
+            $script:lastPresentationCheck = Get-Date
+            return $result
         }
         
-        return @{ IsPresenting = $false }
+        $script:lastPresentationResult = @{ IsPresenting = $false }
+        $script:lastPresentationCheck = Get-Date
+        return $script:lastPresentationResult
     }
     catch {
         return @{ IsPresenting = $false }
@@ -4058,7 +4357,7 @@ function Update-PerformanceMetrics {
 # --- Crash Recovery ---
 
 function Test-CrashRecovery {
-    param([string]$CrashFlagPath = (Join-Path $PSScriptRoot 'Redball.crash.flag'))
+    param([string]$CrashFlagPath = (Join-Path $script:AppRoot 'Redball.crash.flag'))
     
     try {
         if (Test-Path $CrashFlagPath) {
@@ -4090,7 +4389,7 @@ function Test-CrashRecovery {
 }
 
 function Clear-CrashFlag {
-    param([string]$CrashFlagPath = (Join-Path $PSScriptRoot 'Redball.crash.flag'))
+    param([string]$CrashFlagPath = (Join-Path $script:AppRoot 'Redball.crash.flag'))
     try {
         if (Test-Path $CrashFlagPath) {
             Remove-Item $CrashFlagPath -Force -ErrorAction SilentlyContinue
@@ -4343,9 +4642,29 @@ function Test-RedballFileSignature {
 # --- Auto-Updater ---
 
 function Get-RedballLatestRelease {
+    param([switch]$Force)
     try {
+        # Rate limiting: return cached result if checked within 5 minutes
+        if (-not $Force -and $script:lastUpdateCheck -and $script:lastUpdateResult) {
+            $elapsed = (Get-Date) - $script:lastUpdateCheck
+            if ($elapsed.TotalMinutes -lt 5) {
+                Write-RedballLog -Level 'DEBUG' -Message "Returning cached update check result (age: $([math]::Round($elapsed.TotalSeconds))s)"
+                return $script:lastUpdateResult
+            }
+        }
+
         $owner = $script:config.UpdateRepoOwner
         $repo = $script:config.UpdateRepoName
+
+        # Validate repo owner/name to prevent update redirection attacks
+        if ($owner -notmatch '^[a-zA-Z0-9_.-]+$' -or $repo -notmatch '^[a-zA-Z0-9_.-]+$') {
+            Write-RedballLog -Level 'WARN' -Message "Invalid update repo owner/name: $owner/$repo"
+            return $null
+        }
+        if ($owner -ne 'karl-lawrence' -or $repo -ne 'Redball') {
+            Write-RedballLog -Level 'WARN' -Message "Non-default update repo: $owner/$repo (default: karl-lawrence/Redball)"
+        }
+
         $uri = "https://api.github.com/repos/$owner/$repo/releases/latest"
 
         $headers = @{ 'User-Agent' = 'Redball-Updater' }
@@ -4354,6 +4673,10 @@ function Get-RedballLatestRelease {
         if (-not $release -or -not $release.tag_name) {
             return $null
         }
+
+        # Cache the result
+        $script:lastUpdateCheck = Get-Date
+        $script:lastUpdateResult = $release
 
         return $release
     }
@@ -4420,7 +4743,7 @@ function Install-RedballUpdate {
         }
 
         $tempPath = Join-Path $env:TEMP $asset.name
-        $scriptPath = Join-Path $PSScriptRoot 'Redball.ps1'
+        $scriptPath = Join-Path $script:AppRoot 'Redball.ps1'
         $backupPath = "$scriptPath.bak.$(Get-Date -Format 'yyyyMMddHHmmss')"
 
         Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $tempPath -UseBasicParsing -TimeoutSec 30
@@ -4434,6 +4757,9 @@ function Install-RedballUpdate {
 
         Copy-Item -Path $scriptPath -Destination $backupPath -Force
         Copy-Item -Path $tempPath -Destination $scriptPath -Force
+
+        # Clean up temp file
+        Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
 
         Write-RedballLog -Level 'INFO' -Message "Updated Redball from $($status.CurrentVersion) to $($status.LatestVersion). Backup: $backupPath"
         Write-Output "Update installed. Backup created: $backupPath"
@@ -4457,8 +4783,8 @@ function Install-RedballUpdate {
 
 function Export-RedballSettings {
     param(
-        [string]$Path = (Join-Path $PSScriptRoot 'Redball.backup.json'),
-        [switch]$Encrypt = $false
+        [string]$Path = (Join-Path $script:AppRoot 'Redball.backup.json'),
+        [switch]$Obfuscate = $false
     )
     try {
         $settings = @{
@@ -4476,8 +4802,8 @@ function Export-RedballSettings {
         
         $json = $settings | ConvertTo-Json -Depth 5
         
-        if ($Encrypt) {
-            # Simple obfuscation (not true encryption, but better than plain text)
+        if ($Obfuscate) {
+            # Base64 obfuscation (not true encryption — do not rely on this for security)
             $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
             $encoded = [Convert]::ToBase64String($bytes)
             $encoded | Set-Content -Path $Path -Encoding UTF8
@@ -4497,8 +4823,8 @@ function Export-RedballSettings {
 
 function Import-RedballSettings {
     param(
-        [string]$Path = (Join-Path $PSScriptRoot 'Redball.backup.json'),
-        [switch]$Encrypted = $false
+        [string]$Path = (Join-Path $script:AppRoot 'Redball.backup.json'),
+        [switch]$Obfuscated = $false
     )
     try {
         if (-not (Test-Path $Path)) {
@@ -4508,8 +4834,8 @@ function Import-RedballSettings {
         
         $content = Get-Content $Path -Raw -Encoding UTF8
         
-        if ($Encrypted) {
-            # Decode from base64
+        if ($Obfuscated) {
+            # Decode from base64 obfuscation
             $bytes = [Convert]::FromBase64String($content)
             $json = [System.Text.Encoding]::UTF8.GetString($bytes)
             $settings = $json | ConvertFrom-Json
@@ -4552,7 +4878,8 @@ function Test-HighContrastMode {
         }
         
         # Also check if high contrast is enabled via SystemParametersInfo
-        Add-Type @"
+        if (-not ([System.Management.Automation.PSTypeName]'HighContrastHelper').Type) {
+            Add-Type @"
 using System;
 using System.Runtime.InteropServices;
 public class HighContrastHelper {
@@ -4579,6 +4906,7 @@ public class HighContrastHelper {
     }
 }
 "@ -ErrorAction SilentlyContinue
+        }
         
         return [HighContrastHelper]::IsHighContrast()
     }
@@ -4608,7 +4936,8 @@ function Update-HighContrastUI {
 function Enable-HighDPI {
     try {
         # Set DPI awareness for the process
-        Add-Type @"
+        if (-not ([System.Management.Automation.PSTypeName]'DPIHelper').Type) {
+            Add-Type @"
 using System;
 using System.Runtime.InteropServices;
 public class DPIHelper {
@@ -4633,6 +4962,7 @@ public class DPIHelper {
     }
 }
 "@ -ErrorAction SilentlyContinue
+        }
         
         [DPIHelper]::EnableHighDPI()
         Write-RedballLog -Level 'INFO' -Message 'High DPI awareness enabled'
@@ -4674,207 +5004,9 @@ function Update-DarkModeUI {
     }
 }
 
-# --- Settings GUI Dialog ---
-
-function Show-RedballSettingsDialog {
-    try {
-        $form = New-Object System.Windows.Forms.Form
-        $form.Text = 'Redball Settings'
-        $form.Size = New-Object System.Drawing.Size 500, 400
-        $form.StartPosition = 'CenterScreen'
-        $form.FormBorderStyle = 'FixedDialog'
-        $form.MaximizeBox = $false
-        $form.MinimizeBox = $false
-        
-        # Tab Control
-        $tabControl = New-Object System.Windows.Forms.TabControl
-        $tabControl.Location = New-Object System.Drawing.Point 10, 10
-        $tabControl.Size = New-Object System.Drawing.Size 465, 300
-        
-        # General Tab
-        $tabGeneral = New-Object System.Windows.Forms.TabPage
-        $tabGeneral.Text = 'General'
-        
-        $lblHeartbeat = New-Object System.Windows.Forms.Label
-        $lblHeartbeat.Location = New-Object System.Drawing.Point 10, 15
-        $lblHeartbeat.Size = New-Object System.Drawing.Size 150, 20
-        $lblHeartbeat.Text = 'Heartbeat Interval (sec):'
-        
-        $numHeartbeat = New-Object System.Windows.Forms.NumericUpDown
-        $numHeartbeat.Location = New-Object System.Drawing.Point 170, 13
-        $numHeartbeat.Size = New-Object System.Drawing.Size 80, 20
-        $numHeartbeat.Minimum = 10
-        $numHeartbeat.Maximum = 300
-        $numHeartbeat.Value = $script:config.HeartbeatSeconds
-        
-        $chkDisplaySleep = New-Object System.Windows.Forms.CheckBox
-        $chkDisplaySleep.Location = New-Object System.Drawing.Point 10, 45
-        $chkDisplaySleep.Size = New-Object System.Drawing.Size 250, 20
-        $chkDisplaySleep.Text = 'Prevent Display Sleep'
-        $chkDisplaySleep.Checked = $script:config.PreventDisplaySleep
-        
-        $chkHeartbeat = New-Object System.Windows.Forms.CheckBox
-        $chkHeartbeat.Location = New-Object System.Drawing.Point 10, 70
-        $chkHeartbeat.Size = New-Object System.Drawing.Size 250, 20
-        $chkHeartbeat.Text = 'Use F15 Heartbeat Keypress'
-        $chkHeartbeat.Checked = $script:config.UseHeartbeatKeypress
-        
-        $chkStartup = New-Object System.Windows.Forms.CheckBox
-        $chkStartup.Location = New-Object System.Drawing.Point 10, 95
-        $chkStartup.Size = New-Object System.Drawing.Size 250, 20
-        $chkStartup.Text = 'Start with Windows'
-        $chkStartup.Checked = (Test-RedballStartup)
-        
-        $tabGeneral.Controls.AddRange(@($lblHeartbeat, $numHeartbeat, $chkDisplaySleep, $chkHeartbeat, $chkStartup))
-        
-        # Smart Features Tab
-        $tabSmart = New-Object System.Windows.Forms.TabPage
-        $tabSmart.Text = 'Smart Features'
-        
-        $chkBattery = New-Object System.Windows.Forms.CheckBox
-        $chkBattery.Location = New-Object System.Drawing.Point 10, 15
-        $chkBattery.Size = New-Object System.Drawing.Size 250, 20
-        $chkBattery.Text = 'Battery-Aware Mode'
-        $chkBattery.Checked = $script:state.BatteryAware
-        
-        $lblBatteryThreshold = New-Object System.Windows.Forms.Label
-        $lblBatteryThreshold.Location = New-Object System.Drawing.Point 30, 40
-        $lblBatteryThreshold.Size = New-Object System.Drawing.Size 150, 20
-        $lblBatteryThreshold.Text = 'Pause below (%):'
-        
-        $numBatteryThreshold = New-Object System.Windows.Forms.NumericUpDown
-        $numBatteryThreshold.Location = New-Object System.Drawing.Point 180, 38
-        $numBatteryThreshold.Size = New-Object System.Drawing.Size 60, 20
-        $numBatteryThreshold.Minimum = 5
-        $numBatteryThreshold.Maximum = 50
-        $numBatteryThreshold.Value = $script:state.BatteryThreshold
-        
-        $chkNetwork = New-Object System.Windows.Forms.CheckBox
-        $chkNetwork.Location = New-Object System.Drawing.Point 10, 70
-        $chkNetwork.Size = New-Object System.Drawing.Size 250, 20
-        $chkNetwork.Text = 'Network-Aware Mode'
-        $chkNetwork.Checked = $script:state.NetworkAware
-        
-        $chkIdle = New-Object System.Windows.Forms.CheckBox
-        $chkIdle.Location = New-Object System.Drawing.Point 10, 95
-        $chkIdle.Size = New-Object System.Drawing.Size 250, 20
-        $chkIdle.Text = 'Idle Detection (30min)'
-        $chkIdle.Checked = $script:state.IdleDetection
-        
-        $chkSchedule = New-Object System.Windows.Forms.CheckBox
-        $chkSchedule.Location = New-Object System.Drawing.Point 10, 120
-        $chkSchedule.Size = New-Object System.Drawing.Size 250, 20
-        $chkSchedule.Text = 'Scheduled Operation'
-        $chkSchedule.Checked = $script:config.ScheduleEnabled
-        
-        $tabSmart.Controls.AddRange(@($chkBattery, $lblBatteryThreshold, $numBatteryThreshold, $chkNetwork, $chkIdle, $chkSchedule))
-        
-        # Logging Tab
-        $tabLogging = New-Object System.Windows.Forms.TabPage
-        $tabLogging.Text = 'Logging'
-        
-        $lblLogPath = New-Object System.Windows.Forms.Label
-        $lblLogPath.Location = New-Object System.Drawing.Point 10, 15
-        $lblLogPath.Size = New-Object System.Drawing.Size 80, 20
-        $lblLogPath.Text = 'Log Path:'
-        
-        $txtLogPath = New-Object System.Windows.Forms.TextBox
-        $txtLogPath.Location = New-Object System.Drawing.Point 100, 13
-        $txtLogPath.Size = New-Object System.Drawing.Size 300, 20
-        $txtLogPath.Text = $script:config.LogPath
-        
-        $lblMaxSize = New-Object System.Windows.Forms.Label
-        $lblMaxSize.Location = New-Object System.Drawing.Point 10, 45
-        $lblMaxSize.Size = New-Object System.Drawing.Size 150, 20
-        $lblMaxSize.Text = 'Max Log Size (MB):'
-        
-        $numMaxSize = New-Object System.Windows.Forms.NumericUpDown
-        $numMaxSize.Location = New-Object System.Drawing.Point 170, 43
-        $numMaxSize.Size = New-Object System.Drawing.Size 80, 20
-        $numMaxSize.Minimum = 1
-        $numMaxSize.Maximum = 100
-        $numMaxSize.Value = $script:config.MaxLogSizeMB
-        
-        $chkMetrics = New-Object System.Windows.Forms.CheckBox
-        $chkMetrics.Location = New-Object System.Drawing.Point 10, 75
-        $chkMetrics.Size = New-Object System.Drawing.Size 250, 20
-        $chkMetrics.Text = 'Enable Performance Metrics'
-        $chkMetrics.Checked = $script:config.EnablePerformanceMetrics
-        
-        $tabLogging.Controls.AddRange(@($lblLogPath, $txtLogPath, $lblMaxSize, $numMaxSize, $chkMetrics))
-        
-        # Add tabs
-        $tabControl.TabPages.Add($tabGeneral)
-        $tabControl.TabPages.Add($tabSmart)
-        $tabControl.TabPages.Add($tabLogging)
-        $form.Controls.Add($tabControl)
-        
-        # Buttons
-        $btnSave = New-Object System.Windows.Forms.Button
-        $btnSave.Location = New-Object System.Drawing.Point 300, 320
-        $btnSave.Size = New-Object System.Drawing.Size 80, 25
-        $btnSave.Text = 'Save'
-        $btnSave.DialogResult = [System.Windows.Forms.DialogResult]::OK
-        
-        $btnCancel = New-Object System.Windows.Forms.Button
-        $btnCancel.Location = New-Object System.Drawing.Point 395, 320
-        $btnCancel.Size = New-Object System.Drawing.Size 80, 25
-        $btnCancel.Text = 'Cancel'
-        $btnCancel.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
-        
-        $form.Controls.AddRange(@($btnSave, $btnCancel))
-        $form.AcceptButton = $btnSave
-        $form.CancelButton = $btnCancel
-        
-        # Show dialog
-        $result = $form.ShowDialog()
-        
-        if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
-            # Apply settings
-            $script:config.HeartbeatSeconds = [int]$numHeartbeat.Value
-            $script:config.PreventDisplaySleep = $chkDisplaySleep.Checked
-            $script:config.UseHeartbeatKeypress = $chkHeartbeat.Checked
-            $script:config.LogPath = $txtLogPath.Text
-            $script:config.MaxLogSizeMB = [int]$numMaxSize.Value
-            $script:config.EnablePerformanceMetrics = $chkMetrics.Checked
-            
-            # Smart features
-            $script:state.BatteryAware = $chkBattery.Checked
-            $script:state.BatteryThreshold = [int]$numBatteryThreshold.Value
-            $script:state.NetworkAware = $chkNetwork.Checked
-            $script:state.IdleDetection = $chkIdle.Checked
-            $script:config.ScheduleEnabled = $chkSchedule.Checked
-            
-            # Handle startup
-            if ($chkStartup.Checked -ne (Test-RedballStartup)) {
-                if ($chkStartup.Checked) {
-                    Install-RedballStartup | Out-Null
-                }
-                else {
-                    Uninstall-RedballStartup | Out-Null
-                }
-            }
-            
-            # Save config
-            Save-RedballConfig -Path $ConfigPath
-            
-            Write-RedballLog -Level 'INFO' -Message 'Settings updated via GUI dialog'
-            Update-RedballUI
-            
-            return $true
-        }
-        
-        return $false
-    }
-    catch {
-        Write-RedballLog -Level 'ERROR' -Message "Settings dialog error: $_"
-        return $false
-    }
-}
-
 # --- Telemetry (Opt-in) ---
 
-function Send-RedballTelemetry {
+function Write-RedballTelemetryEvent {
     param(
         [string]$TelemetryEvent,
         [hashtable]$Data = @{}
@@ -4936,7 +5068,8 @@ namespace Win32 {
                 Add-Type -TypeDefinition $signature -Language CSharp -ErrorAction SilentlyContinue
 
                 while ($true) {
-                    [Win32.Power]::SetThreadExecutionState(0x80000003)  # ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED
+                    # 0x80000003 = ES_CONTINUOUS (0x80000000) | ES_SYSTEM_REQUIRED (0x1) | ES_DISPLAY_REQUIRED (0x2)
+                    [Win32.Power]::SetThreadExecutionState(0x80000003)
                     Start-Sleep -Seconds $Interval
                 }
             }).AddArgument($script:config.HeartbeatSeconds)
@@ -5123,6 +5256,9 @@ Clear-RedballLogLock | Out-Null
 # Load persisted config before applying runtime state logic.
 Import-RedballConfig -Path $ConfigPath
 
+# Validate and sanitize config values (Security + Backend)
+Test-RedballConfigSchema | Out-Null
+
 # Check for crash recovery
 Test-CrashRecovery | Out-Null
 
@@ -5159,6 +5295,9 @@ $script:performanceMetrics.StartTime = Get-Date
 
 Update-RedballUI
 
+# First-run onboarding (UX)
+Test-RedballFirstRun | Out-Null
+
 # --- TypeThing Initialization ---
 if ($script:config.TypeThingEnabled) {
     try {
@@ -5184,11 +5323,11 @@ if ($script:config.TypeThingEnabled) {
             # Create a timer to retry registration after the message pump starts
             $typeThingInitTimer = New-Object System.Windows.Forms.Timer
             $typeThingInitTimer.Interval = 500
-            $retryCount = 0
-            $maxRetries = 10
+            $script:typeThingRetryCount = 0
+            $script:typeThingMaxRetries = 10
             $typeThingInitTimer.add_Tick({
-                    $retryCount++
-                    if ($script:state.TypeThingHotkeysRegistered -or $retryCount -gt $maxRetries -or $script:state.IsShuttingDown) {
+                    $script:typeThingRetryCount++
+                    if ($script:state.TypeThingHotkeysRegistered -or $script:typeThingRetryCount -gt $script:typeThingMaxRetries -or $script:state.IsShuttingDown) {
                         $typeThingInitTimer.Stop()
                         $typeThingInitTimer.Dispose()
                         return
