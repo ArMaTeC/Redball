@@ -8,8 +8,7 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
-        ShowInTaskbar="False"
-        Visibility="Collapsed">
+        ShowInTaskbar="False">
 
     <Window.DataContext>
         <vm:MainViewModel/>
@@ -20,7 +19,7 @@
         <tb:TaskbarIcon x:Name="TrayIcon"
                        ToolTipText="Redball v3.0"
                        LeftClickCommand="{Binding ToggleActiveCommand}"
-                       Visibility="Collapsed">
+                       Visibility="Visible">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu Style="{StaticResource ModernContextMenu}">
                     <!-- Status Header -->

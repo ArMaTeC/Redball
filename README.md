@@ -627,7 +627,7 @@ Invoke-Pester -Path ".\Redball.Tests.ps1" -Output Detailed
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
-**Manufacturer:** GCI Network Solutions
+**Manufacturer:** ArMaTeC
 
 ## Acknowledgments
 

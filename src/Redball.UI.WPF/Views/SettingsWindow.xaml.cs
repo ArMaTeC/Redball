@@ -39,20 +39,20 @@ public partial class SettingsWindow : Window
 
     private void Tab_Checked(object sender, RoutedEventArgs e)
     {
-        // Hide all panels
-        GeneralPanel.Visibility = Visibility.Collapsed;
-        BehaviorPanel.Visibility = Visibility.Collapsed;
-        FeaturesPanel.Visibility = Visibility.Collapsed;
-        TypeThingPanel.Visibility = Visibility.Collapsed;
-        UpdatesPanel.Visibility = Visibility.Collapsed;
-        AboutPanel.Visibility = Visibility.Collapsed;
+        // Hide all panels (null checks needed during XAML initialization)
+        if (GeneralPanel != null) GeneralPanel.Visibility = Visibility.Collapsed;
+        if (BehaviorPanel != null) BehaviorPanel.Visibility = Visibility.Collapsed;
+        if (FeaturesPanel != null) FeaturesPanel.Visibility = Visibility.Collapsed;
+        if (TypeThingPanel != null) TypeThingPanel.Visibility = Visibility.Collapsed;
+        if (UpdatesPanel != null) UpdatesPanel.Visibility = Visibility.Collapsed;
+        if (AboutPanel != null) AboutPanel.Visibility = Visibility.Collapsed;
 
         // Show selected panel
-        if (sender == GeneralTab) GeneralPanel.Visibility = Visibility.Visible;
-        else if (sender == BehaviorTab) BehaviorPanel.Visibility = Visibility.Visible;
-        else if (sender == FeaturesTab) FeaturesPanel.Visibility = Visibility.Visible;
-        else if (sender == TypeThingTab) TypeThingPanel.Visibility = Visibility.Visible;
-        else if (sender == UpdatesTab) UpdatesPanel.Visibility = Visibility.Visible;
-        else if (sender == AboutTab) AboutPanel.Visibility = Visibility.Visible;
+        if (sender == GeneralTab && GeneralPanel != null) GeneralPanel.Visibility = Visibility.Visible;
+        else if (sender == BehaviorTab && BehaviorPanel != null) BehaviorPanel.Visibility = Visibility.Visible;
+        else if (sender == FeaturesTab && FeaturesPanel != null) FeaturesPanel.Visibility = Visibility.Visible;
+        else if (sender == TypeThingTab && TypeThingPanel != null) TypeThingPanel.Visibility = Visibility.Visible;
+        else if (sender == UpdatesTab && UpdatesPanel != null) UpdatesPanel.Visibility = Visibility.Visible;
+        else if (sender == AboutTab && AboutPanel != null) AboutPanel.Visibility = Visibility.Visible;
     }
 }

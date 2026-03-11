@@ -18,6 +18,7 @@ public partial class App : Application
     private StreamReader? _pipeReader;
     private StreamWriter? _pipeWriter;
     private string _logPath = "";
+    private Views.MainWindow? _mainWindow; // Keep reference to prevent GC
 
     public App()
     {
@@ -74,10 +75,19 @@ public partial class App : Application
 
             // Create main window but don't show it (tray-only mode)
             Log("Creating MainWindow...");
-            var mainWindow = new Views.MainWindow();
-            Log("MainWindow created, hiding...");
-            mainWindow.Hide();
-            Log("MainWindow hidden, startup complete");
+            _mainWindow = new Views.MainWindow();
+            
+            // Ensure window is loaded before hiding (important for tray icon)
+            _mainWindow.Loaded += (s, e) =>
+            {
+                Log("MainWindow loaded, hiding window...");
+                _mainWindow.Hide();
+                Log("MainWindow hidden, tray-only mode active");
+            };
+            
+            // Show the window briefly to ensure proper initialization, then hide it
+            _mainWindow.Show();
+            Log("MainWindow shown for initialization");
         }
         catch (Exception ex)
         {
@@ -170,8 +180,16 @@ public partial class App : Application
         Log("Showing settings dialog");
         Dispatcher.Invoke(() =>
         {
-            var settingsWindow = new Views.SettingsWindow();
-            settingsWindow.ShowDialog();
+            if (_mainWindow != null)
+            {
+                _mainWindow.ShowSettings();
+            }
+            else
+            {
+                // Fallback if MainWindow not available
+                var settingsWindow = new Views.SettingsWindow();
+                settingsWindow.Show();
+            }
         });
         return true;
     }

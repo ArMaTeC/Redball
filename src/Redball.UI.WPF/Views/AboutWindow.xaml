@@ -56,7 +56,7 @@
                           Margin="0,0,0,20"/>
 
                 <StackPanel HorizontalAlignment="Center" Margin="0,0,0,20">
-                    <TextBlock Text="&#xA9; 2024-2026 GCI Network Solutions"
+                    <TextBlock Text="&#xA9; 2024-2026 ArMaTeC"
                               FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"/>
                     <TextBlock Text="Licensed under MIT License"
                               FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"/>

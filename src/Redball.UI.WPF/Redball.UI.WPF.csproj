@@ -8,6 +8,7 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>Redball.UI</RootNamespace>
     <AssemblyName>Redball.UI.WPF</AssemblyName>
+    <ApplicationIcon>Assets\redball.ico</ApplicationIcon>
     <Version>3.0.0</Version>
     <FileVersion>3.0.0.0</FileVersion>
     <AssemblyVersion>3.0.0.0</AssemblyVersion>

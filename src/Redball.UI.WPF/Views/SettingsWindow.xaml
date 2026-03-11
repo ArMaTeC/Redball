@@ -218,7 +218,7 @@
                             <TextBlock Text="A system tray utility to prevent Windows from going to sleep."
                                       TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,16"/>
 
-                            <TextBlock Text="&#xA9; 2024-2026 GCI Network Solutions" FontSize="12"
+                            <TextBlock Text="&#xA9; 2024-2026 ArMaTeC" FontSize="12"
                                       Foreground="{StaticResource ForegroundSecondaryBrush}"
                                       HorizontalAlignment="Center" Margin="0,0,0,8"/>
                             <TextBlock Text="Licensed under MIT License" FontSize="12"

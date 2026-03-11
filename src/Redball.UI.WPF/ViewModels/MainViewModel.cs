@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using Redball.UI.Views;
 
 namespace Redball.UI.ViewModels;
 
@@ -13,6 +14,7 @@ public class MainViewModel : INotifyPropertyChanged
     private bool _isActive = true;
     private string _statusText = "Active | Display On | F15 On";
     private bool _isDarkMode = true;
+    private WeakReference<MainWindow>? _mainWindowRef;
 
     public MainViewModel()
     {
@@ -21,6 +23,14 @@ public class MainViewModel : INotifyPropertyChanged
         OpenSettingsCommand = new RelayCommand(OpenSettings);
         ExitCommand = new RelayCommand(ExitApplication);
         ShowAboutCommand = new RelayCommand(ShowAbout);
+    }
+
+    /// <summary>
+    /// Sets the reference to the MainWindow for delegating window operations
+    /// </summary>
+    public void SetMainWindow(MainWindow window)
+    {
+        _mainWindowRef = new WeakReference<MainWindow>(window);
     }
 
     public bool IsActive
@@ -78,19 +88,45 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void OpenSettings()
     {
-        var settingsWindow = new Views.SettingsWindow();
-        settingsWindow.ShowDialog();
-    }
-
-    private void ExitApplication()
-    {
-        System.Windows.Application.Current.Shutdown();
+        // Delegate to MainWindow to show settings properly
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.ShowSettings();
+        }
+        else
+        {
+            // Fallback: create and show directly
+            var settingsWindow = new Views.SettingsWindow();
+            settingsWindow.Show();
+        }
     }
 
     private void ShowAbout()
     {
-        var aboutWindow = new Views.AboutWindow();
-        aboutWindow.ShowDialog();
+        // Delegate to MainWindow to show about properly
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.ShowAbout();
+        }
+        else
+        {
+            // Fallback: create and show directly
+            var aboutWindow = new Views.AboutWindow();
+            aboutWindow.Show();
+        }
+    }
+
+    private void ExitApplication()
+    {
+        // Dispose tray icon before shutdown if we have a reference
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.ExitApplication();
+        }
+        else
+        {
+            System.Windows.Application.Current.Shutdown();
+        }
     }
 
     private void UpdateStatusText()

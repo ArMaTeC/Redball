@@ -1,0 +1,286 @@
+# WPF Application Issues Analysis and Fix Plan
+# Generated: 2026-03-11
+# Log Source: dist/wpf-publish/Redball.UI.log
+# STATUS: Issues remain after rebuild - see CRITICAL FINDINGS below
+
+---
+
+## CRITICAL FINDING: TWO WINDOWS BEING CREATED
+
+**Root Cause Identified:**
+App.xaml has `StartupUri="Views/MainWindow.xaml"` which creates Window #1
+App.xaml.cs also creates `new Views.MainWindow()` which creates Window #2
+
+**Result:** Two MainWindow instances = Two tray icons
+
+**Fix:** Remove StartupUri from App.xaml (keep manual creation in App.xaml.cs)
+
+---
+
+## Issue 1: TWO TRAY ICONS (CRITICAL)
+
+**Log Evidence:**
+```
+[15:40:00] === SetupTrayIcon called === (first instance)
+[15:40:00] === SetupTrayIcon called === (second instance!)
+```
+
+**Root Cause:** 
+- App.xaml StartupUri creates first MainWindow
+- App.xaml.cs OnStartup creates second MainWindow
+
+**Fix Required:**
+Remove from src/Redball.UI.WPF/App.xaml:
+```xml
+<!-- REMOVE: StartupUri="Views/MainWindow.xaml" -->
+```
+
+---
+
+## Issue 2: ICON NOT LOADING (HIGH)
+
+**Log:** `ERROR loading icon: UriFormatException`
+
+**Root Cause:** FileStream approach may not work with Hardcodet.NotifyIcon.Wpf
+
+**Fix to Try:**
+Replace FileStream loading with file:// URI scheme:
+```csharp
+var uri = new Uri($"file:///{foundPath.Replace('\\', '/')}");
+var bitmap = new BitmapImage(uri);
+bitmap.Freeze();
+_trayIcon.IconSource = bitmap;
+```
+
+---
+
+## Issue 3: SliderValueToWidthConverter NOT FOUND (HIGH)
+
+**Log:** `Cannot find resource named 'SliderValueToWidthConverter'`
+
+**Root Cause:** 
+Controls.xaml references converter before App.xaml resources are loaded
+
+**Fix Options:**
+- Add converter directly to Controls.xaml, OR
+- Remove StaticResource reference from Controls.xaml template
+
+---
+
+## QUICK FIXES TO APPLY NOW
+
+### Fix 1: Remove duplicate window creation
+**File:** src/Redball.UI.WPF/App.xaml
+**Action:** Remove `StartupUri="Views/MainWindow.xaml"`
+
+### Fix 2: Fix icon loading
+**File:** src/Redball.UI.WPF/Views/MainWindow.xaml.cs
+**Action:** Replace FileStream with file:// URI
+
+### Fix 3: Fix converter
+**File:** src/Redball.UI.WPF/Themes/Controls.xaml
+**Action:** Add converter definition or remove StaticResource reference
+
+---
+
+## REBUILD
+
+```powershell
+taskkill /F /IM Redball.UI.WPF.exe 2>nul
+dotnet build-server shutdown
+rmdir /S /Q "src\Redball.UI.WPF\obj"
+dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o dist/wpf-publish
+xcopy "src\Redball.UI.WPF\Assets\redball.ico" "dist\wpf-publish\Assets\" /Y
+```
+
+---
+
+## VERIFICATION
+- [ ] Only ONE tray icon
+- [ ] Icon shows RED BALL (not empty)
+- [ ] Settings opens without crash
+- [ ] All menu items work
+
+
+## Issue 1: Icon Loading Failure (HIGH PRIORITY)
+
+**Symptom:** Tray icon appears as empty space (no icon visible)
+
+**Log Evidence:**
+```
+[2026-03-11 15:40:00] ERROR loading icon: UriFormatException: Invalid URI: The format of the URI could not be determined.
+```
+
+**Root Cause:** 
+BitmapImage loading from file path using Uri fails with UriFormatException when using FileStream.
+
+**Fix Applied:**
+- Changed icon loading to use FileStream with BitmapCacheOption.OnLoad
+- Added proper bitmap freezing after loading
+
+**Files Modified:**
+- src/Redball.UI.WPF/Views/MainWindow.xaml.cs
+
+**Verification:**
+- Icon file exists at: dist/wpf-publish/Assets/redball.ico (210,491 bytes)
+- Need to rebuild with latest code changes
+
+---
+
+## Issue 2: Duplicate Tray Icons (HIGH PRIORITY)
+
+**Symptom:** Two empty tray icon spaces appear instead of one
+
+**Log Evidence:**
+```
+[2026-03-11 15:40:00] === SetupTrayIcon called ===  (first call)
+[2026-03-11 15:40:00] Tray icon visibility set to Visible
+[2026-03-11 15:40:00] === SetupTrayIcon complete ===
+[2026-03-11 15:40:00] MainWindow loaded, hiding window...
+[2026-03-11 15:40:00] === SetupTrayIcon called ===  (second call!)
+[2026-03-11 15:40:00] Tray icon visibility set to Visible
+```
+
+**Root Cause:**
+1. MainWindow constructor subscribes to Loaded event
+2. OnWindowLoaded calls SetupTrayIcon (first call)
+3. App.xaml.cs shows MainWindow which triggers Loaded event again
+4. SetupTrayIcon called second time, creating duplicate icon
+
+**Fix Applied:**
+- Added _isTrayIconInitialized boolean flag
+- SetupTrayIcon returns early if already initialized
+
+**Files Modified:**
+- src/Redball.UI.WPF/Views/MainWindow.xaml.cs
+
+---
+
+## Issue 3: Missing SliderValueToWidthConverter Resource (HIGH PRIORITY)
+
+**Symptom:** Settings window crashes when opened
+
+**Log Evidence:**
+```
+[2026-03-11 15:40:08] FATAL: Dispatcher exception - System.Windows.Markup.XamlParseException
+ ---> System.Exception: Cannot find resource named 'SliderValueToWidthConverter'
+```
+
+**Root Cause:**
+SliderValueToWidthConverter is defined in Converters/SliderConverters.cs but not registered in App.xaml resources.
+
+**Fix Applied:**
+- Added xmlns:converters namespace to App.xaml
+- Added SliderValueToWidthConverter as application resource
+
+**Files Modified:**
+- src/Redball.UI.WPF/App.xaml
+
+---
+
+## Issue 4: SettingsWindow Tab_Checked NullReferenceException (MEDIUM PRIORITY)
+
+**Symptom:** Settings window may crash during initialization
+
+**Root Cause:**
+Tab_Checked event fires during XAML loading before panel fields are initialized.
+
+**Fix Applied:**
+- Added null checks for all panel references in Tab_Checked method
+
+**Files Modified:**
+- src/Redball.UI.WPF/Views/SettingsWindow.xaml.cs
+
+---
+
+## Issue 5: Window Visibility Prevents Tray Icon Initialization (FIXED)
+
+**Symptom:** Tray icon not appearing when window starts collapsed
+
+**Root Cause:**
+MainWindow.xaml had Visibility="Collapsed" preventing TaskbarIcon from initializing.
+
+**Fix Applied:**
+- Removed Visibility="Collapsed" from Window XAML
+- Window now starts visible then hides after Loaded event
+
+**Files Modified:**
+- src/Redball.UI.WPF/Views/MainWindow.xaml
+
+---
+
+## Issue 6: File Locking Prevents Build (DEVELOPMENT ISSUE)
+
+**Symptom:** Build fails with "file in use by another process"
+
+**Log Evidence:**
+```
+error MSB3061: Unable to delete file "obj\Release\net8.0-windows\win-x64\Redball.UI.WPF.dll"
+```
+
+**Workaround:**
+- Kill Redball.UI.WPF.exe process before building
+- Run: taskkill /F /IM Redball.UI.WPF.exe
+- Or use dotnet build-server shutdown
+
+---
+
+## REBUILD INSTRUCTIONS
+
+1. Kill running WPF process:
+   taskkill /F /IM Redball.UI.WPF.exe 2>nul
+
+2. Clear build cache:
+   dotnet build-server shutdown
+   rmdir /S /Q "src\Redball.UI.WPF\obj"
+
+3. Publish application:
+   dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o dist/wpf-publish
+
+4. Copy icon asset:
+   xcopy "src\Redball.UI.WPF\Assets\redball.ico" "dist\wpf-publish\Assets\" /Y
+
+5. Test:
+   Run dist/wpf-publish/Redball.UI.WPF.exe
+   Check Redball.UI.log for any remaining issues
+
+---
+
+## VERIFICATION CHECKLIST
+
+- [ ] Only ONE tray icon appears
+- [ ] Tray icon shows red ball image (not empty)
+- [ ] Right-click on tray icon shows context menu
+- [ ] Settings menu item opens Settings window
+- [ ] About menu item opens About window
+- [ ] Settings window tabs work without crashing
+- [ ] Exit menu item closes application
+
+---
+
+## FILES MODIFIED SUMMARY
+
+1. src/Redball.UI.WPF/App.xaml
+   - Added converters namespace
+   - Added SliderValueToWidthConverter resource
+
+2. src/Redball.UI.WPF/Views/MainWindow.xaml
+   - Removed Visibility="Collapsed"
+   - Changed TrayIcon Visibility to Visible
+
+3. src/Redball.UI.WPF/Views/MainWindow.xaml.cs
+   - Added file logging
+   - Added _isTrayIconInitialized flag
+   - Fixed icon loading with FileStream
+   - Added SetupTrayIcon duplicate call prevention
+
+4. src/Redball.UI.WPF/Views/SettingsWindow.xaml.cs
+   - Added null checks in Tab_Checked
+
+5. src/Redball.UI.WPF/ViewModels/MainViewModel.cs
+   - Added WeakReference<MainWindow> for command delegation
+   - Updated OpenSettings/ShowAbout to use MainWindow methods
+
+6. src/Redball.UI.WPF/App.xaml.cs
+   - Store MainWindow reference to prevent GC
+   - Proper window show/hide sequence for tray-only mode

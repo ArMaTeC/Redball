@@ -14,43 +14,115 @@ namespace Redball.UI.Views;
 public partial class MainWindow : Window
 {
     private TaskbarIcon? _trayIcon;
+    private bool _isTrayIconInitialized;
+    private static readonly string LogPath = Path.Combine(AppContext.BaseDirectory, "Redball.UI.log");
+
+    private static void Log(string message)
+    {
+        try
+        {
+            var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            File.AppendAllText(LogPath, $"[{timestamp}] {message}{Environment.NewLine}");
+        }
+        catch { }
+    }
 
     public MainWindow()
     {
         InitializeComponent();
+        Loaded += OnWindowLoaded;
+    }
+
+    private void OnWindowLoaded(object sender, RoutedEventArgs e)
+    {
+        // Connect ViewModel to this window for proper command delegation
+        if (DataContext is ViewModels.MainViewModel vm)
+        {
+            vm.SetMainWindow(this);
+        }
         SetupTrayIcon();
     }
 
     private void SetupTrayIcon()
     {
-        // Tray icon is defined in XAML, load icon from file
+        // Prevent duplicate initialization
+        if (_isTrayIconInitialized)
+        {
+            Log("SetupTrayIcon already initialized, skipping");
+            return;
+        }
+        
+        Log("=== SetupTrayIcon called ===");
+        _isTrayIconInitialized = true;
+        
+        // Tray icon is defined in XAML, ensure it's properly initialized
         _trayIcon = TrayIcon;
+        Log($"TrayIcon from XAML: {_trayIcon != null}");
+        
         if (_trayIcon != null)
         {
-            // Load icon from file path relative to executable
-            var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "redball.ico");
-            System.Diagnostics.Debug.WriteLine($"[Redball] Looking for icon at: {iconPath}");
-            System.Diagnostics.Debug.WriteLine($"[Redball] Icon exists: {File.Exists(iconPath)}");
+            // Load icon from multiple possible locations
+            var iconPaths = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "Assets", "redball.ico"),
+                Path.Combine(AppContext.BaseDirectory, "redball.ico"),
+                Path.Combine(Environment.CurrentDirectory, "Assets", "redball.ico"),
+                Path.Combine(Environment.CurrentDirectory, "redball.ico")
+            };
             
-            if (File.Exists(iconPath))
+            string? foundPath = null;
+            foreach (var path in iconPaths)
+            {
+                bool exists = File.Exists(path);
+                Log($"Checking icon at: {path} - Exists: {exists}");
+                if (exists)
+                {
+                    foundPath = path;
+                    break;
+                }
+            }
+            
+            if (foundPath != null)
             {
                 try
                 {
-                    _trayIcon.IconSource = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
-                    System.Diagnostics.Debug.WriteLine("[Redball] Icon loaded successfully");
+                    Log($"Loading icon from: {foundPath}");
+                    
+                    // Use FileStream for reliable loading
+                    using var stream = new FileStream(foundPath, FileMode.Open, FileAccess.Read);
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = stream;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    
+                    _trayIcon.IconSource = bitmap;
+                    Log("Icon loaded successfully via FileStream");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[Redball] Icon load failed: {ex.Message}");
+                    Log($"ERROR loading icon: {ex.GetType().Name}: {ex.Message}");
                 }
             }
+            else
+            {
+                Log("WARNING: Icon file not found in any expected location");
+            }
+            
+            // Ensure visibility is set
             _trayIcon.Visibility = Visibility.Visible;
-            System.Diagnostics.Debug.WriteLine("[Redball] Tray icon visibility set to Visible");
+            Log("Tray icon visibility set to Visible");
+            
+            // Verify icon is set
+            Log($"IconSource is null: {_trayIcon.IconSource == null}");
         }
         else
         {
-            System.Diagnostics.Debug.WriteLine("[Redball] ERROR: TrayIcon not found!");
+            Log("ERROR: TrayIcon not found in XAML!");
         }
+        
+        Log("=== SetupTrayIcon complete ===");
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
@@ -66,14 +138,20 @@ public partial class MainWindow : Window
 
     public void ShowSettings()
     {
-        var settings = new SettingsWindow();
-        settings.ShowDialog();
+        Dispatcher.Invoke(() =>
+        {
+            var settings = new SettingsWindow();
+            settings.Show(); // Use Show instead of ShowDialog for non-modal
+        });
     }
 
     public void ShowAbout()
     {
-        var about = new AboutWindow();
-        about.ShowDialog();
+        Dispatcher.Invoke(() =>
+        {
+            var about = new AboutWindow();
+            about.Show(); // Use Show instead of ShowDialog for non-modal
+        });
     }
 
     public void ExitApplication()

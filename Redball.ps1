@@ -1,7 +1,7 @@
 #requires -Version 5.1
 <#requires -RunAsAdministrator#>
 <#
-# Copyright (c) 2024-2026 GCI Network Solutions / Redball Contributors
+# Copyright (c) 2024-2026 ArMaTeC / Redball Contributors
 # Licensed under the MIT License. See LICENSE file in the project root.
 # https://github.com/ArMaTeC/Redball
 #>

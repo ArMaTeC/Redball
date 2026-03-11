@@ -860,8 +860,8 @@ function Invoke-RedballExeBuild {
         $versionParams = @{
             Title = 'Redball'
             Product = 'Redball'
-            Company = 'GCI Network Solutions'
-            Copyright = "GCI Network Solutions (c) $(Get-Date -Format yyyy)"
+            Company = 'ArMaTeC'
+            Copyright = "ArMaTeC (c) $(Get-Date -Format yyyy)"
             IconFile = $IconFilePath
             Version = $VersionInfo.FileVersion
         }
@@ -870,8 +870,8 @@ function Invoke-RedballExeBuild {
         $versionParams = @{
             Title = 'Redball'
             Product = 'Redball'
-            Company = 'GCI Network Solutions'
-            Copyright = 'GCI Network Solutions'
+            Company = 'ArMaTeC'
+            Copyright = 'ArMaTeC'
             IconFile = $IconFilePath
         }
     }

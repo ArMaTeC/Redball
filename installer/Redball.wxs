@@ -2,7 +2,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package Name="Redball"
-           Manufacturer="GCI Network Solutions"
+           Manufacturer="ArMaTeC"
            Version="$(var.ProductVersion)"
            UpgradeCode="A7A9B089-9D1D-4F8A-86DB-6FE89B6F99B0"
            Scope="perUser">
