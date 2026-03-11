@@ -7,6 +7,7 @@ on:
       - '*.ps1'
       - '*.json'
       - '.github/workflows/**'
+      - 'tests/**'
   pull_request:
     branches: [ main ]
     paths:
@@ -44,7 +45,7 @@ jobs:
       run: |
         Import-Module Pester -RequiredVersion 5.5.0
         $config = New-PesterConfiguration
-        $config.Run.Path = "./Redball.Tests.ps1"
+        $config.Run.Path = "./tests/Redball.Tests.ps1"
         $config.Run.PassThru = $true
         $config.Output.Verbosity = "Detailed"
         $config.TestResult.Enabled = $true
@@ -151,7 +152,7 @@ jobs:
         # Check for Invoke-Expression usage (already excluded test files via $mainFiles)
         $invokeExpr = $mainFiles |
           Select-String -Pattern 'Invoke-Expression|iex\s'
-          
+
         if ($invokeExpr) {
           $issues += "Invoke-Expression usage found - review for security"
           $invokeExpr | ForEach-Object { Write-Warning $_ }
