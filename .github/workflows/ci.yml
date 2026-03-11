@@ -21,9 +21,11 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        shell: [powershell, pwsh]
+        shell:
+          - powershell
+          - pwsh
       fail-fast: false
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
