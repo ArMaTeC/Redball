@@ -251,6 +251,8 @@ $script:config = @{
     TypeThingRandomPauseMaxMs  = 500
     TypeThingTypeNewlines      = $true
     TypeThingNotifications     = $true
+    # Debug/Logging options
+    VerboseLogging             = $false
 }
 
 $script:locales = @{}
@@ -901,7 +903,7 @@ function Test-RedballConfigSchema {
         'AutoExitOnComplete', 'ScheduleEnabled', 'PresentationModeDetection',
         'EnablePerformanceMetrics', 'EnableTelemetry', 'ProcessIsolation',
         'VerifyUpdateSignature', 'TypeThingEnabled', 'TypeThingAddRandomPauses',
-        'TypeThingTypeNewlines', 'TypeThingNotifications')
+        'TypeThingTypeNewlines', 'TypeThingNotifications', 'VerboseLogging')
     $stringKeys = @('LogPath', 'Locale', 'ScheduleStartTime', 'ScheduleStopTime',
         'UpdateRepoOwner', 'UpdateRepoName', 'UpdateChannel',
         'TypeThingStartHotkey', 'TypeThingStopHotkey', 'TypeThingTheme')
@@ -2053,13 +2055,27 @@ function Register-TypeThingHotkeys {
     .SYNOPSIS
         Registers TypeThing global hotkeys for start and stop typing.
     #>
-    if (-not $script:config.TypeThingEnabled) { return }
-    if ($script:state.TypeThingHotkeysRegistered) { return }
-    if (-not $script:state.TypeThingHotkeyWindow) { return }
+    Write-VerboseLog -Message "Register-TypeThingHotkeys called" -Source "Hotkey"
+    
+    if (-not $script:config.TypeThingEnabled) { 
+        Write-VerboseLog -Message "TypeThing disabled, skipping hotkey registration" -Source "Hotkey"
+        return 
+    }
+    if ($script:state.TypeThingHotkeysRegistered) { 
+        Write-VerboseLog -Message "Hotkeys already registered, skipping" -Source "Hotkey"
+        return 
+    }
+    if (-not $script:state.TypeThingHotkeyWindow) { 
+        Write-VerboseLog -Message "Hotkey window not created yet, cannot register" -Source "Hotkey"
+        return 
+    }
 
     $handle = $script:state.TypeThingHotkeyWindow.Handle
+    Write-VerboseLog -Message "Hotkey window handle: $handle" -Source "Hotkey"
+    
     if ($handle -eq [IntPtr]::Zero) {
         Write-RedballLog -Level 'WARN' -Message "TypeThing: Hotkey window handle not ready, skipping registration"
+        Write-VerboseLog -Message "Handle is Zero, registration aborted" -Source "Hotkey"
         return
     }
 
@@ -2067,47 +2083,66 @@ function Register-TypeThingHotkeys {
     $stopRegistered = $false
 
     try {
+        Write-VerboseLog -Message "Parsing start hotkey: $($script:config.TypeThingStartHotkey)" -Source "Hotkey"
         $startParams = ConvertTo-HotkeyParams -HotkeyString $script:config.TypeThingStartHotkey
+        Write-VerboseLog -Message "Start hotkey parsed - Modifiers: $($startParams.Modifiers) VK: 0x$($startParams.VirtualKey.ToString('X2'))" -Source "Hotkey"
+        
         if ($startParams.VirtualKey -gt 0) {
+            Write-VerboseLog -Message "Registering start hotkey with RegisterHotKey API" -Source "Hotkey"
             $result = [HotkeyHelper]::RegisterHotKey($handle, $script:state.TypeThingHotkeyStartId,
                 $startParams.Modifiers, $startParams.VirtualKey)
             if ($result) {
                 $startRegistered = $true
                 Write-RedballLog -Level 'INFO' -Message "TypeThing: Start hotkey registered ($($script:config.TypeThingStartHotkey))"
+                Write-VerboseLog -Message "Start hotkey registered successfully" -Source "Hotkey"
             }
             else {
                 $err = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
                 Write-RedballLog -Level 'WARN' -Message "TypeThing: Failed to register start hotkey ($($script:config.TypeThingStartHotkey)) - Win32 error: $err (modifiers=$($startParams.Modifiers) vk=0x$($startParams.VirtualKey.ToString('X2')))"
+                Write-VerboseLog -Message "RegisterHotKey failed with error $err" -Source "Hotkey"
             }
         }
         else {
             Write-RedballLog -Level 'WARN' -Message "TypeThing: Start hotkey '$($script:config.TypeThingStartHotkey)' parsed to VK=0 - check hotkey string format"
+            Write-VerboseLog -Message "VirtualKey is 0, invalid hotkey format" -Source "Hotkey"
         }
 
+        Write-VerboseLog -Message "Parsing stop hotkey: $($script:config.TypeThingStopHotkey)" -Source "Hotkey"
         $stopParams = ConvertTo-HotkeyParams -HotkeyString $script:config.TypeThingStopHotkey
+        Write-VerboseLog -Message "Stop hotkey parsed - Modifiers: $($stopParams.Modifiers) VK: 0x$($stopParams.VirtualKey.ToString('X2'))" -Source "Hotkey"
+        
         if ($stopParams.VirtualKey -gt 0) {
+            Write-VerboseLog -Message "Registering stop hotkey with RegisterHotKey API" -Source "Hotkey"
             $result = [HotkeyHelper]::RegisterHotKey($handle, $script:state.TypeThingHotkeyStopId,
                 $stopParams.Modifiers, $stopParams.VirtualKey)
             if ($result) {
                 $stopRegistered = $true
                 Write-RedballLog -Level 'INFO' -Message "TypeThing: Stop hotkey registered ($($script:config.TypeThingStopHotkey))"
+                Write-VerboseLog -Message "Stop hotkey registered successfully" -Source "Hotkey"
             }
             else {
                 $err = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
                 Write-RedballLog -Level 'WARN' -Message "TypeThing: Failed to register stop hotkey ($($script:config.TypeThingStopHotkey)) - Win32 error: $err (modifiers=$($stopParams.Modifiers) vk=0x$($stopParams.VirtualKey.ToString('X2')))"
+                Write-VerboseLog -Message "RegisterHotKey failed with error $err" -Source "Hotkey"
             }
         }
         else {
             Write-RedballLog -Level 'WARN' -Message "TypeThing: Stop hotkey '$($script:config.TypeThingStopHotkey)' parsed to VK=0 - check hotkey string format"
+            Write-VerboseLog -Message "VirtualKey is 0, invalid hotkey format" -Source "Hotkey"
         }
 
         # Only mark as registered if at least one hotkey was successfully registered
         if ($startRegistered -or $stopRegistered) {
             $script:state.TypeThingHotkeysRegistered = $true
+            Write-VerboseLog -Message "Hotkeys marked as registered (start:$startRegistered stop:$stopRegistered)" -Source "Hotkey"
+        }
+        else {
+            Write-VerboseLog -Message "No hotkeys were registered successfully" -Source "Hotkey"
         }
     }
     catch {
         Write-RedballLog -Level 'WARN' -Message "TypeThing: Hotkey registration error: $_"
+        Write-VerboseLog -Message "Exception during registration: $_" -Source "Hotkey"
     }
 }
 
@@ -2248,10 +2283,22 @@ function Start-TypeThingTyping {
     .SYNOPSIS
         Reads the clipboard and begins simulated typing with a countdown.
     #>
-    if ($script:state.TypeThingIsTyping) { return }
-    if ($script:state.IsShuttingDown) { return }
-    if (-not $script:config.TypeThingEnabled) { return }
+    Write-VerboseLog -Message "Start-TypeThingTyping called" -Source "TypeThing"
+    
+    if ($script:state.TypeThingIsTyping) { 
+        Write-VerboseLog -Message "Already typing, ignoring request" -Source "TypeThing"
+        return 
+    }
+    if ($script:state.IsShuttingDown) { 
+        Write-VerboseLog -Message "Shutting down, ignoring request" -Source "TypeThing"
+        return 
+    }
+    if (-not $script:config.TypeThingEnabled) { 
+        Write-VerboseLog -Message "TypeThing disabled, ignoring request" -Source "TypeThing"
+        return 
+    }
 
+    Write-VerboseLog -Message "Getting clipboard text" -Source "TypeThing"
     $text = Get-ClipboardText
     if (-not $text) {
         if ($script:config.TypeThingNotifications -and $script:state.NotifyIcon) {
@@ -2263,8 +2310,11 @@ function Start-TypeThingTyping {
             }
         }
         Write-RedballLog -Level 'INFO' -Message 'TypeThing: Clipboard empty, nothing to type'
+        Write-VerboseLog -Message "Clipboard was empty" -Source "TypeThing"
         return
     }
+
+    Write-VerboseLog -Message "Clipboard contains $($text.Length) characters" -Source "TypeThing"
 
     # Warn on very large clipboard
     $largeClipboardThreshold = if ($script:config.TypeThingLargeClipboardThreshold) { $script:config.TypeThingLargeClipboardThreshold } else { 10000 }
@@ -5301,25 +5351,37 @@ Test-RedballFirstRun | Out-Null
 # --- TypeThing Initialization ---
 if ($script:config.TypeThingEnabled) {
     try {
+        Write-VerboseLog -Message "Initializing TypeThing hotkey window" -Source "TypeThing"
         $script:state.TypeThingHotkeyWindow = New-Object HotkeyMessageWindow
+        Write-VerboseLog -Message "Hotkey window created, handle: $($script:state.TypeThingHotkeyWindow.Handle)" -Source "TypeThing"
+        
         $script:state.TypeThingHotkeyWindow.add_HotkeyPressed({
                 param($hotkeyId)
                 try {
-                    if ($script:state.IsShuttingDown) { return }
+                    Write-VerboseLog -Message "Hotkey pressed event received, ID: $hotkeyId" -Source "TypeThing"
+                    if ($script:state.IsShuttingDown) { 
+                        Write-VerboseLog -Message "Shutting down, ignoring hotkey" -Source "TypeThing"
+                        return 
+                    }
                     if ($hotkeyId -eq $script:state.TypeThingHotkeyStartId) {
+                        Write-VerboseLog -Message "Start hotkey triggered, calling Start-TypeThingTyping" -Source "TypeThing"
                         Start-TypeThingTyping
                     }
                     elseif ($hotkeyId -eq $script:state.TypeThingHotkeyStopId) {
+                        Write-VerboseLog -Message "Stop hotkey triggered, calling Stop-TypeThingTyping" -Source "TypeThing"
                         Stop-TypeThingTyping
                     }
                 }
                 catch {
                     Write-RedballLog -Level 'WARN' -Message "TypeThing: Hotkey handler error: $_"
+                    Write-VerboseLog -Message "Hotkey handler exception: $_" -Source "TypeThing"
                 }
             })
         # Try to register immediately, but if handle isn't ready, retry via timer
+        Write-VerboseLog -Message "Attempting initial hotkey registration" -Source "TypeThing"
         Register-TypeThingHotkeys
         if (-not $script:state.TypeThingHotkeysRegistered) {
+            Write-VerboseLog -Message "Initial registration failed, starting retry timer" -Source "TypeThing"
             # Create a timer to retry registration after the message pump starts
             $typeThingInitTimer = New-Object System.Windows.Forms.Timer
             $typeThingInitTimer.Interval = 500
@@ -5327,7 +5389,9 @@ if ($script:config.TypeThingEnabled) {
             $script:typeThingMaxRetries = 10
             $typeThingInitTimer.add_Tick({
                     $script:typeThingRetryCount++
+                    Write-VerboseLog -Message "Retry attempt $($script:typeThingRetryCount)/$($script:typeThingMaxRetries)" -Source "TypeThing"
                     if ($script:state.TypeThingHotkeysRegistered -or $script:typeThingRetryCount -gt $script:typeThingMaxRetries -or $script:state.IsShuttingDown) {
+                        Write-VerboseLog -Message "Stopping retry timer (registered:$($script:state.TypeThingHotkeysRegistered) retryCount:$script:typeThingRetryCount)" -Source "TypeThing"
                         $typeThingInitTimer.Stop()
                         $typeThingInitTimer.Dispose()
                         return
@@ -5337,15 +5401,24 @@ if ($script:config.TypeThingEnabled) {
                         $typeThingInitTimer.Stop()
                         $typeThingInitTimer.Dispose()
                         Write-RedballLog -Level 'INFO' -Message "TypeThing: Hotkeys registered after retry"
+                        Write-VerboseLog -Message "Hotkeys registered on retry attempt $script:typeThingRetryCount" -Source "TypeThing"
                     }
                 })
             $typeThingInitTimer.Start()
+            Write-VerboseLog -Message "Retry timer started with 500ms interval" -Source "TypeThing"
+        }
+        else {
+            Write-VerboseLog -Message "Hotkeys registered successfully on first attempt" -Source "TypeThing"
         }
         Write-RedballLog -Level 'INFO' -Message "TypeThing: Initialized (Start: $($script:config.TypeThingStartHotkey), Stop: $($script:config.TypeThingStopHotkey))"
     }
     catch {
         Write-RedballLog -Level 'WARN' -Message "TypeThing: Initialization failed: $_"
+        Write-VerboseLog -Message "Initialization exception: $_" -Source "TypeThing"
     }
+}
+else {
+    Write-VerboseLog -Message "TypeThing disabled in config, skipping initialization" -Source "TypeThing"
 }
 
 # Clear crash flag on clean exit
