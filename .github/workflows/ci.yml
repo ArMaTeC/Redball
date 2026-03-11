@@ -13,6 +13,7 @@ on:
     paths:
       - '*.ps1'
       - '*.json'
+      - 'tests/**'
 
 jobs:
   test:

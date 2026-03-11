@@ -65,16 +65,16 @@ Redball aims to be the most reliable, feature-rich, and user-friendly keep-awake
 - [x] Localization (en, es, fr, de)
 - [x] Pester test suite
 
-### 🔄 v2.1 — Polish & Reliability (Next)
+### ✅ v2.1 — Polish & Reliability (Current)
 
-- [ ] First-run onboarding experience
-- [ ] Config schema validation and integrity checks
-- [ ] Improved error messages and crash reporting
+- [x] First-run onboarding experience
+- [x] Config schema validation and integrity checks
+- [x] Improved error messages and crash reporting
 - [ ] Consistent dark/light theme across all dialogs
-- [ ] Code coverage thresholds in CI
-- [ ] Feature usage analytics (opt-in)
+- [x] Code coverage thresholds in CI
+- [x] Feature usage analytics (opt-in)
 
-### 📋 v2.2 — Enterprise Features (Planned)
+### � v2.2 — Enterprise Features (Next)
 
 - [ ] Group Policy / registry-based configuration
 - [ ] Multi-monitor awareness
