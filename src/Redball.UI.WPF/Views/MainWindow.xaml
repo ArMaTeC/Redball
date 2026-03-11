@@ -18,10 +18,9 @@
     <Grid>
         <!-- Tray Icon (primary UI for v3.0) -->
         <tb:TaskbarIcon x:Name="TrayIcon"
-                       IconSource="/Assets/redball.ico"
                        ToolTipText="Redball v3.0"
                        LeftClickCommand="{Binding ToggleActiveCommand}"
-                       Visibility="Visible">
+                       Visibility="Collapsed">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu Style="{StaticResource ModernContextMenu}">
                     <!-- Status Header -->

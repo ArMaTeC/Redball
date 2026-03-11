@@ -1,5 +1,8 @@
+using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using Hardcodet.Wpf.TaskbarNotification;
 
 namespace Redball.UI.Views;
@@ -20,10 +23,16 @@ public partial class MainWindow : Window
 
     private void SetupTrayIcon()
     {
-        // Tray icon is defined in XAML resources
-        _trayIcon = (TaskbarIcon)FindResource("TrayIcon");
+        // Tray icon is defined in XAML, load icon from file
+        _trayIcon = TrayIcon;
         if (_trayIcon != null)
         {
+            // Load icon from file path relative to executable
+            var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "redball.ico");
+            if (File.Exists(iconPath))
+            {
+                _trayIcon.IconSource = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+            }
             _trayIcon.Visibility = Visibility.Visible;
         }
     }
