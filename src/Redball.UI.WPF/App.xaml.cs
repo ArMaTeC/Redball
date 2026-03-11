@@ -1,9 +1,10 @@
 using System;
-using System.Windows;
 using System.IO.Pipes;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
 
 namespace Redball.UI;
 
@@ -27,9 +28,9 @@ public partial class App : Application
         // Start IPC server for PowerShell communication
         _ = StartIpcServerAsync();
 
-        // Create and show main window (tray-only mode)
-        var mainWindow = new MainWindow();
-        mainWindow.Show();
+        // Create main window but don't show it (tray-only mode)
+        var mainWindow = new Views.MainWindow();
+        mainWindow.Hide();
     }
 
     private async Task StartIpcServerAsync()
@@ -108,8 +109,8 @@ public partial class App : Application
     {
         Dispatcher.Invoke(() =>
         {
-            var settings = new Views.SettingsWindow();
-            settings.ShowDialog();
+            var settingsWindow = new Views.SettingsWindow();
+            settingsWindow.ShowDialog();
         });
         return true;
     }

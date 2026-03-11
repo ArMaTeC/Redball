@@ -19,11 +19,11 @@
                            NoLeftClickDelay="True">
                 <tb:TaskbarIcon.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="Pause Keep-Awake" Click="PauseMenuItem_Click"/>
+                        <MenuItem Header="Pause Keep-Awake" Command="{Binding PauseKeepAwakeCommand}"/>
                         <Separator/>
-                        <MenuItem Header="Settings..." Click="SettingsMenuItem_Click"/>
+                        <MenuItem Header="Settings..." Command="{Binding OpenSettingsCommand}"/>
                         <Separator/>
-                        <MenuItem Header="Exit" Click="ExitMenuItem_Click"/>
+                        <MenuItem Header="Exit" Command="{Binding ExitCommand}"/>
                     </ContextMenu>
                 </tb:TaskbarIcon.ContextMenu>
             </tb:TaskbarIcon>

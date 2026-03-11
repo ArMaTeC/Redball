@@ -1,9 +1,9 @@
-﻿{
-    "SavedAt":  "2026-03-10T16:41:47.8547522+00:00",
-    "UseHeartbeatKeypress":  true,
-    "PreventDisplaySleep":  true,
-    "BatteryAware":  false,
-    "Active":  false,
-    "BatteryThreshold":  20,
-    "Until":  null
+{
+  "SavedAt": "2026-03-11T13:47:14.6315510+00:00",
+  "Active": true,
+  "Until": null,
+  "PreventDisplaySleep": true,
+  "BatteryThreshold": 20,
+  "UseHeartbeatKeypress": true,
+  "BatteryAware": false
 }

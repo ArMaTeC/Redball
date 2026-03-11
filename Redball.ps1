@@ -78,7 +78,10 @@ param(
     [string]$TimestampServer = 'http://timestamp.digicert.com',
     
     [Parameter()]
-    [switch]$ExitOnComplete
+    [switch]$ExitOnComplete,
+
+    [Parameter()]
+    [switch]$UseModernUI
 )
 
 $script:VERSION = '2.1.4'
@@ -3600,6 +3603,26 @@ if ($Uninstall) {
         Write-Output 'Redball was not in startup.'
     }
     exit 0
+}
+
+# Handle modern UI mode
+if ($UseModernUI) {
+    Write-RedballLog -Level 'INFO' -Message 'Starting Redball v3.0 with modern WPF UI'
+    try {
+        $wpfPath = Join-Path $script:AppRoot 'dist\wpf\Redball.UI.WPF.exe'
+        if (Test-Path $wpfPath) {
+            Start-Process -FilePath $wpfPath -WindowStyle Hidden
+            Write-Output 'Redball v3.0 modern UI started. Use tray icon to control.'
+        }
+        else {
+            Write-Warning "Modern UI not found at: $wpfPath"
+            Write-Output 'Falling back to classic PowerShell UI...'
+        }
+    }
+    catch {
+        Write-Warning "Failed to start modern UI: $_"
+        Write-Output 'Falling back to classic PowerShell UI...'
+    }
 }
 
 # Check execution policy before running

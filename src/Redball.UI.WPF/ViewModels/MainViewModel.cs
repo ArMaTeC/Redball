@@ -17,6 +17,7 @@ public class MainViewModel : INotifyPropertyChanged
     public MainViewModel()
     {
         ToggleActiveCommand = new RelayCommand(ToggleActive);
+        PauseKeepAwakeCommand = new RelayCommand(ToggleActive);
         OpenSettingsCommand = new RelayCommand(OpenSettings);
         ExitCommand = new RelayCommand(ExitApplication);
         ShowAboutCommand = new RelayCommand(ShowAbout);
@@ -64,6 +65,7 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     public ICommand ToggleActiveCommand { get; }
+    public ICommand PauseKeepAwakeCommand { get; }
     public ICommand OpenSettingsCommand { get; }
     public ICommand ExitCommand { get; }
     public ICommand ShowAboutCommand { get; }
