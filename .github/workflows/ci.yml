@@ -29,7 +29,7 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Setup PowerShell
       shell: ${{ matrix.shell }}
       run: |
@@ -64,20 +64,20 @@ jobs:
           }
           throw "Pester tests failed: $($result.FailedCount)"
         }
-        
+
         # Enforce minimum code coverage threshold
         if ($result.CodeCoverage -and $result.CodeCoverage.CoveragePercent -lt 40) {
           Write-Host "::warning::Code coverage is $([math]::Round($result.CodeCoverage.CoveragePercent, 1))% (threshold: 40%)"
         }
         Write-Host "Code coverage: $([math]::Round($result.CodeCoverage.CoveragePercent, 1))%"
-        
+
     - name: Upload Test Results
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results-${{ matrix.shell }}
         path: ./test-results-${{ matrix.shell }}.xml
-        
+
     - name: Upload Coverage
       uses: actions/upload-artifact@v4
       if: always()
@@ -88,21 +88,21 @@ jobs:
   lint:
     name: Lint PowerShell
     runs-on: windows-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Setup PowerShell
       shell: pwsh
       run: |
         $PSVersionTable
-        
+
     - name: Install PSScriptAnalyzer
       shell: pwsh
       run: |
         Install-Module -Name PSScriptAnalyzer -Force -SkipPublisherCheck
-        
+
     - name: Run PSScriptAnalyzer
       shell: pwsh
       run: |
@@ -111,7 +111,7 @@ jobs:
         if ($results | Where-Object { $_.Severity -eq 'Error' }) {
           throw "PSScriptAnalyzer found errors!"
         }
-        
+
     - name: Validate JSON Files
       shell: pwsh
       run: |
@@ -128,11 +128,11 @@ jobs:
   security:
     name: Security Scan
     runs-on: windows-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Run Security Scan
       shell: pwsh
       run: |
@@ -140,18 +140,18 @@ jobs:
         $issues = @()
         $psFiles = Get-ChildItem -Path . -Filter "*.ps1" -Recurse -File
         Write-Host "Scanning $($psFiles.Count) PS1 files..."
-        
+
         # Check for hardcoded credentials (only in main script, not tests)
         $mainFiles = $psFiles | Where-Object { $_.Name -notmatch 'Tests\.ps1$' }
         $content = $mainFiles | 
           Select-String -Pattern '(?i)\b(password|secret|apikey|api_key|token)\s*=\s*["\x27][^"\x27]+["\x27]' |
           Where-Object { $_ -notmatch 'example|placeholder|changeme|TimestampServer|Hotkey|ShortcutKey' }
-        
+
         if ($content) {
           $issues += "Potential hardcoded credentials found"
           $content | ForEach-Object { Write-Warning $_ }
         }
-        
+
         # Check for Invoke-Expression usage (already excluded test files via $mainFiles)
         $invokeExpr = $mainFiles |
           Select-String -Pattern 'Invoke-Expression|iex\s'
@@ -160,11 +160,11 @@ jobs:
           $issues += "Invoke-Expression usage found - review for security"
           $invokeExpr | ForEach-Object { Write-Warning $_ }
         }
-        
+
         if ($issues.Count -gt 0) {
           throw "Security issues found: $($issues -join ', ')"
         }
-        
+
         Write-Host "✓ Security scan passed"
 
   release:
@@ -172,20 +172,20 @@ jobs:
     needs: [test, lint, security]
     runs-on: windows-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Create Release Archive
       shell: pwsh
       run: |
         $version = (Get-Content ./Redball.ps1 | Select-String -Pattern "VERSION = '([\d.]+)'").Matches.Groups[1].Value
         $releaseName = "Redball-v$version"
-        
+
         # Create release directory
         New-Item -ItemType Directory -Path "./$releaseName" -Force
-        
+
         # Copy files
         Copy-Item ./Redball.ps1 "./$releaseName/"
         Copy-Item ./Redball.json "./$releaseName/"
@@ -193,12 +193,12 @@ jobs:
         Copy-Item ./README.md "./$releaseName/"
         Copy-Item ./LICENSE "./$releaseName/"
         Copy-Item ./CHANGELOG.md "./$releaseName/"
-        
+
         # Create zip
         Compress-Archive -Path "./$releaseName" -DestinationPath "./$releaseName.zip" -Force
-        
+
         Write-Host "Created release: $releaseName.zip"
-        
+
     - name: Upload Release Artifact
       uses: actions/upload-artifact@v4
       with:
