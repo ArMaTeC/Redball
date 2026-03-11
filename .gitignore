@@ -5,3 +5,4 @@ Redball.log
 typingthing.txt
 dist/Redball-test.msi
 dist/Redball-test.wixpdb
+dist/wpf/*
