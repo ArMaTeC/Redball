@@ -3319,6 +3319,627 @@ Update-RedballUI
 # First-run onboarding (UX)
 Test-RedballFirstRun | Out-Null
 
+# --- TypeThing Functions ---
+
+function ConvertTo-HotkeyParams {
+    <#
+    .SYNOPSIS
+        Parses a hotkey string like "Ctrl+Shift+V" into modifier flags and virtual key code.
+    .DESCRIPTION
+        Converts a human-readable hotkey string (e.g., "Ctrl+Alt+V") into the numeric
+        modifier flags and virtual key code required by the Windows RegisterHotKey API.
+        Supports: Ctrl, Alt, Shift, Win modifiers and alphanumeric keys, function keys,
+        and special keys (Space, Enter, Tab, etc.).
+    .PARAMETER HotkeyString
+        The hotkey string to parse (e.g., "Ctrl+Shift+V", "Alt+F4")
+    .EXAMPLE
+        $params = ConvertTo-HotkeyParams -HotkeyString "Ctrl+Alt+V"
+        # Returns: @{ Modifiers = 3; VirtualKey = 0x56 }
+    .NOTES
+        Modifier flags: Ctrl=0x0002, Alt=0x0001, Shift=0x0004, Win=0x0008
+        Multiple modifiers are combined using bitwise OR.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [string]$HotkeyString
+    )
+    Write-VerboseLog -Message "ConvertTo-HotkeyParams called with: '$HotkeyString'" -Source "Hotkey"
+    
+    $parts = $HotkeyString -split '\+'
+    [uint32]$modifiers = 0
+    [uint32]$vk = 0
+
+    $vkMap = @{
+        'A' = 0x41; 'B' = 0x42; 'C' = 0x43; 'D' = 0x44; 'E' = 0x45; 'F' = 0x46; 'G' = 0x47; 'H' = 0x48
+        'I' = 0x49; 'J' = 0x4A; 'K' = 0x4B; 'L' = 0x4C; 'M' = 0x4D; 'N' = 0x4E; 'O' = 0x4F; 'P' = 0x50
+        'Q' = 0x51; 'R' = 0x52; 'S' = 0x53; 'T' = 0x54; 'U' = 0x55; 'V' = 0x56; 'W' = 0x57; 'X' = 0x58
+        'Y' = 0x59; 'Z' = 0x5A
+        '0' = 0x30; '1' = 0x31; '2' = 0x32; '3' = 0x33; '4' = 0x34; '5' = 0x35; '6' = 0x36; '7' = 0x37
+        '8' = 0x38; '9' = 0x39
+        'F1' = 0x70; 'F2' = 0x71; 'F3' = 0x72; 'F4' = 0x73; 'F5' = 0x74; 'F6' = 0x75; 'F7' = 0x76
+        'F8' = 0x77; 'F9' = 0x78; 'F10' = 0x79; 'F11' = 0x7A; 'F12' = 0x7B
+        'Pause' = 0x13; 'Space' = 0x20; 'Escape' = 0x1B; 'Enter' = 0x0D; 'Tab' = 0x09
+        'Insert' = 0x2D; 'Delete' = 0x2E; 'Home' = 0x24; 'End' = 0x23
+        'PageUp' = 0x21; 'PageDown' = 0x22
+        'Left' = 0x25; 'Up' = 0x26; 'Right' = 0x27; 'Down' = 0x28
+        'NumPad0' = 0x60; 'NumPad1' = 0x61; 'NumPad2' = 0x62; 'NumPad3' = 0x63; 'NumPad4' = 0x64
+        'NumPad5' = 0x65; 'NumPad6' = 0x66; 'NumPad7' = 0x67; 'NumPad8' = 0x68; 'NumPad9' = 0x69
+        'OemTilde' = 0xC0; 'OemMinus' = 0xBD; 'OemPlus' = 0xBB
+    }
+
+    Write-VerboseLog -Message "Parsing $($parts.Count) hotkey parts" -Source "Hotkey"
+    
+    foreach ($part in $parts) {
+        $trimmed = $part.Trim()
+        Write-VerboseLog -Message "Processing part: '$trimmed'" -Source "Hotkey"
+        switch ($trimmed) {
+            'Ctrl' { 
+                $modifiers = $modifiers -bor 0x0002 
+                Write-VerboseLog -Message "  -> Added Ctrl modifier (0x0002), total modifiers: $modifiers" -Source "Hotkey"
+            }
+            'Control' { 
+                $modifiers = $modifiers -bor 0x0002 
+                Write-VerboseLog -Message "  -> Added Control modifier (0x0002), total modifiers: $modifiers" -Source "Hotkey"
+            }
+            'Alt' { 
+                $modifiers = $modifiers -bor 0x0001 
+                Write-VerboseLog -Message "  -> Added Alt modifier (0x0001), total modifiers: $modifiers" -Source "Hotkey"
+            }
+            'Shift' { 
+                $modifiers = $modifiers -bor 0x0004 
+                Write-VerboseLog -Message "  -> Added Shift modifier (0x0004), total modifiers: $modifiers" -Source "Hotkey"
+            }
+            'Win' { 
+                $modifiers = $modifiers -bor 0x0008 
+                Write-VerboseLog -Message "  -> Added Win modifier (0x0008), total modifiers: $modifiers" -Source "Hotkey"
+            }
+            default {
+                if ($vkMap.ContainsKey($trimmed)) {
+                    $vk = $vkMap[$trimmed]
+                    Write-VerboseLog -Message "  -> Found virtual key for '$trimmed': 0x$($vk.ToString('X2'))" -Source "Hotkey"
+                }
+                else {
+                    Write-RedballLog -Level 'WARN' -Message "TypeThing: Unknown hotkey part '$trimmed'"
+                    Write-VerboseLog -Message "  -> Unknown hotkey part: '$trimmed'" -Source "Hotkey"
+                }
+            }
+        }
+    }
+    
+    Write-VerboseLog -Message "Hotkey '$HotkeyString' parsed -> Modifiers: $modifiers, VK: 0x$($vk.ToString('X2'))" -Source "Hotkey"
+    return @{ Modifiers = $modifiers; VirtualKey = $vk }
+}
+
+function Register-TypeThingHotkeys {
+    <#
+    .SYNOPSIS
+        Registers TypeThing global hotkeys for start and stop typing.
+    .DESCRIPTION
+        Registers global Windows hotkeys using the RegisterHotKey API.
+        Includes special handling and diagnostics for Alt key combinations.
+        Alt hotkeys can be problematic because Windows uses Alt for menu access.
+    .NOTES
+        Alt modifier = 0x0001 (MOD_ALT)
+        Known issue: Some Alt combinations may be intercepted by Windows for menu access.
+        If Alt hotkeys fail, try using Ctrl+Alt combinations instead.
+    #>
+    Write-VerboseLog -Message "Register-TypeThingHotkeys called" -Source "Hotkey"
+    
+    if (-not $script:config.TypeThingEnabled) { 
+        Write-VerboseLog -Message "TypeThing disabled, skipping hotkey registration" -Source "Hotkey"
+        return 
+    }
+    if ($script:state.TypeThingHotkeysRegistered) { 
+        Write-VerboseLog -Message "Hotkeys already registered, skipping" -Source "Hotkey"
+        return 
+    }
+    if (-not $script:state.TypeThingHotkeyWindow) { 
+        Write-VerboseLog -Message "Hotkey window not created yet, cannot register" -Source "Hotkey"
+        return 
+    }
+
+    $handle = $script:state.TypeThingHotkeyWindow.Handle
+    Write-VerboseLog -Message "Hotkey window handle: $handle" -Source "Hotkey"
+    
+    if ($handle -eq [IntPtr]::Zero) {
+        Write-RedballLog -Level 'WARN' -Message "TypeThing: Hotkey window handle not ready, skipping registration"
+        Write-VerboseLog -Message "Handle is Zero, registration aborted" -Source "Hotkey"
+        return
+    }
+
+    $startRegistered = $false
+    $stopRegistered = $false
+
+    try {
+        Write-VerboseLog -Message "=== START HOTKEY REGISTRATION ===" -Source "Hotkey"
+        Write-VerboseLog -Message "Config start hotkey: $($script:config.TypeThingStartHotkey)" -Source "Hotkey"
+        $startParams = ConvertTo-HotkeyParams -HotkeyString $script:config.TypeThingStartHotkey
+        
+        # Check for Alt modifier specifically
+        $hasAlt = ($startParams.Modifiers -band 0x0001) -ne 0
+        if ($hasAlt) {
+            Write-VerboseLog -Message "WARNING: Start hotkey uses Alt modifier - this may conflict with Windows menu access" -Source "Hotkey"
+            Write-VerboseLog -Message "  Alt hotkey registration can fail if the combination is reserved by Windows" -Source "Hotkey"
+        }
+        
+        Write-VerboseLog -Message "Start hotkey parsed - Modifiers: $($startParams.Modifiers) (Alt:$hasAlt Ctrl:$((($startParams.Modifiers -band 0x0002) -ne 0)) Shift:$((($startParams.Modifiers -band 0x0004) -ne 0)) Win:$((($startParams.Modifiers -band 0x0008) -ne 0))) VK: 0x$($startParams.VirtualKey.ToString('X2'))" -Source "Hotkey"
+        
+        if ($startParams.VirtualKey -gt 0) {
+            Write-VerboseLog -Message "Calling RegisterHotKey API for START hotkey" -Source "Hotkey"
+            $result = [HotkeyHelper]::RegisterHotKey($handle, $script:state.TypeThingHotkeyStartId,
+                $startParams.Modifiers, $startParams.VirtualKey)
+            if ($result) {
+                $startRegistered = $true
+                Write-RedballLog -Level 'INFO' -Message "TypeThing: Start hotkey registered ($($script:config.TypeThingStartHotkey))"
+                Write-VerboseLog -Message "Start hotkey registered successfully" -Source "Hotkey"
+            }
+            else {
+                $err = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
+                $errMsg = switch ($err) {
+                    1409 { "ERROR_HOTKEY_ALREADY_REGISTERED (1409) - Hotkey is already registered by another application" }
+                    5 { "ERROR_ACCESS_DENIED (5) - Insufficient privileges" }
+                    87 { "ERROR_INVALID_PARAMETER (87) - Invalid virtual key or modifiers" }
+                    default { "Unknown error code: $err" }
+                }
+                Write-RedballLog -Level 'WARN' -Message "TypeThing: Failed to register start hotkey ($($script:config.TypeThingStartHotkey)) - $errMsg"
+                Write-VerboseLog -Message "RegisterHotKey failed with Win32 error $err - $errMsg" -Source "Hotkey"
+                
+                if ($hasAlt) {
+                    Write-VerboseLog -Message "  HINT: Alt hotkeys often fail. Try Ctrl+Alt instead of just Alt" -Source "Hotkey"
+                }
+            }
+        }
+        else {
+            Write-RedballLog -Level 'WARN' -Message "TypeThing: Start hotkey '$($script:config.TypeThingStartHotkey)' parsed to VK=0 - check hotkey string format"
+            Write-VerboseLog -Message "VirtualKey is 0, invalid hotkey format" -Source "Hotkey"
+        }
+
+        Write-VerboseLog -Message "=== STOP HOTKEY REGISTRATION ===" -Source "Hotkey"
+        Write-VerboseLog -Message "Config stop hotkey: $($script:config.TypeThingStopHotkey)" -Source "Hotkey"
+        $stopParams = ConvertTo-HotkeyParams -HotkeyString $script:config.TypeThingStopHotkey
+        
+        # Check for Alt modifier specifically
+        $hasAlt = ($stopParams.Modifiers -band 0x0001) -ne 0
+        if ($hasAlt) {
+            Write-VerboseLog -Message "WARNING: Stop hotkey uses Alt modifier - this may conflict with Windows menu access" -Source "Hotkey"
+        }
+        
+        Write-VerboseLog -Message "Stop hotkey parsed - Modifiers: $($stopParams.Modifiers) (Alt:$hasAlt Ctrl:$((($stopParams.Modifiers -band 0x0002) -ne 0)) Shift:$((($stopParams.Modifiers -band 0x0004) -ne 0)) Win:$((($stopParams.Modifiers -band 0x0008) -ne 0))) VK: 0x$($stopParams.VirtualKey.ToString('X2'))" -Source "Hotkey"
+        
+        if ($stopParams.VirtualKey -gt 0) {
+            Write-VerboseLog -Message "Calling RegisterHotKey API for STOP hotkey" -Source "Hotkey"
+            $result = [HotkeyHelper]::RegisterHotKey($handle, $script:state.TypeThingHotkeyStopId,
+                $stopParams.Modifiers, $stopParams.VirtualKey)
+            if ($result) {
+                $stopRegistered = $true
+                Write-RedballLog -Level 'INFO' -Message "TypeThing: Stop hotkey registered ($($script:config.TypeThingStopHotkey))"
+                Write-VerboseLog -Message "Stop hotkey registered successfully" -Source "Hotkey"
+            }
+            else {
+                $err = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
+                $errMsg = switch ($err) {
+                    1409 { "ERROR_HOTKEY_ALREADY_REGISTERED (1409) - Hotkey is already registered by another application" }
+                    5 { "ERROR_ACCESS_DENIED (5) - Insufficient privileges" }
+                    87 { "ERROR_INVALID_PARAMETER (87) - Invalid virtual key or modifiers" }
+                    default { "Unknown error code: $err" }
+                }
+                Write-RedballLog -Level 'WARN' -Message "TypeThing: Failed to register stop hotkey ($($script:config.TypeThingStopHotkey)) - $errMsg"
+                Write-VerboseLog -Message "RegisterHotKey failed with Win32 error $err - $errMsg" -Source "Hotkey"
+                
+                if ($hasAlt) {
+                    Write-VerboseLog -Message "  HINT: Alt hotkeys often fail. Try Ctrl+Alt instead of just Alt" -Source "Hotkey"
+                }
+            }
+        }
+        else {
+            Write-RedballLog -Level 'WARN' -Message "TypeThing: Stop hotkey '$($script:config.TypeThingStopHotkey)' parsed to VK=0 - check hotkey string format"
+            Write-VerboseLog -Message "VirtualKey is 0, invalid hotkey format" -Source "Hotkey"
+        }
+
+        # Only mark as registered if at least one hotkey was successfully registered
+        if ($startRegistered -or $stopRegistered) {
+            $script:state.TypeThingHotkeysRegistered = $true
+            Write-VerboseLog -Message "Hotkeys marked as registered (start:$startRegistered stop:$stopRegistered)" -Source "Hotkey"
+        }
+        else {
+            Write-VerboseLog -Message "No hotkeys were registered successfully" -Source "Hotkey"
+        }
+    }
+    catch {
+        Write-RedballLog -Level 'WARN' -Message "TypeThing: Hotkey registration error: $_"
+        Write-VerboseLog -Message "Exception during registration: $_" -Source "Hotkey"
+    }
+}
+
+function Unregister-TypeThingHotkeys {
+    <#
+    .SYNOPSIS
+        Unregisters TypeThing global hotkeys.
+    #>
+    if (-not $script:state.TypeThingHotkeysRegistered) { return }
+    if (-not $script:state.TypeThingHotkeyWindow) { return }
+
+    $handle = $script:state.TypeThingHotkeyWindow.Handle
+    try {
+        [HotkeyHelper]::UnregisterHotKey($handle, $script:state.TypeThingHotkeyStartId) | Out-Null
+        [HotkeyHelper]::UnregisterHotKey($handle, $script:state.TypeThingHotkeyStopId) | Out-Null
+        $script:state.TypeThingHotkeysRegistered = $false
+        Write-RedballLog -Level 'INFO' -Message 'TypeThing: Hotkeys unregistered'
+    }
+    catch {
+        Write-RedballLog -Level 'DEBUG' -Message "TypeThing: Hotkey unregistration skipped: $_"
+    }
+}
+
+function Get-ClipboardText {
+    <#
+    .SYNOPSIS
+        Gets text content from the clipboard with retry logic.
+    #>
+    for ($attempt = 0; $attempt -lt 2; $attempt++) {
+        try {
+            $text = [System.Windows.Forms.Clipboard]::GetText()
+            if ([string]::IsNullOrEmpty($text)) { return $null }
+            return $text
+        }
+        catch {
+            if ($attempt -eq 0) {
+                Start-Sleep -Milliseconds 100
+            }
+            else {
+                Write-RedballLog -Level 'DEBUG' -Message "TypeThing: Clipboard access failed: $_"
+                return $null
+            }
+        }
+    }
+    return $null
+}
+
+function Send-TypeThingChar {
+    <#
+    .SYNOPSIS
+        Sends a single character via SendInput using KEYEVENTF_UNICODE.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [char]$Character
+    )
+
+    try {
+        $charCode = [uint16]$Character
+        $cbSize = [System.Runtime.InteropServices.Marshal]::SizeOf([type][INPUT])
+
+        # Handle newlines
+        if ($Character -eq "`n" -or $Character -eq "`r") {
+            if (-not $script:config.TypeThingTypeNewlines) { return }
+            # Build KEYBDINPUT structs fully before assigning to INPUT
+            # (PowerShell returns copies of nested value types, so $input.ki.wVk = x does NOT work)
+            $kiDown = New-Object KEYBDINPUT
+            $kiDown.wVk = [TypeThingInput]::VK_RETURN
+            $kiDown.dwFlags = 0
+            $inputDown = New-Object INPUT
+            $inputDown.type = [TypeThingInput]::INPUT_KEYBOARD
+            $inputDown.ki = $kiDown
+
+            $kiUp = New-Object KEYBDINPUT
+            $kiUp.wVk = [TypeThingInput]::VK_RETURN
+            $kiUp.dwFlags = [TypeThingInput]::KEYEVENTF_KEYUP
+            $inputUp = New-Object INPUT
+            $inputUp.type = [TypeThingInput]::INPUT_KEYBOARD
+            $inputUp.ki = $kiUp
+
+            [TypeThingInput]::SendInput(2, @($inputDown, $inputUp), $cbSize) | Out-Null
+            return
+        }
+
+        # Handle tab
+        if ($Character -eq "`t") {
+            $kiDown = New-Object KEYBDINPUT
+            $kiDown.wVk = [TypeThingInput]::VK_TAB
+            $kiDown.dwFlags = 0
+            $inputDown = New-Object INPUT
+            $inputDown.type = [TypeThingInput]::INPUT_KEYBOARD
+            $inputDown.ki = $kiDown
+
+            $kiUp = New-Object KEYBDINPUT
+            $kiUp.wVk = [TypeThingInput]::VK_TAB
+            $kiUp.dwFlags = [TypeThingInput]::KEYEVENTF_KEYUP
+            $inputUp = New-Object INPUT
+            $inputUp.type = [TypeThingInput]::INPUT_KEYBOARD
+            $inputUp.ki = $kiUp
+
+            [TypeThingInput]::SendInput(2, @($inputDown, $inputUp), $cbSize) | Out-Null
+            return
+        }
+
+        # Skip other control characters
+        if ([char]::IsControl($Character)) { return }
+
+        # Send unicode character via KEYEVENTF_UNICODE
+        $kiDown = New-Object KEYBDINPUT
+        $kiDown.wVk = 0
+        $kiDown.wScan = $charCode
+        $kiDown.dwFlags = [TypeThingInput]::KEYEVENTF_UNICODE
+        $inputDown = New-Object INPUT
+        $inputDown.type = [TypeThingInput]::INPUT_KEYBOARD
+        $inputDown.ki = $kiDown
+
+        $kiUp = New-Object KEYBDINPUT
+        $kiUp.wVk = 0
+        $kiUp.wScan = $charCode
+        $kiUp.dwFlags = ([TypeThingInput]::KEYEVENTF_UNICODE -bor [TypeThingInput]::KEYEVENTF_KEYUP)
+        $inputUp = New-Object INPUT
+        $inputUp.type = [TypeThingInput]::INPUT_KEYBOARD
+        $inputUp.ki = $kiUp
+
+        $sent = [TypeThingInput]::SendInput(2, @($inputDown, $inputUp), $cbSize)
+        if ($sent -eq 0) {
+            $err = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
+            Write-RedballLog -Level 'DEBUG' -Message "TypeThing: SendInput returned 0 (Win32 error: $err) - keystroke may have failed"
+        }
+    }
+    catch {
+        Write-RedballLog -Level 'DEBUG' -Message "TypeThing: Send char failed: $_"
+    }
+}
+
+function Start-TypeThingTyping {
+    <#
+    .SYNOPSIS
+        Reads the clipboard and begins simulated typing with a countdown.
+    #>
+    Write-VerboseLog -Message "Start-TypeThingTyping called" -Source "TypeThing"
+    
+    if ($script:state.TypeThingIsTyping) { 
+        Write-VerboseLog -Message "Already typing, ignoring request" -Source "TypeThing"
+        return 
+    }
+    if ($script:state.IsShuttingDown) { 
+        Write-VerboseLog -Message "Shutting down, ignoring request" -Source "TypeThing"
+        return 
+    }
+    if (-not $script:config.TypeThingEnabled) { 
+        Write-VerboseLog -Message "TypeThing disabled, ignoring request" -Source "TypeThing"
+        return 
+    }
+
+    Write-VerboseLog -Message "Getting clipboard text" -Source "TypeThing"
+    $text = Get-ClipboardText
+    if (-not $text) {
+        if ($script:config.TypeThingNotifications -and $script:state.NotifyIcon) {
+            try {
+                $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing', 'Clipboard is empty - copy some text first', [System.Windows.Forms.ToolTipIcon]::Warning)
+            }
+            catch {
+                Write-RedballLog -Level 'DEBUG' -Message "TypeThing balloon tip failed: $_"
+            }
+        }
+        Write-RedballLog -Level 'INFO' -Message 'TypeThing: Clipboard empty, nothing to type'
+        Write-VerboseLog -Message "Clipboard was empty" -Source "TypeThing"
+        return
+    }
+
+    Write-VerboseLog -Message "Clipboard contains $($text.Length) characters" -Source "TypeThing"
+
+    # Warn on very large clipboard
+    $largeClipboardThreshold = if ($script:config.TypeThingLargeClipboardThreshold) { $script:config.TypeThingLargeClipboardThreshold } else { 10000 }
+    if ($text.Length -gt $largeClipboardThreshold) {
+        $confirmResult = [System.Windows.Forms.MessageBox]::Show(
+            "The clipboard contains $($text.Length) characters. This may take a while.`n`nContinue?",
+            'TypeThing - Large Clipboard',
+            [System.Windows.Forms.MessageBoxButtons]::YesNo,
+            [System.Windows.Forms.MessageBoxIcon]::Warning)
+        if ($confirmResult -ne [System.Windows.Forms.DialogResult]::Yes) { return }
+    }
+
+    $script:state.TypeThingIsTyping = $true
+    $script:state.TypeThingShouldStop = $false
+    $script:state.TypeThingText = $text
+    $script:state.TypeThingIndex = 0
+    $script:state.TypeThingTotalChars = $text.Length
+    $script:state.TypeThingStartTime = Get-Date
+
+    # Update menu items
+    if ($script:state.TypeThingMenuType) { $script:state.TypeThingMenuType.Enabled = $false }
+    if ($script:state.TypeThingMenuStop) { $script:state.TypeThingMenuStop.Enabled = $true }
+    if ($script:state.TypeThingMenuStatus) { $script:state.TypeThingMenuStatus.Text = "Status: Typing 0/$($text.Length) chars..." }
+
+    Write-RedballLog -Level 'INFO' -Message "TypeThing: Starting to type $($text.Length) characters"
+
+    $delaySec = $script:config.TypeThingStartDelaySec
+    if ($delaySec -gt 0) {
+        $script:state.TypeThingCountdownRemaining = $delaySec
+
+        if ($script:config.TypeThingNotifications -and $script:state.NotifyIcon) {
+            try {
+                $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing',
+                    "Typing in $delaySec seconds... ($($script:config.TypeThingStopHotkey) to cancel)",
+                    [System.Windows.Forms.ToolTipIcon]::Info)
+            }
+            catch {
+                Write-RedballLog -Level 'DEBUG' -Message "TypeThing balloon tip failed: $_"
+            }
+        }
+
+        # Create countdown timer
+        if (-not $script:state.TypeThingCountdown) {
+            $script:state.TypeThingCountdown = New-Object System.Windows.Forms.Timer
+            $script:state.TypeThingCountdown.Interval = 1000
+            $script:state.TypeThingCountdown.add_Tick({
+                    $script:state.TypeThingCountdownRemaining--
+                    if ($script:state.TypeThingShouldStop) {
+                        $script:state.TypeThingCountdown.Stop()
+                        return
+                    }
+                    if ($script:state.TypeThingMenuStatus) {
+                        $script:state.TypeThingMenuStatus.Text = "Status: Typing in $($script:state.TypeThingCountdownRemaining)s..."
+                    }
+                    if ($script:state.TypeThingCountdownRemaining -le 0) {
+                        $script:state.TypeThingCountdown.Stop()
+                        Start-TypeThingTimer
+                    }
+                })
+        }
+        $script:state.TypeThingCountdown.Start()
+    }
+    else {
+        Start-TypeThingTimer
+    }
+}
+
+function Start-TypeThingTimer {
+    <#
+    .SYNOPSIS
+        Creates and starts the per-character typing timer.
+    #>
+    if (-not $script:state.TypeThingTimer) {
+        $script:state.TypeThingTimer = New-Object System.Windows.Forms.Timer
+        $script:state.TypeThingTimer.add_Tick({
+                if ($script:state.TypeThingShouldStop -or $script:state.IsShuttingDown) {
+                    Stop-TypeThingTyping
+                    return
+                }
+
+                if ($script:state.TypeThingIndex -ge $script:state.TypeThingTotalChars) {
+                    Complete-TypeThingTyping
+                    return
+                }
+
+                try {
+                    $char = $script:state.TypeThingText[$script:state.TypeThingIndex]
+                    # Skip \r when followed by \n (Windows \r\n) to avoid double-Enter
+                    if ($char -eq "`r" -and ($script:state.TypeThingIndex + 1) -lt $script:state.TypeThingTotalChars -and $script:state.TypeThingText[$script:state.TypeThingIndex + 1] -eq "`n") {
+                        $script:state.TypeThingIndex++
+                        return
+                    }
+                    Send-TypeThingChar -Character $char
+                    $script:state.TypeThingIndex++
+
+                    # Calculate next delay
+                    $minDelay = [Math]::Max(10, $script:config.TypeThingMinDelayMs)
+                    $maxDelay = [Math]::Max($minDelay + 1, $script:config.TypeThingMaxDelayMs)
+                    $delay = Get-Random -Minimum $minDelay -Maximum $maxDelay
+
+                    # Random pause for human-like feel
+                    if ($script:config.TypeThingAddRandomPauses) {
+                        $roll = Get-Random -Maximum 100
+                        if ($roll -lt $script:config.TypeThingRandomPauseChance) {
+                            $delay += Get-Random -Maximum ([Math]::Max(1, $script:config.TypeThingRandomPauseMaxMs))
+                        }
+                    }
+
+                    $script:state.TypeThingTimer.Interval = $delay
+
+                    # Update status periodically (every 10 chars to reduce overhead)
+                    if ($script:state.TypeThingIndex % 10 -eq 0 -and $script:state.TypeThingMenuStatus) {
+                        $script:state.TypeThingMenuStatus.Text = "Status: Typing $($script:state.TypeThingIndex)/$($script:state.TypeThingTotalChars) chars..."
+                    }
+                }
+                catch {
+                    Write-RedballLog -Level 'WARN' -Message "TypeThing: Error during typing: $_"
+                    Stop-TypeThingTyping
+                }
+            })
+    }
+
+    $minDelay = [Math]::Max(10, $script:config.TypeThingMinDelayMs)
+    $maxDelay = [Math]::Max($minDelay + 1, $script:config.TypeThingMaxDelayMs)
+    $script:state.TypeThingTimer.Interval = Get-Random -Minimum $minDelay -Maximum $maxDelay
+    $script:state.TypeThingTimer.Start()
+
+    if ($script:state.TypeThingMenuStatus) {
+        $script:state.TypeThingMenuStatus.Text = "Status: Typing 0/$($script:state.TypeThingTotalChars) chars..."
+    }
+}
+
+function Stop-TypeThingTyping {
+    <#
+    .SYNOPSIS
+        Immediately stops typing and resets state.
+    #>
+    $script:state.TypeThingShouldStop = $true
+
+    if ($script:state.TypeThingTimer) {
+        $script:state.TypeThingTimer.Stop()
+    }
+    if ($script:state.TypeThingCountdown) {
+        $script:state.TypeThingCountdown.Stop()
+    }
+
+    $typed = $script:state.TypeThingIndex
+    $total = $script:state.TypeThingTotalChars
+
+    # Clear sensitive data from memory
+    $script:state.TypeThingText = ''
+    $script:state.TypeThingIndex = 0
+    $script:state.TypeThingTotalChars = 0
+    $script:state.TypeThingIsTyping = $false
+    $script:state.TypeThingShouldStop = $false
+    $script:state.TypeThingStartTime = $null
+
+    # Update menu items
+    if ($script:state.TypeThingMenuType) { $script:state.TypeThingMenuType.Enabled = $true }
+    if ($script:state.TypeThingMenuStop) { $script:state.TypeThingMenuStop.Enabled = $false }
+    if ($script:state.TypeThingMenuStatus) { $script:state.TypeThingMenuStatus.Text = 'Status: Idle' }
+
+    if ($typed -gt 0) {
+        Write-RedballLog -Level 'INFO' -Message "TypeThing: Stopped by user at $typed/$total chars"
+        if ($script:config.TypeThingNotifications -and $script:state.NotifyIcon) {
+            try {
+                $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing',
+                    "Typing stopped ($typed/$total characters typed)",
+                    [System.Windows.Forms.ToolTipIcon]::Warning)
+            }
+            catch {
+                Write-RedballLog -Level 'DEBUG' -Message "TypeThing balloon tip failed: $_"
+            }
+        }
+    }
+}
+
+function Complete-TypeThingTyping {
+    <#
+    .SYNOPSIS
+        Called when typing finishes all characters successfully.
+    #>
+    if ($script:state.TypeThingTimer) {
+        $script:state.TypeThingTimer.Stop()
+    }
+
+    $total = $script:state.TypeThingTotalChars
+    $elapsed = if ($script:state.TypeThingStartTime) {
+        ((Get-Date) - $script:state.TypeThingStartTime).TotalSeconds
+    }
+    else { 0 }
+    $elapsedStr = [Math]::Round($elapsed, 1)
+
+    # Clear sensitive data from memory
+    $script:state.TypeThingText = ''
+    $script:state.TypeThingIndex = 0
+    $script:state.TypeThingTotalChars = 0
+    $script:state.TypeThingIsTyping = $false
+    $script:state.TypeThingShouldStop = $false
+    $script:state.TypeThingStartTime = $null
+
+    # Update menu items
+    if ($script:state.TypeThingMenuType) { $script:state.TypeThingMenuType.Enabled = $true }
+    if ($script:state.TypeThingMenuStop) { $script:state.TypeThingMenuStop.Enabled = $false }
+    if ($script:state.TypeThingMenuStatus) { $script:state.TypeThingMenuStatus.Text = 'Status: Idle' }
+
+    Write-RedballLog -Level 'INFO' -Message "TypeThing: Completed $total chars in ${elapsedStr}s"
+
+    if ($script:config.TypeThingNotifications -and $script:state.NotifyIcon) {
+        try {
+            $script:state.NotifyIcon.ShowBalloonTip(2000, 'TypeThing',
+                "Typing complete ($total characters in ${elapsedStr}s)",
+                [System.Windows.Forms.ToolTipIcon]::Info)
+        }
+        catch {
+            Write-RedballLog -Level 'DEBUG' -Message "TypeThing balloon tip failed: $_"
+        }
+    }
+}
+
 # --- TypeThing Initialization ---
 if ($script:config.TypeThingEnabled) {
     try {
