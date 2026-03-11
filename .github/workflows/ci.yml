@@ -17,7 +17,7 @@ on:
 
 jobs:
   test:
-    name: Run Pester Tests (${{ matrix.shell }})
+    name: Run Pester Tests
     runs-on: windows-latest
     strategy:
       matrix:
