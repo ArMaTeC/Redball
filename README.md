@@ -513,12 +513,12 @@ Redball/
 │   ├── Redball-License.rtf       # License for installer UI
 │   └── redball.png               # Readme icon image
 ├── dist/                         # Build output (MSI, EXE)
+├── docs/                         # Documentation (CHANGELOG, LICENSE, etc.)
 ├── Redball.ps1                   # Main application script
 ├── Redball.json                  # Configuration file
 ├── Redball.Tests.ps1             # Pester test suite
 ├── locales.json                  # External locale overrides (en, es, fr, de)
 ├── .buildversion                 # Auto-incremented build number
-├── CHANGELOG.md                  # Version history
 ├── LICENSE                       # MIT License
 └── README.md                     # This file
 ```

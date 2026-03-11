@@ -117,7 +117,7 @@
       </Component>
 
       <Component Id="ThirdPartyComponent" Guid="F3A4B5C6-7D8E-9F0A-1B2C-3D4E5F6A7B8C">
-        <File Id="ThirdPartyFile" Source="..\THIRD-PARTY-NOTICES.md" KeyPath="yes" />
+        <File Id="ThirdPartyFile" Source="..\docs\THIRD-PARTY-NOTICES.md" KeyPath="yes" />
       </Component>
 
       <Component Id="LaunchVbsComponent" Guid="3D6A2B1C-8F4E-4A9D-B5C7-2E1F9D3A4B6E">

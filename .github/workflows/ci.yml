@@ -191,7 +191,8 @@ jobs:
         Copy-Item ./locales.json "./$releaseName/"
         Copy-Item ./README.md "./$releaseName/"
         Copy-Item ./LICENSE "./$releaseName/"
-        Copy-Item ./CHANGELOG.md "./$releaseName/"
+        Copy-Item ./docs/CHANGELOG.md "./$releaseName/"
+        Copy-Item ./docs/THIRD-PARTY-NOTICES.md "./$releaseName/"
 
         # Create zip
         Compress-Archive -Path "./$releaseName" -DestinationPath "./$releaseName.zip" -Force
