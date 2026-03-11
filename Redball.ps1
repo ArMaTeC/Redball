@@ -35,7 +35,7 @@
     .\Redball.ps1 -Status | ConvertFrom-Json
     Get current Redball status programmatically.
 .NOTES
-    Version: 2.1.3
+    Version: 2.1.4
     Requires: PowerShell 5.1+, Windows 8.1+
 #>
 [CmdletBinding()]
@@ -81,7 +81,7 @@ param(
     [switch]$ExitOnComplete
 )
 
-$script:VERSION = '2.1.3'
+$script:VERSION = '2.1.4'
 $script:APP_NAME = 'Redball'
 $script:IsPS7 = $PSVersionTable.PSVersion.Major -ge 7
 
