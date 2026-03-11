@@ -1,0 +1,132 @@
+name: Cleanup Failed Workflow Artifacts
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      retention_days:
+        description: 'Delete artifacts older than this many days'
+        required: false
+        default: '7'
+        type: string
+      delete_failed_only:
+        description: 'Only delete artifacts from failed workflows'
+        required: false
+        default: 'true'
+        type: string
+
+jobs:
+  cleanup:
+    name: Clean Up Old Artifacts
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+    - name: Delete Old Artifacts
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const retentionDays = parseInt('${{ github.event.inputs.retention_days || '7' }}');
+          const deleteFailedOnly = '${{ github.event.inputs.delete_failed_only || 'true' }}' === 'true';
+          const cutoffDate = new Date();
+          cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
+
+          console.log(`Cleaning up artifacts older than ${retentionDate.toISOString()}`);
+          console.log(`Failed workflows only: ${deleteFailedOnly}`);
+
+          // List all workflow runs
+          const runs = await github.rest.actions.listWorkflowRunsForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100
+          });
+
+          let deletedCount = 0;
+          let skippedCount = 0;
+
+          for (const run of runs.data.workflow_runs) {
+            const runDate = new Date(run.created_at);
+
+            // Skip if run is newer than retention period
+            if (runDate > cutoffDate) {
+              continue;
+            }
+
+            // Skip successful runs if we only want failed ones
+            if (deleteFailedOnly && run.conclusion === 'success') {
+              skippedCount++;
+              continue;
+            }
+
+            // List artifacts for this run
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: run.id
+            });
+
+            for (const artifact of artifacts.data.artifacts) {
+              console.log(`Deleting artifact: ${artifact.name} (from run ${run.id}, conclusion: ${run.conclusion})`);
+
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id
+              });
+
+              deletedCount++;
+            }
+          }
+
+          console.log(`Cleanup complete: ${deletedCount} artifacts deleted, ${skippedCount} runs skipped (successful within retention)`);
+
+    - name: Delete Old Workflow Runs
+      uses: actions/github-script@v7
+      if: github.event.inputs.delete_failed_only != 'true'
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const retentionDays = parseInt('${{ github.event.inputs.retention_days || '30' }}');
+          const cutoffDate = new Date();
+          cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
+
+          console.log(`Deleting workflow runs older than ${cutoffDate.toISOString()}`);
+
+          const runs = await github.rest.actions.listWorkflowRunsForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100,
+            status: 'completed'
+          });
+
+          let deletedCount = 0;
+
+          for (const run of runs.data.workflow_runs) {
+            const runDate = new Date(run.created_at);
+
+            if (runDate > cutoffDate) {
+              continue;
+            }
+
+            // Only delete failed/skipped/cancelled runs, keep successful ones
+            if (run.conclusion === 'success') {
+              continue;
+            }
+
+            console.log(`Deleting workflow run: ${run.id} (${run.conclusion}, ${run.created_at})`);
+
+            await github.rest.actions.deleteWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: run.id
+            });
+
+            deletedCount++;
+          }
+
+          console.log(`Deleted ${deletedCount} old workflow runs`);
