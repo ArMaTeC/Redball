@@ -25,18 +25,19 @@ jobs:
           - powershell
           - pwsh
       fail-fast: false
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
     - name: Setup PowerShell
-      shell: ${{ matrix.shell }}
       run: |
         $PSVersionTable
 
     - name: Install Pester
-      shell: ${{ matrix.shell }}
       run: |
         Remove-Module Pester -Force -ErrorAction SilentlyContinue
         Install-Module -Name Pester -Force -SkipPublisherCheck -RequiredVersion 5.5.0
@@ -44,7 +45,6 @@ jobs:
         Get-Module Pester | Select-Object Name, Version
 
     - name: Run Pester Tests
-      shell: ${{ matrix.shell }}
       run: |
         Import-Module Pester -RequiredVersion 5.5.0
         $config = New-PesterConfiguration
