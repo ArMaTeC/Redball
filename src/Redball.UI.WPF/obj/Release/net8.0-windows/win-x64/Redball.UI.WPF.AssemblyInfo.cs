@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Redball.UI.WPF")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("3.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("3.0.0+1e1945282e81ea1a6154850354729d4a88a32286")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("3.0.0+ba4dd8337454ed0cfe90dcaf682f47b3e2ed1729")]
 [assembly: System.Reflection.AssemblyProductAttribute("Redball.UI.WPF")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Redball.UI.WPF")]
 [assembly: System.Reflection.AssemblyVersionAttribute("3.0.0.0")]

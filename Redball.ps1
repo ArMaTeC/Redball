@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 <#requires -RunAsAdministrator#>
 <#
 # Copyright (c) 2024-2026 ArMaTeC / Redball Contributors
@@ -84,7 +84,7 @@ param(
     [switch]$UseModernUI
 )
 
-$script:VERSION = '2.1.4'
+$script:VERSION = '2.1.5'
 $script:APP_NAME = 'Redball'
 $script:IsPS7 = $PSVersionTable.PSVersion.Major -ge 7
 
@@ -2087,7 +2087,7 @@ function Unregister-GlobalHotkey {
 
 # --- Settings Dialog Functions ---
 
-function Show-RedballSettings {
+function Show-RedballSetting {
     <#
     .SYNOPSIS
         Displays the main Redball settings dialog.
@@ -2122,7 +2122,7 @@ function Show-RedballSettings {
     }
 }
 
-function Show-TypeThingSettings {
+function Show-TypeThingSetting {
     <#
     .SYNOPSIS
         Displays the TypeThing settings dialog.
@@ -2392,7 +2392,7 @@ if ($script:config.TypeThingEnabled) {
     $typeThingSettingsItem.add_Click({
             try {
                 if ($script:state.IsShuttingDown) { return }
-                Show-TypeThingSettings
+                Show-TypeThingSetting
             }
             catch {
                 Write-RedballLog -Level 'WARN' -Message "TypeThing: Settings menu error: $_"
@@ -2412,7 +2412,7 @@ $settingsMenuItem.AccessibleDescription = 'Open the full settings dialog to conf
 $settingsMenuItem.add_Click({
         try {
             if ($script:state.IsShuttingDown) { return }
-            Show-RedballSettings
+            Show-RedballSetting
         }
         catch {
             Write-RedballLog -Level 'WARN' -Message "Settings menu error: $_"

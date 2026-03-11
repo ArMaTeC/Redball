@@ -1,9 +1,9 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Bumps the version number in Redball.ps1
+    Bumps the version number in Redball.ps1 and Redball.UI.WPF.csproj
 .DESCRIPTION
-    Increments the version number in Redball.ps1 and optionally commits/pushes the change.
+    Increments the version number in Redball.ps1 and Redball.UI.WPF.csproj and optionally commits/pushes the change.
     Supports bumping major, minor, or patch version components.
 .PARAMETER Component
     Which version component to bump: Major, Minor, or Patch (default: Patch)
@@ -38,7 +38,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$scriptPath = Join-Path $PSScriptRoot 'Redball.ps1'
+$projectRoot = Split-Path $PSScriptRoot -Parent
+$scriptPath = Join-Path $projectRoot 'Redball.ps1'
+$wpfProjectPath = Join-Path $projectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
 
 if (-not (Test-Path $scriptPath)) {
     throw "Redball.ps1 not found at: $scriptPath"
@@ -79,11 +81,26 @@ switch ($Component) {
 $newVersion = "$major.$minor.$patch"
 Write-Host "New version: $newVersion" -ForegroundColor Green
 
-# Update file
+# Update Redball.ps1
 $newContent = $content -replace $versionPattern, "`$script:VERSION = '$newVersion'"
 Set-Content -Path $scriptPath -Value $newContent -NoNewline
-
 Write-Host "Updated $scriptPath" -ForegroundColor Green
+
+# Update WPF .csproj if it exists
+if (Test-Path $wpfProjectPath) {
+    $csprojContent = Get-Content $wpfProjectPath -Raw
+    
+    # Update <Version>, <FileVersion>, and <AssemblyVersion>
+    $csprojContent = $csprojContent -replace '(<Version>)[0-9]+\.[0-9]+\.[0-9]+(</Version>)', "`$1$newVersion`$2"
+    $csprojContent = $csprojContent -replace '(<FileVersion>)[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?(</FileVersion>)', "`$1$newVersion.0`$3"
+    $csprojContent = $csprojContent -replace '(<AssemblyVersion>)[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?(</AssemblyVersion>)', "`$1$newVersion.0`$3"
+    
+    Set-Content -Path $wpfProjectPath -Value $csprojContent -NoNewline
+    Write-Host "Updated $wpfProjectPath" -ForegroundColor Green
+}
+else {
+    Write-Warning "WPF project not found at: $wpfProjectPath"
+}
 
 # Commit if requested
 if ($Commit -or $Push) {
@@ -91,6 +108,9 @@ if ($Commit -or $Push) {
 
     Write-Host "Committing with message: $commitMessage" -ForegroundColor Yellow
     git add $scriptPath
+    if (Test-Path $wpfProjectPath) {
+        git add $wpfProjectPath
+    }
     git commit -m $commitMessage
 
     if ($Push) {

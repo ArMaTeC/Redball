@@ -9,9 +9,9 @@
     <RootNamespace>Redball.UI</RootNamespace>
     <AssemblyName>Redball.UI.WPF</AssemblyName>
     <ApplicationIcon>Assets\redball.ico</ApplicationIcon>
-    <Version>3.0.0</Version>
-    <FileVersion>3.0.0.0</FileVersion>
-    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    $12.1.5</Version>
+    $12.1.5.0</FileVersion>
+    $12.1.5.0</AssemblyVersion>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
