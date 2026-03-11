@@ -3613,6 +3613,7 @@ if ($UseModernUI) {
         if (Test-Path $wpfPath) {
             Start-Process -FilePath $wpfPath -WindowStyle Hidden
             Write-Output 'Redball v3.0 modern UI started. Use tray icon to control.'
+            exit 0
         }
         else {
             Write-Warning "Modern UI not found at: $wpfPath"

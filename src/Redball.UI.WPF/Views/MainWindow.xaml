@@ -19,7 +19,7 @@
         <!-- Tray Icon (primary UI for v3.0) -->
         <tb:TaskbarIcon x:Name="TrayIcon"
                        IconSource="/Assets/redball.ico"
-                       ToolTipText="{Binding StatusText}"
+                       ToolTipText="Redball v3.0"
                        LeftClickCommand="{Binding ToggleActiveCommand}"
                        Visibility="Visible">
             <tb:TaskbarIcon.ContextMenu>
@@ -36,10 +36,9 @@
                     <Separator/>
 
                     <!-- Toggle Action -->
-                    <MenuItem Header="{Binding IsActive, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Pause Keep-Awake|Resume Keep-Awake'}"
-                             Command="{Binding ToggleActiveCommand}">
+                    <MenuItem Header="Pause Keep-Awake" Command="{Binding PauseKeepAwakeCommand}">
                         <MenuItem.Icon>
-                            <Ellipse Width="12" Height="12" Fill="{Binding IsActive, Converter={StaticResource StatusToBrushConverter}}"/>
+                            <Ellipse Width="12" Height="12" Fill="{StaticResource AccentBrush}"/>
                         </MenuItem.Icon>
                     </MenuItem>
                     <Separator/>
