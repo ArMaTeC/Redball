@@ -13,6 +13,8 @@
     <!-- UI pages (Welcome, License, Feature selection, InstallDir, Progress, Exit) -->
     <ui:WixUI Id="WixUI_FeatureTree" />
     <WixVariable Id="WixUILicenseRtf" Value="Redball-License.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp" />
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
 
     <Icon Id="RedballIcon" SourceFile="Redball.ico" />
@@ -142,7 +144,8 @@
                   Name="Redball"
                   Description="Launch Redball keep-awake utility"
                   Target="[INSTALLFOLDER]Redball.UI.WPF.exe"
-                  WorkingDirectory="INSTALLFOLDER" />
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="RedballIcon" />
         <RemoveFolder Id="RemoveMenuFolder" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\Redball" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
       </Component>
@@ -152,7 +155,8 @@
                   Name="Redball"
                   Description="Launch Redball keep-awake utility"
                   Target="[INSTALLFOLDER]Redball.UI.WPF.exe"
-                  WorkingDirectory="INSTALLFOLDER" />
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="RedballIcon" />
         <RegistryValue Root="HKCU" Key="Software\Redball" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </ComponentGroup>
@@ -163,7 +167,8 @@
                   Name="Redball"
                   Description="Start Redball when Windows signs in"
                   Target="[INSTALLFOLDER]Redball.UI.WPF.exe"
-                  WorkingDirectory="INSTALLFOLDER" />
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="RedballIcon" />
         <RegistryValue Root="HKCU" Key="Software\Redball" Name="StartupShortcut" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </ComponentGroup>

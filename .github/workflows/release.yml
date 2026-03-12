@@ -105,6 +105,46 @@ jobs:
         Write-Host "Published WPF app to dist/wpf-publish"
         Get-ChildItem dist/wpf-publish/Redball.UI.WPF.exe | Select-Object Name, @{N='SizeMB';E={[math]::Round($_.Length/1MB,1)}}
 
+    - name: Sign EXE
+      shell: pwsh
+      env:
+        CODE_SIGNING_CERT: ${{ secrets.CODE_SIGNING_CERT }}
+        CODE_SIGNING_PASSWORD: ${{ secrets.CODE_SIGNING_PASSWORD }}
+      run: |
+        $exePath = "dist/wpf-publish/Redball.UI.WPF.exe"
+        $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" -Recurse | Sort-Object FullName -Descending | Select-Object -First 1
+        if (-not $signtool) {
+          Write-Warning "signtool.exe not found - skipping EXE signing"
+          exit 0
+        }
+        Write-Host "Using signtool: $($signtool.FullName)"
+
+        if ($env:CODE_SIGNING_CERT) {
+          # Decode certificate from secret
+          $certBytes = [Convert]::FromBase64String($env:CODE_SIGNING_CERT)
+          $certPath = "$env:RUNNER_TEMP\code-signing.pfx"
+          [IO.File]::WriteAllBytes($certPath, $certBytes)
+          Write-Host "Signing EXE with production certificate..."
+          & $signtool.FullName sign /f $certPath /p $env:CODE_SIGNING_PASSWORD /tr http://timestamp.digicert.com /td sha256 /fd sha256 $exePath
+          if ($LASTEXITCODE -ne 0) { Write-Warning "EXE signing failed (exit $LASTEXITCODE)" }
+          else { Write-Host "EXE signed successfully" }
+          Remove-Item $certPath -Force
+        } else {
+          # Create self-signed cert for development builds
+          Write-Host "No CODE_SIGNING_CERT secret found - creating self-signed certificate..."
+          $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=Redball Development, O=ArMaTeC" -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(1)
+          $certPath = "$env:RUNNER_TEMP\dev-signing.pfx"
+          $pwd = ConvertTo-SecureString -String "RedballDev2024" -Force -AsPlainText
+          Export-PfxCertificate -Cert $cert -FilePath $certPath -Password $pwd | Out-Null
+          & $signtool.FullName sign /f $certPath /p "RedballDev2024" /tr http://timestamp.digicert.com /td sha256 /fd sha256 $exePath
+          if ($LASTEXITCODE -ne 0) { Write-Warning "EXE signing failed (exit $LASTEXITCODE)" }
+          else { Write-Host "EXE signed with development certificate" }
+          Remove-Item $certPath -Force
+          Remove-Item "Cert:\CurrentUser\My\$($cert.Thumbprint)" -Force
+        }
+        # Verify signature
+        & $signtool.FullName verify /pa $exePath 2>&1 | Write-Host
+
     - name: Debug info
       shell: bash
       run: |
@@ -140,85 +180,81 @@ jobs:
         cp "dist/Redball-${VERSION}.msi" "dist/Redball.msi"
         echo "OK: MSI produced ($(wc -c < dist/Redball.msi) bytes)"
 
-    - name: Upload unsigned MSI
+    - name: Sign MSI
+      shell: pwsh
+      env:
+        CODE_SIGNING_CERT: ${{ secrets.CODE_SIGNING_CERT }}
+        CODE_SIGNING_PASSWORD: ${{ secrets.CODE_SIGNING_PASSWORD }}
+      run: |
+        $version = "${{ needs.tag.outputs.version }}"
+        $msiPath = "dist/Redball.msi"
+        if (-not (Test-Path $msiPath)) {
+          Write-Warning "MSI not found at $msiPath - skipping signing"
+          exit 0
+        }
+        $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" -Recurse | Sort-Object FullName -Descending | Select-Object -First 1
+        if (-not $signtool) {
+          Write-Warning "signtool.exe not found - skipping MSI signing"
+          exit 0
+        }
+
+        if ($env:CODE_SIGNING_CERT) {
+          $certBytes = [Convert]::FromBase64String($env:CODE_SIGNING_CERT)
+          $certPath = "$env:RUNNER_TEMP\code-signing.pfx"
+          [IO.File]::WriteAllBytes($certPath, $certBytes)
+          Write-Host "Signing MSI with production certificate..."
+          & $signtool.FullName sign /f $certPath /p $env:CODE_SIGNING_PASSWORD /tr http://timestamp.digicert.com /td sha256 /fd sha256 /d "Redball v$version" $msiPath
+          if ($LASTEXITCODE -ne 0) { Write-Warning "MSI signing failed (exit $LASTEXITCODE)" }
+          else { Write-Host "MSI signed successfully" }
+          Remove-Item $certPath -Force
+        } else {
+          Write-Host "No CODE_SIGNING_CERT secret - creating self-signed certificate for MSI..."
+          $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=Redball Development, O=ArMaTeC" -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(1)
+          $certPath = "$env:RUNNER_TEMP\dev-signing.pfx"
+          $pwd = ConvertTo-SecureString -String "RedballDev2024" -Force -AsPlainText
+          Export-PfxCertificate -Cert $cert -FilePath $certPath -Password $pwd | Out-Null
+          & $signtool.FullName sign /f $certPath /p "RedballDev2024" /tr http://timestamp.digicert.com /td sha256 /fd sha256 /d "Redball v$version" $msiPath
+          if ($LASTEXITCODE -ne 0) { Write-Warning "MSI signing failed (exit $LASTEXITCODE)" }
+          else { Write-Host "MSI signed with development certificate" }
+          Remove-Item $certPath -Force
+          Remove-Item "Cert:\CurrentUser\My\$($cert.Thumbprint)" -Force
+        }
+        & $signtool.FullName verify /pa $msiPath 2>&1 | Write-Host
+
+    - name: Upload MSI
       id: upload
       uses: actions/upload-artifact@v5
       with:
-        name: redball-unsigned
+        name: redball-msi
         path: ./dist/Redball.msi
-        retention-days: 7
-        if-no-files-found: error
-
-  sign:
-    name: Sign MSI
-    needs: [tag, build]
-    runs-on: ubuntu-latest
-    if: needs.tag.outputs.created == 'true'
-    continue-on-error: true
-    permissions:
-      id-token: write
-      actions: read
-    outputs:
-      signed: ${{ steps.sign.outcome == 'success' && 'true' || 'false' }}
-
-    steps:
-    - name: Submit signing request to SignPath
-      id: sign
-      uses: signpath/github-action-submit-signing-request@v1
-      with:
-        api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
-        organization-id: '54610b87-ea22-4e3b-90ae-34fba7b90267'
-        project-slug: 'redball'
-        signing-policy-slug: 'redball'
-        artifact-configuration-slug: 'Redball-MSI'
-        github-artifact-id: '${{ needs.build.outputs.artifact-id }}'
-        wait-for-completion: true
-        output-artifact-directory: './signed'
-        wait-for-completion-timeout-in-seconds: 600
-
-    - name: Upload signed MSI
-      if: steps.sign.outcome == 'success'
-      uses: actions/upload-artifact@v5
-      with:
-        name: redball-signed
-        path: ./signed/Redball.msi
         retention-days: 7
         if-no-files-found: error
 
   release:
     name: Create GitHub Release
-    needs: [tag, build, sign]
+    needs: [tag, build]
     runs-on: ubuntu-latest
-    if: always() && needs.tag.outputs.created == 'true' && needs.build.result == 'success'
+    if: needs.tag.outputs.created == 'true' && needs.build.result == 'success'
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v5
 
-    - name: Download signed MSI
-      if: needs.sign.outputs.signed == 'true'
+    - name: Download MSI
       uses: actions/download-artifact@v5
       with:
-        name: redball-signed
-        path: ./release
-
-    - name: Download unsigned MSI (fallback)
-      if: needs.sign.outputs.signed != 'true'
-      uses: actions/download-artifact@v5
-      with:
-        name: redball-unsigned
+        name: redball-msi
         path: ./release
 
     - name: Verify MSI exists
       shell: bash
       run: |
         ls -la ./release/
-        SIGNED="${{ needs.sign.outputs.signed == 'true' && 'SIGNED' || 'UNSIGNED' }}"
-        echo "MSI is ${SIGNED}"
         if [ ! -f "./release/Redball.msi" ]; then
           echo "ERROR: Redball.msi not found"
           exit 1
         fi
+        echo "MSI ready for release"
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
