@@ -4,3 +4,4 @@ Redball.log
 .redball-initialized
 typingthing.txt
 dist/*
+src/Redball.UI.WPF/obj/*

@@ -133,7 +133,30 @@ public class MainViewModel : INotifyPropertyChanged
         // Confirm exit when keep-awake is active
         if (_isActive)
         {
+            // Get the currently active window to use as owner (handles About/Settings windows being open)
+            Window? ownerWindow = null;
+            if (Application.Current.Windows.Count > 0)
+            {
+                // Find the active window or fall back to main window
+                foreach (Window window in Application.Current.Windows)
+                {
+                    if (window.IsActive && window.IsVisible)
+                    {
+                        ownerWindow = window;
+                        break;
+                    }
+                }
+            }
+            // Fall back to main window if no active window found
+            if (ownerWindow == null)
+            {
+                ownerWindow = _mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mw) 
+                    ? mw 
+                    : Application.Current.MainWindow;
+            }
+
             var result = System.Windows.MessageBox.Show(
+                ownerWindow,
                 "Redball is currently keeping your system awake. Are you sure you want to exit?",
                 "Confirm Exit",
                 MessageBoxButton.OKCancel,
