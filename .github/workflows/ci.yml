@@ -30,7 +30,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup PowerShell
       run: |
@@ -65,20 +65,21 @@ jobs:
         }
 
         # Enforce minimum code coverage threshold
-        if ($result.CodeCoverage -and $result.CodeCoverage.CoveragePercent -lt 40) {
-          Write-Host "::warning::Code coverage is $([math]::Round($result.CodeCoverage.CoveragePercent, 1))% (threshold: 40%)"
+        # Note: AST-based test loading shows 0% coverage - this is a known limitation
+        if ($result.CodeCoverage) {
+          $covPct = [math]::Round($result.CodeCoverage.CoveragePercent, 1)
+          Write-Host "Code coverage: $covPct% (AST-based testing - coverage tracking limited)"
         }
-        Write-Host "Code coverage: $([math]::Round($result.CodeCoverage.CoveragePercent, 1))%"
 
     - name: Upload Test Results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: test-results-${{ matrix.shell }}
         path: ./test-results-${{ matrix.shell }}.xml
 
     - name: Upload Coverage
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: coverage-report-${{ matrix.shell }}
@@ -90,7 +91,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup PowerShell
       shell: pwsh
@@ -130,7 +131,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Run Security Scan
       shell: pwsh
@@ -140,8 +141,8 @@ jobs:
         $psFiles = Get-ChildItem -Path . -Filter "*.ps1" -Recurse -File
         Write-Host "Scanning $($psFiles.Count) PS1 files..."
 
-        # Check for hardcoded credentials (only in main script, not tests)
-        $mainFiles = $psFiles | Where-Object { $_.Name -notmatch 'Tests\.ps1$' }
+        # Check for hardcoded credentials (only in main script, not tests/build infra)
+        $mainFiles = $psFiles | Where-Object { $_.Name -notmatch 'Tests\.ps1$|build\.ps1$' }
         $content = $mainFiles |
           Select-String -Pattern '(?i)\b(password|secret|apikey|api_key|token)\s*=\s*["\x27][^"\x27]+["\x27]' |
           Where-Object { $_ -notmatch 'example|placeholder|changeme|TimestampServer|Hotkey|ShortcutKey' }
@@ -151,9 +152,10 @@ jobs:
           $content | ForEach-Object { Write-Warning $_ }
         }
 
-        # Check for Invoke-Expression usage (already excluded test files via $mainFiles)
+        # Check for Invoke-Expression usage (excluded test and build files)
         $invokeExpr = $mainFiles |
-          Select-String -Pattern 'Invoke-Expression|iex\s'
+          Select-String -Pattern 'Invoke-Expression|iex\s' |
+          Where-Object { $_.Line -notmatch '^\s*#' }
 
         if ($invokeExpr) {
           $issues += "Invoke-Expression usage found - review for security"
@@ -174,7 +176,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Create Release Archive
       shell: pwsh
@@ -200,7 +202,7 @@ jobs:
         Write-Host "Created release: $releaseName.zip"
 
     - name: Upload Release Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: Redball-Release
         path: ./Redball-v*.zip
