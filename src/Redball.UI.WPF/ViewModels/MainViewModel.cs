@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Input;
 using Redball.UI.Views;
 
@@ -23,6 +24,7 @@ public class MainViewModel : INotifyPropertyChanged
         OpenSettingsCommand = new RelayCommand(OpenSettings);
         ExitCommand = new RelayCommand(ExitApplication);
         ShowAboutCommand = new RelayCommand(ShowAbout);
+        TypeThingCommand = new RelayCommand(StartTypeThing);
     }
 
     /// <summary>
@@ -79,6 +81,7 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand OpenSettingsCommand { get; }
     public ICommand ExitCommand { get; }
     public ICommand ShowAboutCommand { get; }
+    public ICommand TypeThingCommand { get; }
 
     private void ToggleActive()
     {
@@ -101,6 +104,15 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    private void StartTypeThing()
+    {
+        // Delegate to MainWindow for TypeThing paste-as-typing
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.StartTypeThing();
+        }
+    }
+
     private void ShowAbout()
     {
         // Delegate to MainWindow to show about properly
@@ -118,6 +130,18 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void ExitApplication()
     {
+        // Confirm exit when keep-awake is active
+        if (_isActive)
+        {
+            var result = System.Windows.MessageBox.Show(
+                "Redball is currently keeping your system awake. Are you sure you want to exit?",
+                "Confirm Exit",
+                MessageBoxButton.OKCancel,
+                MessageBoxImage.Question);
+            if (result != MessageBoxResult.OK)
+                return;
+        }
+
         // Dispose tray icon before shutdown if we have a reference
         if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
         {

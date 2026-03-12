@@ -91,9 +91,10 @@ if (Test-Path $wpfProjectPath) {
     $csprojContent = Get-Content $wpfProjectPath -Raw
     
     # Update <Version>, <FileVersion>, and <AssemblyVersion>
-    $csprojContent = $csprojContent -replace '(<Version>)[0-9]+\.[0-9]+\.[0-9]+(</Version>)', "`$1$newVersion`$2"
-    $csprojContent = $csprojContent -replace '(<FileVersion>)[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?(</FileVersion>)', "`$1$newVersion.0`$3"
-    $csprojContent = $csprojContent -replace '(<AssemblyVersion>)[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?(</AssemblyVersion>)', "`$1$newVersion.0`$3"
+    # Use simple regex without capture groups to avoid PowerShell variable expansion
+    $csprojContent = $csprojContent -replace '<Version>[0-9]+\.[0-9]+\.[0-9]+</Version>', "<Version>$newVersion</Version>"
+    $csprojContent = $csprojContent -replace '<FileVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</FileVersion>', "<FileVersion>$newVersion.0</FileVersion>"
+    $csprojContent = $csprojContent -replace '<AssemblyVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</AssemblyVersion>', "<AssemblyVersion>$newVersion.0</AssemblyVersion>"
     
     Set-Content -Path $wpfProjectPath -Value $csprojContent -NoNewline
     Write-Host "Updated $wpfProjectPath" -ForegroundColor Green

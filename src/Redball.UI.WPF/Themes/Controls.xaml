@@ -5,15 +5,154 @@
     <!--
         Redball v3.0 Common Control Styles
         Modern WPF controls with Fluent Design principles
+        Uses DynamicResource for theme-dependent brushes so theme switching works at runtime
     -->
 
     <!-- Value Converters -->
     <converters:SliderValueToWidthConverter x:Key="SliderValueToWidthConverter"/>
 
+    <!-- Window styling -->
+    <Style x:Key="ModernWindow" TargetType="Window">
+        <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+        <Setter Property="FontFamily" Value="Segoe UI, Microsoft Sans Serif"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="UseLayoutRounding" Value="True"/>
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+        <Setter Property="TextOptions.TextHintingMode" Value="Animated"/>
+    </Style>
+
+    <!-- Button styling -->
+    <Style x:Key="ModernButton" TargetType="Button">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="MinHeight" Value="36"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource BorderLightBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Primary Button (Accent color) -->
+    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentDarkBrush}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- Toggle Switch styling -->
+    <Style x:Key="ModernToggleSwitch" TargetType="ToggleButton">
+        <Setter Property="Width" Value="44"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid>
+                        <Border x:Name="Track"
+                                Background="{DynamicResource BorderBrush}"
+                                CornerRadius="12"
+                                Height="20"
+                                Width="40"/>
+                        <Ellipse x:Name="Thumb"
+                                Fill="White"
+                                Width="16"
+                                Height="16"
+                                HorizontalAlignment="Left"
+                                Margin="2,0,0,0"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                            <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
+                            <Setter TargetName="Thumb" Property="Margin" Value="0,0,2,0"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- TextBox styling -->
+    <Style x:Key="ModernTextBox" TargetType="TextBox">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="MinHeight" Value="36"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="Focusable" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                    Focusable="false"
+                                    HorizontalScrollBarVisibility="Hidden"
+                                    VerticalScrollBarVisibility="Hidden"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="BorderBrush" Value="{DynamicResource BorderLightBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Card/Panel styling -->
+    <Style x:Key="CardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="Margin" Value="8"/>
+    </Style>
+
     <!-- Navigation RadioButton Style -->
     <Style x:Key="NavRadioButton" TargetType="RadioButton">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="16,12"/>
         <Setter Property="FontSize" Value="14"/>
@@ -23,17 +162,17 @@
                 <ControlTemplate TargetType="RadioButton">
                     <Border x:Name="Border"
                             Background="{TemplateBinding Background}"
-                            BorderBrush="{StaticResource AccentBrush}"
+                            BorderBrush="{DynamicResource AccentBrush}"
                             BorderThickness="0,0,3,0"
                             Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Border" Property="Background" Value="{StaticResource CardBrush}"/>
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource CardBrush}"/>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Border" Property="Background" Value="{StaticResource CardBrush}"/>
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource CardBrush}"/>
                             <Setter TargetName="Border" Property="BorderThickness" Value="0,0,3,0"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
                         </Trigger>
@@ -45,9 +184,9 @@
 
     <!-- ComboBox Style -->
     <Style x:Key="ModernComboBox" TargetType="ComboBox">
-        <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="12,8"/>
         <Setter Property="MinHeight" Value="36"/>
@@ -81,14 +220,14 @@
                                           HorizontalAlignment="Right"
                                           VerticalAlignment="Center"
                                           Margin="0,0,12,0"
-                                          Foreground="{StaticResource ForegroundSecondaryBrush}"/>
+                                          Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                             </Grid>
                         </Border>
                         <Popup x:Name="Popup"
                                Placement="Bottom"
                                IsOpen="{TemplateBinding IsDropDownOpen}">
-                            <Border Background="{StaticResource CardBrush}"
-                                    BorderBrush="{StaticResource BorderBrush}"
+                            <Border Background="{DynamicResource CardBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="4"
                                     MinWidth="{TemplateBinding ActualWidth}">
@@ -100,7 +239,7 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource BorderLightBrush}"/>
+                            <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource BorderLightBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -110,7 +249,7 @@
 
     <!-- CheckBox Style -->
     <Style x:Key="ModernCheckBox" TargetType="CheckBox">
-        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Margin" Value="0,8"/>
         <Setter Property="Template">
@@ -123,13 +262,13 @@
                         </Grid.ColumnDefinitions>
                         <Border x:Name="CheckBorder"
                                 Width="20" Height="20"
-                                Background="{StaticResource SurfaceBrush}"
-                                BorderBrush="{StaticResource BorderBrush}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
                                 BorderThickness="2"
                                 CornerRadius="4">
                             <Path x:Name="CheckMark"
                                   Data="M 3 10 L 8 15 L 17 4"
-                                  Stroke="{StaticResource AccentBrush}"
+                                  Stroke="{DynamicResource AccentBrush}"
                                   StrokeThickness="2"
                                   StrokeStartLineCap="Round"
                                   StrokeEndLineCap="Round"
@@ -142,10 +281,10 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
-                            <Setter TargetName="CheckBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            <Setter TargetName="CheckBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="CheckBorder" Property="Background" Value="{StaticResource CardBrush}"/>
+                            <Setter TargetName="CheckBorder" Property="Background" Value="{DynamicResource CardBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -155,8 +294,8 @@
 
     <!-- Slider Style -->
     <Style x:Key="ModernSlider" TargetType="Slider">
-        <Setter Property="Background" Value="{StaticResource BorderBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
         <Setter Property="Height" Value="24"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -164,22 +303,22 @@
                     <Grid>
                         <Border x:Name="TrackBackground"
                                 Height="4"
-                                Background="{StaticResource BorderBrush}"
+                                Background="{DynamicResource BorderBrush}"
                                 CornerRadius="2"/>
                         <Border x:Name="TrackFill"
                                 Height="4"
                                 HorizontalAlignment="Left"
-                                Background="{StaticResource AccentBrush}"
+                                Background="{DynamicResource AccentBrush}"
                                 CornerRadius="2"
                                 Width="{Binding Path=SelectionEnd, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource SliderValueToWidthConverter}}"/>
                         <Thumb x:Name="Thumb"
                                Width="16" Height="16"
-                               Background="{StaticResource ForegroundBrush}"
+                               Background="{DynamicResource ForegroundBrush}"
                                Cursor="Hand">
                             <Thumb.Template>
                                 <ControlTemplate>
                                     <Ellipse Fill="{TemplateBinding Background}"
-                                            Stroke="{StaticResource AccentBrush}"
+                                            Stroke="{DynamicResource AccentBrush}"
                                             StrokeThickness="2"/>
                                 </ControlTemplate>
                             </Thumb.Template>
@@ -192,8 +331,8 @@
 
     <!-- Context Menu Style -->
     <Style x:Key="ModernContextMenu" TargetType="ContextMenu">
-        <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="4"/>
         <Setter Property="Template">
@@ -214,7 +353,7 @@
     <!-- Menu Item Style -->
     <Style x:Key="StatusMenuItem" TargetType="MenuItem">
         <Setter Property="IsEnabled" Value="False"/>
-        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
         <Setter Property="Background" Value="Transparent"/>
     </Style>
 

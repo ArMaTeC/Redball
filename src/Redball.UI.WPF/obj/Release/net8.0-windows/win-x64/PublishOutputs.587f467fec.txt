@@ -1,0 +1,8 @@
+C:\Users\karll\Desktop\Redball\dist\local-appdata\Redball.UI.WPF.pdb
+C:\Users\karll\Desktop\Redball\dist\local-appdata\Assets\redball.ico
+C:\Users\karll\Desktop\Redball\dist\local-appdata\D3DCompiler_47_cor3.dll
+C:\Users\karll\Desktop\Redball\dist\local-appdata\PenImc_cor3.dll
+C:\Users\karll\Desktop\Redball\dist\local-appdata\PresentationNative_cor3.dll
+C:\Users\karll\Desktop\Redball\dist\local-appdata\vcruntime140_cor3.dll
+C:\Users\karll\Desktop\Redball\dist\local-appdata\wpfgfx_cor3.dll
+C:\Users\karll\Desktop\Redball\dist\local-appdata\Redball.UI.WPF.exe

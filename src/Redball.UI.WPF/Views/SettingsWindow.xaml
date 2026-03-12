@@ -6,8 +6,8 @@
         MinHeight="400" MinWidth="600"
         WindowStartupLocation="CenterScreen"
         Style="{StaticResource ModernWindow}"
-        Background="{StaticResource BackgroundBrush}"
-        Foreground="{StaticResource ForegroundBrush}">
+        Background="{DynamicResource BackgroundBrush}"
+        Foreground="{DynamicResource ForegroundBrush}">
 
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="40"
@@ -16,7 +16,7 @@
                       ResizeBorderThickness="8"/>
     </WindowChrome.WindowChrome>
 
-    <Border Background="{StaticResource BackgroundBrush}" CornerRadius="8">
+    <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="8">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -25,13 +25,21 @@
             </Grid.RowDefinitions>
 
             <!-- Title Bar -->
-            <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8,8,0,0" Height="50">
+            <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="8,8,0,0" Height="50">
                 <Grid>
-                    <TextBlock Text="Settings" FontSize="18" FontWeight="SemiBold"
-                              VerticalAlignment="Center" Margin="20,0"/>
-                    <Button Content="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="14"
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
+                        <TextBlock Text="Settings" FontSize="18" FontWeight="SemiBold"/>
+                        <Border x:Name="StatusBadge" CornerRadius="10" Padding="8,2" Margin="12,0,0,0"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource AccentBrush}">
+                            <TextBlock x:Name="StatusBadgeText" Text="Active" FontSize="11"
+                                      Foreground="White" FontWeight="Medium"/>
+                        </Border>
+                    </StackPanel>
+                    <Button Content="✕" FontSize="16" FontWeight="Bold"
                            HorizontalAlignment="Right" Margin="0,0,10,0"
                            Style="{StaticResource ModernButton}" Width="32" Height="32"
+                           WindowChrome.IsHitTestVisibleInChrome="True"
                            Click="CloseButton_Click"/>
                 </Grid>
             </Border>
@@ -76,7 +84,7 @@
                             <TextBlock Text="General Settings" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
                             <TextBlock Text="Theme" FontWeight="Medium" Margin="0,0,0,8"/>
-                            <ComboBox x:Name="ThemeCombo" Style="{StaticResource ModernComboBox}">
+                            <ComboBox x:Name="ThemeCombo" Style="{StaticResource ModernComboBox}" SelectionChanged="ThemeCombo_SelectionChanged">
                                 <ComboBoxItem Content="System Default"/>
                                 <ComboBoxItem Content="Dark Mode" IsSelected="True"/>
                                 <ComboBoxItem Content="Light Mode"/>
@@ -103,12 +111,12 @@
                             <CheckBox Content="Prevent display sleep" IsChecked="True"
                                      Style="{StaticResource ModernCheckBox}"/>
                             <TextBlock Text="Keep the screen awake while Redball is active" FontSize="12"
-                                      Foreground="{StaticResource ForegroundSecondaryBrush}" Margin="24,0,0,16"/>
+                                      Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,16"/>
 
                             <CheckBox Content="Use F15 heartbeat keypress" IsChecked="True"
                                      Style="{StaticResource ModernCheckBox}"/>
                             <TextBlock Text="Send invisible F15 keypress to prevent idle detection"
-                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,16"/>
 
                             <TextBlock Text="Default Duration (minutes)" FontWeight="Medium" Margin="0,8,0,8"/>
@@ -125,29 +133,29 @@
 
                             <CheckBox Content="Battery-aware mode" Style="{StaticResource ModernCheckBox}"/>
                             <TextBlock Text="Pause when battery is below threshold"
-                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,8"/>
                             <TextBlock Text="Threshold: 20%" FontSize="12" Margin="24,0,0,16"/>
 
                             <CheckBox Content="Network-aware mode" Style="{StaticResource ModernCheckBox}"/>
                             <TextBlock Text="Pause when network disconnects"
-                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,16"/>
 
                             <CheckBox Content="Idle detection" Style="{StaticResource ModernCheckBox}"/>
                             <TextBlock Text="Pause when user is idle"
-                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,8"/>
                             <TextBlock Text="Threshold: 30 minutes" FontSize="12" Margin="24,0,0,16"/>
 
                             <CheckBox Content="Presentation mode detection" Style="{StaticResource ModernCheckBox}"/>
                             <TextBlock Text="Auto-activate during PowerPoint/Teams presentations"
-                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,16"/>
 
                             <CheckBox Content="Scheduled operation" Style="{StaticResource ModernCheckBox}"/>
                             <TextBlock Text="Active: Weekdays 09:00 - 18:00"
-                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,16"/>
                         </StackPanel>
 
@@ -158,10 +166,10 @@
                             <CheckBox Content="Enable TypeThing" IsChecked="True" Style="{StaticResource ModernCheckBox}"/>
 
                             <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,16,0,8"/>
-                            <TextBox Text="Ctrl+Shift+V" Style="{StaticResource ModernTextBox}"/>
+                            <TextBox x:Name="StartHotkeyBox" Text="Ctrl+Shift+V" Style="{StaticResource ModernTextBox}" IsReadOnly="True" PreviewKeyDown="HotkeyBox_PreviewKeyDown" GotFocus="HotkeyBox_GotFocus" LostFocus="HotkeyBox_LostFocus" Cursor="Hand"/>
 
                             <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,16,0,8"/>
-                            <TextBox Text="Ctrl+Shift+X" Style="{StaticResource ModernTextBox}"/>
+                            <TextBox x:Name="StopHotkeyBox" Text="Ctrl+Shift+X" Style="{StaticResource ModernTextBox}" IsReadOnly="True" PreviewKeyDown="HotkeyBox_PreviewKeyDown" GotFocus="HotkeyBox_GotFocus" LostFocus="HotkeyBox_LostFocus" Cursor="Hand"/>
 
                             <TextBlock Text="Typing Speed" FontWeight="Medium" Margin="0,16,0,8"/>
                             <Slider Minimum="10" Maximum="500" Value="120" TickFrequency="50"
@@ -194,14 +202,15 @@
                             <CheckBox Content="Verify update signatures" Margin="0,16,0,8"
                                      Style="{StaticResource ModernCheckBox}"/>
                             <TextBlock Text="Only install signed updates from trusted sources"
-                                      FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,16"/>
 
                             <Button Content="Check for Updates Now" Style="{StaticResource PrimaryButton}"
-                                   Margin="0,16,0,0" HorizontalAlignment="Left"/>
+                                   Margin="0,16,0,0" HorizontalAlignment="Left"
+                                   Click="CheckForUpdatesButton_Click"/>
 
-                            <TextBlock Text="Current Version: 3.0.0" FontSize="12"
-                                      Foreground="{StaticResource ForegroundSecondaryBrush}"
+                            <TextBlock x:Name="CurrentVersionText" FontSize="12"
+                                      Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="0,16,0,0"/>
                         </StackPanel>
 
@@ -211,18 +220,18 @@
 
                             <Image Source="/Assets/redball.ico" Width="64" Height="64" Margin="0,0,0,16"/>
 
-                            <TextBlock Text="Redball v3.0.0" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Modern WPF Edition" FontSize="14" Foreground="{StaticResource AccentBrush}"
+                            <TextBlock x:Name="AboutVersionText" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Modern WPF Edition" FontSize="14" Foreground="{DynamicResource AccentBrush}"
                                       HorizontalAlignment="Center" Margin="0,4,0,16"/>
 
                             <TextBlock Text="A system tray utility to prevent Windows from going to sleep."
                                       TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,16"/>
 
                             <TextBlock Text="&#xA9; 2024-2026 ArMaTeC" FontSize="12"
-                                      Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       HorizontalAlignment="Center" Margin="0,0,0,8"/>
                             <TextBlock Text="Licensed under MIT License" FontSize="12"
-                                      Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       HorizontalAlignment="Center" Margin="0,0,0,16"/>
 
                             <Button Content="View on GitHub" Style="{StaticResource ModernButton}"
@@ -234,7 +243,7 @@
             </Grid>
 
             <!-- Footer -->
-            <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}" CornerRadius="0,0,8,8" Height="60">
+            <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" CornerRadius="0,0,8,8" Height="60">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,0">
                     <Button Content="Cancel" Style="{StaticResource ModernButton}" Width="80" Margin="0,0,8,0"
                            Click="CancelButton_Click"/>

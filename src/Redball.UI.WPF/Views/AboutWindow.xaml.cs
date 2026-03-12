@@ -8,6 +8,13 @@ public partial class AboutWindow : Window
     public AboutWindow()
     {
         InitializeComponent();
+        Loaded += OnLoaded;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        VersionText.Text = $"Redball v{version?.Major}.{version?.Minor}.{version?.Build}";
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -26,10 +33,10 @@ public partial class AboutWindow : Window
 
     private void UpdateButton_Click(object sender, RoutedEventArgs e)
     {
-        // TODO: Trigger update check via IPC to PowerShell core
-        MessageBox.Show("Update check would be performed here via IPC communication with PowerShell core.",
-                       "Check for Updates",
-                       MessageBoxButton.OK,
-                       MessageBoxImage.Information);
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "https://github.com/ArMaTeC/Redball/releases",
+            UseShellExecute = true
+        });
     }
 }

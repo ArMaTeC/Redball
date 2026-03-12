@@ -56,7 +56,7 @@ public static class ThemeManager
         Application.Current.Resources["AccentColor"] = accentBrush.Color;
     }
 
-    private static bool IsSystemDarkMode()
+    public static bool IsSystemDarkMode()
     {
         try
         {

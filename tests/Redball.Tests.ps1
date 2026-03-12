@@ -12,6 +12,11 @@ BeforeAll {
     Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
 
     $scriptPath = Join-Path $PSScriptRoot '..' 'Redball.ps1' | Resolve-Path
+    
+    # Parse and load functions via AST for test isolation
+    # NOTE: This approach doesn't track code coverage because functions are 
+    # extracted and invoked via Invoke-Expression rather than executing the 
+    # file directly. Pester's coverage instrumentation can't track AST-extracted code.
     $tokens = $null
     $parseErrors = $null
     $ast = [System.Management.Automation.Language.Parser]::ParseFile($scriptPath, [ref]$tokens, [ref]$parseErrors)

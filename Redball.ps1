@@ -81,10 +81,13 @@ param(
     [switch]$ExitOnComplete,
 
     [Parameter()]
-    [switch]$UseModernUI
+    [switch]$UseModernUI,
+
+    [Parameter()]
+    [switch]$TestMode
 )
 
-$script:VERSION = '2.1.5'
+$script:VERSION = '2.1.11'
 $script:APP_NAME = 'Redball'
 $script:IsPS7 = $PSVersionTable.PSVersion.Major -ge 7
 
@@ -136,7 +139,10 @@ namespace Win32 {
 }
 "@
 
-Add-Type -TypeDefinition $signature -Language CSharp
+# Only add type if it doesn't already exist (idempotent for dot-sourcing)
+if (-not ([System.Management.Automation.PSTypeName]'Win32.Power').Type) {
+    Add-Type -TypeDefinition $signature -Language CSharp
+}
 
 # Enforce TLS 1.2+ for all HTTPS requests (prevents TLS downgrade attacks)
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
@@ -4561,4 +4567,8 @@ $onProcessExit = {
 }
 [AppDomain]::CurrentDomain.add_ProcessExit($onProcessExit)
 
-[System.Windows.Forms.Application]::Run($script:state.Context)
+# Only start the application if not in test mode
+# Test mode allows dot-sourcing for code coverage without running the GUI
+if (-not $TestMode) {
+    [System.Windows.Forms.Application]::Run($script:state.Context)
+}

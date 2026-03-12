@@ -3532,7 +3532,7 @@
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
-    "version": "3.0.0",
+    "version": "2.1.11",
     "restore": {
       "projectUniqueName": "C:\\Users\\karll\\Desktop\\Redball\\src\\Redball.UI.WPF\\Redball.UI.WPF.csproj",
       "projectName": "Redball.UI.WPF",
@@ -3629,7 +3629,7 @@
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           },
-          "Microsoft.WindowsDesktop.App.WPF": {
+          "Microsoft.WindowsDesktop.App": {
             "privateAssets": "none"
           }
         },

@@ -1,5 +1,5 @@
 ﻿Redball.UI.WPF
-3.0.0.0
+2.1.11.0
 
 winexe
 C#
@@ -12,7 +12,7 @@ TRACE;RELEASE;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_
 C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\App.xaml
 6-1239703317
 11989106568
-955311110
+12-269844673
 209-436238415
 Themes\Controls.xaml;Themes\DarkTheme.xaml;Themes\LightTheme.xaml;Views\AboutWindow.xaml;Views\MainWindow.xaml;Views\SettingsWindow.xaml;
 

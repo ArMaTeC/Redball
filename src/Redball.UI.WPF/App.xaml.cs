@@ -22,6 +22,18 @@ public partial class App : Application
 
     public App()
     {
+        // Setup early exception handling before logging is ready
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+        {
+            var crashLog = Path.Combine(AppContext.BaseDirectory, "crash.log");
+            File.WriteAllText(crashLog, $"[{DateTime.Now}] FATAL: {e.ExceptionObject}");
+        };
+        TaskScheduler.UnobservedTaskException += (s, e) =>
+        {
+            var crashLog = Path.Combine(AppContext.BaseDirectory, "crash.log");
+            File.AppendAllText(crashLog, $"[{DateTime.Now}] TASK ERROR: {e.Exception}\n");
+        };
+
         // Setup crash logging before anything else
         var appRoot = AppContext.BaseDirectory;
         _logPath = Path.Combine(appRoot, "Redball.UI.log");
@@ -63,6 +75,11 @@ public partial class App : Application
             base.OnStartup(e);
             Log("OnStartup called");
 
+            // Load configuration
+            Log("Loading configuration...");
+            var configLoaded = Services.ConfigService.Instance.Load();
+            Log(configLoaded ? "Configuration loaded successfully" : "Using default configuration");
+
             // Initialize modern theme
             Log("Initializing ThemeManager...");
             ThemeManager.Initialize();
@@ -77,15 +94,21 @@ public partial class App : Application
             Log("Creating MainWindow...");
             _mainWindow = new Views.MainWindow();
             
-            // Ensure window is loaded before hiding (important for tray icon)
+            // Ensure window is loaded before moving off-screen (important for tray icon and hotkeys)
             _mainWindow.Loaded += (s, e) =>
             {
-                Log("MainWindow loaded, hiding window...");
-                _mainWindow.Hide();
-                Log("MainWindow hidden, tray-only mode active");
+                Log("MainWindow loaded, moving off-screen for tray-only mode...");
+                // Move window off-screen instead of hiding to keep message pump running for hotkeys
+                _mainWindow.WindowStyle = WindowStyle.ToolWindow;
+                _mainWindow.ShowInTaskbar = false;
+                _mainWindow.Left = -10000;
+                _mainWindow.Top = -10000;
+                _mainWindow.Width = 1;
+                _mainWindow.Height = 1;
+                Log("MainWindow moved off-screen, tray-only mode active");
             };
             
-            // Show the window briefly to ensure proper initialization, then hide it
+            // Show the window to ensure proper initialization and hotkey registration
             _mainWindow.Show();
             Log("MainWindow shown for initialization");
         }
@@ -172,7 +195,11 @@ public partial class App : Application
         };
     }
 
-    private static object GetStatus() => new { Active = true, Version = "3.0.0" };
+    private static object GetStatus()
+    {
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        return new { Active = true, Version = $"{version?.Major}.{version?.Minor}.{version?.Build}" };
+    }
     private static object SetActive(object? data) => new { Active = data };
 
     private bool ShowSettingsDialog()
