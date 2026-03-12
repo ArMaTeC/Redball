@@ -1,7 +1,46 @@
+# Redball Application Specific
 Redball.crash.flag
 Redball.crash.log
 Redball.log
 .redball-initialized
 typingthing.txt
-dist/*
-src/Redball.UI.WPF/obj/*
+
+# Build outputs
+dist/
+src/Redball.UI.WPF/obj/
+src/Redball.UI.WPF/bin/
+
+# .NET / WPF
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+
+# Publish outputs
+publish/
+*.publish.xml
+
+# NuGet
+*.nupkg
+packages/
+project.lock.json
+
+# Test results
+coverage.xml
+test-results.xml
+TestResults/
+
+# Temporary files
+*.tmp
+*.cache
+*.swp
+*~
+
+# JetBrains Rider
+*.sln.iml
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini

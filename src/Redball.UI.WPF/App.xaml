@@ -1,0 +1,18 @@
+<Application x:Class="Redball.UI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:Redball.UI.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Theme dictionaries -->
+                <ResourceDictionary Source="/Themes/DarkTheme.xaml"/>
+                <ResourceDictionary Source="/Themes/Controls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Value Converters -->
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <converters:SliderValueToWidthConverter x:Key="SliderValueToWidthConverter"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
