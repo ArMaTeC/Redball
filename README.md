@@ -2,19 +2,34 @@
 
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-blue.svg)](https://github.com/PowerShell/PowerShell)
 [![PS7 Compatible](https://img.shields.io/badge/PowerShell_7-Compatible-blueviolet.svg)](https://github.com/PowerShell/PowerShell)
+[![.NET 8](https://img.shields.io/badge/.NET_8-WPF-512BD4.svg)](https://dotnet.microsoft.com/)
 [![Windows](https://img.shields.io/badge/Platform-Windows_8.1%2B-0078D6.svg)](https://www.microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/ArMaTeC/Redball/release.yml?label=Build)](https://github.com/ArMaTeC/Redball/actions/workflows/release.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/ArMaTeC/Redball/ci.yml?label=CI)](https://github.com/ArMaTeC/Redball/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/actions/workflow/status/ArMaTeC/Redball/release.yml?label=Release)](https://github.com/ArMaTeC/Redball/actions/workflows/release.yml)
+[![Signed](https://img.shields.io/badge/Code_Signed-SHA256-success.svg)](#code-signing)
 
 > A system tray utility to prevent Windows from sleeping, with style.
 
-Redball is a PowerShell-based system tray application that keeps your Windows computer awake using the `SetThreadExecutionState` API. It features a custom 3D red ball icon that changes color based on state, smart monitoring features, a built-in settings GUI, auto-updating, code signing support, and an MSI installer — all in a single script.
+Redball is a keep-awake utility for Windows featuring a **modern WPF desktop application** with 12 custom themes, alongside the original **PowerShell system tray script**. It keeps your computer awake using the `SetThreadExecutionState` API, with smart monitoring features, a built-in settings GUI, auto-updating, code signing, and a branded MSI installer.
 
 ![Redball Icon](installer/redball.png)
 
 > **[Full Documentation Wiki](https://github.com/ArMaTeC/Redball/wiki)** — Comprehensive guides for every feature, function, and configuration option.
 
 ## Features
+
+### Modern WPF Desktop Application (.NET 8)
+
+- **Native WPF UI** — Built with .NET 8 WPF, self-contained single-file EXE (~64MB)
+- **12 Custom Themes** — System (auto-detect), Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost
+- **Settings Window** — Tabbed settings with live slider value labels for duration and typing speed
+- **About & Update Windows** — Built-in version info, update checker, and download progress
+- **P/Invoke SendInput** — Native Windows API for typing simulation (no WinForms dependency)
+- **Theme Persistence** — Selected theme saved to config and restored on startup
+- **Code Signed** — EXE and MSI signed with SHA-256 certificate via `signtool` in CI
+
+### PowerShell System Tray Application
 
 - **3D Red Ball Icon** — Dynamic GDI+ icon that changes color based on state:
   - **Bright Red** — Active and keeping system awake
@@ -52,27 +67,31 @@ Redball is a PowerShell-based system tray application that keeps your Windows co
   - Handles newlines, tabs, and large clipboard with confirmation prompt
 - **About Dialog** — Version info with built-in update checker and download button
 - **Pester Tests** — Comprehensive test suite included
-- **MSI Installer** — WiX v4 installer with Start Menu/Desktop shortcuts, startup options, and feature selection
-- **CI/CD** — GitHub Actions for automated testing, linting, security scanning, and release builds
+- **MSI Installer** — WiX v4 installer with branded UI (custom banner/dialog images), Start Menu/Desktop/Startup shortcuts with icons, feature selection, and post-install launch
+- **CI/CD** — GitHub Actions with Pester tests, PSScriptAnalyzer lint, security scan, WPF publish, WiX MSI build, code signing, and GitHub Release creation
+- **Code Signing** — Automated SHA-256 signing of both EXE and MSI in CI via `signtool` with DigiCert timestamping
+- **Build System** — Comprehensive `build.ps1` with version management, .NET publish, WiX build, security scanning, and linting
 
 ## Quick Start
 
 ### Prerequisites
 
-- **Windows 8.1** or later
+- **Windows 10** or later (Windows 8.1 for PowerShell script only)
 - **PowerShell 5.1** or later (PowerShell 7+ also supported)
+- **.NET 8 Runtime** (included in the self-contained WPF EXE — no separate install needed)
 
 ### Option A — MSI Installer (Recommended)
 
-Download the latest `Redball.msi` from the [Releases](https://github.com/ArMaTeC/Redball/releases) page and run it. The installer provides:
+Download the latest **`Redball.msi`** from the [Releases](https://github.com/ArMaTeC/Redball/releases) page and run it. The MSI is code-signed and includes:
 
+- **WPF application** — Modern themed desktop UI (`Redball.UI.WPF.exe`)
 - Per-user installation to `%LocalAppData%\Redball`
-- Start Menu and Desktop shortcuts
-- Optional "Start with Windows" shortcut
+- Start Menu, Desktop, and optional Startup shortcuts (all with Redball icon)
+- Branded installer UI with custom banner and dialog images
 - Optional default behavior features (battery-aware, network-aware, idle detection, etc.)
 - "Launch Redball" checkbox on the finish page
 
-### Option B — Run the Script Directly
+### Option B — Run the PowerShell Script Directly
 
 ```powershell
 # Run with default settings
@@ -467,34 +486,83 @@ Invoke-Pester -Path ".\Redball.Tests.ps1" -TestName "*Icon*"
 
 ## Building
 
+### WPF Application
+
+The WPF desktop application is built with .NET 8 as a self-contained single-file executable:
+
+```powershell
+# Publish the WPF app
+dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj --configuration Release -o dist/wpf-publish
+
+# Or use the comprehensive build script
+.\build.ps1 -Task Build
+```
+
+The published EXE (~64MB) includes the .NET runtime, uses compression and native library embedding, and has embedded debug symbols (no separate PDB file).
+
 ### MSI Installer
 
-The MSI is built with [WiX Toolset v4](https://wixtoolset.org/). Use the included build scripts:
+The MSI is built with [WiX Toolset v4](https://wixtoolset.org/):
 
 ```powershell
 # Full deploy pipeline (EXE via ps2exe + MSI via WiX, with code signing)
 .\installer\Deploy-Redball.ps1
 
 # Build MSI only
-.\installer\Build-MSI.ps1 -Version "2.0.9"
-
-# Build with specific WiX path
-.\installer\Build-MSI.ps1 -WixBinPath "C:\Tools\wix"
+.\installer\Build-MSI.ps1 -Version "2.1.19"
 ```
 
-The deploy script automatically:
+The installer includes branded UI images (custom banner and dialog backgrounds) and the Redball icon on all shortcuts.
 
-1. Increments the build number (stored in `.buildversion`)
-2. Compiles an EXE via `ps2exe`
-3. Builds an MSI via WiX
-4. Signs both artifacts with a code-signing certificate (creates a self-signed cert if none exists)
+### Build Script
+
+The `build.ps1` script provides a comprehensive build pipeline:
+
+```powershell
+# Full build (version from Redball.ps1)
+.\build.ps1
+
+# Specific tasks
+.\build.ps1 -Task Build        # Build WPF app
+.\build.ps1 -Task Test         # Run Pester tests
+.\build.ps1 -Task Lint         # PSScriptAnalyzer
+.\build.ps1 -Task Security     # Security scan
+```
+
+### Version Management
+
+Version is defined in three places (kept in sync by `scripts/Bump-Version.ps1`):
+
+- `Redball.ps1` — `$script:VERSION`
+- `src/Redball.UI.WPF/Redball.UI.WPF.csproj` — `<Version>`, `<FileVersion>`, `<AssemblyVersion>`
+- `build.ps1` — fallback version
+
+### Code Signing
+
+Both the EXE and MSI are automatically code-signed during CI releases:
+
+- **Algorithm**: SHA-256 with RSA 2048-bit key
+- **Timestamping**: DigiCert RFC 3161 timestamp server
+- **Tool**: Windows SDK `signtool.exe`
+- **Secrets**: `CODE_SIGNING_CERT` (base64 PFX) and `CODE_SIGNING_PASSWORD` stored as GitHub repository secrets
+
+To use your own certificate, set the GitHub secrets:
+
+```powershell
+# Base64-encode your PFX certificate
+$base64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes("your-cert.pfx"))
+$base64 | gh secret set CODE_SIGNING_CERT --repo YourOrg/Redball
+"your-password" | gh secret set CODE_SIGNING_PASSWORD --repo YourOrg/Redball
+```
+
+If no certificate secrets are configured, the CI creates a self-signed development certificate as a fallback.
 
 ### CI/CD
 
-GitHub Actions workflows are included:
+GitHub Actions workflows (all using Node.js 24-compatible actions):
 
-- **`release.yml`** — On push to `main`: auto-tags the version from the script, builds the MSI on `windows-latest`, and creates a GitHub Release with the MSI attached.
-- **`ci.yml`** — On push/PR: runs Pester tests, PSScriptAnalyzer lint, JSON validation, and a basic security scan.
+- **`ci.yml`** — On push/PR: runs Pester tests, PSScriptAnalyzer lint, JSON validation, and security scan (hardcoded credentials, `Invoke-Expression` usage)
+- **`release.yml`** — On push to `main`: auto-tags version, publishes WPF app, signs EXE, builds branded MSI with WiX, signs MSI, creates GitHub Release with MSI attached
 
 ## Architecture
 
@@ -502,25 +570,42 @@ GitHub Actions workflows are included:
 Redball/
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml                # CI pipeline (test, lint, security)
-│       └── release.yml           # Release pipeline (tag, build MSI, publish)
+│       ├── ci.yml                    # CI pipeline (test, lint, security)
+│       └── release.yml               # Release pipeline (tag, build, sign, publish)
+├── src/
+│   └── Redball.UI.WPF/               # WPF desktop application (.NET 8)
+│       ├── Assets/redball.ico         # Application icon (embedded in EXE)
+│       ├── Converters/               # WPF value converters
+│       ├── Services/                 # ConfigService, HotkeyService, IpcClient, Update
+│       ├── Themes/                   # DarkTheme.xaml, LightTheme.xaml, Controls.xaml
+│       ├── ViewModels/               # MainViewModel (MVVM)
+│       ├── Views/                    # MainWindow, SettingsWindow, AboutWindow, UpdateProgress
+│       ├── ThemeManager.cs           # 12 theme variants with color overrides
+│       ├── App.xaml / App.xaml.cs     # Application startup and theme initialization
+│       └── Redball.UI.WPF.csproj     # Project file (self-contained, compressed)
 ├── installer/
-│   ├── Build-MSI.ps1             # WiX MSI build script
-│   ├── Deploy-Redball.ps1        # Full deploy pipeline (EXE + MSI + signing)
-│   ├── Launch-Redball.vbs        # Hidden-window launcher for MSI post-install
-│   ├── Redball.wxs               # WiX v4 installer definition
-│   ├── Redball.ico               # Application icon
-│   ├── Redball-License.rtf       # License for installer UI
-│   └── redball.png               # Readme icon image
-├── dist/                         # Build output (MSI, EXE)
-├── docs/                         # Documentation (CHANGELOG, LICENSE, etc.)
-├── Redball.ps1                   # Main application script
-├── Redball.json                  # Configuration file
-├── Redball.Tests.ps1             # Pester test suite
-├── locales.json                  # External locale overrides (en, es, fr, de)
-├── .buildversion                 # Auto-incremented build number
-├── LICENSE                       # MIT License
-└── README.md                     # This file
+│   ├── Redball.wxs                   # WiX v4 installer definition
+│   ├── banner.bmp                    # Installer banner image (493×58)
+│   ├── dialog.bmp                    # Installer dialog background (493×312)
+│   ├── Redball.ico                   # Installer icon / shortcut icon
+│   ├── Redball-License.rtf           # License for installer UI
+│   ├── Build-MSI.ps1                 # WiX MSI build script
+│   ├── Deploy-Redball.ps1            # Full deploy pipeline
+│   └── Launch-Redball.vbs            # Hidden-window launcher for post-install
+├── scripts/
+│   ├── Bump-Version.ps1              # Version bump across all files
+│   └── simulate-ci-simple.ps1        # Local CI simulation
+├── tests/
+│   └── Redball.Tests.ps1             # Pester test suite (57 tests)
+├── docs/                             # CHANGELOG, THIRD-PARTY-NOTICES, etc.
+├── dist/                             # Build output (wpf-publish/, MSI)
+├── Redball.ps1                       # PowerShell tray application
+├── Redball.json                      # Configuration file
+├── build.ps1                         # Comprehensive build pipeline
+├── locales.json                      # Locale overrides (en, es, fr, de)
+├── Redball.v3.sln                    # Visual Studio solution
+├── LICENSE                           # MIT License
+└── README.md                         # This file
 ```
 
 ### Component Flow
@@ -622,6 +707,15 @@ Invoke-Pester -Path ".\Redball.Tests.ps1" -Output Detailed
 - [x] TypeThing clipboard typer with global hotkeys
 - [x] About dialog with update checker
 - [x] Themed TypeThing settings dialog (light/dark/hacker)
+- [x] Modern WPF desktop application (.NET 8)
+- [x] 12 custom UI themes (Midnight Blue, Cyberpunk, Rose Gold, etc.)
+- [x] P/Invoke SendInput (replaced WinForms SendKeys)
+- [x] Self-contained compressed EXE (~64MB, down from 150MB)
+- [x] Branded MSI installer UI (custom banner/dialog images)
+- [x] Automated code signing (EXE + MSI) in CI
+- [x] Comprehensive build system (`build.ps1`)
+- [x] Version management script (`Bump-Version.ps1`)
+- [x] Node.js 24-compatible GitHub Actions (v5)
 
 ## License
 
@@ -632,8 +726,12 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ## Acknowledgments
 
 - Icon design using System.Drawing GDI+ path gradients
-- [WiX Toolset](https://wixtoolset.org/) for the MSI installer
-- [ps2exe](https://github.com/MScholtes/PS2EXE) for EXE compilation
+- [.NET 8 / WPF](https://dotnet.microsoft.com/) for the modern desktop application
+- [WiX Toolset v4](https://wixtoolset.org/) for the MSI installer
+- [ps2exe](https://github.com/MScholtes/PS2EXE) for PowerShell EXE compilation
+- [Pester](https://pester.dev/) for PowerShell testing
+- [PSScriptAnalyzer](https://github.com/PowerShell/PSScriptAnalyzer) for code quality
+- Windows SDK `signtool.exe` for code signing
 - PowerShell community for best practices
 
 ## Support
