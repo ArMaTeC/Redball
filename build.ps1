@@ -47,7 +47,7 @@ if (-not $Version) {
     }
 }
 if (-not $Version) {
-    $Version = '2.1.4'
+    $Version = '2.1.14'
 }
 
 $script:Version = $Version
