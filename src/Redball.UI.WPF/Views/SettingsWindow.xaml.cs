@@ -115,13 +115,44 @@ public partial class SettingsWindow : Window
         if (ThemeCombo != null)
         {
             ThemeCombo.SelectionChanged -= ThemeCombo_SelectionChanged;
-            ThemeCombo.SelectedIndex = ThemeManager.CurrentTheme == Theme.Dark ? 1 : 2;
+            ThemeCombo.SelectedIndex = ThemeManager.CurrentTheme switch
+            {
+                Theme.Dark => 1,
+                Theme.Light => 2,
+                Theme.MidnightBlue => 3,
+                Theme.ForestGreen => 4,
+                Theme.OceanBlue => 5,
+                Theme.SunsetOrange => 6,
+                Theme.RoyalPurple => 7,
+                Theme.SlateGray => 8,
+                Theme.RoseGold => 9,
+                Theme.Cyberpunk => 10,
+                Theme.Coffee => 11,
+                Theme.ArcticFrost => 12,
+                _ => 1
+            };
             ThemeCombo.SelectionChanged += ThemeCombo_SelectionChanged;
         }
 
         // TypeThing hotkeys
         if (StartHotkeyBox != null) StartHotkeyBox.Text = cfg.TypeThingStartHotkey;
         if (StopHotkeyBox != null) StopHotkeyBox.Text = cfg.TypeThingStopHotkey;
+
+        // General settings
+        if (MinimizeToTrayCheck != null) MinimizeToTrayCheck.IsChecked = cfg.MinimizeToTray;
+        if (ShowNotificationsCheck != null) ShowNotificationsCheck.IsChecked = cfg.ShowNotifications;
+        if (NotificationModeCombo != null) NotificationModeCombo.SelectedIndex = (int)cfg.NotificationMode;
+
+        // Features settings
+        if (BatteryAwareCheck != null) BatteryAwareCheck.IsChecked = cfg.BatteryAware;
+        if (BatteryThresholdSlider != null) BatteryThresholdSlider.Value = cfg.BatteryThreshold;
+        if (BatteryThresholdText != null) BatteryThresholdText.Text = $"Threshold: {cfg.BatteryThreshold}%";
+        if (NetworkAwareCheck != null) NetworkAwareCheck.IsChecked = cfg.NetworkAware;
+        if (IdleDetectionCheck != null) IdleDetectionCheck.IsChecked = cfg.IdleDetection;
+        if (IdleThresholdSlider != null) IdleThresholdSlider.Value = cfg.IdleThreshold;
+        if (IdleThresholdText != null) IdleThresholdText.Text = $"Threshold: {cfg.IdleThreshold} minutes";
+        if (PresentationModeCheck != null) PresentationModeCheck.IsChecked = cfg.PresentationMode;
+        if (ScheduledOperationCheck != null) ScheduledOperationCheck.IsChecked = cfg.ScheduledOperation;
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -173,9 +204,33 @@ public partial class SettingsWindow : Window
                 0 => "System",
                 1 => "Dark",
                 2 => "Light",
+                3 => "MidnightBlue",
+                4 => "ForestGreen",
+                5 => "OceanBlue",
+                6 => "SunsetOrange",
+                7 => "RoyalPurple",
+                8 => "SlateGray",
+                9 => "RoseGold",
+                10 => "Cyberpunk",
+                11 => "Coffee",
+                12 => "ArcticFrost",
                 _ => "Dark"
             };
         }
+
+        // General settings
+        if (MinimizeToTrayCheck != null) cfg.MinimizeToTray = MinimizeToTrayCheck.IsChecked ?? false;
+        if (ShowNotificationsCheck != null) cfg.ShowNotifications = ShowNotificationsCheck.IsChecked ?? true;
+        if (NotificationModeCombo != null) cfg.NotificationMode = (NotificationMode)NotificationModeCombo.SelectedIndex;
+
+        // Features settings
+        if (BatteryAwareCheck != null) cfg.BatteryAware = BatteryAwareCheck.IsChecked ?? false;
+        if (BatteryThresholdSlider != null) cfg.BatteryThreshold = (int)BatteryThresholdSlider.Value;
+        if (NetworkAwareCheck != null) cfg.NetworkAware = NetworkAwareCheck.IsChecked ?? false;
+        if (IdleDetectionCheck != null) cfg.IdleDetection = IdleDetectionCheck.IsChecked ?? false;
+        if (IdleThresholdSlider != null) cfg.IdleThreshold = (int)IdleThresholdSlider.Value;
+        if (PresentationModeCheck != null) cfg.PresentationMode = PresentationModeCheck.IsChecked ?? false;
+        if (ScheduledOperationCheck != null) cfg.ScheduledOperation = ScheduledOperationCheck.IsChecked ?? false;
     }
 
     private MessageBoxResult PromptUnsavedChanges()
@@ -197,19 +252,24 @@ public partial class SettingsWindow : Window
     {
         if (ThemeCombo is null || ThemeCombo.SelectedIndex < 0) return;
 
-        switch (ThemeCombo.SelectedIndex)
+        var theme = ThemeCombo.SelectedIndex switch
         {
-            case 0: // System Default
-                var isDark = ThemeManager.IsSystemDarkMode();
-                ThemeManager.SetTheme(isDark ? Theme.Dark : Theme.Light);
-                break;
-            case 1: // Dark Mode
-                ThemeManager.SetTheme(Theme.Dark);
-                break;
-            case 2: // Light Mode
-                ThemeManager.SetTheme(Theme.Light);
-                break;
-        }
+            0 => ThemeManager.IsSystemDarkMode() ? Theme.Dark : Theme.Light,
+            1 => Theme.Dark,
+            2 => Theme.Light,
+            3 => Theme.MidnightBlue,
+            4 => Theme.ForestGreen,
+            5 => Theme.OceanBlue,
+            6 => Theme.SunsetOrange,
+            7 => Theme.RoyalPurple,
+            8 => Theme.SlateGray,
+            9 => Theme.RoseGold,
+            10 => Theme.Cyberpunk,
+            11 => Theme.Coffee,
+            12 => Theme.ArcticFrost,
+            _ => Theme.Dark
+        };
+        ThemeManager.SetTheme(theme);
         _isDirty = true;
     }
 
@@ -279,5 +339,47 @@ public partial class SettingsWindow : Window
             };
             target.BeginAnimation(OpacityProperty, fadeIn);
         }
+    }
+
+    private void BatteryThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (BatteryThresholdText != null)
+            BatteryThresholdText.Text = $"Threshold: {(int)e.NewValue}%";
+        _isDirty = true;
+    }
+
+    private void IdleThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (IdleThresholdText != null)
+            IdleThresholdText.Text = $"Threshold: {(int)e.NewValue} minutes";
+        _isDirty = true;
+    }
+
+    private void DurationSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (DurationText != null)
+            DurationText.Text = $"Duration: {(int)e.NewValue} minutes";
+        _isDirty = true;
+    }
+
+    private void TypingSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (TypingSpeedText != null)
+            TypingSpeedText.Text = $"Speed: {(int)e.NewValue} ms per character";
+        _isDirty = true;
+    }
+
+    private void ShowNotificationsCheck_Checked(object sender, RoutedEventArgs e)
+    {
+        if (NotificationModeLabel != null) NotificationModeLabel.Visibility = Visibility.Visible;
+        if (NotificationModeCombo != null) NotificationModeCombo.Visibility = Visibility.Visible;
+        _isDirty = true;
+    }
+
+    private void ShowNotificationsCheck_Unchecked(object sender, RoutedEventArgs e)
+    {
+        if (NotificationModeLabel != null) NotificationModeLabel.Visibility = Visibility.Collapsed;
+        if (NotificationModeCombo != null) NotificationModeCombo.Visibility = Visibility.Collapsed;
+        _isDirty = true;
     }
 }

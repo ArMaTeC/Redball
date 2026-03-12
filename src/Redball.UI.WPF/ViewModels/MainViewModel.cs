@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
+using Redball.UI.Services;
 using Redball.UI.Views;
 
 namespace Redball.UI.ViewModels;
@@ -93,7 +95,7 @@ public class MainViewModel : INotifyPropertyChanged
             var success = await IpcClientService.SendToPowerShellAsync("ToggleActive", new { Active = IsActive });
             if (!success)
             {
-                Log("Failed to notify PowerShell core of state change");
+                Debug.WriteLine("Failed to notify PowerShell core of state change");
             }
         });
     }

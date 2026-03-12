@@ -172,5 +172,19 @@ public class RedballConfig
     public bool TypeThingTypeNewlines { get; set; } = true;
     public bool TypeThingNotifications { get; set; } = true;
     public bool VerboseLogging { get; set; }
+    public bool MinimizeToTray { get; set; }
+    public bool ShowNotifications { get; set; } = true;
+    public NotificationMode NotificationMode { get; set; } = NotificationMode.All;
+    public int IdleThreshold { get; set; } = 30;
+    public bool PresentationMode { get; set; }
+    public bool ScheduledOperation { get; set; }
     public string Theme { get; set; } = "Dark";
+}
+
+public enum NotificationMode
+{
+    All,
+    Important,
+    Errors,
+    Silent
 }

@@ -207,7 +207,11 @@ function Step-RunLinting {
     $results = Invoke-ScriptAnalyzer -Path (Join-Path $ProjectRoot 'Redball.ps1') -Severity Warning, Error
     
     if ($results) {
-        $results | Format-Table -AutoSize
+        foreach ($result in $results) {
+            $color = if ($result.Severity -eq 'Error') { 'Red' } else { 'Yellow' }
+            Write-Host "  [$($result.Severity)] $($result.RuleName) at line $($result.Line)" -ForegroundColor $color
+            Write-Host "    → $($result.Message)" -ForegroundColor Gray
+        }
         $errors = $results | Where-Object { $_.Severity -eq 'Error' }
         if ($errors) {
             throw "PSScriptAnalyzer found errors!"
@@ -507,8 +511,7 @@ try {
  |  _  // _ \/ _` | '_ \ / _` | | | |  _ <| | | | | |/ _` |
  | | \ \  __/ (_| | |_) | (_| | | | | |_) | |_| | | | (_| |
  |_|  \_\___|\__,_|_.__/ \__,_|_|_| |____/ \__,_|_|_|\__,_|
-'@ -ForegroundColor Red
-    
+'@
     Write-Host "  Building Redball v$Version ($Configuration)`n" -ForegroundColor Cyan
     
     # Ensure dist directory exists

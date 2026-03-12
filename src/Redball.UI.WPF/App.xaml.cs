@@ -90,10 +90,18 @@ public partial class App : Application
             var configLoaded = Services.ConfigService.Instance.Load();
             Log(configLoaded ? "Configuration loaded successfully" : "Using default configuration");
 
-            // Initialize modern theme
+            // Initialize modern theme from saved config
             Log("Initializing ThemeManager...");
-            ThemeManager.Initialize();
-            Log("ThemeManager initialized");
+            var savedTheme = Services.ConfigService.Instance.Config.Theme;
+            if (!string.IsNullOrEmpty(savedTheme) && savedTheme != "System")
+            {
+                ThemeManager.SetTheme(ThemeManager.ThemeFromString(savedTheme));
+            }
+            else
+            {
+                ThemeManager.Initialize();
+            }
+            Log($"ThemeManager initialized with theme: {ThemeManager.CurrentTheme}");
 
             // Start IPC server for PowerShell communication
             Log("Starting IPC server...");
