@@ -134,9 +134,6 @@
       <Component Id="WPFExeComponent" Guid="C8D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F">
         <File Id="WPFExecutable" Source="..\dist\wpf-publish\Redball.UI.WPF.exe" KeyPath="yes" />
       </Component>
-      <Component Id="WPFPdbComponent" Guid="D9E6F7A8-9B0C-1D2E-3F4A-5B6C7D8E9F0A">
-        <File Id="WPFPdbFile" Source="..\dist\wpf-publish\Redball.UI.WPF.pdb" KeyPath="yes" />
-      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="ShortcutComponents" Directory="RedballMenuFolder">
