@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using Hardcodet.Wpf.TaskbarNotification;
+using Redball.UI.Services;
 
 namespace Redball.UI.Views;
 
@@ -89,18 +90,34 @@ public partial class MainWindow : Window
                 _viewModel?.ToggleActiveCommand.Execute(null);
             });
 
-            // Register Ctrl+Shift+V for TypeThing start
-            _hotkeyService.RegisterHotkey(100, HotkeyService.MOD_CONTROL | HotkeyService.MOD_SHIFT, 0x56 /* VK_V */, () =>
+            // Register TypeThing start hotkey from config
+            var startHotkey = ConfigService.Instance.Config.TypeThingStartHotkey ?? "Ctrl+Shift+V";
+            var (startMods, startKey) = HotkeyService.ParseHotkey(startHotkey);
+            if (startKey != 0)
             {
-                Log("Hotkey: Ctrl+Shift+V - TypeThing start");
-                StartTypeThing();
-            });
+                _hotkeyService.RegisterHotkey(100, startMods, startKey, () =>
+                {
+                    Log($"Hotkey: {startHotkey} - TypeThing start");
+                    StartTypeThing();
+                });
+                Log($"Registered TypeThing start hotkey: {startHotkey} (mods={startMods}, key={startKey})");
+            }
+            else
+            {
+                Log($"WARNING: Could not parse TypeThing start hotkey: {startHotkey}");
+            }
 
-            // Register Ctrl+Shift+X for TypeThing stop (future use)
-            _hotkeyService.RegisterHotkey(101, HotkeyService.MOD_CONTROL | HotkeyService.MOD_SHIFT, 0x58 /* VK_X */, () =>
+            // Register TypeThing stop hotkey from config
+            var stopHotkey = ConfigService.Instance.Config.TypeThingStopHotkey ?? "Ctrl+Shift+X";
+            var (stopMods, stopKey) = HotkeyService.ParseHotkey(stopHotkey);
+            if (stopKey != 0)
             {
-                Log("Hotkey: Ctrl+Shift+X - TypeThing stop");
-            });
+                _hotkeyService.RegisterHotkey(101, stopMods, stopKey, () =>
+                {
+                    Log($"Hotkey: {stopHotkey} - TypeThing stop");
+                });
+                Log($"Registered TypeThing stop hotkey: {stopHotkey} (mods={stopMods}, key={stopKey})");
+            }
 
             Log("Global hotkeys registered successfully");
         }
@@ -219,7 +236,11 @@ public partial class MainWindow : Window
                 return;
             }
             _settingsWindow = new Views.SettingsWindow();
-            _settingsWindow.Closed += (s, e) => _settingsWindow = null;
+            _settingsWindow.Closed += (s, e) =>
+            {
+                _settingsWindow = null;
+                ReloadHotkeys(); // Reload hotkeys after settings change
+            };
             _settingsWindow.Show();
         });
     }
@@ -355,6 +376,21 @@ public partial class MainWindow : Window
             timer.Interval = TimeSpan.FromMilliseconds(30 + new Random().Next(90));
         };
         timer.Start();
+    }
+
+    public void ReloadHotkeys()
+    {
+        try
+        {
+            Log("Reloading hotkeys from config...");
+            _hotkeyService?.Dispose();
+            SetupGlobalHotkeys();
+            Log("Hotkeys reloaded successfully");
+        }
+        catch (Exception ex)
+        {
+            Log($"Failed to reload hotkeys: {ex.Message}");
+        }
     }
 
     public void ExitApplication()

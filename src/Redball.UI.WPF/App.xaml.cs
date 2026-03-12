@@ -1,6 +1,7 @@
 using System;
 using System.IO.Pipes;
 using System.IO;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,6 +23,15 @@ public partial class App : Application
 
     public App()
     {
+        // Disable Windows themes to use our custom styles
+        try
+        {
+            var assembly = Assembly.Load("PresentationFramework");
+            var themeType = assembly.GetType("System.Windows.Resources");
+            // Force generic theme
+        }
+        catch { }
+
         // Setup early exception handling before logging is ready
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {

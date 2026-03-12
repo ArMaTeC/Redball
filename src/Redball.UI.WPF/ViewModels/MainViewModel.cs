@@ -86,7 +86,16 @@ public class MainViewModel : INotifyPropertyChanged
     private void ToggleActive()
     {
         IsActive = !IsActive;
-        // TODO: Send IPC message to PowerShell core
+        
+        // Send IPC message to PowerShell core
+        Task.Run(async () =>
+        {
+            var success = await IpcClientService.SendToPowerShellAsync("ToggleActive", new { Active = IsActive });
+            if (!success)
+            {
+                Log("Failed to notify PowerShell core of state change");
+            }
+        });
     }
 
     private void OpenSettings()

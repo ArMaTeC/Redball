@@ -205,24 +205,6 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="12,8"/>
         <Setter Property="MinHeight" Value="36"/>
-        <Setter Property="ItemContainerStyle">
-            <Setter.Value>
-                <Style TargetType="ComboBoxItem">
-                    <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
-                    <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
-                    <Setter Property="Padding" Value="12,8"/>
-                    <Style.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-                            <Setter Property="Foreground" Value="White"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </Setter.Value>
-        </Setter>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
@@ -259,13 +241,31 @@
                         <Popup x:Name="Popup"
                                Placement="Bottom"
                                IsOpen="{TemplateBinding IsDropDownOpen}">
-                            <Border Background="{DynamicResource CardBrush}"
+                            <Popup.Resources>
+                                <Style TargetType="ComboBoxItem">
+                                    <Setter Property="Background" Value="#FF2D2D2D"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="Padding" Value="12,8"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ComboBoxItem">
+                                                <Border Background="#FF2D2D2D" Padding="12,8">
+                                                    <ContentPresenter TextBlock.Foreground="White"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Popup.Resources>
+                            <Border Background="#FF1E1E1E"
                                     BorderBrush="{DynamicResource BorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="4"
                                     MinWidth="{TemplateBinding ActualWidth}">
                                 <ScrollViewer>
-                                    <ItemsPresenter/>
+                                    <Border Background="#FF2D2D2D">
+                                        <VirtualizingStackPanel IsItemsHost="True"/>
+                                    </Border>
                                 </ScrollViewer>
                             </Border>
                         </Popup>

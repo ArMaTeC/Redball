@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 <#requires -RunAsAdministrator#>
 <#
 # Copyright (c) 2024-2026 ArMaTeC / Redball Contributors

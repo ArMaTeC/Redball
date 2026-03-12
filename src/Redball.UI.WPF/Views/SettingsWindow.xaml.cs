@@ -12,6 +12,7 @@ namespace Redball.UI.Views;
 public partial class SettingsWindow : Window
 {
     private bool _isDirty;
+    private UpdateService? _updateService;
 
     public SettingsWindow()
     {
@@ -24,6 +25,14 @@ public partial class SettingsWindow : Window
         LoadConfigIntoUI();
         SetVersionText();
         _isDirty = false;
+        
+        // Initialize update service with config
+        var cfg = ConfigService.Instance.Config;
+        _updateService = new UpdateService(
+            cfg.UpdateRepoOwner,
+            cfg.UpdateRepoName,
+            cfg.UpdateChannel,
+            cfg.VerifyUpdateSignature);
     }
 
     private void SetVersionText()
@@ -36,14 +45,66 @@ public partial class SettingsWindow : Window
             AboutVersionText.Text = $"Redball {versionString}";
     }
 
-    private void CheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
+    private async void CheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
     {
-        // Open GitHub releases page for now
-        Process.Start(new ProcessStartInfo
+        if (_updateService == null) return;
+
+        // Show checking dialog
+        var checkingDialog = MessageBox.Show("Checking for updates...", "Update", MessageBoxButton.OKCancel, MessageBoxImage.Information);
+        if (checkingDialog != MessageBoxResult.OK) return;
+
+        // Check for updates
+        var updateInfo = await _updateService.CheckForUpdateAsync();
+        
+        if (updateInfo == null)
         {
-            FileName = "https://github.com/ArMaTeC/Redball/releases",
-            UseShellExecute = true
-        });
+            MessageBox.Show("You're running the latest version.", "No Updates", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        // Show update available dialog
+        var message = $"A new version is available: {updateInfo.VersionDisplay}\n\n" +
+                      $"Current version: {updateInfo.CurrentVersion}\n" +
+                      $"Release date: {updateInfo.ReleaseDate:yyyy-MM-dd}\n\n" +
+                      $"Release notes:\n{updateInfo.ReleaseNotes}\n\n" +
+                      "Would you like to download and install this update?";
+
+        var result = MessageBox.Show(message, "Update Available", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        
+        if (result != MessageBoxResult.Yes)
+            return;
+
+        // Download and install
+        var progressWindow = new UpdateProgressWindow();
+        progressWindow.Show();
+
+        var progress = new Progress<int>(percent => progressWindow.SetProgress(percent));
+        
+        bool success = await _updateService.DownloadAndInstallAsync(updateInfo, progress);
+        
+        progressWindow.Close();
+
+        if (success)
+        {
+            var restartResult = MessageBox.Show(
+                "Update downloaded successfully. The application will now restart to apply the update.",
+                "Update Ready",
+                MessageBoxButton.OKCancel,
+                MessageBoxImage.Information);
+
+            if (restartResult == MessageBoxResult.OK)
+            {
+                Application.Current.Shutdown();
+            }
+        }
+        else
+        {
+            MessageBox.Show(
+                "Failed to download or install the update. Please try again later or download manually from GitHub.",
+                "Update Failed",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
     }
 
     private void LoadConfigIntoUI()

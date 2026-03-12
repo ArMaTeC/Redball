@@ -9,6 +9,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>Redball.UI</RootNamespace>
     <AssemblyName>Redball.UI.WPF</AssemblyName>
+    <AssemblyTitle>Redball</AssemblyTitle>
     <ApplicationIcon>Assets\redball.ico</ApplicationIcon>
     <Version>2.1.11</Version>
     <FileVersion>2.1.11.0</FileVersion>
