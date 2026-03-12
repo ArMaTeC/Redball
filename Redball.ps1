@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 <#requires -RunAsAdministrator#>
 <#
 # Copyright (c) 2024-2026 ArMaTeC / Redball Contributors
@@ -87,7 +87,7 @@ param(
     [switch]$TestMode
 )
 
-$script:VERSION = '2.1.18'
+$script:VERSION = '2.1.19'
 $script:APP_NAME = 'Redball'
 $script:IsPS7 = $PSVersionTable.PSVersion.Major -ge 7
 
