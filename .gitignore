@@ -19,6 +19,7 @@ src/Redball.UI.WPF/bin/
 
 # Publish outputs
 publish/
+publish_output/
 *.publish.xml
 
 # NuGet
