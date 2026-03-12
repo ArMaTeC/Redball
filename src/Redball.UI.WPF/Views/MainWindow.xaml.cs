@@ -341,7 +341,7 @@ public partial class MainWindow : Window
             var ch = text[index];
             if (ch == '\n')
             {
-                System.Windows.Forms.SendKeys.SendWait("{ENTER}");
+                SendKeyPress(0x0D); // VK_RETURN
             }
             else if (ch == '\r')
             {
@@ -349,26 +349,11 @@ public partial class MainWindow : Window
             }
             else if (ch == '\t')
             {
-                System.Windows.Forms.SendKeys.SendWait("{TAB}");
+                SendKeyPress(0x09); // VK_TAB
             }
             else
             {
-                // Escape special SendKeys characters
-                var escaped = ch switch
-                {
-                    '+' => "{+}",
-                    '^' => "{^}",
-                    '%' => "{%}",
-                    '~' => "{~}",
-                    '(' => "{(}",
-                    ')' => "{)}",
-                    '{' => "{{}",
-                    '}' => "{}}",
-                    '[' => "{[}",
-                    ']' => "{]}",
-                    _ => ch.ToString()
-                };
-                System.Windows.Forms.SendKeys.SendWait(escaped);
+                SendCharacter(ch);
             }
             index++;
 
@@ -403,4 +388,61 @@ public partial class MainWindow : Window
         }
         Application.Current.Shutdown();
     }
+
+    #region P/Invoke SendInput helpers
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+    private const int INPUT_KEYBOARD = 1;
+    private const uint KEYEVENTF_KEYUP = 0x0002;
+    private const uint KEYEVENTF_UNICODE = 0x0004;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct INPUT
+    {
+        public int type;
+        public INPUTUNION u;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    private struct INPUTUNION
+    {
+        [FieldOffset(0)] public KEYBDINPUT ki;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct KEYBDINPUT
+    {
+        public ushort wVk;
+        public ushort wScan;
+        public uint dwFlags;
+        public uint time;
+        public IntPtr dwExtraInfo;
+    }
+
+    private static void SendKeyPress(ushort vk)
+    {
+        var inputs = new INPUT[2];
+        inputs[0].type = INPUT_KEYBOARD;
+        inputs[0].u.ki.wVk = vk;
+        inputs[1].type = INPUT_KEYBOARD;
+        inputs[1].u.ki.wVk = vk;
+        inputs[1].u.ki.dwFlags = KEYEVENTF_KEYUP;
+        SendInput(2, inputs, Marshal.SizeOf<INPUT>());
+    }
+
+    private static void SendCharacter(char ch)
+    {
+        var inputs = new INPUT[2];
+        inputs[0].type = INPUT_KEYBOARD;
+        inputs[0].u.ki.wScan = (ushort)ch;
+        inputs[0].u.ki.dwFlags = KEYEVENTF_UNICODE;
+        inputs[1].type = INPUT_KEYBOARD;
+        inputs[1].u.ki.wScan = (ushort)ch;
+        inputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+        SendInput(2, inputs, Marshal.SizeOf<INPUT>());
+    }
+
+    #endregion
 }

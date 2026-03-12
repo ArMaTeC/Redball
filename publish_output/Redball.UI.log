@@ -1,0 +1,31 @@
+[2026-03-12 17:26:28] === Redball.UI.WPF Starting ===
+[2026-03-12 17:26:28] OnStartup called
+[2026-03-12 17:26:28] Loading configuration...
+[2026-03-12 17:26:29] Configuration loaded successfully
+[2026-03-12 17:26:29] Initializing ThemeManager...
+[2026-03-12 17:26:29] ThemeManager initialized with theme: Dark
+[2026-03-12 17:26:29] Starting IPC server...
+[2026-03-12 17:26:29] IPC server loop starting
+[2026-03-12 17:26:29] Waiting for pipe connection...
+[2026-03-12 17:26:29] IPC server started
+[2026-03-12 17:26:29] Creating MainWindow...
+[2026-03-12 17:26:29] Window loaded
+[2026-03-12 17:26:29] DataContext set to new MainViewModel
+[2026-03-12 17:26:29] === SetupTrayIcon called ===
+[2026-03-12 17:26:29] TrayIcon from XAML: True
+[2026-03-12 17:26:29] Checking icon at: C:\Users\karll\Desktop\Redball\publish_output\Assets\redball.ico - Exists: False
+[2026-03-12 17:26:29] Checking icon at: C:\Users\karll\Desktop\Redball\publish_output\redball.ico - Exists: False
+[2026-03-12 17:26:29] Checking icon at: C:\Users\karll\Desktop\Redball\Assets\redball.ico - Exists: False
+[2026-03-12 17:26:29] Checking icon at: C:\Users\karll\Desktop\Redball\redball.ico - Exists: False
+[2026-03-12 17:26:29] WARNING: Icon file not found in any expected location
+[2026-03-12 17:26:29] Tray icon visibility set to Visible
+[2026-03-12 17:26:29] Tray tooltip set to: Redball v2.1.12
+[2026-03-12 17:26:29] IconSource is null: True
+[2026-03-12 17:26:29] === SetupTrayIcon complete ===
+[2026-03-12 17:26:29] Registered TypeThing start hotkey: Ctrl+Shift+V (mods=6, key=86)
+[2026-03-12 17:26:29] Registered TypeThing stop hotkey: Ctrl+Shift+X (mods=6, key=88)
+[2026-03-12 17:26:30] Global hotkeys registered successfully
+[2026-03-12 17:26:30] MainWindow initialization complete
+[2026-03-12 17:26:30] MainWindow loaded, moving off-screen for tray-only mode...
+[2026-03-12 17:26:30] MainWindow moved off-screen, tray-only mode active
+[2026-03-12 17:26:30] MainWindow shown for initialization
