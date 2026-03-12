@@ -39,19 +39,40 @@ public class UpdateService
         try
         {
             var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
-            var latestRelease = await GetLatestReleaseAsync();
+            Logger.Debug("UpdateService", $"Current assembly version: {currentVersion}");
+            
+            // Get all releases and find the highest version (not just "latest" by date)
+            var allReleases = await GetAllReleasesAsync();
+            var latestRelease = FindHighestVersionRelease(allReleases);
             
             if (latestRelease == null)
+            {
+                Logger.Warning("UpdateService", "Could not find any valid release");
                 return null;
+            }
 
             // Parse version from tag (remove 'v' prefix if present)
             var tagName = latestRelease.TagName.TrimStart('v', 'V');
+            Logger.Debug("UpdateService", $"Latest release tag: {latestRelease.TagName}");
+            
             if (!Version.TryParse(tagName, out var latestVersion))
+            {
+                Logger.Error("UpdateService", $"Failed to parse version from tag: {tagName}");
                 return null;
+            }
+            
+            // Normalize versions for comparison (ignore revision number)
+            var currentNormalized = new Version(currentVersion.Major, currentVersion.Minor, currentVersion.Build);
+            var latestNormalized = new Version(latestVersion.Major, latestVersion.Minor, latestVersion.Build);
+            
+            Logger.Info("UpdateService", $"Comparing versions: current={currentNormalized}, latest={latestNormalized}");
 
             // Compare versions
-            if (latestVersion <= currentVersion)
-                return null; // Up to date
+            if (latestNormalized <= currentNormalized)
+            {
+                Logger.Info("UpdateService", $"Up to date (current: {currentNormalized}, latest: {latestNormalized})");
+                return null;
+            }
 
             // Find appropriate asset (prefer standalone/portable versions)
             var asset = FindBestAsset(latestRelease);
@@ -60,8 +81,8 @@ public class UpdateService
 
             return new UpdateInfo
             {
-                CurrentVersion = currentVersion,
-                LatestVersion = latestVersion,
+                CurrentVersion = currentNormalized,
+                LatestVersion = latestNormalized,
                 DownloadUrl = asset.DownloadUrl,
                 FileName = asset.Name,
                 ReleaseNotes = latestRelease.Body,
@@ -152,16 +173,69 @@ public class UpdateService
         }
     }
 
-    private async Task<GitHubRelease?> GetLatestReleaseAsync()
+    private async Task<List<GitHubRelease>> GetAllReleasesAsync()
     {
-        var url = $"https://api.github.com/repos/{_repoOwner}/{_repoName}/releases/latest";
+        var url = $"https://api.github.com/repos/{_repoOwner}/{_repoName}/releases";
+        Logger.Debug("UpdateService", $"Fetching all releases from: {url}");
+        
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "Redball-Updater");
         
         var response = await _httpClient.GetStringAsync(url);
-        return JsonSerializer.Deserialize<GitHubRelease>(response, new JsonSerializerOptions
+        Logger.Debug("UpdateService", $"API response length: {response.Length} chars");
+        
+        var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(response, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         });
+        
+        return releases ?? new List<GitHubRelease>();
+    }
+
+    private GitHubRelease? FindHighestVersionRelease(List<GitHubRelease> releases)
+    {
+        Logger.Debug("UpdateService", $"Checking {releases.Count} releases for highest version");
+        
+        GitHubRelease? highestRelease = null;
+        Version? highestVersion = null;
+        
+        foreach (var release in releases)
+        {
+            // Skip drafts and pre-releases if not on a pre-release channel
+            if (release.IsDraft) continue;
+            if (release.IsPreRelease && _updateChannel != "beta" && _updateChannel != "alpha") continue;
+            
+            // Parse version from tag (remove 'v' prefix if present)
+            var tagName = release.TagName.TrimStart('v', 'V');
+            if (!Version.TryParse(tagName, out var version))
+            {
+                Logger.Warning("UpdateService", $"Could not parse version from tag: {release.TagName}");
+                continue;
+            }
+            
+            Logger.Verbose("UpdateService", $"Release {release.TagName} -> version {version}");
+            
+            // Compare versions (only compare Major.Minor.Build, ignore Revision)
+            var versionToCompare = new Version(version.Major, version.Minor, version.Build);
+            var currentHighest = highestVersion == null ? null : new Version(highestVersion.Major, highestVersion.Minor, highestVersion.Build);
+            
+            if (highestVersion == null || versionToCompare > currentHighest!)
+            {
+                highestVersion = version;
+                highestRelease = release;
+                Logger.Debug("UpdateService", $"New highest version found: {version} from {release.TagName}");
+            }
+        }
+        
+        if (highestRelease != null)
+        {
+            Logger.Info("UpdateService", $"Highest version release: {highestRelease.TagName} ({highestVersion})");
+        }
+        else
+        {
+            Logger.Warning("UpdateService", "No valid version found in releases");
+        }
+        
+        return highestRelease;
     }
 
     private GitHubAsset? FindBestAsset(GitHubRelease release)
@@ -379,6 +453,10 @@ public class GitHubRelease
     public string Body { get; set; } = "";
     public DateTime PublishedAt { get; set; }
     public List<GitHubAsset> Assets { get; set; } = new();
+    [System.Text.Json.Serialization.JsonPropertyName("draft")]
+    public bool IsDraft { get; set; }
+    [System.Text.Json.Serialization.JsonPropertyName("prerelease")]
+    public bool IsPreRelease { get; set; }
 }
 
 /// <summary>
