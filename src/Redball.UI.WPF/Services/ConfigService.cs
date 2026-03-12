@@ -172,4 +172,5 @@ public class RedballConfig
     public bool TypeThingTypeNewlines { get; set; } = true;
     public bool TypeThingNotifications { get; set; } = true;
     public bool VerboseLogging { get; set; }
+    public string Theme { get; set; } = "Dark";
 }

@@ -174,6 +174,11 @@ public partial class MainWindow : Window
             _trayIcon.Visibility = Visibility.Visible;
             Log("Tray icon visibility set to Visible");
             
+            // Set tooltip with actual version
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            _trayIcon.ToolTipText = $"Redball v{version?.Major}.{version?.Minor}.{version?.Build}";
+            Log($"Tray tooltip set to: {_trayIcon.ToolTipText}");
+            
             // Verify icon is set
             Log($"IconSource is null: {_trayIcon.IconSource == null}");
         }

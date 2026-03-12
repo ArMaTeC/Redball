@@ -105,6 +105,16 @@ public partial class SettingsWindow : Window
         var cfg = ConfigService.Instance.Config;
         if (StartHotkeyBox != null) cfg.TypeThingStartHotkey = StartHotkeyBox.Text;
         if (StopHotkeyBox != null) cfg.TypeThingStopHotkey = StopHotkeyBox.Text;
+        if (ThemeCombo != null)
+        {
+            cfg.Theme = ThemeCombo.SelectedIndex switch
+            {
+                0 => "System",
+                1 => "Dark",
+                2 => "Light",
+                _ => "Dark"
+            };
+        }
     }
 
     private MessageBoxResult PromptUnsavedChanges()
@@ -139,6 +149,7 @@ public partial class SettingsWindow : Window
                 ThemeManager.SetTheme(Theme.Light);
                 break;
         }
+        _isDirty = true;
     }
 
     private void HotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)

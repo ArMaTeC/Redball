@@ -13,7 +13,6 @@
     <Grid>
         <!-- Tray Icon (primary UI for v3.0) -->
         <tb:TaskbarIcon x:Name="TrayIcon"
-                       ToolTipText="Redball v3.0"
                        LeftClickCommand="{Binding ToggleActiveCommand}"
                        Visibility="Visible">
             <tb:TaskbarIcon.ContextMenu>
