@@ -1,3 +1,0 @@
-C:\Users\karll\Desktop\Redball\dist\test-deploy\Redball.UI.WPF.pdb
-C:\Users\karll\Desktop\Redball\dist\test-deploy\Assets\redball.ico
-C:\Users\karll\Desktop\Redball\dist\test-deploy\Redball.UI.WPF.exe

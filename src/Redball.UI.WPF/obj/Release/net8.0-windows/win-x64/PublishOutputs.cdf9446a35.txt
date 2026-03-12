@@ -1,8 +1,0 @@
-C:\Users\karll\Desktop\Redball\dist\wpf-publish\Redball.UI.WPF.pdb
-C:\Users\karll\Desktop\Redball\dist\wpf-publish\Assets\redball.ico
-C:\Users\karll\Desktop\Redball\dist\wpf-publish\D3DCompiler_47_cor3.dll
-C:\Users\karll\Desktop\Redball\dist\wpf-publish\PenImc_cor3.dll
-C:\Users\karll\Desktop\Redball\dist\wpf-publish\PresentationNative_cor3.dll
-C:\Users\karll\Desktop\Redball\dist\wpf-publish\vcruntime140_cor3.dll
-C:\Users\karll\Desktop\Redball\dist\wpf-publish\wpfgfx_cor3.dll
-C:\Users\karll\Desktop\Redball\dist\wpf-publish\Redball.UI.WPF.exe
