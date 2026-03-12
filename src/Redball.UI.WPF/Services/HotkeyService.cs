@@ -31,24 +31,66 @@ public class HotkeyService : IDisposable
 
     public HotkeyService(HwndSource hwndSource)
     {
-        _hwndSource = hwndSource ?? throw new ArgumentNullException(nameof(hwndSource));
+        Services.Logger.Info("HotkeyService", "Initializing HotkeyService...");
+        
+        if (hwndSource == null)
+        {
+            Services.Logger.Fatal("HotkeyService", "HwndSource is null - hotkey service cannot be created");
+            throw new ArgumentNullException(nameof(hwndSource));
+        }
+        
+        _hwndSource = hwndSource;
         _hwndSource.AddHook(WndProc);
+        Services.Logger.Debug("HotkeyService", $"Hooked into HwndSource handle: {hwndSource.Handle}");
     }
 
     public bool RegisterHotkey(int id, uint modifiers, uint vk, Action callback)
     {
-        if (_disposed) return false;
+        if (_disposed)
+        {
+            Services.Logger.Warning("HotkeyService", $"Cannot register hotkey {id}: service is disposed");
+            return false;
+        }
 
         var handle = _hwndSource.Handle;
-        if (handle == IntPtr.Zero) return false;
+        if (handle == IntPtr.Zero)
+        {
+            Services.Logger.Error("HotkeyService", $"Cannot register hotkey {id}: window handle is zero");
+            return false;
+        }
+
+        var modifierStr = FormatModifiers(modifiers);
+        var keyStr = FormatVirtualKey(vk);
+        Services.Logger.Info("HotkeyService", $"Registering hotkey ID={id}: {modifierStr}+{keyStr} (vk=0x{vk:X})");
 
         var result = RegisterHotKey(handle, id, modifiers, vk);
         if (result)
         {
             _hotkeyActions[id] = callback;
             _registeredIds.Add(id);
+            Services.Logger.Info("HotkeyService", $"Hotkey {id} registered successfully");
         }
+        else
+        {
+            var error = Marshal.GetLastWin32Error();
+            Services.Logger.Error("HotkeyService", $"Failed to register hotkey {id}: Win32 error {error} (0x{error:X})");
+        }
+        
         return result;
+    }
+
+    public bool RegisterHotkey(int id, string hotkeyString, Action callback)
+    {
+        Services.Logger.Debug("HotkeyService", $"Parsing hotkey string '{hotkeyString}' for ID {id}");
+        var (modifiers, vk) = ParseHotkey(hotkeyString);
+        
+        if (vk == 0)
+        {
+            Services.Logger.Warning("HotkeyService", $"Could not parse virtual key from '{hotkeyString}'");
+            return false;
+        }
+        
+        return RegisterHotkey(id, modifiers, vk, callback);
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -58,8 +100,20 @@ public class HotkeyService : IDisposable
             var id = wParam.ToInt32();
             if (_hotkeyActions.TryGetValue(id, out var action))
             {
-                action?.Invoke();
-                handled = true;
+                Services.Logger.Verbose("HotkeyService", $"WM_HOTKEY received for ID {id}, invoking callback");
+                try
+                {
+                    action?.Invoke();
+                    handled = true;
+                }
+                catch (Exception ex)
+                {
+                    Services.Logger.Error("HotkeyService", $"Hotkey callback for ID {id} threw exception", ex);
+                }
+            }
+            else
+            {
+                Services.Logger.Warning("HotkeyService", $"WM_HOTKEY for unknown ID {id}");
             }
         }
         return IntPtr.Zero;
@@ -67,29 +121,62 @@ public class HotkeyService : IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            Services.Logger.Verbose("HotkeyService", "Dispose called but already disposed");
+            return;
+        }
+        
         _disposed = true;
+        Services.Logger.Info("HotkeyService", $"Disposing service, unregistering {_registeredIds.Count} hotkeys...");
 
         var handle = _hwndSource.Handle;
+        int successCount = 0;
+        int failCount = 0;
+        
         foreach (var id in _registeredIds)
         {
-            UnregisterHotKey(handle, id);
+            try
+            {
+                if (UnregisterHotKey(handle, id))
+                {
+                    successCount++;
+                    Services.Logger.Verbose("HotkeyService", $"Unregistered hotkey {id}");
+                }
+                else
+                {
+                    failCount++;
+                    var error = Marshal.GetLastWin32Error();
+                    Services.Logger.Warning("HotkeyService", $"Failed to unregister hotkey {id}: Win32 error {error}");
+                }
+            }
+            catch (Exception ex)
+            {
+                failCount++;
+                Services.Logger.Error("HotkeyService", $"Exception unregistering hotkey {id}", ex);
+            }
         }
+        
         _registeredIds.Clear();
         _hotkeyActions.Clear();
 
         try
         {
             _hwndSource.RemoveHook(WndProc);
+            Services.Logger.Debug("HotkeyService", "Window hook removed");
         }
-        catch
+        catch (Exception ex)
         {
-            // HwndSource may already be disposed
+            Services.Logger.Warning("HotkeyService", $"Error removing hook (may already be disposed): {ex.Message}");
         }
+        
+        Services.Logger.Info("HotkeyService", $"Dispose complete: {successCount} unregistered, {failCount} failed");
     }
 
     public static (uint Modifiers, uint VirtualKey) ParseHotkey(string hotkey)
     {
+        Services.Logger.Verbose("HotkeyService", $"Parsing hotkey: '{hotkey}'");
+        
         var parts = hotkey?.Split('+', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
         uint modifiers = 0;
         uint vk = 0;
@@ -118,7 +205,44 @@ public class HotkeyService : IDisposable
                     break;
             }
         }
+        
+        Services.Logger.Debug("HotkeyService", $"Parsed '{hotkey}' -> modifiers=0x{modifiers:X}, vk=0x{vk:X}");
         return (modifiers, vk);
+    }
+
+    private static string FormatModifiers(uint modifiers)
+    {
+        var parts = new List<string>();
+        if ((modifiers & MOD_CONTROL) != 0) parts.Add("Ctrl");
+        if ((modifiers & MOD_ALT) != 0) parts.Add("Alt");
+        if ((modifiers & MOD_SHIFT) != 0) parts.Add("Shift");
+        if ((modifiers & MOD_WIN) != 0) parts.Add("Win");
+        return string.Join("+", parts);
+    }
+
+    private static string FormatVirtualKey(uint vk)
+    {
+        // Common virtual keys
+        return vk switch
+        {
+            >= 0x41 and <= 0x5A => ((char)('A' + (vk - 0x41))).ToString(),
+            >= 0x30 and <= 0x39 => ((char)('0' + (vk - 0x30))).ToString(),
+            >= 0x70 and <= 0x87 => $"F{vk - 0x70 + 1}",
+            0x13 => "Pause",
+            0x2D => "Insert",
+            0x2E => "Delete",
+            0x24 => "Home",
+            0x23 => "End",
+            0x21 => "PageUp",
+            0x22 => "PageDown",
+            0x09 => "Tab",
+            0x20 => "Space",
+            0x26 => "Up",
+            0x28 => "Down",
+            0x25 => "Left",
+            0x27 => "Right",
+            _ => $"0x{vk:X}"
+        };
     }
 
     private static uint KeyToVirtualKey(string key)
@@ -155,6 +279,8 @@ public class HotkeyService : IDisposable
             return 0x25;
         if (key.Equals("RIGHT", StringComparison.OrdinalIgnoreCase))
             return 0x27;
+        
+        Services.Logger.Warning("HotkeyService", $"Unknown key '{key}', returning 0");
         return 0;
     }
 }

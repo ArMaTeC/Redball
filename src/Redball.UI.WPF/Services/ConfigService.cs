@@ -21,13 +21,26 @@ public class ConfigService
     public string ConfigPath { get; private set; } = "";
     public bool IsDirty { get; set; }
 
-    private ConfigService() { }
+    private ConfigService() 
+    { 
+        Logger.Verbose("ConfigService", "Instance created (lazy initialization)");
+    }
 
     public bool Load(string? path = null)
     {
         ConfigPath = ResolveConfigPath(path);
-        if (string.IsNullOrEmpty(ConfigPath) || !File.Exists(ConfigPath))
+        Logger.Info("ConfigService", $"Loading configuration from: {ConfigPath}");
+        
+        if (string.IsNullOrEmpty(ConfigPath))
         {
+            Logger.Warning("ConfigService", "Config path is null or empty, using defaults");
+            Config = new RedballConfig();
+            return false;
+        }
+
+        if (!File.Exists(ConfigPath))
+        {
+            Logger.Info("ConfigService", $"Config file not found at: {ConfigPath}, using defaults");
             Config = new RedballConfig();
             return false;
         }
@@ -35,17 +48,37 @@ public class ConfigService
         try
         {
             var json = File.ReadAllText(ConfigPath);
+            Logger.Debug("ConfigService", $"Config file read: {json.Length} bytes");
+            
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
                 ReadCommentHandling = JsonCommentHandling.Skip
             };
+            
             Config = JsonSerializer.Deserialize<RedballConfig>(json, options) ?? new RedballConfig();
             IsDirty = false;
+            
+            Logger.Info("ConfigService", $"Configuration loaded successfully: Heartbeat={Config.HeartbeatSeconds}s, Theme={Config.Theme}");
+            Logger.Debug("ConfigService", $"Config details: Duration={Config.DefaultDuration}min, BatteryAware={Config.BatteryAware}, NetworkAware={Config.NetworkAware}");
+            
             return true;
         }
-        catch
+        catch (JsonException jsonEx)
         {
+            Logger.Error("ConfigService", "Failed to parse configuration JSON", jsonEx);
+            Config = new RedballConfig();
+            return false;
+        }
+        catch (IOException ioEx)
+        {
+            Logger.Error("ConfigService", "IO error reading configuration file", ioEx);
+            Config = new RedballConfig();
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("ConfigService", "Unexpected error loading configuration", ex);
             Config = new RedballConfig();
             return false;
         }
@@ -54,7 +87,13 @@ public class ConfigService
     public bool Save(string? path = null)
     {
         var savePath = path ?? ConfigPath;
-        if (string.IsNullOrEmpty(savePath)) return false;
+        if (string.IsNullOrEmpty(savePath))
+        {
+            Logger.Error("ConfigService", "Cannot save: save path is null or empty");
+            return false;
+        }
+
+        Logger.Info("ConfigService", $"Saving configuration to: {savePath}");
 
         try
         {
@@ -63,13 +102,42 @@ public class ConfigService
                 WriteIndented = true,
                 DefaultIgnoreCondition = JsonIgnoreCondition.Never
             };
+            
             var json = JsonSerializer.Serialize(Config, options);
+            Logger.Debug("ConfigService", $"Serialized config: {json.Length} bytes");
+            
+            // Ensure directory exists
+            var dir = Path.GetDirectoryName(savePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+                Logger.Debug("ConfigService", $"Created directory: {dir}");
+            }
+            
             File.WriteAllText(savePath, json);
             IsDirty = false;
+            
+            Logger.Info("ConfigService", "Configuration saved successfully");
             return true;
         }
-        catch
+        catch (JsonException jsonEx)
         {
+            Logger.Error("ConfigService", "Failed to serialize configuration", jsonEx);
+            return false;
+        }
+        catch (UnauthorizedAccessException authEx)
+        {
+            Logger.Error("ConfigService", "Access denied writing configuration file", authEx);
+            return false;
+        }
+        catch (IOException ioEx)
+        {
+            Logger.Error("ConfigService", "IO error writing configuration file", ioEx);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("ConfigService", "Unexpected error saving configuration", ex);
             return false;
         }
     }
@@ -77,24 +145,52 @@ public class ConfigService
     public List<string> Validate()
     {
         var errors = new List<string>();
+        Logger.Debug("ConfigService", "Validating configuration...");
 
         if (Config.HeartbeatSeconds < 10 || Config.HeartbeatSeconds > 300)
+        {
             errors.Add("HeartbeatSeconds must be between 10 and 300");
+            Logger.Warning("ConfigService", $"Validation: HeartbeatSeconds ({Config.HeartbeatSeconds}) out of range");
+        }
 
         if (Config.DefaultDuration < 1 || Config.DefaultDuration > 720)
+        {
             errors.Add("DefaultDuration must be between 1 and 720 minutes");
+            Logger.Warning("ConfigService", $"Validation: DefaultDuration ({Config.DefaultDuration}) out of range");
+        }
 
         if (Config.BatteryThreshold < 5 || Config.BatteryThreshold > 95)
+        {
             errors.Add("BatteryThreshold must be between 5 and 95%");
+            Logger.Warning("ConfigService", $"Validation: BatteryThreshold ({Config.BatteryThreshold}) out of range");
+        }
 
         if (Config.TypeThingMinDelayMs >= Config.TypeThingMaxDelayMs)
+        {
             errors.Add("TypeThingMinDelayMs must be less than TypeThingMaxDelayMs");
+            Logger.Warning("ConfigService", $"Validation: TypeThing delays invalid ({Config.TypeThingMinDelayMs} >= {Config.TypeThingMaxDelayMs})");
+        }
 
         if (Config.TypeThingStartDelaySec < 0 || Config.TypeThingStartDelaySec > 30)
+        {
             errors.Add("TypeThingStartDelaySec must be between 0 and 30");
+            Logger.Warning("ConfigService", $"Validation: TypeThingStartDelaySec ({Config.TypeThingStartDelaySec}) out of range");
+        }
 
         if (Config.MaxLogSizeMB < 1 || Config.MaxLogSizeMB > 100)
+        {
             errors.Add("MaxLogSizeMB must be between 1 and 100");
+            Logger.Warning("ConfigService", $"Validation: MaxLogSizeMB ({Config.MaxLogSizeMB}) out of range");
+        }
+
+        if (errors.Count == 0)
+        {
+            Logger.Debug("ConfigService", "Configuration validation passed");
+        }
+        else
+        {
+            Logger.Warning("ConfigService", $"Configuration validation found {errors.Count} errors");
+        }
 
         return errors;
     }
@@ -102,7 +198,10 @@ public class ConfigService
     private static string ResolveConfigPath(string? path)
     {
         if (!string.IsNullOrEmpty(path) && File.Exists(path))
+        {
+            Logger.Debug("ConfigService", $"Using provided config path: {path}");
             return path;
+        }
 
         // Try multiple locations
         var candidates = new[]
@@ -113,18 +212,28 @@ public class ConfigService
             Path.Combine(AppContext.BaseDirectory, "..", "Redball.json"),
         };
 
+        Logger.Debug("ConfigService", "Searching for config file in candidate locations...");
         foreach (var candidate in candidates)
         {
             try
             {
-                if (File.Exists(candidate))
-                    return Path.GetFullPath(candidate);
+                var fullPath = Path.GetFullPath(candidate);
+                if (File.Exists(fullPath))
+                {
+                    Logger.Debug("ConfigService", $"Found config at: {fullPath}");
+                    return fullPath;
+                }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Logger.Verbose("ConfigService", $"Error checking candidate '{candidate}': {ex.Message}");
+            }
         }
 
         // Default to base directory even if file doesn't exist yet
-        return Path.Combine(AppContext.BaseDirectory, "Redball.json");
+        var defaultPath = Path.Combine(AppContext.BaseDirectory, "Redball.json");
+        Logger.Debug("ConfigService", $"No existing config found, using default path: {defaultPath}");
+        return defaultPath;
     }
 }
 

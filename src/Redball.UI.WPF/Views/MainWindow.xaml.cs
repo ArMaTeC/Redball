@@ -19,111 +19,104 @@ public partial class MainWindow : Window
     private ViewModels.MainViewModel? _viewModel;
     private TaskbarIcon? _trayIcon;
     private bool _isTrayIconInitialized;
-    private static readonly string LogPath = Path.Combine(AppContext.BaseDirectory, "Redball.UI.log");
 
     private Views.SettingsWindow? _settingsWindow;
     private Views.AboutWindow? _aboutWindow;
     private HotkeyService? _hotkeyService;
 
-    private static void Log(string message)
-    {
-        try
-        {
-            var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            File.AppendAllText(LogPath, $"[{timestamp}] {message}{Environment.NewLine}");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Log failed: {ex.Message}");
-        }
-    }
-
     public MainWindow()
     {
+        Logger.Info("MainWindow", "Constructor called");
         InitializeComponent();
         Loaded += OnWindowLoaded;
+        Logger.Debug("MainWindow", "Constructor completed");
     }
 
     private void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
-        Log("Window loaded");
+        Logger.Info("MainWindow", "Window loaded event fired");
 
         // Set DataContext here instead of XAML to prevent constructor issues during parsing
         if (DataContext == null)
         {
+            Logger.Debug("MainWindow", "Creating new MainViewModel...");
             DataContext = new ViewModels.MainViewModel();
-            Log("DataContext set to new MainViewModel");
+            Logger.Debug("MainWindow", "DataContext set to new MainViewModel");
         }
 
         _viewModel = DataContext as ViewModels.MainViewModel;
         if (_viewModel == null)
         {
-            Log("ERROR: DataContext is not MainViewModel");
+            Logger.Error("MainWindow", "ERROR: DataContext is not MainViewModel");
             return;
         }
 
         // Connect ViewModel to this window for proper command delegation
         _viewModel.SetMainWindow(this);
+        Logger.Debug("MainWindow", "ViewModel connected to window");
 
         SetupTrayIcon();
         SetupGlobalHotkeys();
-        Log("MainWindow initialization complete");
+        Logger.Info("MainWindow", "Initialization complete");
     }
 
     private void SetupGlobalHotkeys()
     {
+        Logger.Info("MainWindow", "Setting up global hotkeys...");
         try
         {
             var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
             if (hwndSource == null)
             {
-                Log("WARNING: HwndSource not available for hotkey registration");
+                Logger.Warning("MainWindow", "HwndSource not available for hotkey registration");
                 return;
             }
+            Logger.Debug("MainWindow", $"HwndSource obtained: {hwndSource.Handle}");
 
             _hotkeyService = new HotkeyService(hwndSource);
 
             // Register Ctrl+Alt+Pause to toggle active state
+            Logger.Debug("MainWindow", "Registering Ctrl+Alt+Pause hotkey...");
             _hotkeyService.RegisterHotkey(1, HotkeyService.MOD_CONTROL | HotkeyService.MOD_ALT, 0x13 /* VK_PAUSE */, () =>
             {
-                Log("Hotkey: Ctrl+Alt+Pause - Toggle active");
+                Logger.Info("MainWindow", "Hotkey: Ctrl+Alt+Pause - Toggle active");
                 _viewModel?.ToggleActiveCommand.Execute(null);
             });
 
             // Register TypeThing start hotkey from config
             var startHotkey = ConfigService.Instance.Config.TypeThingStartHotkey ?? "Ctrl+Shift+V";
+            Logger.Debug("MainWindow", $"TypeThing start hotkey from config: {startHotkey}");
             var (startMods, startKey) = HotkeyService.ParseHotkey(startHotkey);
             if (startKey != 0)
             {
                 _hotkeyService.RegisterHotkey(100, startMods, startKey, () =>
                 {
-                    Log($"Hotkey: {startHotkey} - TypeThing start");
+                    Logger.Info("MainWindow", $"Hotkey: {startHotkey} - TypeThing start");
                     StartTypeThing();
                 });
-                Log($"Registered TypeThing start hotkey: {startHotkey} (mods={startMods}, key={startKey})");
             }
             else
             {
-                Log($"WARNING: Could not parse TypeThing start hotkey: {startHotkey}");
+                Logger.Warning("MainWindow", $"Could not parse TypeThing start hotkey: {startHotkey}");
             }
 
             // Register TypeThing stop hotkey from config
             var stopHotkey = ConfigService.Instance.Config.TypeThingStopHotkey ?? "Ctrl+Shift+X";
+            Logger.Debug("MainWindow", $"TypeThing stop hotkey from config: {stopHotkey}");
             var (stopMods, stopKey) = HotkeyService.ParseHotkey(stopHotkey);
             if (stopKey != 0)
             {
                 _hotkeyService.RegisterHotkey(101, stopMods, stopKey, () =>
                 {
-                    Log($"Hotkey: {stopHotkey} - TypeThing stop");
+                    Logger.Info("MainWindow", $"Hotkey: {stopHotkey} - TypeThing stop");
                 });
-                Log($"Registered TypeThing stop hotkey: {stopHotkey} (mods={stopMods}, key={stopKey})");
             }
 
-            Log("Global hotkeys registered successfully");
+            Logger.Info("MainWindow", "Global hotkeys registered successfully");
         }
         catch (Exception ex)
         {
-            Log($"Failed to register global hotkeys: {ex.Message}");
+            Logger.Error("MainWindow", "Failed to register global hotkeys", ex);
         }
     }
 
@@ -132,16 +125,16 @@ public partial class MainWindow : Window
         // Prevent duplicate initialization
         if (_isTrayIconInitialized)
         {
-            Log("SetupTrayIcon already initialized, skipping");
+            Logger.Debug("MainWindow", "Tray icon already initialized, skipping");
             return;
         }
         
-        Log("=== SetupTrayIcon called ===");
+        Logger.Info("MainWindow", "Setting up tray icon...");
         _isTrayIconInitialized = true;
         
         // Tray icon is defined in XAML, ensure it's properly initialized
         _trayIcon = TrayIcon;
-        Log($"TrayIcon from XAML: {_trayIcon != null}");
+        Logger.Debug("MainWindow", $"TrayIcon from XAML: {_trayIcon != null}");
         
         if (_trayIcon != null)
         {
@@ -158,7 +151,7 @@ public partial class MainWindow : Window
             foreach (var path in iconPaths)
             {
                 bool exists = File.Exists(path);
-                Log($"Checking icon at: {path} - Exists: {exists}");
+                Logger.Verbose("MainWindow", $"Checking icon at: {path} - Exists: {exists}");
                 if (exists)
                 {
                     foundPath = path;
@@ -170,50 +163,45 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    Log($"Loading icon from: {foundPath}");
-
-                    // Use System.Drawing.Icon directly - avoids BitmapImage URI issues
+                    Logger.Info("MainWindow", $"Loading icon from: {foundPath}");
                     var icon = new System.Drawing.Icon(foundPath);
                     _trayIcon.Icon = icon;
-                    Log("Icon loaded successfully via System.Drawing.Icon");
+                    Logger.Info("MainWindow", "Icon loaded successfully");
                 }
                 catch (Exception ex)
                 {
-                    Log($"ERROR loading icon: {ex.GetType().Name}: {ex.Message}");
+                    Logger.Error("MainWindow", "Failed to load icon", ex);
                 }
             }
             else
             {
-                Log("WARNING: Icon file not found in any expected location");
+                Logger.Warning("MainWindow", "Icon file not found in any expected location");
             }
             
             // Ensure visibility is set
             _trayIcon.Visibility = Visibility.Visible;
-            Log("Tray icon visibility set to Visible");
             
             // Set tooltip with actual version
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             _trayIcon.ToolTipText = $"Redball v{version?.Major}.{version?.Minor}.{version?.Build}";
-            Log($"Tray tooltip set to: {_trayIcon.ToolTipText}");
-            
-            // Verify icon is set
-            Log($"IconSource is null: {_trayIcon.IconSource == null}");
+            Logger.Info("MainWindow", $"Tray tooltip set to: {_trayIcon.ToolTipText}");
         }
         else
         {
-            Log("ERROR: TrayIcon not found in XAML!");
+            Logger.Error("MainWindow", "TrayIcon not found in XAML!");
         }
         
-        Log("=== SetupTrayIcon complete ===");
+        Logger.Info("MainWindow", "Tray icon setup complete");
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
+        Logger.Debug("MainWindow", $"OnClosing called, Cancel={e.Cancel}");
         // If closing from tray exit command, allow close
         // If closing from X button, move off-screen instead (tray-only mode)
         if (_trayIcon?.Visibility == Visibility.Visible && e.Cancel == false)
         {
-            // Move off-screen instead of closing to keep hotkeys working
+            Logger.Info("MainWindow", "Moving window off-screen instead of closing (tray-only mode)");
             WindowStyle = WindowStyle.ToolWindow;
             ShowInTaskbar = false;
             Left = -10000;
@@ -227,51 +215,64 @@ public partial class MainWindow : Window
 
     public void ShowSettings()
     {
+        Logger.Info("MainWindow", "ShowSettings called");
         Dispatcher.Invoke(() =>
         {
             if (_settingsWindow != null && _settingsWindow.IsLoaded)
             {
+                Logger.Debug("MainWindow", "Settings window already open, activating");
                 _settingsWindow.Activate();
                 _settingsWindow.Focus();
                 return;
             }
+            Logger.Debug("MainWindow", "Creating new SettingsWindow");
             _settingsWindow = new Views.SettingsWindow();
             _settingsWindow.Closed += (s, e) =>
             {
+                Logger.Info("MainWindow", "Settings window closed, reloading hotkeys");
                 _settingsWindow = null;
-                ReloadHotkeys(); // Reload hotkeys after settings change
+                ReloadHotkeys();
             };
             _settingsWindow.Show();
+            Logger.Info("MainWindow", "Settings window shown");
         });
     }
 
     public void ShowAbout()
     {
+        Logger.Info("MainWindow", "ShowAbout called");
         Dispatcher.Invoke(() =>
         {
             if (_aboutWindow != null && _aboutWindow.IsLoaded)
             {
+                Logger.Debug("MainWindow", "About window already open, activating");
                 _aboutWindow.Activate();
                 _aboutWindow.Focus();
                 return;
             }
+            Logger.Debug("MainWindow", "Creating new AboutWindow");
             _aboutWindow = new Views.AboutWindow();
-            _aboutWindow.Closed += (s, e) => _aboutWindow = null;
+            _aboutWindow.Closed += (s, e) =>
+            {
+                Logger.Debug("MainWindow", "About window closed");
+                _aboutWindow = null;
+            };
             _aboutWindow.Show();
+            Logger.Info("MainWindow", "About window shown");
         });
     }
 
     public void StartTypeThing()
     {
+        Logger.Info("MainWindow", "StartTypeThing called");
         Dispatcher.Invoke(() =>
         {
             try
             {
-                Log("TypeThing: Starting paste-as-typing");
                 var clipboardText = System.Windows.Clipboard.GetText();
                 if (string.IsNullOrEmpty(clipboardText))
                 {
-                    Log("TypeThing: Clipboard is empty, nothing to type");
+                    Logger.Warning("MainWindow", "TypeThing: Clipboard is empty");
                     if (_trayIcon != null)
                     {
                         _trayIcon.ShowBalloonTip("TypeThing", "Clipboard is empty. Copy some text first.",
@@ -280,7 +281,7 @@ public partial class MainWindow : Window
                     return;
                 }
 
-                Log($"TypeThing: Got {clipboardText.Length} chars from clipboard");
+                Logger.Info("MainWindow", $"TypeThing: Got {clipboardText.Length} chars from clipboard");
 
                 // Start typing after a short delay so user can switch to target window
                 var countdown = 3;
@@ -294,11 +295,12 @@ public partial class MainWindow : Window
                     if (countdown <= 0)
                     {
                         countdownTimer.Stop();
+                        Logger.Info("MainWindow", "TypeThing: Starting typing");
                         TypeText(clipboardText);
                     }
                     else
                     {
-                        Log($"TypeThing: Starting in {countdown}...");
+                        Logger.Debug("MainWindow", $"TypeThing: Starting in {countdown}...");
                     }
                 };
 
@@ -311,14 +313,14 @@ public partial class MainWindow : Window
             }
             catch (Exception ex)
             {
-                Log($"TypeThing error: {ex.Message}");
+                Logger.Error("MainWindow", "TypeThing error", ex);
             }
         });
     }
 
     private void TypeText(string text)
     {
-        Log($"TypeThing: Begin typing {text.Length} chars");
+        Logger.Info("MainWindow", $"TypeThing: Begin typing {text.Length} chars");
         var index = 0;
         var timer = new System.Windows.Threading.DispatcherTimer
         {
@@ -329,7 +331,7 @@ public partial class MainWindow : Window
             if (index >= text.Length)
             {
                 timer.Stop();
-                Log("TypeThing: Typing complete");
+                Logger.Info("MainWindow", "TypeThing: Typing complete");
                 if (_trayIcon != null)
                 {
                     _trayIcon.ShowBalloonTip("TypeThing", $"Done! Typed {text.Length} characters.",
@@ -365,27 +367,29 @@ public partial class MainWindow : Window
 
     public void ReloadHotkeys()
     {
+        Logger.Info("MainWindow", "Reloading hotkeys from config...");
         try
         {
-            Log("Reloading hotkeys from config...");
             _hotkeyService?.Dispose();
             SetupGlobalHotkeys();
-            Log("Hotkeys reloaded successfully");
+            Logger.Info("MainWindow", "Hotkeys reloaded successfully");
         }
         catch (Exception ex)
         {
-            Log($"Failed to reload hotkeys: {ex.Message}");
+            Logger.Error("MainWindow", "Failed to reload hotkeys", ex);
         }
     }
 
     public void ExitApplication()
     {
+        Logger.Info("MainWindow", "ExitApplication called");
         _hotkeyService?.Dispose();
         if (_trayIcon != null)
         {
             _trayIcon.Dispose();
             _trayIcon = null;
         }
+        Logger.Info("MainWindow", "Shutting down application");
         Application.Current.Shutdown();
     }
 

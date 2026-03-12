@@ -21,6 +21,8 @@ public static class IpcClientService
     /// <returns>True if message was sent successfully.</returns>
     public static async Task<bool> SendToPowerShellAsync(string action, object? data = null)
     {
+        Logger.Verbose("IpcClient", $"Sending action '{action}' to PowerShell...");
+        
         try
         {
             using var client = new NamedPipeClientStream(
@@ -29,13 +31,13 @@ public static class IpcClientService
                 PipeDirection.InOut,
                 PipeOptions.Asynchronous);
 
-            // Connect with timeout
+            Logger.Debug("IpcClient", "Connecting to pipe (timeout: 2000ms)...");
             await client.ConnectAsync(2000);
+            Logger.Debug("IpcClient", "Connected to pipe successfully");
 
             using var writer = new StreamWriter(client) { AutoFlush = true };
             using var reader = new StreamReader(client);
 
-            // Create message
             var message = new IpcClientMessage
             {
                 Action = action,
@@ -44,49 +46,47 @@ public static class IpcClientService
             };
 
             var json = JsonSerializer.Serialize(message);
+            Logger.Verbose("IpcClient", $"Sending JSON: {json}");
             await writer.WriteLineAsync(json);
+            Logger.Verbose("IpcClient", "Message sent, waiting for response...");
 
-            // Read response
             var responseJson = await reader.ReadLineAsync();
             if (responseJson != null)
             {
+                Logger.Verbose("IpcClient", $"Response received: {responseJson}");
                 var response = JsonSerializer.Deserialize<IpcClientResponse>(responseJson);
-                return response?.Success ?? false;
+                var success = response?.Success ?? false;
+                Logger.Debug("IpcClient", $"Action '{action}' completed: Success={success}");
+                return success;
             }
 
+            Logger.Warning("IpcClient", "No response received from PowerShell");
             return true;
         }
         catch (TimeoutException)
         {
-            // PowerShell core not running or not listening
+            Logger.Debug("IpcClient", "Connection timed out - PowerShell core may not be running");
+            return false;
+        }
+        catch (IOException ioEx)
+        {
+            Logger.Error("IpcClient", "IO error communicating with PowerShell", ioEx);
             return false;
         }
         catch (Exception ex)
         {
-            Log($"IPC send failed: {ex.Message}");
+            Logger.Error("IpcClient", "Failed to send IPC message", ex);
             return false;
         }
     }
 
-    /// <summary>
-    /// Synchronous wrapper for sending messages.
-    /// </summary>
     public static bool SendToPowerShell(string action, object? data = null)
     {
+        Logger.Verbose("IpcClient", $"Synchronous send: '{action}'");
         return SendToPowerShellAsync(action, data).GetAwaiter().GetResult();
-    }
-
-    private static void Log(string message)
-    {
-        var logPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.UI.log");
-        var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [IpcClient] {message}{Environment.NewLine}";
-        System.IO.File.AppendAllText(logPath, line);
     }
 }
 
-/// <summary>
-/// IPC message from WPF to PowerShell.
-/// </summary>
 public class IpcClientMessage
 {
     public string Action { get; set; } = "";
@@ -94,9 +94,6 @@ public class IpcClientMessage
     public DateTime Timestamp { get; set; }
 }
 
-/// <summary>
-/// IPC response from PowerShell.
-/// </summary>
 public class IpcClientResponse
 {
     public bool Success { get; set; }

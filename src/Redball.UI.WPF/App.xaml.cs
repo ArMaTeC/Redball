@@ -18,130 +18,192 @@ public partial class App : Application
     private NamedPipeServerStream? _pipeServer;
     private StreamReader? _pipeReader;
     private StreamWriter? _pipeWriter;
-    private string _logPath = "";
     private Views.MainWindow? _mainWindow; // Keep reference to prevent GC
 
     public App()
     {
-        // Disable Windows themes to use our custom styles
-        try
-        {
-            var assembly = Assembly.Load("PresentationFramework");
-            var themeType = assembly.GetType("System.Windows.Resources");
-            // Force generic theme
-        }
-        catch { }
+        // Initialize logger FIRST before anything else
+        Services.Logger.Initialize();
+        Services.Logger.Info("App", "=== Redball.UI.WPF Application Starting ===");
+        Services.Logger.Info("App", $"Version: {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}");
 
-        // Setup early exception handling before logging is ready
-        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+        // Setup early exception handling
+        AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+        DispatcherUnhandledException += OnDispatcherUnhandledException;
+        
+        Services.Logger.Debug("App", "Exception handlers registered");
+    }
+
+    private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        var ex = e.ExceptionObject as Exception;
+        Services.Logger.Fatal("App", "FATAL: Unhandled exception in AppDomain", ex ?? new Exception("Unknown exception"));
+        Services.Logger.WriteCrashDump(ex ?? new Exception("Unknown"), "AppDomain.UnhandledException");
+        
+        // Write emergency crash log
+        try
         {
             var crashLog = Path.Combine(AppContext.BaseDirectory, "crash.log");
             File.WriteAllText(crashLog, $"[{DateTime.Now}] FATAL: {e.ExceptionObject}");
-        };
-        TaskScheduler.UnobservedTaskException += (s, e) =>
-        {
-            var crashLog = Path.Combine(AppContext.BaseDirectory, "crash.log");
-            File.AppendAllText(crashLog, $"[{DateTime.Now}] TASK ERROR: {e.Exception}\n");
-        };
-
-        // Setup crash logging before anything else
-        var appRoot = AppContext.BaseDirectory;
-        _logPath = Path.Combine(appRoot, "Redball.UI.log");
-        
-        AppDomain.CurrentDomain.UnhandledException += (sender, e) => 
-        {
-            Log($"FATAL: Unhandled exception - {e.ExceptionObject}");
-        };
-        
-        DispatcherUnhandledException += (sender, e) => 
-        {
-            Log($"FATAL: Dispatcher exception - {e.Exception}");
-            e.Handled = true;
-        };
-        
-        TaskScheduler.UnobservedTaskException += (sender, e) => 
-        {
-            Log($"FATAL: Task exception - {e.Exception}");
-            e.SetObserved();
-        };
+        }
+        catch { }
     }
 
-    private void Log(string message)
+    private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
-        try
+        Services.Logger.Fatal("App", "FATAL: Unobserved task exception", e.Exception);
+        Services.Logger.WriteCrashDump(e.Exception, "TaskScheduler.UnobservedTaskException");
+        e.SetObserved();
+    }
+
+    private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+    {
+        Services.Logger.Fatal("App", "FATAL: Dispatcher exception", e.Exception);
+        Services.Logger.WriteCrashDump(e.Exception, "DispatcherUnhandledException");
+        
+        // Prevent default crash dialog for known recoverable exceptions
+        if (e.Exception is System.Windows.Markup.XamlParseException xamlEx)
         {
-            var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            File.AppendAllText(_logPath, $"[{timestamp}] {message}{Environment.NewLine}");
+            Services.Logger.Error("App", $"XAML parse error (recoverable): {xamlEx.Message}");
+            // Could show a message box here with the error
         }
-        catch { /* Silent fail */ }
+        
+        e.Handled = true; // Prevent crash, but log it
     }
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        Log("=== Redball.UI.WPF Starting ===");
+        Services.Logger.Info("App", "=== OnStartup Begin ===");
+        Services.Logger.LogMemoryStats("App");
         
         try
         {
             base.OnStartup(e);
-            Log("OnStartup called");
+            Services.Logger.Debug("App", "base.OnStartup completed");
 
             // Load configuration
-            Log("Loading configuration...");
+            Services.Logger.Info("App", "Loading configuration...");
             var configLoaded = Services.ConfigService.Instance.Load();
-            Log(configLoaded ? "Configuration loaded successfully" : "Using default configuration");
+            Services.Logger.Info("App", configLoaded ? "Configuration loaded successfully" : "Using default configuration (file not found)");
+
+            // Log configuration details
+            var cfg = Services.ConfigService.Instance.Config;
+            Services.Logger.Info("App", $"Config: Heartbeat={cfg.HeartbeatSeconds}s, Duration={cfg.DefaultDuration}min, Theme={cfg.Theme}");
+            Services.Logger.Info("App", $"Config: PreventDisplaySleep={cfg.PreventDisplaySleep}, BatteryAware={cfg.BatteryAware}, NetworkAware={cfg.NetworkAware}");
+
+            // Validate configuration
+            var errors = Services.ConfigService.Instance.Validate();
+            if (errors.Count > 0)
+            {
+                Services.Logger.Warning("App", $"Configuration validation found {errors.Count} errors:");
+                foreach (var err in errors)
+                {
+                    Services.Logger.Warning("App", $"  - {err}");
+                }
+            }
 
             // Initialize modern theme from saved config
-            Log("Initializing ThemeManager...");
-            var savedTheme = Services.ConfigService.Instance.Config.Theme;
-            if (!string.IsNullOrEmpty(savedTheme) && savedTheme != "System")
+            Services.Logger.Info("App", "Initializing ThemeManager...");
+            try
             {
-                ThemeManager.SetTheme(ThemeManager.ThemeFromString(savedTheme));
+                var savedTheme = Services.ConfigService.Instance.Config.Theme;
+                if (!string.IsNullOrEmpty(savedTheme) && savedTheme != "System")
+                {
+                    var themeEnum = ThemeManager.ThemeFromString(savedTheme);
+                    Services.Logger.Debug("App", $"Setting theme to: {themeEnum} (from config)");
+                    ThemeManager.SetTheme(themeEnum);
+                }
+                else
+                {
+                    Services.Logger.Debug("App", "Auto-detecting system theme");
+                    ThemeManager.Initialize();
+                }
+                Services.Logger.Info("App", $"ThemeManager initialized with theme: {ThemeManager.CurrentTheme}");
             }
-            else
+            catch (Exception themeEx)
             {
-                ThemeManager.Initialize();
+                Services.Logger.Error("App", "ThemeManager initialization failed", themeEx);
+                // Fallback to dark theme
+                ThemeManager.SetTheme(Theme.Dark);
             }
-            Log($"ThemeManager initialized with theme: {ThemeManager.CurrentTheme}");
 
             // Start IPC server for PowerShell communication
-            Log("Starting IPC server...");
+            Services.Logger.Info("App", "Starting IPC server...");
             _ = StartIpcServerAsync();
-            Log("IPC server started");
 
             // Create main window but don't show it (tray-only mode)
-            Log("Creating MainWindow...");
-            _mainWindow = new Views.MainWindow();
-            
-            // Ensure window is loaded before moving off-screen (important for tray icon and hotkeys)
-            _mainWindow.Loaded += (s, e) =>
+            Services.Logger.Info("App", "Creating MainWindow...");
+            try
             {
-                Log("MainWindow loaded, moving off-screen for tray-only mode...");
-                // Move window off-screen instead of hiding to keep message pump running for hotkeys
-                // Must use WindowStyle.None when AllowsTransparency is true
+                _mainWindow = new Views.MainWindow();
+                Services.Logger.Debug("App", "MainWindow instance created");
+            }
+            catch (Exception mwEx)
+            {
+                Services.Logger.Fatal("App", "Failed to create MainWindow", mwEx);
+                throw;
+            }
+            
+            // Ensure window is loaded before moving off-screen
+            _mainWindow.Loaded += OnMainWindowLoaded;
+            _mainWindow.Unloaded += OnMainWindowUnloaded;
+            
+            // Subscribe to application events
+            _mainWindow.Closed += OnMainWindowClosed;
+            
+            // Show the window to ensure proper initialization
+            Services.Logger.Debug("App", "Showing MainWindow for initialization...");
+            _mainWindow.Show();
+            Services.Logger.Info("App", "MainWindow shown, startup sequence complete");
+            Services.Logger.LogMemoryStats("App");
+        }
+        catch (Exception ex)
+        {
+            Services.Logger.Fatal("App", "OnStartup failed with exception", ex);
+            Services.Logger.WriteCrashDump(ex, "OnStartup");
+            throw;
+        }
+    }
+
+    private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
+    {
+        Services.Logger.Info("App", "MainWindow Loaded event fired");
+        try
+        {
+            // Move window off-screen for tray-only mode
+            if (_mainWindow != null)
+            {
                 _mainWindow.WindowStyle = WindowStyle.None;
                 _mainWindow.ShowInTaskbar = false;
                 _mainWindow.Left = -10000;
                 _mainWindow.Top = -10000;
                 _mainWindow.Width = 1;
                 _mainWindow.Height = 1;
-                Log("MainWindow moved off-screen, tray-only mode active");
-            };
-            
-            // Show the window to ensure proper initialization and hotkey registration
-            _mainWindow.Show();
-            Log("MainWindow shown for initialization");
+                Services.Logger.Debug("App", "MainWindow moved off-screen, tray-only mode active");
+            }
         }
         catch (Exception ex)
         {
-            Log($"FATAL: OnStartup failed - {ex.GetType().Name}: {ex.Message}");
-            Log($"Stack trace: {ex.StackTrace}");
-            throw;
+            Services.Logger.Error("App", "Error in MainWindow.Loaded handler", ex);
         }
+    }
+
+    private void OnMainWindowUnloaded(object sender, RoutedEventArgs e)
+    {
+        Services.Logger.Info("App", "MainWindow Unloaded event fired");
+    }
+
+    private void OnMainWindowClosed(object? sender, EventArgs e)
+    {
+        Services.Logger.Info("App", "MainWindow Closed event fired");
     }
 
     private async Task StartIpcServerAsync()
     {
-        Log("IPC server loop starting");
+        Services.Logger.Info("IPC", "IPC server loop starting");
+        int connectionAttempts = 0;
+        
         while (true)
         {
             try
@@ -153,20 +215,33 @@ public partial class App : Application
                     PipeTransmissionMode.Message,
                     PipeOptions.Asynchronous);
 
-                Log("Waiting for pipe connection...");
+                Services.Logger.Debug("IPC", "Waiting for pipe connection...");
                 await _pipeServer.WaitForConnectionAsync();
-                Log("Pipe connected");
+                connectionAttempts = 0;
+                Services.Logger.Info("IPC", "Pipe client connected");
 
                 _pipeReader = new StreamReader(_pipeServer);
                 _pipeWriter = new StreamWriter(_pipeServer) { AutoFlush = true };
 
-                // Handle incoming messages from PowerShell core
+                // Handle incoming messages
                 await HandleIpcMessagesAsync();
+            }
+            catch (IOException ioEx)
+            {
+                connectionAttempts++;
+                Services.Logger.Warning("IPC", $"Pipe IO error (attempt {connectionAttempts}): {ioEx.Message}");
             }
             catch (Exception ex)
             {
-                Log($"IPC Error: {ex.GetType().Name}: {ex.Message}");
-                await Task.Delay(1000);
+                connectionAttempts++;
+                Services.Logger.Error("IPC", $"Pipe error (attempt {connectionAttempts})", ex);
+            }
+            
+            if (connectionAttempts > 0)
+            {
+                var delayMs = Math.Min(1000 * connectionAttempts, 30000); // Max 30s delay
+                Services.Logger.Debug("IPC", $"Waiting {delayMs}ms before retry...");
+                await Task.Delay(delayMs);
             }
         }
     }
@@ -175,14 +250,30 @@ public partial class App : Application
     {
         if (_pipeReader == null) return;
 
+        int messageCount = 0;
         while (_pipeServer?.IsConnected == true)
         {
-            var message = await _pipeReader.ReadLineAsync();
-            if (message == null) break;
+            string? message = null;
+            try
+            {
+                message = await _pipeReader.ReadLineAsync();
+                if (message == null) break;
+                messageCount++;
+            }
+            catch (IOException ioEx)
+            {
+                Services.Logger.Debug("IPC", $"ReadLine IO error: {ioEx.Message}");
+                break;
+            }
+            catch (Exception readEx)
+            {
+                Services.Logger.Error("IPC", "Error reading from pipe", readEx);
+                break;
+            }
 
             try
             {
-                Log($"IPC Message received: {message}");
+                Services.Logger.Verbose("IPC", $"Message #{messageCount}: {message}");
                 var request = JsonSerializer.Deserialize<IpcRequest>(message);
                 if (request != null)
                 {
@@ -191,62 +282,112 @@ public partial class App : Application
                     {
                         var responseJson = JsonSerializer.Serialize(response);
                         await _pipeWriter.WriteLineAsync(responseJson);
-                        Log($"IPC Response sent: {responseJson}");
+                        Services.Logger.Verbose("IPC", $"Response: {responseJson}");
                     }
                 }
+                else
+                {
+                    Services.Logger.Warning("IPC", "Received null deserialized request");
+                }
+            }
+            catch (JsonException jsonEx)
+            {
+                Services.Logger.Error("IPC", $"JSON parse error for message: {message}", jsonEx);
             }
             catch (Exception ex)
             {
-                Log($"Message handling error: {ex.GetType().Name}: {ex.Message}");
+                Services.Logger.Error("IPC", "Message handling error", ex);
             }
         }
+        
+        Services.Logger.Info("IPC", $"Message loop ended after {messageCount} messages");
     }
 
     private IpcResponse ProcessRequest(IpcRequest request)
     {
-        Log($"Processing request: {request.Action}");
-        return request.Action switch
+        Services.Logger.Debug("IPC", $"Processing request: {request.Action}");
+        try
         {
-            "GetStatus" => new IpcResponse { Success = true, Data = GetStatus() },
-            "SetActive" => new IpcResponse { Success = true, Data = SetActive(request.Data) },
-            "ShowSettings" => new IpcResponse { Success = ShowSettingsDialog() },
-            _ => new IpcResponse { Success = false, Error = "Unknown action" }
-        };
+            return request.Action switch
+            {
+                "GetStatus" => new IpcResponse { Success = true, Data = GetStatus() },
+                "SetActive" => new IpcResponse { Success = true, Data = SetActive(request.Data) },
+                "ShowSettings" => new IpcResponse { Success = ShowSettingsDialog() },
+                _ => new IpcResponse { Success = false, Error = $"Unknown action: {request.Action}" }
+            };
+        }
+        catch (Exception ex)
+        {
+            Services.Logger.Error("IPC", $"Error processing request {request.Action}", ex);
+            return new IpcResponse { Success = false, Error = ex.Message };
+        }
     }
 
     private static object GetStatus()
     {
         var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-        return new { Active = true, Version = $"{version?.Major}.{version?.Minor}.{version?.Build}" };
+        var status = new { 
+            Active = true, 
+            Version = $"{version?.Major}.{version?.Minor}.{version?.Build}",
+            Timestamp = DateTime.Now
+        };
+        Services.Logger.Verbose("IPC", $"GetStatus: {status}");
+        return status;
     }
-    private static object SetActive(object? data) => new { Active = data };
+
+    private static object SetActive(object? data)
+    {
+        Services.Logger.Info("IPC", $"SetActive: {data}");
+        return new { Active = data };
+    }
 
     private bool ShowSettingsDialog()
     {
-        Log("Showing settings dialog");
-        Dispatcher.Invoke(() =>
+        Services.Logger.Info("App", "Showing settings dialog via IPC request");
+        try
         {
-            if (_mainWindow != null)
+            Dispatcher.Invoke(() =>
             {
-                _mainWindow.ShowSettings();
-            }
-            else
-            {
-                // Fallback if MainWindow not available
-                var settingsWindow = new Views.SettingsWindow();
-                settingsWindow.Show();
-            }
-        });
-        return true;
+                if (_mainWindow != null)
+                {
+                    _mainWindow.ShowSettings();
+                    Services.Logger.Debug("App", "Settings dialog shown via MainWindow");
+                }
+                else
+                {
+                    Services.Logger.Warning("App", "MainWindow was null, creating standalone SettingsWindow");
+                    var settingsWindow = new Views.SettingsWindow();
+                    settingsWindow.Show();
+                }
+            });
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Services.Logger.Error("App", "Failed to show settings dialog", ex);
+            return false;
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
-        Log($"=== Redball.UI.WPF Exiting (code: {e.ApplicationExitCode}) ===");
-        _pipeReader?.Dispose();
-        _pipeWriter?.Dispose();
-        _pipeServer?.Dispose();
+        Services.Logger.Info("App", $"=== OnExit Begin (code: {e.ApplicationExitCode}) ===");
+        Services.Logger.LogMemoryStats("App");
+        
+        try
+        {
+            _pipeReader?.Dispose();
+            _pipeWriter?.Dispose();
+            _pipeServer?.Dispose();
+            Services.Logger.Debug("App", "Pipe resources disposed");
+        }
+        catch (Exception ex)
+        {
+            Services.Logger.Error("App", "Error disposing pipe resources", ex);
+        }
+        
         base.OnExit(e);
+        Services.Logger.Info("App", "=== Application Exit Complete ===");
     }
 }
 
