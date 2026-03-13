@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
-     xmlns:net="http://wixtoolset.org/schemas/v4/wxs/netfx">
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package Name="Redball"
            Manufacturer="ArMaTeC"
            Version="$(var.ProductVersion)"
@@ -25,7 +24,7 @@
     <Property Id="ARPHELPLINK" Value="https://github.com/ArMaTeC/Redball/issues" />
     <!-- Enable Repair and Modify for better user control -->
     <Property Id="ARPNOREPAIR" Value="0" />
-    <Property Id="ARPNOMODIFY" Value="0" />
+    <!-- ARPNOMODIFY is set in WixUI extension, remove our override to avoid conflict -->
     <Property Id="ARPSIZE" Value="25000" />
     
     <!-- Add install scope selection (per-user is default) -->
@@ -56,31 +55,9 @@
     <Icon Id="RedballIcon" SourceFile="Redball.ico" />
     <Property Id="ARPPRODUCTICON" Value="RedballIcon" />
 
-    <!-- .NET 8 Runtime Detection (informative only when used with bundle) -->
-    <net:DotNetCoreSearch
-      RuntimeType="desktop"
-      Platform="x64"
-      MajorVersion="8"
-      Variable="NET8_INSTALLED" />
-    
-    <!-- Note: When installing via bundle, .NET 8 will be installed automatically if missing -->
-    <Launch Condition="NET8_INSTALLED OR BUNDLE_INSTALLED" Message="This application requires .NET 8 Desktop Runtime (x64). Please install it from https://dotnet.microsoft.com/download/dotnet/8.0 or use the Redball Setup.exe installer which includes it automatically." />
-    
-    <!-- Property to detect if we're being installed by the bundle -->
-    <Property Id="BUNDLE_INSTALLED">
-      <RegistrySearch Id="BundleSearch" Root="HKLM" Key="SOFTWARE\ArMaTeC\Redball" Name="Bundle" Type="raw" />
-    </Property>
-
-    <!-- Find powershell.exe via AppSearch -->
-    <Property Id="POWERSHELLEXE">
-      <DirectorySearch Id="FindPSDir" Path="[SystemFolder]WindowsPowerShell\v1.0">
-        <FileSearch Name="powershell.exe" />
-      </DirectorySearch>
-    </Property>
-
-    <!-- Launch after install checkbox on exit dialog -->
-    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Redball after installation" />
-    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" Secure="yes" />
+    <!-- .NET 8 prerequisite is handled by the Bundle (Setup.exe) installer.
+         If the MSI is run standalone without .NET 8, Windows will show the
+         standard .NET runtime-not-found dialog with a direct download link. -->
 
     <!-- Launch application after installation -->
     <CustomAction Id="LaunchApp"
@@ -152,10 +129,6 @@
 
   <Fragment>
     <ComponentGroup Id="CoreComponents" Directory="INSTALLFOLDER">
-      <Component Id="ScriptComponent" Guid="B7A5E9D4-7C3C-4E3B-A8A4-7A6D6E3B9E61">
-        <File Id="RedballScript" Source="..\Redball.ps1" KeyPath="yes" />
-      </Component>
-
       <Component Id="ReadmeComponent" Guid="CFA8E35A-0DF4-4D9F-8669-7865E96AFB95">
         <File Id="ReadmeFile" Source="..\README.md" KeyPath="yes" />
       </Component>

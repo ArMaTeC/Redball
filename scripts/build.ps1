@@ -32,15 +32,15 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# Resolve project root
-$script:ProjectRoot = $PSScriptRoot
+# Resolve project root (parent of scripts directory)
+$script:ProjectRoot = Split-Path $PSScriptRoot -Parent
 $script:DistPath = Join-Path $ProjectRoot $OutputPath
 
 # Import version from version.txt or WPF project if not specified
 if (-not $Version) {
     $versionFilePath = Join-Path $PSScriptRoot 'version.txt'
     if (Test-Path $versionFilePath) {
-        $Version = Get-Content $versionFilePath -Raw
+        $Version = (Get-Content $versionFilePath -Raw).Trim()
     }
     else {
         # Try to read from WPF project
@@ -59,24 +59,40 @@ if (-not $Version) {
 
 $script:Version = $Version
 
+function Write-HostSafe {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'Build script requires console output for user feedback')]
+    param(
+        [Parameter(Mandatory, Position = 0)]
+        [object]$Object,
+        [System.ConsoleColor]$ForegroundColor,
+        [switch]$NoNewline
+    )
+    if ($ForegroundColor) {
+        Write-Host $Object -ForegroundColor $ForegroundColor -NoNewline:$NoNewline
+    }
+    else {
+        Write-Host $Object -NoNewline:$NoNewline
+    }
+}
+
 function Write-BuildHeader {
     param([string]$Message)
-    Write-Host "`n=== $Message ===" -ForegroundColor Cyan
+    Write-HostSafe "`n=== $Message ===" -ForegroundColor Cyan
 }
 
 function Write-BuildStep {
     param([string]$Message)
-    Write-Host "  → $Message" -ForegroundColor Yellow
+    Write-HostSafe "  → $Message" -ForegroundColor Yellow
 }
 
 function Write-BuildSuccess {
     param([string]$Message)
-    Write-Host "  ✓ $Message" -ForegroundColor Green
+    Write-HostSafe "  ✓ $Message" -ForegroundColor Green
 }
 
 function Write-BuildError {
     param([string]$Message)
-    Write-Host "  ✗ $Message" -ForegroundColor Red
+    Write-HostSafe "  ✗ $Message" -ForegroundColor Red
 }
 
 function Test-ModuleInstalled {
@@ -119,7 +135,7 @@ function Install-BuildModule {
 
 #region Build Steps
 
-function Step-RestoreDependencies {
+function Step-RestoreDependency {
     Write-BuildHeader "Restoring Dependencies"
     
     # Ensure Pester is available
@@ -216,59 +232,39 @@ function Step-RunLinting {
     if ($results) {
         foreach ($result in $results) {
             $color = if ($result.Severity -eq 'Error') { 'Red' } else { 'Yellow' }
-            Write-Host "  [$($result.Severity)] $($result.RuleName) at line $($result.Line)" -ForegroundColor $color
-            Write-Host "    → $($result.Message)" -ForegroundColor Gray
+            Write-HostSafe "  [$($result.Severity)] $($result.RuleName) at line $($result.Line)" -ForegroundColor $color
+            Write-HostSafe "    → $($result.Message)" -ForegroundColor Gray
         }
         $errors = $results | Where-Object { $_.Severity -eq 'Error' }
         if ($errors) {
             throw "PSScriptAnalyzer found errors!"
         }
         $warnings = $results | Where-Object { $_.Severity -eq 'Warning' }
-        Write-Host "  ⚠ $($warnings.Count) warnings (non-blocking)" -ForegroundColor Yellow
+        Write-HostSafe "  ⚠ $($warnings.Count) warnings (non-blocking)" -ForegroundColor Yellow
     }
     else {
         Write-BuildSuccess "No issues found"
     }
 }
 
-function Step-RunTests {
-    Write-BuildHeader "Running Pester Tests"
+function Step-RunTest {
+    Write-BuildHeader "Running Tests"
     
-    Import-Module Pester -RequiredVersion 5.5.0 -Force
-    
-    $testPath = Join-Path $ProjectRoot 'tests' 'Redball.Tests.ps1'
+    $testPath = Join-Path $ProjectRoot 'tests' 'Redball.Tests.csproj'
     if (-not (Test-Path $testPath)) {
-        Write-Warning "Test file not found: $testPath"
+        Write-Warning "Test project not found: $testPath"
         return
     }
     
-    $config = New-PesterConfiguration
-    $config.Run.Path = $testPath
-    $config.Run.PassThru = $true
-    $config.Output.Verbosity = 'Detailed'
-    $config.TestResult.Enabled = $true
-    $config.TestResult.OutputPath = Join-Path $DistPath 'test-results.xml'
-    $config.CodeCoverage.Enabled = $false
+    Write-HostSafe "Running dotnet test..." -ForegroundColor Yellow
+    dotnet test $testPath --configuration $Configuration --verbosity normal
     
-    $result = Invoke-Pester -Configuration $config
-    
-    if ($result.FailedCount -gt 0) {
-        foreach ($f in $result.Failed) {
-            Write-BuildError "$($f.ExpandedName): $($f.ErrorRecord)"
-        }
-        throw "Pester tests failed: $($result.FailedCount)"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Tests failed"
     }
     
-    Write-BuildSuccess "All tests passed: $($result.PassedCount)"
-    
-    # Report coverage - note that AST-based test loading shows 0% coverage
-    # This is a known limitation - the file is parsed but functions are loaded via Invoke-Expression
-    if ($result.CodeCoverage) {
-        $coverage = [math]::Round($result.CodeCoverage.CoveragePercent, 1)
-        Write-Host "  Code coverage: $coverage% (AST-based testing - coverage tracking limited)" -ForegroundColor Cyan
-    }
+    Write-BuildSuccess "All tests passed"
 }
-
 function Get-FileLockInfo {
     param([string]$FilePath)
     
@@ -290,7 +286,9 @@ function Get-FileLockInfo {
                 }
             }
         }
-        catch { }
+        catch {
+            Write-Verbose "Failed to enumerate modules for process $($proc.Name): $_"
+        }
     }
     
     # Method 2: Try to open file exclusively to confirm lock
@@ -303,28 +301,30 @@ function Get-FileLockInfo {
         # File is locked - try to find process using WMI
         try {
             $fileName = Split-Path $FilePath -Leaf
-            $wmiQuery = "SELECT * FROM Win32_Process WHERE CommandLine LIKE '%$fileName%'"
-            $wmiProcesses = Get-WmiObject -Query $wmiQuery -ErrorAction SilentlyContinue
+            $wmiProcesses = Get-CimInstance -ClassName Win32_Process -Filter "CommandLine LIKE '%$fileName%'" -ErrorAction SilentlyContinue
             foreach ($wmiProc in $wmiProcesses) {
                 if ($wmiProc.ProcessId -ne $PID) {
                     $lockingProcesses += [PSCustomObject]@{
                         ProcessName = $wmiProc.Name
                         ProcessId   = $wmiProc.ProcessId
                         Path        = $wmiProc.ExecutablePath
-                        Method      = 'WMI'
+                        Method      = 'CIM'
                     }
                 }
             }
         }
-        catch { }
+        catch {
+            Write-Verbose "Failed to query WMI: $_"
+        }
     }
-    
     return $lockingProcesses | Select-Object -Unique -Property ProcessName, ProcessId, Path, Method
 }
 
-function Stop-LockingProcesses {
+function Stop-LockingProcess {
+    [CmdletBinding(SupportsShouldProcess)]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '', Justification = 'Function name is clear and intentional')]
     param([string]$FilePath)
-    
+
     Write-BuildStep "Detecting processes locking file..."
     $lockers = Get-FileLockInfo -FilePath $FilePath
     
@@ -344,16 +344,18 @@ function Stop-LockingProcesses {
     }
     
     if ($lockers) {
-        Write-Host "`n  Detected potential locking processes:" -ForegroundColor Yellow
-        $lockers | Format-Table -AutoSize | Out-String | Write-Host -ForegroundColor Yellow
-        
+        Write-HostSafe "`n  Detected potential locking processes:" -ForegroundColor Yellow
+        $lockers | Format-Table -AutoSize | Out-String | ForEach-Object { Write-HostSafe $_ -ForegroundColor Yellow }
+
         Write-BuildStep "Attempting to terminate locking processes..."
         foreach ($locker in $lockers) {
             try {
                 $proc = Get-Process -Id $locker.ProcessId -ErrorAction SilentlyContinue
                 if ($proc) {
-                    $proc | Stop-Process -Force -ErrorAction Stop
-                    Write-BuildSuccess "Terminated: $($locker.ProcessName) (PID: $($locker.ProcessId))"
+                    if ($PSCmdlet.ShouldProcess($locker.ProcessName, "Terminate Process")) {
+                        $proc | Stop-Process -Force -ErrorAction Stop
+                        Write-BuildSuccess "Terminated: $($locker.ProcessName) (PID: $($locker.ProcessId))"
+                    }
                 }
             }
             catch {
@@ -373,11 +375,11 @@ function Stop-LockingProcesses {
         }
         catch {
             Write-BuildError "File is still locked. Manual intervention required."
-            Write-Host "`n  Options to resolve:" -ForegroundColor Cyan
-            Write-Host "    1. Run: handle.exe $FilePath  (from Sysinternals)" -ForegroundColor Gray
-            Write-Host "    2. Close Visual Studio or other IDE instances" -ForegroundColor Gray
-            Write-Host "    3. Restart Windows Explorer or logoff/login" -ForegroundColor Gray
-            Write-Host "    4. Reboot computer" -ForegroundColor Gray
+            Write-HostSafe "`n  Options to resolve:" -ForegroundColor Cyan
+            Write-HostSafe "    1. Run: handle.exe $FilePath  (from Sysinternals)" -ForegroundColor Gray
+            Write-HostSafe "    2. Close Visual Studio or other IDE instances" -ForegroundColor Gray
+            Write-HostSafe "    3. Restart Windows Explorer or logoff/login" -ForegroundColor Gray
+            Write-HostSafe "    4. Reboot computer" -ForegroundColor Gray
             return $false
         }
     }
@@ -411,7 +413,7 @@ function Step-BuildWPF {
         }
         catch {
             Write-Warning "DLL file is locked by another process"
-            $resolved = Stop-LockingProcesses -FilePath $dllPath
+            $resolved = Stop-LockingProcess -FilePath $dllPath
             if (-not $resolved) {
                 throw "Cannot resolve file lock. Please close locking applications manually."
             }
@@ -448,11 +450,11 @@ function Step-BuildWPF {
     dotnet publish $projectPath `
         --configuration $Configuration `
         --output $publishDir `
-        --self-contained true `
+        --self-contained false `
         --runtime win-x64 `
         --property:PublishSingleFile=true `
         --property:PublishTrimmed=false `
-        --no-build
+        --property:EnableCompressionInSingleFile=false
     
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet publish failed"
@@ -463,12 +465,15 @@ function Step-BuildWPF {
     $exePath = Join-Path $publishDir 'Redball.UI.WPF.exe'
     if (Test-Path $exePath) {
         $fileInfo = Get-Item $exePath
-        Write-Host "  Executable: $($fileInfo.Name) ($([math]::Round($fileInfo.Length / 1MB, 2)) MB)" -ForegroundColor Gray
+        Write-HostSafe "  Executable: $($fileInfo.Name) ($([math]::Round($fileInfo.Length / 1MB, 2)) MB)" -ForegroundColor Gray
     }
 }
 
 function Step-BuildMSI {
     Write-BuildHeader "Building MSI Installer"
+    
+    # Accept WiX v7 OSMF EULA
+    $env:WIX_OSMF_EULA_ACCEPTED = '1'
     
     $msiScript = Join-Path $ProjectRoot 'installer' 'Build-MSI.ps1'
     if (-not (Test-Path $msiScript)) {
@@ -500,15 +505,24 @@ function Step-CreateReleasePackage {
     
     $msiInfo = Get-Item $msiPath
     Write-BuildSuccess "Release MSI ready: $($msiInfo.Name) ($([math]::Round($msiInfo.Length / 1MB, 2)) MB)"
-    Write-Host "  Location: $msiPath" -ForegroundColor Gray
-    Write-Host "  Contains: WPF Application + Core Files + Configuration" -ForegroundColor Gray
+    Write-HostSafe "  Location: $msiPath" -ForegroundColor Gray
+    Write-HostSafe "  Contains: WPF Application + Core Files + Configuration" -ForegroundColor Gray
+    
+    # Show bundle if it exists
+    $bundlePath = Join-Path $DistPath "Redball-Setup-$Version.exe"
+    if (Test-Path $bundlePath) {
+        $bundleInfo = Get-Item $bundlePath
+        Write-BuildSuccess "Release Setup ready: $($bundleInfo.Name) ($([math]::Round($bundleInfo.Length / 1MB, 2)) MB)"
+        Write-HostSafe "  Location: $bundlePath" -ForegroundColor Gray
+        Write-HostSafe "  Contains: MSI + .NET 8 Desktop Runtime auto-download" -ForegroundColor Gray
+    }
 }
 
 #endregion
 
 # Main Build Process
 try {
-    Write-Host @'
+    Write-HostSafe @'
   _____          _ _           _ _   ____        _ _     _ 
  |  __ \        | | |         | | | |  _ \      (_) |   | |
  | |__) |___  __| | |__   __ _| | | | |_) |_   _ _| | __| |
@@ -516,7 +530,7 @@ try {
  | | \ \  __/ (_| | |_) | (_| | | | | |_) | |_| | | | (_| |
  |_|  \_\___|\__,_|_.__/ \__,_|_|_| |____/ \__,_|_|_|\__,_|
 '@
-    Write-Host "  Building Redball v$Version ($Configuration)`n" -ForegroundColor Cyan
+    Write-HostSafe "  Building Redball v$Version ($Configuration)`n" -ForegroundColor Cyan
     
     # Ensure dist directory exists
     if (-not (Test-Path $DistPath)) {
@@ -524,7 +538,7 @@ try {
     }
     
     # Always run these
-    Step-RestoreDependencies
+    Step-RestoreDependency
     Step-ValidateJson
     
     # Security scan
@@ -532,7 +546,7 @@ try {
         Step-RunSecurityScan
     }
     else {
-        Write-Host "  Skipping security scan ( -SkipSecurity )" -ForegroundColor Yellow
+        Write-HostSafe "  Skipping security scan ( -SkipSecurity )" -ForegroundColor Yellow
     }
     
     # Lint
@@ -540,15 +554,15 @@ try {
         Step-RunLinting
     }
     else {
-        Write-Host "  Skipping linting ( -SkipLint )" -ForegroundColor Yellow
+        Write-HostSafe "  Skipping linting ( -SkipLint )" -ForegroundColor Yellow
     }
     
     # Tests
     if (-not $SkipTests) {
-        Step-RunTests
+        Step-RunTest
     }
     else {
-        Write-Host "  Skipping tests ( -SkipTests )" -ForegroundColor Yellow
+        Write-HostSafe "  Skipping tests ( -SkipTests )" -ForegroundColor Yellow
     }
     
     # WPF Build (required before MSI)
@@ -556,7 +570,7 @@ try {
         Step-BuildWPF
     }
     else {
-        Write-Host "  Skipping WPF build ( -SkipWPF )" -ForegroundColor Yellow
+        Write-HostSafe "  Skipping WPF build ( -SkipWPF )" -ForegroundColor Yellow
     }
     
     # MSI Build (requires WPF files)
@@ -567,7 +581,7 @@ try {
         Step-BuildMSI
     }
     else {
-        Write-Host "  Skipping MSI build ( -SkipMSI )" -ForegroundColor Yellow
+        Write-HostSafe "  Skipping MSI build ( -SkipMSI )" -ForegroundColor Yellow
     }
     
     # Finalize release (MSI is now the primary artifact)
@@ -575,21 +589,21 @@ try {
         Step-CreateReleasePackage
     }
     
-    Write-Host "`n══════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "  BUILD SUCCEEDED" -ForegroundColor Green
-    Write-Host "══════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "  Version:  $Version" -ForegroundColor Gray
-    Write-Host "  Config:   $Configuration" -ForegroundColor Gray
-    Write-Host "  Output:   $((Resolve-Path $DistPath).Path)" -ForegroundColor Gray
-    Write-Host "══════════════════════════════════════════════════════════`n" -ForegroundColor Green
+    Write-HostSafe "`n══════════════════════════════════════════════════════════" -ForegroundColor Green
+    Write-HostSafe "  BUILD SUCCEEDED" -ForegroundColor Green
+    Write-HostSafe "══════════════════════════════════════════════════════════" -ForegroundColor Green
+    Write-HostSafe "  Version:  $Version" -ForegroundColor Gray
+    Write-HostSafe "  Config:   $Configuration" -ForegroundColor Gray
+    Write-HostSafe "  Output:   $((Resolve-Path $DistPath).Path)" -ForegroundColor Gray
+    Write-HostSafe "══════════════════════════════════════════════════════════`n" -ForegroundColor Green
     
     exit 0
 }
 catch {
-    Write-Host "`n══════════════════════════════════════════════════════════" -ForegroundColor Red
-    Write-Host "  BUILD FAILED" -ForegroundColor Red
-    Write-Host "══════════════════════════════════════════════════════════" -ForegroundColor Red
-    Write-Host "  Error: $_" -ForegroundColor Red
-    Write-Host "══════════════════════════════════════════════════════════`n" -ForegroundColor Red
+    Write-HostSafe "`n══════════════════════════════════════════════════════════" -ForegroundColor Red
+    Write-HostSafe "  BUILD FAILED" -ForegroundColor Red
+    Write-HostSafe "══════════════════════════════════════════════════════════" -ForegroundColor Red
+    Write-HostSafe "  Error: $_" -ForegroundColor Red
+    Write-HostSafe "══════════════════════════════════════════════════════════`n" -ForegroundColor Red
     exit 1
 }

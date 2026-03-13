@@ -3,7 +3,7 @@
      xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
      xmlns:net="http://wixtoolset.org/schemas/v4/wxs/netfx">
   
-  <Bundle Name="Redball"
+  <Bundle Name="Redball Setup"
           Manufacturer="ArMaTeC"
           Version="$(var.ProductVersion)"
           UpgradeCode="B8BAC190-AE2E-4F8B-97EC-7FE79C0FA9C1"
@@ -14,48 +14,38 @@
       <bal:WixStandardBootstrapperApplication
         Theme="hyperlinkLicense"
         LicenseUrl="https://github.com/ArMaTeC/Redball/blob/main/LICENSE"
-        LogoFile="banner.bmp"
+        LogoFile="redball.png"
         ShowVersion="yes"
         SuppressOptionsUI="no" />
     </BootstrapperApplication>
 
-    <!-- Bundle variables for better UX -->
-    <Variable Name="EulaAcceptLabel" Value="I accept the license terms" />
-    <Variable Name="InstallVersionDescription" Value="Redball [WixBundleVersion] will be installed on your computer." />
-    <Variable Name="SuccessDescription" Value="Redball has been successfully installed!" />
-    <Variable Name="SuccessRestartDescription" Value="Please restart your computer to complete the installation." />
+    <!-- Detect .NET 8 Desktop Runtime x64 -->
+    <net:DotNetCoreSearch
+      RuntimeType="desktop"
+      Platform="x64"
+      MajorVersion="8"
+      Variable="NET8DesktopInstalled" />
 
     <Chain>
-      <!-- .NET 8 Desktop Runtime x64 - downloaded on demand -->
+      <!-- .NET 8 Desktop Runtime x64 - downloaded at build time, not embedded in bundle -->
       <ExePackage
-        Name="dotnet-runtime-8.0.12-windows-x64.exe"
-        DownloadUrl="https://download.visualstudio.microsoft.com/download/pr/f1f22101-2c0b-4108-9a30-3f01ddd92a9c/2d2226a8f5b5b6f7f5c5a8d5c7a8b5c9/windowsdesktop-runtime-8.0.12-win-x64.exe"
+        Id="NetDesktop8Runtime"
+        SourceFile="windowsdesktop-runtime-win-x64.exe"
+        DownloadUrl="https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe"
         Compressed="no"
-        InstallCommand="/install /quiet /norestart"
-        RepairCommand="/repair /quiet /norestart"
-        UninstallCommand="/uninstall /quiet /norestart"
-        DetectCondition="NET8_INSTALLED"
-        InstallCondition="NOT NET8_INSTALLED"
-        Permanent="yes">
-        <net:DotNetCoreSearch
-          RuntimeType="desktop"
-          Platform="x64"
-          MajorVersion="8"
-          Variable="NET8_INSTALLED" />
-      </ExePackage>
+        InstallArguments="/install /quiet /norestart"
+        RepairArguments="/repair /quiet /norestart"
+        UninstallArguments="/uninstall /quiet /norestart"
+        DetectCondition="NET8DesktopInstalled"
+        InstallCondition="NOT NET8DesktopInstalled"
+        Permanent="yes" />
 
       <!-- Redball MSI -->
       <MsiPackage
         SourceFile="$(var.RedballMsiPath)"
         Compressed="yes"
-        Visible="no"
-        InstallCondition="NOT REMOVE">
-        <MsiProperty Name="ADDLOCAL" Value="[RedballFeatures]" />
-      </MsiPackage>
+        Visible="no" />
     </Chain>
-
-    <!-- Variables -->
-    <Variable Name="RedballFeatures" Value="MainFeature,StartupFeature,ConfigFeature" />
     
   </Bundle>
 </Wix>
