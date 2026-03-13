@@ -184,6 +184,8 @@ public partial class SettingsWindow : Window
         }
         if (svc.Save())
         {
+            // Reload keep-awake engine with updated config
+            KeepAwakeService.Instance.ReloadConfig();
             _isDirty = false;
             Close();
         }

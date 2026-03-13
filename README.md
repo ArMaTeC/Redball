@@ -1,7 +1,5 @@
 # Redball
 
-[![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-blue.svg)](https://github.com/PowerShell/PowerShell)
-[![PS7 Compatible](https://img.shields.io/badge/PowerShell_7-Compatible-blueviolet.svg)](https://github.com/PowerShell/PowerShell)
 [![.NET 8](https://img.shields.io/badge/.NET_8-WPF-512BD4.svg)](https://dotnet.microsoft.com/)
 [![Windows](https://img.shields.io/badge/Platform-Windows_8.1%2B-0078D6.svg)](https://www.microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -11,7 +9,7 @@
 
 > A system tray utility to prevent Windows from sleeping, with style.
 
-Redball is a keep-awake utility for Windows featuring a **modern WPF desktop application** with 12 custom themes, alongside the original **PowerShell system tray script**. It keeps your computer awake using the `SetThreadExecutionState` API, with smart monitoring features, a built-in settings GUI, auto-updating, code signing, and a branded MSI installer.
+Redball is a keep-awake utility for Windows built as a **native WPF desktop application** (.NET 8) with 12 custom themes. It keeps your computer awake using the `SetThreadExecutionState` API, with smart monitoring features (battery, network, idle, schedule, presentation mode), a built-in settings GUI, auto-updating, code signing, and a branded MSI installer.
 
 ![Redball Icon](installer/redball.png)
 
@@ -29,55 +27,40 @@ Redball is a keep-awake utility for Windows featuring a **modern WPF desktop app
 - **Theme Persistence** — Selected theme saved to config and restored on startup
 - **Code Signed** — EXE and MSI signed with SHA-256 certificate via `signtool` in CI
 
-### PowerShell System Tray Application
+### Smart Monitoring & Automation
 
-- **3D Red Ball Icon** — Dynamic GDI+ icon that changes color based on state:
-  - **Bright Red** — Active and keeping system awake
-  - **Orange/Red** — Timed mode with countdown
-  - **Dark Red/Gray** — Paused / idle state
-- **Timed Sessions** — Set duration (15, 30, 60, 120 minutes) or run indefinitely
-- **Display Sleep Control** — Optionally keep display awake too
-- **F15 Heartbeat** — Sends invisible F15 keypresses to prevent idle detection (only when system is actually idle)
 - **Battery-Aware Mode** — Auto-pause when battery drops below a configurable threshold, resume on charge
 - **Network-Aware Mode** — Auto-pause when network disconnects, resume on reconnect
-- **Idle Detection** — Auto-pause after 30 minutes of user inactivity, resume on input
+- **Idle Detection** — Auto-pause after configurable minutes of user inactivity, resume on input
 - **Scheduled Operation** — Auto-start/stop at configured times and days of the week
 - **Presentation Mode Detection** — Auto-activate when PowerPoint is open or Teams is screen-sharing
 - **Session Restore** — Saves state on exit, restores on next startup
-- **Startup with Windows** — Launch automatically via startup shortcut or MSI installer option
-- **Toast Notifications** — Native Windows 10/11 toast notifications with balloon tip fallback
-- **Settings GUI** — Tabbed WinForms settings dialog (General, Power & Monitoring, Schedule, Advanced)
-- **Structured Logging** — Rotating log files with configurable size limits and retry/fallback logic
-- **JSON Configuration** — Persistent settings via `Redball.json`
-- **Singleton Instance** — Named mutex prevents multiple instances; auto-stops stale processes
+- **Singleton Instance** — Named mutex prevents multiple instances
 - **Crash Recovery** — Detects previous abnormal termination and resets to safe defaults
-- **Auto-Updater** — Check for and install updates from GitHub Releases
-- **Code Signing** — Sign scripts with `Set-AuthenticodeSignature` or `signtool.exe`
+
+### Core Features
+
+- **Timed Sessions** — Set duration (15, 30, 60, 120 minutes) or run indefinitely
+- **Display Sleep Control** — Optionally keep display awake too
+- **F15 Heartbeat** — Sends invisible F15 keypresses to prevent idle detection via native `SendInput`
+- **Startup with Windows** — Launch automatically via Registry Run key or MSI installer
+- **Tray Notifications** — Configurable balloon tip notifications with mode filtering
+- **JSON Configuration** — Persistent settings via `Redball.json`
+- **Structured Logging** — Rotating log files with configurable size limits
 - **Settings Backup/Restore** — Export and import all settings to a JSON backup file
-- **Process Isolation** — Optional runspace-based keep-awake for extra reliability
 - **Global Hotkey** — Ctrl+Alt+Pause to toggle pause/resume system-wide
-- **Localization (i18n)** — English, Spanish, French, and German with auto-detection
-- **High DPI / High Contrast / Dark Mode** — System-aware rendering and icon fallback
-- **Graceful Shutdown** — Handles Ctrl+C and terminal close without errors
+- **Localization (i18n)** — English, Spanish, French, German, and Blade Runner theme
+- **Auto-Updater** — Check for and install updates from GitHub Releases
+- **Code Signing** — EXE and MSI signed with SHA-256 certificate via `signtool` in CI
 - **TypeThing — Clipboard Typer** — Simulates human-like typing of clipboard contents via global hotkeys
-  - Configurable typing speed (min/max delay), random pauses for realism
-  - Countdown before typing starts, emergency stop hotkey
-  - Unicode support via `SendInput` with `KEYEVENTF_UNICODE`
-  - Themed settings dialog (light, dark, hacker)
-  - Handles newlines, tabs, and large clipboard with confirmation prompt
-- **About Dialog** — Version info with built-in update checker and download button
-- **Pester Tests** — Comprehensive test suite included
-- **MSI Installer** — WiX v4 installer with branded UI (custom banner/dialog images), Start Menu/Desktop/Startup shortcuts with icons, feature selection, and post-install launch
-- **CI/CD** — GitHub Actions with Pester tests, PSScriptAnalyzer lint, security scan, WPF publish, WiX MSI build, code signing, and GitHub Release creation
-- **Code Signing** — Automated SHA-256 signing of both EXE and MSI in CI via `signtool` with DigiCert timestamping
-- **Build System** — Comprehensive `build.ps1` with version management, .NET publish, WiX build, security scanning, and linting
+- **MSI Installer** — WiX v4 installer with branded UI, shortcuts, and post-install launch
+- **CI/CD** — GitHub Actions with Pester tests, PSScriptAnalyzer lint, WPF build, security scan, and GitHub Release creation
 
 ## Quick Start
 
 ### Prerequisites
 
-- **Windows 10** or later (Windows 8.1 for PowerShell script only)
-- **PowerShell 5.1** or later (PowerShell 7+ also supported)
+- **Windows 10** or later
 - **.NET 8 Runtime** (included in the self-contained WPF EXE — no separate install needed)
 
 ### Option A — MSI Installer (Recommended)
@@ -91,19 +74,21 @@ Download the latest **`Redball.msi`** from the [Releases](https://github.com/ArM
 - Optional default behavior features (battery-aware, network-aware, idle detection, etc.)
 - "Launch Redball" checkbox on the finish page
 
-### Option B — Run the PowerShell Script Directly
+### Option B — Run the Executable
+
+If you have the self-contained EXE from the repository or a custom build:
 
 ```powershell
-# Run with default settings
-.\Redball.ps1
+# Run the WPF application
+.\Redball.UI.WPF.exe
 
-# Run with custom config path
-.\Redball.ps1 -ConfigPath "C:\Tools\Redball.json"
+# The application will start minimized to the system tray
+# Right-click the tray icon to access all features
 ```
 
 ## Configuration
 
-Settings are stored in `Redball.json` in the same directory as the script. A default file is created on first run if one doesn't exist. You can also change all settings from the **Settings** dialog in the tray menu.
+Settings are stored in `Redball.json` in the application directory. A default file is created on first run if one doesn't exist. You can also change all settings from the **Settings** dialog in the tray menu.
 
 ```json
 {
@@ -145,20 +130,19 @@ Settings are stored in `Redball.json` in the same directory as the script. A def
 | `LogPath` | Path to log file | `Redball.log` |
 | `MaxLogSizeMB` | Log rotation threshold in MB | `10` |
 | `ShowBalloonOnStart` | Show tray notification when Redball starts | `true` |
-| `Locale` | Display language (`en`, `es`, `fr`, `de`) | Auto-detected |
+| `Locale` | Display language (`en`, `es`, `fr`, `de`, `bl`) | Auto-detected |
 | `MinimizeOnStart` | Start minimized to system tray | `false` |
 | `BatteryAware` | Auto-pause when battery is low | `false` |
 | `BatteryThreshold` | Battery % below which to auto-pause | `20` |
 | `NetworkAware` | Auto-pause when network disconnects | `false` |
-| `IdleDetection` | Auto-pause after 30 min of user inactivity | `false` |
+| `IdleDetection` | Auto-pause after user inactivity | `false` |
+| `IdleThresholdMinutes` | Minutes of inactivity before auto-pause | `30` |
 | `AutoExitOnComplete` | Exit automatically when a timed session finishes | `false` |
 | `ScheduleEnabled` | Enable daily scheduled activation | `false` |
 | `ScheduleStartTime` | Time to auto-start (HH:mm) | `09:00` |
 | `ScheduleStopTime` | Time to auto-stop (HH:mm) | `18:00` |
 | `ScheduleDays` | Days of the week the schedule applies | Weekdays |
 | `PresentationModeDetection` | Auto-activate for PowerPoint/Teams presentations | `false` |
-| `ProcessIsolation` | Run keep-awake API in a separate runspace | `false` |
-| `EnablePerformanceMetrics` | Track CPU, memory, and handle metrics | `false` |
 | `EnableTelemetry` | Opt-in anonymous usage telemetry (logged locally) | `false` |
 | `UpdateRepoOwner` | GitHub owner for update checks | `karl-lawrence` |
 | `UpdateRepoName` | GitHub repo for update checks | `Redball` |
@@ -194,7 +178,7 @@ Right-click the red ball icon in your system tray:
 | **Battery-Aware Mode** | Toggle auto-pause on low battery |
 | **Start with Windows** | Toggle startup shortcut |
 | **Network-Aware Mode** | Toggle auto-pause on disconnect |
-| **Idle Detection (30min)** | Toggle idle-based auto-pause |
+| **Idle Detection** | Toggle idle-based auto-pause |
 | **TypeThing →** | Clipboard typer submenu (Type Clipboard, Stop, Status, Settings) |
 | **Settings...** | Open the tabbed settings dialog |
 | **About...** | Version info and update checker |
@@ -221,267 +205,76 @@ Right-click the red ball icon in your system tray:
 - **Double-click icon** — Toggle pause / resume
 - **Ctrl+Alt+Pause** — Global hotkey to toggle (system-wide)
 
-### Command Line Interface
+## Command Line Arguments
+
+The WPF application supports the following command-line arguments:
 
 ```powershell
-# Install to Windows startup
-.\Redball.ps1 -Install
-
-# Remove from Windows startup
-.\Redball.ps1 -Uninstall
-
-# Run for 60 minutes then exit
-.\Redball.ps1 -Duration 60 -ExitOnComplete
-
 # Start minimized to tray
-.\Redball.ps1 -Minimized
+.\Redball.UI.WPF.exe -minimized
 
-# Get current status as JSON
-.\Redball.ps1 -Status | ConvertFrom-Json
-
-# Check for updates
-.\Redball.ps1 -CheckUpdate
-
-# Install the latest update from GitHub
-.\Redball.ps1 -Update
-
-# Sign the script with a code-signing certificate
-.\Redball.ps1 -SignScript [-CertThumbprint <thumbprint>] [-TimestampServer <url>]
+# Start with specific config path
+.\Redball.UI.WPF.exe -config "C:\Tools\Redball.json"
 ```
 
-| Parameter | Description |
-| --------- | ----------- |
-| `-Install` | Add Redball to Windows startup |
-| `-Uninstall` | Remove from Windows startup |
-| `-Duration <N>` | Run for N minutes (1–720) |
-| `-ExitOnComplete` | Exit after timed duration completes |
-| `-Minimized` | Start minimized to system tray |
-| `-Status` | Output JSON status and exit |
-| `-CheckUpdate` | Check GitHub for a newer version and exit |
-| `-Update` | Download and install the latest release |
-| `-SignScript` | Sign the script with an Authenticode certificate |
-| `-SignPath` | Path to the file to sign (defaults to `Redball.ps1`) |
-| `-CertThumbprint` | Certificate thumbprint to use for signing |
-| `-TimestampServer` | RFC 3161 timestamp server URL |
-| `-ConfigPath` | Specify a custom config file path |
+| Argument | Description |
+| -------- | ----------- |
+| `-minimized` | Start minimized to system tray |
+| `-config <path>` | Specify a custom config file path |
+| `-help` | Show help information |
 
 ## Settings GUI
 
-Open the settings dialog from the tray menu (**Settings...** or press **G**). The dialog has five tabs:
+Open the settings dialog from the tray menu (**Settings...** or press **G**). The dialog has four tabs:
 
 - **General** — Duration, heartbeat interval, locale, minimize/exit behavior
 - **Power & Monitoring** — Display sleep, F15 heartbeat, battery-aware, network-aware, idle detection, presentation mode
 - **Schedule** — Enable/disable scheduled operation, start/stop times, active days
-- **Advanced** — Log size, process isolation, performance metrics, telemetry, update channel, signature verification
-- **TypeThing** — Enable/disable, typing speed, start delay, hotkeys, random pauses, newlines, notifications, theme
+- **TypeThing** — Enable/disable, typing speed, start delay, hotkeys, random pauses, newlines, notifications
 
 Changes are saved to `Redball.json` when you click **OK**.
 
 TypeThing also has its own dedicated settings dialog (accessible from the TypeThing tray submenu) with grouped controls for speed, behaviour, hotkeys, and appearance — including a live WPM estimate and theme preview.
 
-## API Reference
+## C# Services API
 
-### Key Functions
+Redball v3.0 is implemented as a pure C# WPF application. The core functionality is organized into services:
 
-#### `Set-KeepAwakeState`
+### Core Services
 
-Controls the Windows power state using `SetThreadExecutionState`.
+| Service | Purpose |
+| --------- | --------- |
+| `KeepAwakeService` | Core keep-awake engine with `SetThreadExecutionState` and F15 heartbeat |
+| `BatteryMonitorService` | WMI-based battery monitoring with auto-pause/resume |
+| `NetworkMonitorService` | Network connectivity monitoring |
+| `IdleDetectionService` | User idle detection via `GetLastInputInfo` |
+| `ScheduleService` | Time/day-based scheduled activation |
+| `PresentationModeService` | PowerPoint/Teams presentation detection |
+| `SessionStateService` | Save/restore session state |
+| `StartupService` | Windows startup registration (Registry Run key) |
+| `SingletonService` | Named mutex for single instance enforcement |
+| `CrashRecoveryService` | Crash flag detection and safe recovery |
+| `NotificationService` | Tray balloon notifications |
+| `LocalizationService` | i18n with built-in and external locale support |
+| `ConfigService` | JSON configuration with export/import |
+| `HotkeyService` | Global hotkey registration |
+| `UpdateService` | GitHub release auto-updater |
+| `Logger` | Structured logging with rotation |
 
-```powershell
-Set-KeepAwakeState -Enable:$true   # Prevent sleep
-Set-KeepAwakeState -Enable:$false  # Allow sleep (reset)
-```
+### Usage Example
 
-#### `Set-ActiveState`
+```csharp
+// Access the KeepAwakeService singleton
+var keepAwake = KeepAwakeService.Instance;
 
-Sets the active state with optional timer.
+// Toggle active state
+keepAwake.SetActive(!keepAwake.IsActive);
 
-```powershell
-Set-ActiveState -Active:$true                                    # Active indefinitely
-Set-ActiveState -Active:$true -Until (Get-Date).AddMinutes(30)  # Active for 30 min
-Set-ActiveState -Active:$false                                   # Deactivate
-```
+// Start a timed session
+keepAwake.StartTimedAwake(TimeSpan.FromMinutes(30));
 
-#### `Start-TimedAwake`
-
-Start a timed session.
-
-```powershell
-Start-TimedAwake -Minutes 60  # Active for 1 hour (1-720 valid range)
-```
-
-#### `Write-RedballLog`
-
-Write to the structured log with retry logic and fallback.
-
-```powershell
-Write-RedballLog -Level 'INFO' -Message 'Started successfully'
-Write-RedballLog -Level 'ERROR' -Message 'Something went wrong'
-```
-
-#### `Export-RedballSettings` / `Import-RedballSettings`
-
-Backup and restore all settings.
-
-```powershell
-Export-RedballSettings -Path '.\Redball.backup.json'
-Import-RedballSettings -Path '.\Redball.backup.json'
-```
-
-#### `Switch-ActiveState`
-
-Toggles between active and paused.
-
-```powershell
-Switch-ActiveState  # If active → pause; if paused → resume
-```
-
-#### `Exit-Application`
-
-Gracefully shuts down Redball — hides the tray icon, resets power state, saves session/config, disposes resources, and releases the singleton mutex.
-
-#### `Import-RedballConfig` / `Save-RedballConfig`
-
-Load or persist the JSON configuration.
-
-```powershell
-Import-RedballConfig -Path '.\Redball.json'
-Save-RedballConfig -Path '.\Redball.json'
-```
-
-#### `Save-RedballState` / `Restore-RedballState`
-
-Session state persistence for restart continuity.
-
-```powershell
-Save-RedballState       # Writes Redball.state.json
-Restore-RedballState    # Restores from Redball.state.json
-```
-
-### Monitoring Functions
-
-| Function | Description |
-| -------- | ----------- |
-| `Get-BatteryStatus` | Returns battery info (charge %, on-battery, has-battery) with 30s cache |
-| `Test-BatteryThreshold` | Checks if battery is below the configured threshold |
-| `Update-BatteryAwareState` | Auto-pause/resume based on battery level |
-| `Get-NetworkStatus` | Returns network adapter connection status |
-| `Update-NetworkAwareState` | Auto-pause/resume on network disconnect/reconnect |
-| `Get-IdleTimeMinutes` | Returns user idle time in minutes via `GetLastInputInfo` |
-| `Update-IdleAwareState` | Auto-pause after 30 min idle, resume on input |
-| `Test-ScheduleActive` | Checks if current time is within the configured schedule |
-| `Update-ScheduleState` | Auto-start/stop based on time-of-day schedule |
-| `Test-PresentationMode` | Detects PowerPoint, Teams screen-sharing, or Windows presentation mode |
-| `Update-PresentationModeState` | Auto-activate when a presentation is detected |
-
-### Instance & Recovery Functions
-
-| Function | Description |
-| -------- | ----------- |
-| `Test-RedballInstanceRunning` | Checks for an existing Redball instance via named mutex |
-| `Initialize-RedballSingleton` | Creates the singleton mutex for this instance |
-| `Get-RedballProcess` | Finds other PowerShell processes running Redball |
-| `Stop-RedballProcess` | Gracefully stops a Redball process (with optional force kill) |
-| `Clear-RedballLogLock` | Clears file locks on the log file from stale processes |
-| `Test-CrashRecovery` | Detects previous abnormal termination and resets to safe defaults |
-| `Clear-CrashFlag` | Removes the crash detection flag file |
-| `Test-ExecutionPolicy` | Validates the PowerShell execution policy allows Redball to run |
-
-### Update & Signing Functions
-
-| Function | Description |
-| -------- | ----------- |
-| `Get-RedballLatestRelease` | Queries GitHub API for the latest release |
-| `Test-RedballUpdateAvailable` | Compares current version against latest release |
-| `Install-RedballUpdate` | Downloads and installs the latest release with backup |
-| `Get-RedballCodeSigningCertificate` | Finds a code-signing cert by thumbprint or newest |
-| `New-RedballSelfSignedCodeSigningCertificate` | Creates a self-signed code-signing cert |
-| `Set-RedballCodeSignature` | Signs a script with Authenticode |
-| `Test-RedballFileSignature` | Verifies Authenticode signature with optional signer allowlist |
-
-### UI & System Functions
-
-| Function | Description |
-| -------- | ----------- |
-| `Get-CustomTrayIcon` | Generates the 3D ball icon (active/timed/paused) via GDI+ |
-| `Get-StatusText` | Returns the current status string for tooltip/menu |
-| `Update-RedballUI` | Refreshes icon, tooltip, and menu items (only on state change) |
-| `Show-RedballSettings` | Opens the full tabbed settings dialog |
-| `Show-RedballSettingsDialog` | Alternative simplified settings dialog |
-| `Show-AboutDialog` | Shows version info with update checker |
-| `Send-RedballToast` | Sends a Windows toast notification (with balloon fallback) |
-| `Send-HeartbeatKey` | Sends an invisible F15 keypress when system is idle |
-| `Register-GlobalHotkey` / `Unregister-GlobalHotkey` | Manages the Ctrl+Alt+Pause global hotkey |
-| `Install-RedballStartup` / `Uninstall-RedballStartup` | Manages Windows startup shortcut |
-| `Test-RedballStartup` | Checks if the startup shortcut exists |
-| `Import-RedballInstallerDefaults` | Reads MSI installer defaults from registry |
-| `Import-RedballLocales` / `Get-LocalizedString` | Loads and resolves i18n locale strings |
-| `Test-HighContrastMode` / `Update-HighContrastUI` | Detects and adapts to high contrast mode |
-| `Enable-HighDPI` | Enables per-monitor DPI awareness |
-| `Test-DarkMode` / `Update-DarkModeUI` | Detects Windows dark mode |
-| `Update-PerformanceMetrics` | Tracks CPU, memory, and heartbeat metrics |
-| `Send-RedballTelemetry` | Logs opt-in anonymous usage telemetry |
-| `Get-RedballStatus` | Returns full status as JSON (for `-Status` CLI) |
-| `Start-KeepAwakeRunspace` / `Stop-KeepAwakeRunspace` | Process isolation via background runspace |
-
-### TypeThing (Clipboard Typer) Functions
-
-| Function | Description |
-| -------- | ----------- |
-| `Start-TypeThingTyping` | Reads clipboard and begins simulated typing with countdown |
-| `Stop-TypeThingTyping` | Emergency-stops typing and resets state |
-| `Complete-TypeThingTyping` | Called when all characters have been typed successfully |
-| `Start-TypeThingTimer` | Creates and starts the per-character WinForms timer |
-| `Send-TypeThingChar` | Sends a single character via `SendInput` / `KEYEVENTF_UNICODE` |
-| `Get-ClipboardText` | Gets text from clipboard with retry logic |
-| `ConvertTo-HotkeyParams` | Parses a hotkey string (e.g. `Ctrl+Shift+V`) into modifier flags and VK code |
-| `Register-TypeThingHotkeys` / `Unregister-TypeThingHotkeys` | Manages TypeThing global hotkeys |
-| `Show-TypeThingSettings` | Opens the themed TypeThing settings dialog |
-| `Get-TypeThingTheme` / `Set-TypeThingFormTheme` | Theme engine for the TypeThing settings dialog |
-
-### State Object
-
-Access the current state via `$script:state`:
-
-| Property | Type | Description |
-| -------- | ---- | ----------- |
-| `Active` | bool | Currently keeping system awake |
-| `PreventDisplaySleep` | bool | Display sleep prevention enabled |
-| `UseHeartbeatKeypress` | bool | F15 keypresses enabled |
-| `HeartbeatSeconds` | int | Interval between heartbeats |
-| `Until` | DateTime? | Timer expiration (null if indefinite) |
-| `BatteryAware` | bool | Battery monitoring enabled |
-| `NetworkAware` | bool | Network monitoring enabled |
-| `IdleDetection` | bool | Idle detection enabled |
-| `IsShuttingDown` | bool | Shutdown in progress |
-| `SessionId` | string | Unique GUID for the current session |
-| `AutoPausedNetwork` | bool | Currently auto-paused due to network disconnect |
-| `AutoPausedIdle` | bool | Currently auto-paused due to user idle |
-| `AutoPausedPresentation` | bool | Currently auto-activated for presentation |
-| `AutoPausedSchedule` | bool | Currently auto-paused by schedule |
-| `ManualOverride` | bool | User manually overrode scheduled operation |
-| `StartTime` | DateTime | When the current session started |
-| `TypeThingIsTyping` | bool | TypeThing is currently typing |
-| `TypeThingShouldStop` | bool | Emergency stop requested |
-| `TypeThingIndex` | int | Current character position in typing |
-| `TypeThingTotalChars` | int | Total characters to type |
-
-## Testing
-
-Run the Pester test suite:
-
-```powershell
-# Install Pester if needed
-Install-Module Pester -Force -SkipPublisherCheck
-
-# Run all tests
-Invoke-Pester -Path ".\Redball.Tests.ps1"
-
-# Run with detailed output
-Invoke-Pester -Path ".\Redball.Tests.ps1" -Output Detailed
-
-# Run specific test block
-Invoke-Pester -Path ".\Redball.Tests.ps1" -TestName "*Icon*"
+// Export settings
+ConfigService.Instance.Export("backup.json");
 ```
 
 ## Building
@@ -495,7 +288,7 @@ The WPF desktop application is built with .NET 8 as a self-contained single-file
 dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj --configuration Release -o dist/wpf-publish
 
 # Or use the comprehensive build script
-.\build.ps1 -Task Build
+.\scripts\build.ps1
 ```
 
 The published EXE (~64MB) includes the .NET runtime, uses compression and native library embedding, and has embedded debug symbols (no separate PDB file).
@@ -505,37 +298,35 @@ The published EXE (~64MB) includes the .NET runtime, uses compression and native
 The MSI is built with [WiX Toolset v4](https://wixtoolset.org/):
 
 ```powershell
-# Full deploy pipeline (EXE via ps2exe + MSI via WiX, with code signing)
+# Full deploy pipeline (MSI via WiX, with code signing)
 .\installer\Deploy-Redball.ps1
 
 # Build MSI only
-.\installer\Build-MSI.ps1 -Version "2.1.19"
+.\installer\Build-MSI.ps1 -Version "3.0.0"
 ```
 
 The installer includes branded UI images (custom banner and dialog backgrounds) and the Redball icon on all shortcuts.
 
 ### Build Script
 
-The `build.ps1` script provides a comprehensive build pipeline:
+The `build.ps1` script (located in `scripts/`) provides a comprehensive build pipeline:
 
 ```powershell
-# Full build (version from Redball.ps1)
-.\build.ps1
+# Full build (version from version.txt)
+.\scripts\build.ps1
 
 # Specific tasks
-.\build.ps1 -Task Build        # Build WPF app
-.\build.ps1 -Task Test         # Run Pester tests
-.\build.ps1 -Task Lint         # PSScriptAnalyzer
-.\build.ps1 -Task Security     # Security scan
+.\scripts\build.ps1 -SkipTests    # Skip Pester tests
+.\scripts\build.ps1 -SkipLint      # Skip PSScriptAnalyzer
+.\scripts\build.ps1 -SkipWPF      # Skip WPF build
 ```
 
 ### Version Management
 
-Version is defined in three places (kept in sync by `scripts/Bump-Version.ps1`):
+Version is defined in two places (kept in sync by `scripts/Bump-Version.ps1`):
 
-- `Redball.ps1` — `$script:VERSION`
-- `src/Redball.UI.WPF/Redball.UI.WPF.csproj` — `<Version>`, `<FileVersion>`, `<AssemblyVersion>`
-- `build.ps1` — fallback version
+1. `src/Redball.UI.WPF/Redball.UI.WPF.csproj` — `<Version>`, `<FileVersion>`, `<AssemblyVersion>`
+2. `scripts/version.txt` — fallback version
 
 ### Code Signing
 
@@ -561,61 +352,47 @@ If no certificate secrets are configured, the CI creates a self-signed developme
 
 GitHub Actions workflows (all using Node.js 24-compatible actions):
 
-- **`ci.yml`** — On push/PR: runs Pester tests, PSScriptAnalyzer lint, JSON validation, and security scan (hardcoded credentials, `Invoke-Expression` usage)
+- **`ci.yml`** — On push/PR: runs WPF build, Pester tests (legacy), JSON validation, and security scan
 - **`release.yml`** — On push to `main`: auto-tags version, publishes WPF app, signs EXE, builds branded MSI with WiX, signs MSI, creates GitHub Release with MSI attached
 
 ## Architecture
 
+Redball v3.0 is a **pure C# WPF application** — all functionality runs natively with no PowerShell dependency.
+
 ```text
-Redball/
-├── .github/
-│   └── workflows/
-│       ├── ci.yml                    # CI pipeline (test, lint, security)
-│       └── release.yml               # Release pipeline (tag, build, sign, publish)
-├── src/
-│   └── Redball.UI.WPF/               # WPF desktop application (.NET 8)
-│       ├── Assets/redball.ico         # Application icon (embedded in EXE)
-│       ├── Converters/               # WPF value converters
-│       ├── Services/                 # ConfigService, HotkeyService, IpcClient, Update
-│       ├── Themes/                   # DarkTheme.xaml, LightTheme.xaml, Controls.xaml
-│       ├── ViewModels/               # MainViewModel (MVVM)
-│       ├── Views/                    # MainWindow, SettingsWindow, AboutWindow, UpdateProgress
-│       ├── ThemeManager.cs           # 12 theme variants with color overrides
-│       ├── App.xaml / App.xaml.cs     # Application startup and theme initialization
-│       └── Redball.UI.WPF.csproj     # Project file (self-contained, compressed)
-├── installer/
-│   ├── Redball.wxs                   # WiX v4 installer definition
-│   ├── banner.bmp                    # Installer banner image (493×58)
-│   ├── dialog.bmp                    # Installer dialog background (493×312)
-│   ├── Redball.ico                   # Installer icon / shortcut icon
-│   ├── Redball-License.rtf           # License for installer UI
-│   ├── Build-MSI.ps1                 # WiX MSI build script
-│   ├── Deploy-Redball.ps1            # Full deploy pipeline
-│   └── Launch-Redball.vbs            # Hidden-window launcher for post-install
-├── scripts/
-│   ├── Bump-Version.ps1              # Version bump across all files
-│   └── simulate-ci-simple.ps1        # Local CI simulation
-├── tests/
-│   └── Redball.Tests.ps1             # Pester test suite (57 tests)
-├── docs/                             # CHANGELOG, THIRD-PARTY-NOTICES, etc.
-├── dist/                             # Build output (wpf-publish/, MSI)
-├── Redball.ps1                       # PowerShell tray application
-├── Redball.json                      # Configuration file
-├── build.ps1                         # Comprehensive build pipeline
-├── locales.json                      # Locale overrides (en, es, fr, de)
-├── Redball.v3.sln                    # Visual Studio solution
-├── LICENSE                           # MIT License
-└── README.md                         # This file
+src/Redball.UI.WPF/
+├── Interop/NativeMethods.cs          # All Win32 P/Invoke declarations
+├── Services/
+│   ├── KeepAwakeService.cs           # Core engine (SetThreadExecutionState + F15)
+│   ├── BatteryMonitorService.cs      # WMI battery monitoring
+│   ├── NetworkMonitorService.cs      # Network connectivity monitoring
+│   ├── IdleDetectionService.cs       # GetLastInputInfo idle detection
+│   ├── ScheduleService.cs            # Time/day scheduled activation
+│   ├── PresentationModeService.cs    # PowerPoint/Teams/Windows detection
+│   ├── SessionStateService.cs        # Session save/restore
+│   ├── StartupService.cs             # Windows startup (Registry Run key)
+│   ├── SingletonService.cs           # Named mutex singleton
+│   ├── CrashRecoveryService.cs       # Crash flag detection
+│   ├── NotificationService.cs        # Tray balloon notifications
+│   ├── LocalizationService.cs        # i18n (en, es, fr, de, bl)
+│   ├── ConfigService.cs              # JSON config with export/import
+│   ├── HotkeyService.cs              # Global hotkey registration
+│   ├── UpdateService.cs              # GitHub release auto-updater
+│   └── Logger.cs                     # Structured logging with rotation
+├── ViewModels/MainViewModel.cs       # MVVM state + commands
+├── Views/                            # MainWindow, SettingsWindow, AboutWindow
+├── Themes/                           # 12 theme XAML dictionaries
+├── App.xaml.cs                       # Entry point + service orchestration
+└── Redball.UI.WPF.csproj             # .NET 8 WPF project
 ```
 
 ### Component Flow
 
-1. **Startup** — Singleton check → crash recovery → load config → restore session state → apply installer defaults → apply CLI parameters → initialize locales
-2. **Heartbeat Timer** — Fires every N seconds to refresh `SetThreadExecutionState` and send F15 keypress (if system is idle)
-3. **Duration Timer** — Fires every second to check: timer expiration, battery, network, idle, schedule, and presentation mode
-4. **UI Updates** — Refresh icon color and tooltip only when state changes (performance-optimized)
-5. **TypeThing Init** — Create hotkey message window → register global hotkeys → listen for Ctrl+Shift+V / Ctrl+Shift+X
-6. **Shutdown** — Stop TypeThing → unregister hotkeys → hide icon → reset power state → save session & config → stop timers → dispose resources → release mutex → exit
+1. **Startup** — Singleton mutex → crash recovery → load config → init theme → init KeepAwakeService → restore session → create tray icon → register hotkeys
+2. **Heartbeat Timer** — Fires every N seconds: re-assert `SetThreadExecutionState` + send F15 keypress via `SendInput`
+3. **Duration Timer** — Fires every 1s: check timed expiry, idle (1s), battery/network/presentation (10s), schedule (30s)
+4. **Settings Save** — `KeepAwakeService.ReloadConfig()` syncs all monitor settings immediately
+5. **Shutdown** — Save session state → dispose KeepAwakeService → clear crash flag → release mutex → exit
 
 ## Troubleshooting
 
@@ -638,26 +415,19 @@ Redball uses a named mutex to enforce a single instance. If a stale instance is 
 
 ```powershell
 # Find and stop Redball processes manually
-Get-Process powershell, pwsh | Where-Object { $_.CommandLine -like '*Redball*' } | Stop-Process -Force
+Get-Process Redball | Stop-Process -Force
 ```
 
 ### Log file locked
 
 If the log file is locked by a previous instance, Redball automatically retries with exponential backoff and falls back to `%TEMP%\Redball_fallback.log`.
 
-### `$PSScriptRoot` empty
-
-This happens when running from ISE or VS Code without saving. Either:
-
-- Save the file first, then run
-- Specify the config path: `.\Redball.ps1 -ConfigPath ".\Redball.json"`
-
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run tests (`Invoke-Pester -Path .\Redball.Tests.ps1 -Output Detailed`)
+4. Build and test (`dotnet build src/Redball.UI.WPF`)
 5. Commit your changes (`git commit -m 'Add amazing feature'`)
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
@@ -668,11 +438,11 @@ This happens when running from ISE or VS Code without saving. Either:
 git clone https://github.com/ArMaTeC/Redball.git
 cd Redball
 
-# Run in development mode
-.\Redball.ps1 -ConfigPath ".\Redball.json"
+# Build the WPF application
+dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj
 
-# Run tests
-Invoke-Pester -Path ".\Redball.Tests.ps1" -Output Detailed
+# Run in development mode
+dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 
 # Build installer locally
 .\installer\Deploy-Redball.ps1 -BuildMsi
@@ -688,7 +458,7 @@ Invoke-Pester -Path ".\Redball.Tests.ps1" -Output Detailed
 - [x] Network-aware mode
 - [x] Dark mode detection
 - [x] High contrast / High DPI awareness
-- [x] PowerShell Core (7.x) compatibility
+- [x] PowerShell Core (7.x) compatibility (legacy, archived in `legacy/`)
 - [x] Battery-aware mode
 - [x] Idle detection
 - [x] Scheduled operation
@@ -699,7 +469,7 @@ Invoke-Pester -Path ".\Redball.Tests.ps1" -Output Detailed
 - [x] Code signing support
 - [x] Singleton instance management
 - [x] Crash recovery
-- [x] Process isolation
+- [x] Process isolation (legacy PowerShell feature)
 - [x] Settings backup/restore
 - [x] Global hotkey (Ctrl+Alt+Pause)
 - [x] CI/CD (GitHub Actions)
@@ -728,11 +498,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 - Icon design using System.Drawing GDI+ path gradients
 - [.NET 8 / WPF](https://dotnet.microsoft.com/) for the modern desktop application
 - [WiX Toolset v4](https://wixtoolset.org/) for the MSI installer
-- [ps2exe](https://github.com/MScholtes/PS2EXE) for PowerShell EXE compilation
-- [Pester](https://pester.dev/) for PowerShell testing
-- [PSScriptAnalyzer](https://github.com/PowerShell/PSScriptAnalyzer) for code quality
 - Windows SDK `signtool.exe` for code signing
-- PowerShell community for best practices
 
 ## Support
 

@@ -33,5 +33,17 @@
     <SolidColorBrush x:Key="BorderBrush" Color="#FF404040"/>
     <SolidColorBrush x:Key="BorderLightBrush" Color="#FF505050"/>
 
+    <!-- Window and Panel backgrounds -->
+    <SolidColorBrush x:Key="WindowBackground" Color="#FF202020"/>
+    <SolidColorBrush x:Key="PanelBackground" Color="#FF2D2D2D"/>
+
+    <!-- Card Style for onboarding -->
+    <Style x:Key="CardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="12,10"/>
+    </Style>
 
 </ResourceDictionary>

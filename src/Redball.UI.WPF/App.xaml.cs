@@ -1,24 +1,19 @@
 using System;
-using System.IO.Pipes;
 using System.IO;
-using System.Reflection;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 
 namespace Redball.UI;
 
 /// <summary>
 /// Redball v3.0 WPF Modern UI Entry Point
-/// Hybrid architecture: WPF UI + PowerShell Core via Named Pipes
+/// Pure C# architecture - all functionality runs natively in WPF.
 /// </summary>
 public partial class App : Application
 {
-    private NamedPipeServerStream? _pipeServer;
-    private StreamReader? _pipeReader;
-    private StreamWriter? _pipeWriter;
     private Views.MainWindow? _mainWindow; // Keep reference to prevent GC
+    private Services.SingletonService? _singleton;
+    private readonly Services.SessionStateService _sessionState = new();
 
     public App()
     {
@@ -82,6 +77,28 @@ public partial class App : Application
             base.OnStartup(e);
             Services.Logger.Debug("App", "base.OnStartup completed");
 
+            // Singleton check - prevent multiple instances
+            _singleton = new Services.SingletonService();
+            if (!_singleton.TryAcquire())
+            {
+                Services.Logger.Warning("App", "Another instance is already running. Exiting.");
+                System.Windows.MessageBox.Show(
+                    "Redball is already running. Check the system tray.",
+                    "Redball",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                Shutdown();
+                return;
+            }
+
+            // Crash recovery check
+            var wasCrash = Services.CrashRecoveryService.CheckAndRecover();
+            if (wasCrash)
+            {
+                Services.Logger.Warning("App", "Recovered from previous crash - using safe defaults");
+            }
+            Services.CrashRecoveryService.SetCrashFlag();
+
             // Load configuration
             Services.Logger.Info("App", "Loading configuration...");
             var configLoaded = Services.ConfigService.Instance.Load();
@@ -101,6 +118,15 @@ public partial class App : Application
                 {
                     Services.Logger.Warning("App", $"  - {err}");
                 }
+            }
+
+            // Show onboarding for first-time users
+            if (cfg.FirstRun)
+            {
+                Services.Logger.Info("App", "First run detected - showing onboarding window");
+                var onboarding = new Views.OnboardingWindow();
+                var result = onboarding.ShowDialog();
+                Services.Logger.Info("App", result == true ? "Onboarding completed" : "Onboarding cancelled/closed");
             }
 
             // Initialize modern theme from saved config
@@ -128,9 +154,18 @@ public partial class App : Application
                 ThemeManager.SetTheme(Theme.Dark);
             }
 
-            // Start IPC server for PowerShell communication
-            Services.Logger.Info("App", "Starting IPC server...");
-            _ = StartIpcServerAsync();
+            // Initialize keep-awake engine
+            Services.Logger.Info("App", "Initializing KeepAwakeService...");
+            Services.KeepAwakeService.Instance.Initialize();
+
+            // Restore previous session state or start fresh
+            var restored = _sessionState.Restore(Services.KeepAwakeService.Instance);
+            if (!restored)
+            {
+                Services.KeepAwakeService.Instance.SetActive(true);
+            }
+            Services.KeepAwakeService.Instance.StartMonitoring();
+            Services.Logger.Info("App", restored ? "Session state restored" : "KeepAwakeService initialized and active");
 
             // Create main window but don't show it (tray-only mode)
             Services.Logger.Info("App", "Creating MainWindow...");
@@ -199,175 +234,6 @@ public partial class App : Application
         Services.Logger.Info("App", "MainWindow Closed event fired");
     }
 
-    private async Task StartIpcServerAsync()
-    {
-        Services.Logger.Info("IPC", "IPC server loop starting");
-        int connectionAttempts = 0;
-        
-        while (true)
-        {
-            try
-            {
-                _pipeServer = new NamedPipeServerStream(
-                    "RedballUI",
-                    PipeDirection.InOut,
-                    1,
-                    PipeTransmissionMode.Message,
-                    PipeOptions.Asynchronous);
-
-                Services.Logger.Debug("IPC", "Waiting for pipe connection...");
-                await _pipeServer.WaitForConnectionAsync();
-                connectionAttempts = 0;
-                Services.Logger.Info("IPC", "Pipe client connected");
-
-                _pipeReader = new StreamReader(_pipeServer);
-                _pipeWriter = new StreamWriter(_pipeServer) { AutoFlush = true };
-
-                // Handle incoming messages
-                await HandleIpcMessagesAsync();
-            }
-            catch (IOException ioEx)
-            {
-                connectionAttempts++;
-                Services.Logger.Warning("IPC", $"Pipe IO error (attempt {connectionAttempts}): {ioEx.Message}");
-            }
-            catch (Exception ex)
-            {
-                connectionAttempts++;
-                Services.Logger.Error("IPC", $"Pipe error (attempt {connectionAttempts})", ex);
-            }
-            
-            if (connectionAttempts > 0)
-            {
-                var delayMs = Math.Min(1000 * connectionAttempts, 30000); // Max 30s delay
-                Services.Logger.Debug("IPC", $"Waiting {delayMs}ms before retry...");
-                await Task.Delay(delayMs);
-            }
-        }
-    }
-
-    private async Task HandleIpcMessagesAsync()
-    {
-        if (_pipeReader == null) return;
-
-        int messageCount = 0;
-        while (_pipeServer?.IsConnected == true)
-        {
-            string? message = null;
-            try
-            {
-                message = await _pipeReader.ReadLineAsync();
-                if (message == null) break;
-                messageCount++;
-            }
-            catch (IOException ioEx)
-            {
-                Services.Logger.Debug("IPC", $"ReadLine IO error: {ioEx.Message}");
-                break;
-            }
-            catch (Exception readEx)
-            {
-                Services.Logger.Error("IPC", "Error reading from pipe", readEx);
-                break;
-            }
-
-            try
-            {
-                Services.Logger.Verbose("IPC", $"Message #{messageCount}: {message}");
-                var request = JsonSerializer.Deserialize<IpcRequest>(message);
-                if (request != null)
-                {
-                    var response = ProcessRequest(request);
-                    if (_pipeWriter != null)
-                    {
-                        var responseJson = JsonSerializer.Serialize(response);
-                        await _pipeWriter.WriteLineAsync(responseJson);
-                        Services.Logger.Verbose("IPC", $"Response: {responseJson}");
-                    }
-                }
-                else
-                {
-                    Services.Logger.Warning("IPC", "Received null deserialized request");
-                }
-            }
-            catch (JsonException jsonEx)
-            {
-                Services.Logger.Error("IPC", $"JSON parse error for message: {message}", jsonEx);
-            }
-            catch (Exception ex)
-            {
-                Services.Logger.Error("IPC", "Message handling error", ex);
-            }
-        }
-        
-        Services.Logger.Info("IPC", $"Message loop ended after {messageCount} messages");
-    }
-
-    private IpcResponse ProcessRequest(IpcRequest request)
-    {
-        Services.Logger.Debug("IPC", $"Processing request: {request.Action}");
-        try
-        {
-            return request.Action switch
-            {
-                "GetStatus" => new IpcResponse { Success = true, Data = GetStatus() },
-                "SetActive" => new IpcResponse { Success = true, Data = SetActive(request.Data) },
-                "ShowSettings" => new IpcResponse { Success = ShowSettingsDialog() },
-                _ => new IpcResponse { Success = false, Error = $"Unknown action: {request.Action}" }
-            };
-        }
-        catch (Exception ex)
-        {
-            Services.Logger.Error("IPC", $"Error processing request {request.Action}", ex);
-            return new IpcResponse { Success = false, Error = ex.Message };
-        }
-    }
-
-    private static object GetStatus()
-    {
-        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-        var status = new { 
-            Active = true, 
-            Version = $"{version?.Major}.{version?.Minor}.{version?.Build}",
-            Timestamp = DateTime.Now
-        };
-        Services.Logger.Verbose("IPC", $"GetStatus: {status}");
-        return status;
-    }
-
-    private static object SetActive(object? data)
-    {
-        Services.Logger.Info("IPC", $"SetActive: {data}");
-        return new { Active = data };
-    }
-
-    private bool ShowSettingsDialog()
-    {
-        Services.Logger.Info("App", "Showing settings dialog via IPC request");
-        try
-        {
-            Dispatcher.Invoke(() =>
-            {
-                if (_mainWindow != null)
-                {
-                    _mainWindow.ShowSettings();
-                    Services.Logger.Debug("App", "Settings dialog shown via MainWindow");
-                }
-                else
-                {
-                    Services.Logger.Warning("App", "MainWindow was null, creating standalone SettingsWindow");
-                    var settingsWindow = new Views.SettingsWindow();
-                    settingsWindow.Show();
-                }
-            });
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Services.Logger.Error("App", "Failed to show settings dialog", ex);
-            return false;
-        }
-    }
 
     protected override void OnExit(ExitEventArgs e)
     {
@@ -376,30 +242,25 @@ public partial class App : Application
         
         try
         {
-            _pipeReader?.Dispose();
-            _pipeWriter?.Dispose();
-            _pipeServer?.Dispose();
-            Services.Logger.Debug("App", "Pipe resources disposed");
+            // Save session state for next launch
+            _sessionState.Save(Services.KeepAwakeService.Instance);
+            Services.Logger.Debug("App", "Session state saved");
+
+            Services.KeepAwakeService.Instance.Dispose();
+            Services.Logger.Debug("App", "KeepAwakeService disposed");
+
+            // Clear crash flag on clean exit
+            Services.CrashRecoveryService.ClearCrashFlag();
+
+            // Release singleton mutex
+            _singleton?.Dispose();
         }
         catch (Exception ex)
         {
-            Services.Logger.Error("App", "Error disposing pipe resources", ex);
+            Services.Logger.Error("App", "Error during shutdown cleanup", ex);
         }
         
         base.OnExit(e);
         Services.Logger.Info("App", "=== Application Exit Complete ===");
     }
-}
-
-public class IpcRequest
-{
-    public string Action { get; set; } = "";
-    public object? Data { get; set; }
-}
-
-public class IpcResponse
-{
-    public bool Success { get; set; }
-    public object? Data { get; set; }
-    public string? Error { get; set; }
 }

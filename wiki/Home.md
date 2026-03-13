@@ -25,12 +25,14 @@ Welcome to the Redball wiki — the complete documentation for every feature, fu
 
 | Topic | Description |
 | ----- | ----------- |
-| [Redball.ps1](https://github.com/ArMaTeC/Redball/blob/main/Redball.ps1) | Main application script |
 | [Redball.json](https://github.com/ArMaTeC/Redball/blob/main/Redball.json) | Configuration file |
-| [Redball.Tests.ps1](https://github.com/ArMaTeC/Redball/blob/main/Redball.Tests.ps1) | Pester test suite |
-| [CHANGELOG.md](https://github.com/ArMaTeC/Redball/blob/main/CHANGELOG.md) | Version history |
+| [CHANGELOG.md](https://github.com/ArMaTeC/Redball/blob/main/docs/CHANGELOG.md) | Version history |
 | [LICENSE](https://github.com/ArMaTeC/Redball/blob/main/LICENSE) | MIT License |
+
+## Legacy
+
+The original PowerShell script (`Redball.ps1`) is archived in `legacy/Redball-v2.1.19-legacy.zip` for reference.
 
 ## Version
 
-Current version: **2.0.30**
+Current version: **3.0.0**

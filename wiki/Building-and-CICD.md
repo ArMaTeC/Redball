@@ -7,11 +7,11 @@ The MSI is built with [WiX Toolset v4](https://wixtoolset.org/).
 ### Build Scripts
 
 ```powershell
-# Full deploy pipeline (EXE via ps2exe + MSI via WiX, with code signing)
+# Full deploy pipeline (MSI via WiX, with code signing)
 .\installer\Deploy-Redball.ps1
 
 # Build MSI only
-.\installer\Build-MSI.ps1 -Version "2.0.29"
+.\installer\Build-MSI.ps1 -Version "3.0.0"
 
 # Build with specific WiX path
 .\installer\Build-MSI.ps1 -WixBinPath "C:\Tools\wix"
@@ -21,8 +21,8 @@ The MSI is built with [WiX Toolset v4](https://wixtoolset.org/).
 
 `Deploy-Redball.ps1` automatically:
 
-1. Increments the build number (stored in `.buildversion`)
-2. Compiles an EXE via `ps2exe`
+1. Increments the build number (stored in `scripts/version.txt`)
+2. Builds the WPF application via `dotnet publish`
 3. Builds an MSI via WiX
 4. Signs both artifacts with a code-signing certificate (creates a self-signed cert if none exists)
 
@@ -40,19 +40,19 @@ The MSI provides:
   - Start Minimized
   - Exit on Timer Complete
 - "Launch Redball" checkbox on the finish page
-- VBS launcher for hidden-window execution
 
 ### Installer Files
 
 | File | Description |
 | ---- | ----------- |
 | `installer/Build-MSI.ps1` | WiX MSI build script |
-| `installer/Deploy-Redball.ps1` | Full deploy pipeline (EXE + MSI + signing) |
+| `installer/Deploy-Redball.ps1` | Full deploy pipeline (WPF + MSI + signing) |
 | `installer/Launch-Redball.vbs` | Hidden-window launcher for MSI post-install |
 | `installer/Redball.wxs` | WiX v4 installer definition |
 | `installer/Redball.ico` | Application icon |
 | `installer/Redball-License.rtf` | License for installer UI |
 | `installer/redball.png` | Readme icon image |
+| `installer/signpath.json` | Code signing configuration |
 
 ---
 
@@ -65,10 +65,11 @@ The MSI provides:
 **Steps:**
 
 1. Check out repository
-2. Extract version from `$script:VERSION` in `Redball.ps1`
+2. Extract version from `src/Redball.UI.WPF/Redball.UI.WPF.csproj`
 3. Create a Git tag for the version
-4. Build the MSI on `windows-latest`
-5. Create a GitHub Release with the MSI attached
+4. Build the WPF application on `windows-latest`
+5. Build the MSI on `windows-latest`
+6. Create a GitHub Release with the MSI attached
 
 ### CI Workflow (`ci.yml`)
 
@@ -76,26 +77,9 @@ The MSI provides:
 
 **Steps:**
 
-1. **Pester Tests** — Run the full test suite
-2. **PSScriptAnalyzer** — Lint the PowerShell code
-3. **JSON Validation** — Validate `Redball.json` and `locales.json`
-4. **Security Scan** — Basic security checks
-
-### Running Tests Locally
-
-```powershell
-# Install Pester if needed
-Install-Module Pester -Force -SkipPublisherCheck
-
-# Run all tests
-Invoke-Pester -Path ".\Redball.Tests.ps1"
-
-# Run with detailed output
-Invoke-Pester -Path ".\Redball.Tests.ps1" -Output Detailed
-
-# Run specific test block
-Invoke-Pester -Path ".\Redball.Tests.ps1" -TestName "*Icon*"
-```
+1. **WPF Build** — Build the .NET 8 WPF application
+2. **JSON Validation** — Validate `Redball.json` and `locales.json`
+3. **Security Scan** — Basic security checks
 
 ### Build Output
 
@@ -103,7 +87,7 @@ Build artifacts are placed in the `dist/` directory:
 
 | File | Description |
 | ---- | ----------- |
-| `Redball.exe` | Compiled EXE (via ps2exe) |
+| `Redball.UI.WPF.exe` | Self-contained WPF executable |
 | `Redball-{version}.msi` | WiX MSI installer |
 
 ---
@@ -112,7 +96,7 @@ Build artifacts are placed in the `dist/` directory:
 
 The version is stored in two places:
 
-1. `$script:VERSION` in `Redball.ps1` (line ~80) — the canonical version
-2. `.buildversion` — auto-incremented build number used by the deploy pipeline
+1. `src/Redball.UI.WPF/Redball.UI.WPF.csproj` — the canonical version
+2. `scripts/version.txt` — auto-incremented build number used by the deploy pipeline
 
-The CI release workflow reads the version from the script to create the Git tag and GitHub Release.
+The CI release workflow reads the version from the project file to create the Git tag and GitHub Release.

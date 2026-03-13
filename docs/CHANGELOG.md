@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-03-13
+
+### Changed
+
+- **Pure WPF Architecture**: Migrated all functionality from PowerShell script to native C# WPF application. The WPF exe is now fully self-contained with no PowerShell dependency.
+- **Removed IPC Layer**: Eliminated named pipe communication between WPF UI and PowerShell backend. All state management now happens directly in C#.
+- **Direct Win32 API**: Keep-awake engine uses `SetThreadExecutionState` and `SendInput` (F15 heartbeat) via P/Invoke in `NativeMethods.cs`.
+
+### Added
+
+- **KeepAwakeService**: Core keep-awake engine with `SetThreadExecutionState`, F15 heartbeat via `SendInput`, timed sessions, and auto-pause/resume tracking.
+- **BatteryMonitorService**: WMI-based battery monitoring with configurable threshold and 60-second cache.
+- **NetworkMonitorService**: Network connectivity monitoring via `System.Net.NetworkInformation`.
+- **IdleDetectionService**: User idle detection via `GetLastInputInfo` P/Invoke.
+- **ScheduleService**: Time/day-based scheduled activation and deactivation.
+- **PresentationModeService**: Auto-detect PowerPoint, Teams screen sharing, and Windows presentation mode.
+- **SessionStateService**: Save/restore session state (`Redball.state.json`) across application restarts.
+- **StartupService**: Windows startup registration via Registry Run key.
+- **SingletonService**: Named mutex (`Global\Redball_Singleton_Mutex`) to prevent multiple instances.
+- **CrashRecoveryService**: Crash flag file detection with safe-defaults recovery.
+- **NotificationService**: Centralized tray balloon notifications with configurable notification mode filtering.
+- **LocalizationService**: Built-in locales (en, es, fr, de, bl) with external `locales.json` override support.
+- **TelemetryService**: Opt-in local telemetry event logging.
+- **NativeMethods.cs**: Centralized P/Invoke declarations for kernel32 and user32.
+- **Config Export/Import**: `ConfigService.Export()` and `ConfigService.Import()` for settings backup and restore.
+- **ReloadConfig**: `KeepAwakeService.ReloadConfig()` called after settings save so monitors pick up changes immediately.
+
+### Removed
+
+- **IpcClientService.cs**: Named pipe client for PowerShell communication (no longer needed).
+- **System.IO.Pipes dependency**: Removed from project file.
+- **PowerShell backend dependency**: The WPF application no longer requires `Redball.ps1` to be running.
+
 ## [2.1.1] - 2026-03-11
 
 ### Security
@@ -25,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Path Consistency**: Replaced all `$PSScriptRoot` references in function bodies with `$script:AppRoot`
 - **Idle Detection Text**: Menu item and settings label now reflect actual threshold instead of hardcoded "30min"
 
-### Removed
+### Removed (2.1.1)
 
 - **Duplicate Settings Dialog**: Removed dead `Show-RedballSettingsDialog` function (superseded by `Show-RedballSettings`)
 

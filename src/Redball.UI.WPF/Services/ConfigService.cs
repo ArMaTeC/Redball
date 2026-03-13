@@ -195,6 +195,83 @@ public class ConfigService
         return errors;
     }
 
+    /// <summary>
+    /// Exports current configuration to a backup file.
+    /// </summary>
+    public bool Export(string exportPath)
+    {
+        Logger.Info("ConfigService", $"Exporting config to: {exportPath}");
+        try
+        {
+            var backup = new
+            {
+                ExportedAt = DateTime.Now,
+                Version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(),
+                Config
+            };
+
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            var json = JsonSerializer.Serialize(backup, options);
+            File.WriteAllText(exportPath, json);
+            Logger.Info("ConfigService", "Config exported successfully");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("ConfigService", "Failed to export config", ex);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Imports configuration from a backup file, replacing current config.
+    /// </summary>
+    public bool Import(string importPath)
+    {
+        Logger.Info("ConfigService", $"Importing config from: {importPath}");
+        try
+        {
+            if (!File.Exists(importPath))
+            {
+                Logger.Warning("ConfigService", "Import file not found");
+                return false;
+            }
+
+            var json = File.ReadAllText(importPath);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                ReadCommentHandling = JsonCommentHandling.Skip
+            };
+
+            // Try parsing as backup format first (has wrapper object)
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty("Config", out var configElement))
+                {
+                    var configJson = configElement.GetRawText();
+                    Config = JsonSerializer.Deserialize<RedballConfig>(configJson, options) ?? new RedballConfig();
+                    IsDirty = true;
+                    Logger.Info("ConfigService", "Config imported from backup format");
+                    return true;
+                }
+            }
+            catch { }
+
+            // Fall back to plain config format
+            Config = JsonSerializer.Deserialize<RedballConfig>(json, options) ?? new RedballConfig();
+            IsDirty = true;
+            Logger.Info("ConfigService", "Config imported from plain format");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("ConfigService", "Failed to import config", ex);
+            return false;
+        }
+    }
+
     private static string ResolveConfigPath(string? path)
     {
         if (!string.IsNullOrEmpty(path) && File.Exists(path))
@@ -287,6 +364,7 @@ public class RedballConfig
     public int IdleThreshold { get; set; } = 30;
     public bool PresentationMode { get; set; }
     public bool ScheduledOperation { get; set; }
+    public bool FirstRun { get; set; } = true;
     public string Theme { get; set; } = "Dark";
 }
 

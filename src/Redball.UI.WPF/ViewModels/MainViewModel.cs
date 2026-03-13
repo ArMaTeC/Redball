@@ -18,10 +18,15 @@ public class MainViewModel : INotifyPropertyChanged
     private string _statusText = "Active | Display On | F15 On";
     private bool _isDarkMode = true;
     private WeakReference<MainWindow>? _mainWindowRef;
+    private readonly KeepAwakeService _keepAwake;
 
     public MainViewModel()
     {
         Logger.Info("MainViewModel", "Constructor called");
+        
+        _keepAwake = KeepAwakeService.Instance;
+        _keepAwake.ActiveStateChanged += OnKeepAwakeStateChanged;
+        _keepAwake.TimedAwakeExpired += OnTimedAwakeExpired;
         
         ToggleActiveCommand = new RelayCommand(ToggleActive);
         PauseKeepAwakeCommand = new RelayCommand(ToggleActive);
@@ -29,6 +34,10 @@ public class MainViewModel : INotifyPropertyChanged
         ExitCommand = new RelayCommand(ExitApplication);
         ShowAboutCommand = new RelayCommand(ShowAbout);
         TypeThingCommand = new RelayCommand(StartTypeThing);
+        
+        // Sync initial state
+        _isActive = _keepAwake.IsActive;
+        UpdateStatusText();
         
         Logger.Info("MainViewModel", "Commands initialized");
     }
@@ -95,23 +104,23 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void ToggleActive()
     {
-        IsActive = !IsActive;
-        Logger.Info("MainViewModel", $"ToggleActive called, new state: {IsActive}");
-        
-        // Send IPC message to PowerShell core
-        Task.Run(async () =>
+        Logger.Info("MainViewModel", "ToggleActive called");
+        _keepAwake.Toggle();
+    }
+
+    private void OnKeepAwakeStateChanged(object? sender, bool isActive)
+    {
+        // Update on UI thread
+        System.Windows.Application.Current?.Dispatcher.Invoke(() =>
         {
-            Logger.Debug("MainViewModel", "Sending ToggleActive IPC message...");
-            var success = await IpcClientService.SendToPowerShellAsync("ToggleActive", new { Active = IsActive });
-            if (!success)
-            {
-                Logger.Warning("MainViewModel", "Failed to notify PowerShell core of state change");
-            }
-            else
-            {
-                Logger.Debug("MainViewModel", "PowerShell core notified successfully");
-            }
+            IsActive = isActive;
         });
+    }
+
+    private void OnTimedAwakeExpired(object? sender, EventArgs e)
+    {
+        Logger.Info("MainViewModel", "Timed awake expired");
+        System.Windows.Application.Current?.Dispatcher.Invoke(UpdateStatusText);
     }
 
     private void OpenSettings()
@@ -228,9 +237,7 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void UpdateStatusText()
     {
-        StatusText = IsActive
-            ? "Active | Display On | F15 On"
-            : "Paused | Display Normal | F15 Off";
+        StatusText = _keepAwake.GetStatusText();
         Logger.Debug("MainViewModel", $"StatusText updated to: {StatusText}");
     }
 

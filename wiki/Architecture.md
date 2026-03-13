@@ -1,172 +1,170 @@
 # Architecture
 
+> **v3.0** — Pure C# WPF architecture. All functionality runs natively in the WPF application with no PowerShell dependency.
+
 ## Project Structure
 
 ```text
 Redball/
-├── .github/
-│   └── workflows/
-│       ├── ci.yml                # CI pipeline (test, lint, security)
-│       └── release.yml           # Release pipeline (tag, build MSI, publish)
-├── installer/
-│   ├── Build-MSI.ps1             # WiX MSI build script
-│   ├── Deploy-Redball.ps1        # Full deploy pipeline (EXE + MSI + signing)
-│   ├── Launch-Redball.vbs        # Hidden-window launcher for MSI post-install
-│   ├── Redball.wxs               # WiX v4 installer definition
-│   ├── Redball.ico               # Application icon
-│   ├── Redball-License.rtf       # License for installer UI
-│   └── redball.png               # Readme icon image
-├── wiki/                         # Full documentation wiki
-├── dist/                         # Build output (MSI, EXE)
-├── Redball.ps1                   # Main application script (~5000 lines)
-├── Redball.json                  # Configuration file
-├── Redball.Tests.ps1             # Pester test suite
-├── locales.json                  # External locale overrides (en, es, fr, de)
-├── .buildversion                 # Auto-incremented build number
-├── CHANGELOG.md                  # Version history
-├── LICENSE                       # MIT License
-└── README.md                     # Project readme
+├── .github/workflows/
+│   ├── ci.yml                       # CI pipeline (build, test, lint, security)
+│   └── release.yml                  # Release pipeline (tag, build MSI, publish)
+├── src/Redball.UI.WPF/              # WPF application (.NET 8)
+│   ├── Interop/
+│   │   └── NativeMethods.cs         # All Win32 P/Invoke declarations
+│   ├── Services/
+│   │   ├── KeepAwakeService.cs      # Core keep-awake engine
+│   │   ├── BatteryMonitorService.cs # Battery monitoring + auto-pause
+│   │   ├── NetworkMonitorService.cs # Network monitoring + auto-pause
+│   │   ├── IdleDetectionService.cs  # Idle detection + auto-pause
+│   │   ├── ScheduleService.cs       # Scheduled activation
+│   │   ├── PresentationModeService.cs # Presentation detection
+│   │   ├── SessionStateService.cs   # Session save/restore
+│   │   ├── StartupService.cs        # Windows startup registration
+│   │   ├── SingletonService.cs      # Named mutex singleton
+│   │   ├── CrashRecoveryService.cs  # Crash flag detection
+│   │   ├── NotificationService.cs   # Tray balloon notifications
+│   │   ├── LocalizationService.cs   # i18n (en, es, fr, de, bl)
+│   │   ├── TelemetryService.cs      # Opt-in local telemetry
+│   │   ├── ConfigService.cs         # JSON config load/save/export/import
+│   │   ├── HotkeyService.cs         # Global hotkey registration
+│   │   ├── UpdateService.cs         # GitHub release auto-updater
+│   │   └── Logger.cs                # Structured logging with rotation
+│   ├── ViewModels/
+│   │   └── MainViewModel.cs         # MVVM state + commands
+│   ├── Views/
+│   │   ├── MainWindow.xaml/.cs      # Tray icon, TypeThing, hotkeys
+│   │   ├── SettingsWindow.xaml/.cs   # Tabbed settings UI
+│   │   └── AboutWindow.xaml/.cs     # Version info + update check
+│   ├── Themes/                      # 12 theme XAML dictionaries
+│   ├── Converters/                  # WPF value converters
+│   ├── Assets/redball.ico           # Application icon
+│   ├── ThemeManager.cs              # Theme switching engine
+│   ├── App.xaml / App.xaml.cs       # Application entry point
+│   └── Redball.UI.WPF.csproj       # Project file
+├── installer/                       # WiX MSI installer
+├── scripts/                         # Build helper scripts
+├── tests/                           # Test suite
+├── wiki/                            # Documentation
+├── Redball.json                     # Configuration file
+├── Redball.ps1                      # Legacy PowerShell script (retained for rollback)
+├── build.ps1                        # Build pipeline
+└── locales.json                     # External locale overrides
 ```
 
-## Component Flow
+## Service Architecture
 
-### Startup Sequence
+All services are instantiated as singletons and coordinated by `App.xaml.cs` and `KeepAwakeService`.
 
 ```text
-1. Parse CLI parameters
-2. Resolve script root ($PSScriptRoot fallback chain)
-3. Load assemblies (System.Windows.Forms, System.Drawing)
-4. Define Win32 P/Invoke signatures (SetThreadExecutionState)
-5. Initialize state hashtable and config defaults
-6. Handle CLI-only commands (if -Status/-CheckUpdate/-Update/-SignScript/-Install/-Uninstall → exit)
-7. Check execution policy
-8. Singleton instance check → stop stale instances if needed
-9. Claim singleton mutex
-10. Clear log file locks from previous instances
-11. Load persisted config (Import-RedballConfig)
-12. Check for crash recovery (Test-CrashRecovery)
-13. Restore previous session state (Restore-RedballState)
-14. Apply installer defaults if no saved state (Import-RedballInstallerDefaults)
-15. Apply CLI parameters (-Duration, -Minimized, -ExitOnComplete)
-16. Initialize locales (Import-RedballLocales)
-17. Create tray icon and context menu
-18. Start heartbeat timer (every N seconds)
-19. Start duration timer (every 1 second)
-20. Register global hotkey (Ctrl+Alt+Pause)
-21. Initialize TypeThing (hotkey window, register Ctrl+Shift+V / Ctrl+Shift+X)
-22. Record start time
-23. Enter WinForms application message loop
+App.xaml.cs (entry point)
+  ├── SingletonService        — Mutex check (first thing)
+  ├── CrashRecoveryService    — Crash flag check
+  ├── ConfigService           — Load Redball.json
+  ├── ThemeManager            — Apply saved theme
+  ├── KeepAwakeService        — Initialize + SetActive + StartMonitoring
+  │     ├── HeartbeatTimer    — SetThreadExecutionState + F15 (every Ns)
+  │     └── DurationTimer     — 1s tick driving all monitors:
+  │           ├── IdleDetectionService      (every 1s — cheap P/Invoke)
+  │           ├── BatteryMonitorService     (every 10s — WMI cached 60s)
+  │           ├── NetworkMonitorService     (every 10s)
+  │           ├── PresentationModeService   (every 10s — process scan cached 10s)
+  │           └── ScheduleService           (every 30s)
+  ├── SessionStateService     — Restore previous session
+  └── MainWindow              — Tray icon, hotkeys, TypeThing
+        └── MainViewModel     — Binds to KeepAwakeService.ActiveStateChanged
 ```
 
-### Heartbeat Timer (every N seconds)
+## Startup Sequence
 
 ```text
-→ Check if shutting down
-→ If active:
-    → Refresh SetThreadExecutionState (keep-awake)
-    → Send F15 keypress (if idle > 1 min and heartbeat enabled)
-    → Update UI (only if state changed)
+1. Logger.Initialize()
+2. Register global exception handlers
+3. SingletonService.TryAcquire() — exit if another instance running
+4. CrashRecoveryService.CheckAndRecover() — detect previous crash
+5. CrashRecoveryService.SetCrashFlag() — mark this session
+6. ConfigService.Load() — load Redball.json
+7. ConfigService.Validate() — check config ranges
+8. ThemeManager.Initialize() — apply saved theme
+9. KeepAwakeService.Initialize() — create timers, configure monitors
+10. SessionStateService.Restore() — restore previous state (or SetActive(true))
+11. KeepAwakeService.StartMonitoring() — start duration timer
+12. Create MainWindow (tray-only mode)
+13. MainWindow.SetupTrayIcon() + SetupGlobalHotkeys()
 ```
 
-### Duration Timer (every 1 second)
+## Heartbeat Timer (every N seconds)
 
 ```text
-→ Check if shutting down
-→ If battery-aware → Update-BatteryAwareState
-→ If network-aware → Update-NetworkAwareState
-→ If idle-detection → Update-IdleAwareState
-→ If schedule-enabled → Update-ScheduleState
-→ If presentation-detection → Update-PresentationModeState
-→ If timed mode and expired:
-    → Deactivate keep-awake
-    → If auto-exit → toast notification → Exit-Application
-→ Else → Update UI
+→ Re-assert SetThreadExecutionState (ES_CONTINUOUS | ES_SYSTEM_REQUIRED [| ES_DISPLAY_REQUIRED])
+→ Send F15 keypress via SendInput (if UseHeartbeat enabled)
+→ Fire HeartbeatTick event
 ```
 
-### Shutdown Sequence
+## Duration Timer (every 1 second)
 
 ```text
-1. Set IsShuttingDown = true
-2. Stop TypeThing typing (if active)
-3. Unregister TypeThing hotkeys
-4. Destroy TypeThing hotkey window
-5. Hide and dispose tray icon
-6. Stop keep-awake runspace (if process isolation)
-7. Reset power state (SetThreadExecutionState → ES_CONTINUOUS)
-8. Save session state (Redball.state.json)
-9. Save config (Redball.json)
-10. Stop and dispose heartbeat timer
-11. Stop and dispose duration timer
-12. Dispose previous icon (GDI+ cleanup)
-13. Release WScript.Shell COM object
-14. Release singleton mutex
-15. Force garbage collection
-16. Call [Application]::Exit()
-17. Clear crash flag (via ProcessExit event)
+→ Check timed expiry (if Until has passed → SetActive(false))
+→ IdleDetectionService.CheckAndUpdate()          [every 1s]
+→ BatteryMonitorService.CheckAndUpdate()          [every 10s]
+→ NetworkMonitorService.CheckAndUpdate()           [every 10s]
+→ PresentationModeService.CheckAndUpdate()         [every 10s]
+→ ScheduleService.CheckAndUpdate()                 [every 30s]
 ```
+
+## Shutdown Sequence
+
+```text
+1. SessionStateService.Save() — write Redball.state.json
+2. KeepAwakeService.Dispose() — stop timers, SetThreadExecutionState(ES_CONTINUOUS)
+3. CrashRecoveryService.ClearCrashFlag() — clean exit
+4. SingletonService.Dispose() — release mutex
+5. Application.Shutdown()
+```
+
+## Win32 Interop (NativeMethods.cs)
+
+All P/Invoke declarations are centralized in `Interop/NativeMethods.cs`:
+
+| API | DLL | Purpose |
+| --- | --- | ------- |
+| `SetThreadExecutionState` | kernel32.dll | Prevent system/display sleep |
+| `SendInput` | user32.dll | F15 heartbeat + TypeThing character input |
+| `GetLastInputInfo` | user32.dll | Idle time detection |
+| `RegisterHotKey` / `UnregisterHotKey` | user32.dll | Global hotkeys (in HotkeyService) |
 
 ## State Management
 
-### `$script:state` (Ordered Hashtable)
+Runtime state lives in `KeepAwakeService` (singleton):
 
-Runtime state for the current session. Not persisted directly — selected properties are saved via `Save-RedballState`.
+- **Core:** `IsActive`, `Until`, `StartTime`, `PreventDisplaySleep`, `UseHeartbeat`
+- **Auto-pause flags:** `AutoPausedBattery`, `AutoPausedNetwork`, `AutoPausedIdle`, `AutoPausedSchedule`
+- **Events:** `ActiveStateChanged`, `TimedAwakeExpired`, `HeartbeatTick`
 
-Key categories:
+`MainViewModel` subscribes to `ActiveStateChanged` to update the UI. Config is stored in `ConfigService.Config` (strongly-typed `RedballConfig` class) and persisted to `Redball.json`.
 
-- **Core state:** `Active`, `Until`, `IsShuttingDown`, `SessionId`, `StartTime`
-- **Feature toggles:** `PreventDisplaySleep`, `UseHeartbeatKeypress`, `BatteryAware`, `NetworkAware`, `IdleDetection`
-- **Auto-pause tracking:** `AutoPausedBattery`, `AutoPausedNetwork`, `AutoPausedIdle`, `AutoPausedPresentation`, `AutoPausedSchedule`
-- **UI references:** `NotifyIcon`, `Context`, `HeartbeatTimer`, `DurationTimer`, menu item references
-- **TypeThing state:** `TypeThingIsTyping`, `TypeThingShouldStop`, `TypeThingText`, `TypeThingIndex`, etc.
-
-### `$script:config` (Hashtable)
-
-Persisted configuration loaded from/saved to `Redball.json`. Contains all user-configurable settings.
-
-### Sync Between State and Config
-
-Certain properties exist in both `$script:state` and `$script:config` (e.g., `PreventDisplaySleep`, `BatteryAware`). These are synchronized:
-
-- On config load: `Import-RedballConfig` copies config → state
-- On config save: `Save-RedballConfig` copies state → config → disk
-- On settings dialog OK: dialog values → config + state, then save
-
-## Win32 Interop
-
-Redball compiles several C# types at runtime via `Add-Type`:
-
-| Type/Class | Source DLL | Purpose |
-| ---------- | ---------- | ------- |
-| `Win32.Power` | `kernel32.dll` | `SetThreadExecutionState` for keep-awake |
-| `HotkeyHelper` | `user32.dll` | `RegisterHotKey` / `UnregisterHotKey` |
-| `IdleHelper` | `user32.dll` | `GetLastInputInfo` for idle detection |
-| `HighContrastHelper` | `user32.dll` | `SystemParametersInfo` for high contrast |
-| `DPIHelper` | `user32.dll` | `SetProcessDpiAwarenessContext` for high DPI |
-| `TypeThingInput` | `user32.dll` | `SendInput` for character typing |
-| `KEYBDINPUT` / `INPUT` | — | Win32 structs for keyboard input |
-| `HotkeyMessageWindow` | — | `NativeWindow` subclass for `WM_HOTKEY` messages |
+When settings are saved, `KeepAwakeService.ReloadConfig()` is called to sync monitor enable/disable flags and thresholds.
 
 ## Singleton Pattern
 
-Redball uses a named mutex (`Global\Redball_Singleton_Mutex`) to enforce a single instance:
+`SingletonService` uses a named mutex (`Global\Redball_Singleton_Mutex`):
 
-1. `Test-RedballInstanceRunning` — tries to open the existing mutex
-2. If another instance is found, `Get-RedballProcess` + `Stop-RedballProcess` attempt to stop it
-3. `Initialize-RedballSingleton` — creates and acquires the mutex
-4. On shutdown, the mutex is released and disposed
+1. `TryAcquire()` on startup — returns false if another instance holds the mutex
+2. If false → show message box → `Shutdown()`
+3. On exit → `Dispose()` releases the mutex
 
 ## Crash Recovery
 
-1. On startup, `Test-CrashRecovery` checks for `Redball.crash.flag`
-2. If found → previous session crashed → reset to safe defaults, show toast
-3. A new crash flag is written for the current session
-4. On clean shutdown, `Clear-CrashFlag` removes the flag via `ProcessExit` event
+1. On startup, `CrashRecoveryService.CheckAndRecover()` checks for `Redball.crash.flag`
+2. If found → previous session crashed → log warning, return true for safe defaults
+3. `SetCrashFlag()` writes the flag for the current session
+4. On clean exit, `ClearCrashFlag()` deletes the flag
 5. If Redball crashes, the flag remains → detected on next startup
 
 ## Performance Optimizations
 
-- **UI updates:** Icon and tooltip only refresh when state actually changes (`LastIconState`, `LastStatusText`)
-- **Battery cache:** WMI query results cached for 30 seconds
-- **COM object reuse:** `WScript.Shell` created once and reused for all F15 keypresses
-- **Idle-gated F15:** Heartbeat key only fires when system has been idle > 1 minute
-- **TypeThing status:** Menu status text only updates every 10 characters to reduce overhead
+- **Throttled monitors:** Battery/network/presentation checks every 10s, schedule every 30s, idle every 1s
+- **WMI caching:** Battery results cached for 60 seconds
+- **Process scan caching:** Presentation mode results cached for 10 seconds
+- **UI-thread timers:** `DispatcherTimer` ensures thread safety without cross-thread marshaling
+- **Lazy singletons:** Services instantiated on first access via `Lazy<T>`

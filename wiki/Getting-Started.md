@@ -2,8 +2,8 @@
 
 ## Prerequisites
 
-- **Windows 8.1** or later
-- **PowerShell 5.1** or later (PowerShell 7+ also supported)
+- **Windows 10** or later
+- **.NET 8 Runtime** (included in the self-contained EXE — no separate install needed)
 
 ## Installation
 
@@ -19,67 +19,42 @@ The installer provides:
 - Optional default behavior features (battery-aware, network-aware, idle detection, etc.)
 - "Launch Redball" checkbox on the finish page
 
-### Option B — Run the Script Directly
+### Option B — Run the Executable
+
+If you have the self-contained EXE from the repository or a custom build:
 
 ```powershell
-# Run with default settings
-.\Redball.ps1
+# Run the WPF application
+.\Redball.UI.WPF.exe
 
-# Run with custom config path
-.\Redball.ps1 -ConfigPath "C:\Tools\Redball.json"
+# The application will start minimized to the system tray
+# Right-click the tray icon to access all features
 ```
 
-### Option C — Command Line Options
+### Option C — Command Line Arguments
 
 ```powershell
-# Install to Windows startup
-.\Redball.ps1 -Install
-
-# Remove from Windows startup
-.\Redball.ps1 -Uninstall
-
-# Run for 60 minutes then exit
-.\Redball.ps1 -Duration 60 -ExitOnComplete
-
 # Start minimized to tray
-.\Redball.ps1 -Minimized
+.\Redball.UI.WPF.exe -minimized
 
-# Get current status as JSON
-.\Redball.ps1 -Status | ConvertFrom-Json
+# Start with specific config path
+.\Redball.UI.WPF.exe -config "C:\Tools\Redball.json"
 
-# Check for updates
-.\Redball.ps1 -CheckUpdate
-
-# Install the latest update from GitHub
-.\Redball.ps1 -Update
-
-# Sign the script with a code-signing certificate
-.\Redball.ps1 -SignScript [-CertThumbprint <thumbprint>] [-TimestampServer <url>]
+# Show help
+.\Redball.UI.WPF.exe -help
 ```
 
-## CLI Parameters
-
-| Parameter | Description |
-| --------- | ----------- |
-| `-Install` | Add Redball to Windows startup |
-| `-Uninstall` | Remove from Windows startup |
-| `-Duration <N>` | Run for N minutes (1–720) |
-| `-ExitOnComplete` | Exit after timed duration completes |
-| `-Minimized` | Start minimized to system tray |
-| `-Status` | Output JSON status and exit |
-| `-CheckUpdate` | Check GitHub for a newer version and exit |
-| `-Update` | Download and install the latest release |
-| `-SignScript` | Sign the script with an Authenticode certificate |
-| `-SignPath` | Path to the file to sign (defaults to `Redball.ps1`) |
-| `-CertThumbprint` | Certificate thumbprint to use for signing |
-| `-TimestampServer` | RFC 3161 timestamp server URL |
-| `-ConfigPath` | Specify a custom config file path |
+| Argument | Description |
+| -------- | ----------- |
+| `-minimized` | Start minimized to system tray |
+| `-config <path>` | Specify a custom config file path |
+| `-help` | Show help information |
 
 ## First Run
 
 On first run, Redball will:
 
-1. Create a default `Redball.json` configuration file in the script directory
+1. Create a default `Redball.json` configuration file in the application directory
 2. Check for singleton instance (only one Redball can run at a time)
 3. Check for crash recovery from a previous abnormal termination
 4. Display a bright red 3D ball icon in your system tray
@@ -87,18 +62,3 @@ On first run, Redball will:
 6. Initialize TypeThing clipboard typer with default hotkeys (Ctrl+Shift+V / Ctrl+Shift+X)
 
 Right-click the tray icon to access all features and settings.
-
-## Execution Policy
-
-If PowerShell blocks the script, use one of these methods:
-
-```powershell
-# Method 1: Set execution policy for current user
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-
-# Method 2: Run with bypass
-PowerShell -ExecutionPolicy Bypass -File .\Redball.ps1
-
-# Method 3: Use the -Install parameter (handles bypass automatically)
-.\Redball.ps1 -Install
-```
