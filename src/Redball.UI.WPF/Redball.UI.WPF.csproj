@@ -11,9 +11,9 @@
     <AssemblyName>Redball.UI.WPF</AssemblyName>
     <AssemblyTitle>Redball</AssemblyTitle>
     <ApplicationIcon>Assets\redball.ico</ApplicationIcon>
-    <Version>2.1.21</Version>
-    <FileVersion>2.1.21.0</FileVersion>
-    <AssemblyVersion>2.1.21.0</AssemblyVersion>
+    <Version>2.1.22</Version>
+    <FileVersion>2.1.22.0</FileVersion>
+    <AssemblyVersion>2.1.22.0</AssemblyVersion>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -40,7 +40,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Assets\redball.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\redball.ico" CopyToOutputDirectory="PreserveNewest">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
