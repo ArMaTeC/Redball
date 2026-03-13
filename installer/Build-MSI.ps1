@@ -20,11 +20,12 @@ $outputDir = Join-Path $projectRoot 'dist'
 # Use version in MSI filename if provided
 if ($Version) {
     $outputMsi = Join-Path $outputDir "Redball-$Version.msi"
-} else {
+}
+else {
     $outputMsi = Join-Path $outputDir 'Redball.msi'
 }
 
-$requiredExtensions = @('WixToolset.UI.wixext')
+$requiredExtensions = @('WixToolset.UI.wixext', 'WixToolset.Netfx.wixext')
 
 function New-RedballInstallerIconFile {
     param(

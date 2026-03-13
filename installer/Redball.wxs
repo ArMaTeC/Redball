@@ -1,14 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:net="http://wixtoolset.org/schemas/v4/wxs/netfx">
   <Package Name="Redball"
            Manufacturer="ArMaTeC"
            Version="$(var.ProductVersion)"
            UpgradeCode="A7A9B089-9D1D-4F8A-86DB-6FE89B6F99B0"
-           Scope="perUser">
+           Scope="perUser"
+           Compressed="yes"
+           InstallerVersion="500">
+    
+    <!-- Major upgrade with proper scheduling -->
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
-                  Schedule="afterInstallInitialize" />
+                  Schedule="afterInstallInitialize"
+                  AllowSameVersionUpgrades="no" />
+    
+    <!-- CAB embedded in MSI for single-file distribution -->
     <MediaTemplate EmbedCab="yes" />
+
+    <!-- Add/Remove Programs metadata -->
+    <Property Id="ARPCOMMENTS" Value="Keep-awake utility for Windows with modern WPF UI" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/ArMaTeC/Redball" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/ArMaTeC/Redball/releases" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/ArMaTeC/Redball/issues" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="ARPSIZE" Value="25000" />
 
     <!-- UI pages (Welcome, License, Feature selection, InstallDir, Progress, Exit) -->
     <ui:WixUI Id="WixUI_FeatureTree" />
@@ -20,23 +37,24 @@
     <Icon Id="RedballIcon" SourceFile="Redball.ico" />
     <Property Id="ARPPRODUCTICON" Value="RedballIcon" />
 
-    <!-- Find powershell.exe via AppSearch (evaluated before installation begins) -->
+    <!-- .NET 8 Runtime Detection -->
+    <net:DotNetCoreSearch
+      RuntimeType="desktop"
+      Platform="x64"
+      MajorVersion="8"
+      Variable="NET8_INSTALLED" />
+    
+    <Launch Condition="NET8_INSTALLED" Message="This application requires .NET 8 Desktop Runtime (x64). Please install it from https://dotnet.microsoft.com/download/dotnet/8.0" />
+
+    <!-- Find powershell.exe via AppSearch -->
     <Property Id="POWERSHELLEXE">
       <DirectorySearch Id="FindPSDir" Path="[SystemFolder]WindowsPowerShell\v1.0">
         <FileSearch Name="powershell.exe" />
       </DirectorySearch>
     </Property>
 
-    <!-- Find wscript.exe for hidden-window launch at install completion -->
-    <Property Id="WSCRIPTEXE">
-      <DirectorySearch Id="FindWSDir" Path="[SystemFolder]">
-        <FileSearch Name="wscript.exe" />
-      </DirectorySearch>
-    </Property>
-
-    <!-- Launch after install checkbox on exit dialog (checked by default) -->
+    <!-- Launch after install checkbox on exit dialog -->
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Redball after installation" />
-    <!-- Secure=yes allows this UI-set value to flow from the UI server to the execute server -->
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" Secure="yes" />
 
     <!-- Launch application after installation -->
@@ -46,14 +64,14 @@
                   Execute="immediate"
                   Return="asyncNoWait" />
 
-    <!-- Clear Installed property in UI after install so ExitDialog checkbox shows on upgrades too -->
+    <!-- Clear Installed property for proper checkbox behavior on upgrades -->
     <CustomAction Id="ClearInstalled" Property="Installed" Value="" />
     <InstallUISequence>
       <Custom Action="ClearInstalled" After="ExecuteAction"
               Condition="NOT REMOVE" />
     </InstallUISequence>
 
-    <!-- Wire the launch action into the install sequence (fires after install completes) -->
+    <!-- Launch action sequence -->
     <InstallExecuteSequence>
       <Custom Action="LaunchApp" After="InstallFinalize"
               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT REMOVE" />
@@ -72,30 +90,36 @@
     <StandardDirectory Id="StartupFolder" />
 
     <!-- Feature tree gives installer-UI and CLI config support via ADDLOCAL -->
-    <Feature Id="MainFeature" Title="Redball Core" Description="Core Redball files" Level="1">
+    <Feature Id="MainFeature" Title="Redball Core" Description="Core Redball application files" Level="1" AllowAdvertise="no" Display="expand">
       <ComponentGroupRef Id="CoreComponents" />
       <ComponentGroupRef Id="WPFComponents" />
       <ComponentGroupRef Id="ShortcutComponents" />
       <ComponentGroupRef Id="FileAssociationComponents" />
+      
+      <!-- Desktop shortcut as optional sub-feature -->
+      <Feature Id="DesktopShortcutFeature" Title="Desktop Shortcut" Description="Add shortcut to Desktop" Level="1000" AllowAdvertise="no">
+        <ComponentGroupRef Id="DesktopShortcutComponents" />
+      </Feature>
     </Feature>
 
-    <Feature Id="ConfigFeature" Title="Default Behavior Options" Description="Set default Redball behavior at install time" Level="1">
-      <Feature Id="CfgStartWithWindows" Title="Start with Windows" Description="Install a startup shortcut" Level="2">
-        <ComponentGroupRef Id="StartupShortcutComponents" />
-      </Feature>
-      <Feature Id="CfgStartMinimized" Title="Start Minimized by Default" Description="Sets installer default for minimized launch" Level="2">
+    <Feature Id="StartupFeature" Title="Start with Windows" Description="Launch Redball automatically when Windows starts" Level="1" AllowAdvertise="no">
+      <ComponentGroupRef Id="StartupShortcutComponents" />
+    </Feature>
+
+    <Feature Id="ConfigFeature" Title="Default Behavior Options" Description="Configure default Redball behavior at install time" Level="1" AllowAdvertise="no" Display="expand">
+      <Feature Id="CfgStartMinimized" Title="Start Minimized" Description="Start Redball minimized to system tray" Level="2" AllowAdvertise="no">
         <ComponentGroupRef Id="CfgMinimizedComponents" />
       </Feature>
-      <Feature Id="CfgExitOnComplete" Title="Exit on Timed Completion" Description="Sets installer default for auto-exit" Level="2">
+      <Feature Id="CfgExitOnComplete" Title="Exit on Timer Complete" Description="Automatically exit when timer expires" Level="2" AllowAdvertise="no">
         <ComponentGroupRef Id="CfgExitOnCompleteComponents" />
       </Feature>
-      <Feature Id="CfgBatteryAware" Title="Enable Battery-Aware Mode" Description="Sets installer default battery-aware mode" Level="2">
+      <Feature Id="CfgBatteryAware" Title="Battery-Aware Mode" Description="Pause when running on battery power" Level="2" AllowAdvertise="no">
         <ComponentGroupRef Id="CfgBatteryAwareComponents" />
       </Feature>
-      <Feature Id="CfgNetworkAware" Title="Enable Network-Aware Mode" Description="Sets installer default network-aware mode" Level="2">
+      <Feature Id="CfgNetworkAware" Title="Network-Aware Mode" Description="Pause when no network connection detected" Level="2" AllowAdvertise="no">
         <ComponentGroupRef Id="CfgNetworkAwareComponents" />
       </Feature>
-      <Feature Id="CfgIdleDetection" Title="Enable Idle Detection" Description="Sets installer default idle detection mode" Level="2">
+      <Feature Id="CfgIdleDetection" Title="Idle Detection" Description="Pause when user is idle" Level="2" AllowAdvertise="no">
         <ComponentGroupRef Id="CfgIdleDetectionComponents" />
       </Feature>
     </Feature>
@@ -149,8 +173,10 @@
         <RemoveFolder Id="RemoveMenuFolder" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\Redball" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
       </Component>
+    </ComponentGroup>
 
-      <Component Id="DesktopShortcutComponent" Guid="91F1505B-3B86-4D0F-953B-C2FB0F4A9A53" Directory="DesktopFolder">
+    <ComponentGroup Id="DesktopShortcutComponents" Directory="DesktopFolder">
+      <Component Id="DesktopShortcutComponent" Guid="91F1505B-3B86-4D0F-953B-C2FB0F4A9A53">
         <Shortcut Id="DesktopShortcut"
                   Name="Redball"
                   Description="Launch Redball keep-awake utility"
