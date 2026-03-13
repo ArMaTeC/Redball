@@ -16,6 +16,14 @@ $iconPath = Join-Path $scriptRoot 'Redball.ico'
 $licenseSourcePath = Join-Path $projectRoot 'LICENSE'
 $licenseRtfPath = Join-Path $scriptRoot 'Redball-License.rtf'
 $outputDir = Join-Path $projectRoot 'dist'
+$versionFilePath = Join-Path $projectRoot 'version.txt'
+
+# Read version from version.txt if not provided
+if (-not $Version -and (Test-Path $versionFilePath)) {
+    $Version = Get-Content $versionFilePath -Raw
+    $Version = $Version.Trim()
+    Write-Host "Using version from version.txt: $Version" -ForegroundColor Cyan
+}
 
 # Use version in MSI filename if provided
 if ($Version) {

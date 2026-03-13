@@ -41,6 +41,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 $scriptPath = Join-Path $projectRoot 'Redball.ps1'
 $wpfProjectPath = Join-Path $projectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
+$versionFilePath = Join-Path $projectRoot 'version.txt'
 
 if (-not (Test-Path $scriptPath)) {
     throw "Redball.ps1 not found at: $scriptPath"
@@ -103,12 +104,17 @@ else {
     Write-Warning "WPF project not found at: $wpfProjectPath"
 }
 
+# Write version file for MSI and other build processes
+Set-Content -Path $versionFilePath -Value $newVersion -NoNewline
+Write-Host "Updated version.txt" -ForegroundColor Green
+
 # Commit if requested
 if ($Commit -or $Push) {
     $commitMessage = if ($Message) { $Message } else { "Bump version to $newVersion" }
 
     Write-Host "Committing with message: $commitMessage" -ForegroundColor Yellow
     git add $scriptPath
+    git add $versionFilePath
     if (Test-Path $wpfProjectPath) {
         git add $wpfProjectPath
     }
