@@ -12,12 +12,18 @@
     
     <BootstrapperApplication>
       <bal:WixStandardBootstrapperApplication
-        Theme="rtfLicense"
-        LicenseFile="Redball-License.rtf"
+        Theme="hyperlinkLicense"
+        LicenseUrl="https://github.com/ArMaTeC/Redball/blob/main/LICENSE"
         LogoFile="banner.bmp"
         ShowVersion="yes"
         SuppressOptionsUI="no" />
     </BootstrapperApplication>
+
+    <!-- Bundle variables for better UX -->
+    <Variable Name="EulaAcceptLabel" Value="I accept the license terms" />
+    <Variable Name="InstallVersionDescription" Value="Redball [WixBundleVersion] will be installed on your computer." />
+    <Variable Name="SuccessDescription" Value="Redball has been successfully installed!" />
+    <Variable Name="SuccessRestartDescription" Value="Please restart your computer to complete the installation." />
 
     <Chain>
       <!-- .NET 8 Desktop Runtime x64 - downloaded on demand -->

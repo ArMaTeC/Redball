@@ -33,7 +33,7 @@ else {
     $outputMsi = Join-Path $outputDir 'Redball.msi'
 }
 
-$requiredExtensions = @('WixToolset.UI.wixext', 'WixToolset.Netfx.wixext')
+$requiredExtensions = @('WixToolset.UI.wixext', 'WixToolset.Netfx.wixext', 'WixToolset.Bal.wixext')
 
 function New-RedballInstallerIconFile {
     param(

@@ -23,16 +23,35 @@
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/ArMaTeC/Redball" />
     <Property Id="ARPURLUPDATEINFO" Value="https://github.com/ArMaTeC/Redball/releases" />
     <Property Id="ARPHELPLINK" Value="https://github.com/ArMaTeC/Redball/issues" />
-    <Property Id="ARPNOREPAIR" Value="1" />
-    <Property Id="ARPNOMODIFY" Value="1" />
+    <!-- Enable Repair and Modify for better user control -->
+    <Property Id="ARPNOREPAIR" Value="0" />
+    <Property Id="ARPNOMODIFY" Value="0" />
     <Property Id="ARPSIZE" Value="25000" />
+    
+    <!-- Add install scope selection (per-user is default) -->
+    <Property Id="ALLUSERS" Value="2" />
+    <Property Id="MSIINSTALLPERUSER" Value="1" />
 
-    <!-- UI pages (Welcome, License, Feature selection, InstallDir, Progress, Exit) -->
-    <ui:WixUI Id="WixUI_FeatureTree" />
+    <!-- UI: Use InstallDir dialog set for streamlined experience -->
+    <!-- WixUI_InstallDir = Welcome, License, Install Directory, Progress, Exit -->
+    <ui:WixUI Id="WixUI_InstallDir" />
     <WixVariable Id="WixUILicenseRtf" Value="Redball-License.rtf" />
     <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
     <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp" />
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    
+    <!-- Customize UI strings for better experience -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Redball after installation" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" Secure="yes" />
+    
+    <!-- Welcome dialog customization -->
+    <WixVariable Id="WixUISupportPerUser" Value="1" />
+    <WixVariable Id="WixUISupportPerMachine" Value="0" />
+    
+    <!-- Better feature descriptions in UI -->
+    <Property Id="WIXUI_FEATURETREE_MAINFEATURE_DESC" Value="Core Redball application with system tray utility, themes, and TypeThing functionality." />
+    <Property Id="WIXUI_FEATURETREE_STARTUPFEATURE_DESC" Value="Automatically start Redball when you sign in to Windows." />
+    <Property Id="WIXUI_FEATURETREE_CONFIGFEATURE_DESC" Value="Default behavior settings like minimize to tray, battery-aware mode, and idle detection." />
 
     <Icon Id="RedballIcon" SourceFile="Redball.ico" />
     <Property Id="ARPPRODUCTICON" Value="RedballIcon" />
