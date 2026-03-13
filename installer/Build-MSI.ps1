@@ -180,3 +180,47 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "MSI created: $outputMsi" -ForegroundColor Green
+
+# Build the bundle (EXE installer that chains .NET 8 + MSI)
+Write-Host "Building bundle EXE..." -ForegroundColor Cyan
+
+$bundleWxsPath = Join-Path $scriptRoot 'Bundle.wxs'
+if (Test-Path $bundleWxsPath) {
+    if ($Version) {
+        $outputBundle = Join-Path $outputDir "Redball-$Version.exe"
+    }
+    else {
+        $outputBundle = Join-Path $outputDir 'Redball.exe'
+    }
+    
+    $bundleArgs = @(
+        'build'
+        $bundleWxsPath
+        '-o', $outputBundle
+        '-ext', 'WixToolset.Bal.wixext'
+        '-ext', 'WixToolset.Netfx.wixext'
+    )
+    
+    if ($Version) {
+        $bundleArgs += '-d'
+        $bundleArgs += "ProductVersion=$Version"
+    }
+    
+    # Pass MSI path to bundle
+    $bundleArgs += '-d'
+    $bundleArgs += "RedballMsiPath=$outputMsi"
+    
+    Push-Location $scriptRoot
+    try {
+        & $wixExe @bundleArgs
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Bundle EXE created: $outputBundle" -ForegroundColor Green
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+else {
+    Write-Warning "Bundle.wxs not found, skipping bundle creation"
+}

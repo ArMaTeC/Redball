@@ -37,14 +37,20 @@
     <Icon Id="RedballIcon" SourceFile="Redball.ico" />
     <Property Id="ARPPRODUCTICON" Value="RedballIcon" />
 
-    <!-- .NET 8 Runtime Detection -->
+    <!-- .NET 8 Runtime Detection (informative only when used with bundle) -->
     <net:DotNetCoreSearch
       RuntimeType="desktop"
       Platform="x64"
       MajorVersion="8"
       Variable="NET8_INSTALLED" />
     
-    <Launch Condition="NET8_INSTALLED" Message="This application requires .NET 8 Desktop Runtime (x64). Please install it from https://dotnet.microsoft.com/download/dotnet/8.0" />
+    <!-- Note: When installing via bundle, .NET 8 will be installed automatically if missing -->
+    <Launch Condition="NET8_INSTALLED OR BUNDLE_INSTALLED" Message="This application requires .NET 8 Desktop Runtime (x64). Please install it from https://dotnet.microsoft.com/download/dotnet/8.0 or use the Redball Setup.exe installer which includes it automatically." />
+    
+    <!-- Property to detect if we're being installed by the bundle -->
+    <Property Id="BUNDLE_INSTALLED">
+      <RegistrySearch Id="BundleSearch" Root="HKLM" Key="SOFTWARE\ArMaTeC\Redball" Name="Bundle" Type="raw" />
+    </Property>
 
     <!-- Find powershell.exe via AppSearch -->
     <Property Id="POWERSHELLEXE">
