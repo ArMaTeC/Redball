@@ -38,6 +38,16 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+function Write-HostSafe {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'Build script requires console output for user feedback')]
+    param(
+        [Parameter(Mandatory, Position = 0)]
+        [object]$Object,
+        [System.ConsoleColor]$ForegroundColor
+    )
+    Write-Host $Object -ForegroundColor $ForegroundColor
+}
+
 $projectRoot = Split-Path $PSScriptRoot -Parent
 $wpfProjectPath = Join-Path $projectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
 $versionFilePath = Join-Path $PSScriptRoot 'version.txt'
@@ -60,7 +70,7 @@ $minor = [int]$match.Groups[2].Value
 $patch = [int]$match.Groups[3].Value
 $currentVersion = "$major.$minor.$patch"
 
-Write-Host "Current version: $currentVersion" -ForegroundColor Cyan
+Write-HostSafe "Current version: $currentVersion" -ForegroundColor Cyan
 
 # Calculate new version
 switch ($Component) {
@@ -79,7 +89,7 @@ switch ($Component) {
 }
 
 $newVersion = "$major.$minor.$patch"
-Write-Host "New version: $newVersion" -ForegroundColor Green
+Write-HostSafe "New version: $newVersion" -ForegroundColor Green
 
 # Update WPF .csproj
 $csprojContent = $csprojContent -replace '<Version>[0-9]+\.[0-9]+\.[0-9]+</Version>', "<Version>$newVersion</Version>"
@@ -87,25 +97,25 @@ $csprojContent = $csprojContent -replace '<FileVersion>[0-9]+\.[0-9]+\.[0-9]+(\.
 $csprojContent = $csprojContent -replace '<AssemblyVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</AssemblyVersion>', "<AssemblyVersion>$newVersion.0</AssemblyVersion>"
 
 Set-Content -Path $wpfProjectPath -Value $csprojContent -NoNewline
-Write-Host "Updated $wpfProjectPath" -ForegroundColor Green
+Write-HostSafe "Updated $wpfProjectPath" -ForegroundColor Green
 
 # Write version file for MSI and other build processes
 Set-Content -Path $versionFilePath -Value $newVersion -NoNewline
-Write-Host "Updated version.txt" -ForegroundColor Green
+Write-HostSafe "Updated version.txt" -ForegroundColor Green
 
 # Commit if requested
 if ($Commit -or $Push) {
     $commitMessage = if ($Message) { $Message } else { "Bump version to $newVersion" }
 
-    Write-Host "Committing with message: $commitMessage" -ForegroundColor Yellow
+    Write-HostSafe "Committing with message: $commitMessage" -ForegroundColor Yellow
     git add $versionFilePath
     git add $wpfProjectPath
     git commit -m $commitMessage
 
     if ($Push) {
-        Write-Host "Pushing to remote..." -ForegroundColor Yellow
+        Write-HostSafe "Pushing to remote..." -ForegroundColor Yellow
         git push
     }
 }
 
-Write-Host "Done!" -ForegroundColor Green
+Write-HostSafe "Done!" -ForegroundColor Green
