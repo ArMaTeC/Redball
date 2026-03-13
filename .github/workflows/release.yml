@@ -192,7 +192,7 @@ jobs:
         VERSION="${{ needs.tag.outputs.version }}"
         cd installer
         echo "=== Building Bundle EXE v${VERSION} ==="
-        wix.exe build Bundle.wxs -o "../dist/Redball-${VERSION}-Setup.exe" -ext WixToolset.Bal.wixext -ext WixToolset.Netfx.wixext -d "ProductVersion=${VERSION}" -d "RedballMsiPath=../dist/Redball-${VERSION}.msi" > ../dist/bundle.log 2>&1
+        wix.exe build Bundle.wxs -o "../dist/Redball-Setup-${VERSION}.exe" -ext WixToolset.Bal.wixext -ext WixToolset.Netfx.wixext -d "ProductVersion=${VERSION}" -d "RedballMsiPath=../dist/Redball-${VERSION}.msi" > ../dist/bundle.log 2>&1
         BUNDLE_RC=$?
         cd ..
         echo "=== Bundle exit code: ${BUNDLE_RC} ==="
@@ -204,10 +204,10 @@ jobs:
         ls -la dist/
         echo "### dist contents after bundle" >> "$GITHUB_STEP_SUMMARY"
         ls -la dist/ >> "$GITHUB_STEP_SUMMARY"
-        if [ ! -f "dist/Redball-${VERSION}-Setup.exe" ]; then
+        if [ ! -f "dist/Redball-Setup-${VERSION}.exe" ]; then
           echo "WARNING: Bundle not produced (exit ${BUNDLE_RC}) - continuing with MSI only"
         else
-          cp "dist/Redball-${VERSION}-Setup.exe" "dist/Redball-Setup.exe"
+          cp "dist/Redball-Setup-${VERSION}.exe" "dist/Redball-Setup.exe"
           echo "OK: Bundle produced ($(wc -c < dist/Redball-Setup.exe) bytes)"
         fi
 
@@ -291,7 +291,13 @@ jobs:
           echo "ERROR: Redball.msi not found"
           exit 1
         fi
+        # Verify bundle files exist
+        if [ ! -f "./release/Redball-Setup.exe" ]; then
+          echo "ERROR: Redball-Setup.exe not found"
+          exit 1
+        fi
         echo "MSI ready for release"
+        echo "Bundle ready for release"
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
@@ -300,6 +306,7 @@ jobs:
         files: |
           ./release/Redball.msi
           ./release/Redball-Setup.exe
+          ./release/Redball-Setup-${{ needs.tag.outputs.version }}.exe
         generate_release_notes: true
         draft: false
         prerelease: false
