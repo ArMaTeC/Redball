@@ -39,13 +39,13 @@ jobs:
       id: tag
       shell: bash
       run: |
-        # Use input version if provided (manual trigger), otherwise extract from script
+        # Use input version if provided (manual trigger), otherwise extract from csproj
         INPUT_VERSION="${{ github.event.inputs.version }}"
         if [ -n "$INPUT_VERSION" ]; then
           VERSION="$INPUT_VERSION"
         else
-          # Extract version from Redball.ps1 - look for $script:VERSION
-          VERSION=$(grep -oP '\$script:VERSION = '\''\K[\d.]+' Redball.ps1 || echo "2.0.0")
+          # Extract version from WPF project file
+          VERSION=$(grep -oP '<Version>\K[\d.]+' src/Redball.UI.WPF/Redball.UI.WPF.csproj || echo "2.1.25")
         fi
         
         echo "Using version: $VERSION"

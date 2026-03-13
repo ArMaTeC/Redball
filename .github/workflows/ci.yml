@@ -108,11 +108,20 @@ jobs:
     - name: Run PSScriptAnalyzer
       shell: pwsh
       run: |
-        $results = Invoke-ScriptAnalyzer -Path ./Redball.ps1 -Severity Warning,Error
-        $results | Format-Table -AutoSize
-        if ($results | Where-Object { $_.Severity -eq 'Error' }) {
+        $scripts = Get-ChildItem -Path ./scripts,./installer -Filter '*.ps1' -Recurse -File
+        $allResults = @()
+        foreach ($script in $scripts) {
+          $results = Invoke-ScriptAnalyzer -Path $script.FullName -Severity Warning,Error
+          if ($results) {
+            $allResults += $results
+            Write-Host "`n=== $($script.Name) ===" -ForegroundColor Cyan
+            $results | Format-Table -AutoSize
+          }
+        }
+        if ($allResults | Where-Object { $_.Severity -eq 'Error' }) {
           throw "PSScriptAnalyzer found errors!"
         }
+        Write-Host "`nPSScriptAnalyzer completed - $($scripts.Count) files scanned"
 
     - name: Validate JSON Files
       shell: pwsh
@@ -227,7 +236,14 @@ jobs:
     - name: Create Release Archive
       shell: pwsh
       run: |
-        $version = (Get-Content ./Redball.ps1 | Select-String -Pattern "VERSION = '([\d.]+)'").Matches.Groups[1].Value
+        # Get version from WPF project file
+        $csprojContent = Get-Content ./src/Redball.UI.WPF/Redball.UI.WPF.csproj -Raw
+        $versionMatch = $csprojContent | Select-String -Pattern '<Version>([\d.]+)</Version>'
+        if ($versionMatch) {
+          $version = $versionMatch.Matches.Groups[1].Value
+        } else {
+          $version = "2.1.25"  # fallback
+        }
         $releaseName = "Redball-v$version"
 
         # Create release directory
