@@ -1,0 +1,21 @@
+[12/03/2026 16:26:12] FATAL: System.Windows.Markup.XamlParseException: Set property 'System.Windows.ResourceDictionary.Source' threw an exception.
+ ---> System.ArgumentNullException: Value cannot be null. (Parameter 'path1')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.IO.Path.Combine(String path1, String path2)
+   at MS.Internal.AppModel.ContentFilePart.GetStreamCore(FileMode mode, FileAccess access)
+   at System.IO.Packaging.PackagePart.GetStream(FileMode mode, FileAccess access)
+   at MS.Internal.IO.Packaging.PackagePartExtensions.GetSeekableStream(PackagePart packPart, FileMode mode, FileAccess access)
+   at System.IO.Packaging.PackWebResponse.CachedResponse.GetResponseStream()
+   at System.IO.Packaging.PackWebResponse.get_ContentType()
+   at MS.Internal.WpfWebRequestHelper.GetContentType(WebResponse response)
+   at MS.Internal.WpfWebRequestHelper.GetResponseStream(WebRequest request, ContentType& contentType)
+   at System.Windows.ResourceDictionary.set_Source(Uri value)
+   at MS.Internal.Xaml.Runtime.ClrObjectRuntime.SetValue(Object inst, XamlMember property, Object value)
+   --- End of inner exception stack trace ---
+   at System.Windows.Markup.XamlReader.RewrapException(Exception e, IXamlLineInfo lineInfo, Uri baseUri)
+   at System.Windows.Markup.WpfXamlLoader.Load(XamlReader xamlReader, IXamlObjectWriterFactory writerFactory, Boolean skipJournaledProperties, Object rootObject, XamlObjectWriterSettings settings, Uri baseUri)
+   at System.Windows.Markup.WpfXamlLoader.LoadBaml(XamlReader xamlReader, Boolean skipJournaledProperties, Object rootObject, XamlAccessLevel accessLevel, Uri baseUri)
+   at System.Windows.Markup.XamlReader.LoadBaml(Stream stream, ParserContext parserContext, Object parent, Boolean closeStream)
+   at System.Windows.Application.LoadComponent(Object component, Uri resourceLocator)
+   at Redball.UI.App.InitializeComponent() in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\App.xaml:line 1
+   at Redball.UI.App.Main()
