@@ -127,7 +127,7 @@ public class MainViewModel : INotifyPropertyChanged
         else
         {
             Logger.Warning("MainViewModel", "MainWindow reference not available, creating directly");
-            var settingsWindow = new Views.SettingsWindow();
+            var settingsWindow = new Views.SettingsWindow(null);
             settingsWindow.Show();
         }
     }

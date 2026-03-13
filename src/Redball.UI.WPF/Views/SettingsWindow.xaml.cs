@@ -13,9 +13,11 @@ public partial class SettingsWindow : Window
 {
     private bool _isDirty;
     private UpdateService? _updateService;
+    private MainWindow? _mainWindow;
 
-    public SettingsWindow()
+    public SettingsWindow(MainWindow? mainWindow = null)
     {
+        _mainWindow = mainWindow;
         InitializeComponent();
         Loaded += SettingsWindow_Loaded;
     }
@@ -302,12 +304,18 @@ public partial class SettingsWindow : Window
     {
         if (sender is TextBox tb)
             tb.Text = "Press a key combination...";
+
+        // Suspend global hotkeys so we can capture the key combination
+        _mainWindow?.SuspendHotkeys();
     }
 
     private void HotkeyBox_LostFocus(object sender, RoutedEventArgs e)
     {
         if (sender is TextBox tb && tb.Text == "Press a key combination...")
             tb.Text = tb.Name == "StartHotkeyBox" ? "Ctrl+Shift+V" : "Ctrl+Shift+X";
+
+        // Resume global hotkeys after capture
+        _mainWindow?.ResumeHotkeys();
     }
 
     private void Tab_Checked(object sender, RoutedEventArgs e)

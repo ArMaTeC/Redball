@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     private Views.SettingsWindow? _settingsWindow;
     private Views.AboutWindow? _aboutWindow;
     private HotkeyService? _hotkeyService;
+    private bool _isTyping;
 
     public MainWindow()
     {
@@ -226,7 +227,7 @@ public partial class MainWindow : Window
                 return;
             }
             Logger.Debug("MainWindow", "Creating new SettingsWindow");
-            _settingsWindow = new Views.SettingsWindow();
+            _settingsWindow = new Views.SettingsWindow(this);
             _settingsWindow.Closed += (s, e) =>
             {
                 Logger.Info("MainWindow", "Settings window closed, reloading hotkeys");
@@ -264,7 +265,19 @@ public partial class MainWindow : Window
 
     public void StartTypeThing()
     {
+        if (_isTyping)
+        {
+            Logger.Warning("MainWindow", "TypeThing already running, ignoring request");
+            if (_trayIcon != null)
+            {
+                _trayIcon.ShowBalloonTip("TypeThing", "Already typing! Please wait for current operation to complete.",
+                    Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Warning);
+            }
+            return;
+        }
+
         Logger.Info("MainWindow", "StartTypeThing called");
+        _isTyping = true;
         Dispatcher.Invoke(() =>
         {
             try
@@ -314,6 +327,7 @@ public partial class MainWindow : Window
             catch (Exception ex)
             {
                 Logger.Error("MainWindow", "TypeThing error", ex);
+                _isTyping = false;
             }
         });
     }
@@ -331,6 +345,7 @@ public partial class MainWindow : Window
             if (index >= text.Length)
             {
                 timer.Stop();
+                _isTyping = false;
                 Logger.Info("MainWindow", "TypeThing: Typing complete");
                 if (_trayIcon != null)
                 {
@@ -378,6 +393,27 @@ public partial class MainWindow : Window
         {
             Logger.Error("MainWindow", "Failed to reload hotkeys", ex);
         }
+    }
+
+    public void SuspendHotkeys()
+    {
+        Logger.Info("MainWindow", "Suspending hotkeys for key capture...");
+        try
+        {
+            _hotkeyService?.Dispose();
+            _hotkeyService = null;
+            Logger.Info("MainWindow", "Hotkeys suspended");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Failed to suspend hotkeys", ex);
+        }
+    }
+
+    public void ResumeHotkeys()
+    {
+        Logger.Info("MainWindow", "Resuming hotkeys after key capture...");
+        SetupGlobalHotkeys();
     }
 
     public void ExitApplication()

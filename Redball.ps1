@@ -87,7 +87,7 @@ param(
     [switch]$TestMode
 )
 
-$script:VERSION = '2.1.21'
+$script:VERSION = '2.1.22'
 $script:APP_NAME = 'Redball'
 $script:IsPS7 = $PSVersionTable.PSVersion.Major -ge 7
 
