@@ -1,0 +1,764 @@
+
+[2026-03-13 11:11:57] ========== Redball WPF Started ==========
+[2026-03-13 11:11:57] Version: 2.1.22.0
+[2026-03-13 11:11:57] Process ID: 24016
+[2026-03-13 11:11:57] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\
+[2026-03-13 11:11:57] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows
+[2026-03-13 11:11:57] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-13 11:11:57] .NET Version: 8.0.25
+[2026-03-13 11:11:57] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\testhost.dll --port 61217 --endpoint 127.0.0.1:061217 --role client --parentprocessid 26060 --datacollectionport 0 --telemetryoptedin false
+[2026-03-13 11:11:57.829] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:11:57.837] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:11:57.911] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:11:57.912] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:11:58.081] [DBG] [004] [Analytics] Analytics data flushed to disk
+[2026-03-13 11:11:58.162] [DBG] [004] [Analytics] Tracked feature: Test
+[2026-03-13 11:11:58.217] [VRB] [004] [ConfigService] Instance created (lazy initialization)
+[2026-03-13 11:11:58.220] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:11:58.222] [DBG] [004] [ConfigService] Configuration validation passed
+[2026-03-13 11:11:58.225] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:11:58.229] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:11:58.230] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-13 11:11:58.232] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:11:58.297] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:11:58.297] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:11:58.299] [WRN] [004] [ConfigService] Configuration validation found 2 errors
+[2026-03-13 11:11:58.463] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:11:58.464] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:11:58.465] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:11:58.466] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:11:58.467] [WRN] [004] [ConfigService] Configuration validation found 3 errors
+[2026-03-13 11:11:58.482] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:11:58.520] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:11:58.521] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:11:58.521] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:11:58.521] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
+[2026-03-13 11:11:58.522] [WRN] [004] [ConfigService] Configuration validation found 4 errors
+[2026-03-13 11:11:58.665] [ERR] [004] [SecurityService] Failed to compute hash for nonexistent_file_12345.txt
+[2026-03-13 11:11:58.665] [ERR] [004] [SecurityService]   Exception: FileNotFoundException: Could not find file 'C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\nonexistent_file_12345.txt'.
+[2026-03-13 11:11:58.665] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:11:58.665] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:11:58.665] [ERR] [004] [SecurityService]    at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:11:58.665] [ERR] [004] [SecurityService]    at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:11:58.665] [ERR] [004] [SecurityService]    at System.IO.File.OpenRead(String path)
+[2026-03-13 11:11:58.665] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.ComputeFileHash(String filePath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 190
+[2026-03-13 11:11:58.674] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:11:58.748] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:11:58.749] [INF] [004] [SecurityService] SBOM saved to: C:\Users\karll\AppData\Local\Temp\test_sbom_6f9631e6-4308-4db8-b558-87dcc835d961.json
+[2026-03-13 11:11:58.883] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:11:58.884] [ERR] [004] [SecurityService] Failed to save SBOM
+[2026-03-13 11:11:58.884] [ERR] [004] [SecurityService]   Exception: DirectoryNotFoundException: Could not find a part of the path 'Z:\nonexistent\directory\sbom.json'.
+[2026-03-13 11:11:58.884] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:11:58.884] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:11:58.884] [ERR] [004] [SecurityService]    at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+[2026-03-13 11:11:58.884] [ERR] [004] [SecurityService]    at System.IO.File.WriteToFile(String path, FileMode mode, String contents, Encoding encoding)
+[2026-03-13 11:11:58.884] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.SaveSBOM(String outputPath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 172
+
+[2026-03-13 11:12:53] ========== Redball WPF Started ==========
+[2026-03-13 11:12:53] Version: 2.1.22.0
+[2026-03-13 11:12:53] Process ID: 24964
+[2026-03-13 11:12:53] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\
+[2026-03-13 11:12:53] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows
+[2026-03-13 11:12:53] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-13 11:12:53] .NET Version: 8.0.25
+[2026-03-13 11:12:53] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\testhost.dll --port 61477 --endpoint 127.0.0.1:061477 --role client --parentprocessid 9788 --datacollectionport 0 --telemetryoptedin false
+[2026-03-13 11:12:53.805] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:12:53.809] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:12:53.887] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:12:53.889] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:12:53.907] [DBG] [004] [Analytics] Analytics data flushed to disk
+[2026-03-13 11:12:53.927] [DBG] [004] [Analytics] Tracked feature: Test
+[2026-03-13 11:12:53.940] [VRB] [004] [ConfigService] Instance created (lazy initialization)
+[2026-03-13 11:12:53.942] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:12:53.942] [DBG] [004] [ConfigService] Configuration validation passed
+[2026-03-13 11:12:53.945] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:12:53.946] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:12:53.946] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-13 11:12:53.953] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:12:53.954] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:12:53.955] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:12:53.956] [WRN] [004] [ConfigService] Configuration validation found 2 errors
+[2026-03-13 11:12:53.958] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:12:53.958] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:12:53.959] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:12:53.959] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:12:53.959] [WRN] [004] [ConfigService] Configuration validation found 3 errors
+[2026-03-13 11:12:53.962] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:12:53.962] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:12:53.963] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:12:53.964] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:12:53.966] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
+[2026-03-13 11:12:53.967] [WRN] [004] [ConfigService] Configuration validation found 4 errors
+[2026-03-13 11:12:54.013] [ERR] [004] [SecurityService] Failed to compute hash for nonexistent_file_12345.txt
+[2026-03-13 11:12:54.013] [ERR] [004] [SecurityService]   Exception: FileNotFoundException: Could not find file 'C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\nonexistent_file_12345.txt'.
+[2026-03-13 11:12:54.013] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:12:54.013] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:12:54.013] [ERR] [004] [SecurityService]    at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:12:54.013] [ERR] [004] [SecurityService]    at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:12:54.013] [ERR] [004] [SecurityService]    at System.IO.File.OpenRead(String path)
+[2026-03-13 11:12:54.013] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.ComputeFileHash(String filePath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 190
+[2026-03-13 11:12:54.022] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:12:54.025] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:12:54.026] [INF] [004] [SecurityService] SBOM saved to: C:\Users\karll\AppData\Local\Temp\test_sbom_3729e61f-8021-4270-ab04-32a6c3957184.json
+[2026-03-13 11:12:54.060] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:12:54.068] [ERR] [004] [SecurityService] Failed to save SBOM
+[2026-03-13 11:12:54.068] [ERR] [004] [SecurityService]   Exception: DirectoryNotFoundException: Could not find a part of the path 'Z:\nonexistent\directory\sbom.json'.
+[2026-03-13 11:12:54.068] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:12:54.068] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:12:54.068] [ERR] [004] [SecurityService]    at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+[2026-03-13 11:12:54.068] [ERR] [004] [SecurityService]    at System.IO.File.WriteToFile(String path, FileMode mode, String contents, Encoding encoding)
+[2026-03-13 11:12:54.068] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.SaveSBOM(String outputPath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 172
+
+[2026-03-13 11:22:55] ========== Redball WPF Started ==========
+[2026-03-13 11:22:55] Version: 2.1.22.0
+[2026-03-13 11:22:55] Process ID: 21120
+[2026-03-13 11:22:55] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\
+[2026-03-13 11:22:55] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows
+[2026-03-13 11:22:55] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-13 11:22:55] .NET Version: 8.0.25
+[2026-03-13 11:22:55] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\testhost.dll --port 61933 --endpoint 127.0.0.1:061933 --role client --parentprocessid 18484 --datacollectionport 0 --telemetryoptedin false
+[2026-03-13 11:22:55.829] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:22:55.858] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:22:56.107] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:22:56.125] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:22:56.254] [DBG] [004] [Analytics] Analytics data flushed to disk
+[2026-03-13 11:22:56.289] [DBG] [004] [Analytics] Tracked feature: Test
+[2026-03-13 11:22:56.452] [VRB] [004] [ConfigService] Instance created (lazy initialization)
+[2026-03-13 11:22:56.468] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:22:56.469] [DBG] [004] [ConfigService] Configuration validation passed
+[2026-03-13 11:22:56.495] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:22:56.496] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:22:56.496] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-13 11:22:56.535] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:22:56.536] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:22:56.537] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:22:56.537] [WRN] [004] [ConfigService] Configuration validation found 2 errors
+[2026-03-13 11:22:56.562] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:22:56.563] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:22:56.588] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:22:56.588] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:22:56.588] [WRN] [004] [ConfigService] Configuration validation found 3 errors
+[2026-03-13 11:22:56.652] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:22:56.652] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:22:56.652] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:22:56.653] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:22:56.653] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
+[2026-03-13 11:22:56.654] [WRN] [004] [ConfigService] Configuration validation found 4 errors
+[2026-03-13 11:22:56.727] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:22:56.758] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:22:56.802] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:22:56.845] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:22:56.885] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:22:56.913] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:22:57.025] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:22:57.025] [WRN] [004] [CrashRecovery] Previous abnormal termination detected. Resetting to safe defaults.
+[2026-03-13 11:22:57.026] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:22:57.219] [VRB] [004] [KeepAwakeService] Instance created
+[2026-03-13 11:22:57.259] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: False
+[2026-03-13 11:22:57.260] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: True
+[2026-03-13 11:22:57.306] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: False
+[2026-03-13 11:22:57.351] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=13/03/2026 11:52:57
+[2026-03-13 11:22:57.373] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-13 11:22:57.393] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-13 11:22:57.394] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-13 11:22:57.394] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:22:57.396] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-13 11:22:57.396] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:22:57.396] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:22:57.412] [WRN] [004] [KeepAwakeService] Invalid timed duration: 0
+[2026-03-13 11:22:57.412] [WRN] [004] [KeepAwakeService] Invalid timed duration: 800
+[2026-03-13 11:22:58.846] [DBG] [004] [ScheduleService] Schedule check failed: String 'invalid' was not recognized as a valid DateTime.
+[2026-03-13 11:22:58.995] [ERR] [004] [SecurityService] Failed to compute hash for nonexistent_file_12345.txt
+[2026-03-13 11:22:58.995] [ERR] [004] [SecurityService]   Exception: FileNotFoundException: Could not find file 'C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\nonexistent_file_12345.txt'.
+[2026-03-13 11:22:58.995] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:22:58.995] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:22:58.995] [ERR] [004] [SecurityService]    at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:22:58.995] [ERR] [004] [SecurityService]    at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:22:58.995] [ERR] [004] [SecurityService]    at System.IO.File.OpenRead(String path)
+[2026-03-13 11:22:58.995] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.ComputeFileHash(String filePath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 190
+[2026-03-13 11:22:59.036] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:22:59.056] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:22:59.062] [INF] [004] [SecurityService] SBOM saved to: C:\Users\karll\AppData\Local\Temp\test_sbom_084b0cbe-6eef-4bd7-a3d6-3994de7217a7.json
+[2026-03-13 11:22:59.110] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:22:59.115] [ERR] [004] [SecurityService] Failed to save SBOM
+[2026-03-13 11:22:59.115] [ERR] [004] [SecurityService]   Exception: DirectoryNotFoundException: Could not find a part of the path 'Z:\nonexistent\directory\sbom.json'.
+[2026-03-13 11:22:59.115] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:22:59.115] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:22:59.115] [ERR] [004] [SecurityService]    at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+[2026-03-13 11:22:59.115] [ERR] [004] [SecurityService]    at System.IO.File.WriteToFile(String path, FileMode mode, String contents, Encoding encoding)
+[2026-03-13 11:22:59.115] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.SaveSBOM(String outputPath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 172
+
+[2026-03-13 11:24:42] ========== Redball WPF Started ==========
+[2026-03-13 11:24:42] Version: 2.1.22.0
+[2026-03-13 11:24:42] Process ID: 25640
+[2026-03-13 11:24:42] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\
+[2026-03-13 11:24:42] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows
+[2026-03-13 11:24:42] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-13 11:24:42] .NET Version: 8.0.25
+[2026-03-13 11:24:42] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\testhost.dll --port 51766 --endpoint 127.0.0.1:051766 --role client --parentprocessid 24968 --datacollectionport 0 --telemetryoptedin false
+[2026-03-13 11:24:42.205] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:24:42.210] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:24:42.343] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:24:42.349] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:24:42.389] [DBG] [004] [Analytics] Analytics data flushed to disk
+[2026-03-13 11:24:42.406] [DBG] [004] [Analytics] Tracked feature: Test
+[2026-03-13 11:24:42.459] [VRB] [004] [ConfigService] Instance created (lazy initialization)
+[2026-03-13 11:24:42.471] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:24:42.479] [DBG] [004] [ConfigService] Configuration validation passed
+[2026-03-13 11:24:42.484] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:24:42.489] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:24:42.491] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-13 11:24:42.495] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:24:42.498] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:24:42.498] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:24:42.499] [WRN] [004] [ConfigService] Configuration validation found 2 errors
+[2026-03-13 11:24:42.502] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:24:42.503] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:24:42.504] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:24:42.504] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:24:42.505] [WRN] [004] [ConfigService] Configuration validation found 3 errors
+[2026-03-13 11:24:42.515] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:24:42.516] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:24:42.517] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:24:42.517] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:24:42.518] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
+[2026-03-13 11:24:42.519] [WRN] [004] [ConfigService] Configuration validation found 4 errors
+[2026-03-13 11:24:42.527] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:24:42.529] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:24:42.531] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:24:42.532] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:24:42.536] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:24:42.538] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:24:42.547] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:24:42.548] [WRN] [004] [CrashRecovery] Previous abnormal termination detected. Resetting to safe defaults.
+[2026-03-13 11:24:42.549] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:24:42.589] [VRB] [004] [KeepAwakeService] Instance created
+[2026-03-13 11:24:42.601] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: False
+[2026-03-13 11:24:42.652] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: True
+[2026-03-13 11:24:42.694] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: False
+[2026-03-13 11:24:42.700] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=13/03/2026 11:54:42
+[2026-03-13 11:24:42.701] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-13 11:24:42.748] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-13 11:24:42.749] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-13 11:24:42.749] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:24:42.750] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-13 11:24:42.750] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:24:42.750] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:24:42.754] [WRN] [004] [KeepAwakeService] Invalid timed duration: 0
+[2026-03-13 11:24:42.755] [WRN] [004] [KeepAwakeService] Invalid timed duration: 800
+[2026-03-13 11:24:42.760] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:24:42.760] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:24:42.760] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:24:42.761] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-13 11:24:42.761] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-13 11:24:42.762] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-13 11:24:42.762] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-13 11:24:42.763] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:24:42.763] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-13 11:24:42.764] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:24:42.764] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:24:42.766] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:24:42.767] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:24:42.767] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:24:42.773] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:24:42.773] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:24:42.773] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:24:43.325] [DBG] [004] [ScheduleService] Schedule check failed: String 'invalid' was not recognized as a valid DateTime.
+[2026-03-13 11:24:43.491] [ERR] [004] [SecurityService] Failed to compute hash for nonexistent_file_12345.txt
+[2026-03-13 11:24:43.491] [ERR] [004] [SecurityService]   Exception: FileNotFoundException: Could not find file 'C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\nonexistent_file_12345.txt'.
+[2026-03-13 11:24:43.491] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:24:43.491] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:24:43.491] [ERR] [004] [SecurityService]    at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:24:43.491] [ERR] [004] [SecurityService]    at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:24:43.491] [ERR] [004] [SecurityService]    at System.IO.File.OpenRead(String path)
+[2026-03-13 11:24:43.491] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.ComputeFileHash(String filePath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 190
+[2026-03-13 11:24:43.498] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:24:43.501] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:24:43.514] [INF] [004] [SecurityService] SBOM saved to: C:\Users\karll\AppData\Local\Temp\test_sbom_68546be0-82db-4403-9103-a6e603bebb27.json
+[2026-03-13 11:24:43.601] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:24:43.605] [ERR] [004] [SecurityService] Failed to save SBOM
+[2026-03-13 11:24:43.605] [ERR] [004] [SecurityService]   Exception: DirectoryNotFoundException: Could not find a part of the path 'Z:\nonexistent\directory\sbom.json'.
+[2026-03-13 11:24:43.605] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:24:43.605] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:24:43.605] [ERR] [004] [SecurityService]    at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+[2026-03-13 11:24:43.605] [ERR] [004] [SecurityService]    at System.IO.File.WriteToFile(String path, FileMode mode, String contents, Encoding encoding)
+[2026-03-13 11:24:43.605] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.SaveSBOM(String outputPath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 172
+
+[2026-03-13 11:31:51] ========== Redball WPF Started ==========
+[2026-03-13 11:31:51] Version: 2.1.22.0
+[2026-03-13 11:31:51] Process ID: 15884
+[2026-03-13 11:31:51] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\
+[2026-03-13 11:31:51] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows
+[2026-03-13 11:31:51] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-13 11:31:51] .NET Version: 8.0.25
+[2026-03-13 11:31:51] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\testhost.dll --port 52994 --endpoint 127.0.0.1:052994 --role client --parentprocessid 26296 --datacollectionport 0 --telemetryoptedin false
+[2026-03-13 11:31:51.597] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:31:51.603] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:31:51.692] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:31:51.692] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:31:51.753] [DBG] [004] [Analytics] Analytics data flushed to disk
+[2026-03-13 11:31:51.844] [DBG] [004] [Analytics] Tracked feature: Test
+[2026-03-13 11:31:51.965] [VRB] [004] [ConfigService] Instance created (lazy initialization)
+[2026-03-13 11:31:51.983] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:31:51.985] [DBG] [004] [ConfigService] Configuration validation passed
+[2026-03-13 11:31:52.002] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:31:52.003] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:31:52.004] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-13 11:31:52.007] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:31:52.008] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:31:52.009] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:31:52.009] [WRN] [004] [ConfigService] Configuration validation found 2 errors
+[2026-03-13 11:31:52.012] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:31:52.012] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:31:52.014] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:31:52.016] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:31:52.016] [WRN] [004] [ConfigService] Configuration validation found 3 errors
+[2026-03-13 11:31:52.042] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:31:52.054] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:31:52.055] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:31:52.056] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:31:52.057] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
+[2026-03-13 11:31:52.057] [WRN] [004] [ConfigService] Configuration validation found 4 errors
+[2026-03-13 11:31:52.063] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:31:52.065] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:31:52.069] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:31:52.070] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:31:52.118] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:31:52.161] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:31:52.169] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:31:52.170] [WRN] [004] [CrashRecovery] Previous abnormal termination detected. Resetting to safe defaults.
+[2026-03-13 11:31:52.217] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:31:52.242] [VRB] [004] [KeepAwakeService] Instance created
+[2026-03-13 11:31:52.299] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: False
+[2026-03-13 11:31:52.300] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: True
+[2026-03-13 11:31:52.303] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: False
+[2026-03-13 11:31:52.310] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=13/03/2026 12:01:52
+[2026-03-13 11:31:52.311] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-13 11:31:52.352] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-13 11:31:52.353] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-13 11:31:52.354] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:31:52.355] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-13 11:31:52.356] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:31:52.357] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:31:52.468] [WRN] [004] [KeepAwakeService] Invalid timed duration: 0
+[2026-03-13 11:31:52.582] [WRN] [004] [KeepAwakeService] Invalid timed duration: 800
+[2026-03-13 11:31:52.645] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:31:52.646] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:31:52.646] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:31:52.647] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-13 11:31:52.648] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-13 11:31:52.649] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-13 11:31:52.649] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-13 11:31:52.650] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:31:52.650] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-13 11:31:52.651] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:31:52.651] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:31:52.654] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:31:52.655] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:31:52.655] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:31:52.658] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:31:52.659] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:31:52.659] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:31:54.369] [DBG] [004] [ScheduleService] Schedule check failed: String 'invalid' was not recognized as a valid DateTime.
+[2026-03-13 11:31:54.584] [ERR] [004] [SecurityService] Failed to compute hash for nonexistent_file_12345.txt
+[2026-03-13 11:31:54.584] [ERR] [004] [SecurityService]   Exception: FileNotFoundException: Could not find file 'C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\nonexistent_file_12345.txt'.
+[2026-03-13 11:31:54.584] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:31:54.584] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:31:54.584] [ERR] [004] [SecurityService]    at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:31:54.584] [ERR] [004] [SecurityService]    at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:31:54.584] [ERR] [004] [SecurityService]    at System.IO.File.OpenRead(String path)
+[2026-03-13 11:31:54.584] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.ComputeFileHash(String filePath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 190
+[2026-03-13 11:31:54.809] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:31:54.841] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:31:54.859] [INF] [004] [SecurityService] SBOM saved to: C:\Users\karll\AppData\Local\Temp\test_sbom_963c54e5-ad81-4e0f-b87f-5eb3c7f2eefd.json
+[2026-03-13 11:31:54.911] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:31:54.971] [ERR] [004] [SecurityService] Failed to save SBOM
+[2026-03-13 11:31:54.971] [ERR] [004] [SecurityService]   Exception: DirectoryNotFoundException: Could not find a part of the path 'Z:\nonexistent\directory\sbom.json'.
+[2026-03-13 11:31:54.971] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:31:54.971] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:31:54.971] [ERR] [004] [SecurityService]    at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+[2026-03-13 11:31:54.971] [ERR] [004] [SecurityService]    at System.IO.File.WriteToFile(String path, FileMode mode, String contents, Encoding encoding)
+[2026-03-13 11:31:54.971] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.SaveSBOM(String outputPath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 172
+[2026-03-13 11:31:55.077] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:31:55.079] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:31:55.081] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:31:55.138] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:31:55.139] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:31:55.142] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:31:55.143] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:31:55.145] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:31:55.146] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:31:55.147] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:31:55.154] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:31:55.154] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:31:55.155] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:31:55.155] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:31:55.156] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:31:55.156] [INF] [004] [MainViewModel] IsActive changed: False -> True
+[2026-03-13 11:31:55.157] [VRB] [004] [MainViewModel] Property changed: IsActive
+[2026-03-13 11:31:55.157] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:31:55.160] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:31:55.160] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:31:55.160] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:31:55.161] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:31:55.161] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:31:55.161] [INF] [004] [MainViewModel] IsActive changed: False -> True
+[2026-03-13 11:31:55.162] [VRB] [004] [MainViewModel] Property changed: IsActive
+[2026-03-13 11:31:55.162] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:31:55.258] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:31:55.282] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:31:55.286] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:31:55.287] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:31:55.288] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:31:55.313] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:31:55.313] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:31:55.314] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:31:55.314] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:31:55.314] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:31:55.315] [VRB] [004] [MainViewModel] StatusText changed: 'Paused | Display Normal | F15 Off' -> 'Test Status'
+[2026-03-13 11:31:55.315] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:31:55.318] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:31:55.319] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:31:55.319] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:31:55.319] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:31:55.320] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:31:55.321] [INF] [004] [MainViewModel] IsDarkMode changed: True -> False
+[2026-03-13 11:31:55.322] [VRB] [004] [MainViewModel] Property changed: IsDarkMode
+[2026-03-13 11:31:55.362] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:31:55.373] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:31:55.373] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:31:55.374] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:31:55.397] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:31:55.522] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:31:55.523] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:31:55.545] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:31:55.546] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:31:55.607] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:31:55.716] [DBG] [004] [MainViewModel] Setting MainWindow reference
+[2026-03-13 11:31:55.720] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:31:55.721] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:31:55.721] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:31:55.721] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:31:55.722] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:31:55.722] [INF] [004] [MainViewModel] IsDarkMode changed: True -> False
+[2026-03-13 11:31:55.722] [VRB] [004] [MainViewModel] Property changed: IsDarkMode
+
+[2026-03-13 11:34:15] ========== Redball WPF Started ==========
+[2026-03-13 11:34:15] Version: 2.1.22.0
+[2026-03-13 11:34:15] Process ID: 16708
+[2026-03-13 11:34:15] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\
+[2026-03-13 11:34:15] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows
+[2026-03-13 11:34:15] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-13 11:34:15] .NET Version: 8.0.25
+[2026-03-13 11:34:15] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\testhost.dll --port 57756 --endpoint 127.0.0.1:057756 --role client --parentprocessid 27412 --datacollectionport 0 --telemetryoptedin false
+[2026-03-13 11:34:15.283] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:34:15.288] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:34:15.341] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:34:15.342] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:34:15.370] [DBG] [004] [Analytics] Analytics data flushed to disk
+[2026-03-13 11:34:15.397] [DBG] [004] [Analytics] Tracked feature: Test
+[2026-03-13 11:34:15.441] [VRB] [004] [ConfigService] Instance created (lazy initialization)
+[2026-03-13 11:34:15.443] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:34:15.445] [DBG] [004] [ConfigService] Configuration validation passed
+[2026-03-13 11:34:15.451] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:34:15.451] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:34:15.454] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-13 11:34:15.461] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:34:15.462] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:34:15.462] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:34:15.462] [WRN] [004] [ConfigService] Configuration validation found 2 errors
+[2026-03-13 11:34:15.465] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:34:15.465] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:34:15.465] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:34:15.466] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:34:15.466] [WRN] [004] [ConfigService] Configuration validation found 3 errors
+[2026-03-13 11:34:15.471] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:34:15.472] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:34:15.472] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:34:15.473] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:34:15.473] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
+[2026-03-13 11:34:15.473] [WRN] [004] [ConfigService] Configuration validation found 4 errors
+[2026-03-13 11:34:15.490] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:34:15.491] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:34:15.498] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:34:15.501] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:34:15.535] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:34:15.536] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:34:15.547] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:34:15.551] [WRN] [004] [CrashRecovery] Previous abnormal termination detected. Resetting to safe defaults.
+[2026-03-13 11:34:15.551] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:34:15.574] [VRB] [004] [KeepAwakeService] Instance created
+[2026-03-13 11:34:15.584] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: False
+[2026-03-13 11:34:15.585] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: True
+[2026-03-13 11:34:15.587] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: False
+[2026-03-13 11:34:15.597] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=13/03/2026 12:04:15
+[2026-03-13 11:34:15.598] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-13 11:34:15.605] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-13 11:34:15.606] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-13 11:34:15.606] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:34:15.607] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-13 11:34:15.607] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:34:15.608] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:34:15.614] [WRN] [004] [KeepAwakeService] Invalid timed duration: 0
+[2026-03-13 11:34:15.614] [WRN] [004] [KeepAwakeService] Invalid timed duration: 800
+[2026-03-13 11:34:15.633] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:34:15.638] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:34:15.638] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:34:15.645] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-13 11:34:15.649] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-13 11:34:15.657] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-13 11:34:15.659] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-13 11:34:15.661] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:34:15.682] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-13 11:34:15.682] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:34:15.693] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:34:15.718] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:34:15.719] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:34:15.760] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:34:15.786] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:34:15.787] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:34:15.810] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:34:16.548] [DBG] [004] [ScheduleService] Schedule check failed: String 'invalid' was not recognized as a valid DateTime.
+[2026-03-13 11:34:16.648] [ERR] [004] [SecurityService] Failed to compute hash for nonexistent_file_12345.txt
+[2026-03-13 11:34:16.648] [ERR] [004] [SecurityService]   Exception: FileNotFoundException: Could not find file 'C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\nonexistent_file_12345.txt'.
+[2026-03-13 11:34:16.648] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:34:16.648] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:34:16.648] [ERR] [004] [SecurityService]    at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:34:16.648] [ERR] [004] [SecurityService]    at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:34:16.648] [ERR] [004] [SecurityService]    at System.IO.File.OpenRead(String path)
+[2026-03-13 11:34:16.648] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.ComputeFileHash(String filePath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 190
+[2026-03-13 11:34:16.660] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:34:16.664] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:34:16.668] [INF] [004] [SecurityService] SBOM saved to: C:\Users\karll\AppData\Local\Temp\test_sbom_e00e7ae6-9c6f-4194-af49-cad8ee2f2b1b.json
+[2026-03-13 11:34:16.722] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:34:16.725] [ERR] [004] [SecurityService] Failed to save SBOM
+[2026-03-13 11:34:16.725] [ERR] [004] [SecurityService]   Exception: DirectoryNotFoundException: Could not find a part of the path 'Z:\nonexistent\directory\sbom.json'.
+[2026-03-13 11:34:16.725] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:34:16.725] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:34:16.725] [ERR] [004] [SecurityService]    at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+[2026-03-13 11:34:16.725] [ERR] [004] [SecurityService]    at System.IO.File.WriteToFile(String path, FileMode mode, String contents, Encoding encoding)
+[2026-03-13 11:34:16.725] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.SaveSBOM(String outputPath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 172
+[2026-03-13 11:34:16.761] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:34:16.769] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:34:16.770] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:34:16.771] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:34:16.771] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:34:16.785] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:34:16.786] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:34:16.787] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:34:16.787] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:34:16.788] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:34:16.804] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:34:16.814] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:34:16.815] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:34:16.815] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:34:16.816] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:34:16.816] [INF] [004] [MainViewModel] IsActive changed: False -> True
+[2026-03-13 11:34:16.817] [VRB] [004] [MainViewModel] Property changed: IsActive
+[2026-03-13 11:34:16.817] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:34:16.854] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:34:16.855] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:34:16.855] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:34:16.856] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:34:16.856] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:34:16.856] [INF] [004] [MainViewModel] IsActive changed: False -> True
+[2026-03-13 11:34:16.857] [VRB] [004] [MainViewModel] Property changed: IsActive
+[2026-03-13 11:34:16.858] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:34:16.964] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:34:16.965] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:34:16.980] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:34:16.980] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:34:16.981] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:34:16.997] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:34:16.997] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:34:16.999] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:34:16.999] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:34:17.000] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:34:17.000] [VRB] [004] [MainViewModel] StatusText changed: 'Paused | Display Normal | F15 Off' -> 'Test Status'
+[2026-03-13 11:34:17.000] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:34:17.003] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:34:17.003] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:34:17.004] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:34:17.004] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:34:17.004] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:34:17.005] [INF] [004] [MainViewModel] IsDarkMode changed: True -> False
+[2026-03-13 11:34:17.005] [VRB] [004] [MainViewModel] Property changed: IsDarkMode
+[2026-03-13 11:34:17.038] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:34:17.040] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:34:17.040] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:34:17.041] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:34:17.041] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:34:17.043] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:34:17.044] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:34:17.045] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:34:17.045] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:34:17.046] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:34:17.085] [DBG] [004] [MainViewModel] Setting MainWindow reference
+[2026-03-13 11:34:17.094] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:34:17.095] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:34:17.095] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:34:17.096] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:34:17.096] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:34:17.097] [INF] [004] [MainViewModel] IsDarkMode changed: True -> False
+[2026-03-13 11:34:17.097] [VRB] [004] [MainViewModel] Property changed: IsDarkMode
+
+[2026-03-13 11:35:28] ========== Redball WPF Started ==========
+[2026-03-13 11:35:28] Version: 2.1.22.0
+[2026-03-13 11:35:28] Process ID: 28152
+[2026-03-13 11:35:28] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\
+[2026-03-13 11:35:28] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows
+[2026-03-13 11:35:28] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-13 11:35:28] .NET Version: 8.0.25
+[2026-03-13 11:35:28] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\testhost.dll --port 56193 --endpoint 127.0.0.1:056193 --role client --parentprocessid 25452 --datacollectionport 0 --telemetryoptedin false
+[2026-03-13 11:35:28.549] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:35:28.554] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-13 11:35:28.651] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:35:28.652] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-13 11:35:28.689] [DBG] [004] [Analytics] Analytics data flushed to disk
+[2026-03-13 11:35:28.711] [DBG] [004] [Analytics] Tracked feature: Test
+[2026-03-13 11:35:28.922] [VRB] [004] [ConfigService] Instance created (lazy initialization)
+[2026-03-13 11:35:28.990] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:35:28.990] [DBG] [004] [ConfigService] Configuration validation passed
+[2026-03-13 11:35:28.994] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:35:29.010] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:35:29.011] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-13 11:35:29.039] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:35:29.040] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:35:29.040] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:35:29.040] [WRN] [004] [ConfigService] Configuration validation found 2 errors
+[2026-03-13 11:35:29.042] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:35:29.043] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:35:29.044] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:35:29.044] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:35:29.044] [WRN] [004] [ConfigService] Configuration validation found 3 errors
+[2026-03-13 11:35:29.049] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-13 11:35:29.049] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-13 11:35:29.050] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-13 11:35:29.050] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-13 11:35:29.051] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
+[2026-03-13 11:35:29.052] [WRN] [004] [ConfigService] Configuration validation found 4 errors
+[2026-03-13 11:35:29.124] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:35:29.126] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:35:29.128] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:35:29.135] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:35:29.154] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:35:29.155] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-13 11:35:29.160] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:35:29.160] [WRN] [004] [CrashRecovery] Previous abnormal termination detected. Resetting to safe defaults.
+[2026-03-13 11:35:29.161] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-13 11:35:29.222] [VRB] [004] [KeepAwakeService] Instance created
+[2026-03-13 11:35:29.239] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: False
+[2026-03-13 11:35:29.239] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: True
+[2026-03-13 11:35:29.242] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: False
+[2026-03-13 11:35:29.254] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=13/03/2026 12:05:29
+[2026-03-13 11:35:29.290] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-13 11:35:29.303] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-13 11:35:29.304] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-13 11:35:29.305] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:35:29.306] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-13 11:35:29.308] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:35:29.375] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:35:29.391] [WRN] [004] [KeepAwakeService] Invalid timed duration: 0
+[2026-03-13 11:35:29.426] [WRN] [004] [KeepAwakeService] Invalid timed duration: 800
+[2026-03-13 11:35:29.556] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:35:29.556] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:35:29.557] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:35:29.558] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-13 11:35:29.559] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-13 11:35:29.620] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-13 11:35:29.621] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-13 11:35:29.622] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:35:29.623] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-13 11:35:29.673] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:35:29.706] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:35:29.710] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:35:29.716] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:35:29.718] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:35:29.733] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-13 11:35:29.734] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-13 11:35:29.734] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-13 11:35:30.444] [DBG] [004] [ScheduleService] Schedule check failed: String 'invalid' was not recognized as a valid DateTime.
+[2026-03-13 11:35:30.571] [ERR] [004] [SecurityService] Failed to compute hash for nonexistent_file_12345.txt
+[2026-03-13 11:35:30.571] [ERR] [004] [SecurityService]   Exception: FileNotFoundException: Could not find file 'C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\nonexistent_file_12345.txt'.
+[2026-03-13 11:35:30.571] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:35:30.571] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:35:30.571] [ERR] [004] [SecurityService]    at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:35:30.571] [ERR] [004] [SecurityService]    at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:35:30.571] [ERR] [004] [SecurityService]    at System.IO.File.OpenRead(String path)
+[2026-03-13 11:35:30.571] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.ComputeFileHash(String filePath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 190
+[2026-03-13 11:35:30.585] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:35:30.588] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:35:30.589] [INF] [004] [SecurityService] SBOM saved to: C:\Users\karll\AppData\Local\Temp\test_sbom_6b6de966-3193-4697-ba8d-e600174daae1.json
+[2026-03-13 11:35:30.686] [INF] [004] [SecurityService] SBOM generated successfully
+[2026-03-13 11:35:30.744] [ERR] [004] [SecurityService] Failed to save SBOM
+[2026-03-13 11:35:30.744] [ERR] [004] [SecurityService]   Exception: DirectoryNotFoundException: Could not find a part of the path 'Z:\nonexistent\directory\sbom.json'.
+[2026-03-13 11:35:30.744] [ERR] [004] [SecurityService]   Stack:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+[2026-03-13 11:35:30.744] [ERR] [004] [SecurityService]    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+[2026-03-13 11:35:30.744] [ERR] [004] [SecurityService]    at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+[2026-03-13 11:35:30.744] [ERR] [004] [SecurityService]    at System.IO.File.WriteToFile(String path, FileMode mode, String contents, Encoding encoding)
+[2026-03-13 11:35:30.744] [ERR] [004] [SecurityService]    at Redball.UI.Services.SecurityService.SaveSBOM(String outputPath) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\SecurityService.cs:line 172
+[2026-03-13 11:35:30.753] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:35:30.754] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:35:30.755] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:35:30.756] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:35:30.756] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:35:30.759] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:35:30.760] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:35:30.760] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:35:30.761] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:35:30.761] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:35:30.766] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:35:30.767] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:35:30.767] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:35:30.767] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:35:30.768] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:35:30.769] [INF] [004] [MainViewModel] IsActive changed: False -> True
+[2026-03-13 11:35:30.769] [VRB] [004] [MainViewModel] Property changed: IsActive
+[2026-03-13 11:35:30.770] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:35:30.775] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:35:30.776] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:35:30.776] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:35:30.777] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:35:30.777] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:35:30.778] [INF] [004] [MainViewModel] IsActive changed: False -> True
+[2026-03-13 11:35:30.778] [VRB] [004] [MainViewModel] Property changed: IsActive
+[2026-03-13 11:35:30.779] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:35:30.947] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:35:30.950] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:35:30.951] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:35:30.951] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:35:30.952] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:35:30.954] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:35:30.954] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:35:30.955] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:35:30.955] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:35:30.956] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:35:30.956] [VRB] [004] [MainViewModel] StatusText changed: 'Paused | Display Normal | F15 Off' -> 'Test Status'
+[2026-03-13 11:35:30.956] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:35:30.959] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:35:30.960] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:35:30.960] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:35:30.960] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:35:30.961] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:35:30.962] [INF] [004] [MainViewModel] IsDarkMode changed: True -> False
+[2026-03-13 11:35:30.962] [VRB] [004] [MainViewModel] Property changed: IsDarkMode
+[2026-03-13 11:35:31.088] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:35:31.095] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:35:31.095] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:35:31.096] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:35:31.096] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:35:31.101] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:35:31.102] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:35:31.102] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:35:31.102] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:35:31.103] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:35:31.125] [DBG] [004] [MainViewModel] Setting MainWindow reference
+[2026-03-13 11:35:31.128] [INF] [004] [MainViewModel] Constructor called
+[2026-03-13 11:35:31.128] [VRB] [004] [MainViewModel] StatusText changed: 'Active | Display On | F15 On' -> 'Paused | Display Normal | F15 Off'
+[2026-03-13 11:35:31.129] [VRB] [004] [MainViewModel] Property changed: StatusText
+[2026-03-13 11:35:31.130] [DBG] [004] [MainViewModel] StatusText updated to: Paused | Display Normal | F15 Off
+[2026-03-13 11:35:31.133] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-13 11:35:31.135] [INF] [004] [MainViewModel] IsDarkMode changed: True -> False
+[2026-03-13 11:35:31.135] [VRB] [004] [MainViewModel] Property changed: IsDarkMode
+[2026-03-13 11:35:31.136] [INF] [004] [MainViewModel] IsDarkMode changed: False -> True
+[2026-03-13 11:35:31.136] [VRB] [004] [MainViewModel] Property changed: IsDarkMode

@@ -1,9 +1,9 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Bumps the version number in Redball.ps1 and Redball.UI.WPF.csproj
+    Bumps the version number in Redball.UI.WPF.csproj
 .DESCRIPTION
-    Increments the version number in Redball.ps1 and Redball.UI.WPF.csproj and optionally commits/pushes the change.
+    Increments the version number in Redball.UI.WPF.csproj and optionally commits/pushes the change.
     Supports bumping major, minor, or patch version components.
 .PARAMETER Component
     Which version component to bump: Major, Minor, or Patch (default: Patch)
@@ -39,21 +39,20 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $projectRoot = Split-Path $PSScriptRoot -Parent
-$scriptPath = Join-Path $projectRoot 'Redball.ps1'
 $wpfProjectPath = Join-Path $projectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
-$versionFilePath = Join-Path $projectRoot 'version.txt'
+$versionFilePath = Join-Path $PSScriptRoot 'version.txt'
 
-if (-not (Test-Path $scriptPath)) {
-    throw "Redball.ps1 not found at: $scriptPath"
+if (-not (Test-Path $wpfProjectPath)) {
+    throw "WPF project not found at: $wpfProjectPath"
 }
 
-# Read current version
-$content = Get-Content $scriptPath -Raw
-$versionPattern = "\`$script:VERSION\s*=\s*'([0-9]+)\.([0-9]+)\.([0-9]+)'"
-$match = [regex]::Match($content, $versionPattern)
+# Read current version from WPF project
+$csprojContent = Get-Content $wpfProjectPath -Raw
+$versionPattern = '<Version>([0-9]+)\.([0-9]+)\.([0-9]+)</Version>'
+$match = [regex]::Match($csprojContent, $versionPattern)
 
 if (-not $match.Success) {
-    throw "Could not find version pattern in Redball.ps1"
+    throw "Could not find version pattern in $wpfProjectPath"
 }
 
 $major = [int]$match.Groups[1].Value
@@ -82,27 +81,13 @@ switch ($Component) {
 $newVersion = "$major.$minor.$patch"
 Write-Host "New version: $newVersion" -ForegroundColor Green
 
-# Update Redball.ps1
-$newContent = $content -replace $versionPattern, "`$script:VERSION = '$newVersion'"
-Set-Content -Path $scriptPath -Value $newContent -NoNewline
-Write-Host "Updated $scriptPath" -ForegroundColor Green
+# Update WPF .csproj
+$csprojContent = $csprojContent -replace '<Version>[0-9]+\.[0-9]+\.[0-9]+</Version>', "<Version>$newVersion</Version>"
+$csprojContent = $csprojContent -replace '<FileVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</FileVersion>', "<FileVersion>$newVersion.0</FileVersion>"
+$csprojContent = $csprojContent -replace '<AssemblyVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</AssemblyVersion>', "<AssemblyVersion>$newVersion.0</AssemblyVersion>"
 
-# Update WPF .csproj if it exists
-if (Test-Path $wpfProjectPath) {
-    $csprojContent = Get-Content $wpfProjectPath -Raw
-    
-    # Update <Version>, <FileVersion>, and <AssemblyVersion>
-    # Use simple regex without capture groups to avoid PowerShell variable expansion
-    $csprojContent = $csprojContent -replace '<Version>[0-9]+\.[0-9]+\.[0-9]+</Version>', "<Version>$newVersion</Version>"
-    $csprojContent = $csprojContent -replace '<FileVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</FileVersion>', "<FileVersion>$newVersion.0</FileVersion>"
-    $csprojContent = $csprojContent -replace '<AssemblyVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</AssemblyVersion>', "<AssemblyVersion>$newVersion.0</AssemblyVersion>"
-    
-    Set-Content -Path $wpfProjectPath -Value $csprojContent -NoNewline
-    Write-Host "Updated $wpfProjectPath" -ForegroundColor Green
-}
-else {
-    Write-Warning "WPF project not found at: $wpfProjectPath"
-}
+Set-Content -Path $wpfProjectPath -Value $csprojContent -NoNewline
+Write-Host "Updated $wpfProjectPath" -ForegroundColor Green
 
 # Write version file for MSI and other build processes
 Set-Content -Path $versionFilePath -Value $newVersion -NoNewline
@@ -113,11 +98,8 @@ if ($Commit -or $Push) {
     $commitMessage = if ($Message) { $Message } else { "Bump version to $newVersion" }
 
     Write-Host "Committing with message: $commitMessage" -ForegroundColor Yellow
-    git add $scriptPath
     git add $versionFilePath
-    if (Test-Path $wpfProjectPath) {
-        git add $wpfProjectPath
-    }
+    git add $wpfProjectPath
     git commit -m $commitMessage
 
     if ($Push) {

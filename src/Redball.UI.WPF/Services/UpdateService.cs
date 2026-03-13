@@ -41,6 +41,12 @@ public class UpdateService
             var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
             Logger.Debug("UpdateService", $"Current assembly version: {currentVersion}");
             
+            if (currentVersion == null)
+            {
+                Logger.Warning("UpdateService", "Could not get current assembly version");
+                return null;
+            }
+            
             // Get all releases and find the highest version (not just "latest" by date)
             var allReleases = await GetAllReleasesAsync();
             var latestRelease = FindHighestVersionRelease(allReleases);
