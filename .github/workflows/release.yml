@@ -263,6 +263,7 @@ jobs:
         path: |
           ./dist/Redball.msi
           ./dist/Redball-Setup.exe
+          ./dist/Redball-*-Setup.exe
         retention-days: 7
         if-no-files-found: error
 

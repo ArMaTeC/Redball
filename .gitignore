@@ -7,7 +7,7 @@ Redball.state.json
 typingthing.txt
 
 # Build outputs
-dist/
+#dist/
 src/Redball.UI.WPF/obj/
 src/Redball.UI.WPF/bin/
 
