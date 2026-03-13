@@ -244,11 +244,13 @@ public static class Logger
             sb.AppendLine();
 
             sb.AppendLine("--- LOADED ASSEMBLIES ---");
+#pragma warning disable IL3000 // Assembly.Location returns empty for single-file apps, handled intentionally
             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
             {
                 try
                 {
-                    var loc = asm.IsDynamic ? "[Dynamic]" : (asm.Location ?? "[Unknown]");
+                    var loc = asm.IsDynamic ? "[Dynamic]" : 
+                        (string.IsNullOrEmpty(asm.Location) ? "[Bundled/Single-file]" : asm.Location);
                     sb.AppendLine($"  {asm.FullName} -> {loc}");
                 }
                 catch (Exception asmEx)
@@ -256,6 +258,7 @@ public static class Logger
                     sb.AppendLine($"  {asm.FullName} -> [Error: {asmEx.Message}]");
                 }
             }
+#pragma warning restore IL3000
             sb.AppendLine();
 
             sb.AppendLine("========================================");

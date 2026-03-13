@@ -58,11 +58,11 @@ public partial class OnboardingWindow : Window
         // Handle startup registration
         if (StartWithWindowsCheck.IsChecked == true)
         {
-            StartupService.Instance.SetStartup(true);
+            StartupService.Install();
         }
         
         // Apply theme immediately
-        ThemeManager.Instance.SetTheme(config.Theme);
+        ThemeManager.SetTheme(ThemeManager.ThemeFromString(config.Theme));
         
         // Save config
         ConfigService.Instance.Save();

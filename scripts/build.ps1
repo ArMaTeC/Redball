@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 [CmdletBinding()]
 param(
     [Parameter()]
@@ -36,13 +36,20 @@ $ErrorActionPreference = 'Stop'
 $script:ProjectRoot = $PSScriptRoot
 $script:DistPath = Join-Path $ProjectRoot $OutputPath
 
-# Import version from main script if not specified
+# Import version from version.txt or WPF project if not specified
 if (-not $Version) {
-    $mainScriptPath = Join-Path $ProjectRoot 'Redball.ps1'
-    if (Test-Path $mainScriptPath) {
-        $versionMatch = Get-Content $mainScriptPath | Select-String -Pattern "VERSION = '([\d.]+)'"
-        if ($versionMatch) {
-            $Version = $versionMatch.Matches.Groups[1].Value
+    $versionFilePath = Join-Path $PSScriptRoot 'version.txt'
+    if (Test-Path $versionFilePath) {
+        $Version = Get-Content $versionFilePath -Raw
+    }
+    else {
+        # Try to read from WPF project
+        $wpfProjectPath = Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
+        if (Test-Path $wpfProjectPath) {
+            $versionMatch = Get-Content $wpfProjectPath | Select-String -Pattern '<Version>([0-9]+\.[0-9]+\.[0-9]+)</Version>'
+            if ($versionMatch) {
+                $Version = $versionMatch.Matches.Groups[1].Value
+            }
         }
     }
 }
@@ -204,7 +211,7 @@ function Step-RunLinting {
     
     Import-Module PSScriptAnalyzer -Force
     
-    $results = Invoke-ScriptAnalyzer -Path (Join-Path $ProjectRoot 'Redball.ps1') -Severity Warning, Error
+    $results = Invoke-ScriptAnalyzer -Path $PSScriptRoot -Severity Warning, Error
     
     if ($results) {
         foreach ($result in $results) {
@@ -241,10 +248,7 @@ function Step-RunTests {
     $config.Output.Verbosity = 'Detailed'
     $config.TestResult.Enabled = $true
     $config.TestResult.OutputPath = Join-Path $DistPath 'test-results.xml'
-    $config.CodeCoverage.Enabled = $true
-    $config.CodeCoverage.Path = (Join-Path $ProjectRoot 'Redball.ps1')
-    $config.CodeCoverage.OutputPath = Join-Path $DistPath 'coverage.xml'
-    $config.CodeCoverage.CoveragePercentTarget = 40
+    $config.CodeCoverage.Enabled = $false
     
     $result = Invoke-Pester -Configuration $config
     

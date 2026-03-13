@@ -43,7 +43,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Check if test project exists
-$testPath = Join-Path $PSScriptRoot ".." "tests" "Redball.Tests"
+$testPath = Join-Path $PSScriptRoot ".." "tests" "Redball.Tests.csproj"
 if (Test-Path $testPath) {
     Write-Host "Running tests with coverage..." -ForegroundColor Yellow
     
@@ -84,7 +84,8 @@ if (Test-Path $testPath) {
             Write-Warning "Branch coverage is below 50% threshold!"
         }
     }
-} else {
+}
+else {
     Write-Warning "No test project found at $testPath"
     Write-Host "To add code coverage, create a test project with MSTest, NUnit, or xUnit." -ForegroundColor Yellow
 }
