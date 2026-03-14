@@ -1,4 +1,5 @@
 ﻿#requires -Version 5.1
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '', Justification = 'Parameters are used within function scope')]
 [CmdletBinding()]
 param(
     [Parameter()]
@@ -27,7 +28,23 @@ param(
     [string]$OutputPath = './dist',
 
     [Parameter()]
-    [string]$Version = ''
+    [string]$Version = '',
+
+    [Parameter()]
+    [switch]$BumpVersion,
+
+    [Parameter()]
+    [ValidateSet('Major', 'Minor', 'Patch')]
+    [string]$BumpComponent = 'Patch',
+
+    [Parameter()]
+    [switch]$BumpCommit,
+
+    [Parameter()]
+    [switch]$BumpPush,
+
+    [Parameter()]
+    [string]$BumpMessage = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -264,6 +281,95 @@ function Step-RunTest {
     }
     
     Write-BuildSuccess "All tests passed"
+}
+
+function Step-BumpVersion {
+    [CmdletBinding()]
+    param()
+    
+    Write-BuildHeader "Bumping Version ($BumpComponent)"
+    
+    $wpfProjectPath = Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
+    $versionFilePath = Join-Path $PSScriptRoot 'version.txt'
+    
+    if (-not (Test-Path $wpfProjectPath)) {
+        throw "WPF project not found at: $wpfProjectPath"
+    }
+    
+    # Read current version from WPF project
+    $csprojContent = Get-Content $wpfProjectPath -Raw
+    $versionPattern = '<Version>([0-9]+)\.([0-9]+)\.([0-9]+)</Version>'
+    $match = [regex]::Match($csprojContent, $versionPattern)
+    
+    if (-not $match.Success) {
+        throw "Could not find version pattern in $wpfProjectPath"
+    }
+    
+    $major = [int]$match.Groups[1].Value
+    $minor = [int]$match.Groups[2].Value
+    $patch = [int]$match.Groups[3].Value
+    $currentVersion = "$major.$minor.$patch"
+    
+    Write-HostSafe "Current version: $currentVersion" -ForegroundColor Cyan
+    
+    # Calculate new version
+    switch ($BumpComponent) {
+        'Major' {
+            $major++
+            $minor = 0
+            $patch = 0
+        }
+        'Minor' {
+            $minor++
+            $patch = 0
+        }
+        'Patch' {
+            $patch++
+        }
+    }
+    
+    $newVersion = "$major.$minor.$patch"
+    Write-HostSafe "New version: $newVersion" -ForegroundColor Green
+    
+    # Update WPF .csproj
+    $csprojContent = $csprojContent -replace '<Version>[0-9]+\.[0-9]+\.[0-9]+</Version>', "<Version>$newVersion</Version>"
+    $csprojContent = $csprojContent -replace '<FileVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</FileVersion>', "<FileVersion>$newVersion.0</FileVersion>"
+    $csprojContent = $csprojContent -replace '<AssemblyVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</AssemblyVersion>', "<AssemblyVersion>$newVersion.0</AssemblyVersion>"
+    
+    Set-Content -Path $wpfProjectPath -Value $csprojContent -NoNewline
+    Write-BuildSuccess "Updated $wpfProjectPath"
+    
+    # Write version file for MSI and other build processes
+    Set-Content -Path $versionFilePath -Value $newVersion -NoNewline
+    Write-BuildSuccess "Updated version.txt"
+    
+    # Update script-level version variable for the rest of the build
+    $script:Version = $newVersion
+    
+    Write-BuildSuccess "Version bumped to $newVersion"
+}
+
+function Step-CommitVersionBump {
+    [CmdletBinding()]
+    param()
+    
+    Write-BuildHeader "Committing Version Bump"
+    
+    $wpfProjectPath = Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
+    $versionFilePath = Join-Path $PSScriptRoot 'version.txt'
+    
+    $commitMessage = if ($BumpMessage) { $BumpMessage } else { "Bump version to $Version" }
+    
+    Write-BuildStep "Committing with message: $commitMessage"
+    git add $versionFilePath
+    git add $wpfProjectPath
+    git commit -m $commitMessage
+    
+    if ($BumpPush) {
+        Write-BuildStep "Pushing to remote..."
+        git push
+        Write-BuildSuccess "Pushed version bump to remote"
+    }
 }
 function Get-FileLockInfo {
     param([string]$FilePath)
@@ -532,6 +638,11 @@ try {
 '@
     Write-HostSafe "  Building Redball v$Version ($Configuration)`n" -ForegroundColor Cyan
     
+    # Bump version if requested (do this early so build uses new version)
+    if ($BumpVersion) {
+        Step-BumpVersion
+    }
+    
     # Ensure dist directory exists
     if (-not (Test-Path $DistPath)) {
         New-Item -ItemType Directory -Path $DistPath -Force | Out-Null
@@ -587,6 +698,11 @@ try {
     # Finalize release (MSI is now the primary artifact)
     if (-not $SkipMSI -or $BuildAll) {
         Step-CreateReleasePackage
+    }
+    
+    # Commit/push version bump only if build succeeded
+    if ($BumpVersion -and ($BumpCommit -or $BumpPush)) {
+        Step-CommitVersionBump
     }
     
     Write-HostSafe "`n══════════════════════════════════════════════════════════" -ForegroundColor Green
