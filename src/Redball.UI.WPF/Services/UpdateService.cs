@@ -246,14 +246,14 @@ public class UpdateService
 
     private GitHubAsset? FindBestAsset(GitHubRelease release)
     {
-        // Priority: standalone/portable > full installer > any zip
+        // Priority: full installer bundle > MSI installer > any exe/msi
         var priorities = new[]
         {
-            "standalone",
-            "portable",
-            "win-x64",
-            "windows",
-            ".zip"
+            "Redball-Setup-",
+            "Redball-Setup.exe",
+            "Redball.msi",
+            ".exe",
+            ".msi"
         };
 
         foreach (var priority in priorities)
@@ -263,11 +263,28 @@ public class UpdateService
                 !a.Name.Contains("debug", StringComparison.OrdinalIgnoreCase));
             
             if (asset != null)
+            {
+                Logger.Debug("UpdateService", $"Found matching asset: {asset.Name}");
                 return asset;
+            }
         }
 
-        // Fallback to first zip file
-        return release.Assets.Find(a => a.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
+        // Fallback to first .exe or .msi file
+        var fallbackAsset = release.Assets.Find(a => 
+            (a.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ||
+             a.Name.EndsWith(".msi", StringComparison.OrdinalIgnoreCase)) &&
+            !a.Name.Contains("debug", StringComparison.OrdinalIgnoreCase));
+        
+        if (fallbackAsset != null)
+        {
+            Logger.Debug("UpdateService", $"Using fallback asset: {fallbackAsset.Name}");
+        }
+        else
+        {
+            Logger.Warning("UpdateService", "No suitable asset found in release");
+        }
+        
+        return fallbackAsset;
     }
 
     private async Task<bool> DownloadFileAsync(string url, string destinationPath, IProgress<int>? progress)
