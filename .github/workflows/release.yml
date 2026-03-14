@@ -4,15 +4,20 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'Redball.ps1'
+      - 'src/**'
       - 'installer/**'
       - '.github/workflows/release.yml'
+      - '*.json'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to build (e.g., 2.0.2)'
+        description: 'Version to build (e.g., 2.1.25)'
         required: false
         default: ''
+      force_build:
+        description: 'Force build even if tag exists'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
@@ -41,6 +46,7 @@ jobs:
       run: |
         # Use input version if provided (manual trigger), otherwise extract from csproj
         INPUT_VERSION="${{ github.event.inputs.version }}"
+        FORCE_BUILD="${{ github.event.inputs.force_build }}"
         if [ -n "$INPUT_VERSION" ]; then
           VERSION="$INPUT_VERSION"
         else
@@ -57,8 +63,14 @@ jobs:
 
         # Check if this tag already exists
         if git rev-parse "$TAG" >/dev/null 2>&1; then
-          echo "Tag $TAG already exists — skipping."
-          echo "CREATED=false" >> "$GITHUB_OUTPUT"
+          echo "Tag $TAG already exists"
+          if [ "$FORCE_BUILD" == "true" ]; then
+            echo "Force build enabled - will rebuild existing tag"
+            echo "CREATED=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skipping build - use force_build=true to rebuild"
+            echo "CREATED=false" >> "$GITHUB_OUTPUT"
+          fi
         else
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -71,7 +83,12 @@ jobs:
   build:
     name: Build Installer
     needs: tag
-    if: needs.tag.outputs.created == 'true'
+    # Run if: (1) new tag was created, OR (2) manual run with force_build=true, OR (3) manual run with version input
+    if: |
+      always() && 
+      (needs.tag.outputs.created == 'true' || 
+       github.event.inputs.force_build == 'true' ||
+       (github.event_name == 'workflow_dispatch' && github.event.inputs.version != ''))
     runs-on: windows-latest
     outputs:
       artifact-id: ${{ steps.upload.outputs.artifact-id }}
