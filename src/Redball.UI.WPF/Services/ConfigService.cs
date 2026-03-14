@@ -341,7 +341,7 @@ public class RedballConfig
     public bool ProcessIsolation { get; set; }
     public bool EnablePerformanceMetrics { get; set; }
     public bool EnableTelemetry { get; set; }
-    public string UpdateRepoOwner { get; set; } = "karl-lawrence";
+    public string UpdateRepoOwner { get; set; } = "ArMaTeC";
     public string UpdateRepoName { get; set; } = "Redball";
     public string UpdateChannel { get; set; } = "stable";
     public bool VerifyUpdateSignature { get; set; }
