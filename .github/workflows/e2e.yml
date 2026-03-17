@@ -1,0 +1,142 @@
+name: E2E Tests & Performance
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'tests-e2e/**'
+      - '.github/workflows/e2e.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'tests-e2e/**'
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  e2e-tests:
+    name: Playwright E2E Tests
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Install Playwright
+      run: |
+        dotnet tool install --global Microsoft.Playwright.CLI
+        playwright install chromium
+
+    - name: Build Application
+      run: |
+        dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj -c Release
+        dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj -c Release -r win-x64 --self-contained -o ./publish
+
+    - name: Run E2E Tests
+      run: |
+        dotnet test tests-e2e/Redball.E2E.Tests.csproj --logger trx --results-directory ./test-results
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v5
+      if: always()
+      with:
+        name: e2e-test-results
+        path: ./test-results/*.trx
+
+  performance-benchmarks:
+    name: Performance Benchmarks
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Install BenchmarkDotNet
+      run: |
+        dotnet tool install --global BenchmarkDotNet.Cli
+
+    - name: Build Release
+      run: |
+        dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj -c Release
+
+    - name: Run Benchmarks
+      run: |
+        dotnet run --project tests/Redball.Benchmarks.csproj -c Release -- --artifacts ./benchmark-results
+
+    - name: Upload Benchmark Results
+      uses: actions/upload-artifact@v5
+      with:
+        name: benchmark-results
+        path: ./benchmark-results/
+
+    - name: Compare with Baseline
+      run: |
+        $baseline = Get-Content -Path .github/baseline-benchmarks.json | ConvertFrom-Json
+        $current = Get-Content -Path ./benchmark-results/results.json | ConvertFrom-Json
+        
+        # Check if performance degraded by more than 10%
+        foreach ($metric in $baseline.Metrics) {
+          $currentMetric = $current.Metrics | Where-Object { $_.Name -eq $metric.Name }
+          if ($currentMetric -and $currentMetric.Value -gt $metric.Value * 1.1) {
+            Write-Warning "Performance regression detected in $($metric.Name): $($currentMetric.Value) vs baseline $($metric.Value)"
+          }
+        }
+
+  accessibility-tests:
+    name: Accessibility Audit
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Install Axe Windows
+      run: |
+        dotnet tool install --global Axe.Windows.CLI
+
+    - name: Build and Run App
+      run: |
+        dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj -c Release
+        Start-Process -FilePath ./src/Redball.UI.WPF/bin/Release/net8.0-windows/win-x64/Redball.UI.WPF.exe -WindowStyle Hidden
+        Start-Sleep -Seconds 5
+
+    - name: Run Accessibility Scan
+      run: |
+        axe-windows --process-name "Redball.UI.WPF" --output-directory ./accessibility-results
+
+    - name: Upload Accessibility Results
+      uses: actions/upload-artifact@v5
+      if: always()
+      with:
+        name: accessibility-results
+        path: ./accessibility-results/
+
+    - name: Check Accessibility Issues
+      run: |
+        $results = Get-ChildItem ./accessibility-results/*.a11ytest
+        $hasErrors = $false
+        foreach ($result in $results) {
+          [xml]$xml = Get-Content $result.FullName
+          $errors = $xml.SelectNodes("//RuleResult").Count
+          if ($errors -gt 0) {
+            Write-Error "Found $errors accessibility issues in $($result.Name)"
+            $hasErrors = $true
+          }
+        }
+        if ($hasErrors) { exit 1 }

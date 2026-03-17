@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using Hardcodet.Wpf.TaskbarNotification;
 using Redball.UI.Services;
 
@@ -19,6 +20,8 @@ public partial class MainWindow : Window
     private ViewModels.MainViewModel? _viewModel;
     private TaskbarIcon? _trayIcon;
     private bool _isTrayIconInitialized;
+    private DispatcherTimer? _trayIconRefreshTimer;
+    private uint _taskbarCreatedMsg;
 
     private Views.SettingsWindow? _settingsWindow;
     private Views.AboutWindow? _aboutWindow;
@@ -36,6 +39,18 @@ public partial class MainWindow : Window
     private void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
         Logger.Info("MainWindow", "Window loaded event fired");
+
+        // Register for taskbar created message (Explorer restart detection)
+        _taskbarCreatedMsg = RegisterWindowMessage("TaskbarCreated");
+        Logger.Debug("MainWindow", $"TaskbarCreated message registered: {_taskbarCreatedMsg}");
+
+        // Hook window messages for taskbar recreation
+        var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+        if (hwndSource != null)
+        {
+            hwndSource.AddHook(WndProc);
+            Logger.Debug("MainWindow", "Window message hook added for tray icon recovery");
+        }
 
         // Set DataContext here instead of XAML to prevent constructor issues during parsing
         if (DataContext == null)
@@ -57,67 +72,128 @@ public partial class MainWindow : Window
         Logger.Debug("MainWindow", "ViewModel connected to window");
 
         SetupTrayIcon();
+        SetupTrayIconRefreshTimer();
         SetupGlobalHotkeys();
         Logger.Info("MainWindow", "Initialization complete");
     }
 
-    private void SetupGlobalHotkeys()
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        Logger.Info("MainWindow", "Setting up global hotkeys...");
+        // Check for TaskbarCreated message (Explorer restart)
+        if (msg == _taskbarCreatedMsg)
+        {
+            Logger.Info("MainWindow", "TaskbarCreated message received - Explorer likely restarted, recreating tray icon");
+            handled = true;
+            // Recreate tray icon with delay to ensure Explorer is ready
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                try
+                {
+                    RecreateTrayIcon();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("MainWindow", "Failed to recreate tray icon after Explorer restart", ex);
+                }
+            }), DispatcherPriority.Background, TimeSpan.FromSeconds(2));
+        }
+        return IntPtr.Zero;
+    }
+
+    private void RecreateTrayIcon()
+    {
+        Logger.Info("MainWindow", "Recreating tray icon...");
         try
         {
-            var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
-            if (hwndSource == null)
+            // Dispose existing tray icon
+            if (_trayIcon != null)
             {
-                Logger.Warning("MainWindow", "HwndSource not available for hotkey registration");
-                return;
+                _trayIcon.Visibility = Visibility.Collapsed;
+                _trayIcon = null;
+                Logger.Debug("MainWindow", "Existing tray icon hidden");
             }
-            Logger.Debug("MainWindow", $"HwndSource obtained: {hwndSource.Handle}");
 
-            _hotkeyService = new HotkeyService(hwndSource);
+            _isTrayIconInitialized = false;
 
-            // Register Ctrl+Alt+Pause to toggle active state
-            Logger.Debug("MainWindow", "Registering Ctrl+Alt+Pause hotkey...");
-            _hotkeyService.RegisterHotkey(1, HotkeyService.MOD_CONTROL | HotkeyService.MOD_ALT, 0x13 /* VK_PAUSE */, () =>
+            // Small delay to ensure cleanup
+            System.Threading.Thread.Sleep(100);
+
+            // Re-setup tray icon
+            SetupTrayIcon();
+
+            if (_trayIcon != null)
             {
-                Logger.Info("MainWindow", "Hotkey: Ctrl+Alt+Pause - Toggle active");
-                _viewModel?.ToggleActiveCommand.Execute(null);
-            });
-
-            // Register TypeThing start hotkey from config
-            var startHotkey = ConfigService.Instance.Config.TypeThingStartHotkey ?? "Ctrl+Shift+V";
-            Logger.Debug("MainWindow", $"TypeThing start hotkey from config: {startHotkey}");
-            var (startMods, startKey) = HotkeyService.ParseHotkey(startHotkey);
-            if (startKey != 0)
-            {
-                _hotkeyService.RegisterHotkey(100, startMods, startKey, () =>
-                {
-                    Logger.Info("MainWindow", $"Hotkey: {startHotkey} - TypeThing start");
-                    StartTypeThing();
-                });
+                // Force refresh by toggling visibility
+                _trayIcon.Visibility = Visibility.Collapsed;
+                _trayIcon.Visibility = Visibility.Visible;
+                Logger.Info("MainWindow", "Tray icon recreated successfully");
             }
             else
             {
-                Logger.Warning("MainWindow", $"Could not parse TypeThing start hotkey: {startHotkey}");
+                Logger.Warning("MainWindow", "Tray icon recreation failed - will retry on next timer tick");
             }
-
-            // Register TypeThing stop hotkey from config
-            var stopHotkey = ConfigService.Instance.Config.TypeThingStopHotkey ?? "Ctrl+Shift+X";
-            Logger.Debug("MainWindow", $"TypeThing stop hotkey from config: {stopHotkey}");
-            var (stopMods, stopKey) = HotkeyService.ParseHotkey(stopHotkey);
-            if (stopKey != 0)
-            {
-                _hotkeyService.RegisterHotkey(101, stopMods, stopKey, () =>
-                {
-                    Logger.Info("MainWindow", $"Hotkey: {stopHotkey} - TypeThing stop");
-                });
-            }
-
-            Logger.Info("MainWindow", "Global hotkeys registered successfully");
         }
         catch (Exception ex)
         {
-            Logger.Error("MainWindow", "Failed to register global hotkeys", ex);
+            Logger.Error("MainWindow", "Error recreating tray icon", ex);
+        }
+    }
+
+    private void SetupTrayIconRefreshTimer()
+    {
+        Logger.Info("MainWindow", "Setting up tray icon refresh timer...");
+        try
+        {
+            _trayIconRefreshTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(30) // Check every 30 seconds
+            };
+
+            int retryCount = 0;
+            const int maxRetries = 3;
+
+            _trayIconRefreshTimer.Tick += (s, e) =>
+            {
+                try
+                {
+                    // Check if tray icon needs refreshing
+                    if (_trayIcon == null || !_isTrayIconInitialized)
+                    {
+                        retryCount++;
+                        if (retryCount <= maxRetries)
+                        {
+                            Logger.Warning("MainWindow", $"Tray icon not initialized, attempt {retryCount}/{maxRetries} to recreate...");
+                            RecreateTrayIcon();
+                        }
+                        else
+                        {
+                            Logger.Error("MainWindow", "Max tray icon retry attempts reached, giving up until next timer cycle");
+                            retryCount = 0; // Reset for next cycle
+                        }
+                    }
+                    else
+                    {
+                        // Icon exists, ensure visibility is set correctly
+                        if (_trayIcon.Visibility != Visibility.Visible)
+                        {
+                            Logger.Warning("MainWindow", "Tray icon visibility was not Visible, correcting...");
+                            _trayIcon.Visibility = Visibility.Visible;
+                        }
+                        retryCount = 0; // Reset counter on success
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("MainWindow", "Error in tray icon refresh timer", ex);
+                }
+            };
+
+            _trayIconRefreshTimer.Start();
+            Logger.Info("MainWindow", "Tray icon refresh timer started (30s interval)");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Failed to setup tray icon refresh timer", ex);
         }
     }
 
@@ -193,6 +269,66 @@ public partial class MainWindow : Window
         }
         
         Logger.Info("MainWindow", "Tray icon setup complete");
+    }
+
+    private void SetupGlobalHotkeys()
+    {
+        Logger.Info("MainWindow", "Setting up global hotkeys...");
+        try
+        {
+            var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+            if (hwndSource == null)
+            {
+                Logger.Warning("MainWindow", "HwndSource not available for hotkey registration");
+                return;
+            }
+            Logger.Debug("MainWindow", $"HwndSource obtained: {hwndSource.Handle}");
+
+            _hotkeyService = new HotkeyService(hwndSource);
+
+            // Register Ctrl+Alt+Pause to toggle active state
+            Logger.Debug("MainWindow", "Registering Ctrl+Alt+Pause hotkey...");
+            _hotkeyService.RegisterHotkey(1, HotkeyService.MOD_CONTROL | HotkeyService.MOD_ALT, 0x13 /* VK_PAUSE */, () =>
+            {
+                Logger.Info("MainWindow", "Hotkey: Ctrl+Alt+Pause - Toggle active");
+                _viewModel?.ToggleActiveCommand.Execute(null);
+            });
+
+            // Register TypeThing start hotkey from config
+            var startHotkey = ConfigService.Instance.Config.TypeThingStartHotkey ?? "Ctrl+Shift+V";
+            Logger.Debug("MainWindow", $"TypeThing start hotkey from config: {startHotkey}");
+            var (startMods, startKey) = HotkeyService.ParseHotkey(startHotkey);
+            if (startKey != 0)
+            {
+                _hotkeyService.RegisterHotkey(100, startMods, startKey, () =>
+                {
+                    Logger.Info("MainWindow", $"Hotkey: {startHotkey} - TypeThing start");
+                    StartTypeThing();
+                });
+            }
+            else
+            {
+                Logger.Warning("MainWindow", $"Could not parse TypeThing start hotkey: {startHotkey}");
+            }
+
+            // Register TypeThing stop hotkey from config
+            var stopHotkey = ConfigService.Instance.Config.TypeThingStopHotkey ?? "Ctrl+Shift+X";
+            Logger.Debug("MainWindow", $"TypeThing stop hotkey from config: {stopHotkey}");
+            var (stopMods, stopKey) = HotkeyService.ParseHotkey(stopHotkey);
+            if (stopKey != 0)
+            {
+                _hotkeyService.RegisterHotkey(101, stopMods, stopKey, () =>
+                {
+                    Logger.Info("MainWindow", $"Hotkey: {stopHotkey} - TypeThing stop");
+                });
+            }
+
+            Logger.Info("MainWindow", "Global hotkeys registered successfully");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Failed to register global hotkeys", ex);
+        }
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
@@ -334,7 +470,8 @@ public partial class MainWindow : Window
 
     private void TypeText(string text)
     {
-        Logger.Info("MainWindow", $"TypeThing: Begin typing {text.Length} chars");
+        var isRdp = IsRemoteSession();
+        Logger.Info("MainWindow", $"TypeThing: Begin typing {text.Length} chars (RDP session: {isRdp})");
         var index = 0;
         var timer = new System.Windows.Threading.DispatcherTimer
         {
@@ -419,6 +556,8 @@ public partial class MainWindow : Window
     public void ExitApplication()
     {
         Logger.Info("MainWindow", "ExitApplication called");
+        _trayIconRefreshTimer?.Stop();
+        _trayIconRefreshTimer = null;
         _hotkeyService?.Dispose();
         if (_trayIcon != null)
         {
@@ -431,9 +570,28 @@ public partial class MainWindow : Window
 
     #region P/Invoke SendInput helpers
 
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    private static extern uint RegisterWindowMessage(string lpString);
+
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
+    [DllImport("user32.dll")]
+    private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int nIndex);
+
+    private const int SM_REMOTESESSION = 0x1000;
+    private const uint WM_KEYDOWN = 0x0100;
+    private const uint WM_KEYUP = 0x0101;
+    private const uint WM_CHAR = 0x0102;
     private const int INPUT_KEYBOARD = 1;
     private const uint KEYEVENTF_KEYUP = 0x0002;
     private const uint KEYEVENTF_UNICODE = 0x0004;
@@ -473,27 +631,59 @@ public partial class MainWindow : Window
         public IntPtr dwExtraInfo;
     }
 
+    private static bool IsRemoteSession()
+    {
+        return GetSystemMetrics(SM_REMOTESESSION) != 0;
+    }
+
     private static void SendKeyPress(ushort vk)
     {
-        var inputs = new INPUT[2];
-        inputs[0].type = INPUT_KEYBOARD;
-        inputs[0].u.ki.wVk = vk;
-        inputs[1].type = INPUT_KEYBOARD;
-        inputs[1].u.ki.wVk = vk;
-        inputs[1].u.ki.dwFlags = KEYEVENTF_KEYUP;
-        SendInput(2, inputs, Marshal.SizeOf<INPUT>());
+        if (IsRemoteSession())
+        {
+            // Use PostMessage for RDP sessions
+            var hwnd = GetForegroundWindow();
+            if (hwnd != IntPtr.Zero)
+            {
+                PostMessage(hwnd, WM_KEYDOWN, (IntPtr)vk, IntPtr.Zero);
+                PostMessage(hwnd, WM_KEYUP, (IntPtr)vk, unchecked((nint)0xC0000001));
+            }
+        }
+        else
+        {
+            // Use SendInput for local sessions (more reliable)
+            var inputs = new INPUT[2];
+            inputs[0].type = INPUT_KEYBOARD;
+            inputs[0].u.ki.wVk = vk;
+            inputs[1].type = INPUT_KEYBOARD;
+            inputs[1].u.ki.wVk = vk;
+            inputs[1].u.ki.dwFlags = KEYEVENTF_KEYUP;
+            SendInput(2, inputs, Marshal.SizeOf<INPUT>());
+        }
     }
 
     private static void SendCharacter(char ch)
     {
-        var inputs = new INPUT[2];
-        inputs[0].type = INPUT_KEYBOARD;
-        inputs[0].u.ki.wScan = (ushort)ch;
-        inputs[0].u.ki.dwFlags = KEYEVENTF_UNICODE;
-        inputs[1].type = INPUT_KEYBOARD;
-        inputs[1].u.ki.wScan = (ushort)ch;
-        inputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
-        SendInput(2, inputs, Marshal.SizeOf<INPUT>());
+        if (IsRemoteSession())
+        {
+            // Use PostMessage for RDP sessions
+            var hwnd = GetForegroundWindow();
+            if (hwnd != IntPtr.Zero)
+            {
+                PostMessage(hwnd, WM_CHAR, (IntPtr)ch, IntPtr.Zero);
+            }
+        }
+        else
+        {
+            // Use SendInput for local sessions
+            var inputs = new INPUT[2];
+            inputs[0].type = INPUT_KEYBOARD;
+            inputs[0].u.ki.wScan = (ushort)ch;
+            inputs[0].u.ki.dwFlags = KEYEVENTF_UNICODE;
+            inputs[1].type = INPUT_KEYBOARD;
+            inputs[1].u.ki.wScan = (ushort)ch;
+            inputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+            SendInput(2, inputs, Marshal.SizeOf<INPUT>());
+        }
     }
 
     #endregion

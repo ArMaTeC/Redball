@@ -82,11 +82,6 @@ public partial class App : Application
             if (!_singleton.TryAcquire())
             {
                 Services.Logger.Warning("App", "Another instance is already running. Exiting.");
-                System.Windows.MessageBox.Show(
-                    "Redball is already running. Check the system tray.",
-                    "Redball",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
                 Shutdown();
                 return;
             }

@@ -47,3 +47,7 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 .todo
+tests-integration/bin/
+tests-integration/obj/
+tests-ui-automation/bin/
+tests-ui-automation/obj/

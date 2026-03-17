@@ -105,5 +105,109 @@ namespace Redball.Tests
             Assert.IsTrue(service.Days.Contains("Monday"), "Should include Monday");
             Assert.IsTrue(service.Days.Contains("Friday"), "Should include Friday");
         }
+
+        [TestMethod]
+        public void ScheduleService_Days_CanBeModified()
+        {
+            // Arrange
+            var service = new ScheduleService();
+            
+            // Act
+            service.Days = new List<string> { "Monday", "Wednesday", "Friday" };
+
+            // Assert
+            Assert.AreEqual(3, service.Days.Count, "Should have 3 days after modification");
+            Assert.IsTrue(service.Days.Contains("Wednesday"), "Should include Wednesday");
+        }
+
+        [TestMethod]
+        public void ScheduleService_StartTime_CanBeModified()
+        {
+            // Arrange
+            var service = new ScheduleService();
+            
+            // Act
+            service.StartTime = "08:30";
+
+            // Assert
+            Assert.AreEqual("08:30", service.StartTime, "Start time should be modified");
+        }
+
+        [TestMethod]
+        public void ScheduleService_StopTime_CanBeModified()
+        {
+            // Arrange
+            var service = new ScheduleService();
+            
+            // Act
+            service.StopTime = "17:30";
+
+            // Assert
+            Assert.AreEqual("17:30", service.StopTime, "Stop time should be modified");
+        }
+
+        [TestMethod]
+        public void ScheduleService_CheckAndUpdate_WhenDisabled_DoesNotThrow()
+        {
+            // Arrange
+            var service = new ScheduleService();
+            service.IsEnabled = false;
+            var keepAwake = KeepAwakeService.Instance;
+            var wasActive = keepAwake.IsActive;
+            keepAwake.SetActive(false);
+
+            try
+            {
+                // Act & Assert
+                service.CheckAndUpdate(keepAwake);
+                Assert.IsTrue(true, "CheckAndUpdate should not throw when disabled");
+            }
+            finally
+            {
+                keepAwake.SetActive(wasActive);
+            }
+        }
+
+        [TestMethod]
+        public void ScheduleService_CheckAndUpdate_WhenEnabled_DoesNotThrow()
+        {
+            // Arrange
+            var service = new ScheduleService();
+            service.IsEnabled = true;
+            service.Days = new List<string> { DateTime.Now.DayOfWeek.ToString() };
+            var keepAwake = KeepAwakeService.Instance;
+            var wasActive = keepAwake.IsActive;
+            keepAwake.SetActive(false);
+
+            try
+            {
+                // Act & Assert
+                service.CheckAndUpdate(keepAwake);
+                Assert.IsTrue(true, "CheckAndUpdate should not throw when enabled");
+            }
+            finally
+            {
+                keepAwake.SetActive(wasActive);
+            }
+        }
+
+        [TestMethod]
+        public void ScheduleService_IsInSchedule_EmptyDays_ReturnsFalse()
+        {
+            // Arrange
+            var service = new ScheduleService
+            {
+                IsEnabled = true,
+                StartTime = "00:00",
+                StopTime = "23:59",
+                Days = new List<string>() // Empty days list
+            };
+
+            // Act
+            var result = service.IsInSchedule();
+
+            // Assert
+            Assert.IsFalse(result, "Should return false when days list is empty");
+        }
     }
 }

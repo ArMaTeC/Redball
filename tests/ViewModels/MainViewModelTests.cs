@@ -83,6 +83,7 @@ namespace Redball.Tests.ViewModels
 
             // Assert - StatusText should have been updated (even if to same value)
             // The key is that UpdateStatusText() was called, which sets StatusText
+            Assert.IsTrue(statusTextChanged, "StatusText should have been changed when IsActive was toggled");
             Assert.IsNotNull(viewModel.StatusText, "StatusText should not be null");
             Assert.IsFalse(string.IsNullOrEmpty(viewModel.StatusText), "StatusText should not be empty");
         }

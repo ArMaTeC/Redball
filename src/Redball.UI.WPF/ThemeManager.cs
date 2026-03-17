@@ -11,6 +11,7 @@ namespace Redball.UI;
 public static class ThemeManager
 {
     private static ResourceDictionary? _currentTheme;
+    private static bool _controlsLoaded;
 
     public static Theme CurrentTheme { get; private set; } = Theme.Dark;
 
@@ -24,6 +25,17 @@ public static class ThemeManager
     public static void SetTheme(Theme theme)
     {
         CurrentTheme = theme;
+
+        // Load shared control styles once (was previously in App.xaml statically)
+        if (!_controlsLoaded)
+        {
+            _controlsLoaded = true;
+            var controlsDict = new ResourceDictionary
+            {
+                Source = new Uri("pack://application:,,,/Themes/Controls.xaml")
+            };
+            Application.Current.Resources.MergedDictionaries.Add(controlsDict);
+        }
 
         // Remove current theme if exists
         if (_currentTheme != null)
@@ -197,6 +209,21 @@ public static class ThemeManager
                 SetBrush(res, "BorderBrush", 195, 210, 230);
                 SetBrush(res, "BorderLightBrush", 210, 222, 238);
                 break;
+
+            case Theme.HighContrast:
+                // WCAG 2.1 AA compliant high contrast theme
+                // Pure black and white with high contrast accents
+                SetBrush(res, "BackgroundBrush", 0, 0, 0);
+                SetBrush(res, "SurfaceBrush", 0, 0, 0);
+                SetBrush(res, "CardBrush", 20, 20, 20);
+                SetBrush(res, "ForegroundBrush", 255, 255, 255);
+                SetBrush(res, "ForegroundSecondaryBrush", 255, 255, 255);
+                SetBrush(res, "AccentBrush", 255, 255, 0); // Yellow
+                SetBrush(res, "AccentLightBrush", 255, 255, 100);
+                SetBrush(res, "AccentDarkBrush", 200, 200, 0);
+                SetBrush(res, "BorderBrush", 255, 255, 255);
+                SetBrush(res, "BorderLightBrush", 255, 255, 255);
+                break;
         }
     }
 
@@ -240,6 +267,7 @@ public static class ThemeManager
             "Cyberpunk" => Theme.Cyberpunk,
             "Coffee" => Theme.Coffee,
             "ArcticFrost" => Theme.ArcticFrost,
+            "HighContrast" => Theme.HighContrast,
             _ => Theme.Dark
         };
     }
@@ -286,5 +314,6 @@ public enum Theme
     RoseGold,
     Cyberpunk,
     Coffee,
-    ArcticFrost
+    ArcticFrost,
+    HighContrast
 }
