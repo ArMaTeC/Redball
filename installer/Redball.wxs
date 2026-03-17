@@ -61,7 +61,7 @@
 
     <!-- Launch application after installation -->
     <CustomAction Id="LaunchApp"
-                  FileRef="WPFExecutable"
+                  FileRef="LaunchVbs"
                   ExeCommand=""
                   Execute="deferred"
                   Return="asyncNoWait"
