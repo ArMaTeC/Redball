@@ -81,7 +81,9 @@
 
     <!-- Installation layout -->
     <StandardDirectory Id="LocalAppDataFolder">
-      <Directory Id="INSTALLFOLDER" Name="Redball" />
+      <Directory Id="INSTALLFOLDER" Name="Redball">
+        <Directory Id="AssetsFolder" Name="Assets" />
+      </Directory>
     </StandardDirectory>
 
     <StandardDirectory Id="ProgramMenuFolder">
@@ -95,6 +97,7 @@
     <Feature Id="MainFeature" Title="Redball Core" Description="Core Redball application files" Level="1" AllowAdvertise="no" Display="expand">
       <ComponentGroupRef Id="CoreComponents" />
       <ComponentGroupRef Id="WPFComponents" />
+      <ComponentGroupRef Id="AssetsComponents" />
       <ComponentGroupRef Id="ShortcutComponents" />
       <ComponentGroupRef Id="FileAssociationComponents" />
       
@@ -157,6 +160,12 @@
     <ComponentGroup Id="WPFComponents" Directory="INSTALLFOLDER">
       <Component Id="WPFExeComponent" Guid="C8D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F">
         <File Id="WPFExecutable" Source="..\dist\wpf-publish\Redball.UI.WPF.exe" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="AssetsComponents">
+      <Component Id="WPFAssetsComponent" Guid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890" Directory="AssetsFolder">
+        <File Id="RedballIconAsset" Source="..\dist\wpf-publish\Assets\redball.ico" KeyPath="yes" />
       </Component>
     </ComponentGroup>
 
