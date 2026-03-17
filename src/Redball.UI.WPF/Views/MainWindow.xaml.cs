@@ -339,12 +339,9 @@ public partial class MainWindow : Window
         if (_trayIcon?.Visibility == Visibility.Visible && e.Cancel == false)
         {
             Logger.Info("MainWindow", "Moving window off-screen instead of closing (tray-only mode)");
-            WindowStyle = WindowStyle.ToolWindow;
             ShowInTaskbar = false;
-            Left = -10000;
-            Top = -10000;
-            Width = 1;
-            Height = 1;
+            WindowState = WindowState.Minimized;
+            Hide();
             e.Cancel = true;
         }
         base.OnClosing(e);
