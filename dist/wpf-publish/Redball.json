@@ -27,7 +27,7 @@
   "ProcessIsolation": false,
   "EnablePerformanceMetrics": false,
   "EnableTelemetry": false,
-  "UpdateRepoOwner": "karl-lawrence",
+  "UpdateRepoOwner": "ArMaTeC",
   "UpdateRepoName": "Redball",
   "UpdateChannel": "stable",
   "VerifyUpdateSignature": false,

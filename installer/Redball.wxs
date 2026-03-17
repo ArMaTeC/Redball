@@ -59,13 +59,18 @@
          If the MSI is run standalone without .NET 8, Windows will show the
          standard .NET runtime-not-found dialog with a direct download link. -->
 
+    <!-- Binary data for launch script -->
+    <Binary Id="LaunchVbsBinary" SourceFile="Launch-Redball.vbs" />
+
+    <!-- Set property with install path for launch -->
+    <SetProperty Id="LaunchAppProperty" Value="&quot;[INSTALLFOLDER]Redball.UI.WPF.exe&quot;" Sequence="execute" After="InstallFiles" />
+
     <!-- Launch application after installation -->
     <CustomAction Id="LaunchApp"
-                  FileRef="LaunchVbs"
-                  ExeCommand=""
-                  Execute="deferred"
-                  Return="asyncNoWait"
-                  Impersonate="yes" />
+                  BinaryRef="LaunchVbsBinary"
+                  VBScriptCall="LaunchApp"
+                  Execute="immediate"
+                  Return="ignore" />
 
     <!-- Clear Installed property for proper checkbox behavior on upgrades -->
     <CustomAction Id="ClearInstalled" Property="Installed" Value="" />
@@ -74,7 +79,7 @@
               Condition="NOT REMOVE" />
     </InstallUISequence>
 
-    <!-- Launch action sequence -->
+    <!-- Launch action sequence (deferred execution after InstallFinalize) -->
     <InstallExecuteSequence>
       <Custom Action="LaunchApp" After="InstallFinalize"
               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT REMOVE" />
@@ -149,12 +154,10 @@
         <File Id="ThirdPartyFile" Source="..\docs\THIRD-PARTY-NOTICES.md" KeyPath="yes" />
       </Component>
 
-      <Component Id="LaunchVbsComponent" Guid="3D6A2B1C-8F4E-4A9D-B5C7-2E1F9D3A4B6E">
-        <File Id="LaunchVbs" Source="Launch-Redball.vbs" KeyPath="yes" />
-      </Component>
-
       <Component Id="InstalledMarkerComponent" Guid="4B9B1F2A-5B5E-4C3A-95D7-6DBE8468D8E1">
         <RegistryValue Root="HKCU" Key="Software\Redball" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+        <!-- Store install path for launch script -->
+        <RegistryValue Root="HKCU" Key="Software\Redball" Name="InstallPath" Type="string" Value="[INSTALLFOLDER]Redball.UI.WPF.exe" />
       </Component>
     </ComponentGroup>
 

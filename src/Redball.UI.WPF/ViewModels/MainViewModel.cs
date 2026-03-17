@@ -169,9 +169,16 @@ public class MainViewModel : INotifyPropertyChanged
         }
         else
         {
-            Logger.Warning("MainViewModel", "MainWindow reference not available, creating directly");
-            var aboutWindow = new Views.AboutWindow();
-            aboutWindow.Show();
+            var fallbackMainWindow = Application.Current.MainWindow as MainWindow;
+            if (fallbackMainWindow != null)
+            {
+                Logger.Warning("MainViewModel", "MainWindow reference not available, using Application.Current.MainWindow");
+                fallbackMainWindow.ShowAbout();
+            }
+            else
+            {
+                Logger.Warning("MainViewModel", "MainWindow reference not available, cannot show About window");
+            }
         }
     }
 

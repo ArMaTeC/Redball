@@ -51,7 +51,7 @@ Settings are stored in `Redball.json` in the same directory as the script. A def
 | `ProcessIsolation` | bool | Run keep-awake API in a separate runspace | `false` |
 | `EnablePerformanceMetrics` | bool | Track CPU, memory, and handle metrics | `false` |
 | `EnableTelemetry` | bool | Opt-in anonymous usage telemetry (logged locally) | `false` |
-| `UpdateRepoOwner` | string | GitHub owner for update checks | `karl-lawrence` |
+| `UpdateRepoOwner` | string | GitHub owner for update checks | `ArMaTeC` |
 | `UpdateRepoName` | string | GitHub repo for update checks | `Redball` |
 | `UpdateChannel` | string | Release channel (`stable` or `beta`) | `stable` |
 | `VerifyUpdateSignature` | bool | Require valid digital signature on updates | `false` |
@@ -99,7 +99,7 @@ Settings are stored in `Redball.json` in the same directory as the script. A def
     "ProcessIsolation": false,
     "EnablePerformanceMetrics": false,
     "EnableTelemetry": false,
-    "UpdateRepoOwner": "karl-lawrence",
+    "UpdateRepoOwner": "ArMaTeC",
     "UpdateRepoName": "Redball",
     "UpdateChannel": "stable",
     "VerifyUpdateSignature": false,
