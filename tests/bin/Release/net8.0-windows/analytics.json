@@ -1,8 +1,11 @@
 {
   "FirstSeen": "2026-03-13T11:11:57.9169461Z",
   "LastUpdated": "0001-01-01T00:00:00",
-  "TotalSessions": 44,
-  "TotalSessionDuration": "00:00:00.0277963",
+  "TotalSessions": 59,
+  "TotalSessionDuration": "00:00:00.0380117",
   "SessionStartTime": null,
-  "Features": {}
+  "Features": {},
+  "Funnels": {},
+  "Retention": {},
+  "NpsResponses": []
 }

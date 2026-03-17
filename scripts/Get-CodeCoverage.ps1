@@ -15,7 +15,12 @@ function Write-HostSafe {
         [object]$Object,
         [System.ConsoleColor]$ForegroundColor
     )
-    Write-Host $Object -ForegroundColor $ForegroundColor
+    if ($ForegroundColor) {
+        Write-Host $Object -ForegroundColor $ForegroundColor
+    }
+    else {
+        Write-Host $Object
+    }
 }
 
 Write-HostSafe "=== Redball Code Coverage Report ===" -ForegroundColor Cyan
