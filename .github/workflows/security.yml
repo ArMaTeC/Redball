@@ -58,7 +58,7 @@ jobs:
 
     - name: Install SBOM tool
       run: |
-        dotnet tool install --global Microsoft.Sbom.DotNet
+        dotnet tool install --global Microsoft.Sbom.Tool --version 2.2.7
 
     - name: Restore and Build
       run: |
@@ -69,7 +69,7 @@ jobs:
       run: |
         $sbomPath = "sbom"
         New-Item -ItemType Directory -Force -Path $sbomPath
-        sbom-tool generate -b $sbomPath -bc src/Redball.UI.WPF -pn Redball -pv $env:GITHUB_REF_NAME -ps ArMaTeC -nsb https://github.com/ArMaTeC/Redball
+        sbom-tool generate -b $sbomPath -bc src/Redball.UI.WPF -pn Redball -pv $env:GITHUB_REF_NAME -ps ArMaTeC -nsb https://github.com/ArMaTeC/Redball -m "$sbomPath/_manifest/spdx_2.2"
 
     - name: Upload SBOM
       uses: actions/upload-artifact@v5
@@ -95,16 +95,16 @@ jobs:
       uses: actions/checkout@v5
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         languages: csharp
         queries: security-extended,security-and-quality
 
     - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
+      uses: github/codeql-action/autobuild@v4
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       with:
         category: "/language:csharp"
 

@@ -6,8 +6,8 @@ using System.Windows.Interop;
 namespace Redball.UI.Views;
 
 /// <summary>
-/// Manages global hotkey registration via Win32 RegisterHotKey API.
-/// Hooks into the WPF message loop to receive WM_HOTKEY messages.
+/// Manages global hotkey registration. Uses RegisterHotKey for local sessions
+/// and LowLevelKeyboardHook for RDP sessions where RegisterHotKey doesn't work.
 /// </summary>
 public class HotkeyService : IDisposable
 {
@@ -17,31 +17,56 @@ public class HotkeyService : IDisposable
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int nIndex);
+
+    private const int SM_REMOTESESSION = 0x1000;
+    private const int WM_HOTKEY = 0x0312;
+
     public const uint MOD_ALT = 0x0001;
     public const uint MOD_CONTROL = 0x0002;
     public const uint MOD_SHIFT = 0x0004;
     public const uint MOD_WIN = 0x0008;
 
-    private const int WM_HOTKEY = 0x0312;
-
-    private readonly HwndSource _hwndSource;
-    private readonly Dictionary<int, Action> _hotkeyActions = new();
+    private readonly HwndSource? _hwndSource;
+    private readonly LowLevelKeyboardHook? _llHook;
+    private readonly Dictionary<int, (uint Modifiers, uint Key, Action Callback)> _hotkeyRegistrations = new();
     private readonly List<int> _registeredIds = new();
+    private readonly bool _useLowLevelHook;
     private bool _disposed;
 
     public HotkeyService(HwndSource hwndSource)
     {
         Services.Logger.Info("HotkeyService", "Initializing HotkeyService...");
         
-        if (hwndSource == null)
+        // Detect if we're in a remote session (RDP)
+        _useLowLevelHook = IsRemoteSession();
+        Services.Logger.Info("HotkeyService", $"Remote session detected: {_useLowLevelHook}");
+
+        if (_useLowLevelHook)
         {
-            Services.Logger.Fatal("HotkeyService", "HwndSource is null - hotkey service cannot be created");
-            throw new ArgumentNullException(nameof(hwndSource));
+            // Use low-level hook for RDP sessions
+            _llHook = new LowLevelKeyboardHook();
+            _llHook.Install();
         }
-        
-        _hwndSource = hwndSource;
-        _hwndSource.AddHook(WndProc);
-        Services.Logger.Debug("HotkeyService", $"Hooked into HwndSource handle: {hwndSource.Handle}");
+        else
+        {
+            // Use RegisterHotKey for local sessions
+            if (hwndSource == null)
+            {
+                Services.Logger.Fatal("HotkeyService", "HwndSource is null - hotkey service cannot be created");
+                throw new ArgumentNullException(nameof(hwndSource));
+            }
+            
+            _hwndSource = hwndSource;
+            _hwndSource.AddHook(WndProc);
+            Services.Logger.Debug("HotkeyService", $"Hooked into HwndSource handle: {hwndSource.Handle}");
+        }
+    }
+
+    private static bool IsRemoteSession()
+    {
+        return GetSystemMetrics(SM_REMOTESESSION) != 0;
     }
 
     public bool RegisterHotkey(int id, uint modifiers, uint vk, Action callback)
@@ -52,10 +77,22 @@ public class HotkeyService : IDisposable
             return false;
         }
 
-        var handle = _hwndSource.Handle;
-        if (handle == IntPtr.Zero)
+        // Store registration for potential re-registration
+        _hotkeyRegistrations[id] = (modifiers, vk, callback);
+
+        if (_useLowLevelHook && _llHook != null)
         {
-            Services.Logger.Error("HotkeyService", $"Cannot register hotkey {id}: window handle is zero");
+            // Use low-level hook for RDP sessions
+            _llHook.RegisterHotkey(modifiers, vk, callback);
+            _registeredIds.Add(id);
+            Services.Logger.Info("HotkeyService", $"Hotkey {id} registered with low-level hook");
+            return true;
+        }
+
+        // Use RegisterHotKey for local sessions
+        if (_hwndSource?.Handle == null || _hwndSource.Handle == IntPtr.Zero)
+        {
+            Services.Logger.Error("HotkeyService", $"Cannot register hotkey {id}: window handle is not available");
             return false;
         }
 
@@ -63,12 +100,11 @@ public class HotkeyService : IDisposable
         var keyStr = FormatVirtualKey(vk);
         Services.Logger.Info("HotkeyService", $"Registering hotkey ID={id}: {modifierStr}+{keyStr} (vk=0x{vk:X})");
 
-        var result = RegisterHotKey(handle, id, modifiers, vk);
+        var result = RegisterHotKey(_hwndSource.Handle, id, modifiers, vk);
         if (result)
         {
-            _hotkeyActions[id] = callback;
             _registeredIds.Add(id);
-            Services.Logger.Info("HotkeyService", $"Hotkey {id} registered successfully");
+            Services.Logger.Info("HotkeyService", $"Hotkey {id} registered successfully via RegisterHotKey");
         }
         else
         {
@@ -95,15 +131,15 @@ public class HotkeyService : IDisposable
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (msg == WM_HOTKEY)
+        if (msg == WM_HOTKEY && !_useLowLevelHook)
         {
             var id = wParam.ToInt32();
-            if (_hotkeyActions.TryGetValue(id, out var action))
+            if (_hotkeyRegistrations.TryGetValue(id, out var registration))
             {
                 Services.Logger.Verbose("HotkeyService", $"WM_HOTKEY received for ID {id}, invoking callback");
                 try
                 {
-                    action?.Invoke();
+                    registration.Callback?.Invoke();
                     handled = true;
                 }
                 catch (Exception ex)
@@ -130,47 +166,57 @@ public class HotkeyService : IDisposable
         _disposed = true;
         Services.Logger.Info("HotkeyService", $"Disposing service, unregistering {_registeredIds.Count} hotkeys...");
 
-        var handle = _hwndSource.Handle;
-        int successCount = 0;
-        int failCount = 0;
-        
-        foreach (var id in _registeredIds)
+        if (_useLowLevelHook)
         {
-            try
+            // Dispose low-level hook
+            _llHook?.Dispose();
+        }
+        else
+        {
+            // Unregister hotkeys via RegisterHotKey API
+            var handle = _hwndSource?.Handle ?? IntPtr.Zero;
+            int successCount = 0;
+            int failCount = 0;
+            
+            foreach (var id in _registeredIds)
             {
-                if (UnregisterHotKey(handle, id))
+                try
                 {
-                    successCount++;
-                    Services.Logger.Verbose("HotkeyService", $"Unregistered hotkey {id}");
+                    if (handle != IntPtr.Zero && UnregisterHotKey(handle, id))
+                    {
+                        successCount++;
+                        Services.Logger.Verbose("HotkeyService", $"Unregistered hotkey {id}");
+                    }
+                    else
+                    {
+                        failCount++;
+                        var error = Marshal.GetLastWin32Error();
+                        Services.Logger.Warning("HotkeyService", $"Failed to unregister hotkey {id}: Win32 error {error}");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
                     failCount++;
-                    var error = Marshal.GetLastWin32Error();
-                    Services.Logger.Warning("HotkeyService", $"Failed to unregister hotkey {id}: Win32 error {error}");
+                    Services.Logger.Error("HotkeyService", $"Exception unregistering hotkey {id}", ex);
                 }
+            }
+            
+            Services.Logger.Info("HotkeyService", $"Unregister complete: {successCount} succeeded, {failCount} failed");
+
+            try
+            {
+                _hwndSource?.RemoveHook(WndProc);
+                Services.Logger.Debug("HotkeyService", "Window hook removed");
             }
             catch (Exception ex)
             {
-                failCount++;
-                Services.Logger.Error("HotkeyService", $"Exception unregistering hotkey {id}", ex);
+                Services.Logger.Warning("HotkeyService", $"Error removing hook (may already be disposed): {ex.Message}");
             }
         }
         
         _registeredIds.Clear();
-        _hotkeyActions.Clear();
-
-        try
-        {
-            _hwndSource.RemoveHook(WndProc);
-            Services.Logger.Debug("HotkeyService", "Window hook removed");
-        }
-        catch (Exception ex)
-        {
-            Services.Logger.Warning("HotkeyService", $"Error removing hook (may already be disposed): {ex.Message}");
-        }
-        
-        Services.Logger.Info("HotkeyService", $"Dispose complete: {successCount} unregistered, {failCount} failed");
+        _hotkeyRegistrations.Clear();
+        Services.Logger.Info("HotkeyService", "Dispose complete");
     }
 
     public static (uint Modifiers, uint VirtualKey) ParseHotkey(string hotkey)
