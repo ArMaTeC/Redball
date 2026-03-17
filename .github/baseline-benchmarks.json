@@ -1,0 +1,21 @@
+{
+  "Metrics": [
+    {
+      "Name": "SimulateKeyPress",
+      "Value": 0.5,
+      "Unit": "ms"
+    },
+    {
+      "Name": "TimerCallback", 
+      "Value": 0.1,
+      "Unit": "ms"
+    },
+    {
+      "Name": "PropertyChangedNotification",
+      "Value": 0.01,
+      "Unit": "ms"
+    }
+  ],
+  "BaselineDate": "2024-01-01T00:00:00Z",
+  "Version": "2.1.0"
+}

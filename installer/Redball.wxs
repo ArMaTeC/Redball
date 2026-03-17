@@ -63,8 +63,9 @@
     <CustomAction Id="LaunchApp"
                   FileRef="WPFExecutable"
                   ExeCommand=""
-                  Execute="immediate"
-                  Return="asyncNoWait" />
+                  Execute="deferred"
+                  Return="asyncNoWait"
+                  Impersonate="yes" />
 
     <!-- Clear Installed property for proper checkbox behavior on upgrades -->
     <CustomAction Id="ClearInstalled" Property="Installed" Value="" />
