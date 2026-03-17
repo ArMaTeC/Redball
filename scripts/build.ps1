@@ -567,6 +567,17 @@ function Step-BuildWPF {
     }
     Write-BuildSuccess "Published to: $publishDir"
     
+    # Copy Assets folder to publish directory for MSI packaging
+    $assetsSource = Join-Path (Split-Path $projectPath -Parent) 'Assets'
+    $assetsDest = Join-Path $publishDir 'Assets'
+    if (Test-Path $assetsSource) {
+        if (-not (Test-Path $assetsDest)) {
+            New-Item -ItemType Directory -Path $assetsDest -Force | Out-Null
+        }
+        Copy-Item -Path (Join-Path $assetsSource '*') -Destination $assetsDest -Recurse -Force
+        Write-BuildSuccess "Copied Assets to publish directory"
+    }
+    
     # List output
     $exePath = Join-Path $publishDir 'Redball.UI.WPF.exe'
     if (Test-Path $exePath) {
