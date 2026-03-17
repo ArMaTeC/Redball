@@ -29,7 +29,7 @@
                     <TextBlock Text="About" FontSize="18" FontWeight="SemiBold"
                               VerticalAlignment="Center" Margin="20,0"/>
                     <Button Content="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="14"
-                           HorizontalAlignment="Right" Margin="0,0,10,0"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
                            Style="{StaticResource CloseButton}" Width="32" Height="32"
                            Click="CloseButton_Click"/>
                 </Grid>

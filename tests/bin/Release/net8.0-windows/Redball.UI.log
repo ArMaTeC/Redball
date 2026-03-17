@@ -10363,3 +10363,215 @@
 [2026-03-17 15:21:13.351] [INF] [004] [LocalizationService] Locale set to: en
 [2026-03-17 15:21:13.354] [WRN] [004] [LocalizationService] Unknown locale 'invalid_locale', keeping 'en'
 [2026-03-17 15:21:13.359] [INF] [004] [LocalizationService] Locale set to: bl
+
+[2026-03-17 15:27:06] ========== Redball WPF Started ==========
+[2026-03-17 15:27:06] Version: 2.1.34.0
+[2026-03-17 15:27:06] Process ID: 41392
+[2026-03-17 15:27:06] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\
+[2026-03-17 15:27:06] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows
+[2026-03-17 15:27:06] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-17 15:27:06] .NET Version: 8.0.25
+[2026-03-17 15:27:06] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\testhost.dll --port 54865 --endpoint 127.0.0.1:054865 --role client --parentprocessid 46320 --telemetryoptedin false
+[2026-03-17 15:27:06.946] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-17 15:27:06.958] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-17 15:27:07.024] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-17 15:27:07.024] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-17 15:27:07.046] [DBG] [004] [Analytics] Analytics data flushed to disk
+[2026-03-17 15:27:07.065] [DBG] [004] [Analytics] Tracked feature: Test
+[2026-03-17 15:27:07.124] [VRB] [004] [ConfigService] Instance created (lazy initialization)
+[2026-03-17 15:27:07.132] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-17 15:27:07.140] [DBG] [004] [ConfigService] Configuration validation passed
+[2026-03-17 15:27:07.145] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-17 15:27:07.150] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-17 15:27:07.151] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-17 15:27:07.153] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-17 15:27:07.160] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (400) out of range
+[2026-03-17 15:27:07.161] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-17 15:27:07.169] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-17 15:27:07.173] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (400) out of range
+[2026-03-17 15:27:07.174] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-17 15:27:07.174] [WRN] [004] [ConfigService] Configuration validation found 2 errors
+[2026-03-17 15:27:07.178] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-17 15:27:07.178] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (400) out of range
+[2026-03-17 15:27:07.179] [WRN] [004] [ConfigService] Validation: DefaultDuration (800) out of range
+[2026-03-17 15:27:07.179] [WRN] [004] [ConfigService] Configuration validation found 2 errors
+[2026-03-17 15:27:07.181] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-17 15:27:07.181] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (400) out of range
+[2026-03-17 15:27:07.182] [WRN] [004] [ConfigService] Validation: DefaultDuration (800) out of range
+[2026-03-17 15:27:07.182] [WRN] [004] [ConfigService] Validation: BatteryThreshold (3) out of range
+[2026-03-17 15:27:07.182] [WRN] [004] [ConfigService] Configuration validation found 3 errors
+[2026-03-17 15:27:07.184] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-17 15:27:07.184] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (400) out of range
+[2026-03-17 15:27:07.185] [WRN] [004] [ConfigService] Validation: DefaultDuration (800) out of range
+[2026-03-17 15:27:07.185] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-17 15:27:07.186] [WRN] [004] [ConfigService] Configuration validation found 3 errors
+[2026-03-17 15:27:07.191] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-17 15:27:07.192] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (400) out of range
+[2026-03-17 15:27:07.192] [WRN] [004] [ConfigService] Validation: DefaultDuration (800) out of range
+[2026-03-17 15:27:07.193] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-17 15:27:07.195] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
+[2026-03-17 15:27:07.195] [WRN] [004] [ConfigService] Configuration validation found 4 errors
+[2026-03-17 15:27:07.200] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-17 15:27:07.201] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (400) out of range
+[2026-03-17 15:27:07.201] [WRN] [004] [ConfigService] Validation: DefaultDuration (800) out of range
+[2026-03-17 15:27:07.209] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-17 15:27:07.210] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
+[2026-03-17 15:27:07.211] [WRN] [004] [ConfigService] Validation: TypeThingStartDelaySec (35) out of range
+[2026-03-17 15:27:07.212] [WRN] [004] [ConfigService] Configuration validation found 5 errors
+[2026-03-17 15:27:07.214] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-17 15:27:07.214] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (400) out of range
+[2026-03-17 15:27:07.215] [WRN] [004] [ConfigService] Validation: DefaultDuration (800) out of range
+[2026-03-17 15:27:07.215] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-17 15:27:07.215] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
+[2026-03-17 15:27:07.216] [WRN] [004] [ConfigService] Validation: TypeThingStartDelaySec (35) out of range
+[2026-03-17 15:27:07.216] [WRN] [004] [ConfigService] Validation: MaxLogSizeMB (0) out of range
+[2026-03-17 15:27:07.216] [WRN] [004] [ConfigService] Configuration validation found 6 errors
+[2026-03-17 15:27:07.219] [INF] [004] [ConfigService] Saving configuration to: C:\Users\karll\AppData\Local\Temp\redball_config_test_4ce8f341-1268-4a63-a42b-62daca344440\test_config.json
+[2026-03-17 15:27:07.269] [DBG] [004] [ConfigService] Serialized config: 1538 bytes
+[2026-03-17 15:27:07.275] [INF] [004] [ConfigService] Configuration saved successfully
+[2026-03-17 15:27:07.291] [DBG] [004] [ConfigService] Using provided config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_8c2a18d0-1b21-4e63-b86d-dbcfe9384514\load_test.json
+[2026-03-17 15:27:07.291] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8c2a18d0-1b21-4e63-b86d-dbcfe9384514\load_test.json
+[2026-03-17 15:27:07.293] [DBG] [004] [ConfigService] Config file read: 1270 bytes
+[2026-03-17 15:27:07.308] [INF] [004] [ConfigService] Configuration loaded successfully: Heartbeat=42s, Theme=LoadTestTheme
+[2026-03-17 15:27:07.309] [DBG] [004] [ConfigService] Config details: Duration=120min, BatteryAware=False, NetworkAware=False
+[2026-03-17 15:27:07.312] [DBG] [004] [ConfigService] Searching for config file in candidate locations...
+[2026-03-17 15:27:07.326] [DBG] [004] [ConfigService] Found config at: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.json
+[2026-03-17 15:27:07.326] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.json
+[2026-03-17 15:27:07.327] [DBG] [004] [ConfigService] Config file read: 1531 bytes
+[2026-03-17 15:27:07.327] [INF] [004] [ConfigService] Configuration loaded successfully: Heartbeat=59s, Theme=Dark
+[2026-03-17 15:27:07.328] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-17 15:27:07.330] [DBG] [004] [ConfigService] Using provided config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_28ecd0d6-f9e5-4bd8-928d-4c6a23a05b55\invalid.json
+[2026-03-17 15:27:07.330] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_28ecd0d6-f9e5-4bd8-928d-4c6a23a05b55\invalid.json
+[2026-03-17 15:27:07.334] [DBG] [004] [ConfigService] Config file read: 16 bytes
+[2026-03-17 15:27:07.351] [ERR] [004] [ConfigService] Failed to parse configuration JSON
+[2026-03-17 15:27:07.351] [ERR] [004] [ConfigService]   Exception: JsonException: 'i' is an invalid start of a property name. Expected a '"'. Path: $ | LineNumber: 0 | BytePositionInLine: 2.
+[2026-03-17 15:27:07.351] [ERR] [004] [ConfigService]   Stack:    at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack& state, JsonReaderException ex)
+[2026-03-17 15:27:07.351] [ERR] [004] [ConfigService]    at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, JsonSerializerOptions options, ReadStack& state)
+[2026-03-17 15:27:07.351] [ERR] [004] [ConfigService]    at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 utf8Json, JsonTypeInfo`1 jsonTypeInfo, Nullable`1 actualByteCount)
+[2026-03-17 15:27:07.351] [ERR] [004] [ConfigService]    at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 json, JsonTypeInfo`1 jsonTypeInfo)
+[2026-03-17 15:27:07.351] [ERR] [004] [ConfigService]    at System.Text.Json.JsonSerializer.Deserialize[TValue](String json, JsonSerializerOptions options)
+[2026-03-17 15:27:07.351] [ERR] [004] [ConfigService]    at Redball.UI.Services.ConfigService.Load(String path) in C:\Users\karll\Desktop\Redball\src\Redball.UI.WPF\Services\ConfigService.cs:line 59
+[2026-03-17 15:27:07.351] [ERR] [004] [ConfigService]   Inner: JsonReaderException: 'i' is an invalid start of a property name. Expected a '"'. LineNumber: 0 | BytePositionInLine: 2.
+[2026-03-17 15:27:07.362] [INF] [004] [ConfigService] Exporting config to: C:\Users\karll\AppData\Local\Temp\redball_config_test_e1c04a5f-2910-4adc-851f-e5be6efb6f4f\export.json
+[2026-03-17 15:27:07.375] [INF] [004] [ConfigService] Config exported successfully
+[2026-03-17 15:27:07.417] [INF] [004] [ConfigService] Importing config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_f762cf99-f3a5-4de7-9dca-3762b1d030b6\import_backup.json
+[2026-03-17 15:27:07.444] [INF] [004] [ConfigService] Config imported from backup format
+[2026-03-17 15:27:07.448] [INF] [004] [ConfigService] Importing config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_561b9e14-eb4a-4d16-8b3a-59e691bd2a14\import_plain.json
+[2026-03-17 15:27:07.453] [INF] [004] [ConfigService] Config imported from plain format
+[2026-03-17 15:27:07.463] [INF] [004] [ConfigService] Importing config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a93c3e6a-6a15-49c4-9c73-ba46c21254f7\does_not_exist.json
+[2026-03-17 15:27:07.475] [WRN] [004] [ConfigService] Import file not found
+[2026-03-17 15:27:07.486] [DBG] [004] [ConfigService] Searching for config file in candidate locations...
+[2026-03-17 15:27:07.487] [DBG] [004] [ConfigService] Found config at: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.json
+[2026-03-17 15:27:07.491] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.json
+[2026-03-17 15:27:07.493] [DBG] [004] [ConfigService] Config file read: 1531 bytes
+[2026-03-17 15:27:07.494] [INF] [004] [ConfigService] Configuration loaded successfully: Heartbeat=59s, Theme=Dark
+[2026-03-17 15:27:07.494] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-17 15:27:07.495] [INF] [004] [ConfigService] Saving configuration to: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.json
+[2026-03-17 15:27:07.496] [DBG] [004] [ConfigService] Serialized config: 1531 bytes
+[2026-03-17 15:27:07.497] [INF] [004] [ConfigService] Configuration saved successfully
+[2026-03-17 15:27:07.529] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-17 15:27:07.530] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-17 15:27:07.532] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-17 15:27:07.532] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-17 15:27:07.534] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-17 15:27:07.534] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-17 15:27:07.541] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-17 15:27:07.542] [WRN] [004] [CrashRecovery] Previous abnormal termination detected. Resetting to safe defaults.
+[2026-03-17 15:27:07.544] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-17 15:27:08.202] [VRB] [004] [HotkeyService] Parsing hotkey: 'A'
+[2026-03-17 15:27:08.214] [DBG] [004] [HotkeyService] Parsed 'A' -> modifiers=0x0, vk=0x41
+[2026-03-17 15:27:08.216] [VRB] [004] [HotkeyService] Parsing hotkey: 'Ctrl+A'
+[2026-03-17 15:27:08.217] [DBG] [004] [HotkeyService] Parsed 'Ctrl+A' -> modifiers=0x2, vk=0x41
+[2026-03-17 15:27:08.218] [VRB] [004] [HotkeyService] Parsing hotkey: 'Alt+F1'
+[2026-03-17 15:27:08.218] [DBG] [004] [HotkeyService] Parsed 'Alt+F1' -> modifiers=0x1, vk=0x70
+[2026-03-17 15:27:08.219] [VRB] [004] [HotkeyService] Parsing hotkey: 'Ctrl+Shift+V'
+[2026-03-17 15:27:08.220] [DBG] [004] [HotkeyService] Parsed 'Ctrl+Shift+V' -> modifiers=0x6, vk=0x56
+[2026-03-17 15:27:08.221] [VRB] [004] [HotkeyService] Parsing hotkey: 'F12'
+[2026-03-17 15:27:08.225] [DBG] [004] [HotkeyService] Parsed 'F12' -> modifiers=0x0, vk=0x7B
+[2026-03-17 15:27:08.227] [VRB] [004] [HotkeyService] Parsing hotkey: ''
+[2026-03-17 15:27:08.229] [DBG] [004] [HotkeyService] Parsed '' -> modifiers=0x0, vk=0x0
+[2026-03-17 15:27:08.230] [VRB] [004] [HotkeyService] Parsing hotkey: '@#$'
+[2026-03-17 15:27:08.248] [WRN] [004] [HotkeyService] Unknown key '@#$', returning 0
+[2026-03-17 15:27:08.251] [DBG] [004] [HotkeyService] Parsed '@#$' -> modifiers=0x0, vk=0x0
+[2026-03-17 15:27:08.252] [VRB] [004] [HotkeyService] Parsing hotkey: 'TAB'
+[2026-03-17 15:27:08.253] [DBG] [004] [HotkeyService] Parsed 'TAB' -> modifiers=0x0, vk=0x9
+[2026-03-17 15:27:08.254] [VRB] [004] [HotkeyService] Parsing hotkey: 'SPACE'
+[2026-03-17 15:27:08.256] [DBG] [004] [HotkeyService] Parsed 'SPACE' -> modifiers=0x0, vk=0x20
+[2026-03-17 15:27:08.258] [VRB] [004] [HotkeyService] Parsing hotkey: 'UP'
+[2026-03-17 15:27:08.261] [DBG] [004] [HotkeyService] Parsed 'UP' -> modifiers=0x0, vk=0x26
+[2026-03-17 15:27:08.261] [VRB] [004] [HotkeyService] Parsing hotkey: 'DOWN'
+[2026-03-17 15:27:08.262] [DBG] [004] [HotkeyService] Parsed 'DOWN' -> modifiers=0x0, vk=0x28
+[2026-03-17 15:27:08.263] [VRB] [004] [HotkeyService] Parsing hotkey: 'LEFT'
+[2026-03-17 15:27:08.263] [DBG] [004] [HotkeyService] Parsed 'LEFT' -> modifiers=0x0, vk=0x25
+[2026-03-17 15:27:08.263] [VRB] [004] [HotkeyService] Parsing hotkey: 'RIGHT'
+[2026-03-17 15:27:08.264] [DBG] [004] [HotkeyService] Parsed 'RIGHT' -> modifiers=0x0, vk=0x27
+[2026-03-17 15:27:08.264] [VRB] [004] [HotkeyService] Parsing hotkey: 'HOME'
+[2026-03-17 15:27:08.265] [DBG] [004] [HotkeyService] Parsed 'HOME' -> modifiers=0x0, vk=0x24
+[2026-03-17 15:27:08.266] [VRB] [004] [HotkeyService] Parsing hotkey: 'END'
+[2026-03-17 15:27:08.266] [DBG] [004] [HotkeyService] Parsed 'END' -> modifiers=0x0, vk=0x23
+[2026-03-17 15:27:08.267] [VRB] [004] [HotkeyService] Parsing hotkey: 'INSERT'
+[2026-03-17 15:27:08.267] [DBG] [004] [HotkeyService] Parsed 'INSERT' -> modifiers=0x0, vk=0x2D
+[2026-03-17 15:27:08.268] [VRB] [004] [HotkeyService] Parsing hotkey: 'DELETE'
+[2026-03-17 15:27:08.268] [DBG] [004] [HotkeyService] Parsed 'DELETE' -> modifiers=0x0, vk=0x2E
+[2026-03-17 15:27:08.268] [VRB] [004] [HotkeyService] Parsing hotkey: 'DEL'
+[2026-03-17 15:27:08.269] [DBG] [004] [HotkeyService] Parsed 'DEL' -> modifiers=0x0, vk=0x2E
+[2026-03-17 15:27:08.270] [VRB] [004] [HotkeyService] Parsing hotkey: 'PAGEUP'
+[2026-03-17 15:27:08.274] [DBG] [004] [HotkeyService] Parsed 'PAGEUP' -> modifiers=0x0, vk=0x21
+[2026-03-17 15:27:08.275] [VRB] [004] [HotkeyService] Parsing hotkey: 'PAGEDOWN'
+[2026-03-17 15:27:08.275] [DBG] [004] [HotkeyService] Parsed 'PAGEDOWN' -> modifiers=0x0, vk=0x22
+[2026-03-17 15:27:08.276] [VRB] [004] [HotkeyService] Parsing hotkey: 'PAUSE'
+[2026-03-17 15:27:08.276] [DBG] [004] [HotkeyService] Parsed 'PAUSE' -> modifiers=0x0, vk=0x13
+[2026-03-17 15:27:08.277] [VRB] [004] [HotkeyService] Parsing hotkey: 'BREAK'
+[2026-03-17 15:27:08.310] [DBG] [004] [HotkeyService] Parsed 'BREAK' -> modifiers=0x0, vk=0x13
+[2026-03-17 15:27:08.333] [VRB] [004] [HotkeyService] Parsing hotkey: 'Ctrl+Alt+Shift+Win+X'
+[2026-03-17 15:27:08.347] [DBG] [004] [HotkeyService] Parsed 'Ctrl+Alt+Shift+Win+X' -> modifiers=0xF, vk=0x58
+[2026-03-17 15:27:08.348] [VRB] [004] [HotkeyService] Parsing hotkey: 'ctrl+SHIFT+v'
+[2026-03-17 15:27:08.349] [DBG] [004] [HotkeyService] Parsed 'ctrl+SHIFT+v' -> modifiers=0x6, vk=0x56
+[2026-03-17 15:27:08.361] [VRB] [004] [KeepAwakeService] Instance created
+[2026-03-17 15:27:08.364] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-17 15:27:08.365] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-17 15:27:08.365] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-17 15:27:08.366] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-17 15:27:08.366] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-17 15:27:08.367] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-17 15:27:08.368] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-17 15:27:08.368] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-17 15:27:08.369] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-17 15:27:08.369] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-17 15:27:08.369] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-17 15:27:08.370] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-17 15:27:08.377] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: False
+[2026-03-17 15:27:08.377] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: True
+[2026-03-17 15:27:08.378] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: False
+[2026-03-17 15:27:08.380] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=17/03/2026 15:57:08
+[2026-03-17 15:27:08.381] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-17 15:27:08.381] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-17 15:27:08.382] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-17 15:27:08.382] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-17 15:27:08.383] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-17 15:27:08.383] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-17 15:27:08.384] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-17 15:27:08.385] [WRN] [004] [KeepAwakeService] Invalid timed duration: 0
+[2026-03-17 15:27:08.385] [WRN] [004] [KeepAwakeService] Invalid timed duration: 800
+[2026-03-17 15:27:08.420] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-17 15:27:08.424] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-17 15:27:08.425] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-17 15:27:08.425] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-17 15:27:08.426] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-17 15:27:08.426] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-17 15:27:08.427] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-17 15:27:08.428] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-17 15:27:08.428] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-17 15:27:08.429] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-17 15:27:08.429] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-17 15:27:08.430] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-17 15:27:08.430] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-17 15:27:08.431] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-17 15:27:08.432] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-17 15:27:08.432] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-17 15:27:08.433] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-17 15:27:08.435] [VRB] [004] [LocalizationService] Instance created
+[2026-03-17 15:27:08.441] [INF] [004] [LocalizationService] Locale set to: es
+[2026-03-17 15:27:08.442] [INF] [004] [LocalizationService] Locale set to: en
+[2026-03-17 15:27:08.443] [WRN] [004] [LocalizationService] Unknown locale 'invalid_locale', keeping 'en'
+[2026-03-17 15:27:08.448] [INF] [004] [LocalizationService] Locale set to: bl
