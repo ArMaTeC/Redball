@@ -85,6 +85,9 @@ public class UpdateService
             if (asset == null)
                 return null;
 
+            Logger.Info("UpdateService", $"Selected release {latestRelease.TagName} with asset {asset.Name}");
+            Logger.Debug("UpdateService", $"Selected asset download URL: {asset.DownloadUrl}");
+
             return new UpdateInfo
             {
                 CurrentVersion = currentNormalized,
@@ -115,10 +118,15 @@ public class UpdateService
             var tempDir = Path.Combine(Path.GetTempPath(), "RedballUpdate");
             Directory.CreateDirectory(tempDir);
 
+            Logger.Info("UpdateService", $"Preparing to download update {updateInfo.LatestVersion} ({updateInfo.FileName})");
+            Logger.Debug("UpdateService", $"Download URL requested: {updateInfo.DownloadUrl}");
+
             // Download the update package
             var downloadPath = Path.Combine(tempDir, updateInfo.FileName);
             if (!await DownloadFileAsync(updateInfo.DownloadUrl, downloadPath, progress))
                 return false;
+
+            Logger.Debug("UpdateService", $"Downloaded file path: {downloadPath}");
 
             // Verify signature if enabled
             if (_verifySignature)
@@ -289,6 +297,7 @@ public class UpdateService
 
     private async Task<bool> DownloadFileAsync(string url, string destinationPath, IProgress<int>? progress)
     {
+        Logger.Info("UpdateService", $"Downloading update from: {url}");
         using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
 
