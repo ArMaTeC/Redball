@@ -79,7 +79,7 @@
               Condition="NOT REMOVE" />
     </InstallUISequence>
 
-    <!-- Launch action sequence (deferred execution after InstallFinalize) -->
+    <!-- Launch action sequence (after install completes) -->
     <InstallExecuteSequence>
       <Custom Action="LaunchApp" After="InstallFinalize"
               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT REMOVE" />
