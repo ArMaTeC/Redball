@@ -472,8 +472,10 @@ public class UpdateInfo
 /// </summary>
 public class GitHubRelease
 {
+    [System.Text.Json.Serialization.JsonPropertyName("tag_name")]
     public string TagName { get; set; } = "";
     public string Body { get; set; } = "";
+    [System.Text.Json.Serialization.JsonPropertyName("published_at")]
     public DateTime PublishedAt { get; set; }
     public List<GitHubAsset> Assets { get; set; } = new();
     [System.Text.Json.Serialization.JsonPropertyName("draft")]
@@ -488,6 +490,7 @@ public class GitHubRelease
 public class GitHubAsset
 {
     public string Name { get; set; } = "";
+    [System.Text.Json.Serialization.JsonPropertyName("browser_download_url")]
     public string DownloadUrl { get; set; } = "";
     public long Size { get; set; }
 }

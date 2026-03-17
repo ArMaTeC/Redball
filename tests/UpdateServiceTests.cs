@@ -1,11 +1,14 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Redball.UI.Services;
+using System.Text.Json;
 
 namespace Redball.Tests
 {
     [TestClass]
     public class UpdateServiceTests
     {
+        public TestContext TestContext { get; set; } = null!;
+
         [TestMethod]
         public void UpdateInfo_DefaultValues_AreCorrect()
         {
@@ -68,11 +71,14 @@ namespace Redball.Tests
         {
             // Arrange
             var service = new UpdateService("ArMaTeC", "Redball", "stable");
+            var currentVersion = typeof(UpdateService).Assembly.GetName().Version;
+            TestContext.WriteLine($"Detected current assembly version: {currentVersion}");
 
             try
             {
                 // Act
                 var result = await service.CheckForUpdateAsync();
+                TestContext.WriteLine($"Detected latest version: {(result?.LatestVersion?.ToString() ?? "none")}");
 
                 // Assert - result may be null (up to date) or an UpdateInfo object
                 // Either is valid depending on current version vs latest release
@@ -145,6 +151,52 @@ namespace Redball.Tests
             // Assert
             Assert.AreEqual(1, release.Assets.Count, "Should have 1 asset");
             Assert.AreEqual("Redball.msi", release.Assets[0].Name, "Asset name should match");
+        }
+
+        [TestMethod]
+        public void GitHubRelease_JsonDeserialization_MapsGitHubFieldsCorrectly()
+        {
+            // Arrange
+            var json = """
+            [
+              {
+                "tag_name": "v2.1.43",
+                "body": "Release notes",
+                "published_at": "2026-03-17T19:00:00Z",
+                "draft": false,
+                "prerelease": false,
+                "assets": [
+                  {
+                    "name": "Redball-Setup-2.1.43.exe",
+                    "browser_download_url": "https://github.com/ArMaTeC/Redball/releases/download/v2.1.43/Redball-Setup-2.1.43.exe",
+                    "size": 12345678
+                  }
+                ]
+              }
+            ]
+            """;
+
+            // Act
+            var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            var parsedVersion = Version.Parse(releases![0].TagName.TrimStart('v', 'V'));
+            TestContext.WriteLine($"Detected latest version from JSON tag: {parsedVersion}");
+
+            // Assert
+            Assert.IsNotNull(releases, "Releases should deserialize");
+            Assert.AreEqual(1, releases.Count, "Should deserialize one release");
+            Assert.AreEqual("v2.1.43", releases[0].TagName, "tag_name should map to TagName");
+            Assert.AreEqual("Release notes", releases[0].Body, "body should map to Body");
+            Assert.AreEqual(new DateTime(2026, 3, 17, 19, 0, 0, DateTimeKind.Utc), releases[0].PublishedAt, "published_at should map to PublishedAt");
+            Assert.IsFalse(releases[0].IsDraft, "draft should map to IsDraft");
+            Assert.IsFalse(releases[0].IsPreRelease, "prerelease should map to IsPreRelease");
+            Assert.AreEqual(1, releases[0].Assets.Count, "Assets should deserialize");
+            Assert.AreEqual("Redball-Setup-2.1.43.exe", releases[0].Assets[0].Name, "Asset name should deserialize");
+            Assert.AreEqual("https://github.com/ArMaTeC/Redball/releases/download/v2.1.43/Redball-Setup-2.1.43.exe", releases[0].Assets[0].DownloadUrl, "browser_download_url should map to DownloadUrl");
+            Assert.AreEqual(12345678, releases[0].Assets[0].Size, "Asset size should deserialize");
         }
     }
 }

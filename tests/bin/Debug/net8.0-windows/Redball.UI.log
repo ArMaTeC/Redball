@@ -1,0 +1,288 @@
+
+[2026-03-17 19:48:19] ========== Redball WPF Started ==========
+[2026-03-17 19:48:19] Version: 2.1.43.0
+[2026-03-17 19:48:19] Process ID: 36552
+[2026-03-17 19:48:19] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows\
+[2026-03-17 19:48:19] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows
+[2026-03-17 19:48:19] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-17 19:48:19] .NET Version: 8.0.25
+[2026-03-17 19:48:19] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows\testhost.dll --port 50466 --endpoint 127.0.0.1:050466 --role client --parentprocessid 46920 --telemetryoptedin false
+[2026-03-17 19:48:19.822] [DBG] [004] [UpdateService] Current assembly version: 2.1.43.0
+[2026-03-17 19:48:19.830] [DBG] [004] [UpdateService] Fetching all releases from: https://api.github.com/repos/ArMaTeC/Redball/releases
+[2026-03-17 19:48:20.919] [DBG] [014] [UpdateService] API response length: 123957 chars
+[2026-03-17 19:48:21.013] [DBG] [014] [UpdateService] Checking 30 releases for highest version
+[2026-03-17 19:48:21.013] [VRB] [014] [UpdateService] Release v2.1.43 -> version 2.1.43
+[2026-03-17 19:48:21.014] [DBG] [014] [UpdateService] New highest version found: 2.1.43 from v2.1.43
+[2026-03-17 19:48:21.015] [VRB] [014] [UpdateService] Release v2.1.37 -> version 2.1.37
+[2026-03-17 19:48:21.015] [VRB] [014] [UpdateService] Release v2.1.35 -> version 2.1.35
+[2026-03-17 19:48:21.015] [VRB] [014] [UpdateService] Release v2.1.34 -> version 2.1.34
+[2026-03-17 19:48:21.016] [VRB] [014] [UpdateService] Release v2.1.33 -> version 2.1.33
+[2026-03-17 19:48:21.016] [VRB] [014] [UpdateService] Release v2.1.32 -> version 2.1.32
+[2026-03-17 19:48:21.017] [VRB] [014] [UpdateService] Release v2.1.31 -> version 2.1.31
+[2026-03-17 19:48:21.017] [VRB] [014] [UpdateService] Release v2.1.30 -> version 2.1.30
+[2026-03-17 19:48:21.017] [VRB] [014] [UpdateService] Release v2.1.28 -> version 2.1.28
+[2026-03-17 19:48:21.018] [VRB] [014] [UpdateService] Release v2.1.27 -> version 2.1.27
+[2026-03-17 19:48:21.018] [VRB] [014] [UpdateService] Release v2.1.26 -> version 2.1.26
+[2026-03-17 19:48:21.018] [VRB] [014] [UpdateService] Release v2.1.21 -> version 2.1.21
+[2026-03-17 19:48:21.019] [VRB] [014] [UpdateService] Release v2.1.20 -> version 2.1.20
+[2026-03-17 19:48:21.020] [VRB] [014] [UpdateService] Release v2.1.19 -> version 2.1.19
+[2026-03-17 19:48:21.020] [VRB] [014] [UpdateService] Release v2.1.18 -> version 2.1.18
+[2026-03-17 19:48:21.022] [VRB] [014] [UpdateService] Release v2.1.17 -> version 2.1.17
+[2026-03-17 19:48:21.023] [VRB] [014] [UpdateService] Release v2.1.15 -> version 2.1.15
+[2026-03-17 19:48:21.024] [VRB] [014] [UpdateService] Release v2.1.14 -> version 2.1.14
+[2026-03-17 19:48:21.024] [VRB] [014] [UpdateService] Release v2.1.4 -> version 2.1.4
+[2026-03-17 19:48:21.025] [VRB] [014] [UpdateService] Release v2.1.3 -> version 2.1.3
+[2026-03-17 19:48:21.025] [VRB] [014] [UpdateService] Release v2.1.2 -> version 2.1.2
+[2026-03-17 19:48:21.025] [VRB] [014] [UpdateService] Release v2.1.1 -> version 2.1.1
+[2026-03-17 19:48:21.026] [VRB] [014] [UpdateService] Release v2.0.42 -> version 2.0.42
+[2026-03-17 19:48:21.026] [VRB] [014] [UpdateService] Release v2.0.41 -> version 2.0.41
+[2026-03-17 19:48:21.026] [VRB] [014] [UpdateService] Release v2.0.40 -> version 2.0.40
+[2026-03-17 19:48:21.027] [VRB] [014] [UpdateService] Release v2.0.39 -> version 2.0.39
+[2026-03-17 19:48:21.027] [VRB] [014] [UpdateService] Release v2.0.38 -> version 2.0.38
+[2026-03-17 19:48:21.027] [VRB] [014] [UpdateService] Release v2.0.37 -> version 2.0.37
+[2026-03-17 19:48:21.028] [VRB] [014] [UpdateService] Release v2.0.36 -> version 2.0.36
+[2026-03-17 19:48:21.028] [VRB] [014] [UpdateService] Release v2.0.35 -> version 2.0.35
+[2026-03-17 19:48:21.028] [INF] [014] [UpdateService] Highest version release: v2.1.43 (2.1.43)
+[2026-03-17 19:48:21.029] [DBG] [014] [UpdateService] Latest release tag: v2.1.43
+[2026-03-17 19:48:21.029] [INF] [014] [UpdateService] Comparing versions: current=2.1.43, latest=2.1.43
+[2026-03-17 19:48:21.029] [INF] [014] [UpdateService] Up to date (current: 2.1.43, latest: 2.1.43)
+
+[2026-03-17 19:49:04] ========== Redball WPF Started ==========
+[2026-03-17 19:49:04] Version: 2.1.43.0
+[2026-03-17 19:49:04] Process ID: 41032
+[2026-03-17 19:49:04] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows\
+[2026-03-17 19:49:04] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows
+[2026-03-17 19:49:04] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-17 19:49:04] .NET Version: 8.0.25
+[2026-03-17 19:49:04] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows\testhost.dll --port 63456 --endpoint 127.0.0.1:063456 --role client --parentprocessid 43272 --telemetryoptedin false
+[2026-03-17 19:49:04.597] [DBG] [004] [UpdateService] Current assembly version: 2.1.43.0
+[2026-03-17 19:49:04.654] [DBG] [004] [UpdateService] Fetching all releases from: https://api.github.com/repos/ArMaTeC/Redball/releases
+[2026-03-17 19:49:05.568] [DBG] [010] [UpdateService] API response length: 123957 chars
+[2026-03-17 19:49:05.667] [DBG] [010] [UpdateService] Checking 30 releases for highest version
+[2026-03-17 19:49:05.668] [VRB] [010] [UpdateService] Release v2.1.43 -> version 2.1.43
+[2026-03-17 19:49:05.668] [DBG] [010] [UpdateService] New highest version found: 2.1.43 from v2.1.43
+[2026-03-17 19:49:05.669] [VRB] [010] [UpdateService] Release v2.1.37 -> version 2.1.37
+[2026-03-17 19:49:05.669] [VRB] [010] [UpdateService] Release v2.1.35 -> version 2.1.35
+[2026-03-17 19:49:05.669] [VRB] [010] [UpdateService] Release v2.1.34 -> version 2.1.34
+[2026-03-17 19:49:05.670] [VRB] [010] [UpdateService] Release v2.1.33 -> version 2.1.33
+[2026-03-17 19:49:05.670] [VRB] [010] [UpdateService] Release v2.1.32 -> version 2.1.32
+[2026-03-17 19:49:05.670] [VRB] [010] [UpdateService] Release v2.1.31 -> version 2.1.31
+[2026-03-17 19:49:05.671] [VRB] [010] [UpdateService] Release v2.1.30 -> version 2.1.30
+[2026-03-17 19:49:05.671] [VRB] [010] [UpdateService] Release v2.1.28 -> version 2.1.28
+[2026-03-17 19:49:05.671] [VRB] [010] [UpdateService] Release v2.1.27 -> version 2.1.27
+[2026-03-17 19:49:05.672] [VRB] [010] [UpdateService] Release v2.1.26 -> version 2.1.26
+[2026-03-17 19:49:05.672] [VRB] [010] [UpdateService] Release v2.1.21 -> version 2.1.21
+[2026-03-17 19:49:05.673] [VRB] [010] [UpdateService] Release v2.1.20 -> version 2.1.20
+[2026-03-17 19:49:05.673] [VRB] [010] [UpdateService] Release v2.1.19 -> version 2.1.19
+[2026-03-17 19:49:05.673] [VRB] [010] [UpdateService] Release v2.1.18 -> version 2.1.18
+[2026-03-17 19:49:05.674] [VRB] [010] [UpdateService] Release v2.1.17 -> version 2.1.17
+[2026-03-17 19:49:05.674] [VRB] [010] [UpdateService] Release v2.1.15 -> version 2.1.15
+[2026-03-17 19:49:05.674] [VRB] [010] [UpdateService] Release v2.1.14 -> version 2.1.14
+[2026-03-17 19:49:05.675] [VRB] [010] [UpdateService] Release v2.1.4 -> version 2.1.4
+[2026-03-17 19:49:05.675] [VRB] [010] [UpdateService] Release v2.1.3 -> version 2.1.3
+[2026-03-17 19:49:05.675] [VRB] [010] [UpdateService] Release v2.1.2 -> version 2.1.2
+[2026-03-17 19:49:05.675] [VRB] [010] [UpdateService] Release v2.1.1 -> version 2.1.1
+[2026-03-17 19:49:05.676] [VRB] [010] [UpdateService] Release v2.0.42 -> version 2.0.42
+[2026-03-17 19:49:05.676] [VRB] [010] [UpdateService] Release v2.0.41 -> version 2.0.41
+[2026-03-17 19:49:05.676] [VRB] [010] [UpdateService] Release v2.0.40 -> version 2.0.40
+[2026-03-17 19:49:05.677] [VRB] [010] [UpdateService] Release v2.0.39 -> version 2.0.39
+[2026-03-17 19:49:05.677] [VRB] [010] [UpdateService] Release v2.0.38 -> version 2.0.38
+[2026-03-17 19:49:05.677] [VRB] [010] [UpdateService] Release v2.0.37 -> version 2.0.37
+[2026-03-17 19:49:05.679] [VRB] [010] [UpdateService] Release v2.0.36 -> version 2.0.36
+[2026-03-17 19:49:05.680] [VRB] [010] [UpdateService] Release v2.0.35 -> version 2.0.35
+[2026-03-17 19:49:05.680] [INF] [010] [UpdateService] Highest version release: v2.1.43 (2.1.43)
+[2026-03-17 19:49:05.680] [DBG] [010] [UpdateService] Latest release tag: v2.1.43
+[2026-03-17 19:49:05.681] [INF] [010] [UpdateService] Comparing versions: current=2.1.43, latest=2.1.43
+[2026-03-17 19:49:05.681] [INF] [010] [UpdateService] Up to date (current: 2.1.43, latest: 2.1.43)
+
+[2026-03-17 19:50:59] ========== Redball WPF Started ==========
+[2026-03-17 19:50:59] Version: 2.1.43.0
+[2026-03-17 19:50:59] Process ID: 28984
+[2026-03-17 19:50:59] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows\
+[2026-03-17 19:50:59] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows
+[2026-03-17 19:50:59] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-17 19:50:59] .NET Version: 8.0.25
+[2026-03-17 19:50:59] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows\testhost.dll --port 49427 --endpoint 127.0.0.1:049427 --role client --parentprocessid 44264 --telemetryoptedin false
+[2026-03-17 19:50:59.893] [DBG] [004] [UpdateService] Current assembly version: 2.1.43.0
+[2026-03-17 19:50:59.902] [DBG] [004] [UpdateService] Fetching all releases from: https://api.github.com/repos/ArMaTeC/Redball/releases
+[2026-03-17 19:51:00.511] [DBG] [010] [UpdateService] API response length: 123957 chars
+[2026-03-17 19:51:00.592] [DBG] [010] [UpdateService] Checking 30 releases for highest version
+[2026-03-17 19:51:00.603] [VRB] [010] [UpdateService] Release v2.1.43 -> version 2.1.43
+[2026-03-17 19:51:00.603] [DBG] [010] [UpdateService] New highest version found: 2.1.43 from v2.1.43
+[2026-03-17 19:51:00.604] [VRB] [010] [UpdateService] Release v2.1.37 -> version 2.1.37
+[2026-03-17 19:51:00.604] [VRB] [010] [UpdateService] Release v2.1.35 -> version 2.1.35
+[2026-03-17 19:51:00.605] [VRB] [010] [UpdateService] Release v2.1.34 -> version 2.1.34
+[2026-03-17 19:51:00.605] [VRB] [010] [UpdateService] Release v2.1.33 -> version 2.1.33
+[2026-03-17 19:51:00.605] [VRB] [010] [UpdateService] Release v2.1.32 -> version 2.1.32
+[2026-03-17 19:51:00.606] [VRB] [010] [UpdateService] Release v2.1.31 -> version 2.1.31
+[2026-03-17 19:51:00.606] [VRB] [010] [UpdateService] Release v2.1.30 -> version 2.1.30
+[2026-03-17 19:51:00.606] [VRB] [010] [UpdateService] Release v2.1.28 -> version 2.1.28
+[2026-03-17 19:51:00.606] [VRB] [010] [UpdateService] Release v2.1.27 -> version 2.1.27
+[2026-03-17 19:51:00.607] [VRB] [010] [UpdateService] Release v2.1.26 -> version 2.1.26
+[2026-03-17 19:51:00.607] [VRB] [010] [UpdateService] Release v2.1.21 -> version 2.1.21
+[2026-03-17 19:51:00.608] [VRB] [010] [UpdateService] Release v2.1.20 -> version 2.1.20
+[2026-03-17 19:51:00.608] [VRB] [010] [UpdateService] Release v2.1.19 -> version 2.1.19
+[2026-03-17 19:51:00.608] [VRB] [010] [UpdateService] Release v2.1.18 -> version 2.1.18
+[2026-03-17 19:51:00.609] [VRB] [010] [UpdateService] Release v2.1.17 -> version 2.1.17
+[2026-03-17 19:51:00.609] [VRB] [010] [UpdateService] Release v2.1.15 -> version 2.1.15
+[2026-03-17 19:51:00.609] [VRB] [010] [UpdateService] Release v2.1.14 -> version 2.1.14
+[2026-03-17 19:51:00.610] [VRB] [010] [UpdateService] Release v2.1.4 -> version 2.1.4
+[2026-03-17 19:51:00.610] [VRB] [010] [UpdateService] Release v2.1.3 -> version 2.1.3
+[2026-03-17 19:51:00.610] [VRB] [010] [UpdateService] Release v2.1.2 -> version 2.1.2
+[2026-03-17 19:51:00.611] [VRB] [010] [UpdateService] Release v2.1.1 -> version 2.1.1
+[2026-03-17 19:51:00.611] [VRB] [010] [UpdateService] Release v2.0.42 -> version 2.0.42
+[2026-03-17 19:51:00.612] [VRB] [010] [UpdateService] Release v2.0.41 -> version 2.0.41
+[2026-03-17 19:51:00.612] [VRB] [010] [UpdateService] Release v2.0.40 -> version 2.0.40
+[2026-03-17 19:51:00.612] [VRB] [010] [UpdateService] Release v2.0.39 -> version 2.0.39
+[2026-03-17 19:51:00.613] [VRB] [010] [UpdateService] Release v2.0.38 -> version 2.0.38
+[2026-03-17 19:51:00.613] [VRB] [010] [UpdateService] Release v2.0.37 -> version 2.0.37
+[2026-03-17 19:51:00.613] [VRB] [010] [UpdateService] Release v2.0.36 -> version 2.0.36
+[2026-03-17 19:51:00.613] [VRB] [010] [UpdateService] Release v2.0.35 -> version 2.0.35
+[2026-03-17 19:51:00.614] [INF] [010] [UpdateService] Highest version release: v2.1.43 (2.1.43)
+[2026-03-17 19:51:00.614] [DBG] [010] [UpdateService] Latest release tag: v2.1.43
+[2026-03-17 19:51:00.615] [INF] [010] [UpdateService] Comparing versions: current=2.1.43, latest=2.1.43
+[2026-03-17 19:51:00.616] [INF] [010] [UpdateService] Up to date (current: 2.1.43, latest: 2.1.43)
+
+[2026-03-17 19:52:57] ========== Redball WPF Started ==========
+[2026-03-17 19:52:57] Version: 2.1.43.0
+[2026-03-17 19:52:57] Process ID: 42204
+[2026-03-17 19:52:57] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows\
+[2026-03-17 19:52:57] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows
+[2026-03-17 19:52:57] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-17 19:52:57] .NET Version: 8.0.25
+[2026-03-17 19:52:57] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows\testhost.dll --port 52791 --endpoint 127.0.0.1:052791 --role client --parentprocessid 45524 --telemetryoptedin false
+[2026-03-17 19:52:57.431] [DBG] [004] [UpdateService] Current assembly version: 2.1.43.0
+[2026-03-17 19:52:57.439] [DBG] [004] [UpdateService] Fetching all releases from: https://api.github.com/repos/ArMaTeC/Redball/releases
+[2026-03-17 19:52:58.152] [DBG] [014] [UpdateService] API response length: 123957 chars
+[2026-03-17 19:52:58.245] [DBG] [014] [UpdateService] Checking 30 releases for highest version
+[2026-03-17 19:52:58.246] [VRB] [014] [UpdateService] Release v2.1.43 -> version 2.1.43
+[2026-03-17 19:52:58.248] [DBG] [014] [UpdateService] New highest version found: 2.1.43 from v2.1.43
+[2026-03-17 19:52:58.249] [VRB] [014] [UpdateService] Release v2.1.37 -> version 2.1.37
+[2026-03-17 19:52:58.249] [VRB] [014] [UpdateService] Release v2.1.35 -> version 2.1.35
+[2026-03-17 19:52:58.249] [VRB] [014] [UpdateService] Release v2.1.34 -> version 2.1.34
+[2026-03-17 19:52:58.250] [VRB] [014] [UpdateService] Release v2.1.33 -> version 2.1.33
+[2026-03-17 19:52:58.250] [VRB] [014] [UpdateService] Release v2.1.32 -> version 2.1.32
+[2026-03-17 19:52:58.250] [VRB] [014] [UpdateService] Release v2.1.31 -> version 2.1.31
+[2026-03-17 19:52:58.251] [VRB] [014] [UpdateService] Release v2.1.30 -> version 2.1.30
+[2026-03-17 19:52:58.251] [VRB] [014] [UpdateService] Release v2.1.28 -> version 2.1.28
+[2026-03-17 19:52:58.251] [VRB] [014] [UpdateService] Release v2.1.27 -> version 2.1.27
+[2026-03-17 19:52:58.252] [VRB] [014] [UpdateService] Release v2.1.26 -> version 2.1.26
+[2026-03-17 19:52:58.252] [VRB] [014] [UpdateService] Release v2.1.21 -> version 2.1.21
+[2026-03-17 19:52:58.252] [VRB] [014] [UpdateService] Release v2.1.20 -> version 2.1.20
+[2026-03-17 19:52:58.253] [VRB] [014] [UpdateService] Release v2.1.19 -> version 2.1.19
+[2026-03-17 19:52:58.253] [VRB] [014] [UpdateService] Release v2.1.18 -> version 2.1.18
+[2026-03-17 19:52:58.253] [VRB] [014] [UpdateService] Release v2.1.17 -> version 2.1.17
+[2026-03-17 19:52:58.254] [VRB] [014] [UpdateService] Release v2.1.15 -> version 2.1.15
+[2026-03-17 19:52:58.254] [VRB] [014] [UpdateService] Release v2.1.14 -> version 2.1.14
+[2026-03-17 19:52:58.254] [VRB] [014] [UpdateService] Release v2.1.4 -> version 2.1.4
+[2026-03-17 19:52:58.255] [VRB] [014] [UpdateService] Release v2.1.3 -> version 2.1.3
+[2026-03-17 19:52:58.255] [VRB] [014] [UpdateService] Release v2.1.2 -> version 2.1.2
+[2026-03-17 19:52:58.256] [VRB] [014] [UpdateService] Release v2.1.1 -> version 2.1.1
+[2026-03-17 19:52:58.256] [VRB] [014] [UpdateService] Release v2.0.42 -> version 2.0.42
+[2026-03-17 19:52:58.257] [VRB] [014] [UpdateService] Release v2.0.41 -> version 2.0.41
+[2026-03-17 19:52:58.257] [VRB] [014] [UpdateService] Release v2.0.40 -> version 2.0.40
+[2026-03-17 19:52:58.257] [VRB] [014] [UpdateService] Release v2.0.39 -> version 2.0.39
+[2026-03-17 19:52:58.258] [VRB] [014] [UpdateService] Release v2.0.38 -> version 2.0.38
+[2026-03-17 19:52:58.258] [VRB] [014] [UpdateService] Release v2.0.37 -> version 2.0.37
+[2026-03-17 19:52:58.259] [VRB] [014] [UpdateService] Release v2.0.36 -> version 2.0.36
+[2026-03-17 19:52:58.260] [VRB] [014] [UpdateService] Release v2.0.35 -> version 2.0.35
+[2026-03-17 19:52:58.260] [INF] [014] [UpdateService] Highest version release: v2.1.43 (2.1.43)
+[2026-03-17 19:52:58.261] [DBG] [014] [UpdateService] Latest release tag: v2.1.43
+[2026-03-17 19:52:58.261] [INF] [014] [UpdateService] Comparing versions: current=2.1.43, latest=2.1.43
+[2026-03-17 19:52:58.262] [INF] [014] [UpdateService] Up to date (current: 2.1.43, latest: 2.1.43)
+
+[2026-03-17 19:54:42] ========== Redball WPF Started ==========
+[2026-03-17 19:54:42] Version: 2.1.43.0
+[2026-03-17 19:54:42] Process ID: 45120
+[2026-03-17 19:54:42] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows\
+[2026-03-17 19:54:42] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows
+[2026-03-17 19:54:42] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-17 19:54:42] .NET Version: 8.0.25
+[2026-03-17 19:54:42] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows\testhost.dll --port 59450 --endpoint 127.0.0.1:059450 --role client --parentprocessid 43904 --telemetryoptedin false
+[2026-03-17 19:54:42.867] [DBG] [004] [UpdateService] Current assembly version: 2.1.43.0
+[2026-03-17 19:54:42.877] [DBG] [004] [UpdateService] Fetching all releases from: https://api.github.com/repos/ArMaTeC/Redball/releases
+[2026-03-17 19:54:43.444] [DBG] [014] [UpdateService] API response length: 123957 chars
+[2026-03-17 19:54:43.542] [DBG] [014] [UpdateService] Checking 30 releases for highest version
+[2026-03-17 19:54:43.549] [VRB] [014] [UpdateService] Release v2.1.43 -> version 2.1.43
+[2026-03-17 19:54:43.550] [DBG] [014] [UpdateService] New highest version found: 2.1.43 from v2.1.43
+[2026-03-17 19:54:43.550] [VRB] [014] [UpdateService] Release v2.1.37 -> version 2.1.37
+[2026-03-17 19:54:43.550] [VRB] [014] [UpdateService] Release v2.1.35 -> version 2.1.35
+[2026-03-17 19:54:43.551] [VRB] [014] [UpdateService] Release v2.1.34 -> version 2.1.34
+[2026-03-17 19:54:43.551] [VRB] [014] [UpdateService] Release v2.1.33 -> version 2.1.33
+[2026-03-17 19:54:43.551] [VRB] [014] [UpdateService] Release v2.1.32 -> version 2.1.32
+[2026-03-17 19:54:43.552] [VRB] [014] [UpdateService] Release v2.1.31 -> version 2.1.31
+[2026-03-17 19:54:43.552] [VRB] [014] [UpdateService] Release v2.1.30 -> version 2.1.30
+[2026-03-17 19:54:43.552] [VRB] [014] [UpdateService] Release v2.1.28 -> version 2.1.28
+[2026-03-17 19:54:43.552] [VRB] [014] [UpdateService] Release v2.1.27 -> version 2.1.27
+[2026-03-17 19:54:43.553] [VRB] [014] [UpdateService] Release v2.1.26 -> version 2.1.26
+[2026-03-17 19:54:43.553] [VRB] [014] [UpdateService] Release v2.1.21 -> version 2.1.21
+[2026-03-17 19:54:43.553] [VRB] [014] [UpdateService] Release v2.1.20 -> version 2.1.20
+[2026-03-17 19:54:43.554] [VRB] [014] [UpdateService] Release v2.1.19 -> version 2.1.19
+[2026-03-17 19:54:43.554] [VRB] [014] [UpdateService] Release v2.1.18 -> version 2.1.18
+[2026-03-17 19:54:43.554] [VRB] [014] [UpdateService] Release v2.1.17 -> version 2.1.17
+[2026-03-17 19:54:43.555] [VRB] [014] [UpdateService] Release v2.1.15 -> version 2.1.15
+[2026-03-17 19:54:43.555] [VRB] [014] [UpdateService] Release v2.1.14 -> version 2.1.14
+[2026-03-17 19:54:43.555] [VRB] [014] [UpdateService] Release v2.1.4 -> version 2.1.4
+[2026-03-17 19:54:43.556] [VRB] [014] [UpdateService] Release v2.1.3 -> version 2.1.3
+[2026-03-17 19:54:43.556] [VRB] [014] [UpdateService] Release v2.1.2 -> version 2.1.2
+[2026-03-17 19:54:43.556] [VRB] [014] [UpdateService] Release v2.1.1 -> version 2.1.1
+[2026-03-17 19:54:43.557] [VRB] [014] [UpdateService] Release v2.0.42 -> version 2.0.42
+[2026-03-17 19:54:43.557] [VRB] [014] [UpdateService] Release v2.0.41 -> version 2.0.41
+[2026-03-17 19:54:43.557] [VRB] [014] [UpdateService] Release v2.0.40 -> version 2.0.40
+[2026-03-17 19:54:43.558] [VRB] [014] [UpdateService] Release v2.0.39 -> version 2.0.39
+[2026-03-17 19:54:43.558] [VRB] [014] [UpdateService] Release v2.0.38 -> version 2.0.38
+[2026-03-17 19:54:43.558] [VRB] [014] [UpdateService] Release v2.0.37 -> version 2.0.37
+[2026-03-17 19:54:43.559] [VRB] [014] [UpdateService] Release v2.0.36 -> version 2.0.36
+[2026-03-17 19:54:43.559] [VRB] [014] [UpdateService] Release v2.0.35 -> version 2.0.35
+[2026-03-17 19:54:43.559] [INF] [014] [UpdateService] Highest version release: v2.1.43 (2.1.43)
+[2026-03-17 19:54:43.560] [DBG] [014] [UpdateService] Latest release tag: v2.1.43
+[2026-03-17 19:54:43.561] [INF] [014] [UpdateService] Comparing versions: current=2.1.43, latest=2.1.43
+[2026-03-17 19:54:43.566] [INF] [014] [UpdateService] Up to date (current: 2.1.43, latest: 2.1.43)
+
+[2026-03-17 19:58:59] ========== Redball WPF Started ==========
+[2026-03-17 19:58:59] Version: 2.1.44.0
+[2026-03-17 19:58:59] Process ID: 44712
+[2026-03-17 19:58:59] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows\
+[2026-03-17 19:58:59] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows
+[2026-03-17 19:58:59] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-17 19:58:59] .NET Version: 8.0.25
+[2026-03-17 19:58:59] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Debug\net8.0-windows\testhost.dll --port 52695 --endpoint 127.0.0.1:052695 --role client --parentprocessid 42572 --telemetryoptedin false
+[2026-03-17 19:58:59.924] [DBG] [004] [UpdateService] Current assembly version: 2.1.44.0
+[2026-03-17 19:58:59.933] [DBG] [004] [UpdateService] Fetching all releases from: https://api.github.com/repos/ArMaTeC/Redball/releases
+[2026-03-17 19:59:00.728] [DBG] [010] [UpdateService] API response length: 123957 chars
+[2026-03-17 19:59:00.846] [DBG] [010] [UpdateService] Checking 30 releases for highest version
+[2026-03-17 19:59:00.867] [VRB] [010] [UpdateService] Release v2.1.43 -> version 2.1.43
+[2026-03-17 19:59:00.883] [DBG] [010] [UpdateService] New highest version found: 2.1.43 from v2.1.43
+[2026-03-17 19:59:00.884] [VRB] [010] [UpdateService] Release v2.1.37 -> version 2.1.37
+[2026-03-17 19:59:00.887] [VRB] [010] [UpdateService] Release v2.1.35 -> version 2.1.35
+[2026-03-17 19:59:00.888] [VRB] [010] [UpdateService] Release v2.1.34 -> version 2.1.34
+[2026-03-17 19:59:00.889] [VRB] [010] [UpdateService] Release v2.1.33 -> version 2.1.33
+[2026-03-17 19:59:00.889] [VRB] [010] [UpdateService] Release v2.1.32 -> version 2.1.32
+[2026-03-17 19:59:00.889] [VRB] [010] [UpdateService] Release v2.1.31 -> version 2.1.31
+[2026-03-17 19:59:00.890] [VRB] [010] [UpdateService] Release v2.1.30 -> version 2.1.30
+[2026-03-17 19:59:00.890] [VRB] [010] [UpdateService] Release v2.1.28 -> version 2.1.28
+[2026-03-17 19:59:00.890] [VRB] [010] [UpdateService] Release v2.1.27 -> version 2.1.27
+[2026-03-17 19:59:00.890] [VRB] [010] [UpdateService] Release v2.1.26 -> version 2.1.26
+[2026-03-17 19:59:00.891] [VRB] [010] [UpdateService] Release v2.1.21 -> version 2.1.21
+[2026-03-17 19:59:00.891] [VRB] [010] [UpdateService] Release v2.1.20 -> version 2.1.20
+[2026-03-17 19:59:00.891] [VRB] [010] [UpdateService] Release v2.1.19 -> version 2.1.19
+[2026-03-17 19:59:00.891] [VRB] [010] [UpdateService] Release v2.1.18 -> version 2.1.18
+[2026-03-17 19:59:00.892] [VRB] [010] [UpdateService] Release v2.1.17 -> version 2.1.17
+[2026-03-17 19:59:00.892] [VRB] [010] [UpdateService] Release v2.1.15 -> version 2.1.15
+[2026-03-17 19:59:00.892] [VRB] [010] [UpdateService] Release v2.1.14 -> version 2.1.14
+[2026-03-17 19:59:00.892] [VRB] [010] [UpdateService] Release v2.1.4 -> version 2.1.4
+[2026-03-17 19:59:00.893] [VRB] [010] [UpdateService] Release v2.1.3 -> version 2.1.3
+[2026-03-17 19:59:00.893] [VRB] [010] [UpdateService] Release v2.1.2 -> version 2.1.2
+[2026-03-17 19:59:00.893] [VRB] [010] [UpdateService] Release v2.1.1 -> version 2.1.1
+[2026-03-17 19:59:00.893] [VRB] [010] [UpdateService] Release v2.0.42 -> version 2.0.42
+[2026-03-17 19:59:00.894] [VRB] [010] [UpdateService] Release v2.0.41 -> version 2.0.41
+[2026-03-17 19:59:00.894] [VRB] [010] [UpdateService] Release v2.0.40 -> version 2.0.40
+[2026-03-17 19:59:00.894] [VRB] [010] [UpdateService] Release v2.0.39 -> version 2.0.39
+[2026-03-17 19:59:00.895] [VRB] [010] [UpdateService] Release v2.0.38 -> version 2.0.38
+[2026-03-17 19:59:00.895] [VRB] [010] [UpdateService] Release v2.0.37 -> version 2.0.37
+[2026-03-17 19:59:00.895] [VRB] [010] [UpdateService] Release v2.0.36 -> version 2.0.36
+[2026-03-17 19:59:00.895] [VRB] [010] [UpdateService] Release v2.0.35 -> version 2.0.35
+[2026-03-17 19:59:00.896] [INF] [010] [UpdateService] Highest version release: v2.1.43 (2.1.43)
+[2026-03-17 19:59:00.896] [DBG] [010] [UpdateService] Latest release tag: v2.1.43
+[2026-03-17 19:59:00.896] [INF] [010] [UpdateService] Comparing versions: current=2.1.44, latest=2.1.43
+[2026-03-17 19:59:00.897] [INF] [010] [UpdateService] Up to date (current: 2.1.44, latest: 2.1.43)
