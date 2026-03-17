@@ -71,11 +71,6 @@ public partial class AboutWindow : Window
 
         if (success)
         {
-            MessageBox.Show(
-                "Update downloaded successfully. The application will now restart to apply the update.",
-                "Update Ready",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
             Application.Current.Shutdown();
         }
         else

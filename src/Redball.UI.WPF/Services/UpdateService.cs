@@ -150,6 +150,24 @@ public class UpdateService
                 }
             }
 
+            if (updateInfo.FileName.EndsWith(".msi", StringComparison.OrdinalIgnoreCase) ||
+                updateInfo.FileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            {
+                var installerScriptPath = CreateInstallerLaunchScript(downloadPath, updateInfo.FileName);
+                if (installerScriptPath == null)
+                    return false;
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-ExecutionPolicy Bypass -File \"{installerScriptPath}\"",
+                    UseShellExecute = true,
+                    CreateNoWindow = false
+                });
+
+                return true;
+            }
+
             // Extract if it's a zip file
             var extractDir = Path.Combine(tempDir, "extracted");
             if (updateInfo.FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
@@ -257,9 +275,9 @@ public class UpdateService
         // Priority: full installer bundle > MSI installer > any exe/msi
         var priorities = new[]
         {
+            "Redball.msi",
             "Redball-Setup-",
             "Redball-Setup.exe",
-            "Redball.msi",
             ".exe",
             ".msi"
         };
@@ -449,6 +467,59 @@ Remove-Item -Path $PSCommandPath -Force -ErrorAction SilentlyContinue
         catch (Exception ex)
         {
             Log($"Failed to create update script: {ex.Message}");
+            return null;
+        }
+    }
+
+    private string? CreateInstallerLaunchScript(string installerPath, string fileName)
+    {
+        try
+        {
+            var scriptPath = Path.Combine(Path.GetTempPath(), "RedballUpdate", "install-update.ps1");
+            var packageDir = Path.GetDirectoryName(installerPath) ?? Path.Combine(Path.GetTempPath(), "RedballUpdate");
+            var installerCommand = fileName.EndsWith(".msi", StringComparison.OrdinalIgnoreCase)
+                ? "$process = Start-Process -FilePath 'msiexec.exe' -ArgumentList '/i \"" + installerPath.Replace("'", "''") + "\" /passive /norestart' -Wait -PassThru"
+                : "$process = Start-Process -FilePath '" + installerPath.Replace("'", "''") + "' -ArgumentList '/quiet /norestart' -Wait -PassThru";
+
+            var script = $@"
+$ErrorActionPreference = 'Stop'
+$processName = 'Redball.UI.WPF'
+
+while (Get-Process -Name $processName -ErrorAction SilentlyContinue) {{
+    Start-Sleep -Seconds 1
+}}
+
+{installerCommand}
+
+if ($process.ExitCode -ne 0) {{
+    throw 'Installer exited with code ' + $process.ExitCode
+}}
+
+$appPath = $null
+try {{
+    $appPath = (Get-ItemProperty -Path 'HKCU:\Software\Redball' -Name 'InstallPath' -ErrorAction Stop).InstallPath
+}}
+catch {{
+}}
+
+if ([string]::IsNullOrWhiteSpace($appPath)) {{
+    $appPath = Join-Path $env:LOCALAPPDATA 'Redball\Redball.UI.WPF.exe'
+}}
+
+if (Test-Path $appPath) {{
+    Start-Process -FilePath $appPath
+}}
+
+Remove-Item -Path '{packageDir.Replace("'", "''")}' -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path $PSCommandPath -Force -ErrorAction SilentlyContinue
+";
+
+            File.WriteAllText(scriptPath, script);
+            return scriptPath;
+        }
+        catch (Exception ex)
+        {
+            Log($"Failed to create installer launch script: {ex.Message}");
             return null;
         }
     }
