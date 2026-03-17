@@ -11,9 +11,9 @@
     <AssemblyName>Redball.UI.WPF</AssemblyName>
     <AssemblyTitle>Redball</AssemblyTitle>
     <ApplicationIcon>Assets\redball.ico</ApplicationIcon>
-    <Version>2.1.49</Version>
-    <FileVersion>2.1.49.0</FileVersion>
-    <AssemblyVersion>2.1.49.0</AssemblyVersion>
+    <Version>2.1.50</Version>
+    <FileVersion>2.1.50.0</FileVersion>
+    <AssemblyVersion>2.1.50.0</AssemblyVersion>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>false</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
