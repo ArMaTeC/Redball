@@ -57,6 +57,7 @@ public class ConfigService
             };
             
             Config = JsonSerializer.Deserialize<RedballConfig>(json, options) ?? new RedballConfig();
+            NormalizeConfig();
             IsDirty = false;
             
             Logger.Info("ConfigService", $"Configuration loaded successfully: Heartbeat={Config.HeartbeatSeconds}s, Theme={Config.Theme}");
@@ -252,6 +253,7 @@ public class ConfigService
                 {
                     var configJson = configElement.GetRawText();
                     Config = JsonSerializer.Deserialize<RedballConfig>(configJson, options) ?? new RedballConfig();
+                    NormalizeConfig();
                     IsDirty = true;
                     Logger.Info("ConfigService", "Config imported from backup format");
                     return true;
@@ -261,6 +263,7 @@ public class ConfigService
 
             // Fall back to plain config format
             Config = JsonSerializer.Deserialize<RedballConfig>(json, options) ?? new RedballConfig();
+            NormalizeConfig();
             IsDirty = true;
             Logger.Info("ConfigService", "Config imported from plain format");
             return true;
@@ -311,6 +314,32 @@ public class ConfigService
         var defaultPath = Path.Combine(AppContext.BaseDirectory, "Redball.json");
         Logger.Debug("ConfigService", $"No existing config found, using default path: {defaultPath}");
         return defaultPath;
+    }
+
+    private void NormalizeConfig()
+    {
+        if (string.Equals(Config.UpdateRepoOwner, "karl-lawrence", StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(Config.UpdateRepoName, "Redball", StringComparison.OrdinalIgnoreCase))
+        {
+            Logger.Warning("ConfigService", "Detected legacy update repository configuration, migrating to ArMaTeC/Redball");
+            Config.UpdateRepoOwner = "ArMaTeC";
+            Config.UpdateRepoName = "Redball";
+            IsDirty = true;
+        }
+
+        if (string.IsNullOrWhiteSpace(Config.UpdateRepoOwner))
+        {
+            Logger.Warning("ConfigService", "UpdateRepoOwner was empty, defaulting to ArMaTeC");
+            Config.UpdateRepoOwner = "ArMaTeC";
+            IsDirty = true;
+        }
+
+        if (string.IsNullOrWhiteSpace(Config.UpdateRepoName))
+        {
+            Logger.Warning("ConfigService", "UpdateRepoName was empty, defaulting to Redball");
+            Config.UpdateRepoName = "Redball";
+            IsDirty = true;
+        }
     }
 }
 
