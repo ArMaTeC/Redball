@@ -59,18 +59,6 @@ public partial class AboutWindow : Window
             return;
         }
 
-        // Show update available dialog
-        var message = $"A new version is available: {updateInfo.VersionDisplay}\n\n" +
-                      $"Current version: {updateInfo.CurrentVersion}\n" +
-                      $"Release date: {updateInfo.ReleaseDate:yyyy-MM-dd}\n\n" +
-                      $"Release notes:\n{updateInfo.ReleaseNotes}\n\n" +
-                      "Would you like to download and install this update?";
-
-        var result = MessageBox.Show(message, "Update Available", MessageBoxButton.YesNo, MessageBoxImage.Question);
-        
-        if (result != MessageBoxResult.Yes)
-            return;
-
         // Download and install
         var progressWindow = new UpdateProgressWindow();
         progressWindow.Show();
@@ -83,16 +71,12 @@ public partial class AboutWindow : Window
 
         if (success)
         {
-            var restartResult = MessageBox.Show(
+            MessageBox.Show(
                 "Update downloaded successfully. The application will now restart to apply the update.",
                 "Update Ready",
-                MessageBoxButton.OKCancel,
+                MessageBoxButton.OK,
                 MessageBoxImage.Information);
-
-            if (restartResult == MessageBoxResult.OK)
-            {
-                Application.Current.Shutdown();
-            }
+            Application.Current.Shutdown();
         }
         else
         {
