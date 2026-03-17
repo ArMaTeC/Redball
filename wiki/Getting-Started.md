@@ -9,7 +9,7 @@
 
 ### Option A — MSI Installer (Recommended)
 
-Download the latest `Redball.msi` from the [Releases](https://github.com/karl-lawrence/Redball/releases) page and run it.
+Download the latest `Redball.msi` from the [Releases](https://github.com/ArMaTeC/Redball/releases) page and run it.
 
 The installer provides:
 

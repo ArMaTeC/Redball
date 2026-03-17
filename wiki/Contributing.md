@@ -13,7 +13,7 @@
 ## Development Setup
 
 ```powershell
-git clone https://github.com/karl-lawrence/Redball.git
+git clone https://github.com/ArMaTeC/Redball.git
 cd Redball
 
 # Run in development mode
@@ -96,7 +96,7 @@ Ensure all checks pass before requesting review.
 
 ## Reporting Issues
 
-- Use [GitHub Issues](https://github.com/karl-lawrence/Redball/issues) to report bugs
+- Use [GitHub Issues](https://github.com/ArMaTeC/Redball/issues) to report bugs
 - Include:
   - Redball version (`.\Redball.ps1 -Status | ConvertFrom-Json | Select Version`)
   - PowerShell version (`$PSVersionTable.PSVersion`)

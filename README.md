@@ -114,7 +114,7 @@ Settings are stored in `Redball.json` in the application directory. A default fi
     "ProcessIsolation": false,
     "EnablePerformanceMetrics": false,
     "EnableTelemetry": false,
-    "UpdateRepoOwner": "karl-lawrence",
+    "UpdateRepoOwner": "ArMaTeC",
     "UpdateRepoName": "Redball",
     "UpdateChannel": "stable",
     "VerifyUpdateSignature": false
@@ -144,7 +144,7 @@ Settings are stored in `Redball.json` in the application directory. A default fi
 | `ScheduleDays` | Days of the week the schedule applies | Weekdays |
 | `PresentationModeDetection` | Auto-activate for PowerPoint/Teams presentations | `false` |
 | `EnableTelemetry` | Opt-in anonymous usage telemetry (logged locally) | `false` |
-| `UpdateRepoOwner` | GitHub owner for update checks | `karl-lawrence` |
+| `UpdateRepoOwner` | GitHub owner for update checks | `ArMaTeC` |
 | `UpdateRepoName` | GitHub repo for update checks | `Redball` |
 | `UpdateChannel` | Release channel (`stable` or `beta`) | `stable` |
 | `VerifyUpdateSignature` | Require valid digital signature on updates | `false` |

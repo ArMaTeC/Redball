@@ -46,7 +46,7 @@ When `-Update` is used:
 
 | Setting | Default | Description |
 | ------- | ------- | ----------- |
-| `UpdateRepoOwner` | `karl-lawrence` | GitHub account or organization |
+| `UpdateRepoOwner` | `ArMaTeC` | GitHub account or organization |
 | `UpdateRepoName` | `Redball` | GitHub repository name |
 | `UpdateChannel` | `stable` | Release channel |
 | `VerifyUpdateSignature` | `false` | Require valid digital signature |

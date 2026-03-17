@@ -58,7 +58,11 @@ jobs:
 
     - name: Install SBOM tool
       run: |
-        dotnet tool install --global Microsoft.Sbom.Tool --version 2.2.7
+        $releaseUrl = "https://github.com/microsoft/sbom-tool/releases/download/v2.2.7/sbom-tool-win-x64.exe"
+        $sbomToolPath = "$env:LOCALAPPDATA\sbom-tool.exe"
+        Invoke-WebRequest -Uri $releaseUrl -OutFile $sbomToolPath
+        Add-Content $env:GITHUB_PATH $sbomToolPath
+        Write-Host "SBOM tool installed to: $sbomToolPath"
 
     - name: Restore and Build
       run: |
@@ -69,7 +73,8 @@ jobs:
       run: |
         $sbomPath = "sbom"
         New-Item -ItemType Directory -Force -Path $sbomPath
-        sbom-tool generate -b $sbomPath -bc src/Redball.UI.WPF -pn Redball -pv $env:GITHUB_REF_NAME -ps ArMaTeC -nsb https://github.com/ArMaTeC/Redball -m "$sbomPath/_manifest/spdx_2.2"
+        $sbomTool = "$env:LOCALAPPDATA\sbom-tool.exe"
+        & $sbomTool generate -b $sbomPath -bc src/Redball.UI.WPF -pn Redball -pv $env:GITHUB_REF_NAME -ps ArMaTeC -nsb https://github.com/ArMaTeC/Redball -m "$sbomPath/_manifest/spdx_2.2"
 
     - name: Upload SBOM
       uses: actions/upload-artifact@v5
