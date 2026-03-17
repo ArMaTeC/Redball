@@ -43,8 +43,6 @@
 
                     <!-- Main Actions -->
                     <MenuItem Header="Settings..." Command="{Binding OpenSettingsCommand}"/>
-                    <MenuItem Header="About Redball" Command="{Binding ShowAboutCommand}"/>
-                    <Separator/>
                     <MenuItem Header="Exit" Command="{Binding ExitCommand}"/>
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>

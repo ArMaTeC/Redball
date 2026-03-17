@@ -29,7 +29,7 @@ $iconPath = Join-Path $scriptRoot 'Redball.ico'
 $licenseSourcePath = Join-Path $projectRoot 'LICENSE'
 $licenseRtfPath = Join-Path $scriptRoot 'Redball-License.rtf'
 $outputDir = Join-Path $projectRoot 'dist'
-$versionFilePath = Join-Path $projectRoot 'version.txt'
+$versionFilePath = Join-Path $projectRoot 'scripts\version.txt'
 
 # Read version from version.txt if not provided
 if (-not $Version -and (Test-Path $versionFilePath)) {
@@ -209,31 +209,28 @@ $buildArgs = @(
 
 # Use explicit extension paths
 $projectRoot = Split-Path -Parent $scriptRoot
-$wixExtPath = Join-Path $projectRoot '.wix' 'extensions'
-$uiExtPath = Join-Path $env:USERPROFILE '.wix' 'extensions'
+$wixExtPath = Join-Path (Join-Path $projectRoot '.wix') 'extensions'
+$uiExtPath = Join-Path (Join-Path $env:USERPROFILE '.wix') 'extensions'
 $buildArgs += '-ext'
-$buildArgs += (Join-Path $uiExtPath 'WixToolset.UI.wixext' '7.0.0-rc.2' 'wixext7' 'WixToolset.UI.wixext.dll')
+$buildArgs += (Join-Path (Join-Path (Join-Path (Join-Path $uiExtPath 'WixToolset.UI.wixext') '7.0.0-rc.2') 'wixext7') 'WixToolset.UI.wixext.dll')
 
 if ($AddLocalFeatures) {
     $buildArgs += '-d'
     $buildArgs += "DEFAULT_ADDLOCAL=$AddLocalFeatures"
 }
 
-# Pass version to WiX if provided
-if ($Version) {
-    # Ensure 4-part version for WiX (e.g., 2.1.21.0)
-    $cleanVersion = $Version.Trim()
-    $versionParts = $cleanVersion.Split('.')
-    if ($versionParts.Count -eq 3) {
-        $wixVersion = "$cleanVersion.0"
-    }
-    else {
-        $wixVersion = $cleanVersion
-    }
-    Write-HostSafe "Using WiX version: $wixVersion" -ForegroundColor Gray
-    $buildArgs += '-d'
-    $buildArgs += "ProductVersion=$wixVersion"
+# Pass version to WiX
+$cleanVersion = $Version.Trim()
+$versionParts = $cleanVersion.Split('.')
+if ($versionParts.Count -eq 3) {
+    $wixVersion = "$cleanVersion.0"
 }
+else {
+    $wixVersion = $cleanVersion
+}
+Write-HostSafe "Using WiX version: $wixVersion" -ForegroundColor Gray
+$buildArgs += '-d'
+$buildArgs += "ProductVersion=$wixVersion"
 
 Push-Location $scriptRoot
 try {
@@ -291,9 +288,9 @@ if (Test-Path $bundleWxsPath) {
     
     # Add explicit extension paths for bundle (Netfx for DotNetCoreSearch, Bal for bootstrapper UI)
     $bundleArgs += '-ext'
-    $bundleArgs += (Join-Path $wixExtPath 'WixToolset.Netfx.wixext' '7.0.0-rc.2' 'wixext7' 'WixToolset.Netfx.wixext.dll')
+    $bundleArgs += (Join-Path (Join-Path (Join-Path (Join-Path $wixExtPath 'WixToolset.Netfx.wixext') '7.0.0-rc.2') 'wixext7') 'WixToolset.Netfx.wixext.dll')
     $bundleArgs += '-ext'
-    $bundleArgs += (Join-Path $wixExtPath 'WixToolset.Bal.wixext' '7.0.0-rc.2' 'wixext7' 'WixToolset.BootstrapperApplications.wixext.dll')
+    $bundleArgs += (Join-Path (Join-Path (Join-Path (Join-Path $wixExtPath 'WixToolset.Bal.wixext') '7.0.0-rc.2') 'wixext7') 'WixToolset.BootstrapperApplications.wixext.dll')
     
     if ($Version) {
         # Bundle also needs 4-part version

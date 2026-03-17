@@ -2,7 +2,7 @@
 ' This script runs in user context to avoid Session 0 isolation
 
 Sub LaunchApp()
-    Dim WshShell, appPath, fso
+    Dim WshShell, appPath, appDir, launchCommand, fso
     
     ' Read install path from registry (set by installer)
     Set WshShell = CreateObject("WScript.Shell")
@@ -19,7 +19,7 @@ Sub LaunchApp()
     
     ' Retry up to 5 times with 500ms delay (files may still be committing)
     Dim attempts
-    For attempts = 1 To 5
+    For attempts = 1 To 10
         If fso.FileExists(appPath) Then
             Exit For
         End If
@@ -27,6 +27,11 @@ Sub LaunchApp()
     Next
     
     If fso.FileExists(appPath) Then
-        WshShell.Run """" & appPath & """", 1, False
+        appDir = fso.GetParentFolderName(appPath)
+        If appDir <> "" Then
+            WshShell.CurrentDirectory = appDir
+        End If
+        launchCommand = "cmd.exe /c start """" """" & appPath & """""
+        WshShell.Run launchCommand, 1, False
     End If
 End Sub
