@@ -12,6 +12,7 @@ C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.Tests.de
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.Tests.runtimeconfig.json
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.Tests.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.Tests.pdb
+C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Castle.Core.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Hardcodet.NotifyIcon.Wpf.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.VisualStudio.CodeCoverage.Shim.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.TestPlatform.CoreUtilities.dll
@@ -22,6 +23,7 @@ C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.TestPl
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.TestPlatform.Utilities.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.VisualStudio.TestPlatform.Common.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.Xaml.Behaviors.dll
+C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Moq.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.VisualStudio.TestPlatform.TestFramework.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Newtonsoft.Json.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\NuGet.Frameworks.dll
@@ -120,5 +122,3 @@ C:\Users\karll\Desktop\Redball\tests\obj\Release\net8.0-windows\refint\Redball.T
 C:\Users\karll\Desktop\Redball\tests\obj\Release\net8.0-windows\Redball.Tests.pdb
 C:\Users\karll\Desktop\Redball\tests\obj\Release\net8.0-windows\Redball.Tests.genruntimeconfig.cache
 C:\Users\karll\Desktop\Redball\tests\obj\Release\net8.0-windows\ref\Redball.Tests.dll
-C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Castle.Core.dll
-C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Moq.dll

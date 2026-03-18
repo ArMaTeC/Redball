@@ -44,7 +44,13 @@ param(
     [switch]$BumpPush,
 
     [Parameter()]
-    [string]$BumpMessage = ''
+    [string]$BumpMessage = '',
+
+    [Parameter()]
+    [switch]$NoClean,
+
+    [Parameter()]
+    [switch]$Parallel
 )
 
 $ErrorActionPreference = 'Stop'
@@ -153,6 +159,8 @@ function Install-BuildModule {
 #region Build Steps
 
 function Step-RestoreDependency {
+    [CmdletBinding()]
+    param()
     Write-BuildHeader "Restoring Dependencies"
     
     # Ensure Pester is available
@@ -171,6 +179,7 @@ function Step-RestoreDependency {
     else {
         Write-BuildSuccess "PSScriptAnalyzer already installed"
     }
+    Import-Module PSScriptAnalyzer -Force
     
     # Check for .NET SDK if building WPF
     if (-not $SkipWPF) {
@@ -240,6 +249,8 @@ function Step-RunSecurityScan {
 }
 
 function Step-RunLinting {
+    [CmdletBinding()]
+    param()
     Write-BuildHeader "Running PSScriptAnalyzer"
     
     Import-Module PSScriptAnalyzer -Force
@@ -265,6 +276,8 @@ function Step-RunLinting {
 }
 
 function Step-RunTest {
+    [CmdletBinding()]
+    param()
     Write-BuildHeader "Running Tests"
     
     $testPath = Join-Path $ProjectRoot 'tests' 'Redball.Tests.csproj'
@@ -394,6 +407,7 @@ function Get-FileLockInfo {
         }
         catch {
             Write-Verbose "Failed to enumerate modules for process $($proc.Name): $_"
+            Write-Debug "Module enumeration error details: $($_.Exception.Message)"
         }
     }
     
@@ -421,6 +435,7 @@ function Get-FileLockInfo {
         }
         catch {
             Write-Verbose "Failed to query WMI: $_"
+            Write-Debug "WMI query error details: $($_.Exception.Message)"
         }
     }
     return $lockingProcesses | Select-Object -Unique -Property ProcessName, ProcessId, Path, Method
@@ -495,7 +510,9 @@ function Stop-LockingProcess {
     }
 }
 
-function Step-BuildWPF {
+function Step-BuildWpfApp {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     Write-BuildHeader "Building WPF Application"
     
     $solutionPath = Join-Path $ProjectRoot 'Redball.v3.sln'
@@ -504,6 +521,10 @@ function Step-BuildWPF {
     
     if (-not (Test-Path $projectPath)) {
         Write-Warning "WPF project not found: $projectPath"
+        return
+    }
+    
+    if (-not $PSCmdlet.ShouldProcess("WPF App v$Version", 'Build')) {
         return
     }
     
@@ -526,13 +547,16 @@ function Step-BuildWPF {
         }
     }
     
-    # Also try to stop known processes
-    $runningProcesses = Get-Process -Name 'Redball.UI.WPF', 'Redball' -ErrorAction SilentlyContinue
-    if ($runningProcesses) {
-        Write-BuildStep "Stopping running Redball processes..."
-        $runningProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 2
-        Write-BuildSuccess "Processes stopped"
+    # Ensure we stop processes even in -WhatIf mode
+    if ($PSCmdlet.ShouldProcess("Running Redball processes", 'Stop')) {
+        # Also try to stop known processes
+        $runningProcesses = Get-Process -Name 'Redball.UI.WPF', 'Redball' -ErrorAction SilentlyContinue
+        if ($runningProcesses) {
+            Write-BuildStep "Stopping running Redball processes..."
+            $runningProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 2
+            Write-BuildSuccess "Processes stopped"
+        }
     }
     
     # Restore packages
@@ -586,17 +610,23 @@ function Step-BuildWPF {
     }
 }
 
-function Step-BuildMSI {
+function Step-BuildMsiInstaller {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     Write-BuildHeader "Building MSI Installer"
-    
-    # Accept WiX v7 OSMF EULA
-    $env:WIX_OSMF_EULA_ACCEPTED = '1'
     
     $msiScript = Join-Path $ProjectRoot 'installer' 'Build-MSI.ps1'
     if (-not (Test-Path $msiScript)) {
         Write-Warning "MSI build script not found: $msiScript"
         return
     }
+    
+    if (-not $PSCmdlet.ShouldProcess("MSI for v$Version", 'Build')) {
+        return
+    }
+    
+    # Accept WiX v7 OSMF EULA
+    $env:WIX_OSMF_EULA_ACCEPTED = '1'
     
     & $msiScript -Configuration $Configuration -Version $Version
     
@@ -612,6 +642,8 @@ function Step-BuildMSI {
 }
 
 function Step-CreateReleasePackage {
+    [CmdletBinding()]
+    param()
     Write-BuildHeader "Creating Release Artifacts"
     
     # MSI now contains everything - just verify it exists and show summary
@@ -692,7 +724,60 @@ function Step-CleanupDist {
     Write-BuildSuccess "Kept the latest $KeepLatest distribution version(s)"
 }
 
+function Step-CleanBuild {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
+
+    Write-BuildHeader "Cleaning Build Artifacts"
+
+    $pathsToClean = @(
+        (Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'obj'),
+        (Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'bin'),
+        (Join-Path $ProjectRoot 'tests' 'obj'),
+        (Join-Path $ProjectRoot 'tests' 'bin'),
+        (Join-Path $ProjectRoot 'tests-integration' 'obj'),
+        (Join-Path $ProjectRoot 'tests-integration' 'bin'),
+        (Join-Path $ProjectRoot 'tests-e2e' 'obj'),
+        (Join-Path $ProjectRoot 'tests-e2e' 'bin'),
+        (Join-Path $ProjectRoot 'tests-ui-automation' 'obj'),
+        (Join-Path $ProjectRoot 'tests-ui-automation' 'bin'),
+        $DistPath
+    )
+
+    foreach ($path in $pathsToClean) {
+        if (Test-Path $path) {
+            if ($PSCmdlet.ShouldProcess($path, 'Remove directory')) {
+                try {
+                    Remove-Item -Path $path -Recurse -Force -ErrorAction Stop
+                    Write-BuildSuccess "Removed: $path"
+                }
+                catch {
+                    Write-Error "Failed to clean $path`: $_"
+                }
+            }
+        }
+    }
+
+    # Run dotnet clean on the solution
+    $solutionPath = Join-Path $ProjectRoot 'Redball.v3.sln'
+    if (Test-Path $solutionPath) {
+        Write-BuildStep "Running dotnet clean..."
+        dotnet clean $solutionPath --verbosity quiet
+        if ($LASTEXITCODE -eq 0) {
+            Write-BuildSuccess "Solution cleaned"
+        }
+        else {
+            Write-Warning "dotnet clean completed with warnings"
+        }
+    }
+
+    Write-BuildSuccess "Clean build completed"
+}
+
 #endregion
+
+# Build timing
+$script:BuildStartTime = Get-Date
 
 # Main Build Process
 try {
@@ -705,6 +790,11 @@ try {
  |_|  \_\___|\__,_|_.__/ \__,_|_|_| |____/ \__,_|_|_|\__,_|
 '@
     Write-HostSafe "  Building Redball v$Version ($Configuration)`n" -ForegroundColor Cyan
+    
+    # Clean build if requested (default on, use -NoClean to skip)
+    if (-not $NoClean) {
+        Step-CleanBuild
+    }
     
     # Bump version by default so build outputs always get a new version
     if (-not $SkipVersionBump) {
@@ -749,7 +839,7 @@ try {
     
     # WPF Build (required before MSI)
     if (-not $SkipWPF) {
-        Step-BuildWPF
+        Step-BuildWpfApp
     }
     else {
         Write-HostSafe "  Skipping WPF build ( -SkipWPF )" -ForegroundColor Yellow
@@ -760,7 +850,7 @@ try {
         if ($SkipWPF) {
             Write-Warning "WPF build skipped - MSI will use previously built files if available"
         }
-        Step-BuildMSI
+        Step-BuildMsiInstaller
     }
     else {
         Write-HostSafe "  Skipping MSI build ( -SkipMSI )" -ForegroundColor Yellow
@@ -780,18 +870,22 @@ try {
     Write-HostSafe "`n══════════════════════════════════════════════════════════" -ForegroundColor Green
     Write-HostSafe "  BUILD SUCCEEDED" -ForegroundColor Green
     Write-HostSafe "══════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-HostSafe "  Version:  $Version" -ForegroundColor Gray
-    Write-HostSafe "  Config:   $Configuration" -ForegroundColor Gray
-    Write-HostSafe "  Output:   $((Resolve-Path $DistPath).Path)" -ForegroundColor Gray
+    $duration = (Get-Date) - $script:BuildStartTime
+    Write-HostSafe "  Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor Gray
     Write-HostSafe "══════════════════════════════════════════════════════════`n" -ForegroundColor Green
     
     exit 0
 }
 catch {
+    $errorMessage = $_
     Write-HostSafe "`n══════════════════════════════════════════════════════════" -ForegroundColor Red
     Write-HostSafe "  BUILD FAILED" -ForegroundColor Red
     Write-HostSafe "══════════════════════════════════════════════════════════" -ForegroundColor Red
-    Write-HostSafe "  Error: $_" -ForegroundColor Red
+    Write-HostSafe "  Error: $errorMessage" -ForegroundColor Red
+    if ($script:BuildStartTime) {
+        $duration = (Get-Date) - $script:BuildStartTime
+        Write-HostSafe "  Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor Gray
+    }
     Write-HostSafe "══════════════════════════════════════════════════════════`n" -ForegroundColor Red
     exit 1
 }
