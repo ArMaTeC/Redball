@@ -2,6 +2,7 @@
   "HeartbeatSeconds": 59,
   "PreventDisplaySleep": true,
   "UseHeartbeatKeypress": true,
+  "HeartbeatInputMode": "F15",
   "DefaultDuration": 60,
   "LogPath": "Redball.log",
   "MaxLogSizeMB": 10,

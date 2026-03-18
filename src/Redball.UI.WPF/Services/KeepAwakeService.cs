@@ -24,6 +24,7 @@ public class KeepAwakeService : IDisposable
     private bool _isActive;
     private bool _preventDisplaySleep = true;
     private bool _useHeartbeat = true;
+    private HeartbeatInputMode _heartbeatInputMode = HeartbeatInputMode.F15;
     private DateTime? _until;
     private DateTime? _startTime;
 
@@ -93,6 +94,17 @@ public class KeepAwakeService : IDisposable
         }
     }
 
+    public HeartbeatInputMode HeartbeatInputMode
+    {
+        get => _heartbeatInputMode;
+        set
+        {
+            _heartbeatInputMode = value;
+            _useHeartbeat = value != HeartbeatInputMode.Disabled;
+            Logger.Info("KeepAwakeService", $"HeartbeatInputMode changed to: {value}");
+        }
+    }
+
     public DateTime? Until => _until;
     public DateTime? StartTime => _startTime;
 
@@ -114,6 +126,7 @@ public class KeepAwakeService : IDisposable
         var config = ConfigService.Instance.Config;
         _preventDisplaySleep = config.PreventDisplaySleep;
         _useHeartbeat = config.UseHeartbeatKeypress;
+        _heartbeatInputMode = ParseHeartbeatInputMode(config.HeartbeatInputMode);
 
         // Configure monitoring services from config
         _batteryMonitor.IsEnabled = config.BatteryAware;
@@ -154,6 +167,7 @@ public class KeepAwakeService : IDisposable
         var config = ConfigService.Instance.Config;
         _preventDisplaySleep = config.PreventDisplaySleep;
         _useHeartbeat = config.UseHeartbeatKeypress;
+        _heartbeatInputMode = ParseHeartbeatInputMode(config.HeartbeatInputMode);
         _batteryMonitor.IsEnabled = config.BatteryAware;
         _batteryMonitor.Threshold = config.BatteryThreshold;
         _networkMonitor.IsEnabled = config.NetworkAware;
@@ -326,26 +340,53 @@ public class KeepAwakeService : IDisposable
         }
     }
 
-    private void SendF15Heartbeat()
+    private static HeartbeatInputMode ParseHeartbeatInputMode(string? inputMode)
+    {
+        if (Enum.TryParse<HeartbeatInputMode>(inputMode, true, out var mode))
+        {
+            return mode;
+        }
+
+        return HeartbeatInputMode.F15;
+    }
+
+    private ushort GetHeartbeatVirtualKey()
+    {
+        return _heartbeatInputMode switch
+        {
+            HeartbeatInputMode.F13 => NativeMethods.VK_F13,
+            HeartbeatInputMode.F14 => NativeMethods.VK_F14,
+            HeartbeatInputMode.F16 => NativeMethods.VK_F16,
+            _ => NativeMethods.VK_F15
+        };
+    }
+
+    private void SendHeartbeat()
     {
         try
         {
+            if (!_useHeartbeat || _heartbeatInputMode == HeartbeatInputMode.Disabled)
+            {
+                return;
+            }
+
+            var virtualKey = GetHeartbeatVirtualKey();
             var inputs = new NativeMethods.INPUT[2];
 
             inputs[0].type = NativeMethods.INPUT_KEYBOARD;
-            inputs[0].u.ki.wVk = NativeMethods.VK_F15;
+            inputs[0].u.ki.wVk = virtualKey;
             inputs[0].u.ki.dwFlags = 0;
 
             inputs[1].type = NativeMethods.INPUT_KEYBOARD;
-            inputs[1].u.ki.wVk = NativeMethods.VK_F15;
+            inputs[1].u.ki.wVk = virtualKey;
             inputs[1].u.ki.dwFlags = NativeMethods.KEYEVENTF_KEYUP;
 
             NativeMethods.SendInput(2, inputs, Marshal.SizeOf<NativeMethods.INPUT>());
-            Logger.Verbose("KeepAwakeService", "F15 heartbeat sent");
+            Logger.Verbose("KeepAwakeService", $"{_heartbeatInputMode} heartbeat sent");
         }
         catch (Exception ex)
         {
-            Logger.Debug("KeepAwakeService", $"F15 heartbeat failed: {ex.Message}");
+            Logger.Debug("KeepAwakeService", $"Heartbeat failed: {ex.Message}");
         }
     }
 
@@ -358,10 +399,10 @@ public class KeepAwakeService : IDisposable
             // Re-assert execution state on each heartbeat
             ApplyExecutionState(true);
 
-            // Send F15 keypress if enabled
+            // Send heartbeat keypress if enabled
             if (_useHeartbeat)
             {
-                SendF15Heartbeat();
+                SendHeartbeat();
             }
 
             HeartbeatTick?.Invoke(this, EventArgs.Empty);

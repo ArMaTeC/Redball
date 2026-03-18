@@ -25,35 +25,84 @@ public partial class ProductMetricsDashboard : Window
         {
             var analytics = new AnalyticsService(true);
             var summary = analytics.GetSummary();
+            var topCategory = summary.TopCategories.FirstOrDefault();
+            var topCategoryTrend = summary.CategoryTrends.FirstOrDefault();
 
             // Calculate metrics
-            ActiveUsersText.Text = summary.TotalSessions.ToString("N0");
-            
-            var avgDuration = summary.TotalSessions > 0 
-                ? summary.TotalUsageTime.TotalMinutes / summary.TotalSessions 
-                : 0;
-            SessionDurationText.Text = $"{avgDuration:F0}m";
-            
-            // Feature adoption (percentage of users who used advanced features)
-            var featureCount = summary.TopFeatures.Count;
-            var adoption = featureCount > 0 ? Math.Min(100, featureCount * 20) : 0;
-            FeatureAdoptionText.Text = $"{adoption:F0}%";
-            
-            // Calculate retention based on return visits
-            var daysSinceFirst = (DateTime.UtcNow - summary.FirstSeen).TotalDays;
-            var retention = daysSinceFirst > 0 
-                ? Math.Min(100, (summary.TotalSessions / daysSinceFirst) * 30) 
-                : 0;
+            ActiveUsersText.Text = summary.RecentSessions.ToString("N0");
+            ActiveUsersTrend.Text = $"vs prior 7d: {summary.PriorSessions:N0} ({FormatTrend(summary.SessionTrendPercent)})";
+
+            SessionDurationText.Text = $"{summary.AverageSessionDuration.TotalMinutes:F0}m";
+
+            FeatureAdoptionText.Text = $"{summary.FeatureAdoptionRate:F0}%";
+            FeatureAdoptionTrend.Text = topCategory != null
+                ? $"Top category: {topCategory.Name} ({FormatTrend(topCategoryTrend?.TrendPercent ?? 0)})"
+                : "Top: None";
+
+            var retention = Math.Max(summary.RetentionDay7, summary.RetentionDay30);
             RetentionText.Text = $"{retention:F0}%";
-            
-            // Update feature bars
-            foreach (var feature in summary.TopFeatures)
+            RetentionTrend.Text = summary.LastFeatureUse == default
+                ? "No recent activity"
+                : $"Last activity: {summary.LastFeatureUse.ToLocalTime():g}";
+
+            JourneyOutcomesList.ItemsSource = new[]
             {
-                var percentage = Math.Min(100, feature.Count * 100 / Math.Max(1, summary.TotalSessions));
-                UpdateFeatureBar(feature.Name, percentage);
+                OutcomePresentationHelper.CreateRow(
+                    "TypeThing completion",
+                    "Completed TypeThing runs divided by TypeThing starts.",
+                    summary.TypeThingSuccessRate,
+                    summary.TypeThingCompletions,
+                    summary.TypeThingAttempts,
+                    "Completions",
+                    "starts"),
+                OutcomePresentationHelper.CreateRow(
+                    "Settings save success",
+                    "Successful settings saves divided by all save attempts, including validation failures.",
+                    summary.SettingsSaveSuccessRate,
+                    summary.SettingsSaves,
+                    summary.SettingsSaveAttempts,
+                    "Successful saves",
+                    "attempts"),
+                OutcomePresentationHelper.CreateRow(
+                    "Update success",
+                    "Successful update downloads divided by update download attempts.",
+                    summary.UpdateSuccessRate,
+                    summary.UpdateSuccesses,
+                    summary.UpdateAttempts,
+                    "Successful downloads",
+                    "attempts"),
+                OutcomePresentationHelper.CreateRow(
+                    "Diagnostics export rate",
+                    "Diagnostics exports divided by diagnostics window opens.",
+                    summary.DiagnosticsExportRate,
+                    summary.DiagnosticsExports,
+                    summary.DiagnosticsOpens,
+                    "Exports",
+                    "opens"),
+                OutcomePresentationHelper.CreateRow(
+                    "Onboarding completion",
+                    "Completed onboarding flows divided by onboarding starts shown to the user.",
+                    summary.OnboardingCompletionRate,
+                    summary.OnboardingCompletions,
+                    summary.OnboardingStarts,
+                    "Completions",
+                    "starts shown")
+            };
+            
+            // Update category bars
+            KeepAwakeBar.Value = 0;
+            TypeThingBar.Value = 0;
+            ScheduleBar.Value = 0;
+            BatteryBar.Value = 0;
+            NetworkBar.Value = 0;
+
+            foreach (var category in summary.TopCategories)
+            {
+                var percentage = Math.Min(100, category.Count * 100.0 / Math.Max(1, summary.TotalFeatureEvents));
+                UpdateFeatureBar(category.Name, percentage);
             }
             
-            LastUpdatedText.Text = $"Last updated: {DateTime.Now:g}";
+            LastUpdatedText.Text = $"Last updated: {summary.LastUpdated.ToLocalTime():g}";
         }
         catch (Exception ex)
         {
@@ -61,23 +110,41 @@ public partial class ProductMetricsDashboard : Window
         }
     }
 
+    private static string FormatTrend(double value)
+    {
+        if (value > 0)
+        {
+            return $"↑ {value:F0}%";
+        }
+
+        if (value < 0)
+        {
+            return $"↓ {Math.Abs(value):F0}%";
+        }
+
+        return "→ 0%";
+    }
+
     private void UpdateFeatureBar(string featureName, double percentage)
     {
         switch (featureName)
         {
-            case "KeepAwakeToggle":
+            case "Core Usage":
                 KeepAwakeBar.Value = percentage;
                 break;
             case "TypeThing":
                 TypeThingBar.Value = percentage;
                 break;
-            case "Schedule":
+            case "Onboarding":
+            case "Settings":
                 ScheduleBar.Value = percentage;
                 break;
-            case "BatteryAware":
+            case "Diagnostics":
                 BatteryBar.Value = percentage;
                 break;
-            case "NetworkAware":
+            case "Updates":
+            case "Insights":
+            case "Other":
                 NetworkBar.Value = percentage;
                 break;
         }
@@ -107,13 +174,23 @@ public partial class ProductMetricsDashboard : Window
                 var csv = "Metric,Value\n" +
                          $"Total Sessions,{summary.TotalSessions}\n" +
                          $"Total Usage Time (minutes),{summary.TotalUsageTime.TotalMinutes:F0}\n" +
+                         $"Average Session Duration (minutes),{summary.AverageSessionDuration.TotalMinutes:F0}\n" +
+                         $"Total Feature Events,{summary.TotalFeatureEvents}\n" +
+                         $"Feature Adoption Rate,{summary.FeatureAdoptionRate:F0}%\n" +
+                         $"Retention Day 7,{summary.RetentionDay7:F0}%\n" +
+                         $"Retention Day 30,{summary.RetentionDay30:F0}%\n" +
+                         $"TypeThing Success Rate,{summary.TypeThingSuccessRate:F0}% ({summary.TypeThingCompletions}/{summary.TypeThingAttempts})\n" +
+                         $"Settings Save Success Rate,{summary.SettingsSaveSuccessRate:F0}% ({summary.SettingsSaves}/{summary.SettingsSaveAttempts})\n" +
+                         $"Update Success Rate,{summary.UpdateSuccessRate:F0}% ({summary.UpdateSuccesses}/{summary.UpdateAttempts})\n" +
+                         $"Diagnostics Export Rate,{summary.DiagnosticsExportRate:F0}% ({summary.DiagnosticsExports}/{summary.DiagnosticsOpens})\n" +
+                         $"Onboarding Completion Rate,{summary.OnboardingCompletionRate:F0}% ({summary.OnboardingCompletions}/{summary.OnboardingStarts})\n" +
                          $"First Seen,{summary.FirstSeen:yyyy-MM-dd}\n" +
                          $"Last Updated,{summary.LastUpdated:yyyy-MM-dd HH:mm}\n" +
-                         "\nFeature,Usage Count\n";
+                         "\nCategory,Usage Count\n";
                 
-                foreach (var feature in summary.TopFeatures)
+                foreach (var category in summary.TopCategories)
                 {
-                    csv += $"{feature.Name},{feature.Count}\n";
+                    csv += $"{category.Name},{category.Count}\n";
                 }
                 
                 File.WriteAllText(dialog.FileName, csv);

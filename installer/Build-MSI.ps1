@@ -70,23 +70,43 @@ function New-RedballBannerBmp {
     $g.DrawLine($pen, 0, 56, 493, 56)
     $pen.Dispose()
 
-    # Draw icon on the left if available
-    if ($IconPath -and (Test-Path $IconPath)) {
-        try {
-            $icon = New-Object System.Drawing.Icon($IconPath, 40, 40)
-            $g.DrawIcon($icon, 8, 9)
-            $icon.Dispose()
-        }
-        catch {
-            Write-Verbose "Could not draw icon on banner: $_"
-        }
-    }
-
     $g.Dispose()
     $bmp.Save($Path, [System.Drawing.Imaging.ImageFormat]::Bmp)
     $bmp.Dispose()
 
     Write-HostSafe "Generated clean installer banner at $Path" -ForegroundColor DarkGreen
+}
+
+function New-RedballDialogBmp {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    Add-Type -AssemblyName System.Drawing
+
+    $bmp = New-Object System.Drawing.Bitmap(493, 312)
+    $g = [System.Drawing.Graphics]::FromImage($bmp)
+    $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+
+    $background = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+        (New-Object System.Drawing.Rectangle 0, 0, 493, 312),
+        [System.Drawing.Color]::White,
+        [System.Drawing.Color]::FromArgb(248, 248, 248),
+        [System.Drawing.Drawing2D.LinearGradientMode]::Vertical
+    )
+    $g.FillRectangle($background, 0, 0, 493, 312)
+    $background.Dispose()
+
+    $accentBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(200, 30, 30))
+    $g.FillRectangle($accentBrush, 0, 0, 18, 312)
+    $accentBrush.Dispose()
+
+    $g.Dispose()
+    $bmp.Save($Path, [System.Drawing.Imaging.ImageFormat]::Bmp)
+    $bmp.Dispose()
+
+    Write-HostSafe "Generated clean installer dialog background at $Path" -ForegroundColor DarkGreen
 }
 
 function New-RedballInstallerIconFile {
@@ -169,6 +189,7 @@ if (-not (Test-Path $outputDir)) {
 New-RedballInstallerIconFile -Path $iconPath
 New-RedballInstallerLicenseRtf -SourcePath $licenseSourcePath -OutputPath $licenseRtfPath
 New-RedballBannerBmp -Path (Join-Path $scriptRoot 'banner.bmp') -IconPath $iconPath
+New-RedballDialogBmp -Path (Join-Path $scriptRoot 'dialog.bmp')
 
 $wixCandidates = @(
     (Join-Path $WixBinPath 'wix.exe'),

@@ -18,7 +18,6 @@ namespace Redball.Tests.ViewModels
             Assert.IsNotNull(viewModel.PauseKeepAwakeCommand, "PauseKeepAwakeCommand should be initialized");
             Assert.IsNotNull(viewModel.OpenSettingsCommand, "OpenSettingsCommand should be initialized");
             Assert.IsNotNull(viewModel.ExitCommand, "ExitCommand should be initialized");
-            Assert.IsNotNull(viewModel.ShowAboutCommand, "ShowAboutCommand should be initialized");
             Assert.IsNotNull(viewModel.TypeThingCommand, "TypeThingCommand should be initialized");
         }
 

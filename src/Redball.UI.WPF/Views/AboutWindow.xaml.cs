@@ -7,6 +7,7 @@ namespace Redball.UI.Views;
 public partial class AboutWindow : Window
 {
     private UpdateService? _updateService;
+    private readonly AnalyticsService _analytics = new(ConfigService.Instance.Config.EnableTelemetry);
 
     public AboutWindow()
     {
@@ -35,6 +36,7 @@ public partial class AboutWindow : Window
 
     private void GitHubButton_Click(object sender, RoutedEventArgs e)
     {
+        _analytics.TrackFeature("github.opened");
         Process.Start(new ProcessStartInfo
         {
             FileName = "https://github.com/ArMaTeC/Redball",
@@ -48,16 +50,25 @@ public partial class AboutWindow : Window
 
         // Show checking dialog
         var checkingDialog = MessageBox.Show("Checking for updates...", "Update", MessageBoxButton.OKCancel, MessageBoxImage.Information);
-        if (checkingDialog != MessageBoxResult.OK) return;
+        if (checkingDialog != MessageBoxResult.OK)
+        {
+            _analytics.TrackFeature("update.check_cancelled");
+            return;
+        }
+
+        _analytics.TrackFeature("update.check_started");
 
         // Check for updates
         var updateInfo = await _updateService.CheckForUpdateAsync();
         
         if (updateInfo == null)
         {
+            _analytics.TrackFeature("update.not_available");
             MessageBox.Show("You're running the latest version.", "No Updates", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
+
+        _analytics.TrackFeature("update.available");
 
         // Download and install
         var progressWindow = new UpdateProgressWindow();
@@ -71,10 +82,12 @@ public partial class AboutWindow : Window
 
         if (success)
         {
+            _analytics.TrackFeature("update.download_succeeded");
             Application.Current.Shutdown();
         }
         else
         {
+            _analytics.TrackFeature("update.download_failed");
             MessageBox.Show(
                 "Failed to download or install the update. Please try again later or download manually from GitHub.",
                 "Update Failed",

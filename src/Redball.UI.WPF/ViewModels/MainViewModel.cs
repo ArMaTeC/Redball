@@ -20,6 +20,38 @@ public class MainViewModel : INotifyPropertyChanged
     private WeakReference<MainWindow>? _mainWindowRef;
     private readonly KeepAwakeService _keepAwake;
 
+    public bool PreventDisplaySleep
+    {
+        get => _keepAwake.PreventDisplaySleep;
+        set
+        {
+            if (_keepAwake.PreventDisplaySleep == value)
+            {
+                return;
+            }
+
+            _keepAwake.PreventDisplaySleep = value;
+            OnPropertyChanged();
+            UpdateStatusText();
+        }
+    }
+
+    public bool UseHeartbeat
+    {
+        get => _keepAwake.UseHeartbeat;
+        set
+        {
+            if (_keepAwake.UseHeartbeat == value)
+            {
+                return;
+            }
+
+            _keepAwake.UseHeartbeat = value;
+            OnPropertyChanged();
+            UpdateStatusText();
+        }
+    }
+
     public MainViewModel()
     {
         Logger.Info("MainViewModel", "Constructor called");
@@ -32,9 +64,15 @@ public class MainViewModel : INotifyPropertyChanged
         PauseKeepAwakeCommand = new RelayCommand(ToggleActive);
         OpenSettingsCommand = new RelayCommand(OpenSettings);
         ExitCommand = new RelayCommand(ExitApplication);
-        ShowAboutCommand = new RelayCommand(ShowAbout);
+
         TypeThingCommand = new RelayCommand(StartTypeThing);
-        
+        ToggleDisplaySleepCommand = new RelayCommand(ToggleDisplaySleep);
+        ToggleHeartbeatCommand = new RelayCommand(ToggleHeartbeat);
+        OpenAnalyticsCommand = new RelayCommand(OpenAnalytics);
+        OpenMetricsCommand = new RelayCommand(OpenMetrics);
+        OpenDiagnosticsCommand = new RelayCommand(OpenDiagnostics);
+        OpenLogsCommand = new RelayCommand(OpenLogs);
+
         // Sync initial state
         _isActive = _keepAwake.IsActive;
         UpdateStatusText();
@@ -99,13 +137,31 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand PauseKeepAwakeCommand { get; }
     public ICommand OpenSettingsCommand { get; }
     public ICommand ExitCommand { get; }
-    public ICommand ShowAboutCommand { get; }
+    
     public ICommand TypeThingCommand { get; }
+    public ICommand ToggleDisplaySleepCommand { get; }
+    public ICommand ToggleHeartbeatCommand { get; }
+    public ICommand OpenAnalyticsCommand { get; }
+    public ICommand OpenMetricsCommand { get; }
+    public ICommand OpenDiagnosticsCommand { get; }
+    public ICommand OpenLogsCommand { get; }
 
     private void ToggleActive()
     {
         Logger.Info("MainViewModel", "ToggleActive called");
         _keepAwake.Toggle();
+        var analytics = new AnalyticsService(ConfigService.Instance.Config.EnableTelemetry);
+        analytics.TrackFeature(_keepAwake.IsActive ? "keepawake.enabled" : "keepawake.disabled");
+    }
+
+    private void ToggleDisplaySleep()
+    {
+        PreventDisplaySleep = !PreventDisplaySleep;
+    }
+
+    private void ToggleHeartbeat()
+    {
+        UseHeartbeat = !UseHeartbeat;
     }
 
     private void OnKeepAwakeStateChanged(object? sender, bool isActive)
@@ -135,9 +191,16 @@ public class MainViewModel : INotifyPropertyChanged
         }
         else
         {
-            Logger.Warning("MainViewModel", "MainWindow reference not available, creating directly");
-            var settingsWindow = new Views.SettingsWindow(null);
-            settingsWindow.Show();
+            var fallbackMainWindow = Application.Current.MainWindow as MainWindow;
+            if (fallbackMainWindow != null)
+            {
+                Logger.Warning("MainViewModel", "MainWindow reference not available, using Application.Current.MainWindow");
+                fallbackMainWindow.ShowSettings();
+            }
+            else
+            {
+                Logger.Warning("MainViewModel", "MainWindow reference not available, cannot open embedded settings");
+            }
         }
     }
 
@@ -179,6 +242,38 @@ public class MainViewModel : INotifyPropertyChanged
             {
                 Logger.Warning("MainViewModel", "MainWindow reference not available, cannot show About window");
             }
+        }
+    }
+
+    private void OpenAnalytics()
+    {
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.ShowAnalytics();
+        }
+    }
+
+    private void OpenMetrics()
+    {
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.ShowMetrics();
+        }
+    }
+
+    private void OpenDiagnostics()
+    {
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.ShowDiagnostics();
+        }
+    }
+
+    private void OpenLogs()
+    {
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.OpenLogs();
         }
     }
 
@@ -245,6 +340,8 @@ public class MainViewModel : INotifyPropertyChanged
     private void UpdateStatusText()
     {
         StatusText = _keepAwake.GetStatusText();
+        OnPropertyChanged(nameof(PreventDisplaySleep));
+        OnPropertyChanged(nameof(UseHeartbeat));
         Logger.Debug("MainViewModel", $"StatusText updated to: {StatusText}");
     }
 

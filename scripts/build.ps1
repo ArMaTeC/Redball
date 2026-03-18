@@ -31,7 +31,7 @@ param(
     [string]$Version = '',
 
     [Parameter()]
-    [switch]$BumpVersion,
+    [switch]$SkipVersionBump,
 
     [Parameter()]
     [ValidateSet('Major', 'Minor', 'Patch')]
@@ -635,6 +635,63 @@ function Step-CreateReleasePackage {
     }
 }
 
+function Step-CleanupDist {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [int]$KeepLatest = 5
+    )
+
+    Write-BuildHeader "Cleaning Old Distribution Artifacts"
+
+    if (-not (Test-Path $DistPath)) {
+        Write-BuildStep "Distribution path not found, skipping cleanup"
+        return
+    }
+
+    $versionedArtifacts = Get-ChildItem -Path $DistPath -File | Where-Object {
+        $_.Name -match '^Redball(?:-Setup)?-(\d+\.\d+\.\d+)\.'
+    }
+
+    if (-not $versionedArtifacts) {
+        Write-BuildStep "No versioned distribution artifacts found"
+        return
+    }
+
+    $artifactGroups = $versionedArtifacts |
+    Group-Object {
+        if ($_.Name -match '^Redball(?:-Setup)?-(\d+\.\d+\.\d+)\.') {
+            $matches[1]
+        }
+    } |
+    ForEach-Object {
+        [PSCustomObject]@{
+            Version     = $_.Name
+            VersionInfo = [version]$_.Name
+            Files       = $_.Group
+        }
+    } |
+    Sort-Object -Property VersionInfo -Descending
+
+    if ($artifactGroups.Count -le $KeepLatest) {
+        Write-BuildSuccess "Found $($artifactGroups.Count) version(s); nothing to clean"
+        return
+    }
+
+    $versionsToRemove = $artifactGroups | Select-Object -Skip $KeepLatest
+
+    foreach ($artifactVersion in $versionsToRemove) {
+        Write-BuildStep "Removing distribution version $($artifactVersion.Version)"
+        foreach ($artifactFile in $artifactVersion.Files) {
+            if ($PSCmdlet.ShouldProcess($artifactFile.FullName, 'Delete old distribution artifact')) {
+                Remove-Item -Path $artifactFile.FullName -Force
+                Write-BuildSuccess "Removed $($artifactFile.Name)"
+            }
+        }
+    }
+
+    Write-BuildSuccess "Kept the latest $KeepLatest distribution version(s)"
+}
+
 #endregion
 
 # Main Build Process
@@ -649,9 +706,12 @@ try {
 '@
     Write-HostSafe "  Building Redball v$Version ($Configuration)`n" -ForegroundColor Cyan
     
-    # Bump version if requested (do this early so build uses new version)
-    if ($BumpVersion) {
+    # Bump version by default so build outputs always get a new version
+    if (-not $SkipVersionBump) {
         Step-BumpVersion
+    }
+    else {
+        Write-HostSafe "  Skipping version bump ( -SkipVersionBump )" -ForegroundColor Yellow
     }
     
     # Ensure dist directory exists
@@ -709,10 +769,11 @@ try {
     # Finalize release (MSI is now the primary artifact)
     if (-not $SkipMSI -or $BuildAll) {
         Step-CreateReleasePackage
+        Step-CleanupDist
     }
     
     # Commit/push version bump only if build succeeded
-    if ($BumpVersion -and ($BumpCommit -or $BumpPush)) {
+    if ((-not $SkipVersionBump) -and ($BumpCommit -or $BumpPush)) {
         Step-CommitVersionBump
     }
     

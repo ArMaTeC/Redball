@@ -5,7 +5,7 @@
         Height="500" Width="700"
         MinHeight="400" MinWidth="600"
         WindowStartupLocation="CenterScreen"
-        Style="{StaticResource ModernWindow}"
+        Style="{DynamicResource ModernWindow}"
         Background="{DynamicResource BackgroundBrush}"
         Foreground="{DynamicResource ForegroundBrush}">
 
@@ -38,7 +38,7 @@
                     </StackPanel>
                     <Button Content="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="14"
                            HorizontalAlignment="Right" Margin="0,0,10,0"
-                           Style="{StaticResource CloseButton}" Width="32" Height="32"
+                           Style="{DynamicResource CloseButton}" Width="32" Height="32"
                            WindowChrome.IsHitTestVisibleInChrome="True"
                            Click="CloseButton_Click"/>
                 </Grid>
@@ -52,31 +52,31 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Navigation -->
-                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+                <Border Grid.Column="0" Style="{DynamicResource CardStyle}" Margin="0,0,10,0">
                     <StackPanel>
                         <RadioButton x:Name="GeneralTab" Content="General" IsChecked="True"
-                                    Style="{StaticResource NavRadioButton}"
+                                    Style="{DynamicResource NavRadioButton}"
                                     Checked="Tab_Checked"/>
                         <RadioButton x:Name="BehaviorTab" Content="Behavior"
-                                    Style="{StaticResource NavRadioButton}"
+                                    Style="{DynamicResource NavRadioButton}"
                                     Checked="Tab_Checked"/>
                         <RadioButton x:Name="FeaturesTab" Content="Features"
-                                    Style="{StaticResource NavRadioButton}"
+                                    Style="{DynamicResource NavRadioButton}"
                                     Checked="Tab_Checked"/>
                         <RadioButton x:Name="TypeThingTab" Content="TypeThing"
-                                    Style="{StaticResource NavRadioButton}"
+                                    Style="{DynamicResource NavRadioButton}"
                                     Checked="Tab_Checked"/>
                         <RadioButton x:Name="UpdatesTab" Content="Updates"
-                                    Style="{StaticResource NavRadioButton}"
+                                    Style="{DynamicResource NavRadioButton}"
                                     Checked="Tab_Checked"/>
                         <RadioButton x:Name="AboutTab" Content="About"
-                                    Style="{StaticResource NavRadioButton}"
+                                    Style="{DynamicResource NavRadioButton}"
                                     Checked="Tab_Checked"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Tab Content -->
-                <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                <Border Grid.Column="1" Style="{DynamicResource CardStyle}">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <!-- General Tab -->
@@ -84,99 +84,116 @@
                             <TextBlock Text="General Settings" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
                             <TextBlock Text="Theme" FontWeight="Medium" Margin="0,0,0,8"/>
-                            <ComboBox x:Name="ThemeCombo" Style="{StaticResource ModernComboBox}" SelectionChanged="ThemeCombo_SelectionChanged">
-                                <ComboBoxItem><TextBlock Text="System Default" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem IsSelected="True"><TextBlock Text="Dark Mode" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Light Mode" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Midnight Blue" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Forest Green" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Ocean Blue" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Sunset Orange" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Royal Purple" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Slate Gray" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Rose Gold" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Cyberpunk" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Coffee" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Arctic Frost" Foreground="White"/></ComboBoxItem>
+                            <ComboBox x:Name="ThemeCombo" Style="{DynamicResource ModernComboBox}" SelectionChanged="ThemeCombo_SelectionChanged">
+                                <ComboBoxItem Content="System Default"/>
+                                <ComboBoxItem IsSelected="True" Content="Dark Mode"/>
+                                <ComboBoxItem Content="Light Mode"/>
+                                <ComboBoxItem Content="Midnight Blue"/>
+                                <ComboBoxItem Content="Forest Green"/>
+                                <ComboBoxItem Content="Ocean Blue"/>
+                                <ComboBoxItem Content="Sunset Orange"/>
+                                <ComboBoxItem Content="Royal Purple"/>
+                                <ComboBoxItem Content="Slate Gray"/>
+                                <ComboBoxItem Content="Rose Gold"/>
+                                <ComboBoxItem Content="Cyberpunk"/>
+                                <ComboBoxItem Content="Coffee"/>
+                                <ComboBoxItem Content="Arctic Frost"/>
                             </ComboBox>
 
                             <TextBlock Text="Language" FontWeight="Medium" Margin="0,16,0,8"/>
-                            <ComboBox x:Name="LanguageCombo" Style="{StaticResource ModernComboBox}">
-                                <ComboBoxItem IsSelected="True"><TextBlock Text="English" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Espa&#xF1;ol" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Fran&#xE7;ais" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Deutsch" Foreground="White"/></ComboBoxItem>
+                            <ComboBox x:Name="LanguageCombo" Style="{DynamicResource ModernComboBox}">
+                                <ComboBoxItem IsSelected="True" Content="English"/>
+                                <ComboBoxItem Content="Español"/>
+                                <ComboBoxItem Content="Français"/>
+                                <ComboBoxItem Content="Deutsch"/>
                             </ComboBox>
 
                             <CheckBox x:Name="MinimizeToTrayCheck" Content="Minimize to tray on start" Margin="0,16,0,8"
-                                     Style="{StaticResource ModernCheckBox}"/>
+                                     Style="{DynamicResource ModernCheckBox}"/>
                             <CheckBox x:Name="ShowNotificationsCheck" Content="Show notifications" IsChecked="True"
-                                     Style="{StaticResource ModernCheckBox}" Checked="ShowNotificationsCheck_Checked" Unchecked="ShowNotificationsCheck_Unchecked"/>
+                                     Style="{DynamicResource ModernCheckBox}" Checked="ShowNotificationsCheck_Checked" Unchecked="ShowNotificationsCheck_Unchecked"/>
 
                             <TextBlock x:Name="NotificationModeLabel" Text="Notification Mode" FontWeight="Medium" Margin="0,8,0,8"/>
-                            <ComboBox x:Name="NotificationModeCombo" Style="{StaticResource ModernComboBox}" Margin="0,0,0,8">
-                                <ComboBoxItem IsSelected="True"><TextBlock Text="All events" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Important only" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Errors only" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Silent" Foreground="White"/></ComboBoxItem>
+                            <ComboBox x:Name="NotificationModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8">
+                                <ComboBoxItem IsSelected="True" Content="All events"/>
+                                <ComboBoxItem Content="Important only"/>
+                                <ComboBoxItem Content="Errors only"/>
+                                <ComboBoxItem Content="Silent"/>
                             </ComboBox>
+
+                            <TextBlock Text="Logging" FontSize="16" FontWeight="SemiBold" Margin="0,20,0,16"/>
+
+                            <CheckBox x:Name="VerboseLoggingCheck" Content="Enable verbose logging"
+                                     Style="{DynamicResource ModernCheckBox}"/>
+
+                            <TextBlock Text="Max Log Size (MB)" FontWeight="Medium" Margin="0,16,0,8"/>
+                            <Slider x:Name="MaxLogSizeSlider" Minimum="1" Maximum="100" Value="10" TickFrequency="5"
+                                   IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MaxLogSizeSlider_ValueChanged"/>
+                            <TextBlock x:Name="MaxLogSizeText" Text="Max log size: 10 MB" FontSize="12" Margin="0,4,0,12"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <Button Content="Open Log Folder" Style="{DynamicResource ModernButton}" Margin="0,0,8,0"
+                                       Click="OpenLogFolderButton_Click"/>
+                                <Button Content="Export Diagnostics" Style="{DynamicResource ModernButton}"
+                                       Click="ExportDiagnosticsButton_Click"/>
+                            </StackPanel>
                         </StackPanel>
 
                         <!-- Behavior Tab -->
                         <StackPanel x:Name="BehaviorPanel" Visibility="Collapsed">
                             <TextBlock Text="Behavior Settings" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
-                            <CheckBox Content="Prevent display sleep" IsChecked="True"
-                                     Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox x:Name="PreventDisplaySleepCheck" Content="Prevent display sleep" IsChecked="True"
+                                     Style="{DynamicResource ModernCheckBox}"/>
                             <TextBlock Text="Keep the screen awake while Redball is active" FontSize="12"
                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,16"/>
 
-                            <CheckBox Content="Use F15 heartbeat keypress" IsChecked="True"
-                                     Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox x:Name="UseHeartbeatCheck" Content="Use F15 heartbeat keypress" IsChecked="True"
+                                     Style="{DynamicResource ModernCheckBox}"/>
                             <TextBlock Text="Send invisible F15 keypress to prevent idle detection"
                                       FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,16"/>
 
                             <TextBlock Text="Default Duration (minutes)" FontWeight="Medium" Margin="0,8,0,8"/>
                             <Slider x:Name="DurationSlider" Minimum="1" Maximum="720" Value="60" TickFrequency="30"
-                                   IsSnapToTickEnabled="True" Style="{StaticResource ModernSlider}" ValueChanged="DurationSlider_ValueChanged"/>
+                                   IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="DurationSlider_ValueChanged"/>
                             <TextBlock x:Name="DurationText" Text="Duration: 60 minutes" FontSize="12" Margin="0,4,0,0"/>
 
-                            <CheckBox Content="Auto-exit after duration completes"
-                                     Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox x:Name="AutoExitOnCompleteCheck" Content="Auto-exit after duration completes"
+                                     Style="{DynamicResource ModernCheckBox}"/>
                         </StackPanel>
 
                         <!-- Features Tab -->
                         <StackPanel x:Name="FeaturesPanel" Visibility="Collapsed">
                             <TextBlock Text="Smart Features" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
-                            <CheckBox x:Name="BatteryAwareCheck" Content="Battery-aware mode" Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox x:Name="BatteryAwareCheck" Content="Battery-aware mode" Style="{DynamicResource ModernCheckBox}"/>
                             <TextBlock Text="Pause when battery is below threshold"
                                       FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,8"/>
                             <Slider x:Name="BatteryThresholdSlider" Minimum="5" Maximum="50" Value="20" TickFrequency="5"
-                                   IsSnapToTickEnabled="True" Style="{StaticResource ModernSlider}" Margin="24,0,0,8" ValueChanged="BatteryThresholdSlider_ValueChanged"/>
+                                   IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" Margin="24,0,0,8" ValueChanged="BatteryThresholdSlider_ValueChanged"/>
                             <TextBlock x:Name="BatteryThresholdText" Text="Threshold: 20%" FontSize="12" Margin="24,0,0,16"/>
 
-                            <CheckBox x:Name="NetworkAwareCheck" Content="Network-aware mode" Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox x:Name="NetworkAwareCheck" Content="Network-aware mode" Style="{DynamicResource ModernCheckBox}"/>
                             <TextBlock Text="Pause when network disconnects"
                                       FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,16"/>
 
-                            <CheckBox x:Name="IdleDetectionCheck" Content="Idle detection" Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox x:Name="IdleDetectionCheck" Content="Idle detection" Style="{DynamicResource ModernCheckBox}"/>
                             <TextBlock Text="Pause when user is idle"
                                       FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,8"/>
                             <Slider x:Name="IdleThresholdSlider" Minimum="5" Maximum="120" Value="30" TickFrequency="5"
-                                   IsSnapToTickEnabled="True" Style="{StaticResource ModernSlider}" Margin="24,0,0,8" ValueChanged="IdleThresholdSlider_ValueChanged"/>
+                                   IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" Margin="24,0,0,8" ValueChanged="IdleThresholdSlider_ValueChanged"/>
                             <TextBlock x:Name="IdleThresholdText" Text="Threshold: 30 minutes" FontSize="12" Margin="24,0,0,16"/>
 
-                            <CheckBox x:Name="PresentationModeCheck" Content="Presentation mode detection" Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox x:Name="PresentationModeCheck" Content="Presentation mode detection" Style="{DynamicResource ModernCheckBox}"/>
                             <TextBlock Text="Auto-activate during PowerPoint/Teams presentations"
                                       FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,16"/>
 
-                            <CheckBox x:Name="ScheduledOperationCheck" Content="Scheduled operation" Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox x:Name="ScheduledOperationCheck" Content="Scheduled operation" Style="{DynamicResource ModernCheckBox}"/>
                             <TextBlock Text="Active: Weekdays 09:00 - 18:00"
                                       FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,16"/>
@@ -186,23 +203,23 @@
                         <StackPanel x:Name="TypeThingPanel" Visibility="Collapsed">
                             <TextBlock Text="TypeThing (Clipboard Typer)" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
-                            <CheckBox Content="Enable TypeThing" IsChecked="True" Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox x:Name="EnableTypeThingCheck" Content="Enable TypeThing" IsChecked="True" Style="{DynamicResource ModernCheckBox}"/>
 
                             <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,16,0,8"/>
-                            <TextBox x:Name="StartHotkeyBox" Text="Ctrl+Shift+V" Style="{StaticResource ModernTextBox}" IsReadOnly="True" PreviewKeyDown="HotkeyBox_PreviewKeyDown" GotFocus="HotkeyBox_GotFocus" LostFocus="HotkeyBox_LostFocus" Cursor="Hand"/>
+                            <TextBox x:Name="StartHotkeyBox" Text="Ctrl+Shift+V" Style="{DynamicResource ModernTextBox}" IsReadOnly="True" PreviewKeyDown="HotkeyBox_PreviewKeyDown" GotFocus="HotkeyBox_GotFocus" LostFocus="HotkeyBox_LostFocus" Cursor="Hand"/>
 
                             <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,16,0,8"/>
-                            <TextBox x:Name="StopHotkeyBox" Text="Ctrl+Shift+X" Style="{StaticResource ModernTextBox}" IsReadOnly="True" PreviewKeyDown="HotkeyBox_PreviewKeyDown" GotFocus="HotkeyBox_GotFocus" LostFocus="HotkeyBox_LostFocus" Cursor="Hand"/>
+                            <TextBox x:Name="StopHotkeyBox" Text="Ctrl+Shift+X" Style="{DynamicResource ModernTextBox}" IsReadOnly="True" PreviewKeyDown="HotkeyBox_PreviewKeyDown" GotFocus="HotkeyBox_GotFocus" LostFocus="HotkeyBox_LostFocus" Cursor="Hand"/>
 
                             <TextBlock Text="Typing Speed" FontWeight="Medium" Margin="0,16,0,8"/>
                             <Slider x:Name="TypingSpeedSlider" Minimum="10" Maximum="500" Value="120" TickFrequency="10"
-                                   IsSnapToTickEnabled="True" Style="{StaticResource ModernSlider}" ValueChanged="TypingSpeedSlider_ValueChanged"/>
+                                   IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="TypingSpeedSlider_ValueChanged"/>
                             <TextBlock x:Name="TypingSpeedText" Text="Speed: 120 ms per character" FontSize="12" Margin="0,4,0,0"/>
 
-                            <CheckBox Content="Add random pauses (human-like typing)" IsChecked="True"
-                                     Style="{StaticResource ModernCheckBox}"/>
-                            <CheckBox Content="Type newlines as Enter key" IsChecked="True"
-                                     Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox x:Name="AddRandomPausesCheck" Content="Add random pauses (human-like typing)" IsChecked="True"
+                                     Style="{DynamicResource ModernCheckBox}"/>
+                            <CheckBox x:Name="TypeNewlinesCheck" Content="Type newlines as Enter key" IsChecked="True"
+                                     Style="{DynamicResource ModernCheckBox}"/>
                         </StackPanel>
 
                         <!-- Updates Tab -->
@@ -210,19 +227,19 @@
                             <TextBlock Text="Updates" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
                             <TextBlock Text="Update Channel" FontWeight="Medium" Margin="0,0,0,8"/>
-                            <ComboBox SelectedIndex="0" Style="{StaticResource ModernComboBox}">
-                                <ComboBoxItem><TextBlock Text="Stable (Recommended)" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Beta" Foreground="White"/></ComboBoxItem>
-                                <ComboBoxItem><TextBlock Text="Disabled" Foreground="White"/></ComboBoxItem>
+                            <ComboBox x:Name="UpdateChannelCombo" SelectedIndex="0" Style="{DynamicResource ModernComboBox}">
+                                <ComboBoxItem Content="Stable (Recommended)"/>
+                                <ComboBoxItem Content="Beta"/>
+                                <ComboBoxItem Content="Disabled"/>
                             </ComboBox>
 
-                            <CheckBox Content="Verify update signatures" Margin="0,16,0,8"
-                                     Style="{StaticResource ModernCheckBox}"/>
+                            <CheckBox x:Name="VerifyUpdateSignatureCheck" Content="Verify update signatures" Margin="0,16,0,8"
+                                     Style="{DynamicResource ModernCheckBox}"/>
                             <TextBlock Text="Only install signed updates from trusted sources"
                                       FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="24,0,0,16"/>
 
-                            <Button Content="Check for Updates Now" Style="{StaticResource PrimaryButton}"
+                            <Button Content="Check for Updates Now" Style="{DynamicResource PrimaryButton}"
                                    Margin="0,16,0,0" HorizontalAlignment="Left"
                                    Click="CheckForUpdatesButton_Click"/>
 
@@ -242,14 +259,14 @@
                             <TextBlock Text="A system tray utility to prevent Windows from going to sleep."
                                       TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,16"/>
 
-                            <TextBlock Text="&#xA9; 2024-2026 ArMaTeC" FontSize="12"
+                            <TextBlock Text="&#xA9; 2026 ArMaTeC" FontSize="12"
                                       Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       HorizontalAlignment="Center" Margin="0,0,0,8"/>
                             <TextBlock Text="Licensed under MIT License" FontSize="12"
                                       Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       HorizontalAlignment="Center" Margin="0,0,0,16"/>
 
-                            <Button Content="View on GitHub" Style="{StaticResource ModernButton}"
+                            <Button Content="View on GitHub" Style="{DynamicResource ModernButton}"
                                    HorizontalAlignment="Center" Click="GitHubButton_Click"/>
                         </StackPanel>
                     </StackPanel>
@@ -260,9 +277,9 @@
             <!-- Footer -->
             <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" CornerRadius="0,0,8,8" Height="60">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,0">
-                    <Button Content="Cancel" Style="{StaticResource ModernButton}" Width="80" Margin="0,0,8,0"
+                    <Button Content="Cancel" Style="{DynamicResource ModernButton}" Width="80" Margin="0,0,8,0"
                            Click="CancelButton_Click"/>
-                    <Button Content="Save" Style="{StaticResource PrimaryButton}" Width="80"
+                    <Button Content="Save" Style="{DynamicResource PrimaryButton}" Width="80"
                            Click="SaveButton_Click"/>
                 </StackPanel>
             </Border>

@@ -1,9 +1,0 @@
-{
-  "SavedAt": "2026-03-11T13:47:14.6315510+00:00",
-  "Active": true,
-  "Until": null,
-  "PreventDisplaySleep": true,
-  "BatteryThreshold": 20,
-  "UseHeartbeatKeypress": true,
-  "BatteryAware": false
-}

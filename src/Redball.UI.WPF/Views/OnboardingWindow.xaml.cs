@@ -10,6 +10,8 @@ namespace Redball.UI.Views;
 /// </summary>
 public partial class OnboardingWindow : Window
 {
+    private readonly AnalyticsService _analytics = new(ConfigService.Instance.Config.EnableTelemetry);
+
     public OnboardingWindow()
     {
         InitializeComponent();
@@ -66,7 +68,15 @@ public partial class OnboardingWindow : Window
         
         // Save config
         ConfigService.Instance.Save();
+        Logger.ApplyConfig(config);
         ConfigService.Instance.IsDirty = false;
+
+        _analytics.TrackFeature("onboarding.preferences_saved");
+        _analytics.TrackFunnel("onboarding", "preferences_saved");
+        if (StartWithWindowsCheck.IsChecked == true)
+        {
+            _analytics.TrackFeature("startup.enabled");
+        }
         
         Logger.Info("OnboardingWindow", "First-run onboarding completed, settings saved");
         
