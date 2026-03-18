@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
-     xmlns:net="http://wixtoolset.org/schemas/v4/wxs/netfx">
+     xmlns:net="http://wixtoolset.org/schemas/v4/wxs/netfx"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   
   <Bundle Name="Redball Setup"
           Manufacturer="ArMaTeC"
@@ -26,6 +27,12 @@
       MajorVersion="8"
       Variable="NET8DesktopInstalled" />
 
+    <!-- Variable to track if we should launch after install -->
+    <Variable Name="LaunchAfterInstall" Type="numeric" Value="1" />
+
+    <!-- Utility to execute application after install -->
+    <util:QueryNativeMachineArchitecture Variable="NativeMachine" />
+
     <Chain>
       <!-- .NET 8 Desktop Runtime x64 - downloaded at build time, not embedded in bundle -->
       <ExePackage
@@ -44,7 +51,9 @@
       <MsiPackage
         SourceFile="$(var.RedballMsiPath)"
         Compressed="yes"
-        Visible="no" />
+        Visible="no">
+        <MsiProperty Name="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="[LaunchAfterInstall]" />
+      </MsiPackage>
     </Chain>
     
   </Bundle>
