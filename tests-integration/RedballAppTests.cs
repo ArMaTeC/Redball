@@ -14,7 +14,6 @@ namespace Redball.IntegrationTests
     public class RedballAppTests
     {
         private static WindowsDriver? _driver;
-        private static Process? _appProcess;
         private const string WinAppDriverUrl = "http://127.0.0.1:4723";
         private const string AppPath = @"..\..\..\..\src\Redball.UI.WPF\bin\Release\net8.0-windows\win-x64\Redball.UI.WPF.exe";
 

@@ -31,11 +31,7 @@ public partial class MainWindow : Window
     private readonly Random _random = new();
     private UpdateService? _updateService;
 
-    private Views.SettingsWindow? _settingsWindow;
     private Views.AboutWindow? _aboutWindow;
-    private Views.AnalyticsDashboard? _analyticsWindow;
-    private Views.ProductMetricsDashboard? _metricsWindow;
-    private Views.DiagnosticsWindow? _diagnosticsWindow;
     private HotkeyService? _hotkeyService;
     private bool _isTyping;
     private bool _isLoadingSettings;
@@ -504,7 +500,7 @@ public partial class MainWindow : Window
         _updateService = new UpdateService(
             config.UpdateRepoOwner,
             config.UpdateRepoName,
-            config.UpdateChannel,
+            config.UpdateChannel ?? "stable",
             config.VerifyUpdateSignature);
         _isLoadingSettings = false;
     }
@@ -600,6 +596,8 @@ public partial class MainWindow : Window
             KeepAwakeService.Instance.HeartbeatInputMode = Enum.TryParse<HeartbeatInputMode>(config.HeartbeatInputMode, true, out var heartbeatMode)
                 ? heartbeatMode
                 : HeartbeatInputMode.F15;
+            _analytics.TrackFeature("settings.saved");
+            ReloadHotkeys();
             Logger.Debug("MainWindow", "Settings auto-applied");
         }
         catch (Exception ex)
@@ -753,120 +751,6 @@ public partial class MainWindow : Window
         ShowUpdates();
     }
 
-    private void ApplyMainSettingsButton_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var config = ConfigService.Instance.Config;
-            config.MinimizeToTray = MainMinimizeToTrayCheck.IsChecked ?? false;
-            config.ShowNotifications = MainShowNotificationsCheck.IsChecked ?? true;
-            config.NotificationMode = (NotificationMode)MainNotificationModeCombo.SelectedIndex;
-            config.VerboseLogging = MainVerboseLoggingCheck.IsChecked ?? false;
-            config.EnableTelemetry = MainEnableTelemetryCheck.IsChecked ?? false;
-            config.EnablePerformanceMetrics = MainEnablePerformanceMetricsCheck.IsChecked ?? false;
-            config.ProcessIsolation = MainProcessIsolationCheck.IsChecked ?? false;
-            config.MaxLogSizeMB = (int)MainMaxLogSizeSlider.Value;
-            config.PreventDisplaySleep = MainPreventDisplaySleepCheck.IsChecked ?? true;
-            config.HeartbeatInputMode = MainHeartbeatInputModeCombo.SelectedIndex switch
-            {
-                0 => "Disabled",
-                1 => "F13",
-                2 => "F14",
-                4 => "F16",
-                _ => "F15"
-            };
-            config.UseHeartbeatKeypress = MainHeartbeatInputModeCombo.SelectedIndex != 0;
-            config.DefaultDuration = (int)MainDurationSlider.Value;
-            config.AutoExitOnComplete = MainAutoExitOnCompleteCheck.IsChecked ?? false;
-
-            config.BatteryAware = MainBatteryAwareCheck.IsChecked ?? false;
-            config.BatteryThreshold = (int)MainBatteryThresholdSlider.Value;
-            config.NetworkAware = MainNetworkAwareCheck.IsChecked ?? false;
-            config.IdleDetection = MainIdleDetectionCheck.IsChecked ?? false;
-            config.IdleThreshold = (int)MainIdleThresholdSlider.Value;
-            config.PresentationMode = MainPresentationModeCheck.IsChecked ?? false;
-            config.ScheduledOperation = MainScheduledOperationCheck.IsChecked ?? false;
-            config.ScheduleStartTime = MainScheduleStartTimeBox.Text ?? "09:00";
-            config.ScheduleStopTime = MainScheduleStopTimeBox.Text ?? "18:00";
-            config.ScheduleDays = new List<string>();
-            if (MainScheduleMonCheck.IsChecked == true) config.ScheduleDays.Add("Monday");
-            if (MainScheduleTueCheck.IsChecked == true) config.ScheduleDays.Add("Tuesday");
-            if (MainScheduleWedCheck.IsChecked == true) config.ScheduleDays.Add("Wednesday");
-            if (MainScheduleThuCheck.IsChecked == true) config.ScheduleDays.Add("Thursday");
-            if (MainScheduleFriCheck.IsChecked == true) config.ScheduleDays.Add("Friday");
-            if (MainScheduleSatCheck.IsChecked == true) config.ScheduleDays.Add("Saturday");
-            if (MainScheduleSunCheck.IsChecked == true) config.ScheduleDays.Add("Sunday");
-
-            config.TypeThingEnabled = MainEnableTypeThingCheck.IsChecked ?? true;
-            config.TypeThingStartHotkey = MainStartHotkeyBox.Text;
-            config.TypeThingStopHotkey = MainStopHotkeyBox.Text;
-            config.TypeThingMaxDelayMs = (int)MainTypingSpeedSlider.Value;
-            config.TypeThingMinDelayMs = Math.Max(1, Math.Min(config.TypeThingMinDelayMs, config.TypeThingMaxDelayMs));
-            config.TypeThingAddRandomPauses = MainAddRandomPausesCheck.IsChecked ?? true;
-            config.TypeThingTypeNewlines = MainTypeNewlinesCheck.IsChecked ?? true;
-            config.TypeThingNotifications = MainTypeThingNotificationsCheck.IsChecked ?? true;
-            config.TypeThingMinDelayMs = (int)MainTypeThingMinDelaySlider.Value;
-            config.TypeThingStartDelaySec = (int)MainTypeThingStartDelaySlider.Value;
-            config.TypeThingRandomPauseChance = (int)MainTypeThingPauseChanceSlider.Value;
-            config.TypeThingRandomPauseMaxMs = (int)MainTypeThingPauseMaxSlider.Value;
-
-            config.Theme = MainThemeCombo.SelectedIndex switch
-            {
-                0 => "System",
-                3 => "MidnightBlue",
-                4 => "ForestGreen",
-                5 => "OceanBlue",
-                6 => "SunsetOrange",
-                7 => "RoyalPurple",
-                8 => "SlateGray",
-                9 => "RoseGold",
-                10 => "Cyberpunk",
-                11 => "Coffee",
-                12 => "ArcticFrost",
-                2 => "Light",
-                _ => "Dark"
-            };
-            config.UpdateChannel = MainUpdateChannelCombo.SelectedIndex switch
-            {
-                1 => "beta",
-                2 => "disabled",
-                _ => "stable"
-            };
-            config.VerifyUpdateSignature = MainVerifyUpdateSignatureCheck.IsChecked ?? false;
-
-            var validationErrors = ConfigService.Instance.Validate();
-            if (validationErrors.Count > 0)
-            {
-                _analytics.TrackFeature("settings.save_validation_failed");
-                MessageBox.Show(this, string.Join(Environment.NewLine, validationErrors), "Validation Errors", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!ConfigService.Instance.Save())
-            {
-                throw new InvalidOperationException("Failed to save configuration.");
-            }
-
-            ThemeManager.SetTheme(ThemeManager.ThemeFromString(config.Theme));
-            Logger.ApplyConfig(config);
-            KeepAwakeService.Instance.ReloadConfig();
-            KeepAwakeService.Instance.PreventDisplaySleep = config.PreventDisplaySleep;
-            KeepAwakeService.Instance.UseHeartbeat = config.UseHeartbeatKeypress;
-            KeepAwakeService.Instance.HeartbeatInputMode = Enum.TryParse<HeartbeatInputMode>(config.HeartbeatInputMode, true, out var heartbeatMode)
-                ? heartbeatMode
-                : HeartbeatInputMode.F15;
-            _analytics.TrackFeature("settings.saved");
-            LoadEmbeddedDashboardContent();
-            ReloadHotkeys();
-            MessageBox.Show(this, "Settings applied.", "Redball", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("MainWindow", "Failed to apply embedded settings", ex);
-            _analytics.TrackFeature("settings.save_failed");
-            MessageBox.Show(this, $"Could not apply settings: {ex.Message}", "Redball", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {

@@ -530,7 +530,6 @@
                                                 <Button Content="Open Logs" Click="MainOpenLogFolderButton_Click" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" ToolTipService.ShowDuration="12000" ToolTip="Open the folder containing Redball log files."/>
                                                 <Button Content="Export Diagnostics" Click="MainExportDiagnosticsButton_Click" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" ToolTipService.ShowDuration="12000" ToolTip="Create a diagnostics export for troubleshooting."/>
                                                 <Button Content="Start TypeThing" Command="{Binding TypeThingCommand}" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" ToolTipService.ShowDuration="12000" ToolTip="Start the TypeThing typing workflow."/>
-                                                <Button Content="Apply Settings" Click="ApplyMainSettingsButton_Click" Style="{DynamicResource PrimaryButton}" Margin="0,0,8,8" ToolTipService.ShowDuration="12000" ToolTip="Save and immediately apply the current settings."/>
                                             </WrapPanel>
                                         </StackPanel>
                                     </Border>

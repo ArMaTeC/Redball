@@ -730,6 +730,10 @@ function Step-CleanBuild {
 
     Write-BuildHeader "Cleaning Build Artifacts"
 
+    # Suppress progress bars during file removal
+    $oldProgressPreference = $ProgressPreference
+    $ProgressPreference = 'SilentlyContinue'
+
     $pathsToClean = @(
         (Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'obj'),
         (Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'bin'),
@@ -757,6 +761,9 @@ function Step-CleanBuild {
             }
         }
     }
+
+    # Restore progress preference
+    $ProgressPreference = $oldProgressPreference
 
     # Run dotnet clean on the solution
     $solutionPath = Join-Path $ProjectRoot 'Redball.v3.sln'
