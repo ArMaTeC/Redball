@@ -230,7 +230,6 @@ $buildArgs = @(
 
 # Use explicit extension paths
 $projectRoot = Split-Path -Parent $scriptRoot
-$wixExtPath = Join-Path (Join-Path $projectRoot '.wix') 'extensions'
 $uiExtPath = Join-Path (Join-Path $env:USERPROFILE '.wix') 'extensions'
 $buildArgs += '-ext'
 $buildArgs += (Join-Path (Join-Path (Join-Path (Join-Path $uiExtPath 'WixToolset.UI.wixext') '7.0.0-rc.2') 'wixext7') 'WixToolset.UI.wixext.dll')
@@ -266,83 +265,3 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-HostSafe "MSI created: $outputMsi" -ForegroundColor Green
-
-# Build the bundle (EXE installer that chains .NET 8 + MSI)
-Write-HostSafe "Building bundle EXE..." -ForegroundColor Cyan
-
-$bundleWxsPath = Join-Path $scriptRoot 'Bundle.wxs'
-if (Test-Path $bundleWxsPath) {
-    # Download .NET 8 Desktop Runtime installer for bundle (required at build time for hash)
-    $dotnetInstallerPath = Join-Path $scriptRoot 'windowsdesktop-runtime-win-x64.exe'
-    if (-not (Test-Path $dotnetInstallerPath)) {
-        Write-HostSafe "Downloading .NET 8 Desktop Runtime installer..." -ForegroundColor Yellow
-        try {
-            $dotnetUrl = 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe'
-            $ProgressPreference = 'SilentlyContinue'
-            Invoke-WebRequest -Uri $dotnetUrl -OutFile $dotnetInstallerPath -UseBasicParsing
-            $ProgressPreference = 'Continue'
-            $dlSize = [math]::Round((Get-Item $dotnetInstallerPath).Length / 1MB, 1)
-            Write-HostSafe "Downloaded .NET 8 runtime ($dlSize MB)" -ForegroundColor Green
-        }
-        catch {
-            Write-Warning "Failed to download .NET 8 runtime: $_"
-            Write-Warning "Bundle build skipped. MSI was created successfully."
-            return
-        }
-    }
-    else {
-        Write-HostSafe "Using cached .NET 8 runtime installer" -ForegroundColor Gray
-    }
-
-    if ($Version) {
-        $outputBundle = Join-Path $outputDir "Redball-Setup-$Version.exe"
-    }
-    else {
-        $outputBundle = Join-Path $outputDir 'Redball-Setup.exe'
-    }
-    
-    $bundleArgs = @(
-        'build'
-        $bundleWxsPath
-        '-o', $outputBundle
-    )
-    
-    # Add explicit extension paths for bundle (Netfx for DotNetCoreSearch, Bal for bootstrapper UI)
-    $bundleArgs += '-ext'
-    $bundleArgs += (Join-Path (Join-Path (Join-Path (Join-Path $wixExtPath 'WixToolset.Netfx.wixext') '7.0.0-rc.2') 'wixext7') 'WixToolset.Netfx.wixext.dll')
-    $bundleArgs += '-ext'
-    $bundleArgs += (Join-Path (Join-Path (Join-Path (Join-Path $wixExtPath 'WixToolset.Bal.wixext') '7.0.0-rc.2') 'wixext7') 'WixToolset.BootstrapperApplications.wixext.dll')
-    
-    if ($Version) {
-        # Bundle also needs 4-part version
-        $bundleVersion = $wixVersion
-        if (-not $bundleVersion) {
-            $bv = $Version.Trim()
-            $bvParts = $bv.Split('.')
-            $bundleVersion = if ($bvParts.Count -eq 3) { "$bv.0" } else { $bv }
-        }
-        $bundleArgs += '-d'
-        $bundleArgs += "ProductVersion=$bundleVersion"
-    }
-    
-    # Pass MSI path to bundle
-    $bundleArgs += '-d'
-    $bundleArgs += "RedballMsiPath=$outputMsi"
-    
-    Push-Location $scriptRoot
-    try {
-        & $wixExe @bundleArgs
-        if ($LASTEXITCODE -eq 0) {
-            Write-HostSafe "Bundle EXE created: $outputBundle" -ForegroundColor Green
-        }
-        else {
-            Write-Warning "Bundle build failed (exit code $LASTEXITCODE). MSI was created successfully."
-        }
-    }
-    finally {
-        Pop-Location
-    }
-}
-else {
-    Write-Warning "Bundle.wxs not found, skipping bundle creation"
-}

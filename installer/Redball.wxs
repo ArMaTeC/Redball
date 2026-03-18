@@ -49,9 +49,7 @@
       <ComponentSearch Id="CheckForInstall" Guid="4B9B1F2A-5B5E-4C3A-95D7-6DBE8468D8E1" />
     </Property>
     <!-- Set checkbox unchecked during uninstall -->
-    <SetProperty Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="0" After="CostFinalize">
-      <![CDATA[REMOVE]]>
-    </SetProperty>
+    <SetProperty Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="0" After="CostFinalize" Condition="REMOVE" />
     
     <!-- Better feature descriptions in UI -->
     <Property Id="WIXUI_FEATURETREE_MAINFEATURE_DESC" Value="Core Redball application with system tray utility, themes, and TypeThing functionality." />
