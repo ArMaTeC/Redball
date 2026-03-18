@@ -284,8 +284,10 @@ public class KeepAwakeService : IDisposable
         if (IsActive)
         {
             var display = PreventDisplaySleep ? "Display On" : "Display Normal";
-            var f15 = UseHeartbeat ? "F15 On" : "F15 Off";
-            var status = $"Active | {display} | {f15}";
+            var heartbeat = UseHeartbeat && _heartbeatInputMode != HeartbeatInputMode.Disabled
+                ? $"{_heartbeatInputMode} On"
+                : "Heartbeat Off";
+            var status = $"Active | {display} | {heartbeat}";
 
             if (_until.HasValue)
             {
@@ -297,7 +299,7 @@ public class KeepAwakeService : IDisposable
         }
         else
         {
-            return "Paused | Display Normal | F15 Off";
+            return "Paused | Display Normal | Heartbeat Off";
         }
     }
 

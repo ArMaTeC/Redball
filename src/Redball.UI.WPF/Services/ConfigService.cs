@@ -49,9 +49,11 @@ public class ConfigService
 
         if (!File.Exists(ConfigPath))
         {
-            Logger.Info("ConfigService", $"Config file not found at: {ConfigPath}, using defaults");
+            Logger.Info("ConfigService", $"Config file not found at: {ConfigPath}, creating with defaults");
             Config = new RedballConfig();
-            return false;
+            // Save defaults to disk so user has a config file to edit
+            Save(ConfigPath);
+            return true;
         }
 
         try
