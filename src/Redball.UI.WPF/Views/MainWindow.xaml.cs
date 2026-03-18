@@ -38,6 +38,7 @@ public partial class MainWindow : Window
     private Views.DiagnosticsWindow? _diagnosticsWindow;
     private HotkeyService? _hotkeyService;
     private bool _isTyping;
+    private bool _isLoadingSettings;
     private DispatcherTimer? _typeThingCountdownTimer;
     private DispatcherTimer? _typeThingTimer;
 
@@ -246,12 +247,14 @@ public partial class MainWindow : Window
     {
         MainNotificationModeLabel.Visibility = Visibility.Visible;
         MainNotificationModeCombo.Visibility = Visibility.Visible;
+        AutoApplySettings();
     }
 
     private void MainShowNotificationsCheck_Unchecked(object sender, RoutedEventArgs e)
     {
         MainNotificationModeLabel.Visibility = Visibility.Collapsed;
         MainNotificationModeCombo.Visibility = Visibility.Collapsed;
+        AutoApplySettings();
     }
 
     private void MainBatteryThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -260,6 +263,7 @@ public partial class MainWindow : Window
         {
             MainBatteryThresholdText.Text = $"Threshold: {(int)e.NewValue}%";
         }
+        AutoApplySettings();
     }
 
     private void MainIdleThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -268,6 +272,7 @@ public partial class MainWindow : Window
         {
             MainIdleThresholdText.Text = $"Threshold: {(int)e.NewValue} minutes";
         }
+        AutoApplySettings();
     }
 
     private void MainDurationSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -276,6 +281,7 @@ public partial class MainWindow : Window
         {
             MainDurationText.Text = $"Duration: {(int)e.NewValue} minutes";
         }
+        AutoApplySettings();
     }
 
     private void MainTypingSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -284,6 +290,7 @@ public partial class MainWindow : Window
         {
             MainTypingSpeedText.Text = $"Speed: {(int)e.NewValue} ms per character";
         }
+        AutoApplySettings();
     }
 
     private void MainMaxLogSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -292,6 +299,17 @@ public partial class MainWindow : Window
         {
             MainMaxLogSizeText.Text = $"Max log size: {(int)e.NewValue} MB";
         }
+        AutoApplySettings();
+    }
+
+    private void MainSettingChanged(object sender, RoutedEventArgs e)
+    {
+        AutoApplySettings();
+    }
+
+    private void MainComboSettingChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        AutoApplySettings();
     }
 
     private void MainHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -341,6 +359,7 @@ public partial class MainWindow : Window
 
     private void LoadEmbeddedSettings()
     {
+        _isLoadingSettings = true;
         var config = ConfigService.Instance.Config;
 
         MainMinimizeToTrayCheck.IsChecked = config.MinimizeToTray;
@@ -415,6 +434,88 @@ public partial class MainWindow : Window
             config.UpdateRepoName,
             config.UpdateChannel,
             config.VerifyUpdateSignature);
+        _isLoadingSettings = false;
+    }
+
+    private void AutoApplySettings()
+    {
+        if (_isLoadingSettings) return;
+        try
+        {
+            var config = ConfigService.Instance.Config;
+            config.MinimizeToTray = MainMinimizeToTrayCheck.IsChecked ?? false;
+            config.ShowNotifications = MainShowNotificationsCheck.IsChecked ?? true;
+            config.NotificationMode = (NotificationMode)MainNotificationModeCombo.SelectedIndex;
+            config.VerboseLogging = MainVerboseLoggingCheck.IsChecked ?? false;
+            config.MaxLogSizeMB = (int)MainMaxLogSizeSlider.Value;
+            config.PreventDisplaySleep = MainPreventDisplaySleepCheck.IsChecked ?? true;
+            config.HeartbeatInputMode = MainHeartbeatInputModeCombo.SelectedIndex switch
+            {
+                0 => "Disabled",
+                1 => "F13",
+                2 => "F14",
+                4 => "F16",
+                _ => "F15"
+            };
+            config.UseHeartbeatKeypress = MainHeartbeatInputModeCombo.SelectedIndex != 0;
+            config.DefaultDuration = (int)MainDurationSlider.Value;
+            config.AutoExitOnComplete = MainAutoExitOnCompleteCheck.IsChecked ?? false;
+
+            config.BatteryAware = MainBatteryAwareCheck.IsChecked ?? false;
+            config.BatteryThreshold = (int)MainBatteryThresholdSlider.Value;
+            config.NetworkAware = MainNetworkAwareCheck.IsChecked ?? false;
+            config.IdleDetection = MainIdleDetectionCheck.IsChecked ?? false;
+            config.IdleThreshold = (int)MainIdleThresholdSlider.Value;
+            config.PresentationMode = MainPresentationModeCheck.IsChecked ?? false;
+            config.ScheduledOperation = MainScheduledOperationCheck.IsChecked ?? false;
+
+            config.TypeThingEnabled = MainEnableTypeThingCheck.IsChecked ?? true;
+            config.TypeThingStartHotkey = MainStartHotkeyBox.Text;
+            config.TypeThingStopHotkey = MainStopHotkeyBox.Text;
+            config.TypeThingMaxDelayMs = (int)MainTypingSpeedSlider.Value;
+            config.TypeThingMinDelayMs = Math.Max(1, Math.Min(config.TypeThingMinDelayMs, config.TypeThingMaxDelayMs));
+            config.TypeThingAddRandomPauses = MainAddRandomPausesCheck.IsChecked ?? true;
+            config.TypeThingTypeNewlines = MainTypeNewlinesCheck.IsChecked ?? true;
+
+            config.Theme = MainThemeCombo.SelectedIndex switch
+            {
+                0 => "System",
+                3 => "MidnightBlue",
+                4 => "ForestGreen",
+                5 => "OceanBlue",
+                6 => "SunsetOrange",
+                7 => "RoyalPurple",
+                8 => "SlateGray",
+                9 => "RoseGold",
+                10 => "Cyberpunk",
+                11 => "Coffee",
+                12 => "ArcticFrost",
+                2 => "Light",
+                _ => "Dark"
+            };
+            config.UpdateChannel = MainUpdateChannelCombo.SelectedIndex switch
+            {
+                1 => "beta",
+                2 => "disabled",
+                _ => "stable"
+            };
+            config.VerifyUpdateSignature = MainVerifyUpdateSignatureCheck.IsChecked ?? false;
+
+            ConfigService.Instance.Save();
+            ThemeManager.SetTheme(ThemeManager.ThemeFromString(config.Theme));
+            Logger.ApplyConfig(config);
+            KeepAwakeService.Instance.ReloadConfig();
+            KeepAwakeService.Instance.PreventDisplaySleep = config.PreventDisplaySleep;
+            KeepAwakeService.Instance.UseHeartbeat = config.UseHeartbeatKeypress;
+            KeepAwakeService.Instance.HeartbeatInputMode = Enum.TryParse<HeartbeatInputMode>(config.HeartbeatInputMode, true, out var heartbeatMode)
+                ? heartbeatMode
+                : HeartbeatInputMode.F15;
+            Logger.Debug("MainWindow", "Settings auto-applied");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Failed to auto-apply settings", ex);
+        }
     }
 
     private void ShowSection(string section)
