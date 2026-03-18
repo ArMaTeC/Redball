@@ -656,15 +656,6 @@ function Step-CreateReleasePackage {
     Write-BuildSuccess "Release MSI ready: $($msiInfo.Name) ($([math]::Round($msiInfo.Length / 1MB, 2)) MB)"
     Write-HostSafe "  Location: $msiPath" -ForegroundColor Gray
     Write-HostSafe "  Contains: WPF Application + Core Files + Configuration" -ForegroundColor Gray
-    
-    # Show bundle if it exists
-    $bundlePath = Join-Path $DistPath "Redball-Setup-$Version.exe"
-    if (Test-Path $bundlePath) {
-        $bundleInfo = Get-Item $bundlePath
-        Write-BuildSuccess "Release Setup ready: $($bundleInfo.Name) ($([math]::Round($bundleInfo.Length / 1MB, 2)) MB)"
-        Write-HostSafe "  Location: $bundlePath" -ForegroundColor Gray
-        Write-HostSafe "  Contains: MSI + .NET 8 Desktop Runtime auto-download" -ForegroundColor Gray
-    }
 }
 
 function Step-CleanupDist {
@@ -681,7 +672,7 @@ function Step-CleanupDist {
     }
 
     $versionedArtifacts = Get-ChildItem -Path $DistPath -File | Where-Object {
-        $_.Name -match '^Redball(?:-Setup)?-(\d+\.\d+\.\d+)\.'
+        $_.Name -match '^Redball-(\d+\.\d+\.\d+)\.msi$'
     }
 
     if (-not $versionedArtifacts) {
@@ -691,7 +682,7 @@ function Step-CleanupDist {
 
     $artifactGroups = $versionedArtifacts |
     Group-Object {
-        if ($_.Name -match '^Redball(?:-Setup)?-(\d+\.\d+\.\d+)\.') {
+        if ($_.Name -match '^Redball-(\d+\.\d+\.\d+)\.msi$') {
             $matches[1]
         }
     } |

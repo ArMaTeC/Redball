@@ -596,6 +596,7 @@ public partial class MainWindow : Window
             KeepAwakeService.Instance.HeartbeatInputMode = Enum.TryParse<HeartbeatInputMode>(config.HeartbeatInputMode, true, out var heartbeatMode)
                 ? heartbeatMode
                 : HeartbeatInputMode.F15;
+            _viewModel?.RefreshStatus();
             _analytics.TrackFeature("settings.saved");
             ReloadHotkeys();
             Logger.Debug("MainWindow", "Settings auto-applied");

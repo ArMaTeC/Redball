@@ -345,6 +345,15 @@ public class MainViewModel : INotifyPropertyChanged
         Logger.Debug("MainViewModel", $"StatusText updated to: {StatusText}");
     }
 
+    /// <summary>
+    /// Public method to force refresh status text from KeepAwakeService.
+    /// Call this when heartbeat settings change to update the UI immediately.
+    /// </summary>
+    public void RefreshStatus()
+    {
+        UpdateStatusText();
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)

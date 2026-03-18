@@ -135,7 +135,7 @@ namespace Redball.Tests
             var status = service.GetStatusText();
 
             // Assert
-            Assert.AreEqual("Paused | Display Normal | F15 Off", status);
+            Assert.AreEqual("Paused | Display Normal | Heartbeat Off", status);
         }
 
         [TestMethod]

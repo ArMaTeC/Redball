@@ -72,11 +72,33 @@ public static class ThemeManager
         switch (theme)
         {
             case Theme.Dark:
-            case Theme.Light:
-                // Base themes use default colors from XAML, just set accent
+                // Dark theme - match DarkTheme.xaml values
+                SetBrush(res, "BackgroundBrush", 32, 32, 32);
+                SetBrush(res, "SurfaceBrush", 0x80, 45, 45, 45);
+                SetBrush(res, "CardBrush", 0x70, 60, 60, 60);
+                SetBrush(res, "ForegroundBrush", 224, 224, 224);
+                SetBrush(res, "ForegroundSecondaryBrush", 176, 176, 176);
+                SetBrush(res, "ForegroundDisabledBrush", 128, 128, 128);
                 SetBrush(res, "AccentBrush", 220, 53, 69);
                 SetBrush(res, "AccentLightBrush", 227, 75, 92);
                 SetBrush(res, "AccentDarkBrush", 181, 43, 58);
+                SetBrush(res, "BorderBrush", 0x60, 64, 64, 64);
+                SetBrush(res, "BorderLightBrush", 0x80, 80, 80, 80);
+                break;
+
+            case Theme.Light:
+                // Light theme - match LightTheme.xaml values
+                SetBrush(res, "BackgroundBrush", 250, 250, 250);
+                SetBrush(res, "SurfaceBrush", 0xE0, 255, 255, 255);
+                SetBrush(res, "CardBrush", 0xD0, 245, 245, 245);
+                SetBrush(res, "ForegroundBrush", 33, 37, 41);
+                SetBrush(res, "ForegroundSecondaryBrush", 108, 117, 125);
+                SetBrush(res, "ForegroundDisabledBrush", 173, 181, 189);
+                SetBrush(res, "AccentBrush", 220, 53, 69);
+                SetBrush(res, "AccentLightBrush", 227, 75, 92);
+                SetBrush(res, "AccentDarkBrush", 181, 43, 58);
+                SetBrush(res, "BorderBrush", 0x70, 222, 226, 230);
+                SetBrush(res, "BorderLightBrush", 0x90, 233, 236, 239);
                 break;
 
             case Theme.MidnightBlue:
