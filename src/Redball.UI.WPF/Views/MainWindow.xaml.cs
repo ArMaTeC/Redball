@@ -312,6 +312,56 @@ public partial class MainWindow : Window
         AutoApplySettings();
     }
 
+    private void MainScheduledOperationCheck_Checked(object sender, RoutedEventArgs e)
+    {
+        if (MainScheduleDetailsPanel != null)
+            MainScheduleDetailsPanel.Visibility = Visibility.Visible;
+        AutoApplySettings();
+    }
+
+    private void MainScheduledOperationCheck_Unchecked(object sender, RoutedEventArgs e)
+    {
+        if (MainScheduleDetailsPanel != null)
+            MainScheduleDetailsPanel.Visibility = Visibility.Collapsed;
+        AutoApplySettings();
+    }
+
+    private void MainTypeThingMinDelaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MainTypeThingMinDelayText != null)
+        {
+            MainTypeThingMinDelayText.Text = $"Min: {(int)e.NewValue} ms";
+        }
+        AutoApplySettings();
+    }
+
+    private void MainTypeThingStartDelaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MainTypeThingStartDelayText != null)
+        {
+            MainTypeThingStartDelayText.Text = $"Countdown: {(int)e.NewValue} seconds";
+        }
+        AutoApplySettings();
+    }
+
+    private void MainTypeThingPauseChanceSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MainTypeThingPauseChanceText != null)
+        {
+            MainTypeThingPauseChanceText.Text = $"Chance: {(int)e.NewValue}%";
+        }
+        AutoApplySettings();
+    }
+
+    private void MainTypeThingPauseMaxSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MainTypeThingPauseMaxText != null)
+        {
+            MainTypeThingPauseMaxText.Text = $"Max pause: {(int)e.NewValue} ms";
+        }
+        AutoApplySettings();
+    }
+
     private void MainHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         e.Handled = true;
@@ -366,6 +416,9 @@ public partial class MainWindow : Window
         MainShowNotificationsCheck.IsChecked = config.ShowNotifications;
         MainNotificationModeCombo.SelectedIndex = (int)config.NotificationMode;
         MainVerboseLoggingCheck.IsChecked = config.VerboseLogging;
+        MainEnableTelemetryCheck.IsChecked = config.EnableTelemetry;
+        MainEnablePerformanceMetricsCheck.IsChecked = config.EnablePerformanceMetrics;
+        MainProcessIsolationCheck.IsChecked = config.ProcessIsolation;
         MainMaxLogSizeSlider.Value = config.MaxLogSizeMB;
         MainMaxLogSizeText.Text = $"Max log size: {config.MaxLogSizeMB} MB";
         MainPreventDisplaySleepCheck.IsChecked = config.PreventDisplaySleep;
@@ -390,6 +443,16 @@ public partial class MainWindow : Window
         MainIdleThresholdText.Text = $"Threshold: {config.IdleThreshold} minutes";
         MainPresentationModeCheck.IsChecked = config.PresentationMode;
         MainScheduledOperationCheck.IsChecked = config.ScheduledOperation;
+        MainScheduleStartTimeBox.Text = config.ScheduleStartTime;
+        MainScheduleStopTimeBox.Text = config.ScheduleStopTime;
+        MainScheduleMonCheck.IsChecked = config.ScheduleDays?.Contains("Monday") ?? true;
+        MainScheduleTueCheck.IsChecked = config.ScheduleDays?.Contains("Tuesday") ?? true;
+        MainScheduleWedCheck.IsChecked = config.ScheduleDays?.Contains("Wednesday") ?? true;
+        MainScheduleThuCheck.IsChecked = config.ScheduleDays?.Contains("Thursday") ?? true;
+        MainScheduleFriCheck.IsChecked = config.ScheduleDays?.Contains("Friday") ?? true;
+        MainScheduleSatCheck.IsChecked = config.ScheduleDays?.Contains("Saturday") ?? false;
+        MainScheduleSunCheck.IsChecked = config.ScheduleDays?.Contains("Sunday") ?? false;
+        MainScheduleDetailsPanel.Visibility = config.ScheduledOperation ? Visibility.Visible : Visibility.Collapsed;
 
         MainEnableTypeThingCheck.IsChecked = config.TypeThingEnabled;
         MainStartHotkeyBox.Text = config.TypeThingStartHotkey;
@@ -398,6 +461,15 @@ public partial class MainWindow : Window
         MainTypingSpeedText.Text = $"Speed: {config.TypeThingMaxDelayMs} ms per character";
         MainAddRandomPausesCheck.IsChecked = config.TypeThingAddRandomPauses;
         MainTypeNewlinesCheck.IsChecked = config.TypeThingTypeNewlines;
+        MainTypeThingNotificationsCheck.IsChecked = config.TypeThingNotifications;
+        MainTypeThingMinDelaySlider.Value = config.TypeThingMinDelayMs;
+        MainTypeThingMinDelayText.Text = $"Min: {config.TypeThingMinDelayMs} ms";
+        MainTypeThingStartDelaySlider.Value = config.TypeThingStartDelaySec;
+        MainTypeThingStartDelayText.Text = $"Countdown: {config.TypeThingStartDelaySec} seconds";
+        MainTypeThingPauseChanceSlider.Value = config.TypeThingRandomPauseChance;
+        MainTypeThingPauseChanceText.Text = $"Chance: {config.TypeThingRandomPauseChance}%";
+        MainTypeThingPauseMaxSlider.Value = config.TypeThingRandomPauseMaxMs;
+        MainTypeThingPauseMaxText.Text = $"Max pause: {config.TypeThingRandomPauseMaxMs} ms";
 
         MainThemeCombo.SelectedIndex = config.Theme switch
         {
@@ -447,6 +519,9 @@ public partial class MainWindow : Window
             config.ShowNotifications = MainShowNotificationsCheck.IsChecked ?? true;
             config.NotificationMode = (NotificationMode)MainNotificationModeCombo.SelectedIndex;
             config.VerboseLogging = MainVerboseLoggingCheck.IsChecked ?? false;
+            config.EnableTelemetry = MainEnableTelemetryCheck.IsChecked ?? false;
+            config.EnablePerformanceMetrics = MainEnablePerformanceMetricsCheck.IsChecked ?? false;
+            config.ProcessIsolation = MainProcessIsolationCheck.IsChecked ?? false;
             config.MaxLogSizeMB = (int)MainMaxLogSizeSlider.Value;
             config.PreventDisplaySleep = MainPreventDisplaySleepCheck.IsChecked ?? true;
             config.HeartbeatInputMode = MainHeartbeatInputModeCombo.SelectedIndex switch
@@ -468,6 +543,16 @@ public partial class MainWindow : Window
             config.IdleThreshold = (int)MainIdleThresholdSlider.Value;
             config.PresentationMode = MainPresentationModeCheck.IsChecked ?? false;
             config.ScheduledOperation = MainScheduledOperationCheck.IsChecked ?? false;
+            config.ScheduleStartTime = MainScheduleStartTimeBox.Text ?? "09:00";
+            config.ScheduleStopTime = MainScheduleStopTimeBox.Text ?? "18:00";
+            config.ScheduleDays = new List<string>();
+            if (MainScheduleMonCheck.IsChecked == true) config.ScheduleDays.Add("Monday");
+            if (MainScheduleTueCheck.IsChecked == true) config.ScheduleDays.Add("Tuesday");
+            if (MainScheduleWedCheck.IsChecked == true) config.ScheduleDays.Add("Wednesday");
+            if (MainScheduleThuCheck.IsChecked == true) config.ScheduleDays.Add("Thursday");
+            if (MainScheduleFriCheck.IsChecked == true) config.ScheduleDays.Add("Friday");
+            if (MainScheduleSatCheck.IsChecked == true) config.ScheduleDays.Add("Saturday");
+            if (MainScheduleSunCheck.IsChecked == true) config.ScheduleDays.Add("Sunday");
 
             config.TypeThingEnabled = MainEnableTypeThingCheck.IsChecked ?? true;
             config.TypeThingStartHotkey = MainStartHotkeyBox.Text;
@@ -476,6 +561,11 @@ public partial class MainWindow : Window
             config.TypeThingMinDelayMs = Math.Max(1, Math.Min(config.TypeThingMinDelayMs, config.TypeThingMaxDelayMs));
             config.TypeThingAddRandomPauses = MainAddRandomPausesCheck.IsChecked ?? true;
             config.TypeThingTypeNewlines = MainTypeNewlinesCheck.IsChecked ?? true;
+            config.TypeThingNotifications = MainTypeThingNotificationsCheck.IsChecked ?? true;
+            config.TypeThingMinDelayMs = (int)MainTypeThingMinDelaySlider.Value;
+            config.TypeThingStartDelaySec = (int)MainTypeThingStartDelaySlider.Value;
+            config.TypeThingRandomPauseChance = (int)MainTypeThingPauseChanceSlider.Value;
+            config.TypeThingRandomPauseMaxMs = (int)MainTypeThingPauseMaxSlider.Value;
 
             config.Theme = MainThemeCombo.SelectedIndex switch
             {
@@ -672,6 +762,9 @@ public partial class MainWindow : Window
             config.ShowNotifications = MainShowNotificationsCheck.IsChecked ?? true;
             config.NotificationMode = (NotificationMode)MainNotificationModeCombo.SelectedIndex;
             config.VerboseLogging = MainVerboseLoggingCheck.IsChecked ?? false;
+            config.EnableTelemetry = MainEnableTelemetryCheck.IsChecked ?? false;
+            config.EnablePerformanceMetrics = MainEnablePerformanceMetricsCheck.IsChecked ?? false;
+            config.ProcessIsolation = MainProcessIsolationCheck.IsChecked ?? false;
             config.MaxLogSizeMB = (int)MainMaxLogSizeSlider.Value;
             config.PreventDisplaySleep = MainPreventDisplaySleepCheck.IsChecked ?? true;
             config.HeartbeatInputMode = MainHeartbeatInputModeCombo.SelectedIndex switch
@@ -693,6 +786,16 @@ public partial class MainWindow : Window
             config.IdleThreshold = (int)MainIdleThresholdSlider.Value;
             config.PresentationMode = MainPresentationModeCheck.IsChecked ?? false;
             config.ScheduledOperation = MainScheduledOperationCheck.IsChecked ?? false;
+            config.ScheduleStartTime = MainScheduleStartTimeBox.Text ?? "09:00";
+            config.ScheduleStopTime = MainScheduleStopTimeBox.Text ?? "18:00";
+            config.ScheduleDays = new List<string>();
+            if (MainScheduleMonCheck.IsChecked == true) config.ScheduleDays.Add("Monday");
+            if (MainScheduleTueCheck.IsChecked == true) config.ScheduleDays.Add("Tuesday");
+            if (MainScheduleWedCheck.IsChecked == true) config.ScheduleDays.Add("Wednesday");
+            if (MainScheduleThuCheck.IsChecked == true) config.ScheduleDays.Add("Thursday");
+            if (MainScheduleFriCheck.IsChecked == true) config.ScheduleDays.Add("Friday");
+            if (MainScheduleSatCheck.IsChecked == true) config.ScheduleDays.Add("Saturday");
+            if (MainScheduleSunCheck.IsChecked == true) config.ScheduleDays.Add("Sunday");
 
             config.TypeThingEnabled = MainEnableTypeThingCheck.IsChecked ?? true;
             config.TypeThingStartHotkey = MainStartHotkeyBox.Text;
@@ -701,6 +804,11 @@ public partial class MainWindow : Window
             config.TypeThingMinDelayMs = Math.Max(1, Math.Min(config.TypeThingMinDelayMs, config.TypeThingMaxDelayMs));
             config.TypeThingAddRandomPauses = MainAddRandomPausesCheck.IsChecked ?? true;
             config.TypeThingTypeNewlines = MainTypeNewlinesCheck.IsChecked ?? true;
+            config.TypeThingNotifications = MainTypeThingNotificationsCheck.IsChecked ?? true;
+            config.TypeThingMinDelayMs = (int)MainTypeThingMinDelaySlider.Value;
+            config.TypeThingStartDelaySec = (int)MainTypeThingStartDelaySlider.Value;
+            config.TypeThingRandomPauseChance = (int)MainTypeThingPauseChanceSlider.Value;
+            config.TypeThingRandomPauseMaxMs = (int)MainTypeThingPauseMaxSlider.Value;
 
             config.Theme = MainThemeCombo.SelectedIndex switch
             {

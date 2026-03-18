@@ -513,6 +513,9 @@
                                                 <ComboBoxItem Content="Errors only"/>
                                                 <ComboBoxItem Content="Silent"/>
                                             </ComboBox>
+                                            <CheckBox x:Name="MainEnableTelemetryCheck" Content="Enable analytics &amp; telemetry" Style="{DynamicResource ModernCheckBox}" Margin="0,8,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Allow Redball to collect anonymous usage data to help improve the app."/>
+                                            <CheckBox x:Name="MainEnablePerformanceMetricsCheck" Content="Enable performance metrics" Style="{DynamicResource ModernCheckBox}" Margin="0,8,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Track and display detailed performance statistics."/>
+                                            <CheckBox x:Name="MainProcessIsolationCheck" Content="Enable process isolation" Style="{DynamicResource ModernCheckBox}" Margin="0,8,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Run Redball in an isolated process for enhanced stability."/>
                                             <CheckBox x:Name="MainVerboseLoggingCheck" Content="Enable verbose logging" Style="{DynamicResource ModernCheckBox}" Margin="0,8,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Record extra diagnostic details in the log files."/>
                                             <TextBlock Text="Max Log Size (MB)" FontWeight="Medium" Margin="0,8,0,8"/>
                                             <Slider x:Name="MainMaxLogSizeSlider" Minimum="1" Maximum="100" Value="10" TickFrequency="5" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainMaxLogSizeSlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Set the maximum size allowed for the Redball log file before rotation or trimming."/>
@@ -568,7 +571,23 @@
                                             <Slider x:Name="MainIdleThresholdSlider" Minimum="5" Maximum="120" Value="30" TickFrequency="5" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" Margin="24,0,0,8" ValueChanged="MainIdleThresholdSlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Set how many minutes of user inactivity count as idle."/>
                                             <TextBlock x:Name="MainIdleThresholdText" Text="Threshold: 30 minutes" FontSize="12" Margin="24,0,0,16"/>
                                             <CheckBox x:Name="MainPresentationModeCheck" Content="Presentation mode detection" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Enable special handling when presentation apps are active."/>
-                                            <CheckBox x:Name="MainScheduledOperationCheck" Content="Scheduled operation" Style="{DynamicResource ModernCheckBox}" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Limit Redball behavior to scheduled windows of time."/>
+                                            <CheckBox x:Name="MainScheduledOperationCheck" Content="Scheduled operation" Style="{DynamicResource ModernCheckBox}" Checked="MainScheduledOperationCheck_Checked" Unchecked="MainScheduledOperationCheck_Unchecked" ToolTipService.ShowDuration="12000" ToolTip="Limit Redball behavior to scheduled windows of time."/>
+                                            <StackPanel x:Name="MainScheduleDetailsPanel" Visibility="Collapsed" Margin="24,0,0,0">
+                                                <TextBlock Text="Start Time (HH:MM)" FontWeight="Medium" Margin="0,8,0,4"/>
+                                                <TextBox x:Name="MainScheduleStartTimeBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8" ToolTipService.ShowDuration="12000" ToolTip="Time to automatically start Redball (24-hour format, e.g., 09:00)."/>
+                                                <TextBlock Text="Stop Time (HH:MM)" FontWeight="Medium" Margin="0,8,0,4"/>
+                                                <TextBox x:Name="MainScheduleStopTimeBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8" ToolTipService.ShowDuration="12000" ToolTip="Time to automatically stop Redball (24-hour format, e.g., 18:00)."/>
+                                                <TextBlock Text="Active Days" FontWeight="Medium" Margin="0,8,0,4"/>
+                                                <WrapPanel>
+                                                    <CheckBox x:Name="MainScheduleMonCheck" Content="Mon" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainScheduleTueCheck" Content="Tue" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainScheduleWedCheck" Content="Wed" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainScheduleThuCheck" Content="Thu" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainScheduleFriCheck" Content="Fri" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainScheduleSatCheck" Content="Sat" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainScheduleSunCheck" Content="Sun" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                </WrapPanel>
+                                            </StackPanel>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
@@ -587,6 +606,20 @@
                                             <TextBlock x:Name="MainTypingSpeedText" Text="Speed: 120 ms per character" FontSize="12" Margin="0,4,0,12"/>
                                             <CheckBox x:Name="MainAddRandomPausesCheck" Content="Add random pauses" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Insert natural-feeling random pauses while TypeThing is typing."/>
                                             <CheckBox x:Name="MainTypeNewlinesCheck" Content="Type newlines as Enter key" Style="{DynamicResource ModernCheckBox}" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Send real Enter key presses for line breaks instead of plain newline text."/>
+                                            <CheckBox x:Name="MainTypeThingNotificationsCheck" Content="Show TypeThing notifications" Style="{DynamicResource ModernCheckBox}" Margin="0,8,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Display toast notifications when TypeThing starts and stops."/>
+                                            <TextBlock Text="Advanced Settings" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,8"/>
+                                            <TextBlock Text="Minimum Delay (ms)" FontWeight="Medium" Margin="0,8,0,4"/>
+                                            <Slider x:Name="MainTypeThingMinDelaySlider" Minimum="10" Maximum="200" Value="30" TickFrequency="5" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypeThingMinDelaySlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Minimum milliseconds between keystrokes (must be less than max)."/>
+                                            <TextBlock x:Name="MainTypeThingMinDelayText" Text="Min: 30 ms" FontSize="12" Margin="0,4,0,8"/>
+                                            <TextBlock Text="Start Countdown (seconds)" FontWeight="Medium" Margin="0,8,0,4"/>
+                                            <Slider x:Name="MainTypeThingStartDelaySlider" Minimum="0" Maximum="30" Value="3" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypeThingStartDelaySlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Seconds to wait before TypeThing starts typing."/>
+                                            <TextBlock x:Name="MainTypeThingStartDelayText" Text="Countdown: 3 seconds" FontSize="12" Margin="0,4,0,8"/>
+                                            <TextBlock Text="Random Pause Chance" FontWeight="Medium" Margin="0,8,0,4"/>
+                                            <Slider x:Name="MainTypeThingPauseChanceSlider" Minimum="0" Maximum="50" Value="5" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypeThingPauseChanceSlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Percentage chance of inserting a random pause (0-50%)."/>
+                                            <TextBlock x:Name="MainTypeThingPauseChanceText" Text="Chance: 5%" FontSize="12" Margin="0,4,0,8"/>
+                                            <TextBlock Text="Max Pause Duration (ms)" FontWeight="Medium" Margin="0,8,0,4"/>
+                                            <Slider x:Name="MainTypeThingPauseMaxSlider" Minimum="100" Maximum="2000" Value="500" TickFrequency="100" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypeThingPauseMaxSlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Maximum duration for random pauses in milliseconds."/>
+                                            <TextBlock x:Name="MainTypeThingPauseMaxText" Text="Max pause: 500 ms" FontSize="12" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>

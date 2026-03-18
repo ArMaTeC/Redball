@@ -8,8 +8,8 @@
 
     <!-- Background colors -->
     <SolidColorBrush x:Key="BackgroundBrush" Color="#FFFAFAFA"/>
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFFFF"/>
-    <SolidColorBrush x:Key="CardBrush" Color="#FFF5F5F5"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#E0FFFFFF"/>
+    <SolidColorBrush x:Key="CardBrush" Color="#D0F5F5F5"/>
 
     <!-- Foreground colors -->
     <SolidColorBrush x:Key="ForegroundBrush" Color="#FF212529"/>
@@ -30,12 +30,12 @@
     <SolidColorBrush x:Key="ErrorBrush" Color="#FFDC3545"/>
 
     <!-- Border colors -->
-    <SolidColorBrush x:Key="BorderBrush" Color="#FFDEE2E6"/>
-    <SolidColorBrush x:Key="BorderLightBrush" Color="#FFE9ECEF"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#70DEE2E6"/>
+    <SolidColorBrush x:Key="BorderLightBrush" Color="#90E9ECEF"/>
 
     <!-- Window and Panel backgrounds -->
     <SolidColorBrush x:Key="WindowBackground" Color="#FFFAFAFA"/>
-    <SolidColorBrush x:Key="PanelBackground" Color="#FFF0F0F0"/>
+    <SolidColorBrush x:Key="PanelBackground" Color="#B0F0F0F0"/>
 
     <!-- Accent color reference for onboarding -->
     <SolidColorBrush x:Key="AccentColor" Color="#FFDC3545"/>

@@ -236,24 +236,28 @@
                         </Border>
                         <Popup x:Name="Popup"
                                Placement="Bottom"
-                               IsOpen="{TemplateBinding IsDropDownOpen}">
+                               IsOpen="{TemplateBinding IsDropDownOpen}"
+                               PopupAnimation="Fade">
                             <Popup.Resources>
                                 <Style TargetType="ComboBoxItem">
-                                    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                    <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
                                     <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
-                                    <Setter Property="Padding" Value="12,8"/>
+                                    <Setter Property="Padding" Value="12,10"/>
+                                    <Setter Property="MinHeight" Value="36"/>
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="ComboBoxItem">
-                                                <Border Background="{TemplateBinding Background}" Padding="12,8">
-                                                    <ContentPresenter TextBlock.Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <Border Background="{TemplateBinding Background}" Padding="12,10">
+                                                    <ContentPresenter TextBlock.Foreground="{TemplateBinding Foreground}"/>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
                                                         <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                        <Setter Property="Foreground" Value="White"/>
                                                     </Trigger>
                                                     <Trigger Property="IsSelected" Value="True">
-                                                        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                        <Setter Property="Background" Value="{DynamicResource AccentDarkBrush}"/>
+                                                        <Setter Property="Foreground" Value="White"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -261,15 +265,17 @@
                                     </Setter>
                                 </Style>
                             </Popup.Resources>
-                            <Border Background="{DynamicResource SurfaceBrush}"
-                                    BorderBrush="{DynamicResource BorderBrush}"
+                            <Border Background="{DynamicResource CardBrush}"
+                                    BorderBrush="{DynamicResource BorderLightBrush}"
                                     BorderThickness="1"
                                     CornerRadius="4"
-                                    MinWidth="{TemplateBinding ActualWidth}">
-                                <ScrollViewer>
-                                    <Border Background="{DynamicResource SurfaceBrush}">
-                                        <VirtualizingStackPanel IsItemsHost="True"/>
-                                    </Border>
+                                    MinWidth="{TemplateBinding ActualWidth}"
+                                    Margin="0,4,0,0">
+                                <Border.Effect>
+                                    <DropShadowEffect ShadowDepth="4" Direction="270" Color="Black" Opacity="0.3" BlurRadius="12"/>
+                                </Border.Effect>
+                                <ScrollViewer MaxHeight="300">
+                                    <VirtualizingStackPanel IsItemsHost="True"/>
                                 </ScrollViewer>
                             </Border>
                         </Popup>

@@ -18,57 +18,91 @@ public partial class OnboardingWindow : Window
         LoadCurrentSettings();
     }
 
+    private bool _isLoading;
+
     private void LoadCurrentSettings()
     {
+        _isLoading = true;
         var config = ConfigService.Instance.Config;
         
         PreventDisplaySleepCheck.IsChecked = config.PreventDisplaySleep;
         UseHeartbeatCheck.IsChecked = config.UseHeartbeatKeypress;
-        StartWithWindowsCheck.IsChecked = false; // Will be set via StartupService
+        StartWithWindowsCheck.IsChecked = false;
         BatteryAwareCheck.IsChecked = config.BatteryAware;
         NetworkAwareCheck.IsChecked = config.NetworkAware;
         ShowOnStartupCheck.IsChecked = false;
         
-        // Set theme selection
         ThemeCombo.SelectedIndex = config.Theme switch
         {
-            "Light" => 1,
-            "System" => 2,
-            _ => 0
+            "System" => 0,
+            "Light" => 2,
+            "MidnightBlue" => 3,
+            "ForestGreen" => 4,
+            "OceanBlue" => 5,
+            "SunsetOrange" => 6,
+            "RoyalPurple" => 7,
+            "SlateGray" => 8,
+            "RoseGold" => 9,
+            "Cyberpunk" => 10,
+            "Coffee" => 11,
+            "ArcticFrost" => 12,
+            _ => 1
+        };
+        _isLoading = false;
+    }
+
+    private string GetSelectedTheme()
+    {
+        return ThemeCombo.SelectedIndex switch
+        {
+            0 => "System",
+            3 => "MidnightBlue",
+            4 => "ForestGreen",
+            5 => "OceanBlue",
+            6 => "SunsetOrange",
+            7 => "RoyalPurple",
+            8 => "SlateGray",
+            9 => "RoseGold",
+            10 => "Cyberpunk",
+            11 => "Coffee",
+            12 => "ArcticFrost",
+            2 => "Light",
+            _ => "Dark"
         };
     }
 
-    private void GetStartedButton_Click(object sender, RoutedEventArgs e)
+    private void SaveCurrentSettings()
     {
-        // Save user preferences
+        if (_isLoading) return;
         var config = ConfigService.Instance.Config;
-        
         config.PreventDisplaySleep = PreventDisplaySleepCheck.IsChecked ?? true;
         config.UseHeartbeatKeypress = UseHeartbeatCheck.IsChecked ?? true;
         config.BatteryAware = BatteryAwareCheck.IsChecked ?? false;
         config.NetworkAware = NetworkAwareCheck.IsChecked ?? false;
         config.FirstRun = ShowOnStartupCheck.IsChecked ?? false;
-        
-        // Save theme selection
-        config.Theme = ThemeCombo.SelectedIndex switch
-        {
-            1 => "Light",
-            2 => "System",
-            _ => "Dark"
-        };
-        
-        // Handle startup registration
+        config.Theme = GetSelectedTheme();
+
         if (StartWithWindowsCheck.IsChecked == true)
-        {
             StartupService.Install();
-        }
-        
-        // Apply theme immediately
+
         ThemeManager.SetTheme(ThemeManager.ThemeFromString(config.Theme));
-        
-        // Save config
         ConfigService.Instance.Save();
         Logger.ApplyConfig(config);
+    }
+
+    private void OnSettingChanged(object sender, RoutedEventArgs e)
+    {
+        SaveCurrentSettings();
+    }
+
+    private void ThemeCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        SaveCurrentSettings();
+    }
+
+    private void GetStartedButton_Click(object sender, RoutedEventArgs e)
+    {
+        SaveCurrentSettings();
         ConfigService.Instance.IsDirty = false;
 
         _analytics.TrackFeature("onboarding.preferences_saved");

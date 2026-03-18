@@ -1,74 +1,77 @@
 # Settings GUI
 
-Redball provides two settings dialogs: a full tabbed dialog and a dedicated TypeThing settings dialog.
+Redball provides a comprehensive settings dialog accessible from the main window navigation panel or via the tray menu.
 
 ## Main Settings Dialog
 
-Open via **Settings...** in the tray menu (or press **G**).
+Open via **Settings** in the main window navigation panel, or **Settings...** in the tray menu (or press **G**).
+
+The settings are organized into five dedicated sections:
 
 ### General Tab
 
 | Control | Type | Config Key | Description |
 | ------- | ---- | ---------- | ----------- |
-| Default Duration (minutes) | NumericUpDown (1–720) | `DefaultDuration` | Default timer duration |
-| Heartbeat Interval (seconds) | NumericUpDown (10–300) | `HeartbeatSeconds` | F15 keypress and refresh interval |
-| Show Notification on Start | CheckBox | `ShowBalloonOnStart` | Tray notification on startup |
-| Start Minimized | CheckBox | `MinimizeOnStart` | Start without visible window |
-| Exit When Timer Completes | CheckBox | `AutoExitOnComplete` | Auto-close after timed session |
-| Language | Dropdown (en/es/fr/de) | `Locale` | Display language |
+| Theme | Dropdown (13 options) | `Theme` | Visual theme: System, Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost |
+| Minimize to tray on start | CheckBox | `MinimizeOnStart` | Start without visible window |
+| Show notifications | CheckBox | `ShowBalloonOnStart` | Tray notifications on startup and events |
+| Notification Mode | Dropdown | `NotificationMode` | All events, Important only, Errors only, or Silent |
+| Enable verbose logging | CheckBox | `VerboseLogging` | Record extra diagnostic details |
+| Max Log Size (MB) | Slider (1–100) | `MaxLogSizeMB` | Log rotation threshold |
 
-### Power & Monitoring Tab
-
-| Control | Type | Config Key | Description |
-| ------- | ---- | ---------- | ----------- |
-| Prevent Display Sleep | CheckBox | `PreventDisplaySleep` | Keep display on |
-| Use F15 Heartbeat Keypress | CheckBox | `UseHeartbeatKeypress` | Send invisible F15 |
-| Battery-Aware Mode | CheckBox | `BatteryAware` | Auto-pause on low battery |
-| Battery Threshold (%) | NumericUpDown (5–95) | `BatteryThreshold` | Pause below this % |
-| Network-Aware Mode | CheckBox | `NetworkAware` | Auto-pause on disconnect |
-| Idle Detection (30 min) | CheckBox | `IdleDetection` | Auto-pause when idle |
-| Presentation Mode Detection | CheckBox | `PresentationModeDetection` | Auto-activate for presentations |
-
-### Schedule Tab
+### Behavior Tab
 
 | Control | Type | Config Key | Description |
 | ------- | ---- | ---------- | ----------- |
-| Enable Scheduled Operation | CheckBox | `ScheduleEnabled` | Toggle scheduling |
-| Start Time | TextBox (HH:mm) | `ScheduleStartTime` | Daily start time |
-| Stop Time | TextBox (HH:mm) | `ScheduleStopTime` | Daily stop time |
-| Active Days | CheckedListBox | `ScheduleDays` | Days of the week |
+| Prevent Display Sleep | CheckBox | `PreventDisplaySleep` | Keep display awake while active |
+| Heartbeat Input | Dropdown (F13–F16) | `HeartbeatInputMode` | Invisible function key for idle prevention |
+| Default Duration (minutes) | Slider (1–720) | `DefaultDuration` | Default timer duration for timed sessions |
+| Auto-exit after duration completes | CheckBox | `AutoExitOnComplete` | Exit when timed session finishes |
 
-### Advanced Tab
+### Smart Features Tab
 
 | Control | Type | Config Key | Description |
 | ------- | ---- | ---------- | ----------- |
-| Max Log File Size (MB) | NumericUpDown (1–100) | `MaxLogSizeMB` | Log rotation threshold |
-| Process Isolation | CheckBox | `ProcessIsolation` | Background runspace |
-| Performance Metrics | CheckBox | `EnablePerformanceMetrics` | Track CPU/memory |
-| Anonymous Telemetry | CheckBox | `EnableTelemetry` | Opt-in telemetry |
-| Update Channel | Dropdown (stable/beta) | `UpdateChannel` | Release channel |
-| Verify Update Signatures | CheckBox | `VerifyUpdateSignature` | Signature enforcement |
-| Update Repository Owner | TextBox | `UpdateRepoOwner` | GitHub owner |
-| Update Repository Name | TextBox | `UpdateRepoName` | GitHub repo |
+| Battery-aware mode | CheckBox | `BatteryAware` | Auto-pause when battery is low |
+| Pause threshold (%) | Slider (5–50) | `BatteryThreshold` | Battery % below which to auto-pause |
+| Network-aware mode | CheckBox | `NetworkAware` | Auto-pause when network disconnects |
+| Idle detection | CheckBox | `IdleDetection` | Auto-pause after user inactivity |
+| Idle threshold (minutes) | Slider (5–120) | `IdleThresholdMinutes` | Minutes of inactivity before auto-pause |
+| Presentation mode detection | CheckBox | `PresentationModeDetection` | Auto-activate for PowerPoint/Teams |
+| Scheduled operation | CheckBox | `ScheduleEnabled` | Enable daily scheduled activation |
 
 ### TypeThing Tab
 
 | Control | Type | Config Key | Description |
 | ------- | ---- | ---------- | ----------- |
-| Enable TypeThing | CheckBox | `TypeThingEnabled` | Master switch |
-| Min Delay (ms) | NumericUpDown (10–1000) | `TypeThingMinDelayMs` | Minimum keystroke delay |
-| Max Delay (ms) | NumericUpDown (10–2000) | `TypeThingMaxDelayMs` | Maximum keystroke delay |
-| Start Delay (seconds) | NumericUpDown (0–30) | `TypeThingStartDelaySec` | Countdown duration |
-| Start Hotkey | TextBox | `TypeThingStartHotkey` | Start typing hotkey |
-| Stop Hotkey | TextBox | `TypeThingStopHotkey` | Stop typing hotkey |
-| Random Pauses | CheckBox | `TypeThingAddRandomPauses` | Add realistic pauses |
-| Type Newlines | CheckBox | `TypeThingTypeNewlines` | Press Enter for newlines |
-| Show Notifications | CheckBox | `TypeThingNotifications` | Tray notifications |
-| Settings Theme | Dropdown (light/dark/hacker) | `TypeThingTheme` | Dialog theme |
+| Enable TypeThing | CheckBox | `TypeThingEnabled` | Master switch for clipboard typer |
+| Start Hotkey | Hotkey capture | `TypeThingStartHotkey` | Key combination to start typing |
+| Stop Hotkey | Hotkey capture | `TypeThingStopHotkey` | Key combination to stop typing |
+| Typing Speed (ms per char) | Slider (10–500) | `TypeThingMinDelayMs` / `TypeThingMaxDelayMs` | Character typing delay range |
+| Add random pauses | CheckBox | `TypeThingAddRandomPauses` | Insert natural-feeling random delays |
+| Type newlines as Enter key | CheckBox | `TypeThingTypeNewlines` | Send Enter key for line breaks |
+
+### Updates Tab
+
+| Control | Type | Config Key | Description |
+| ------- | ---- | ---------- | ----------- |
+| Update Channel | Dropdown (stable/beta/disabled) | `UpdateChannel` | Release channel preference |
+| Verify update signatures | CheckBox | `VerifyUpdateSignature` | Require valid digital signature on updates |
+| Check for Updates Now | Button | — | Query update service immediately |
+| Current Version | Label | — | Display installed version |
+
+### Actions Section (General Tab)
+
+Quick action buttons at the bottom of the General tab:
+
+- **Open Logs** — Opens the log folder in File Explorer
+- **Export Diagnostics** — Creates a diagnostics export for troubleshooting
+- **Start TypeThing** — Launches the TypeThing typing workflow
+- **Apply Settings** — Saves and applies all current settings immediately
 
 ### Saving
 
-Clicking **OK** applies all changes immediately and saves to `Redball.json`. Clicking **Cancel** discards changes.
+Clicking **Apply Settings** saves all changes to `Redball.json`. Settings are applied immediately to the running instance.
 
 If TypeThing hotkeys were changed, the old hotkeys are unregistered and new ones are registered automatically.
 
@@ -76,7 +79,7 @@ If TypeThing hotkeys were changed, the old hotkeys are unregistered and new ones
 
 ## TypeThing Settings Dialog
 
-Open via **TypeThing → TypeThing Settings...** in the tray menu.
+Open via **TypeThing** in the main window navigation panel, or via **TypeThing → TypeThing Settings...** in the tray menu.
 
 This is a dedicated, themed dialog with grouped controls:
 
@@ -122,6 +125,41 @@ The dialog supports three themes applied via `Set-TypeThingFormTheme`:
 | `hacker` | #0A0A0A | #00FF00 | #00FF41 | Consolas |
 
 Switching themes applies instantly via the `SelectedIndexChanged` event.
+
+---
+
+## Main Window UI
+
+The main Redball window features a modern custom chrome design:
+
+### Title Bar
+
+- **App Icon** — Red "R" logo in a rounded corner border
+- **Title** — "Redball" with subtitle "Desktop Control Center"
+- **Window Controls** — Minimize (—), Maximize (□), Close (✕) with hover effects
+- **Draggable** — Click and drag anywhere on the title bar to move the window
+
+### Navigation Panel
+
+Left-side navigation with nine sections:
+
+| Section | Description |
+| ------- | ----------- |
+| **Home** | Overview dashboard with quick access cards |
+| **Analytics** | Session counts, usage patterns, tracked activity |
+| **Metrics** | Feature adoption and product usage metrics |
+| **Diagnostics** | Runtime state, logging paths, app health |
+| **Settings** | General application settings (theme, notifications, logging) |
+| **Behavior** | Keep-awake controls (display sleep, heartbeat, duration) |
+| **Smart Features** | Battery-aware, network-aware, idle detection, scheduling |
+| **TypeThing** | Typing automation hotkeys and behavior |
+| **Updates** | Update channels and version management |
+
+Click any navigation item to switch the content area. All navigation items show descriptive tooltips on hover.
+
+### Content Area
+
+The main content area displays the selected section's controls and information. Each section is organized into cards with consistent styling across all themes.
 
 ---
 

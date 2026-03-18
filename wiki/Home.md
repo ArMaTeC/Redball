@@ -10,11 +10,11 @@ Welcome to the Redball wiki — the complete documentation for every feature, fu
 - [Getting Started](Getting-Started) — Installation, prerequisites, and first run
 - [Configuration](Configuration) — All JSON settings explained
 - [Tray Menu & Keyboard Shortcuts](Tray-Menu-and-Shortcuts) — UI interaction guide
+- [Settings GUI](Settings-GUI) — Main window navigation, tabbed settings dialog, and TypeThing settings
 - [TypeThing — Clipboard Typer](TypeThing) — Full documentation for the clipboard typing feature
 - [Monitoring & Smart Features](Monitoring-and-Smart-Features) — Battery, network, idle, schedule, and presentation mode
 - [API Reference](API-Reference) — Every function documented with parameters and examples
 - [Auto-Updater & Code Signing](Updates-and-Signing) — Update system and digital signatures
-- [Settings GUI](Settings-GUI) — The tabbed settings dialog and TypeThing settings
 - [Building & CI/CD](Building-and-CICD) — MSI installer, deploy pipeline, and GitHub Actions
 - [Architecture](Architecture) — Component flow, state management, and internals
 - [Troubleshooting](Troubleshooting) — Common issues and solutions

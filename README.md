@@ -21,7 +21,8 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 
 - **Native WPF UI** — Built with .NET 8 WPF, self-contained single-file EXE (~64MB)
 - **12 Custom Themes** — System (auto-detect), Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost
-- **Settings Window** — Tabbed settings with live slider value labels for duration and typing speed
+- **Custom Window Chrome** — Modern borderless window with custom title bar, minimize/maximize/close buttons, and rounded corners via `WindowChrome`
+- **Settings Window** — Tabbed settings with live slider value labels for duration and typing speed, organized into General, Behavior, Smart Features, TypeThing, and Updates sections
 - **About & Update Windows** — Built-in version info, update checker, and download progress
 - **P/Invoke SendInput** — Native Windows API for typing simulation (no WinForms dependency)
 - **Theme Persistence** — Selected theme saved to config and restored on startup
@@ -186,24 +187,12 @@ Right-click the red ball icon in your system tray:
 
 ### Keyboard Shortcuts
 
-| Shortcut | Action |
-| -------- | ------ |
-| **Space** | Toggle pause / resume |
-| **D** | Toggle display sleep prevention |
-| **H** | Toggle F15 heartbeat |
-| **I** | Stay awake indefinitely |
-| **B** | Toggle battery-aware mode |
-| **S** | Toggle startup with Windows |
-| **N** | Toggle network-aware mode |
-| **L** | Toggle idle detection |
-| **G** | Open settings dialog |
-| **A** | Open About dialog |
-| **X** | Exit application |
-| **Ctrl+Shift+V** | TypeThing: Start typing clipboard (global) |
-| **Ctrl+Shift+X** | TypeThing: Emergency stop typing (global) |
-
-- **Double-click icon** — Toggle pause / resume
-- **Ctrl+Alt+Pause** — Global hotkey to toggle (system-wide)
+| Main UI | Description |
+| ------- | ----------- |
+| **Title Bar** | Custom chrome with app icon, title, subtitle, and window controls (minimize, maximize, close) |
+| **Navigation Panel** | Left-side navigation with Home, Analytics, Metrics, Diagnostics, Settings, Behavior, Smart Features, TypeThing, and Updates sections |
+| **Content Area** | Dynamic content that changes based on selected navigation item |
+| **Tray Icon** | Right-click for quick controls; left-click to toggle pause/resume |
 
 ## Command Line Arguments
 
@@ -225,12 +214,13 @@ The WPF application supports the following command-line arguments:
 
 ## Settings GUI
 
-Open the settings dialog from the tray menu (**Settings...** or press **G**). The dialog has four tabs:
+Open the settings dialog from the tray menu (**Settings...** or press **G**). The dialog has five tabs:
 
-- **General** — Duration, heartbeat interval, locale, minimize/exit behavior
-- **Power & Monitoring** — Display sleep, F15 heartbeat, battery-aware, network-aware, idle detection, presentation mode
-- **Schedule** — Enable/disable scheduled operation, start/stop times, active days
-- **TypeThing** — Enable/disable, typing speed, start delay, hotkeys, random pauses, newlines, notifications
+- **General** — Theme, notifications, logging, minimize behavior
+- **Behavior** — Display sleep prevention, heartbeat key, default duration, auto-exit
+- **Smart Features** — Battery-aware, network-aware, idle detection, presentation mode, scheduled operation
+- **TypeThing** — Enable/disable, typing speed, hotkeys, random pauses, newlines
+- **Updates** — Update channel, signature verification, version check, notifications
 
 Changes are saved to `Redball.json` when you click **OK**.
 
