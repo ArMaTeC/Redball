@@ -8,8 +8,8 @@
 
     <!-- Background colors -->
     <SolidColorBrush x:Key="BackgroundBrush" Color="#FF202020"/>
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#FF2D2D2D"/>
-    <SolidColorBrush x:Key="CardBrush" Color="#FF3C3C3C"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#802D2D2D"/>
+    <SolidColorBrush x:Key="CardBrush" Color="#703C3C3C"/>
 
     <!-- Foreground colors -->
     <SolidColorBrush x:Key="ForegroundBrush" Color="#FFE0E0E0"/>
@@ -30,12 +30,12 @@
     <SolidColorBrush x:Key="ErrorBrush" Color="#FFDC3545"/>
 
     <!-- Border colors -->
-    <SolidColorBrush x:Key="BorderBrush" Color="#FF404040"/>
-    <SolidColorBrush x:Key="BorderLightBrush" Color="#FF505050"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#60404040"/>
+    <SolidColorBrush x:Key="BorderLightBrush" Color="#80505050"/>
 
     <!-- Window and Panel backgrounds -->
     <SolidColorBrush x:Key="WindowBackground" Color="#FF202020"/>
-    <SolidColorBrush x:Key="PanelBackground" Color="#FF2D2D2D"/>
+    <SolidColorBrush x:Key="PanelBackground" Color="#A02D2D2D"/>
 
 
 </ResourceDictionary>

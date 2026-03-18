@@ -143,37 +143,52 @@
                           Content="Keep display awake"
                           IsChecked="True"
                           Margin="0,5"
+                          Checked="OnSettingChanged" Unchecked="OnSettingChanged"
                           Style="{DynamicResource ModernCheckBox}"/>
                 
                 <CheckBox x:Name="UseHeartbeatCheck" 
                           Content="F15 heartbeat"
                           IsChecked="True"
                           Margin="0,5"
+                          Checked="OnSettingChanged" Unchecked="OnSettingChanged"
                           Style="{DynamicResource ModernCheckBox}"/>
                 
                 <CheckBox x:Name="StartWithWindowsCheck" 
                           Content="Start with Windows"
                           IsChecked="False"
                           Margin="0,5"
+                          Checked="OnSettingChanged" Unchecked="OnSettingChanged"
                           Style="{DynamicResource ModernCheckBox}"/>
                 
                 <CheckBox x:Name="BatteryAwareCheck" 
                           Content="Battery-aware mode"
                           IsChecked="False"
                           Margin="0,5"
+                          Checked="OnSettingChanged" Unchecked="OnSettingChanged"
                           Style="{DynamicResource ModernCheckBox}"/>
                 
                 <CheckBox x:Name="NetworkAwareCheck" 
                           Content="Network-aware mode"
                           IsChecked="False"
                           Margin="0,5"
+                          Checked="OnSettingChanged" Unchecked="OnSettingChanged"
                           Style="{DynamicResource ModernCheckBox}"/>
                 
                 <TextBlock Text="Theme:" Margin="0,15,0,5" Foreground="{DynamicResource ForegroundBrush}"/>
-                <ComboBox x:Name="ThemeCombo" SelectedIndex="0" Style="{DynamicResource ModernComboBox}">
-                    <ComboBoxItem Content="Dark"/>
-                    <ComboBoxItem Content="Light"/>
-                    <ComboBoxItem Content="System"/>
+                <ComboBox x:Name="ThemeCombo" SelectedIndex="0" Style="{DynamicResource ModernComboBox}" SelectionChanged="ThemeCombo_SelectionChanged">
+                    <ComboBoxItem Content="System Default"/>
+                    <ComboBoxItem Content="Dark Mode"/>
+                    <ComboBoxItem Content="Light Mode"/>
+                    <ComboBoxItem Content="Midnight Blue"/>
+                    <ComboBoxItem Content="Forest Green"/>
+                    <ComboBoxItem Content="Ocean Blue"/>
+                    <ComboBoxItem Content="Sunset Orange"/>
+                    <ComboBoxItem Content="Royal Purple"/>
+                    <ComboBoxItem Content="Slate Gray"/>
+                    <ComboBoxItem Content="Rose Gold"/>
+                    <ComboBoxItem Content="Cyberpunk"/>
+                    <ComboBoxItem Content="Coffee"/>
+                    <ComboBoxItem Content="Arctic Frost"/>
                 </ComboBox>
             </StackPanel>
         </Grid>
@@ -195,6 +210,7 @@
                           x:Name="ShowOnStartupCheck"
                           Content="Show this on startup"
                           IsChecked="False"
+                          Checked="OnSettingChanged" Unchecked="OnSettingChanged"
                           Style="{DynamicResource ModernCheckBox}"/>
                 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
