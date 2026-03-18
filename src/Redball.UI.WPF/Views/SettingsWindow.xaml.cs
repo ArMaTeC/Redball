@@ -1,9 +1,11 @@
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using Microsoft.Win32;
 using Redball.UI.Services;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
@@ -14,6 +16,7 @@ public partial class SettingsWindow : Window
     private bool _isDirty;
     private UpdateService? _updateService;
     private MainWindow? _mainWindow;
+    private readonly AnalyticsService _analytics = new(ConfigService.Instance.Config.EnableTelemetry);
 
     public SettingsWindow(MainWindow? mainWindow = null)
     {
@@ -123,6 +126,16 @@ public partial class SettingsWindow : Window
         if (MinimizeToTrayCheck != null) MinimizeToTrayCheck.IsChecked = cfg.MinimizeToTray;
         if (ShowNotificationsCheck != null) ShowNotificationsCheck.IsChecked = cfg.ShowNotifications;
         if (NotificationModeCombo != null) NotificationModeCombo.SelectedIndex = (int)cfg.NotificationMode;
+        if (VerboseLoggingCheck != null) VerboseLoggingCheck.IsChecked = cfg.VerboseLogging;
+        if (MaxLogSizeSlider != null) MaxLogSizeSlider.Value = cfg.MaxLogSizeMB;
+        if (MaxLogSizeText != null) MaxLogSizeText.Text = $"Max log size: {cfg.MaxLogSizeMB} MB";
+
+        // Behavior settings
+        if (PreventDisplaySleepCheck != null) PreventDisplaySleepCheck.IsChecked = cfg.PreventDisplaySleep;
+        if (UseHeartbeatCheck != null) UseHeartbeatCheck.IsChecked = cfg.UseHeartbeatKeypress;
+        if (DurationSlider != null) DurationSlider.Value = cfg.DefaultDuration;
+        if (DurationText != null) DurationText.Text = $"Duration: {cfg.DefaultDuration} minutes";
+        if (AutoExitOnCompleteCheck != null) AutoExitOnCompleteCheck.IsChecked = cfg.AutoExitOnComplete;
 
         // Features settings
         if (BatteryAwareCheck != null) BatteryAwareCheck.IsChecked = cfg.BatteryAware;
@@ -134,6 +147,26 @@ public partial class SettingsWindow : Window
         if (IdleThresholdText != null) IdleThresholdText.Text = $"Threshold: {cfg.IdleThreshold} minutes";
         if (PresentationModeCheck != null) PresentationModeCheck.IsChecked = cfg.PresentationMode;
         if (ScheduledOperationCheck != null) ScheduledOperationCheck.IsChecked = cfg.ScheduledOperation;
+
+        // TypeThing settings
+        if (EnableTypeThingCheck != null) EnableTypeThingCheck.IsChecked = cfg.TypeThingEnabled;
+        if (TypingSpeedSlider != null) TypingSpeedSlider.Value = cfg.TypeThingMaxDelayMs;
+        if (TypingSpeedText != null) TypingSpeedText.Text = $"Speed: {cfg.TypeThingMaxDelayMs} ms per character";
+        if (AddRandomPausesCheck != null) AddRandomPausesCheck.IsChecked = cfg.TypeThingAddRandomPauses;
+        if (TypeNewlinesCheck != null) TypeNewlinesCheck.IsChecked = cfg.TypeThingTypeNewlines;
+
+        // Update settings
+        if (UpdateChannelCombo != null)
+        {
+            UpdateChannelCombo.SelectedIndex = cfg.UpdateChannel?.ToLowerInvariant() switch
+            {
+                "stable" => 0,
+                "beta" => 1,
+                "disabled" => 2,
+                _ => 0
+            };
+        }
+        if (VerifyUpdateSignatureCheck != null) VerifyUpdateSignatureCheck.IsChecked = cfg.VerifyUpdateSignature;
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -157,12 +190,16 @@ public partial class SettingsWindow : Window
         var errors = svc.Validate();
         if (errors.Count > 0)
         {
+            _analytics.TrackFeature("settings.save_validation_failed");
             MessageBox.Show(string.Join("\n", errors), "Validation Errors",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
         if (svc.Save())
         {
+            _analytics.TrackFeature("settings.saved");
+            _analytics.TrackFunnel("settings", "saved");
+            Logger.ApplyConfig(svc.Config);
             // Reload keep-awake engine with updated config
             KeepAwakeService.Instance.ReloadConfig();
             _isDirty = false;
@@ -170,6 +207,7 @@ public partial class SettingsWindow : Window
         }
         else
         {
+            _analytics.TrackFeature("settings.save_failed");
             MessageBox.Show("Failed to save configuration.", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
@@ -205,6 +243,14 @@ public partial class SettingsWindow : Window
         if (MinimizeToTrayCheck != null) cfg.MinimizeToTray = MinimizeToTrayCheck.IsChecked ?? false;
         if (ShowNotificationsCheck != null) cfg.ShowNotifications = ShowNotificationsCheck.IsChecked ?? true;
         if (NotificationModeCombo != null) cfg.NotificationMode = (NotificationMode)NotificationModeCombo.SelectedIndex;
+        if (VerboseLoggingCheck != null) cfg.VerboseLogging = VerboseLoggingCheck.IsChecked ?? false;
+        if (MaxLogSizeSlider != null) cfg.MaxLogSizeMB = (int)MaxLogSizeSlider.Value;
+
+        // Behavior settings
+        if (PreventDisplaySleepCheck != null) cfg.PreventDisplaySleep = PreventDisplaySleepCheck.IsChecked ?? true;
+        if (UseHeartbeatCheck != null) cfg.UseHeartbeatKeypress = UseHeartbeatCheck.IsChecked ?? true;
+        if (DurationSlider != null) cfg.DefaultDuration = (int)DurationSlider.Value;
+        if (AutoExitOnCompleteCheck != null) cfg.AutoExitOnComplete = AutoExitOnCompleteCheck.IsChecked ?? false;
 
         // Features settings
         if (BatteryAwareCheck != null) cfg.BatteryAware = BatteryAwareCheck.IsChecked ?? false;
@@ -214,6 +260,29 @@ public partial class SettingsWindow : Window
         if (IdleThresholdSlider != null) cfg.IdleThreshold = (int)IdleThresholdSlider.Value;
         if (PresentationModeCheck != null) cfg.PresentationMode = PresentationModeCheck.IsChecked ?? false;
         if (ScheduledOperationCheck != null) cfg.ScheduledOperation = ScheduledOperationCheck.IsChecked ?? false;
+
+        // TypeThing settings
+        if (EnableTypeThingCheck != null) cfg.TypeThingEnabled = EnableTypeThingCheck.IsChecked ?? true;
+        if (TypingSpeedSlider != null)
+        {
+            cfg.TypeThingMaxDelayMs = (int)TypingSpeedSlider.Value;
+            cfg.TypeThingMinDelayMs = Math.Max(1, Math.Min(cfg.TypeThingMinDelayMs, cfg.TypeThingMaxDelayMs));
+        }
+        if (AddRandomPausesCheck != null) cfg.TypeThingAddRandomPauses = AddRandomPausesCheck.IsChecked ?? true;
+        if (TypeNewlinesCheck != null) cfg.TypeThingTypeNewlines = TypeNewlinesCheck.IsChecked ?? true;
+
+        // Update settings
+        if (UpdateChannelCombo != null)
+        {
+            cfg.UpdateChannel = UpdateChannelCombo.SelectedIndex switch
+            {
+                0 => "stable",
+                1 => "beta",
+                2 => "disabled",
+                _ => "stable"
+            };
+        }
+        if (VerifyUpdateSignatureCheck != null) cfg.VerifyUpdateSignature = VerifyUpdateSignatureCheck.IsChecked ?? false;
     }
 
     private MessageBoxResult PromptUnsavedChanges()
@@ -254,6 +323,47 @@ public partial class SettingsWindow : Window
         };
         ThemeManager.SetTheme(theme);
         _isDirty = true;
+    }
+
+    private void OpenLogFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = Logger.GetLogDirectory(),
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("SettingsWindow", "Failed to open log folder", ex);
+            MessageBox.Show($"Could not open log folder: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void ExportDiagnosticsButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var dialog = new SaveFileDialog
+            {
+                Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
+                FileName = $"redball_diagnostics_{DateTime.Now:yyyyMMdd_HHmmss}.txt",
+                Title = "Export Diagnostics"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                var path = Logger.ExportDiagnostics(dialog.FileName);
+                MessageBox.Show($"Diagnostics exported to:\n{path}", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("SettingsWindow", "Failed to export diagnostics", ex);
+            MessageBox.Show($"Export failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void HotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -355,6 +465,13 @@ public partial class SettingsWindow : Window
     {
         if (TypingSpeedText != null)
             TypingSpeedText.Text = $"Speed: {(int)e.NewValue} ms per character";
+        _isDirty = true;
+    }
+
+    private void MaxLogSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MaxLogSizeText != null)
+            MaxLogSizeText.Text = $"Max log size: {(int)e.NewValue} MB";
         _isDirty = true;
     }
 

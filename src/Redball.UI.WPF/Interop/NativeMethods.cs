@@ -27,8 +27,11 @@ internal static class NativeMethods
     public const uint KEYEVENTF_KEYUP = 0x0002;
     public const uint KEYEVENTF_UNICODE = 0x0004;
 
+    public const ushort VK_F13 = 0x7C;
+    public const ushort VK_F14 = 0x7D;
     // VK_F15 = 0x7E (invisible key used for heartbeat)
     public const ushort VK_F15 = 0x7E;
+    public const ushort VK_F16 = 0x7F;
 
     [StructLayout(LayoutKind.Sequential)]
     public struct INPUT

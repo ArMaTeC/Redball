@@ -6,6 +6,15 @@ using System.Text.Json.Serialization;
 
 namespace Redball.UI.Services;
 
+public enum HeartbeatInputMode
+{
+    Disabled = 0,
+    F13 = 1,
+    F14 = 2,
+    F15 = 3,
+    F16 = 4
+}
+
 /// <summary>
 /// Manages loading, saving, and validating Redball configuration from Redball.json.
 /// </summary>
@@ -340,6 +349,25 @@ public class ConfigService
             Config.UpdateRepoName = "Redball";
             IsDirty = true;
         }
+
+        if (string.IsNullOrWhiteSpace(Config.HeartbeatInputMode))
+        {
+            Config.HeartbeatInputMode = Config.UseHeartbeatKeypress ? "F15" : "Disabled";
+            IsDirty = true;
+        }
+        else if (!Enum.TryParse<HeartbeatInputMode>(Config.HeartbeatInputMode, true, out _))
+        {
+            Logger.Warning("ConfigService", $"HeartbeatInputMode '{Config.HeartbeatInputMode}' was invalid, defaulting to F15");
+            Config.HeartbeatInputMode = "F15";
+            IsDirty = true;
+        }
+
+        var useHeartbeatKeypress = !string.Equals(Config.HeartbeatInputMode, "Disabled", StringComparison.OrdinalIgnoreCase);
+        if (Config.UseHeartbeatKeypress != useHeartbeatKeypress)
+        {
+            Config.UseHeartbeatKeypress = useHeartbeatKeypress;
+            IsDirty = true;
+        }
     }
 }
 
@@ -351,6 +379,7 @@ public class RedballConfig
     public int HeartbeatSeconds { get; set; } = 59;
     public bool PreventDisplaySleep { get; set; } = true;
     public bool UseHeartbeatKeypress { get; set; } = true;
+    public string HeartbeatInputMode { get; set; } = "F15";
     public int DefaultDuration { get; set; } = 60;
     public string LogPath { get; set; } = "Redball.log";
     public int MaxLogSizeMB { get; set; } = 10;

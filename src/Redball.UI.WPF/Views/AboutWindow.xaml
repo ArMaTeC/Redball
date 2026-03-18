@@ -4,8 +4,8 @@
         Title="About Redball"
         Height="400" Width="500"
         WindowStartupLocation="CenterScreen"
-        Style="{StaticResource ModernWindow}"
-        Background="{StaticResource BackgroundBrush}"
+        Style="{DynamicResource ModernWindow}"
+        Background="{DynamicResource BackgroundBrush}"
         ResizeMode="NoResize">
 
     <WindowChrome.WindowChrome>
@@ -15,7 +15,7 @@
                       ResizeBorderThickness="0"/>
     </WindowChrome.WindowChrome>
 
-    <Border Background="{StaticResource BackgroundBrush}" CornerRadius="8">
+    <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="8">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -24,13 +24,13 @@
             </Grid.RowDefinitions>
 
             <!-- Title Bar -->
-            <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8,8,0,0" Height="50">
+            <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="8,8,0,0" Height="50">
                 <Grid>
                     <TextBlock Text="About" FontSize="18" FontWeight="SemiBold"
                               VerticalAlignment="Center" Margin="20,0"/>
                     <Button Content="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="14"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
-                           Style="{StaticResource CloseButton}" Width="32" Height="32"
+                           Style="{DynamicResource CloseButton}" Width="32" Height="32"
                            Click="CloseButton_Click"/>
                 </Grid>
             </Border>
@@ -38,7 +38,7 @@
             <!-- Content -->
             <StackPanel Grid.Row="1" Margin="40,30" HorizontalAlignment="Center">
                 <!-- Icon Placeholder -->
-                <Border Width="80" Height="80" Background="{StaticResource AccentBrush}"
+                <Border Width="80" Height="80" Background="{DynamicResource AccentBrush}"
                        CornerRadius="40" Margin="0,0,0,20">
                     <TextBlock Text="RB" FontSize="32" FontWeight="Bold" Foreground="White"
                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -47,29 +47,29 @@
                 <TextBlock x:Name="VersionText" FontSize="24" FontWeight="Bold"
                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
                 <TextBlock Text="Modern WPF Edition" FontSize="14"
-                          Foreground="{StaticResource AccentBrush}"
+                          Foreground="{DynamicResource AccentBrush}"
                           HorizontalAlignment="Center" Margin="0,0,0,20"/>
 
                 <TextBlock Text="A system tray utility to prevent Windows from going to sleep."
                           TextWrapping="Wrap" TextAlignment="Center"
-                          Foreground="{StaticResource ForegroundBrush}"
+                          Foreground="{DynamicResource ForegroundBrush}"
                           Margin="0,0,0,20"/>
 
                 <StackPanel HorizontalAlignment="Center" Margin="0,0,0,20">
-                    <TextBlock Text="&#xA9; 2024-2026 ArMaTeC"
-                              FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"/>
+                    <TextBlock Text="&#xA9; 2026 ArMaTeC"
+                              FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                     <TextBlock Text="Licensed under MIT License"
-                              FontSize="12" Foreground="{StaticResource ForegroundSecondaryBrush}"/>
+                              FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                 </StackPanel>
 
-                <Button Content="View on GitHub" Style="{StaticResource ModernButton}"
+                <Button Content="View on GitHub" Style="{DynamicResource ModernButton}"
                        Width="140" Click="GitHubButton_Click"/>
             </StackPanel>
 
             <!-- Footer -->
-            <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}" CornerRadius="0,0,8,8" Height="50">
+            <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" CornerRadius="0,0,8,8" Height="50">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Button Content="Check for Updates" Style="{StaticResource ModernButton}"
+                    <Button Content="Check for Updates" Style="{DynamicResource ModernButton}"
                            Click="UpdateButton_Click"/>
                 </StackPanel>
             </Border>

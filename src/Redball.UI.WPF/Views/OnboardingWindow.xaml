@@ -9,7 +9,9 @@
         Width="640"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource WindowBackground}">
+        Style="{DynamicResource ModernWindow}"
+        Background="{DynamicResource BackgroundBrush}"
+        Foreground="{DynamicResource ForegroundBrush}">
     
     <Grid>
         <Grid.RowDefinitions>
@@ -20,7 +22,7 @@
         
         <!-- Header -->
         <Border Grid.Row="0" 
-                Background="{DynamicResource AccentColor}" 
+                Background="{DynamicResource AccentBrush}" 
                 Height="80"
                 Padding="20,0">
             <Grid>
@@ -62,7 +64,8 @@
                            FontWeight="SemiBold"
                            Margin="0,0,0,15"/>
                 
-                <TextBlock TextWrapping="Wrap" Margin="0,0,0,20">
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,20"
+                           Foreground="{DynamicResource ForegroundBrush}">
                     Redball prevents your computer from sleeping while you work. Here's how to get started:
                 </TextBlock>
                 
@@ -75,9 +78,9 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="🔴" FontSize="20" Margin="0,0,10,0"/>
                         <StackPanel Grid.Column="1">
-                            <TextBlock Text="System Tray Icon" FontWeight="SemiBold"/>
+                            <TextBlock Text="System Tray Icon" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
                             <TextBlock Text="Look for the red ball in your system tray. Right-click for options." 
-                                       Opacity="0.7" FontSize="12"/>
+                                       Opacity="0.7" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -90,9 +93,9 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="⏱️" FontSize="20" Margin="0,0,10,0"/>
                         <StackPanel Grid.Column="1">
-                            <TextBlock Text="Set a Duration" FontWeight="SemiBold"/>
+                            <TextBlock Text="Set a Duration" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
                             <TextBlock Text="Choose how long to stay awake (15/30/60/120 min or indefinite)." 
-                                       Opacity="0.7" FontSize="12"/>
+                                       Opacity="0.7" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -105,9 +108,9 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="🔋" FontSize="20" Margin="0,0,10,0"/>
                         <StackPanel Grid.Column="1">
-                            <TextBlock Text="Smart Features" FontWeight="SemiBold"/>
+                            <TextBlock Text="Smart Features" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
                             <TextBlock Text="Enable battery-aware, network-aware, or idle detection modes." 
-                                       Opacity="0.7" FontSize="12"/>
+                                       Opacity="0.7" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -120,9 +123,9 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="⌨️" FontSize="20" Margin="0,0,10,0"/>
                         <StackPanel Grid.Column="1">
-                            <TextBlock Text="Keyboard Shortcuts" FontWeight="SemiBold"/>
+                            <TextBlock Text="Keyboard Shortcuts" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
                             <TextBlock Text="Space = Toggle, D = Display, H = Heartbeat, I = Indefinite" 
-                                       Opacity="0.7" FontSize="12"/>
+                                       Opacity="0.7" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -133,35 +136,41 @@
                 <TextBlock Text="Default Settings" 
                            FontSize="14" 
                            FontWeight="SemiBold"
-                           Margin="0,0,0,10"/>
+                           Margin="0,0,0,10"
+                           Foreground="{DynamicResource ForegroundBrush}"/>
                 
                 <CheckBox x:Name="PreventDisplaySleepCheck" 
                           Content="Keep display awake"
                           IsChecked="True"
-                          Margin="0,5"/>
+                          Margin="0,5"
+                          Style="{DynamicResource ModernCheckBox}"/>
                 
                 <CheckBox x:Name="UseHeartbeatCheck" 
                           Content="F15 heartbeat"
                           IsChecked="True"
-                          Margin="0,5"/>
+                          Margin="0,5"
+                          Style="{DynamicResource ModernCheckBox}"/>
                 
                 <CheckBox x:Name="StartWithWindowsCheck" 
                           Content="Start with Windows"
                           IsChecked="False"
-                          Margin="0,5"/>
+                          Margin="0,5"
+                          Style="{DynamicResource ModernCheckBox}"/>
                 
                 <CheckBox x:Name="BatteryAwareCheck" 
                           Content="Battery-aware mode"
                           IsChecked="False"
-                          Margin="0,5"/>
+                          Margin="0,5"
+                          Style="{DynamicResource ModernCheckBox}"/>
                 
                 <CheckBox x:Name="NetworkAwareCheck" 
                           Content="Network-aware mode"
                           IsChecked="False"
-                          Margin="0,5"/>
+                          Margin="0,5"
+                          Style="{DynamicResource ModernCheckBox}"/>
                 
-                <TextBlock Text="Theme:" Margin="0,15,0,5"/>
-                <ComboBox x:Name="ThemeCombo" SelectedIndex="0">
+                <TextBlock Text="Theme:" Margin="0,15,0,5" Foreground="{DynamicResource ForegroundBrush}"/>
+                <ComboBox x:Name="ThemeCombo" SelectedIndex="0" Style="{DynamicResource ModernComboBox}">
                     <ComboBoxItem Content="Dark"/>
                     <ComboBoxItem Content="Light"/>
                     <ComboBoxItem Content="System"/>
@@ -172,7 +181,7 @@
         <!-- Footer -->
         <Border Grid.Row="2" 
                 Background="{DynamicResource PanelBackground}" 
-                BorderBrush="{DynamicResource BorderColor}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,1,0,0"
                 Padding="20,15">
             <Grid>
@@ -185,7 +194,8 @@
                 <CheckBox Grid.Column="0" 
                           x:Name="ShowOnStartupCheck"
                           Content="Show this on startup"
-                          IsChecked="False"/>
+                          IsChecked="False"
+                          Style="{DynamicResource ModernCheckBox}"/>
                 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
                     <TextBlock Text="📖 " FontSize="14"/>
@@ -202,9 +212,7 @@
                         Content="Get Started" 
                         Click="GetStartedButton_Click"
                         Padding="20,8"
-                        FontWeight="SemiBold"
-                        Background="{DynamicResource AccentColor}"
-                        Foreground="White"/>
+                        Style="{DynamicResource PrimaryButton}"/>
             </Grid>
         </Border>
     </Grid>

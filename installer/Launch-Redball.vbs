@@ -31,7 +31,7 @@ Sub LaunchApp()
         If appDir <> "" Then
             WshShell.CurrentDirectory = appDir
         End If
-        launchCommand = "cmd.exe /c start """" """" & appPath & """""
-        WshShell.Run launchCommand, 1, False
+        launchCommand = Chr(34) & appPath & Chr(34)
+        WshShell.Run launchCommand, 0, False
     End If
 End Sub

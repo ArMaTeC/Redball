@@ -51,6 +51,10 @@
                                FontSize="24" 
                                FontWeight="Bold"
                                Foreground="{DynamicResource AccentColor}"/>
+                    <TextBlock x:Name="SessionsTrendText"
+                               Text="Last 7 days vs prior 7 days"
+                               FontSize="11"
+                               Opacity="0.7"/>
                 </StackPanel>
             </Border>
             
@@ -64,6 +68,18 @@
                                FontSize="24" 
                                FontWeight="Bold"
                                Foreground="{DynamicResource AccentColor}"/>
+                    <ItemsControl x:Name="UsageOutcomeList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding ValueText}"
+                                           FontSize="11"
+                                           Opacity="0.9"
+                                           Foreground="{Binding ValueForeground}"
+                                           FontWeight="{Binding ValueFontWeight}"
+                                           TextWrapping="Wrap"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
             
@@ -77,6 +93,18 @@
                                FontSize="16" 
                                FontWeight="Bold"
                                Foreground="{DynamicResource AccentColor}"/>
+                    <ItemsControl x:Name="CoverageOutcomeList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding ValueText}"
+                                           FontSize="11"
+                                           Opacity="0.9"
+                                           Foreground="{Binding ValueForeground}"
+                                           FontWeight="{Binding ValueFontWeight}"
+                                           TextWrapping="Wrap"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
         </Grid>
@@ -90,7 +118,7 @@
                 </Grid.RowDefinitions>
                 
                 <TextBlock Grid.Row="0" 
-                           Text="🔥 Most Used Features" 
+                           Text="🔥 Most Active Product Areas" 
                            FontSize="16" 
                            FontWeight="SemiBold"
                            Margin="0,0,0,10"/>
@@ -105,9 +133,14 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold"/>
-                                <TextBlock Grid.Column="1" 
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Share}"
+                                           Margin="0,0,12,0"
+                                           Opacity="0.7"/>
+                                <TextBlock Grid.Column="2" 
                                            Text="{Binding Count, StringFormat={}{0}x}" 
                                            Opacity="0.7"/>
                             </Grid>

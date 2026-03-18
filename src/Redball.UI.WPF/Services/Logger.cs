@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 
 namespace Redball.UI.Services;
@@ -17,6 +19,8 @@ public static class Logger
     private static int _logLevel = 0; // 0=Verbose, 1=Debug, 2=Info, 3=Warning, 4=Error, 5=Fatal
 
     public static string LogPath => _logPath;
+
+    public static int CurrentLogLevel => _logLevel;
 
     /// <summary>
     /// Initialize the logger with the specified log file path.
@@ -72,6 +76,68 @@ public static class Logger
     public static void SetLogLevel(int level)
     {
         _logLevel = Math.Clamp(level, 0, 5);
+    }
+
+    public static void ApplyConfig(RedballConfig config)
+    {
+        if (config == null)
+        {
+            return;
+        }
+
+        SetLogLevel(config.VerboseLogging ? 0 : 2);
+        RotateLog(config.MaxLogSizeMB * 1024L * 1024L);
+        Info("Logger", $"Logger configuration applied: Level={_logLevel}, MaxSizeMB={config.MaxLogSizeMB}");
+    }
+
+    public static string GetLogDirectory()
+    {
+        return Path.GetDirectoryName(_logPath) ?? AppContext.BaseDirectory;
+    }
+
+    public static string ExportDiagnostics(string destinationPath)
+    {
+        var diagnostics = new StringBuilder();
+        diagnostics.AppendLine("Redball Diagnostics");
+        diagnostics.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        diagnostics.AppendLine($"Version: {GetAppVersion()}");
+        diagnostics.AppendLine($"LogPath: {_logPath}");
+        diagnostics.AppendLine($"LogLevel: {_logLevel}");
+        diagnostics.AppendLine();
+
+        try
+        {
+            var config = ConfigService.Instance.Config;
+            diagnostics.AppendLine("Configuration:");
+            diagnostics.AppendLine(JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
+            diagnostics.AppendLine();
+        }
+        catch (Exception ex)
+        {
+            diagnostics.AppendLine($"Configuration export failed: {ex.Message}");
+            diagnostics.AppendLine();
+        }
+
+        try
+        {
+            if (File.Exists(_logPath))
+            {
+                diagnostics.AppendLine("Recent Log Output:");
+                var logLines = File.ReadAllLines(_logPath);
+                var recentLines = logLines.Skip(Math.Max(0, logLines.Length - 200));
+                foreach (var line in recentLines)
+                {
+                    diagnostics.AppendLine(line);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            diagnostics.AppendLine($"Log export failed: {ex.Message}");
+        }
+
+        File.WriteAllText(destinationPath, diagnostics.ToString());
+        return destinationPath;
     }
 
     /// <summary>

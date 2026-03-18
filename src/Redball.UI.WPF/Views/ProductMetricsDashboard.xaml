@@ -57,7 +57,9 @@
             
             <Border Grid.Column="0" Style="{DynamicResource CardStyle}" Margin="0,0,12,0">
                 <StackPanel>
-                    <TextBlock Text="Active Users (7d)" FontSize="11" Opacity="0.6"/>
+                    <TextBlock Text="Session Activity (7d)"
+                               ToolTip="Recent app sessions recorded in the last 7 days, compared with the prior 7-day window."
+                               FontSize="11" Opacity="0.6"/>
                     <TextBlock x:Name="ActiveUsersText" Text="0" FontSize="28" FontWeight="Bold" 
                                Foreground="{DynamicResource AccentColor}"/>
                     <TextBlock x:Name="ActiveUsersTrend" Text="↑ 0%" FontSize="12" Opacity="0.7"/>
@@ -106,7 +108,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="Feature Usage Distribution" 
+                    <TextBlock Grid.Row="0" Text="Product Area Distribution" 
                                FontSize="14" FontWeight="SemiBold" Margin="0,0,0,15"/>
                     
                     <!-- Simulated Bar Chart -->
@@ -117,7 +119,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="50"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Keep-Awake" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="Core Usage" VerticalAlignment="Center"/>
                             <ProgressBar Grid.Column="1" x:Name="KeepAwakeBar" Value="85" Maximum="100" Height="20"/>
                             <TextBlock Grid.Column="2" Text="85%" Margin="5,0,0,0" VerticalAlignment="Center"/>
                         </Grid>
@@ -137,7 +139,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="50"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Schedule" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="Onboarding / Settings" VerticalAlignment="Center"/>
                             <ProgressBar Grid.Column="1" x:Name="ScheduleBar" Value="30" Maximum="100" Height="20"/>
                             <TextBlock Grid.Column="2" Text="30%" Margin="5,0,0,0" VerticalAlignment="Center"/>
                         </Grid>
@@ -147,7 +149,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="50"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Battery-Aware" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="Diagnostics" VerticalAlignment="Center"/>
                             <ProgressBar Grid.Column="1" x:Name="BatteryBar" Value="25" Maximum="100" Height="20"/>
                             <TextBlock Grid.Column="2" Text="25%" Margin="5,0,0,0" VerticalAlignment="Center"/>
                         </Grid>
@@ -157,7 +159,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="50"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Network-Aware" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="Updates / Insights" VerticalAlignment="Center"/>
                             <ProgressBar Grid.Column="1" x:Name="NetworkBar" Value="15" Maximum="100" Height="20"/>
                             <TextBlock Grid.Column="2" Text="15%" Margin="5,0,0,0" VerticalAlignment="Center"/>
                         </Grid>
@@ -172,52 +174,26 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="Cohort Retention Analysis" 
+                    <TextBlock Grid.Row="0" Text="Journey Outcome Snapshot" 
                                FontSize="14" FontWeight="SemiBold" Margin="0,0,0,15"/>
                     
-                    <!-- Cohort Grid -->
-                    <Grid Grid.Row="1">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="80"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        
-                        <!-- Header -->
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Cohort" FontWeight="Bold"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="Day 1" HorizontalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Day 7" HorizontalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="3" Text="Day 14" HorizontalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="4" Text="Day 30" HorizontalAlignment="Center"/>
-                        
-                        <!-- Data Rows -->
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Jan 2025"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="100%" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColor}" FontWeight="Bold"/>
-                        <TextBlock Grid.Row="1" Grid.Column="2" Text="65%" HorizontalAlignment="Center"/>
-                        <TextBlock Grid.Row="1" Grid.Column="3" Text="45%" HorizontalAlignment="Center"/>
-                        <TextBlock Grid.Row="1" Grid.Column="4" Text="32%" HorizontalAlignment="Center"/>
-                        
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Feb 2025"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="100%" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColor}" FontWeight="Bold"/>
-                        <TextBlock Grid.Row="2" Grid.Column="2" Text="72%" HorizontalAlignment="Center"/>
-                        <TextBlock Grid.Row="2" Grid.Column="3" Text="58%" HorizontalAlignment="Center"/>
-                        <TextBlock Grid.Row="2" Grid.Column="4" Text="41%" HorizontalAlignment="Center"/>
-                        
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Mar 2025"/>
-                        <TextBlock Grid.Row="3" Grid.Column="1" Text="100%" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColor}" FontWeight="Bold"/>
-                        <TextBlock Grid.Row="3" Grid.Column="2" Text="78%" HorizontalAlignment="Center"/>
-                        <TextBlock Grid.Row="3" Grid.Column="3" Text="62%" HorizontalAlignment="Center"/>
-                        <TextBlock Grid.Row="3" Grid.Column="4" Text="--" HorizontalAlignment="Center" Opacity="0.5"/>
-                    </Grid>
+                    <ItemsControl Grid.Row="1" x:Name="JourneyOutcomesList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding Label}" ToolTip="{Binding ToolTip}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding HintText}" FontSize="11" Opacity="0.65" Foreground="{Binding HintForeground}" FontWeight="{Binding HintFontWeight}"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding ValueText}" HorizontalAlignment="Right" Foreground="{Binding ValueForeground}" FontWeight="{Binding ValueFontWeight}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </Grid>
             </Border>
         </Grid>
@@ -271,3 +247,5 @@
         </Border>
     </Grid>
 </Window>
+
+

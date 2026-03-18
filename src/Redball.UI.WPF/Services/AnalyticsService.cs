@@ -15,6 +15,7 @@ public class AnalyticsService
 {
     private static readonly string AnalyticsFile = Path.Combine(
         AppContext.BaseDirectory, "analytics.json");
+    private const int TrendWindowDays = 7;
     
     private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion);
     private AnalyticsData _data = new();
@@ -32,6 +33,100 @@ public class AnalyticsService
         }
     }
 
+    private static string GetFeatureCategory(string featureName)
+    {
+        if (featureName.StartsWith("keepawake.", StringComparison.OrdinalIgnoreCase) ||
+            featureName == "app.launch" ||
+            featureName == "app.exit")
+        {
+            return "Core Usage";
+        }
+
+        if (featureName.StartsWith("typething.", StringComparison.OrdinalIgnoreCase))
+        {
+            return "TypeThing";
+        }
+
+        if (featureName.StartsWith("onboarding.", StringComparison.OrdinalIgnoreCase) ||
+            featureName == "startup.enabled")
+        {
+            return "Onboarding";
+        }
+
+        if (featureName.StartsWith("settings.", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Settings";
+        }
+
+        if (featureName.StartsWith("diagnostics.", StringComparison.OrdinalIgnoreCase) ||
+            featureName.StartsWith("config.", StringComparison.OrdinalIgnoreCase) ||
+            featureName == "logs.opened")
+        {
+            return "Diagnostics";
+        }
+
+        if (featureName.StartsWith("update.", StringComparison.OrdinalIgnoreCase) ||
+            featureName == "github.opened")
+        {
+            return "Updates";
+        }
+
+        if (featureName.StartsWith("analytics.", StringComparison.OrdinalIgnoreCase) ||
+            featureName.StartsWith("metrics.", StringComparison.OrdinalIgnoreCase) ||
+            featureName == "about.opened")
+        {
+            return "Insights";
+        }
+
+        return "Other";
+    }
+
+    private static string GetDayKey(DateTime timestamp)
+    {
+        return timestamp.ToString("yyyy-MM-dd");
+    }
+
+    private static int SumRange(Dictionary<string, int> history, DateTime startInclusive, DateTime endExclusive)
+    {
+        return history.Sum(entry =>
+        {
+            if (!DateTime.TryParse(entry.Key, out var day))
+            {
+                return 0;
+            }
+
+            var normalizedDay = day.Date;
+            return normalizedDay >= startInclusive.Date && normalizedDay < endExclusive.Date
+                ? entry.Value
+                : 0;
+        });
+    }
+
+    private static double CalculateTrendPercent(int recent, int prior)
+    {
+        if (prior <= 0)
+        {
+            return recent > 0 ? 100 : 0;
+        }
+
+        return ((recent - prior) / (double)prior) * 100;
+    }
+
+    private static int GetFeatureCount(IReadOnlyDictionary<string, FeatureStats> features, string featureName)
+    {
+        return features.TryGetValue(featureName, out var stats) ? stats.UsageCount : 0;
+    }
+
+    private static double CalculateRate(int numerator, int denominator)
+    {
+        if (denominator <= 0)
+        {
+            return 0;
+        }
+
+        return (numerator / (double)denominator) * 100;
+    }
+
     /// <summary>
     /// Track a feature usage event
     /// </summary>
@@ -43,8 +138,10 @@ public class AnalyticsService
         try
         {
             var feature = _data.Features.GetValueOrDefault(featureName) ?? new FeatureStats();
+            var todayKey = GetDayKey(DateTime.UtcNow);
             feature.UsageCount++;
             feature.LastUsed = DateTime.UtcNow;
+            feature.DailyUsage[todayKey] = feature.DailyUsage.GetValueOrDefault(todayKey) + 1;
             if (context != null)
             {
                 feature.Contexts[context] = feature.Contexts.GetValueOrDefault(context) + 1;
@@ -204,6 +301,8 @@ public class AnalyticsService
         if (!_enabled) return;
         _data.SessionStartTime = DateTime.UtcNow;
         _data.TotalSessions++;
+        var todayKey = GetDayKey(DateTime.UtcNow);
+        _data.SessionHistory[todayKey] = _data.SessionHistory.GetValueOrDefault(todayKey) + 1;
     }
 
     public void TrackSessionEnd()
@@ -226,11 +325,70 @@ public class AnalyticsService
         _lock.EnterReadLock();
         try
         {
+            var utcToday = DateTime.UtcNow.Date;
+            var recentStart = utcToday.AddDays(-(TrendWindowDays - 1));
+            var recentEnd = utcToday.AddDays(1);
+            var priorStart = recentStart.AddDays(-TrendWindowDays);
+            var priorEnd = recentStart;
+
             var topFeatures = _data.Features
                 .OrderByDescending(f => f.Value.UsageCount)
                 .Take(5)
                 .Select(f => new TopFeature { Name = f.Key, Count = f.Value.UsageCount })
                 .ToList();
+
+            var topCategories = _data.Features
+                .GroupBy(f => GetFeatureCategory(f.Key))
+                .Select(group => new TopFeature
+                {
+                    Name = group.Key,
+                    Count = group.Sum(feature => feature.Value.UsageCount)
+                })
+                .OrderByDescending(category => category.Count)
+                .ToList();
+
+            var categoryTrends = _data.Features
+                .GroupBy(f => GetFeatureCategory(f.Key))
+                .Select(group =>
+                {
+                    var recentCount = group.Sum(feature => SumRange(feature.Value.DailyUsage, recentStart, recentEnd));
+                    var priorCount = group.Sum(feature => SumRange(feature.Value.DailyUsage, priorStart, priorEnd));
+                    return new CategoryTrend
+                    {
+                        Name = group.Key,
+                        RecentCount = recentCount,
+                        PriorCount = priorCount,
+                        TrendPercent = CalculateTrendPercent(recentCount, priorCount)
+                    };
+                })
+                .OrderByDescending(category => category.RecentCount)
+                .ThenByDescending(category => category.TrendPercent)
+                .ToList();
+
+            var totalFeatureEvents = _data.Features.Sum(f => f.Value.UsageCount);
+            var averageSessionDuration = _data.TotalSessions > 0
+                ? TimeSpan.FromTicks(_data.TotalSessionDuration.Ticks / _data.TotalSessions)
+                : TimeSpan.Zero;
+            var activeUsersLast7Days = _data.TotalSessions;
+            var recentSessions = SumRange(_data.SessionHistory, recentStart, recentEnd);
+            var priorSessions = SumRange(_data.SessionHistory, priorStart, priorEnd);
+            var featureAdoptionRate = _data.TotalSessions > 0
+                ? Math.Min(100, (_data.Features.Count / (double)_data.TotalSessions) * 100)
+                : 0;
+            var lastFeatureUse = _data.Features.Count > 0
+                ? _data.Features.Max(f => f.Value.LastUsed)
+                : _data.LastUpdated;
+            var typeThingStarted = GetFeatureCount(_data.Features, "typething.started");
+            var typeThingCompleted = GetFeatureCount(_data.Features, "typething.completed");
+            var settingsSaved = GetFeatureCount(_data.Features, "settings.saved");
+            var settingsFailed = GetFeatureCount(_data.Features, "settings.save_failed") +
+                                 GetFeatureCount(_data.Features, "settings.save_validation_failed");
+            var updateSucceeded = GetFeatureCount(_data.Features, "update.download_succeeded");
+            var updateFailed = GetFeatureCount(_data.Features, "update.download_failed");
+            var diagnosticsOpened = GetFeatureCount(_data.Features, "diagnostics.opened");
+            var diagnosticsExported = GetFeatureCount(_data.Features, "diagnostics.exported");
+            var onboardingShown = GetFeatureCount(_data.Features, "onboarding.shown");
+            var onboardingCompleted = GetFeatureCount(_data.Features, "onboarding.completed");
 
             return new AnalyticsSummary
             {
@@ -241,7 +399,32 @@ public class AnalyticsService
                 LastUpdated = _data.LastUpdated,
                 NpsScore = GetNpsScore(),
                 RetentionDay7 = GetRetentionRate(7),
-                RetentionDay30 = GetRetentionRate(30)
+                RetentionDay30 = GetRetentionRate(30),
+                AverageSessionDuration = averageSessionDuration,
+                TotalFeatureEvents = totalFeatureEvents,
+                TopCategories = topCategories,
+                CategoryTrends = categoryTrends,
+                FeatureAdoptionRate = featureAdoptionRate,
+                ActiveUsersLast7Days = activeUsersLast7Days,
+                LastFeatureUse = lastFeatureUse,
+                RecentSessions = recentSessions,
+                PriorSessions = priorSessions,
+                SessionTrendPercent = CalculateTrendPercent(recentSessions, priorSessions),
+                TypeThingSuccessRate = CalculateRate(typeThingCompleted, typeThingStarted),
+                TypeThingCompletions = typeThingCompleted,
+                TypeThingAttempts = typeThingStarted,
+                SettingsSaveSuccessRate = CalculateRate(settingsSaved, settingsSaved + settingsFailed),
+                SettingsSaves = settingsSaved,
+                SettingsSaveAttempts = settingsSaved + settingsFailed,
+                UpdateSuccessRate = CalculateRate(updateSucceeded, updateSucceeded + updateFailed),
+                UpdateSuccesses = updateSucceeded,
+                UpdateAttempts = updateSucceeded + updateFailed,
+                DiagnosticsExportRate = CalculateRate(diagnosticsExported, diagnosticsOpened),
+                DiagnosticsExports = diagnosticsExported,
+                DiagnosticsOpens = diagnosticsOpened,
+                OnboardingCompletionRate = CalculateRate(onboardingCompleted, onboardingShown),
+                OnboardingCompletions = onboardingCompleted,
+                OnboardingStarts = onboardingShown
             };
         }
         finally
@@ -350,6 +533,7 @@ public class AnalyticsData
     public int TotalSessions { get; set; }
     public TimeSpan TotalSessionDuration { get; set; }
     public DateTime? SessionStartTime { get; set; }
+    public Dictionary<string, int> SessionHistory { get; set; } = new();
     public Dictionary<string, FeatureStats> Features { get; set; } = new();
     public Dictionary<string, FunnelStats> Funnels { get; set; } = new();
     public Dictionary<string, DateTime> Retention { get; set; } = new();
@@ -360,6 +544,7 @@ public class FeatureStats
 {
     public int UsageCount { get; set; }
     public DateTime LastUsed { get; set; }
+    public Dictionary<string, int> DailyUsage { get; set; } = new();
     public Dictionary<string, int> Contexts { get; set; } = new();
 }
 
@@ -381,15 +566,48 @@ public class AnalyticsSummary
     public int TotalSessions { get; set; }
     public TimeSpan TotalUsageTime { get; set; }
     public List<TopFeature> TopFeatures { get; set; } = new();
+    public List<TopFeature> TopCategories { get; set; } = new();
+    public List<CategoryTrend> CategoryTrends { get; set; } = new();
     public DateTime FirstSeen { get; set; }
     public DateTime LastUpdated { get; set; }
     public double NpsScore { get; set; }
     public double RetentionDay7 { get; set; }
     public double RetentionDay30 { get; set; }
+    public TimeSpan AverageSessionDuration { get; set; }
+    public int TotalFeatureEvents { get; set; }
+    public double FeatureAdoptionRate { get; set; }
+    public int ActiveUsersLast7Days { get; set; }
+    public DateTime LastFeatureUse { get; set; }
+    public int RecentSessions { get; set; }
+    public int PriorSessions { get; set; }
+    public double SessionTrendPercent { get; set; }
+    public double TypeThingSuccessRate { get; set; }
+    public int TypeThingCompletions { get; set; }
+    public int TypeThingAttempts { get; set; }
+    public double SettingsSaveSuccessRate { get; set; }
+    public int SettingsSaves { get; set; }
+    public int SettingsSaveAttempts { get; set; }
+    public double UpdateSuccessRate { get; set; }
+    public int UpdateSuccesses { get; set; }
+    public int UpdateAttempts { get; set; }
+    public double DiagnosticsExportRate { get; set; }
+    public int DiagnosticsExports { get; set; }
+    public int DiagnosticsOpens { get; set; }
+    public double OnboardingCompletionRate { get; set; }
+    public int OnboardingCompletions { get; set; }
+    public int OnboardingStarts { get; set; }
 }
 
 public class TopFeature
 {
     public string Name { get; set; } = "";
     public int Count { get; set; }
+}
+
+public class CategoryTrend
+{
+    public string Name { get; set; } = "";
+    public int RecentCount { get; set; }
+    public int PriorCount { get; set; }
+    public double TrendPercent { get; set; }
 }

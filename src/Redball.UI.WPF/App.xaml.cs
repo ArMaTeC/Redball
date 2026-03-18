@@ -14,6 +14,7 @@ public partial class App : Application
     private Views.MainWindow? _mainWindow; // Keep reference to prevent GC
     private Services.SingletonService? _singleton;
     private readonly Services.SessionStateService _sessionState = new();
+    private Services.AnalyticsService? _analytics;
 
     public App()
     {
@@ -75,6 +76,7 @@ public partial class App : Application
         try
         {
             base.OnStartup(e);
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
             Services.Logger.Debug("App", "base.OnStartup completed");
 
             // Singleton check - prevent multiple instances
@@ -101,8 +103,39 @@ public partial class App : Application
 
             // Log configuration details
             var cfg = Services.ConfigService.Instance.Config;
+            Services.Logger.ApplyConfig(cfg);
             Services.Logger.Info("App", $"Config: Heartbeat={cfg.HeartbeatSeconds}s, Duration={cfg.DefaultDuration}min, Theme={cfg.Theme}");
             Services.Logger.Info("App", $"Config: PreventDisplaySleep={cfg.PreventDisplaySleep}, BatteryAware={cfg.BatteryAware}, NetworkAware={cfg.NetworkAware}");
+
+            // Initialize theme resources before showing any themed windows such as onboarding.
+            Services.Logger.Info("App", "Initializing ThemeManager...");
+            try
+            {
+                var savedTheme = Services.ConfigService.Instance.Config.Theme;
+                if (!string.IsNullOrEmpty(savedTheme) && savedTheme != "System")
+                {
+                    var themeEnum = ThemeManager.ThemeFromString(savedTheme);
+                    Services.Logger.Debug("App", $"Setting theme to: {themeEnum} (from config)");
+                    ThemeManager.SetTheme(themeEnum);
+                }
+                else
+                {
+                    Services.Logger.Debug("App", "Auto-detecting system theme");
+                    ThemeManager.Initialize();
+                }
+
+                Services.Logger.Info("App", $"ThemeManager initialized with theme: {ThemeManager.CurrentTheme}");
+            }
+            catch (Exception themeEx)
+            {
+                Services.Logger.Error("App", "ThemeManager initialization failed", themeEx);
+                ThemeManager.SetTheme(Theme.Dark);
+            }
+
+            _analytics = new Services.AnalyticsService(cfg.EnableTelemetry);
+            _analytics.TrackSessionStart();
+            _analytics.TrackFeature("app.launch");
+            _analytics.TrackFunnel("onboarding", "app_started");
 
             // Validate configuration
             var errors = Services.ConfigService.Instance.Validate();
@@ -119,34 +152,21 @@ public partial class App : Application
             if (cfg.FirstRun)
             {
                 Services.Logger.Info("App", "First run detected - showing onboarding window");
+                _analytics.TrackFeature("onboarding.shown");
+                _analytics.TrackFunnel("onboarding", "shown");
                 var onboarding = new Views.OnboardingWindow();
                 var result = onboarding.ShowDialog();
                 Services.Logger.Info("App", result == true ? "Onboarding completed" : "Onboarding cancelled/closed");
-            }
-
-            // Initialize modern theme from saved config
-            Services.Logger.Info("App", "Initializing ThemeManager...");
-            try
-            {
-                var savedTheme = Services.ConfigService.Instance.Config.Theme;
-                if (!string.IsNullOrEmpty(savedTheme) && savedTheme != "System")
+                if (result == true)
                 {
-                    var themeEnum = ThemeManager.ThemeFromString(savedTheme);
-                    Services.Logger.Debug("App", $"Setting theme to: {themeEnum} (from config)");
-                    ThemeManager.SetTheme(themeEnum);
+                    _analytics.TrackFeature("onboarding.completed");
+                    _analytics.TrackFunnel("onboarding", "completed");
+                    _analytics.TrackRetention(0);
                 }
                 else
                 {
-                    Services.Logger.Debug("App", "Auto-detecting system theme");
-                    ThemeManager.Initialize();
+                    _analytics.TrackFeature("onboarding.dismissed");
                 }
-                Services.Logger.Info("App", $"ThemeManager initialized with theme: {ThemeManager.CurrentTheme}");
-            }
-            catch (Exception themeEx)
-            {
-                Services.Logger.Error("App", "ThemeManager initialization failed", themeEx);
-                // Fallback to dark theme
-                ThemeManager.SetTheme(Theme.Dark);
             }
 
             // Initialize keep-awake engine
@@ -182,10 +202,14 @@ public partial class App : Application
             // Subscribe to application events
             _mainWindow.Closed += OnMainWindowClosed;
             
-            // Show the window to ensure proper initialization
-            Services.Logger.Debug("App", "Showing MainWindow for initialization...");
+            // Initialize the main window in hidden tray-only mode
+            Services.Logger.Debug("App", "Initializing MainWindow in tray-only mode...");
+            _mainWindow.WindowState = WindowState.Minimized;
+            _mainWindow.ShowInTaskbar = false;
             _mainWindow.Show();
-            Services.Logger.Info("App", "MainWindow shown, startup sequence complete");
+            _mainWindow.Hide();
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+            Services.Logger.Info("App", "MainWindow initialized in tray-only mode, startup sequence complete");
             Services.Logger.LogMemoryStats("App");
         }
         catch (Exception ex)
@@ -201,16 +225,12 @@ public partial class App : Application
         Services.Logger.Info("App", "MainWindow Loaded event fired");
         try
         {
-            // Move window off-screen for tray-only mode
             if (_mainWindow != null)
             {
-                _mainWindow.WindowStyle = WindowStyle.None;
+                _mainWindow.WindowState = WindowState.Minimized;
                 _mainWindow.ShowInTaskbar = false;
-                _mainWindow.Left = -10000;
-                _mainWindow.Top = -10000;
-                _mainWindow.Width = 1;
-                _mainWindow.Height = 1;
-                Services.Logger.Debug("App", "MainWindow moved off-screen, tray-only mode active");
+                _mainWindow.Hide();
+                Services.Logger.Debug("App", "MainWindow kept hidden for tray-only startup");
             }
         }
         catch (Exception ex)
@@ -237,6 +257,9 @@ public partial class App : Application
         
         try
         {
+            _analytics?.TrackFeature("app.exit");
+            _analytics?.TrackSessionEnd();
+
             // Save session state for next launch
             _sessionState.Save(Services.KeepAwakeService.Instance);
             Services.Logger.Debug("App", "Session state saved");
