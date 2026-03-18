@@ -489,7 +489,7 @@
                                         <StackPanel>
                                             <TextBlock Text="General" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
                                             <TextBlock Text="Theme" FontWeight="Medium" Margin="0,0,0,8"/>
-                                            <ComboBox x:Name="MainThemeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,12" ToolTipService.ShowDuration="12000" ToolTip="Choose the visual theme for the Redball window.">
+                                            <ComboBox x:Name="MainThemeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,12" SelectionChanged="MainComboSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Choose the visual theme for the Redball window.">
                                                 <ComboBoxItem Content="System Default"/>
                                                 <ComboBoxItem Content="Dark Mode"/>
                                                 <ComboBoxItem Content="Light Mode"/>
@@ -504,16 +504,16 @@
                                                 <ComboBoxItem Content="Coffee"/>
                                                 <ComboBoxItem Content="Arctic Frost"/>
                                             </ComboBox>
-                                            <CheckBox x:Name="MainMinimizeToTrayCheck" Content="Minimize to tray on start" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" ToolTipService.ShowDuration="12000" ToolTip="Start Redball minimized so it lives in the tray instead of opening on screen."/>
+                                            <CheckBox x:Name="MainMinimizeToTrayCheck" Content="Minimize to tray on start" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Start Redball minimized so it lives in the tray instead of opening on screen."/>
                                             <CheckBox x:Name="MainShowNotificationsCheck" Content="Show notifications" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainShowNotificationsCheck_Checked" Unchecked="MainShowNotificationsCheck_Unchecked" ToolTipService.ShowDuration="12000" ToolTip="Enable or disable toast notifications from Redball."/>
                                             <TextBlock x:Name="MainNotificationModeLabel" Text="Notification Mode" FontWeight="Medium" Margin="0,8,0,8"/>
-                                            <ComboBox x:Name="MainNotificationModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" ToolTipService.ShowDuration="12000" ToolTip="Choose how chatty Redball should be when sending notifications.">
+                                            <ComboBox x:Name="MainNotificationModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Choose how chatty Redball should be when sending notifications.">
                                                 <ComboBoxItem Content="All events"/>
                                                 <ComboBoxItem Content="Important only"/>
                                                 <ComboBoxItem Content="Errors only"/>
                                                 <ComboBoxItem Content="Silent"/>
                                             </ComboBox>
-                                            <CheckBox x:Name="MainVerboseLoggingCheck" Content="Enable verbose logging" Style="{DynamicResource ModernCheckBox}" Margin="0,8,0,8" ToolTipService.ShowDuration="12000" ToolTip="Record extra diagnostic details in the log files."/>
+                                            <CheckBox x:Name="MainVerboseLoggingCheck" Content="Enable verbose logging" Style="{DynamicResource ModernCheckBox}" Margin="0,8,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Record extra diagnostic details in the log files."/>
                                             <TextBlock Text="Max Log Size (MB)" FontWeight="Medium" Margin="0,8,0,8"/>
                                             <Slider x:Name="MainMaxLogSizeSlider" Minimum="1" Maximum="100" Value="10" TickFrequency="5" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainMaxLogSizeSlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Set the maximum size allowed for the Redball log file before rotation or trimming."/>
                                             <TextBlock x:Name="MainMaxLogSizeText" Text="Max log size: 10 MB" FontSize="12" Margin="0,4,0,0"/>
@@ -537,9 +537,9 @@
                                     <TextBlock Text="Behavior" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,16"/>
                                     <Border Style="{DynamicResource CardStyle}">
                                         <StackPanel>
-                                            <CheckBox x:Name="MainPreventDisplaySleepCheck" Content="Prevent display sleep" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" ToolTipService.ShowDuration="12000" ToolTip="Keep the display awake while Redball is active."/>
+                                            <CheckBox x:Name="MainPreventDisplaySleepCheck" Content="Prevent display sleep" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Keep the display awake while Redball is active."/>
                                             <TextBlock Text="Heartbeat Input" FontWeight="Medium" Margin="0,8,0,8"/>
-                                            <ComboBox x:Name="MainHeartbeatInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,12" ToolTipService.ShowDuration="12000" ToolTip="Choose which invisible function key Redball sends to prevent idle detection.">
+                                            <ComboBox x:Name="MainHeartbeatInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,12" SelectionChanged="MainComboSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Choose which invisible function key Redball sends to prevent idle detection.">
                                                 <ComboBoxItem Content="Disabled"/>
                                                 <ComboBoxItem Content="F13"/>
                                                 <ComboBoxItem Content="F14"/>
@@ -550,7 +550,7 @@
                                             <TextBlock Text="Default Duration (minutes)" FontWeight="Medium" Margin="0,8,0,8"/>
                                             <Slider x:Name="MainDurationSlider" Minimum="1" Maximum="720" Value="60" TickFrequency="30" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainDurationSlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Set the default duration for timed keep-awake sessions."/>
                                             <TextBlock x:Name="MainDurationText" Text="Duration: 60 minutes" FontSize="12" Margin="0,4,0,12"/>
-                                            <CheckBox x:Name="MainAutoExitOnCompleteCheck" Content="Auto-exit after duration completes" Style="{DynamicResource ModernCheckBox}" ToolTipService.ShowDuration="12000" ToolTip="Stop Redball automatically when a timed session finishes."/>
+                                            <CheckBox x:Name="MainAutoExitOnCompleteCheck" Content="Auto-exit after duration completes" Style="{DynamicResource ModernCheckBox}" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Stop Redball automatically when a timed session finishes."/>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
@@ -559,16 +559,16 @@
                                     <TextBlock Text="Smart Features" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,16"/>
                                     <Border Style="{DynamicResource CardStyle}">
                                         <StackPanel>
-                                            <CheckBox x:Name="MainBatteryAwareCheck" Content="Battery-aware mode" Style="{DynamicResource ModernCheckBox}" ToolTipService.ShowDuration="12000" ToolTip="Pause keep-awake behavior when battery conditions are unfavorable."/>
+                                            <CheckBox x:Name="MainBatteryAwareCheck" Content="Battery-aware mode" Style="{DynamicResource ModernCheckBox}" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Pause keep-awake behavior when battery conditions are unfavorable."/>
                                             <TextBlock Text="Pause when battery is below threshold" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,8"/>
                                             <Slider x:Name="MainBatteryThresholdSlider" Minimum="5" Maximum="50" Value="20" TickFrequency="5" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" Margin="24,0,0,8" ValueChanged="MainBatteryThresholdSlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Set the battery percentage where Redball should pause battery-aware operation."/>
                                             <TextBlock x:Name="MainBatteryThresholdText" Text="Threshold: 20%" FontSize="12" Margin="24,0,0,16"/>
-                                            <CheckBox x:Name="MainNetworkAwareCheck" Content="Network-aware mode" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" ToolTipService.ShowDuration="12000" ToolTip="Pause when Redball detects that network connectivity is unavailable."/>
-                                            <CheckBox x:Name="MainIdleDetectionCheck" Content="Idle detection" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" ToolTipService.ShowDuration="12000" ToolTip="Pause or react when the user has been idle for the configured threshold."/>
+                                            <CheckBox x:Name="MainNetworkAwareCheck" Content="Network-aware mode" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Pause when Redball detects that network connectivity is unavailable."/>
+                                            <CheckBox x:Name="MainIdleDetectionCheck" Content="Idle detection" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Pause or react when the user has been idle for the configured threshold."/>
                                             <Slider x:Name="MainIdleThresholdSlider" Minimum="5" Maximum="120" Value="30" TickFrequency="5" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" Margin="24,0,0,8" ValueChanged="MainIdleThresholdSlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Set how many minutes of user inactivity count as idle."/>
                                             <TextBlock x:Name="MainIdleThresholdText" Text="Threshold: 30 minutes" FontSize="12" Margin="24,0,0,16"/>
-                                            <CheckBox x:Name="MainPresentationModeCheck" Content="Presentation mode detection" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" ToolTipService.ShowDuration="12000" ToolTip="Enable special handling when presentation apps are active."/>
-                                            <CheckBox x:Name="MainScheduledOperationCheck" Content="Scheduled operation" Style="{DynamicResource ModernCheckBox}" ToolTipService.ShowDuration="12000" ToolTip="Limit Redball behavior to scheduled windows of time."/>
+                                            <CheckBox x:Name="MainPresentationModeCheck" Content="Presentation mode detection" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Enable special handling when presentation apps are active."/>
+                                            <CheckBox x:Name="MainScheduledOperationCheck" Content="Scheduled operation" Style="{DynamicResource ModernCheckBox}" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Limit Redball behavior to scheduled windows of time."/>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
@@ -577,7 +577,7 @@
                                     <TextBlock Text="TypeThing" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,16"/>
                                     <Border Style="{DynamicResource CardStyle}">
                                         <StackPanel>
-                                            <CheckBox x:Name="MainEnableTypeThingCheck" Content="Enable TypeThing" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" ToolTipService.ShowDuration="12000" ToolTip="Turn the TypeThing typing automation feature on or off."/>
+                                            <CheckBox x:Name="MainEnableTypeThingCheck" Content="Enable TypeThing" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Turn the TypeThing typing automation feature on or off."/>
                                             <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,8,0,8"/>
                                             <TextBox x:Name="MainStartHotkeyBox" Style="{DynamicResource ModernTextBox}" IsReadOnly="True" PreviewKeyDown="MainHotkeyBox_PreviewKeyDown" GotFocus="MainHotkeyBox_GotFocus" LostFocus="MainHotkeyBox_LostFocus" Cursor="Hand" ToolTipService.ShowDuration="12000" ToolTip="Click and press the hotkey that should start TypeThing."/>
                                             <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,16,0,8"/>
@@ -585,8 +585,8 @@
                                             <TextBlock Text="Typing Speed" FontWeight="Medium" Margin="0,16,0,8"/>
                                             <Slider x:Name="MainTypingSpeedSlider" Minimum="10" Maximum="500" Value="120" TickFrequency="10" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypingSpeedSlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Control how quickly TypeThing types each character."/>
                                             <TextBlock x:Name="MainTypingSpeedText" Text="Speed: 120 ms per character" FontSize="12" Margin="0,4,0,12"/>
-                                            <CheckBox x:Name="MainAddRandomPausesCheck" Content="Add random pauses" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" ToolTipService.ShowDuration="12000" ToolTip="Insert natural-feeling random pauses while TypeThing is typing."/>
-                                            <CheckBox x:Name="MainTypeNewlinesCheck" Content="Type newlines as Enter key" Style="{DynamicResource ModernCheckBox}" ToolTipService.ShowDuration="12000" ToolTip="Send real Enter key presses for line breaks instead of plain newline text."/>
+                                            <CheckBox x:Name="MainAddRandomPausesCheck" Content="Add random pauses" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Insert natural-feeling random pauses while TypeThing is typing."/>
+                                            <CheckBox x:Name="MainTypeNewlinesCheck" Content="Type newlines as Enter key" Style="{DynamicResource ModernCheckBox}" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Send real Enter key presses for line breaks instead of plain newline text."/>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
@@ -598,12 +598,12 @@
                                             <StackPanel>
                                                 <TextBlock Text="Update Preferences" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
                                                 <TextBlock Text="Update Channel" FontWeight="Medium" Margin="0,0,0,8"/>
-                                                <ComboBox x:Name="MainUpdateChannelCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,12" ToolTipService.ShowDuration="12000" ToolTip="Choose whether Redball receives stable releases, beta builds, or no update checks.">
+                                                <ComboBox x:Name="MainUpdateChannelCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,12" SelectionChanged="MainComboSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Choose whether Redball receives stable releases, beta builds, or no update checks.">
                                                     <ComboBoxItem Content="Stable"/>
                                                     <ComboBoxItem Content="Beta"/>
                                                     <ComboBoxItem Content="Disabled"/>
                                                 </ComboBox>
-                                                <CheckBox x:Name="MainVerifyUpdateSignatureCheck" Content="Verify update signatures" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" ToolTipService.ShowDuration="12000" ToolTip="Only install updates that pass signature verification."/>
+                                                <CheckBox x:Name="MainVerifyUpdateSignatureCheck" Content="Verify update signatures" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Only install updates that pass signature verification."/>
                                                 <Button Content="Check for Updates Now" Style="{DynamicResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,8,0,12" Click="MainCheckForUpdatesButton_Click" ToolTipService.ShowDuration="12000" ToolTip="Query the update service immediately for a newer Redball version."/>
                                                 <TextBlock x:Name="MainCurrentVersionText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                                             </StackPanel>
