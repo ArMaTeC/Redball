@@ -228,7 +228,8 @@
                                 <views:HomeSectionView x:Name="HomePanel" Visibility="Visible"/>
 
                                 <StackPanel x:Name="AnalyticsPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Analytics" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                    <TextBlock Text="Analytics" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Track how you use Redball over time. View session counts, total usage hours, and which features you use most. You can also export your data as CSV or JSON for your own records." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                     <UniformGrid Columns="3" Margin="0,0,0,16">
                                         <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
                                             <StackPanel>
@@ -270,7 +271,8 @@
                                 </StackPanel>
 
                                 <StackPanel x:Name="MetricsPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Product Metrics" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                    <TextBlock Text="Product Metrics" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="A deeper look at feature adoption and engagement. See which Redball features are being used, how often settings are saved, and overall product health at a glance." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                     <UniformGrid Columns="2" Margin="0,0,0,16">
                                         <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
                                             <StackPanel>
@@ -318,7 +320,8 @@
                                 </StackPanel>
 
                                 <StackPanel x:Name="DiagnosticsPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Diagnostics" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                    <TextBlock Text="Diagnostics" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Troubleshooting and system health information. Check your current configuration, runtime state, log output, hardware details, and session statistics. Useful if something isn't working as expected." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                     <UniformGrid Columns="2" Margin="0,0,0,12">
                                         <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
                                             <StackPanel>
@@ -378,7 +381,8 @@
                                 </StackPanel>
 
                                 <StackPanel x:Name="SettingsPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Settings" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                    <TextBlock Text="Settings" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="General application settings. Choose your theme, control notifications, manage configuration profiles, toggle logging, and enable the local web API for remote control from scripts." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                     <Grid Margin="0,0,0,16">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
@@ -479,7 +483,8 @@
                                 </StackPanel>
 
                                 <StackPanel x:Name="BehaviorPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Behavior" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                    <TextBlock Text="Behavior" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Control how Redball keeps your PC awake. Set the default session duration, choose which invisible function key to send as a heartbeat, prevent your display from sleeping, and configure timed or scheduled keep-awake sessions." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                     <Border Style="{DynamicResource CardStyle}">
                                         <StackPanel>
                                             <CheckBox x:Name="MainPreventDisplaySleepCheck" Content="Prevent display sleep" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Keep the display awake while Redball is active."/>
@@ -520,7 +525,8 @@
                                 </StackPanel>
 
                                 <StackPanel x:Name="SmartFeaturesPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Smart Features" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                    <TextBlock Text="Smart Features" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Intelligent automation that adapts Redball to your situation. Pause keep-awake when your battery is low, when you lose network connectivity, or when you've been idle. Detect presentations, link to specific processes, set schedules, and auto-switch profiles based on your WiFi network." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                     <Border Style="{DynamicResource CardStyle}">
                                         <StackPanel>
                                             <CheckBox x:Name="MainBatteryAwareCheck" Content="Battery-aware mode" Style="{DynamicResource ModernCheckBox}" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Pause keep-awake behavior when battery conditions are unfavorable."/>
@@ -581,7 +587,8 @@
                                 </StackPanel>
 
                                 <StackPanel x:Name="TypeThingPanel" Visibility="Collapsed">
-                                    <TextBlock Text="TypeThing" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                    <TextBlock Text="TypeThing" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Clipboard-to-keyboard typing tool. TypeThing takes text from your clipboard and types it out character by character, simulating real keystrokes. Useful for pasting into remote desktops, virtual machines, or applications that block normal paste. Set a hotkey, adjust typing speed, and save templates for text you type often." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                     <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16"
                                             AllowDrop="True" Drop="TypeThingDropZone_Drop" DragOver="TypeThingDropZone_DragOver">
                                         <StackPanel HorizontalAlignment="Center" Margin="16">
@@ -648,7 +655,8 @@
                                 </StackPanel>
 
                                 <StackPanel x:Name="PomodoroPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Pomodoro Timer" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                    <TextBlock Text="Pomodoro Timer" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="A built-in focus timer based on the Pomodoro Technique. Work in focused bursts (typically 25 minutes), then take a short break (5 minutes). After a few sessions, take a longer break. This helps you stay productive by breaking work into manageable intervals with regular rest periods. Redball keeps your PC awake during focus sessions automatically." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                     <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
                                         <StackPanel HorizontalAlignment="Center" Margin="16">
                                             <TextBlock x:Name="PomodoroPhaseText" Text="Idle" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,4"/>
@@ -683,7 +691,8 @@
                                 </StackPanel>
 
                                 <StackPanel x:Name="UpdatesPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Updates" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                    <TextBlock Text="Updates" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Manage how Redball checks for new versions. Choose between stable releases or early beta builds, verify update signatures for security, and check for updates on demand." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                     <UniformGrid Columns="2" Margin="0,0,0,16">
                                         <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
                                             <StackPanel>
@@ -701,12 +710,14 @@
                                         </Border>
                                         <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
                                             <StackPanel>
-                                                <TextBlock Text="Update Status" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                                <TextBlock Text="Manage how Redball checks for and verifies updates without mixing those controls into app settings."
-                                                           TextWrapping="Wrap"
-                                                           Foreground="{DynamicResource ForegroundSecondaryBrush}"
-                                                           Margin="0,0,0,12"/>
-                                                <TextBlock Text="Use Stable for normal releases or Beta if you want early builds." TextWrapping="Wrap"/>
+                                                <TextBlock Text="Automatic Update Checks" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                <CheckBox x:Name="MainAutoUpdateCheckEnabledCheck" Content="Check for updates automatically" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Periodically check for new Redball versions in the background and show a changelog when an update is available."/>
+                                                <TextBlock Text="Check Interval (minutes)" FontWeight="Medium" Margin="0,8,0,4"/>
+                                                <Slider x:Name="MainAutoUpdateIntervalSlider" Minimum="30" Maximum="720" Value="120" TickFrequency="30" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainAutoUpdateIntervalSlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="How often Redball checks for updates in the background (minimum 30 minutes)."/>
+                                                <TextBlock x:Name="MainAutoUpdateIntervalText" Text="Interval: every 2 hours" FontSize="12" Margin="0,4,0,8"/>
+                                                <TextBlock Text="When an update is found, Redball will show a dialog with all the changes between your version and the latest, so you can see exactly what's new before updating."
+                                                           TextWrapping="Wrap" FontSize="11"
+                                                           Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                                             </StackPanel>
                                         </Border>
                                     </UniformGrid>

@@ -34,6 +34,8 @@ public class RedballConfig
     public string UpdateRepoName { get; set; } = "Redball";
     public string UpdateChannel { get; set; } = "stable";
     public bool VerifyUpdateSignature { get; set; }
+    public bool AutoUpdateCheckEnabled { get; set; } = true;
+    public int AutoUpdateCheckIntervalMinutes { get; set; } = 120;
     public bool TypeThingEnabled { get; set; } = true;
     public int TypeThingMinDelayMs { get; set; } = 30;
     public int TypeThingMaxDelayMs { get; set; } = 120;
@@ -46,6 +48,7 @@ public class RedballConfig
     public int TypeThingRandomPauseMaxMs { get; set; } = 500;
     public bool TypeThingTypeNewlines { get; set; } = true;
     public bool TypeThingNotifications { get; set; } = true;
+    public string TypeThingInputMode { get; set; } = "SendInput";
     public bool VerboseLogging { get; set; }
     public bool MinimizeToTray { get; set; }
     public bool ShowNotifications { get; set; } = true;

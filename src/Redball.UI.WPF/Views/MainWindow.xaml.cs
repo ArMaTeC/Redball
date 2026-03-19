@@ -80,6 +80,7 @@ public partial class MainWindow : Window
             LoadEmbeddedDashboardContent();
             InitializePomodoro();
             RefreshTemplateCombo();
+            StartAutoUpdateCheck();
             Logger.Info("MainWindow", "Initialization complete");
         }
         catch (Exception ex)

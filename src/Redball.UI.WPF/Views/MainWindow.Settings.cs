@@ -144,6 +144,9 @@ public partial class MainWindow
         };
 
         MainVerifyUpdateSignatureCheck.IsChecked = config.VerifyUpdateSignature;
+        MainAutoUpdateCheckEnabledCheck.IsChecked = config.AutoUpdateCheckEnabled;
+        MainAutoUpdateIntervalSlider.Value = Math.Max(30, config.AutoUpdateCheckIntervalMinutes);
+        UpdateAutoUpdateIntervalText((int)MainAutoUpdateIntervalSlider.Value);
         MainCurrentVersionText.Text = GetCurrentVersionText();
 
         MainNotificationModeLabel.Visibility = config.ShowNotifications ? Visibility.Visible : Visibility.Collapsed;
@@ -272,6 +275,8 @@ public partial class MainWindow
                 _ => "stable"
             };
             config.VerifyUpdateSignature = MainVerifyUpdateSignatureCheck.IsChecked ?? false;
+            config.AutoUpdateCheckEnabled = MainAutoUpdateCheckEnabledCheck.IsChecked ?? true;
+            config.AutoUpdateCheckIntervalMinutes = (int)MainAutoUpdateIntervalSlider.Value;
 
             ConfigService.Instance.Save();
             ThemeManager.SetThemeFromConfig(config.Theme);
@@ -363,6 +368,23 @@ public partial class MainWindow
             MainMaxLogSizeText.Text = $"Max log size: {(int)e.NewValue} MB";
         }
         AutoApplySettings();
+    }
+
+    private void MainAutoUpdateIntervalSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        UpdateAutoUpdateIntervalText((int)e.NewValue);
+        AutoApplySettings();
+    }
+
+    private void UpdateAutoUpdateIntervalText(int minutes)
+    {
+        if (MainAutoUpdateIntervalText == null) return;
+        if (minutes >= 60 && minutes % 60 == 0)
+            MainAutoUpdateIntervalText.Text = minutes == 60 ? "Interval: every hour" : $"Interval: every {minutes / 60} hours";
+        else if (minutes > 60)
+            MainAutoUpdateIntervalText.Text = $"Interval: every {minutes / 60}h {minutes % 60}m";
+        else
+            MainAutoUpdateIntervalText.Text = $"Interval: every {minutes} minutes";
     }
 
     private void MainSettingChanged(object sender, RoutedEventArgs e)

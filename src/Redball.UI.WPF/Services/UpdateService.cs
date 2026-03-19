@@ -241,6 +241,56 @@ public class UpdateService : IUpdateService
         return releases ?? new List<GitHubRelease>();
     }
 
+    /// <summary>
+    /// Gets changelogs for all releases between the current version and latest version (inclusive of latest).
+    /// Returns them sorted newest-first so the user sees the most recent changes at the top.
+    /// </summary>
+    public async Task<List<VersionChangelog>> GetChangelogBetweenVersionsAsync(Version currentVersion, Version latestVersion, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var allReleases = await GetAllReleasesAsync(cancellationToken);
+            var currentNormalized = new Version(currentVersion.Major, currentVersion.Minor, currentVersion.Build);
+            var latestNormalized = new Version(latestVersion.Major, latestVersion.Minor, latestVersion.Build);
+
+            var changelogs = new List<VersionChangelog>();
+
+            foreach (var release in allReleases)
+            {
+                if (release.IsDraft) continue;
+                if (release.IsPreRelease && _updateChannel != "beta" && _updateChannel != "alpha") continue;
+
+                var tagName = release.TagName.TrimStart('v', 'V');
+                if (!Version.TryParse(tagName, out var version)) continue;
+
+                var vNorm = new Version(version.Major, version.Minor, version.Build);
+
+                // Include versions that are newer than current and up to (including) latest
+                if (vNorm > currentNormalized && vNorm <= latestNormalized)
+                {
+                    changelogs.Add(new VersionChangelog
+                    {
+                        Version = vNorm,
+                        TagName = release.TagName,
+                        ReleaseNotes = release.Body ?? "",
+                        ReleaseDate = release.PublishedAt,
+                        IsPreRelease = release.IsPreRelease
+                    });
+                }
+            }
+
+            // Sort newest first
+            changelogs.Sort((a, b) => b.Version.CompareTo(a.Version));
+            Logger.Info("UpdateService", $"Found {changelogs.Count} changelog entries between {currentNormalized} and {latestNormalized}");
+            return changelogs;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("UpdateService", "Failed to get changelogs", ex);
+            return new List<VersionChangelog>();
+        }
+    }
+
     private GitHubRelease? FindHighestVersionRelease(List<GitHubRelease> releases)
     {
         Logger.Debug("UpdateService", $"Checking {releases.Count} releases for highest version");
@@ -557,6 +607,21 @@ public class UpdateInfo
     public DateTime ReleaseDate { get; set; }
 
     public string VersionDisplay => $"v{LatestVersion.Major}.{LatestVersion.Minor}.{LatestVersion.Build}";
+}
+
+/// <summary>
+/// Represents a single version's changelog entry for display in the update dialog.
+/// </summary>
+public class VersionChangelog
+{
+    public Version Version { get; set; } = new(0, 0, 0);
+    public string TagName { get; set; } = "";
+    public string ReleaseNotes { get; set; } = "";
+    public DateTime ReleaseDate { get; set; }
+    public bool IsPreRelease { get; set; }
+
+    public string VersionDisplay => $"v{Version.Major}.{Version.Minor}.{Version.Build}";
+    public string DateDisplay => ReleaseDate.ToString("d MMM yyyy");
 }
 
 /// <summary>
