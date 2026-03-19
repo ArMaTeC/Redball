@@ -298,6 +298,7 @@ public class ConfigService : IConfigService
         };
 
         Logger.Debug("ConfigService", "Searching for config file in candidate locations...");
+        string? foundInBaseDir = null;
         foreach (var candidate in candidates)
         {
             try
@@ -306,6 +307,18 @@ public class ConfigService : IConfigService
                 if (File.Exists(fullPath))
                 {
                     Logger.Debug("ConfigService", $"Found config at: {fullPath}");
+
+                    // If found in the install/base directory, migrate it to LocalAppData
+                    // so it survives MSI updates that wipe the install folder
+                    var baseDir = Path.GetFullPath(AppContext.BaseDirectory).TrimEnd(Path.DirectorySeparatorChar);
+                    var fileDir = Path.GetFullPath(Path.GetDirectoryName(fullPath) ?? "").TrimEnd(Path.DirectorySeparatorChar);
+                    if (string.Equals(fileDir, baseDir, StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(fullPath, LocalAppDataConfigPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        foundInBaseDir = fullPath;
+                        continue; // prefer LocalAppData if it also exists
+                    }
+
                     return fullPath;
                 }
             }
@@ -315,10 +328,28 @@ public class ConfigService : IConfigService
             }
         }
 
-        // Default to base directory even if file doesn't exist yet
-        var defaultPath = Path.Combine(AppContext.BaseDirectory, "Redball.json");
-        Logger.Debug("ConfigService", $"No existing config found, using default path: {defaultPath}");
-        return defaultPath;
+        // Migrate config from install directory to LocalAppData so it survives updates
+        if (foundInBaseDir != null)
+        {
+            try
+            {
+                var dir = Path.GetDirectoryName(LocalAppDataConfigPath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+                File.Copy(foundInBaseDir, LocalAppDataConfigPath, true);
+                Logger.Info("ConfigService", $"Migrated config from install directory to: {LocalAppDataConfigPath}");
+                return LocalAppDataConfigPath;
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning("ConfigService", $"Failed to migrate config to LocalAppData: {ex.Message}");
+                return foundInBaseDir;
+            }
+        }
+
+        // Default to LocalAppData so config survives MSI updates
+        Logger.Debug("ConfigService", $"No existing config found, using default path: {LocalAppDataConfigPath}");
+        return LocalAppDataConfigPath;
     }
 
     private void NormalizeConfig()

@@ -255,30 +255,6 @@ public partial class MainWindow
 
                 Logger.Info("MainWindow", $"TypeThing: Got {clipboardText.Length} chars from clipboard");
 
-                // Show preview and estimated time before starting
-                var avgDelayMs = (config.TypeThingMinDelayMs + config.TypeThingMaxDelayMs) / 2.0;
-                var estimatedSeconds = (int)Math.Ceiling(clipboardText.Length * avgDelayMs / 1000.0);
-                var preview = clipboardText.Length > 200
-                    ? clipboardText[..200] + "..."
-                    : clipboardText;
-                var previewMsg = $"Characters: {clipboardText.Length}\n" +
-                                 $"Estimated time: ~{estimatedSeconds}s\n\n" +
-                                 $"Preview:\n{preview}";
-
-                var confirm = MessageBox.Show(
-                    previewMsg,
-                    "TypeThing — Confirm Typing",
-                    MessageBoxButton.OKCancel,
-                    MessageBoxImage.Information);
-
-                if (confirm != MessageBoxResult.OK)
-                {
-                    Logger.Info("MainWindow", "TypeThing: User cancelled after preview");
-                    _analytics.TrackFeature("typething.cancelled_preview");
-                    _isTyping = false;
-                    return;
-                }
-
                 // Start typing after a short delay so user can switch to target window
                 var countdown = Math.Max(1, config.TypeThingStartDelaySec);
                 _typeThingCountdownTimer?.Stop();
@@ -486,7 +462,7 @@ public partial class MainWindow
             });
 
             // Register TypeThing start hotkey from config
-            var startHotkey = ConfigService.Instance.Config.TypeThingStartHotkey ?? "Ctrl+Shift+V";
+            var startHotkey = string.IsNullOrWhiteSpace(ConfigService.Instance.Config.TypeThingStartHotkey) ? "Ctrl+Shift+V" : ConfigService.Instance.Config.TypeThingStartHotkey;
             Logger.Debug("MainWindow", $"TypeThing start hotkey from config: {startHotkey}");
             var (startMods, startKey) = HotkeyService.ParseHotkey(startHotkey);
             if (startKey != 0)
@@ -503,7 +479,7 @@ public partial class MainWindow
             }
 
             // Register TypeThing stop hotkey from config
-            var stopHotkey = ConfigService.Instance.Config.TypeThingStopHotkey ?? "Ctrl+Shift+X";
+            var stopHotkey = string.IsNullOrWhiteSpace(ConfigService.Instance.Config.TypeThingStopHotkey) ? "Ctrl+Shift+X" : ConfigService.Instance.Config.TypeThingStopHotkey;
             Logger.Debug("MainWindow", $"TypeThing stop hotkey from config: {stopHotkey}");
             var (stopMods, stopKey) = HotkeyService.ParseHotkey(stopHotkey);
             if (stopKey != 0)
