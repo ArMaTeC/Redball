@@ -6,16 +6,19 @@ using Redball.UI.Services;
 namespace Redball.UI.Views;
 
 /// <summary>
-/// First-run onboarding window to help new users get started with Redball.
+/// First-run onboarding window with multi-step animated flow.
 /// </summary>
 public partial class OnboardingWindow : Window
 {
     private readonly AnalyticsService _analytics = new(ConfigService.Instance.Config.EnableTelemetry);
+    private int _currentStep = 1;
+    private const int TotalSteps = 4;
 
     public OnboardingWindow()
     {
         InitializeComponent();
         LoadCurrentSettings();
+        UpdateStepUI();
     }
 
     private bool _isLoading;
@@ -90,6 +93,36 @@ public partial class OnboardingWindow : Window
         Logger.ApplyConfig(config);
     }
 
+    private void UpdateStepUI()
+    {
+        Step1Panel.Visibility = _currentStep == 1 ? Visibility.Visible : Visibility.Collapsed;
+        Step2Panel.Visibility = _currentStep == 2 ? Visibility.Visible : Visibility.Collapsed;
+        Step3Panel.Visibility = _currentStep == 3 ? Visibility.Visible : Visibility.Collapsed;
+        Step4Panel.Visibility = _currentStep == 4 ? Visibility.Visible : Visibility.Collapsed;
+
+        // Progress dots
+        Dot1.Opacity = _currentStep >= 1 ? 1.0 : 0.4;
+        Dot2.Opacity = _currentStep >= 2 ? 1.0 : 0.4;
+        Dot3.Opacity = _currentStep >= 3 ? 1.0 : 0.4;
+        Dot4.Opacity = _currentStep >= 4 ? 1.0 : 0.4;
+
+        // Header text
+        HeaderSubtitle.Text = _currentStep switch
+        {
+            1 => "Keep your Windows PC awake — intelligently",
+            2 => "Step 2 of 4 — Discover what Redball can do",
+            3 => "Step 3 of 4 — Set your preferences",
+            4 => "Setup complete!",
+            _ => ""
+        };
+
+        // Button text & visibility
+        BackButton.Visibility = _currentStep > 1 ? Visibility.Visible : Visibility.Collapsed;
+        GetStartedButton.Content = _currentStep == TotalSteps ? "Get Started" : "Next";
+
+        _analytics.TrackFunnel("onboarding", $"step_{_currentStep}");
+    }
+
     private void OnSettingChanged(object sender, RoutedEventArgs e)
     {
         SaveCurrentSettings();
@@ -100,8 +133,25 @@ public partial class OnboardingWindow : Window
         SaveCurrentSettings();
     }
 
+    private void BackButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentStep > 1)
+        {
+            _currentStep--;
+            UpdateStepUI();
+        }
+    }
+
     private void GetStartedButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_currentStep < TotalSteps)
+        {
+            _currentStep++;
+            UpdateStepUI();
+            return;
+        }
+
+        // Final step — save and close
         SaveCurrentSettings();
         ConfigService.Instance.IsDirty = false;
 

@@ -1,0 +1,35 @@
+<UserControl x:Class="Redball.UI.Views.QuickSettingsPopup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="280">
+    <Border Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Effect="{StaticResource PopupShadow}">
+        <Border.Resources>
+            <DropShadowEffect x:Key="PopupShadow" BlurRadius="16" ShadowDepth="4" Opacity="0.3" Color="Black"/>
+        </Border.Resources>
+        <StackPanel Margin="16,14">
+            <!-- Status -->
+            <TextBlock Text="Redball" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource ForegroundBrush}"/>
+            <TextBlock x:Name="StatusText" FontSize="11.5" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,2,0,12"/>
+
+            <!-- Quick toggles -->
+            <Button x:Name="ToggleActiveBtn" Content="Pause Keep-Awake" 
+                    Style="{DynamicResource ModernButton}" Margin="0,0,0,6" Click="ToggleActive_Click"/>
+            <Button x:Name="ToggleDisplayBtn" Content="Display Sleep: Prevented"
+                    Style="{DynamicResource ModernButton}" Margin="0,0,0,6" Click="ToggleDisplay_Click"/>
+            <Button x:Name="ToggleHeartbeatBtn" Content="Heartbeat: On"
+                    Style="{DynamicResource ModernButton}" Margin="0,0,0,10" Click="ToggleHeartbeat_Click"/>
+
+            <Separator Background="{DynamicResource BorderBrush}" Margin="0,0,0,10"/>
+
+            <!-- Actions -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Settings" Style="{DynamicResource ModernButton}" Margin="0,0,6,0" Click="OpenSettings_Click"/>
+                <Button Content="Exit" Style="{DynamicResource ModernButton}" Click="Exit_Click"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

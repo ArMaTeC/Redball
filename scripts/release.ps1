@@ -1,0 +1,564 @@
+#Requires -Version 7
+<#
+.SYNOPSIS
+    Create GitHub release with changelog and artifacts.
+
+.DESCRIPTION
+    This script creates a GitHub release with auto-generated changelog from git commits,
+    SHA256 checksums, and uploads MSI/Bundle artifacts.
+    Automatically handles: missing tags, dirty working trees, unpushed commits,
+    missing artifacts (triggers build), existing releases, and branch validation.
+
+.PARAMETER Version
+    Version for the release (e.g., "2.1.80"). Extracted from csproj if not provided.
+
+.PARAMETER Tag
+    Git tag for the release (e.g., "v2.1.80"). Auto-generated from version if not provided.
+
+.PARAMETER ReleaseNotes
+    Custom release notes. If not provided, generates from git commits.
+
+.PARAMETER SkipRelease
+    Skip creating GitHub release (validate only).
+
+.PARAMETER DistDir
+    Directory containing build artifacts. Defaults to ../dist.
+
+.PARAMETER DryRun
+    Show what would happen without making any changes.
+
+.PARAMETER Force
+    Skip all confirmation prompts.
+
+.PARAMETER AllowDirty
+    Allow release from a dirty working tree (uncommitted changes).
+
+.PARAMETER BuildIfMissing
+    Automatically run the build script if artifacts are missing. Defaults to true.
+
+.EXAMPLE
+    .\release.ps1
+
+.EXAMPLE
+    .\release.ps1 -Version "2.1.81" -ReleaseNotes "Custom release notes"
+
+.EXAMPLE
+    .\release.ps1 -SkipRelease
+
+.EXAMPLE
+    .\release.ps1 -DryRun
+#>
+[CmdletBinding(SupportsShouldProcess)]
+param(
+    [string]$Version = "",
+    [string]$Tag = "",
+    [string]$ReleaseNotes = "",
+    [switch]$SkipRelease,
+    [string]$DistDir = "",
+    [switch]$DryRun,
+    [switch]$Force,
+    [switch]$AllowDirty,
+    [switch]$BuildIfMissing = $true
+)
+
+$ErrorActionPreference = "Stop"
+$script:stashedChanges = $false
+
+# Configuration
+$ProjectRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+if (-not $DistDir) {
+    $DistDir = Join-Path $ProjectRoot "dist"
+}
+
+#region Helper Functions
+
+function Write-Step {
+    param([string]$Message)
+    Write-Host "`n=== $Message ===" -ForegroundColor Cyan
+}
+
+function Write-Success {
+    param([string]$Message)
+    Write-Host "✓ $Message" -ForegroundColor Green
+}
+
+function Write-Warn {
+    param([string]$Message)
+    Write-Host "⚠ $Message" -ForegroundColor Yellow
+}
+
+function Write-Err {
+    param([string]$Message)
+    Write-Host "✗ $Message" -ForegroundColor Red
+}
+
+function Write-Info {
+    param([string]$Message)
+    Write-Host "ℹ $Message" -ForegroundColor DarkGray
+}
+
+function Test-GitHubCli {
+    $gh = Get-Command "gh" -ErrorAction SilentlyContinue
+    if ($gh) {
+        $ver = (& gh --version 2>$null | Select-Object -First 1)
+        Write-Info "GitHub CLI found: $ver"
+        return $true
+    }
+    return $false
+}
+
+function Test-GitRepo {
+    $result = git rev-parse --is-inside-work-tree 2>$null
+    return ($result -eq "true")
+}
+
+function Get-CurrentBranch {
+    return (git rev-parse --abbrev-ref HEAD 2>$null)
+}
+
+function Test-DirtyWorkingTree {
+    $status = git status --porcelain 2>$null
+    return [bool]$status
+}
+
+function Test-UnpushedCommits {
+    $upstream = git rev-parse --abbrev-ref '@{upstream}' 2>$null
+    if (-not $upstream) { return $false }
+    $ahead = git rev-list --count "$upstream..HEAD" 2>$null
+    return ([int]$ahead -gt 0)
+}
+
+function Get-UnpushedCount {
+    $upstream = git rev-parse --abbrev-ref '@{upstream}' 2>$null
+    if (-not $upstream) { return 0 }
+    return [int](git rev-list --count "$upstream..HEAD" 2>$null)
+}
+
+function Test-TagExistsLocally {
+    param([string]$TagName)
+    $result = git tag -l $TagName 2>$null
+    return [bool]$result
+}
+
+function Test-TagExistsRemotely {
+    param([string]$TagName, [string]$Remote = "origin")
+    $result = git ls-remote --tags $Remote "refs/tags/$TagName" 2>$null
+    return [bool]$result
+}
+
+function Get-ProjectVersion {
+    if ($script:Version) {
+        return $script:Version
+    }
+
+    $CsprojPath = Join-Path $ProjectRoot "src\Redball.UI.WPF\Redball.UI.WPF.csproj"
+    if (-not (Test-Path $CsprojPath)) {
+        throw "Project file not found: $CsprojPath"
+    }
+
+    [xml]$csproj = Get-Content $CsprojPath
+    $versionNode = $csproj.Project.PropertyGroup.Version
+
+    if ($versionNode) {
+        return $versionNode
+    }
+
+    throw "Could not extract version from $CsprojPath. Specify -Version manually."
+}
+
+function Get-ChangeLog {
+    param([string]$CurrentTag, [string]$VersionStr)
+
+    # Find previous tag
+    $allTags = git tag --sort=-v:refname 2>$null
+    $previousTag = $null
+    if ($allTags) {
+        foreach ($t in $allTags) {
+            if ($t -ne $CurrentTag) {
+                $previousTag = $t
+                break
+            }
+        }
+    }
+
+    if ($previousTag) {
+        Write-Info "Generating changelog from $previousTag to HEAD..."
+        $commits = git log "$previousTag..HEAD" --pretty=format:"- %s (%h)" --no-merges 2>$null
+    }
+    else {
+        Write-Info "No previous tag found, using last 20 commits..."
+        $commits = git log --pretty=format:"- %s (%h)" --no-merges -20 2>$null
+    }
+
+    if ($commits) {
+        $changelog = "## Changes in this Release`n`n"
+        $changelog += $commits -join "`n"
+        $changelog += "`n`n## Installation`n`n"
+        $changelog += "Download and run ``Redball.msi`` to install.`n`n"
+        $changelog += "## SHA256 Checksums`n`n"
+
+        # Calculate checksums for all artifacts in dist
+        $artifacts = Get-ChildItem $DistDir -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -in '.msi', '.exe' }
+        foreach ($artifact in $artifacts) {
+            $hash = (Get-FileHash $artifact.FullName -Algorithm SHA256).Hash
+            $changelog += "- ``$($artifact.Name)``: ``$hash```n"
+        }
+
+        return $changelog
+    }
+
+    return "## Release $CurrentTag`n`nSee commit history for detailed changes."
+}
+
+function Invoke-BuildIfNeeded {
+    param([string]$VersionStr)
+
+    $buildScript = Join-Path $PSScriptRoot "build.ps1"
+    if (-not (Test-Path $buildScript)) {
+        throw "Build script not found at $buildScript. Build manually and re-run."
+    }
+
+    Write-Step "Running build script"
+    Write-Info "Invoking: $buildScript -Version $VersionStr"
+
+    if ($DryRun) {
+        Write-Info "[DRY RUN] Would run build script with -Version $VersionStr"
+        return
+    }
+
+    & $buildScript -Version $VersionStr -SkipVersionBump
+    if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+        throw "Build failed with exit code $LASTEXITCODE"
+    }
+    Write-Success "Build completed"
+}
+
+function Restore-StashedChanges {
+    if ($script:stashedChanges) {
+        Write-Info "Restoring stashed changes..."
+        git stash pop 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Success "Stashed changes restored"
+        }
+        else {
+            Write-Warn "Could not auto-restore stash. Run 'git stash pop' manually."
+        }
+        $script:stashedChanges = $false
+    }
+}
+
+#endregion
+
+#region Main Script
+
+try {
+
+    Write-Step "Redball GitHub Release Script"
+    Write-Host "Project root: $ProjectRoot"
+    Write-Host "Dist directory: $DistDir"
+    if ($DryRun) { Write-Warn "DRY RUN MODE - no changes will be made" }
+
+    # ── 1. Validate we're in a git repo ──
+    Write-Step "Pre-flight checks"
+
+    if (-not (Test-GitRepo)) {
+        throw "Not inside a git repository. Run this script from the Redball project root."
+    }
+    Write-Success "Inside git repository"
+
+    # ── 2. Validate GitHub CLI ──
+    if (-not (Test-GitHubCli)) {
+        throw "GitHub CLI (gh) not found. Install from https://cli.github.com/"
+    }
+
+    # ── 3. Check GitHub authentication ──
+    $authOutput = (& gh auth status 2>&1) | Out-String
+    if ($authOutput -match "not logged" -or $LASTEXITCODE -ne 0) {
+        Write-Err "Not authenticated with GitHub."
+        Write-Info "Attempting 'gh auth login'..."
+        if (-not $DryRun) {
+            & gh auth login
+            if ($LASTEXITCODE -ne 0) {
+                throw "GitHub authentication failed. Run 'gh auth login' manually."
+            }
+        }
+        else {
+            Write-Info "[DRY RUN] Would run 'gh auth login'"
+        }
+    }
+    Write-Success "Authenticated with GitHub"
+
+    # ── 4. Branch validation ──
+    $currentBranch = Get-CurrentBranch
+    Write-Info "Current branch: $currentBranch"
+    if ($currentBranch -notin @("main", "master", "release") -and $currentBranch -notmatch "^release/") {
+        Write-Warn "Releasing from branch '$currentBranch' (not main/master/release)."
+        if (-not $Force) {
+            Write-Info "Use -Force to release from any branch."
+        }
+    }
+
+    # ── 5. Fetch latest remote state ──
+    Write-Info "Fetching latest from remote..."
+    if (-not $DryRun) {
+        git fetch --tags --prune origin 2>$null
+        Write-Success "Remote state synced"
+    }
+
+    # ── 6. Handle dirty working tree ──
+    if (Test-DirtyWorkingTree) {
+        if ($AllowDirty) {
+            Write-Warn "Working tree has uncommitted changes (--AllowDirty specified, continuing)."
+        }
+        else {
+            Write-Warn "Working tree has uncommitted changes. Stashing them for a clean release..."
+            if (-not $DryRun) {
+                git stash push -m "release-script-auto-stash" --include-untracked 2>$null
+                if ($LASTEXITCODE -eq 0) {
+                    $script:stashedChanges = $true
+                    Write-Success "Changes stashed (will restore after release)"
+                }
+                else {
+                    throw "Failed to stash changes. Commit or stash them manually."
+                }
+            }
+            else {
+                Write-Info "[DRY RUN] Would stash uncommitted changes"
+            }
+        }
+    }
+    else {
+        Write-Success "Working tree is clean"
+    }
+
+    # ── 7. Get version and tag ──
+    Write-Step "Resolving version"
+    $version = Get-ProjectVersion
+    if (-not $Tag) {
+        $Tag = "v$version"
+    }
+    Write-Host "Version: $version"
+    Write-Host "Tag:     $Tag"
+
+    # ── 8. Push any unpushed commits ──
+    $unpushed = Get-UnpushedCount
+    if ($unpushed -gt 0) {
+        Write-Warn "$unpushed unpushed commit(s) detected."
+        Write-Info "Pushing commits to origin/$currentBranch..."
+        if (-not $DryRun) {
+            git push origin $currentBranch 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Success "Pushed $unpushed commit(s) to origin/$currentBranch"
+            }
+            else {
+                throw "Failed to push commits. Resolve conflicts or push manually."
+            }
+        }
+        else {
+            Write-Info "[DRY RUN] Would push $unpushed commit(s)"
+        }
+    }
+    else {
+        Write-Success "All commits are pushed"
+    }
+
+    # ── 9. Handle tag creation/sync ──
+    Write-Step "Tag management"
+    $tagLocal = Test-TagExistsLocally -TagName $Tag
+    $tagRemote = Test-TagExistsRemotely -TagName $Tag
+
+    if ($tagLocal -and $tagRemote) {
+        Write-Success "Tag $Tag exists locally and on remote"
+    }
+    elseif ($tagLocal -and -not $tagRemote) {
+        Write-Warn "Tag $Tag exists locally but not on remote. Pushing..."
+        if (-not $DryRun) {
+            git push origin $Tag 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Success "Pushed tag $Tag to origin"
+            }
+            else {
+                throw "Failed to push tag $Tag to origin."
+            }
+        }
+        else {
+            Write-Info "[DRY RUN] Would push tag $Tag to origin"
+        }
+    }
+    elseif (-not $tagLocal -and $tagRemote) {
+        Write-Warn "Tag $Tag exists on remote but not locally. Fetching..."
+        if (-not $DryRun) {
+            git fetch origin tag $Tag 2>$null
+            Write-Success "Fetched tag $Tag from origin"
+        }
+        else {
+            Write-Info "[DRY RUN] Would fetch tag $Tag from origin"
+        }
+    }
+    else {
+        Write-Warn "Tag $Tag does not exist anywhere. Creating..."
+        if (-not $DryRun) {
+            git tag -a $Tag -m "Release $Tag" 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to create tag $Tag locally."
+            }
+            Write-Success "Created tag $Tag locally"
+
+            git push origin $Tag 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to push tag $Tag to origin."
+            }
+            Write-Success "Pushed tag $Tag to origin"
+        }
+        else {
+            Write-Info "[DRY RUN] Would create and push tag $Tag"
+        }
+    }
+
+    # ── 10. Validate/build artifacts ──
+    Write-Step "Artifact validation"
+    $msiPath = Join-Path $DistDir "Redball.msi"
+    $msiVersioned = Join-Path $DistDir "Redball-$version.msi"
+
+    if (-not (Test-Path $msiPath) -and -not (Test-Path $msiVersioned)) {
+        Write-Warn "No MSI artifacts found in $DistDir."
+        if ($BuildIfMissing) {
+            Invoke-BuildIfNeeded -VersionStr $version
+        }
+        else {
+            throw "MSI not found at $msiPath. Run build first or use -BuildIfMissing."
+        }
+    }
+
+    # Re-check after potential build
+    if (-not (Test-Path $msiPath) -and -not (Test-Path $msiVersioned)) {
+        if (-not $DryRun) {
+            throw "MSI still not found after build. Check build output."
+        }
+    }
+
+    if (Test-Path $msiPath) { Write-Success "Found: $msiPath" }
+    if (Test-Path $msiVersioned) { Write-Success "Found: $msiVersioned" }
+
+    # Build upload files list
+    $uploadFiles = @()
+    if (Test-Path $msiPath) { $uploadFiles += $msiPath }
+    if (Test-Path $msiVersioned) { $uploadFiles += $msiVersioned }
+
+    $bundlePath = Join-Path $DistDir "Redball-Setup.exe"
+    $bundleVersioned = Join-Path $DistDir "Redball-Setup-$version.exe"
+    if (Test-Path $bundlePath) { $uploadFiles += $bundlePath }
+    if (Test-Path $bundleVersioned) { $uploadFiles += $bundleVersioned }
+
+    # Also pick up any .wixpdb for debugging
+    $wixpdb = Join-Path $DistDir "Redball-$version.wixpdb"
+    if (Test-Path $wixpdb) { $uploadFiles += $wixpdb }
+
+    Write-Host "`nArtifacts to upload:"
+    $uploadFiles | ForEach-Object { Write-Host "  - $(Split-Path $_ -Leaf)" }
+
+    if ($uploadFiles.Count -eq 0 -and -not $DryRun) {
+        throw "No uploadable artifacts found."
+    }
+
+    # ── 11. Skip release if requested ──
+    if ($SkipRelease) {
+        Write-Info "Skipping release creation (-SkipRelease specified)"
+        Restore-StashedChanges
+        Write-Host ""
+        Write-Success "Validation completed successfully!"
+        exit 0
+    }
+
+    # ── 12. Generate release notes ──
+    Write-Step "Creating GitHub Release: $Tag"
+
+    if (-not $ReleaseNotes) {
+        $ReleaseNotes = Get-ChangeLog -CurrentTag $Tag -VersionStr $version
+    }
+
+    $notesFile = Join-Path $env:TEMP "release-notes-$version.md"
+    $ReleaseNotes | Set-Content $notesFile -Encoding UTF8
+    Write-Info "Release notes saved to $notesFile"
+
+    # ── 13. Create or update release ──
+    if ($DryRun) {
+        Write-Info "[DRY RUN] Would create/update GitHub release $Tag with $($uploadFiles.Count) artifact(s)"
+    }
+    else {
+        # Check if release already exists
+        $null = (& gh release view $Tag 2>&1)
+        $releaseExists = ($LASTEXITCODE -eq 0)
+
+        if ($releaseExists) {
+            Write-Warn "Release $Tag already exists. Updating artifacts (--clobber)..."
+            foreach ($file in $uploadFiles) {
+                if ($PSCmdlet.ShouldProcess($file, "Upload to release $Tag")) {
+                    & gh release upload $Tag $file --clobber
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Success "Uploaded: $(Split-Path $file -Leaf)"
+                    }
+                    else {
+                        Write-Err "Failed to upload: $(Split-Path $file -Leaf)"
+                    }
+                }
+            }
+
+            # Update release notes if we generated new ones
+            if ($PSCmdlet.ShouldProcess($Tag, "Update release notes")) {
+                & gh release edit $Tag --notes-file $notesFile 2>$null
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "Release notes updated"
+                }
+            }
+        }
+        else {
+            # Create new release
+            $releaseArgs = @(
+                "release", "create", $Tag,
+                "--title", "Release $Tag",
+                "--notes-file", $notesFile
+            )
+
+            foreach ($file in $uploadFiles) {
+                $releaseArgs += $file
+            }
+
+            if ($PSCmdlet.ShouldProcess($Tag, "Create GitHub release")) {
+                & gh @releaseArgs
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "GitHub release created: https://github.com/ArMaTeC/Redball/releases/tag/$Tag"
+                }
+                else {
+                    throw "GitHub release creation failed (exit code $LASTEXITCODE)"
+                }
+            }
+            else {
+                Write-Host "Would create release with args:"
+                $releaseArgs | ForEach-Object { Write-Host "  $_" }
+            }
+        }
+    }
+
+    # ── 14. Cleanup ──
+    Remove-Item $notesFile -Force -ErrorAction SilentlyContinue
+    Restore-StashedChanges
+
+    Write-Host ""
+    Write-Success "Release $Tag completed successfully!"
+
+}
+catch {
+    # Ensure stashed changes are restored even on failure
+    Restore-StashedChanges
+    Write-Err "Release failed: $_"
+    throw
+}
+finally {
+    # Belt-and-suspenders: always try to restore stash
+    if ($script:stashedChanges) {
+        Restore-StashedChanges
+    }
+}
+
+#endregion

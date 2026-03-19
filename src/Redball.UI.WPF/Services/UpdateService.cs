@@ -3,9 +3,11 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -14,13 +16,21 @@ namespace Redball.UI.Services;
 /// <summary>
 /// Service for checking, downloading, and installing updates from GitHub releases.
 /// </summary>
-public class UpdateService
+public class UpdateService : IUpdateService
 {
-    private static readonly HttpClient _httpClient = new();
+    private static readonly HttpClient _httpClient;
     private readonly string _repoOwner;
     private readonly string _repoName;
     private readonly string _updateChannel;
     private readonly bool _verifySignature;
+
+    static UpdateService()
+    {
+        _httpClient = new HttpClient();
+        _httpClient.DefaultRequestHeaders.UserAgent.Add(
+            new ProductInfoHeaderValue("Redball-Updater", 
+                Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0"));
+    }
 
     public UpdateService(string repoOwner, string repoName, string updateChannel = "stable", bool verifySignature = false)
     {
@@ -34,7 +44,7 @@ public class UpdateService
     /// Checks for updates by comparing current version with latest GitHub release.
     /// </summary>
     /// <returns>Update info if an update is available, null if up to date or error.</returns>
-    public async Task<UpdateInfo?> CheckForUpdateAsync()
+    public async Task<UpdateInfo?> CheckForUpdateAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -48,7 +58,7 @@ public class UpdateService
             }
             
             // Get all releases and find the highest version (not just "latest" by date)
-            var allReleases = await GetAllReleasesAsync();
+            var allReleases = await GetAllReleasesAsync(cancellationToken);
             var latestRelease = FindHighestVersionRelease(allReleases);
             
             if (latestRelease == null)
@@ -98,9 +108,14 @@ public class UpdateService
                 ReleaseDate = latestRelease.PublishedAt
             };
         }
+        catch (OperationCanceledException)
+        {
+            Logger.Info("UpdateService", "Update check was cancelled");
+            return null;
+        }
         catch (Exception ex)
         {
-            Log($"Update check failed: {ex.Message}");
+            Logger.Error("UpdateService", "Update check failed", ex);
             return null;
         }
     }
@@ -111,7 +126,7 @@ public class UpdateService
     /// <param name="updateInfo">Update information from CheckForUpdateAsync.</param>
     /// <param name="progress">Callback for download progress (0-100).</param>
     /// <returns>True if update was downloaded and prepared successfully.</returns>
-    public async Task<bool> DownloadAndInstallAsync(UpdateInfo updateInfo, IProgress<int>? progress = null)
+    public async Task<bool> DownloadAndInstallAsync(UpdateInfo updateInfo, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -123,7 +138,7 @@ public class UpdateService
 
             // Download the update package
             var downloadPath = Path.Combine(tempDir, updateInfo.FileName);
-            if (!await DownloadFileAsync(updateInfo.DownloadUrl, downloadPath, progress))
+            if (!await DownloadFileAsync(updateInfo.DownloadUrl, downloadPath, progress, cancellationToken))
                 return false;
 
             Logger.Debug("UpdateService", $"Downloaded file path: {downloadPath}");
@@ -132,21 +147,21 @@ public class UpdateService
             if (_verifySignature)
             {
                 var hashFileName = updateInfo.FileName + ".sha256";
-                var expectedHash = await DownloadHashFileAsync(updateInfo.DownloadUrl + ".sha256", hashFileName);
+                var expectedHash = await DownloadHashFileAsync(updateInfo.DownloadUrl + ".sha256", hashFileName, cancellationToken);
                 
                 if (!string.IsNullOrEmpty(expectedHash))
                 {
                     if (!VerifyFileHash(downloadPath, expectedHash))
                     {
-                        Log("Signature verification failed - file hash mismatch");
+                        Logger.Warning("UpdateService", "Signature verification failed - file hash mismatch");
                         File.Delete(downloadPath);
                         return false;
                     }
-                    Log("Signature verification passed");
+                    Logger.Info("UpdateService", "Signature verification passed");
                 }
                 else
                 {
-                    Log("No hash file available for verification, proceeding without verification");
+                    Logger.Warning("UpdateService", "No hash file available for verification, proceeding without verification");
                 }
             }
 
@@ -198,21 +213,24 @@ public class UpdateService
 
             return true;
         }
+        catch (OperationCanceledException)
+        {
+            Logger.Info("UpdateService", "Update download was cancelled");
+            return false;
+        }
         catch (Exception ex)
         {
-            Log($"Update installation failed: {ex.Message}");
+            Logger.Error("UpdateService", "Update installation failed", ex);
             return false;
         }
     }
 
-    private async Task<List<GitHubRelease>> GetAllReleasesAsync()
+    private async Task<List<GitHubRelease>> GetAllReleasesAsync(CancellationToken cancellationToken = default)
     {
         var url = $"https://api.github.com/repos/{_repoOwner}/{_repoName}/releases";
         Logger.Debug("UpdateService", $"Fetching all releases from: {url}");
         
-        _httpClient.DefaultRequestHeaders.Add("User-Agent", "Redball-Updater");
-        
-        var response = await _httpClient.GetStringAsync(url);
+        var response = await _httpClient.GetStringAsync(url, cancellationToken);
         Logger.Debug("UpdateService", $"API response length: {response.Length} chars");
         
         var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(response, new JsonSerializerOptions
@@ -313,23 +331,24 @@ public class UpdateService
         return fallbackAsset;
     }
 
-    private async Task<bool> DownloadFileAsync(string url, string destinationPath, IProgress<int>? progress)
+    private async Task<bool> DownloadFileAsync(string url, string destinationPath, IProgress<int>? progress, CancellationToken cancellationToken = default)
     {
         Logger.Info("UpdateService", $"Downloading update from: {url}");
-        using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+        using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         var totalBytes = response.Content.Headers.ContentLength ?? -1L;
         var downloadedBytes = 0L;
 
-        await using var contentStream = await response.Content.ReadAsStreamAsync();
+        await using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
         await using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None);
 
         var buffer = new byte[8192];
         int read;
-        while ((read = await contentStream.ReadAsync(buffer)) > 0)
+        while ((read = await contentStream.ReadAsync(buffer, cancellationToken)) > 0)
         {
-            await fileStream.WriteAsync(buffer.AsMemory(0, read));
+            cancellationToken.ThrowIfCancellationRequested();
+            await fileStream.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
             downloadedBytes += read;
 
             if (totalBytes > 0 && progress != null)
@@ -356,16 +375,16 @@ public class UpdateService
         }
         catch (Exception ex)
         {
-            Log($"Failed to extract zip: {ex.Message}");
+            Logger.Error("UpdateService", "Failed to extract zip", ex);
             return false;
         }
     }
 
-    private async Task<string?> DownloadHashFileAsync(string hashUrl, string hashFileName)
+    private async Task<string?> DownloadHashFileAsync(string hashUrl, string hashFileName, CancellationToken cancellationToken = default)
     {
         try
         {
-            var response = await _httpClient.GetAsync(hashUrl);
+            var response = await _httpClient.GetAsync(hashUrl, cancellationToken);
             if (!response.IsSuccessStatusCode)
                 return null;
 
@@ -404,7 +423,7 @@ public class UpdateService
         }
         catch (Exception ex)
         {
-            Log($"Hash verification error: {ex.Message}");
+            Logger.Error("UpdateService", "Hash verification error", ex);
             return false;
         }
     }
@@ -436,10 +455,10 @@ Start-Sleep -Seconds 2
 # Copy files
 Get-ChildItem -Path $sourceDir -Recurse | ForEach-Object {{
     $targetPath = $_.FullName.Replace($sourceDir, $targetDir)
-    $targetDir = Split-Path -Parent $targetPath
+    $parentDir = Split-Path -Parent $targetPath
     
-    if (-not (Test-Path $targetDir)) {{
-        New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+    if (-not (Test-Path $parentDir)) {{
+        New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
     }}
     
     if (-not $_.PSIsContainer) {{
@@ -466,7 +485,7 @@ Remove-Item -Path $PSCommandPath -Force -ErrorAction SilentlyContinue
         }
         catch (Exception ex)
         {
-            Log($"Failed to create update script: {ex.Message}");
+            Logger.Error("UpdateService", "Failed to create update script", ex);
             return null;
         }
     }
@@ -519,16 +538,9 @@ Remove-Item -Path $PSCommandPath -Force -ErrorAction SilentlyContinue
         }
         catch (Exception ex)
         {
-            Log($"Failed to create installer launch script: {ex.Message}");
+            Logger.Error("UpdateService", "Failed to create installer launch script", ex);
             return null;
         }
-    }
-
-    private void Log(string message)
-    {
-        var logPath = Path.Combine(AppContext.BaseDirectory, "Redball.UI.log");
-        var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [Update] {message}{Environment.NewLine}";
-        File.AppendAllText(logPath, line);
     }
 }
 

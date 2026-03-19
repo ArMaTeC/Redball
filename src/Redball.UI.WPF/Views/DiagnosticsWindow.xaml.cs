@@ -182,6 +182,61 @@ public partial class DiagnosticsWindow : Window
         }
     }
 
+    private void CopyAllButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var text = string.Join(Environment.NewLine, new[]
+            {
+                "=== Redball Diagnostics ===",
+                $"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}",
+                "",
+                "--- Configuration ---",
+                ConfigPathText.Text,
+                ValidationStatusText.Text,
+                DirtyStateText.Text,
+                UpdateStatusText.Text,
+                "",
+                "--- Logging ---",
+                LogPathText.Text,
+                LogDirectoryText.Text,
+                LogLevelText.Text,
+                LogSizeText.Text,
+                "",
+                "--- Runtime ---",
+                KeepAwakeStatusText.Text,
+                HeartbeatText.Text,
+                MonitorStatusText.Text,
+                "",
+                "--- Analytics ---",
+                AnalyticsEnabledText.Text,
+                AnalyticsSessionsText.Text,
+                AnalyticsFeaturesText.Text,
+                AnalyticsPathText.Text,
+                "",
+                "--- Update Health ---",
+                UpdateChannelText.Text,
+                UpdateRepoText.Text,
+                UpdateVerificationText.Text,
+                "",
+                "--- Validation Issues ---",
+                ValidationIssuesText.Text,
+                "",
+                "--- Recent Log Output ---",
+                RecentLogText.Text
+            });
+
+            Clipboard.SetText(text);
+            _analytics.TrackFeature("diagnostics.copied_all");
+            Logger.Info("DiagnosticsWindow", "All diagnostics copied to clipboard");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("DiagnosticsWindow", "Failed to copy diagnostics to clipboard", ex);
+            MessageBox.Show($"Failed to copy: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
         Close();

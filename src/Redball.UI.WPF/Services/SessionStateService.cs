@@ -8,7 +8,7 @@ namespace Redball.UI.Services;
 /// Saves and restores session state across application restarts.
 /// Port of Save-RedballState, Restore-RedballState.
 /// </summary>
-public class SessionStateService
+public class SessionStateService : ISessionStateService
 {
     private static readonly string DefaultStatePath = Path.Combine(
         AppContext.BaseDirectory, "Redball.state.json");

@@ -11,7 +11,7 @@ namespace Redball.UI.Services;
 /// Port of Import-RedballLocale, Get-LocalizedString.
 /// Supports: en, es, fr, de, bl (blade runner theme).
 /// </summary>
-public class LocalizationService
+public class LocalizationService : ILocalizationService
 {
     private static readonly Lazy<LocalizationService> _instance = new(() => new LocalizationService());
     public static LocalizationService Instance => _instance.Value;

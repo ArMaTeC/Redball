@@ -1,8 +1,8 @@
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
+using CommunityToolkit.Mvvm.Input;
 using Redball.UI.Services;
 using Redball.UI.Views;
 
@@ -12,13 +12,17 @@ namespace Redball.UI.ViewModels;
 /// Main ViewModel for Redball v3.0 WPF UI
 /// Handles state management and command binding
 /// </summary>
-public class MainViewModel : INotifyPropertyChanged
+public class MainViewModel : ViewModelBase
 {
     private bool _isActive = true;
     private string _statusText = "Active | Display On | F15 On";
     private bool _isDarkMode = true;
+    private string _memoryUsageText = "";
+    private string _batteryText = "";
+    private string _uptimeText = "";
     private WeakReference<MainWindow>? _mainWindowRef;
     private readonly KeepAwakeService _keepAwake;
+    private readonly DispatcherTimer _statusBarTimer;
 
     public bool PreventDisplaySleep
     {
@@ -72,10 +76,22 @@ public class MainViewModel : INotifyPropertyChanged
         OpenMetricsCommand = new RelayCommand(OpenMetrics);
         OpenDiagnosticsCommand = new RelayCommand(OpenDiagnostics);
         OpenLogsCommand = new RelayCommand(OpenLogs);
+        OpenBehaviorCommand = new RelayCommand(OpenBehavior);
+        OpenSmartFeaturesCommand = new RelayCommand(OpenSmartFeatures);
+        OpenTypeThingCommand = new RelayCommand(OpenTypeThing);
+        OpenUpdatesCommand = new RelayCommand(OpenUpdates);
+        OpenAboutCommand = new RelayCommand(() => ShowAbout());
+        ShowQuickSettingsCommand = new RelayCommand(ShowQuickSettings);
+        ShowMiniWidgetCommand = new RelayCommand(ShowMiniWidget);
 
         // Sync initial state
         _isActive = _keepAwake.IsActive;
         UpdateStatusText();
+        UpdateStatusBar();
+
+        _statusBarTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+        _statusBarTimer.Tick += (_, _) => UpdateStatusBar();
+        _statusBarTimer.Start();
         
         Logger.Info("MainViewModel", "Commands initialized");
     }
@@ -94,11 +110,9 @@ public class MainViewModel : INotifyPropertyChanged
         get => _isActive;
         set
         {
-            if (_isActive != value)
+            if (SetProperty(ref _isActive, value))
             {
-                Logger.Info("MainViewModel", $"IsActive changed: {_isActive} -> {value}");
-                _isActive = value;
-                OnPropertyChanged();
+                Logger.Info("MainViewModel", $"IsActive changed to: {value}");
                 UpdateStatusText();
             }
         }
@@ -109,11 +123,9 @@ public class MainViewModel : INotifyPropertyChanged
         get => _statusText;
         set
         {
-            if (_statusText != value)
+            if (SetProperty(ref _statusText, value))
             {
-                Logger.Verbose("MainViewModel", $"StatusText changed: '{_statusText}' -> '{value}'");
-                _statusText = value;
-                OnPropertyChanged();
+                Logger.Verbose("MainViewModel", $"StatusText changed to: '{value}'");
             }
         }
     }
@@ -123,11 +135,9 @@ public class MainViewModel : INotifyPropertyChanged
         get => _isDarkMode;
         set
         {
-            if (_isDarkMode != value)
+            if (SetProperty(ref _isDarkMode, value))
             {
-                Logger.Info("MainViewModel", $"IsDarkMode changed: {_isDarkMode} -> {value}");
-                _isDarkMode = value;
-                OnPropertyChanged();
+                Logger.Info("MainViewModel", $"IsDarkMode changed to: {value}");
                 ThemeManager.SetTheme(value ? Theme.Dark : Theme.Light);
             }
         }
@@ -145,6 +155,31 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand OpenMetricsCommand { get; }
     public ICommand OpenDiagnosticsCommand { get; }
     public ICommand OpenLogsCommand { get; }
+    public ICommand OpenBehaviorCommand { get; }
+    public ICommand OpenSmartFeaturesCommand { get; }
+    public ICommand OpenTypeThingCommand { get; }
+    public ICommand OpenUpdatesCommand { get; }
+    public ICommand OpenAboutCommand { get; }
+    public ICommand ShowQuickSettingsCommand { get; }
+    public ICommand ShowMiniWidgetCommand { get; }
+
+    public string MemoryUsageText
+    {
+        get => _memoryUsageText;
+        set => SetProperty(ref _memoryUsageText, value);
+    }
+
+    public string BatteryText
+    {
+        get => _batteryText;
+        set => SetProperty(ref _batteryText, value);
+    }
+
+    public string UptimeText
+    {
+        get => _uptimeText;
+        set => SetProperty(ref _uptimeText, value);
+    }
 
     private void ToggleActive()
     {
@@ -277,12 +312,45 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    private void OpenBehavior()
+    {
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.ShowBehavior();
+        }
+    }
+
+    private void OpenSmartFeatures()
+    {
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.ShowSmartFeatures();
+        }
+    }
+
+    private void OpenTypeThing()
+    {
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.ShowTypeThing();
+        }
+    }
+
+    private void OpenUpdates()
+    {
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.ShowUpdates();
+        }
+    }
+
     private void ExitApplication()
     {
         Logger.Info("MainViewModel", "ExitApplication called");
         
-        // Confirm exit when keep-awake is active
-        if (_isActive)
+        // Confirm exit when configured and keep-awake is active
+        var confirmOnExit = ConfigService.Instance.Config.ConfirmOnExit;
+        if (confirmOnExit && _isActive)
         {
             Logger.Debug("MainViewModel", "Showing exit confirmation dialog");
             
@@ -345,6 +413,29 @@ public class MainViewModel : INotifyPropertyChanged
         Logger.Debug("MainViewModel", $"StatusText updated to: {StatusText}");
     }
 
+    private void UpdateStatusBar()
+    {
+        var proc = Process.GetCurrentProcess();
+        MemoryUsageText = $"Mem: {proc.WorkingSet64 / 1024 / 1024} MB";
+
+        try
+        {
+            var batteryService = new BatteryMonitorService();
+            var status = batteryService.GetStatus();
+            if (!status.HasBattery)
+                BatteryText = "AC Power";
+            else
+                BatteryText = $"Battery: {status.ChargePercent}%{(status.IsOnBattery ? " (discharging)" : "")}";
+        }
+        catch
+        {
+            BatteryText = "";
+        }
+
+        var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
+        UptimeText = $"System uptime: {(int)uptime.TotalHours}h {uptime.Minutes}m";
+    }
+
     /// <summary>
     /// Public method to force refresh status text from KeepAwakeService.
     /// Call this when heartbeat settings change to update the UI immediately.
@@ -354,36 +445,33 @@ public class MainViewModel : INotifyPropertyChanged
         UpdateStatusText();
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    private Views.MiniWidgetWindow? _miniWidget;
 
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    private void ShowMiniWidget()
     {
-        Logger.Verbose("MainViewModel", $"Property changed: {propertyName}");
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-}
+        if (_miniWidget != null && _miniWidget.IsVisible)
+        {
+            _miniWidget.Activate();
+            return;
+        }
 
-/// <summary>
-/// Simple relay command implementation
-/// </summary>
-public class RelayCommand : ICommand
-{
-    private readonly Action _execute;
-    private readonly Func<bool>? _canExecute;
-
-    public RelayCommand(Action execute, Func<bool>? canExecute = null)
-    {
-        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-        _canExecute = canExecute;
+        _miniWidget = new Views.MiniWidgetWindow();
+        _miniWidget.Closed += (_, _) => _miniWidget = null;
+        _miniWidget.Show();
+        Logger.Info("MainViewModel", "Mini widget opened");
     }
 
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
-
-    public void Execute(object? parameter) => _execute();
-
-    public event EventHandler? CanExecuteChanged
+    private void ShowQuickSettings()
     {
-        add { CommandManager.RequerySuggested += value; }
-        remove { CommandManager.RequerySuggested -= value; }
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var window))
+        {
+            var trayIcon = window.TrayIcon;
+            if (trayIcon != null)
+            {
+                var popup = new Views.QuickSettingsPopup();
+                trayIcon.ShowCustomBalloon(popup, System.Windows.Controls.Primitives.PopupAnimation.Slide, null);
+            }
+        }
     }
+
 }

@@ -15,7 +15,7 @@ public static class Logger
 {
     private static readonly object _lock = new();
     private static string _logPath = "";
-    private static bool _initialized = false;
+    private static volatile bool _initialized = false;
     private static int _logLevel = 0; // 0=Verbose, 1=Debug, 2=Info, 3=Warning, 4=Error, 5=Fatal
 
     public static string LogPath => _logPath;

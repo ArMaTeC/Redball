@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Redball.UI;
 
@@ -13,8 +14,7 @@ public partial class App : Application
 {
     private Views.MainWindow? _mainWindow; // Keep reference to prevent GC
     private Services.SingletonService? _singleton;
-    private readonly Services.SessionStateService _sessionState = new();
-    private Services.AnalyticsService? _analytics;
+    private IServiceProvider? _serviceProvider;
 
     public App()
     {
@@ -112,19 +112,11 @@ public partial class App : Application
             try
             {
                 var savedTheme = Services.ConfigService.Instance.Config.Theme;
-                if (!string.IsNullOrEmpty(savedTheme) && savedTheme != "System")
-                {
-                    var themeEnum = ThemeManager.ThemeFromString(savedTheme);
-                    Services.Logger.Debug("App", $"Setting theme to: {themeEnum} (from config)");
-                    ThemeManager.SetTheme(themeEnum);
-                }
-                else
-                {
-                    Services.Logger.Debug("App", "Auto-detecting system theme");
-                    ThemeManager.Initialize();
-                }
+                Services.Logger.Debug("App", $"Setting theme from config: '{savedTheme}'");
+                ThemeManager.SetThemeFromConfig(string.IsNullOrEmpty(savedTheme) ? "System" : savedTheme);
 
                 Services.Logger.Info("App", $"ThemeManager initialized with theme: {ThemeManager.CurrentTheme}");
+                ThemeManager.StartWatchingSystemTheme();
             }
             catch (Exception themeEx)
             {
@@ -132,10 +124,14 @@ public partial class App : Application
                 ThemeManager.SetTheme(Theme.Dark);
             }
 
-            _analytics = new Services.AnalyticsService(cfg.EnableTelemetry);
-            _analytics.TrackSessionStart();
-            _analytics.TrackFeature("app.launch");
-            _analytics.TrackFunnel("onboarding", "app_started");
+            // Build DI container now that config is loaded
+            _serviceProvider = Services.ServiceLocator.BuildServiceProvider(cfg);
+            Services.Logger.Info("App", "DI container built");
+
+            var analytics = _serviceProvider.GetRequiredService<Services.IAnalyticsService>();
+            analytics.TrackSessionStart();
+            analytics.TrackFeature("app.launch");
+            analytics.TrackFunnel("onboarding", "app_started");
 
             // Validate configuration
             var errors = Services.ConfigService.Instance.Validate();
@@ -152,20 +148,20 @@ public partial class App : Application
             if (cfg.FirstRun)
             {
                 Services.Logger.Info("App", "First run detected - showing onboarding window");
-                _analytics.TrackFeature("onboarding.shown");
-                _analytics.TrackFunnel("onboarding", "shown");
+                analytics.TrackFeature("onboarding.shown");
+                analytics.TrackFunnel("onboarding", "shown");
                 var onboarding = new Views.OnboardingWindow();
                 var result = onboarding.ShowDialog();
                 Services.Logger.Info("App", result == true ? "Onboarding completed" : "Onboarding cancelled/closed");
                 if (result == true)
                 {
-                    _analytics.TrackFeature("onboarding.completed");
-                    _analytics.TrackFunnel("onboarding", "completed");
-                    _analytics.TrackRetention(0);
+                    analytics.TrackFeature("onboarding.completed");
+                    analytics.TrackFunnel("onboarding", "completed");
+                    analytics.TrackRetention(0);
                 }
                 else
                 {
-                    _analytics.TrackFeature("onboarding.dismissed");
+                    analytics.TrackFeature("onboarding.dismissed");
                 }
             }
 
@@ -174,7 +170,8 @@ public partial class App : Application
             Services.KeepAwakeService.Instance.Initialize();
 
             // Restore previous session state or start fresh
-            var restored = _sessionState.Restore(Services.KeepAwakeService.Instance);
+            var sessionState = _serviceProvider.GetRequiredService<Services.ISessionStateService>();
+            var restored = sessionState.Restore(Services.KeepAwakeService.Instance);
             if (!restored)
             {
                 Services.KeepAwakeService.Instance.SetActive(true);
@@ -257,13 +254,17 @@ public partial class App : Application
         
         try
         {
-            _analytics?.TrackFeature("app.exit");
-            _analytics?.TrackSessionEnd();
+            var analytics = _serviceProvider?.GetService<Services.IAnalyticsService>();
+            analytics?.TrackFeature("app.exit");
+            analytics?.TrackSessionEnd();
+            analytics?.Dispose();
 
             // Save session state for next launch
-            _sessionState.Save(Services.KeepAwakeService.Instance);
+            var sessionState = _serviceProvider?.GetService<Services.ISessionStateService>();
+            sessionState?.Save(Services.KeepAwakeService.Instance);
             Services.Logger.Debug("App", "Session state saved");
 
+            ThemeManager.StopWatchingSystemTheme();
             Services.KeepAwakeService.Instance.Dispose();
             Services.Logger.Debug("App", "KeepAwakeService disposed");
 

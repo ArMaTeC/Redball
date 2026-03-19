@@ -118,6 +118,7 @@
             <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" CornerRadius="0,0,8,8" Height="60">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,0">
                     <Button Content="Refresh" Style="{DynamicResource ModernButton}" Margin="0,0,8,0" Click="RefreshButton_Click"/>
+                    <Button Content="Copy All" Style="{DynamicResource ModernButton}" Margin="0,0,8,0" Click="CopyAllButton_Click" ToolTip="Copy all diagnostic info to clipboard"/>
                     <Button Content="Open Config" Style="{DynamicResource ModernButton}" Margin="0,0,8,0" Click="OpenConfigButton_Click"/>
                     <Button Content="Open Analytics" Style="{DynamicResource ModernButton}" Margin="0,0,8,0" Click="OpenAnalyticsButton_Click"/>
                     <Button Content="Export Config" Style="{DynamicResource ModernButton}" Margin="0,0,8,0" Click="ExportConfigButton_Click"/>

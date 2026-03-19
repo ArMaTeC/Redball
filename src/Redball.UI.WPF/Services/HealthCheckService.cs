@@ -9,10 +9,11 @@ namespace Redball.UI.Services;
 /// <summary>
 /// Health check service for monitoring application and update API status
 /// </summary>
-public class HealthCheckService
+public class HealthCheckService : IHealthCheckService
 {
     private readonly HttpClient _httpClient;
     private readonly string _version;
+    private bool _disposed;
 
     public HealthCheckService()
     {
@@ -200,6 +201,8 @@ public class HealthCheckService
 
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
         _httpClient?.Dispose();
     }
 }
