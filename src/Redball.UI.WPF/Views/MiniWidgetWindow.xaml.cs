@@ -49,6 +49,11 @@ public partial class MiniWidgetWindow : Window
         RefreshState();
     }
 
+    private void CloseBtn_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton == MouseButton.Left)

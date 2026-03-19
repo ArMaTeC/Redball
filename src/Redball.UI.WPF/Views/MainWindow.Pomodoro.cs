@@ -15,14 +15,22 @@ public partial class MainWindow
         pomodoro.StateChanged += Pomodoro_StateChanged;
         pomodoro.PhaseCompleted += Pomodoro_PhaseCompleted;
 
-        // Load config into sliders
-        var config = ConfigService.Instance.Config;
-        PomodoroFocusSlider.Value = config.PomodoroFocusMinutes;
-        PomodoroBreakSlider.Value = config.PomodoroBreakMinutes;
-        PomodoroLongBreakSlider.Value = config.PomodoroLongBreakMinutes;
-        PomodoroLongBreakIntervalSlider.Value = config.PomodoroLongBreakInterval;
-        PomodoroAutoStartCheck.IsChecked = config.PomodoroAutoStart;
-        PomodoroKeepAwakeBreakCheck.IsChecked = config.PomodoroKeepAwakeDuringBreak;
+        // Load config into sliders (suppress save-back while loading)
+        _isLoadingSettings = true;
+        try
+        {
+            var config = ConfigService.Instance.Config;
+            PomodoroFocusSlider.Value = config.PomodoroFocusMinutes;
+            PomodoroBreakSlider.Value = config.PomodoroBreakMinutes;
+            PomodoroLongBreakSlider.Value = config.PomodoroLongBreakMinutes;
+            PomodoroLongBreakIntervalSlider.Value = config.PomodoroLongBreakInterval;
+            PomodoroAutoStartCheck.IsChecked = config.PomodoroAutoStart;
+            PomodoroKeepAwakeBreakCheck.IsChecked = config.PomodoroKeepAwakeDuringBreak;
+        }
+        finally
+        {
+            _isLoadingSettings = false;
+        }
 
         UpdatePomodoroUI();
     }
@@ -102,7 +110,8 @@ public partial class MainWindow
 
     private void SavePomodoroSettings()
     {
-        if (_isLoadingSettings) return;
+        if (_isLoadingSettings || !IsLoaded) return;
+        if (PomodoroFocusSlider == null || PomodoroBreakSlider == null) return;
         var config = ConfigService.Instance.Config;
         config.PomodoroFocusMinutes = (int)PomodoroFocusSlider.Value;
         config.PomodoroBreakMinutes = (int)PomodoroBreakSlider.Value;

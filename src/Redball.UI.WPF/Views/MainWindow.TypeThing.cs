@@ -537,6 +537,12 @@ public partial class MainWindow
     [DllImport("user32.dll")]
     private static extern int GetSystemMetrics(int nIndex);
 
+    [DllImport("user32.dll")]
+    private static extern short VkKeyScanW(char ch);
+
+    [DllImport("user32.dll")]
+    private static extern uint MapVirtualKeyW(uint uCode, uint uMapType);
+
     private const int SM_REMOTESESSION = 0x1000;
     private const uint WM_KEYDOWN = 0x0100;
     private const uint WM_KEYUP = 0x0101;
@@ -544,6 +550,11 @@ public partial class MainWindow
     private const int INPUT_KEYBOARD = 1;
     private const uint KEYEVENTF_KEYUP = 0x0002;
     private const uint KEYEVENTF_UNICODE = 0x0004;
+    private const uint KEYEVENTF_SCANCODE = 0x0008;
+    private const uint MAPVK_VK_TO_VSC = 0;
+    private const ushort VK_SHIFT = 0x10;
+    private const ushort VK_CONTROL = 0x11;
+    private const ushort VK_MENU = 0x12;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct INPUT
@@ -585,21 +596,29 @@ public partial class MainWindow
         return GetSystemMetrics(SM_REMOTESESSION) != 0;
     }
 
+    private static INPUT MakeScanCodeInput(ushort scanCode, uint extraFlags = 0)
+    {
+        var input = new INPUT { type = INPUT_KEYBOARD };
+        input.u.ki.wScan = scanCode;
+        input.u.ki.dwFlags = KEYEVENTF_SCANCODE | extraFlags;
+        return input;
+    }
+
     private static void SendKeyPress(ushort vk)
     {
-        if (IsRemoteSession())
+        // Use hardware scan codes — works with VMware, fullscreen/maximized apps, and RDP
+        var scan = (ushort)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+        if (scan != 0)
         {
-            // Use PostMessage for RDP sessions
-            var hwnd = GetForegroundWindow();
-            if (hwnd != IntPtr.Zero)
-            {
-                PostMessage(hwnd, WM_KEYDOWN, (IntPtr)vk, IntPtr.Zero);
-                PostMessage(hwnd, WM_KEYUP, (IntPtr)vk, unchecked((nint)0xC0000001));
-            }
+            var inputs = new[] {
+                MakeScanCodeInput(scan),
+                MakeScanCodeInput(scan, KEYEVENTF_KEYUP)
+            };
+            SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
         }
         else
         {
-            // Use SendInput for local sessions (more reliable)
+            // Fallback: virtual-key based SendInput
             var inputs = new INPUT[2];
             inputs[0].type = INPUT_KEYBOARD;
             inputs[0].u.ki.wVk = vk;
@@ -612,27 +631,51 @@ public partial class MainWindow
 
     private static void SendCharacter(char ch)
     {
-        if (IsRemoteSession())
+        // Try hardware scan code approach — works with VMware, fullscreen/maximized apps
+        var vkResult = VkKeyScanW(ch);
+        if (vkResult != -1)
         {
-            // Use PostMessage for RDP sessions
-            var hwnd = GetForegroundWindow();
-            if (hwnd != IntPtr.Zero)
+            var vk = (byte)(vkResult & 0xFF);
+            var shiftState = (byte)((vkResult >> 8) & 0xFF);
+            var scan = (ushort)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+
+            if (scan != 0)
             {
-                PostMessage(hwnd, WM_CHAR, (IntPtr)ch, IntPtr.Zero);
+                var needShift = (shiftState & 1) != 0;
+                var needCtrl = (shiftState & 2) != 0;
+                var needAlt = (shiftState & 4) != 0;
+
+                var inputList = new List<INPUT>();
+
+                // Press modifiers
+                if (needShift) inputList.Add(MakeScanCodeInput((ushort)MapVirtualKeyW(VK_SHIFT, MAPVK_VK_TO_VSC)));
+                if (needCtrl) inputList.Add(MakeScanCodeInput((ushort)MapVirtualKeyW(VK_CONTROL, MAPVK_VK_TO_VSC)));
+                if (needAlt) inputList.Add(MakeScanCodeInput((ushort)MapVirtualKeyW(VK_MENU, MAPVK_VK_TO_VSC)));
+
+                // Key down + up
+                inputList.Add(MakeScanCodeInput(scan));
+                inputList.Add(MakeScanCodeInput(scan, KEYEVENTF_KEYUP));
+
+                // Release modifiers (reverse order)
+                if (needAlt) inputList.Add(MakeScanCodeInput((ushort)MapVirtualKeyW(VK_MENU, MAPVK_VK_TO_VSC), KEYEVENTF_KEYUP));
+                if (needCtrl) inputList.Add(MakeScanCodeInput((ushort)MapVirtualKeyW(VK_CONTROL, MAPVK_VK_TO_VSC), KEYEVENTF_KEYUP));
+                if (needShift) inputList.Add(MakeScanCodeInput((ushort)MapVirtualKeyW(VK_SHIFT, MAPVK_VK_TO_VSC), KEYEVENTF_KEYUP));
+
+                var inputs = inputList.ToArray();
+                SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
+                return;
             }
         }
-        else
-        {
-            // Use SendInput for local sessions
-            var inputs = new INPUT[2];
-            inputs[0].type = INPUT_KEYBOARD;
-            inputs[0].u.ki.wScan = (ushort)ch;
-            inputs[0].u.ki.dwFlags = KEYEVENTF_UNICODE;
-            inputs[1].type = INPUT_KEYBOARD;
-            inputs[1].u.ki.wScan = (ushort)ch;
-            inputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
-            SendInput(2, inputs, Marshal.SizeOf<INPUT>());
-        }
+
+        // Fallback: Unicode SendInput for chars not on current keyboard layout
+        var uInputs = new INPUT[2];
+        uInputs[0].type = INPUT_KEYBOARD;
+        uInputs[0].u.ki.wScan = (ushort)ch;
+        uInputs[0].u.ki.dwFlags = KEYEVENTF_UNICODE;
+        uInputs[1].type = INPUT_KEYBOARD;
+        uInputs[1].u.ki.wScan = (ushort)ch;
+        uInputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+        SendInput(2, uInputs, Marshal.SizeOf<INPUT>());
     }
 
     #endregion
