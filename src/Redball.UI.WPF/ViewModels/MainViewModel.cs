@@ -79,6 +79,7 @@ public class MainViewModel : ViewModelBase
         OpenBehaviorCommand = new RelayCommand(OpenBehavior);
         OpenSmartFeaturesCommand = new RelayCommand(OpenSmartFeatures);
         OpenTypeThingCommand = new RelayCommand(OpenTypeThing);
+        OpenPomodoroCommand = new RelayCommand(OpenPomodoro);
         OpenUpdatesCommand = new RelayCommand(OpenUpdates);
         OpenAboutCommand = new RelayCommand(() => ShowAbout());
         ShowQuickSettingsCommand = new RelayCommand(ShowQuickSettings);
@@ -158,6 +159,7 @@ public class MainViewModel : ViewModelBase
     public ICommand OpenBehaviorCommand { get; }
     public ICommand OpenSmartFeaturesCommand { get; }
     public ICommand OpenTypeThingCommand { get; }
+    public ICommand OpenPomodoroCommand { get; }
     public ICommand OpenUpdatesCommand { get; }
     public ICommand OpenAboutCommand { get; }
     public ICommand ShowQuickSettingsCommand { get; }
@@ -333,6 +335,14 @@ public class MainViewModel : ViewModelBase
         if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
         {
             mainWindow.ShowTypeThing();
+        }
+    }
+
+    private void OpenPomodoro()
+    {
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.ShowPomodoro();
         }
     }
 

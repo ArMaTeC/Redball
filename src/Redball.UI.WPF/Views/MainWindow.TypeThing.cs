@@ -315,11 +315,32 @@ public partial class MainWindow
         });
     }
 
+    private bool _useHidInput;
+
     private void TypeText(string text)
     {
         var isRdp = IsRemoteSession();
         var config = ConfigService.Instance.Config;
-        Logger.Info("MainWindow", $"TypeThing: Begin typing {text.Length} chars (RDP session: {isRdp})");
+
+        // Determine input mode: HID (driver-level) or SendInput (default)
+        _useHidInput = false;
+        if (Enum.TryParse<TypeThingInputMode>(config.TypeThingInputMode, true, out var inputMode) &&
+            inputMode == TypeThingInputMode.HID)
+        {
+            var interception = InterceptionInputService.Instance;
+            if (interception.IsReady || interception.Initialize())
+            {
+                _useHidInput = true;
+                Logger.Info("MainWindow", "TypeThing: Using HID driver-level input (Interception)");
+            }
+            else
+            {
+                Logger.Warning("MainWindow", "TypeThing: HID mode requested but driver not available, falling back to SendInput");
+                NotificationService.Instance.ShowWarning("TypeThing", "HID driver not available. Falling back to SendInput mode.");
+            }
+        }
+
+        Logger.Info("MainWindow", $"TypeThing: Begin typing {text.Length} chars (RDP: {isRdp}, HID: {_useHidInput})");
         var index = 0;
         var minDelay = Math.Max(1, config.TypeThingMinDelayMs);
         var maxDelay = Math.Max(minDelay, config.TypeThingMaxDelayMs);
@@ -604,8 +625,16 @@ public partial class MainWindow
         return input;
     }
 
-    private static void SendKeyPress(ushort vk)
+    private void SendKeyPress(ushort vk)
     {
+        // Route through Interception driver if HID mode is active
+        if (_useHidInput)
+        {
+            if (InterceptionInputService.Instance.SendVirtualKey(vk))
+                return;
+            Logger.Debug("MainWindow", $"TypeThing: HID SendVirtualKey failed for VK 0x{vk:X4}, falling back to SendInput");
+        }
+
         // Use hardware scan codes — works with VMware, fullscreen/maximized apps, and RDP
         var scan = (ushort)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
         if (scan != 0)
@@ -629,8 +658,16 @@ public partial class MainWindow
         }
     }
 
-    private static void SendCharacter(char ch)
+    private void SendCharacter(char ch)
     {
+        // Route through Interception driver if HID mode is active
+        if (_useHidInput)
+        {
+            if (InterceptionInputService.Instance.SendCharacter(ch))
+                return;
+            Logger.Debug("MainWindow", $"TypeThing: HID SendCharacter failed for '{ch}', falling back to SendInput");
+        }
+
         // Try hardware scan code approach — works with VMware, fullscreen/maximized apps
         var vkResult = VkKeyScanW(ch);
         if (vkResult != -1)

@@ -87,11 +87,7 @@ public partial class MainWindow
             return;
         }
 
-        var checkingDialog = MessageBox.Show("Checking for updates...", "Update", MessageBoxButton.OKCancel, MessageBoxImage.Information);
-        if (checkingDialog != MessageBoxResult.OK)
-        {
-            return;
-        }
+        _analytics.TrackFeature("update.manual_check");
 
         var updateInfo = await _updateService.CheckForUpdateAsync();
         if (updateInfo == null)
@@ -100,19 +96,8 @@ public partial class MainWindow
             return;
         }
 
-        var progressWindow = new UpdateProgressWindow();
-        progressWindow.Show();
-        var progress = new Progress<int>(percent => progressWindow.SetProgress(percent));
-        var success = await _updateService.DownloadAndInstallAsync(updateInfo, progress);
-        progressWindow.Close();
-
-        if (success)
-        {
-            Application.Current.Shutdown();
-            return;
-        }
-
-        MessageBox.Show(this, "Failed to download or install the update. Please try again later or download manually from GitHub.", "Update Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+        // Show the full changelog dialog instead of jumping straight to download
+        await ShowUpdateAvailableDialogAsync(updateInfo);
     }
 
     private void MainOpenLogFolderButton_Click(object sender, RoutedEventArgs e)
@@ -355,6 +340,21 @@ public partial class MainWindow
             WindowState = WindowState.Normal;
             LoadEmbeddedSettings();
             ShowSection("Updates");
+            Activate();
+            Focus();
+        });
+    }
+
+    public void ShowPomodoro()
+    {
+        Logger.Info("MainWindow", "ShowPomodoro called");
+        _analytics.TrackFeature("pomodoro.opened");
+        Dispatcher.Invoke(() =>
+        {
+            ShowInTaskbar = true;
+            if (!IsVisible) Show();
+            WindowState = WindowState.Normal;
+            ShowSection("Pomodoro");
             Activate();
             Focus();
         });

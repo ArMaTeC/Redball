@@ -11,9 +11,9 @@
     <AssemblyName>Redball.UI.WPF</AssemblyName>
     <AssemblyTitle>Redball</AssemblyTitle>
     <ApplicationIcon>Assets\redball.ico</ApplicationIcon>
-    <Version>2.1.87</Version>
-    <FileVersion>2.1.87.0</FileVersion>
-    <AssemblyVersion>2.1.87.0</AssemblyVersion>
+    <Version>2.1.91</Version>
+    <FileVersion>2.1.91.0</FileVersion>
+    <AssemblyVersion>2.1.91.0</AssemblyVersion>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>false</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -30,6 +30,7 @@
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="System.Speech" Version="8.0.0" />
+    <PackageReference Include="InputInterceptor" Version="2.2.1" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
