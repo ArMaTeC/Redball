@@ -1,4 +1,4 @@
-#Requires -Version 7
+﻿#Requires -Version 7
 <#
 .SYNOPSIS
     Create GitHub release with changelog and artifacts.
@@ -33,8 +33,8 @@
 .PARAMETER AllowDirty
     Allow release from a dirty working tree (uncommitted changes).
 
-.PARAMETER BuildIfMissing
-    Automatically run the build script if artifacts are missing. Defaults to true.
+.PARAMETER SkipAutoBuild
+    Skip automatically running the build script when artifacts are missing.
 
 .EXAMPLE
     .\release.ps1
@@ -58,7 +58,7 @@ param(
     [switch]$DryRun,
     [switch]$Force,
     [switch]$AllowDirty,
-    [switch]$BuildIfMissing = $true
+    [switch]$SkipAutoBuild
 )
 
 $ErrorActionPreference = "Stop"
@@ -72,29 +72,44 @@ if (-not $DistDir) {
 
 #region Helper Functions
 
+function Write-HostSafe {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'Release script requires console output for user feedback')]
+    param(
+        [Parameter(Mandatory, Position = 0)]
+        [object]$Object,
+        [System.ConsoleColor]$ForegroundColor
+    )
+    if ($ForegroundColor) {
+        Write-Host $Object -ForegroundColor $ForegroundColor
+    }
+    else {
+        Write-Host $Object
+    }
+}
+
 function Write-Step {
     param([string]$Message)
-    Write-Host "`n=== $Message ===" -ForegroundColor Cyan
+    Write-HostSafe "`n=== $Message ===" -ForegroundColor Cyan
 }
 
 function Write-Success {
     param([string]$Message)
-    Write-Host "✓ $Message" -ForegroundColor Green
+    Write-HostSafe "✓ $Message" -ForegroundColor Green
 }
 
 function Write-Warn {
     param([string]$Message)
-    Write-Host "⚠ $Message" -ForegroundColor Yellow
+    Write-HostSafe "⚠ $Message" -ForegroundColor Yellow
 }
 
 function Write-Err {
     param([string]$Message)
-    Write-Host "✗ $Message" -ForegroundColor Red
+    Write-HostSafe "✗ $Message" -ForegroundColor Red
 }
 
 function Write-Info {
     param([string]$Message)
-    Write-Host "ℹ $Message" -ForegroundColor DarkGray
+    Write-HostSafe "ℹ $Message" -ForegroundColor DarkGray
 }
 
 function Test-GitHubCli {
@@ -121,7 +136,7 @@ function Test-DirtyWorkingTree {
     return [bool]$status
 }
 
-function Test-UnpushedCommits {
+function Test-UnpushedCommit {
     $upstream = git rev-parse --abbrev-ref '@{upstream}' 2>$null
     if (-not $upstream) { return $false }
     $ahead = git rev-list --count "$upstream..HEAD" 2>$null
@@ -167,7 +182,7 @@ function Get-ProjectVersion {
 }
 
 function Get-ChangeLog {
-    param([string]$CurrentTag, [string]$VersionStr)
+    param([string]$CurrentTag)
 
     # Find previous tag
     $allTags = git tag --sort=-v:refname 2>$null
@@ -233,7 +248,7 @@ function Invoke-BuildIfNeeded {
     Write-Success "Build completed"
 }
 
-function Restore-StashedChanges {
+function Restore-StashedChange {
     if ($script:stashedChanges) {
         Write-Info "Restoring stashed changes..."
         git stash pop 2>$null
@@ -254,8 +269,8 @@ function Restore-StashedChanges {
 try {
 
     Write-Step "Redball GitHub Release Script"
-    Write-Host "Project root: $ProjectRoot"
-    Write-Host "Dist directory: $DistDir"
+    Write-HostSafe "Project root: $ProjectRoot"
+    Write-HostSafe "Dist directory: $DistDir"
     if ($DryRun) { Write-Warn "DRY RUN MODE - no changes will be made" }
 
     # ── 1. Validate we're in a git repo ──
@@ -337,8 +352,8 @@ try {
     if (-not $Tag) {
         $Tag = "v$version"
     }
-    Write-Host "Version: $version"
-    Write-Host "Tag:     $Tag"
+    Write-HostSafe "Version: $version"
+    Write-HostSafe "Tag:     $Tag"
 
     # ── 8. Push any unpushed commits ──
     $unpushed = Get-UnpushedCount
@@ -422,11 +437,11 @@ try {
 
     if (-not (Test-Path $msiPath) -and -not (Test-Path $msiVersioned)) {
         Write-Warn "No MSI artifacts found in $DistDir."
-        if ($BuildIfMissing) {
+        if (-not $SkipAutoBuild) {
             Invoke-BuildIfNeeded -VersionStr $version
         }
         else {
-            throw "MSI not found at $msiPath. Run build first or use -BuildIfMissing."
+            throw "MSI not found at $msiPath. Run build first or remove -SkipAutoBuild."
         }
     }
 
@@ -454,8 +469,8 @@ try {
     $wixpdb = Join-Path $DistDir "Redball-$version.wixpdb"
     if (Test-Path $wixpdb) { $uploadFiles += $wixpdb }
 
-    Write-Host "`nArtifacts to upload:"
-    $uploadFiles | ForEach-Object { Write-Host "  - $(Split-Path $_ -Leaf)" }
+    Write-HostSafe "`nArtifacts to upload:"
+    $uploadFiles | ForEach-Object { Write-HostSafe "  - $(Split-Path $_ -Leaf)" }
 
     if ($uploadFiles.Count -eq 0 -and -not $DryRun) {
         throw "No uploadable artifacts found."
@@ -464,8 +479,8 @@ try {
     # ── 11. Skip release if requested ──
     if ($SkipRelease) {
         Write-Info "Skipping release creation (-SkipRelease specified)"
-        Restore-StashedChanges
-        Write-Host ""
+        Restore-StashedChange
+        Write-HostSafe ""
         Write-Success "Validation completed successfully!"
         exit 0
     }
@@ -474,7 +489,7 @@ try {
     Write-Step "Creating GitHub Release: $Tag"
 
     if (-not $ReleaseNotes) {
-        $ReleaseNotes = Get-ChangeLog -CurrentTag $Tag -VersionStr $version
+        $ReleaseNotes = Get-ChangeLog -CurrentTag $Tag
     }
 
     $notesFile = Join-Path $env:TEMP "release-notes-$version.md"
@@ -534,30 +549,30 @@ try {
                 }
             }
             else {
-                Write-Host "Would create release with args:"
-                $releaseArgs | ForEach-Object { Write-Host "  $_" }
+                Write-HostSafe "Would create release with args:"
+                $releaseArgs | ForEach-Object { Write-HostSafe "  $_" }
             }
         }
     }
 
     # ── 14. Cleanup ──
     Remove-Item $notesFile -Force -ErrorAction SilentlyContinue
-    Restore-StashedChanges
+    Restore-StashedChange
 
-    Write-Host ""
+    Write-HostSafe ""
     Write-Success "Release $Tag completed successfully!"
 
 }
 catch {
     # Ensure stashed changes are restored even on failure
-    Restore-StashedChanges
+    Restore-StashedChange
     Write-Err "Release failed: $_"
     throw
 }
 finally {
     # Belt-and-suspenders: always try to restore stash
     if ($script:stashedChanges) {
-        Restore-StashedChanges
+        Restore-StashedChange
     }
 }
 

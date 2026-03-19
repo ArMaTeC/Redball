@@ -5,11 +5,10 @@
     <Border Background="{DynamicResource SurfaceBrush}"
             BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="1"
-            CornerRadius="8"
-            Effect="{StaticResource PopupShadow}">
-        <Border.Resources>
-            <DropShadowEffect x:Key="PopupShadow" BlurRadius="16" ShadowDepth="4" Opacity="0.3" Color="Black"/>
-        </Border.Resources>
+            CornerRadius="8">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.3" Color="Black"/>
+        </Border.Effect>
         <StackPanel Margin="16,14">
             <!-- Status -->
             <TextBlock Text="Redball" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource ForegroundBrush}"/>

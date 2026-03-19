@@ -455,6 +455,13 @@ function Stop-LockingProcess {
         foreach ($procName in $commonProcesses) {
             $procs = Get-Process -Name $procName -ErrorAction SilentlyContinue
             if ($procs) {
+                # For Redball processes, only consider instances running from the project folder
+                if ($procName -eq 'Redball.UI.WPF') {
+                    $procs = $procs | Where-Object {
+                        try { $_.Path -and $_.Path.StartsWith($ProjectRoot, [System.StringComparison]::OrdinalIgnoreCase) } catch { $false }
+                    }
+                    if (-not $procs) { continue }
+                }
                 $lockers = $procs | Select-Object @{N = 'ProcessName'; E = { $_.ProcessName } }, 
                 @{N = 'ProcessId'; E = { $_.Id } }, 
                 @{N = 'Path'; E = { $_.Path } }, 
@@ -547,15 +554,25 @@ function Step-BuildWpfApp {
         }
     }
     
-    # Ensure we stop processes even in -WhatIf mode
-    if ($PSCmdlet.ShouldProcess("Running Redball processes", 'Stop')) {
-        # Also try to stop known processes
+    # Stop only Redball processes running from the project folder (not the user's installed copy)
+    if ($PSCmdlet.ShouldProcess("Running Redball processes from project folder", 'Stop')) {
         $runningProcesses = Get-Process -Name 'Redball.UI.WPF', 'Redball' -ErrorAction SilentlyContinue
         if ($runningProcesses) {
-            Write-BuildStep "Stopping running Redball processes..."
-            $runningProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
-            Start-Sleep -Seconds 2
-            Write-BuildSuccess "Processes stopped"
+            $projectProcesses = $runningProcesses | Where-Object {
+                try { $_.Path -and $_.Path.StartsWith($ProjectRoot, [System.StringComparison]::OrdinalIgnoreCase) } catch { $false }
+            }
+            if ($projectProcesses) {
+                Write-BuildStep "Stopping Redball processes from project folder..."
+                $projectProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
+                Start-Sleep -Seconds 2
+                Write-BuildSuccess "Project-folder processes stopped"
+            }
+            $skippedProcesses = $runningProcesses | Where-Object {
+                try { -not $_.Path -or -not $_.Path.StartsWith($ProjectRoot, [System.StringComparison]::OrdinalIgnoreCase) } catch { $true }
+            }
+            if ($skippedProcesses) {
+                Write-BuildStep "Leaving installed Redball instance(s) running (not in project folder)"
+            }
         }
     }
     
@@ -742,12 +759,23 @@ function Step-CleanBuild {
     foreach ($path in $pathsToClean) {
         if (Test-Path $path) {
             if ($PSCmdlet.ShouldProcess($path, 'Remove directory')) {
-                try {
-                    Remove-Item -Path $path -Recurse -Force -ErrorAction Stop
-                    Write-BuildSuccess "Removed: $path"
+                $removed = $false
+                for ($attempt = 1; $attempt -le 3; $attempt++) {
+                    try {
+                        Remove-Item -Path $path -Recurse -Force -ErrorAction Stop
+                        Write-BuildSuccess "Removed: $path"
+                        $removed = $true
+                        break
+                    }
+                    catch {
+                        if ($attempt -lt 3) {
+                            Write-BuildStep "  Locked files detected in $path, retrying in $($attempt * 2)s... (attempt $attempt/3)"
+                            Start-Sleep -Seconds ($attempt * 2)
+                        }
+                    }
                 }
-                catch {
-                    Write-Error "Failed to clean $path`: $_"
+                if (-not $removed) {
+                    Write-Warning "Could not fully clean $path (files locked by another process). Continuing anyway."
                 }
             }
         }
@@ -867,13 +895,14 @@ try {
 
     # Call release script to create GitHub release
     $releaseScript = Join-Path $PSScriptRoot "release.ps1"
+    $releaseTag = "v$Version"
     if (Test-Path $releaseScript) {
         Write-HostSafe "  Calling release script..." -ForegroundColor Cyan
-        & $releaseScript -Version $version -Tag $tag
+        & $releaseScript -Version $Version -Tag $releaseTag -SkipAutoBuild -AllowDirty
     }
     else {
         Write-HostSafe "  release.ps1 not found. GitHub release not created." -ForegroundColor Yellow
-        Write-HostSafe "  Run manually: .\scripts\release.ps1 -Version $version -Tag $tag" -ForegroundColor Gray
+        Write-HostSafe "  Run manually: .\scripts\release.ps1 -Version $Version -Tag $releaseTag" -ForegroundColor Gray
     }
 
     Write-HostSafe "`n══════════════════════════════════════════════════════════" -ForegroundColor Green
