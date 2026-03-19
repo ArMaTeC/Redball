@@ -11,8 +11,9 @@ namespace Redball.UI.Services;
 /// Analytics service for tracking feature usage, user engagement, funnels, and retention.
 /// All data is stored locally; no cloud transmission without explicit opt-in.
 /// </summary>
-public class AnalyticsService
+public class AnalyticsService : IAnalyticsService
 {
+    private bool _disposed;
     private static readonly string AnalyticsFile = Path.Combine(
         AppContext.BaseDirectory, "analytics.json");
     private const int TrendWindowDays = 7;
@@ -451,6 +452,48 @@ public class AnalyticsService
     }
 
     /// <summary>
+    /// Export analytics data as CSV for spreadsheet import.
+    /// </summary>
+    public string ExportToCsv()
+    {
+        _lock.EnterReadLock();
+        try
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("Feature,Category,UsageCount,LastUsed");
+            foreach (var kvp in _data.Features.OrderByDescending(f => f.Value.UsageCount))
+            {
+                var category = GetFeatureCategory(kvp.Key);
+                var escaped = kvp.Key.Contains(',') ? $"\"{kvp.Key}\"" : kvp.Key;
+                sb.AppendLine($"{escaped},{category},{kvp.Value.UsageCount},{kvp.Value.LastUsed:yyyy-MM-dd HH:mm:ss}");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("Date,Sessions");
+            foreach (var kvp in _data.SessionHistory.OrderBy(s => s.Key))
+            {
+                sb.AppendLine($"{kvp.Key},{kvp.Value}");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("Funnel,Step,Count");
+            foreach (var funnel in _data.Funnels)
+            {
+                foreach (var step in funnel.Value.Steps)
+                {
+                    sb.AppendLine($"{funnel.Key},{step.Key},{step.Value}");
+                }
+            }
+
+            return sb.ToString();
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    /// <summary>
     /// Clear all analytics data
     /// </summary>
     public void Clear()
@@ -518,8 +561,15 @@ public class AnalyticsService
 
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+
         _flushTimer?.Dispose();
+        _flushTimer = null;
+
         Flush();
+
+        _lock.Dispose();
     }
 }
 

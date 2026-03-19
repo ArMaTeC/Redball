@@ -6,27 +6,20 @@ using System.Text.Json.Serialization;
 
 namespace Redball.UI.Services;
 
-public enum HeartbeatInputMode
-{
-    Disabled = 0,
-    F13 = 1,
-    F14 = 2,
-    F15 = 3,
-    F16 = 4
-}
-
 /// <summary>
 /// Manages loading, saving, and validating Redball configuration from Redball.json.
 /// </summary>
-public class ConfigService
+public class ConfigService : IConfigService
 {
-    private static readonly string DefaultConfigPath = Path.Combine(
-        AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Redball.json");
+    private static readonly string LocalAppDataConfigPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "Redball.json");
+    private static readonly string AppDataConfigPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Redball", "Redball.json");
 
     private static readonly Lazy<ConfigService> _instance = new(() => new ConfigService());
     public static ConfigService Instance => _instance.Value;
 
-    public RedballConfig Config { get; private set; } = new();
+    public RedballConfig Config { get; internal set; } = new();
     public string ConfigPath { get; private set; } = "";
     public bool IsDirty { get; set; }
 
@@ -298,9 +291,10 @@ public class ConfigService
         var candidates = new[]
         {
             Path.Combine(AppContext.BaseDirectory, "Redball.json"),
-            Path.GetFullPath(DefaultConfigPath),
             Path.Combine(Environment.CurrentDirectory, "Redball.json"),
             Path.Combine(AppContext.BaseDirectory, "..", "Redball.json"),
+            LocalAppDataConfigPath,
+            AppDataConfigPath,
         };
 
         Logger.Debug("ConfigService", "Searching for config file in candidate locations...");
@@ -371,67 +365,4 @@ public class ConfigService
             IsDirty = true;
         }
     }
-}
-
-/// <summary>
-/// Strongly-typed Redball configuration matching Redball.json schema.
-/// </summary>
-public class RedballConfig
-{
-    public int HeartbeatSeconds { get; set; } = 59;
-    public bool PreventDisplaySleep { get; set; } = true;
-    public bool UseHeartbeatKeypress { get; set; } = true;
-    public string HeartbeatInputMode { get; set; } = "F15";
-    public int DefaultDuration { get; set; } = 60;
-    public string LogPath { get; set; } = "Redball.log";
-    public int MaxLogSizeMB { get; set; } = 10;
-    public bool ShowBalloonOnStart { get; set; } = true;
-    public string Locale { get; set; } = "en";
-    public bool MinimizeOnStart { get; set; }
-    public bool BatteryAware { get; set; }
-    public int BatteryThreshold { get; set; } = 20;
-    public bool NetworkAware { get; set; }
-    public bool IdleDetection { get; set; }
-    public bool AutoExitOnComplete { get; set; }
-    public bool ScheduleEnabled { get; set; }
-    public string ScheduleStartTime { get; set; } = "09:00";
-    public string ScheduleStopTime { get; set; } = "18:00";
-    public List<string> ScheduleDays { get; set; } = new() { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" };
-    public bool PresentationModeDetection { get; set; }
-    public bool ProcessIsolation { get; set; }
-    public bool EnablePerformanceMetrics { get; set; }
-    public bool EnableTelemetry { get; set; }
-    public string UpdateRepoOwner { get; set; } = "ArMaTeC";
-    public string UpdateRepoName { get; set; } = "Redball";
-    public string UpdateChannel { get; set; } = "stable";
-    public bool VerifyUpdateSignature { get; set; }
-    public bool TypeThingEnabled { get; set; } = true;
-    public int TypeThingMinDelayMs { get; set; } = 30;
-    public int TypeThingMaxDelayMs { get; set; } = 120;
-    public int TypeThingStartDelaySec { get; set; } = 3;
-    public string TypeThingStartHotkey { get; set; } = "Ctrl+Shift+V";
-    public string TypeThingStopHotkey { get; set; } = "Ctrl+Shift+X";
-    public string TypeThingTheme { get; set; } = "dark";
-    public bool TypeThingAddRandomPauses { get; set; } = true;
-    public int TypeThingRandomPauseChance { get; set; } = 5;
-    public int TypeThingRandomPauseMaxMs { get; set; } = 500;
-    public bool TypeThingTypeNewlines { get; set; } = true;
-    public bool TypeThingNotifications { get; set; } = true;
-    public bool VerboseLogging { get; set; }
-    public bool MinimizeToTray { get; set; }
-    public bool ShowNotifications { get; set; } = true;
-    public NotificationMode NotificationMode { get; set; } = NotificationMode.All;
-    public int IdleThreshold { get; set; } = 30;
-    public bool PresentationMode { get; set; }
-    public bool ScheduledOperation { get; set; }
-    public bool FirstRun { get; set; } = true;
-    public string Theme { get; set; } = "Dark";
-}
-
-public enum NotificationMode
-{
-    All,
-    Important,
-    Errors,
-    Silent
 }

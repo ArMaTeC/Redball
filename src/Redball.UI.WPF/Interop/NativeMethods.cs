@@ -68,6 +68,43 @@ internal static class NativeMethods
         public IntPtr dwExtraInfo;
     }
 
+    // --- Focus Assist / Do Not Disturb Detection ---
+
+    [DllImport("ntdll.dll")]
+    public static extern int NtQueryWnfStateData(
+        ref ulong stateName,
+        IntPtr typeId,
+        IntPtr explicitScope,
+        out uint changeStamp,
+        byte[] buffer,
+        ref uint bufferSize);
+
+    // WNF_SHEL_QUIETHOURS_ACTIVE_PROFILE_CHANGED state name
+    // This WNF state indicates Focus Assist status on Windows 10/11
+    public static readonly ulong WNF_SHEL_QUIET_MOMENT_SHELL_MODE_CHANGED = 0xD83063EA3BF1C75;
+
+    /// <summary>
+    /// Returns the Focus Assist profile: 0 = Off, 1 = Priority Only, 2 = Alarms Only
+    /// Returns -1 on failure.
+    /// </summary>
+    public static int GetFocusAssistStatus()
+    {
+        try
+        {
+            var stateName = WNF_SHEL_QUIET_MOMENT_SHELL_MODE_CHANGED;
+            var buffer = new byte[4];
+            uint bufferSize = 4;
+            var result = NtQueryWnfStateData(ref stateName, IntPtr.Zero, IntPtr.Zero, out _, buffer, ref bufferSize);
+            if (result == 0 && bufferSize >= 4)
+                return BitConverter.ToInt32(buffer, 0);
+            return -1;
+        }
+        catch
+        {
+            return -1;
+        }
+    }
+
     // --- Idle Detection (user32.dll) ---
 
     [DllImport("user32.dll")]

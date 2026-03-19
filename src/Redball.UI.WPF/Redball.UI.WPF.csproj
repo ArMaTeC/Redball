@@ -11,9 +11,9 @@
     <AssemblyName>Redball.UI.WPF</AssemblyName>
     <AssemblyTitle>Redball</AssemblyTitle>
     <ApplicationIcon>Assets\redball.ico</ApplicationIcon>
-    <Version>2.1.80</Version>
-    <FileVersion>2.1.80.0</FileVersion>
-    <AssemblyVersion>2.1.80.0</AssemblyVersion>
+    <Version>2.1.83</Version>
+    <FileVersion>2.1.83.0</FileVersion>
+    <AssemblyVersion>2.1.83.0</AssemblyVersion>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>false</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -24,9 +24,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />
     <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="System.Speech" Version="8.0.0" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 

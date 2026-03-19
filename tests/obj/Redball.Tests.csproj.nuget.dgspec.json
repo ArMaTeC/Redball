@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\Users\\karll\\Desktop\\Redball\\src\\Redball.UI.WPF\\Redball.UI.WPF.csproj": {
-      "version": "2.1.80",
+      "version": "2.1.83",
       "restore": {
         "projectUniqueName": "C:\\Users\\karll\\Desktop\\Redball\\src\\Redball.UI.WPF\\Redball.UI.WPF.csproj",
         "projectName": "Redball.UI.WPF",
@@ -50,9 +50,17 @@
         "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
           "dependencies": {
+            "CommunityToolkit.Mvvm": {
+              "target": "Package",
+              "version": "[8.2.2, )"
+            },
             "Hardcodet.NotifyIcon.Wpf": {
               "target": "Package",
               "version": "[1.1.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[8.0.1, )"
             },
             "Microsoft.NET.ILLink.Tasks": {
               "suppressParent": "All",
@@ -65,6 +73,10 @@
               "version": "[1.1.77, )"
             },
             "System.Management": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "System.Speech": {
               "target": "Package",
               "version": "[8.0.0, )"
             },

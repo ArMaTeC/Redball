@@ -864,7 +864,18 @@ try {
     if ((-not $SkipVersionBump) -and ($BumpCommit -or $BumpPush)) {
         Step-CommitVersionBump
     }
-    
+
+    # Call release script to create GitHub release
+    $releaseScript = Join-Path $PSScriptRoot "release.ps1"
+    if (Test-Path $releaseScript) {
+        Write-HostSafe "  Calling release script..." -ForegroundColor Cyan
+        & $releaseScript -Version $version -Tag $tag
+    }
+    else {
+        Write-HostSafe "  release.ps1 not found. GitHub release not created." -ForegroundColor Yellow
+        Write-HostSafe "  Run manually: .\scripts\release.ps1 -Version $version -Tag $tag" -ForegroundColor Gray
+    }
+
     Write-HostSafe "`n══════════════════════════════════════════════════════════" -ForegroundColor Green
     Write-HostSafe "  BUILD SUCCEEDED" -ForegroundColor Green
     Write-HostSafe "══════════════════════════════════════════════════════════" -ForegroundColor Green

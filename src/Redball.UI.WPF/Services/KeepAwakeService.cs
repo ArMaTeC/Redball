@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Windows.Threading;
+using System.Threading;
+using System.Windows;
 using Redball.UI.Interop;
 
 namespace Redball.UI.Services;
@@ -10,13 +11,13 @@ namespace Redball.UI.Services;
 /// and optionally sends F15 heartbeat keypresses to prevent idle detection.
 /// Replaces the PowerShell keep-awake logic entirely.
 /// </summary>
-public class KeepAwakeService : IDisposable
+public class KeepAwakeService : IKeepAwakeService
 {
     private static readonly Lazy<KeepAwakeService> _instance = new(() => new KeepAwakeService());
     public static KeepAwakeService Instance => _instance.Value;
 
-    private DispatcherTimer? _heartbeatTimer;
-    private DispatcherTimer? _durationTimer;
+    private Timer? _heartbeatTimer;
+    private Timer? _durationTimer;
     private bool _disposed;
     private int _monitorTickCount;
 
@@ -113,6 +114,8 @@ public class KeepAwakeService : IDisposable
     public bool AutoPausedIdle => _autoPausedIdle;
     public bool AutoPausedSchedule => _autoPausedSchedule;
 
+    private int _heartbeatIntervalMs = 59000;
+
     // --- Public Methods ---
 
     /// <summary>
@@ -142,18 +145,11 @@ public class KeepAwakeService : IDisposable
 
         // Heartbeat timer - calls SetThreadExecutionState + optional F15
         var heartbeatInterval = Math.Max(10, config.HeartbeatSeconds);
-        _heartbeatTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(heartbeatInterval)
-        };
-        _heartbeatTimer.Tick += OnHeartbeatTick;
+        _heartbeatTimer = new Timer(OnHeartbeatTick, null, Timeout.Infinite, Timeout.Infinite);
+        _heartbeatIntervalMs = heartbeatInterval * 1000;
 
         // Duration timer - 1-second tick for timed expiry and monitoring checks
-        _durationTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(1)
-        };
-        _durationTimer.Tick += OnDurationTick;
+        _durationTimer = new Timer(OnDurationTick, null, Timeout.Infinite, Timeout.Infinite);
 
         Logger.Info("KeepAwakeService", $"Timers created (heartbeat: {heartbeatInterval}s)");
         Logger.Info("KeepAwakeService", $"Monitors: Battery={_batteryMonitor.IsEnabled}, Network={_networkMonitor.IsEnabled}, Idle={_idleDetection.IsEnabled}, Schedule={_schedule.IsEnabled}, Presentation={_presentationMode.IsEnabled}");
@@ -198,13 +194,13 @@ public class KeepAwakeService : IDisposable
         if (active)
         {
             _startTime ??= DateTime.Now;
-            _heartbeatTimer?.Start();
-            _durationTimer?.Start();
+            _heartbeatTimer?.Change(_heartbeatIntervalMs, _heartbeatIntervalMs);
+            _durationTimer?.Change(1000, 1000);
             Logger.Info("KeepAwakeService", "Timers started");
         }
         else
         {
-            _heartbeatTimer?.Stop();
+            _heartbeatTimer?.Change(Timeout.Infinite, Timeout.Infinite);
             // Keep duration timer running for monitoring even when paused
             Logger.Info("KeepAwakeService", "Heartbeat timer stopped");
         }
@@ -309,7 +305,7 @@ public class KeepAwakeService : IDisposable
     /// </summary>
     public void StartMonitoring()
     {
-        _durationTimer?.Start();
+        _durationTimer?.Change(1000, 1000);
         Logger.Info("KeepAwakeService", "Duration timer started for monitoring");
     }
 
@@ -392,19 +388,20 @@ public class KeepAwakeService : IDisposable
         }
     }
 
-    private void OnHeartbeatTick(object? sender, EventArgs e)
+    private void OnHeartbeatTick(object? state)
     {
         if (!IsActive) return;
 
         try
         {
-            // Re-assert execution state on each heartbeat
+            // Re-assert execution state on each heartbeat (P/Invoke, thread-safe)
             ApplyExecutionState(true);
 
-            // Send heartbeat keypress if enabled
+            // SendInput must be called from a thread with a message pump,
+            // so marshal heartbeat keypress to the UI thread.
             if (_useHeartbeat)
             {
-                SendHeartbeat();
+                Application.Current?.Dispatcher.BeginInvoke(SendHeartbeat);
             }
 
             HeartbeatTick?.Invoke(this, EventArgs.Empty);
@@ -415,7 +412,7 @@ public class KeepAwakeService : IDisposable
         }
     }
 
-    private void OnDurationTick(object? sender, EventArgs e)
+    private void OnDurationTick(object? state)
     {
         try
         {
@@ -424,8 +421,12 @@ public class KeepAwakeService : IDisposable
             {
                 Logger.Info("KeepAwakeService", "Timed awake expired");
                 _until = null;
-                SetActive(false);
-                TimedAwakeExpired?.Invoke(this, EventArgs.Empty);
+                // SetActive raises events that may touch UI, marshal to dispatcher
+                Application.Current?.Dispatcher.BeginInvoke(() =>
+                {
+                    SetActive(false);
+                    TimedAwakeExpired?.Invoke(this, EventArgs.Empty);
+                });
                 return;
             }
 
@@ -463,8 +464,10 @@ public class KeepAwakeService : IDisposable
 
         Logger.Info("KeepAwakeService", "Disposing...");
 
-        _heartbeatTimer?.Stop();
-        _durationTimer?.Stop();
+        _heartbeatTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+        _durationTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+        _heartbeatTimer?.Dispose();
+        _durationTimer?.Dispose();
 
         // Release execution state
         ApplyExecutionState(false);

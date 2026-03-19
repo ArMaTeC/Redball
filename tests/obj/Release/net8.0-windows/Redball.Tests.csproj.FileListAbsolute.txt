@@ -13,8 +13,11 @@ C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.Tests.ru
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.Tests.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.Tests.pdb
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Castle.Core.dll
+C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\CommunityToolkit.Mvvm.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Hardcodet.NotifyIcon.Wpf.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.VisualStudio.CodeCoverage.Shim.dll
+C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.Extensions.DependencyInjection.Abstractions.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.TestPlatform.CoreUtilities.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.TestPlatform.PlatformAbstractions.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll
@@ -28,6 +31,7 @@ C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.Visual
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Newtonsoft.Json.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\NuGet.Frameworks.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\System.Management.dll
+C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\System.Speech.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\cs\Microsoft.TestPlatform.CoreUtilities.resources.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\cs\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\de\Microsoft.TestPlatform.CoreUtilities.resources.dll
@@ -107,6 +111,7 @@ C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\tr\Microsoft.Vis
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\zh-Hans\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\zh-Hant\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Management.dll
+C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Speech.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.UI.WPF.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml

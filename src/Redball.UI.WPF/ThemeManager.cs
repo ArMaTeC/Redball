@@ -12,19 +12,87 @@ public static class ThemeManager
 {
     private static ResourceDictionary? _currentTheme;
     private static bool _controlsLoaded;
+    private static bool _isWatchingSystemTheme;
 
     public static Theme CurrentTheme { get; private set; } = Theme.Dark;
 
+    /// <summary>
+    /// Whether ThemeManager is currently following the system theme.
+    /// True when the user's config theme is set to "System".
+    /// </summary>
+    public static bool IsFollowingSystemTheme { get; private set; }
+
     public static void Initialize()
     {
-        // Detect system theme preference
+        // Detect system theme preference and follow it
         var isDarkMode = IsSystemDarkMode();
         SetTheme(isDarkMode ? Theme.Dark : Theme.Light);
+        IsFollowingSystemTheme = true; // Re-enable after SetTheme resets it
+    }
+
+    /// <summary>
+    /// Begin monitoring Windows theme changes. When the OS theme toggles
+    /// between light and dark mode, the app theme is updated automatically
+    /// if <see cref="IsFollowingSystemTheme"/> is true.
+    /// </summary>
+    public static void StartWatchingSystemTheme()
+    {
+        if (_isWatchingSystemTheme) return;
+        _isWatchingSystemTheme = true;
+        Microsoft.Win32.SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
+        Services.Logger.Info("ThemeManager", "Started watching system theme changes");
+    }
+
+    /// <summary>
+    /// Stop monitoring Windows theme changes. Call this on app shutdown
+    /// to prevent leaking the static event handler.
+    /// </summary>
+    public static void StopWatchingSystemTheme()
+    {
+        if (!_isWatchingSystemTheme) return;
+        _isWatchingSystemTheme = false;
+        Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
+        Services.Logger.Info("ThemeManager", "Stopped watching system theme changes");
+    }
+
+    private static void OnUserPreferenceChanged(object sender, Microsoft.Win32.UserPreferenceChangedEventArgs e)
+    {
+        // Only react to General category changes which include theme switches
+        if (e.Category != Microsoft.Win32.UserPreferenceCategory.General) return;
+        if (!IsFollowingSystemTheme) return;
+
+        var isDark = IsSystemDarkMode();
+        var desired = isDark ? Theme.Dark : Theme.Light;
+        if (desired == CurrentTheme) return;
+
+        Services.Logger.Info("ThemeManager", $"System theme changed — switching to {desired}");
+
+        // Marshal to the UI thread; preserve following flag after SetTheme resets it
+        System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+        {
+            SetTheme(desired);
+            IsFollowingSystemTheme = true;
+        });
+    }
+
+    /// <summary>
+    /// Apply a theme resolved from config. When the config value is "System",
+    /// call <see cref="ThemeFromString"/> first — it sets <see cref="IsFollowingSystemTheme"/>
+    /// before this method runs, and this overload preserves the flag.
+    /// </summary>
+    public static void SetThemeFromConfig(string configValue)
+    {
+        var theme = ThemeFromString(configValue);
+        // ThemeFromString already set IsFollowingSystemTheme for "System"
+        var wasFollowing = IsFollowingSystemTheme;
+        SetTheme(theme);
+        IsFollowingSystemTheme = wasFollowing;
     }
 
     public static void SetTheme(Theme theme)
     {
         CurrentTheme = theme;
+        IsFollowingSystemTheme = false; // Explicit theme set; stop auto-following
 
         // Load shared control styles once (was previously in App.xaml statically)
         if (!_controlsLoaded)
@@ -259,6 +327,17 @@ public static class ThemeManager
         res[key] = new SolidColorBrush(Color.FromArgb(a, r, g, b));
     }
 
+    /// <summary>
+    /// Resolves the current system theme and enables auto-following.
+    /// Used when config theme is "System".
+    /// </summary>
+    private static Theme ResolveSystemTheme()
+    {
+        // Flag will be preserved by SetThemeFromConfig; direct SetTheme calls reset it
+        IsFollowingSystemTheme = true;
+        return IsSystemDarkMode() ? Theme.Dark : Theme.Light;
+    }
+
     public static bool IsSystemDarkMode()
     {
         try
@@ -281,7 +360,7 @@ public static class ThemeManager
     {
         return name switch
         {
-            "System" => IsSystemDarkMode() ? Theme.Dark : Theme.Light,
+            "System" => ResolveSystemTheme(),
             "Light" => Theme.Light,
             "Dark" => Theme.Dark,
             "MidnightBlue" => Theme.MidnightBlue,
