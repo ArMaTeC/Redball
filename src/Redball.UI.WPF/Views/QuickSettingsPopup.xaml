@@ -26,6 +26,7 @@
 
             <!-- Actions -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Updates" Style="{DynamicResource ModernButton}" Margin="0,0,6,0" Click="CheckForUpdates_Click"/>
                 <Button Content="Settings" Style="{DynamicResource ModernButton}" Margin="0,0,6,0" Click="OpenSettings_Click"/>
                 <Button Content="Exit" Style="{DynamicResource ModernButton}" Click="Exit_Click"/>
             </StackPanel>

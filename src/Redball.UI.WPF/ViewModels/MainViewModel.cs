@@ -85,6 +85,7 @@ public class MainViewModel : ViewModelBase
         ShowQuickSettingsCommand = new RelayCommand(ShowQuickSettings);
         ShowMiniWidgetCommand = new RelayCommand(ShowMiniWidget);
         ResetMiniWidgetPositionCommand = new RelayCommand(ResetMiniWidgetPosition);
+        CheckForUpdatesCommand = new RelayCommand(CheckForUpdates);
 
         // Sync initial state
         _isActive = _keepAwake.IsActive;
@@ -166,6 +167,7 @@ public class MainViewModel : ViewModelBase
     public ICommand ShowQuickSettingsCommand { get; }
     public ICommand ShowMiniWidgetCommand { get; }
     public ICommand ResetMiniWidgetPositionCommand { get; }
+    public ICommand CheckForUpdatesCommand { get; }
 
     public bool IsMiniWidgetVisible => _miniWidget != null && _miniWidget.IsVisible;
 
@@ -486,6 +488,14 @@ public class MainViewModel : ViewModelBase
         {
             _miniWidget.ResetPosition();
             Logger.Info("MainViewModel", "Mini widget position reset");
+        }
+    }
+
+    private void CheckForUpdates()
+    {
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var window))
+        {
+            _ = window.CheckForUpdatesAsync();
         }
     }
 

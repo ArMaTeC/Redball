@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using Microsoft.Win32;
@@ -76,6 +77,11 @@ public partial class MainWindow
     }
 
     private async void MainCheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
+    {
+        await CheckForUpdatesAsync();
+    }
+
+    public async Task CheckForUpdatesAsync()
     {
         if (_updateService == null)
         {
