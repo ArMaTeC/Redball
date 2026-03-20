@@ -30,10 +30,11 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
-    - name: Install Playwright
+    - name: Install FlaUI dependencies
       run: |
-        dotnet tool install --global Microsoft.Playwright.CLI
-        playwright install chromium
+        # FlaUI requires Windows UI Automation and runs on Windows runners natively
+        # No additional installation needed - FlaUI is included via NuGet
+        echo "FlaUI will be used for UI automation tests"
 
     - name: Build Application
       run: |
@@ -85,13 +86,23 @@ jobs:
       run: |
         $baseline = Get-Content -Path .github/baseline-benchmarks.json | ConvertFrom-Json
         $current = Get-Content -Path ./benchmark-results/results.json | ConvertFrom-Json
+        $regressions = @()
+        $threshold = 1.1  # 10% regression threshold
         
-        # Check if performance degraded by more than 10%
+        # Check if performance degraded by more than threshold
         foreach ($metric in $baseline.Metrics) {
           $currentMetric = $current.Metrics | Where-Object { $_.Name -eq $metric.Name }
-          if ($currentMetric -and $currentMetric.Value -gt $metric.Value * 1.1) {
+          if ($currentMetric -and $currentMetric.Value -gt $metric.Value * $threshold) {
+            $regressions += "$($metric.Name): $($currentMetric.Value) vs baseline $($metric.Value)"
             Write-Warning "Performance regression detected in $($metric.Name): $($currentMetric.Value) vs baseline $($metric.Value)"
           }
+        }
+        
+        if ($regressions.Count -gt 0) {
+          Write-Error "Performance regressions detected:`n$($regressions -join "`n")"
+          exit 1
+        } else {
+          Write-Host "✓ No performance regressions detected (threshold: $([int](($threshold-1)*100))%)"
         }
 
   accessibility-tests:

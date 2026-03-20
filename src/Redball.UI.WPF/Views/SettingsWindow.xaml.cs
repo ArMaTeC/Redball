@@ -79,6 +79,12 @@ public partial class SettingsWindow : Window
 
         if (success)
         {
+            if (Application.Current.MainWindow is MainWindow mw)
+            {
+                mw.ExitApplication();
+                return;
+            }
+
             Application.Current.Shutdown();
         }
         else
@@ -167,6 +173,9 @@ public partial class SettingsWindow : Window
             };
         }
         if (VerifyUpdateSignatureCheck != null) VerifyUpdateSignatureCheck.IsChecked = cfg.VerifyUpdateSignature;
+
+        // Privacy settings
+        if (EncryptConfigCheck != null) EncryptConfigCheck.IsChecked = cfg.EncryptConfig;
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -270,6 +279,9 @@ public partial class SettingsWindow : Window
         }
         if (AddRandomPausesCheck != null) cfg.TypeThingAddRandomPauses = AddRandomPausesCheck.IsChecked ?? true;
         if (TypeNewlinesCheck != null) cfg.TypeThingTypeNewlines = TypeNewlinesCheck.IsChecked ?? true;
+
+        // Privacy settings
+        if (EncryptConfigCheck != null) cfg.EncryptConfig = EncryptConfigCheck.IsChecked ?? false;
 
         // Update settings
         if (UpdateChannelCombo != null)
@@ -412,7 +424,7 @@ public partial class SettingsWindow : Window
     private void Tab_Checked(object sender, RoutedEventArgs e)
     {
         // Hide all panels (null checks needed during XAML initialization)
-        var panels = new[] { GeneralPanel, BehaviorPanel, FeaturesPanel, TypeThingPanel, UpdatesPanel, AboutPanel };
+        var panels = new[] { GeneralPanel, BehaviorPanel, FeaturesPanel, TypeThingPanel, UpdatesPanel, PrivacyPanel, AboutPanel };
         foreach (var p in panels)
         {
             if (p != null) p.Visibility = Visibility.Collapsed;
@@ -425,6 +437,7 @@ public partial class SettingsWindow : Window
         else if (sender == FeaturesTab) target = FeaturesPanel;
         else if (sender == TypeThingTab) target = TypeThingPanel;
         else if (sender == UpdatesTab) target = UpdatesPanel;
+        else if (sender == PrivacyTab) target = PrivacyPanel;
         else if (sender == AboutTab) target = AboutPanel;
 
         // Show with fade-in animation
@@ -487,5 +500,37 @@ public partial class SettingsWindow : Window
         if (NotificationModeLabel != null) NotificationModeLabel.Visibility = Visibility.Collapsed;
         if (NotificationModeCombo != null) NotificationModeCombo.Visibility = Visibility.Collapsed;
         _isDirty = true;
+    }
+
+    private void ExportAllDataButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var dialog = new SaveFileDialog
+            {
+                Filter = "ZIP files (*.zip)|*.zip|All files (*.*)|*.*",
+                FileName = $"redball_data_export_{DateTime.Now:yyyyMMdd_HHmmss}.zip",
+                Title = "Export All My Data (GDPR)"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                var success = DataExportService.ExportAll(dialog.FileName);
+                if (success)
+                {
+                    _analytics.TrackFeature("privacy.data_exported");
+                    MessageBox.Show($"Your data has been exported to:\n{dialog.FileName}", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Failed to export data. Check the log for details.", "Export Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("SettingsWindow", "Failed to export all data", ex);
+            MessageBox.Show($"Export failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 }

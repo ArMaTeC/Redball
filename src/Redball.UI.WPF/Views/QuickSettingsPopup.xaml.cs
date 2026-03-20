@@ -63,6 +63,12 @@ public partial class QuickSettingsPopup : UserControl
     private void Exit_Click(object sender, RoutedEventArgs e)
     {
         ClosePopup();
+        if (Application.Current.MainWindow is MainWindow mw)
+        {
+            mw.ExitApplication();
+            return;
+        }
+
         Application.Current.Shutdown();
     }
 

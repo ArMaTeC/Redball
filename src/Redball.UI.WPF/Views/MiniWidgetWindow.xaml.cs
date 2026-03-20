@@ -10,6 +10,7 @@ namespace Redball.UI.Views;
 public partial class MiniWidgetWindow : Window
 {
     private readonly DispatcherTimer _refreshTimer;
+    private readonly EventHandler<bool> _activeStateChangedHandler;
 
     public MiniWidgetWindow()
     {
@@ -17,8 +18,8 @@ public partial class MiniWidgetWindow : Window
         RestorePosition();
         RefreshState();
 
-        KeepAwakeService.Instance.ActiveStateChanged += (_, _) =>
-            Dispatcher.BeginInvoke(RefreshState);
+        _activeStateChangedHandler = (_, _) => Dispatcher.BeginInvoke(RefreshState);
+        KeepAwakeService.Instance.ActiveStateChanged += _activeStateChangedHandler;
 
         _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
         _refreshTimer.Tick += (_, _) => RefreshState();
@@ -134,6 +135,7 @@ public partial class MiniWidgetWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _refreshTimer.Stop();
+        KeepAwakeService.Instance.ActiveStateChanged -= _activeStateChangedHandler;
         SavePosition();
         base.OnClosed(e);
     }

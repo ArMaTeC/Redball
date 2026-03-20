@@ -40,9 +40,9 @@ public class TemplateService
         return _templates.Keys.OrderBy(k => k).ToList();
     }
 
-    public string? GetTemplate(string name)
+    public string GetTemplate(string name)
     {
-        return _templates.TryGetValue(name, out var text) ? text : null;
+        return _templates.TryGetValue(name, out var text) ? text : string.Empty;
     }
 
     public bool SaveTemplate(string name, string text)

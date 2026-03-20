@@ -1,325 +1,661 @@
-
-[2026-03-20 10:43:39] ========== Redball WPF Started ==========
-[2026-03-20 10:43:39] Version: 2.1.110.0
-[2026-03-20 10:43:39] Process ID: 15044
-[2026-03-20 10:43:39] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\
-[2026-03-20 10:43:39] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows
-[2026-03-20 10:43:39] OS: Microsoft Windows NT 10.0.26100.0
-[2026-03-20 10:43:39] .NET Version: 8.0.25
-[2026-03-20 10:43:39] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\testhost.dll --port 52930 --endpoint 127.0.0.1:052930 --role client --parentprocessid 15388 --telemetryoptedin false
-[2026-03-20 10:43:39.080] [DBG] [004] [Analytics] Tracked feature: TestFeature
-[2026-03-20 10:43:39.088] [DBG] [004] [Analytics] Tracked feature: TestFeature
-[2026-03-20 10:43:39.262] [DBG] [004] [Analytics] Tracked feature: KeepAwake
-[2026-03-20 10:43:39.263] [DBG] [004] [Analytics] Tracked feature: KeepAwake
-[2026-03-20 10:43:40.198] [DBG] [004] [Analytics] Analytics data flushed to disk
-[2026-03-20 10:43:40.375] [DBG] [004] [Analytics] Tracked feature: Test
-[2026-03-20 10:43:40.531] [VRB] [004] [ConfigService] Instance created (lazy initialization)
-[2026-03-20 10:43:40.538] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_fe0c147b-9a96-49c5-8887-42e2dd63e1c2\reset_defaults.json
-[2026-03-20 10:43:40.539] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_fe0c147b-9a96-49c5-8887-42e2dd63e1c2\reset_defaults.json
-[2026-03-20 10:43:40.545] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_fe0c147b-9a96-49c5-8887-42e2dd63e1c2\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.630] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_fe0c147b-9a96-49c5-8887-42e2dd63e1c2\reset_defaults.json
-[2026-03-20 10:43:40.663] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.663] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.665] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 10:43:40.665] [DBG] [004] [ConfigService] Configuration validation passed
-[2026-03-20 10:43:40.680] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_8668aeeb-e0bc-49aa-a76e-d2fbe18c6bcd\reset_defaults.json
-[2026-03-20 10:43:40.680] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8668aeeb-e0bc-49aa-a76e-d2fbe18c6bcd\reset_defaults.json
-[2026-03-20 10:43:40.682] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8668aeeb-e0bc-49aa-a76e-d2fbe18c6bcd\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.689] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8668aeeb-e0bc-49aa-a76e-d2fbe18c6bcd\reset_defaults.json
-[2026-03-20 10:43:40.689] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.690] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.691] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 10:43:40.691] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
-[2026-03-20 10:43:40.692] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 10:43:40.695] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_e77f7367-861f-42b3-860f-85ed1fcb3191\reset_defaults.json
-[2026-03-20 10:43:40.695] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_e77f7367-861f-42b3-860f-85ed1fcb3191\reset_defaults.json
-[2026-03-20 10:43:40.697] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_e77f7367-861f-42b3-860f-85ed1fcb3191\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.697] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_e77f7367-861f-42b3-860f-85ed1fcb3191\reset_defaults.json
-[2026-03-20 10:43:40.698] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.698] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.699] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 10:43:40.704] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (400) out of range
-[2026-03-20 10:43:40.706] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 10:43:40.709] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_f1adecde-d373-46b4-812a-91ebf0decd6a\reset_defaults.json
-[2026-03-20 10:43:40.710] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_f1adecde-d373-46b4-812a-91ebf0decd6a\reset_defaults.json
-[2026-03-20 10:43:40.711] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_f1adecde-d373-46b4-812a-91ebf0decd6a\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.712] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_f1adecde-d373-46b4-812a-91ebf0decd6a\reset_defaults.json
-[2026-03-20 10:43:40.712] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.725] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.726] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 10:43:40.726] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
-[2026-03-20 10:43:40.727] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 10:43:40.730] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_944be870-9829-491c-a9eb-a971ced5da6a\reset_defaults.json
-[2026-03-20 10:43:40.730] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_944be870-9829-491c-a9eb-a971ced5da6a\reset_defaults.json
-[2026-03-20 10:43:40.732] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_944be870-9829-491c-a9eb-a971ced5da6a\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.732] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_944be870-9829-491c-a9eb-a971ced5da6a\reset_defaults.json
-[2026-03-20 10:43:40.737] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.738] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.739] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 10:43:40.739] [WRN] [004] [ConfigService] Validation: DefaultDuration (800) out of range
-[2026-03-20 10:43:40.740] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 10:43:40.743] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_41280a1d-38bd-4c37-930f-676eb4472908\reset_defaults.json
-[2026-03-20 10:43:40.743] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_41280a1d-38bd-4c37-930f-676eb4472908\reset_defaults.json
-[2026-03-20 10:43:40.745] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_41280a1d-38bd-4c37-930f-676eb4472908\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.745] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_41280a1d-38bd-4c37-930f-676eb4472908\reset_defaults.json
-[2026-03-20 10:43:40.746] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.746] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.747] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 10:43:40.747] [WRN] [004] [ConfigService] Validation: BatteryThreshold (3) out of range
-[2026-03-20 10:43:40.748] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 10:43:40.756] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_ad3bfe69-fa0e-484c-af22-eba047eee5b8\reset_defaults.json
-[2026-03-20 10:43:40.757] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_ad3bfe69-fa0e-484c-af22-eba047eee5b8\reset_defaults.json
-[2026-03-20 10:43:40.759] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_ad3bfe69-fa0e-484c-af22-eba047eee5b8\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.759] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_ad3bfe69-fa0e-484c-af22-eba047eee5b8\reset_defaults.json
-[2026-03-20 10:43:40.760] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.760] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.761] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 10:43:40.761] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
-[2026-03-20 10:43:40.761] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 10:43:40.764] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_e85e92a9-9ddf-4d9b-b5b9-09bfad7743aa\reset_defaults.json
-[2026-03-20 10:43:40.765] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_e85e92a9-9ddf-4d9b-b5b9-09bfad7743aa\reset_defaults.json
-[2026-03-20 10:43:40.773] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_e85e92a9-9ddf-4d9b-b5b9-09bfad7743aa\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.773] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_e85e92a9-9ddf-4d9b-b5b9-09bfad7743aa\reset_defaults.json
-[2026-03-20 10:43:40.774] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.774] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.775] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 10:43:40.775] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
-[2026-03-20 10:43:40.776] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 10:43:40.790] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_a03085f1-6002-4788-8b79-dea21cee6ed2\reset_defaults.json
-[2026-03-20 10:43:40.791] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a03085f1-6002-4788-8b79-dea21cee6ed2\reset_defaults.json
-[2026-03-20 10:43:40.796] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a03085f1-6002-4788-8b79-dea21cee6ed2\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.797] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a03085f1-6002-4788-8b79-dea21cee6ed2\reset_defaults.json
-[2026-03-20 10:43:40.797] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.798] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.799] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 10:43:40.806] [WRN] [004] [ConfigService] Validation: TypeThingStartDelaySec (35) out of range
-[2026-03-20 10:43:40.806] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 10:43:40.825] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_5fc648be-7631-4d8a-aca4-10cc4efc1fe3\reset_defaults.json
-[2026-03-20 10:43:40.826] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_5fc648be-7631-4d8a-aca4-10cc4efc1fe3\reset_defaults.json
-[2026-03-20 10:43:40.828] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_5fc648be-7631-4d8a-aca4-10cc4efc1fe3\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.829] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_5fc648be-7631-4d8a-aca4-10cc4efc1fe3\reset_defaults.json
-[2026-03-20 10:43:40.829] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.830] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.831] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 10:43:40.831] [WRN] [004] [ConfigService] Validation: MaxLogSizeMB (0) out of range
-[2026-03-20 10:43:40.832] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 10:43:40.842] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_28f68d2a-cc75-443b-ad8c-86a73a806372\reset_defaults.json
-[2026-03-20 10:43:40.843] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_28f68d2a-cc75-443b-ad8c-86a73a806372\reset_defaults.json
-[2026-03-20 10:43:40.845] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_28f68d2a-cc75-443b-ad8c-86a73a806372\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.846] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_28f68d2a-cc75-443b-ad8c-86a73a806372\reset_defaults.json
-[2026-03-20 10:43:40.846] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.846] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.848] [INF] [004] [ConfigService] Saving configuration to: C:\Users\karll\AppData\Local\Temp\redball_config_test_28f68d2a-cc75-443b-ad8c-86a73a806372\test_config.json
-[2026-03-20 10:43:40.854] [DBG] [004] [ConfigService] Serialized config: 2569 bytes
-[2026-03-20 10:43:40.856] [INF] [004] [ConfigService] Configuration saved successfully
-[2026-03-20 10:43:40.864] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_b901245d-e821-48fc-8a8d-8352d1a62eb6\reset_defaults.json
-[2026-03-20 10:43:40.864] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_b901245d-e821-48fc-8a8d-8352d1a62eb6\reset_defaults.json
-[2026-03-20 10:43:40.873] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_b901245d-e821-48fc-8a8d-8352d1a62eb6\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.874] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_b901245d-e821-48fc-8a8d-8352d1a62eb6\reset_defaults.json
-[2026-03-20 10:43:40.874] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.875] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.876] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_b901245d-e821-48fc-8a8d-8352d1a62eb6\load_test.json
-[2026-03-20 10:43:40.877] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_b901245d-e821-48fc-8a8d-8352d1a62eb6\load_test.json
-[2026-03-20 10:43:40.879] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_b901245d-e821-48fc-8a8d-8352d1a62eb6\load_test.json (2138 bytes)
-[2026-03-20 10:43:40.879] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_b901245d-e821-48fc-8a8d-8352d1a62eb6\load_test.json
-[2026-03-20 10:43:40.880] [INF] [004] [ConfigService] Configuration ready: Heartbeat=42s, Theme=LoadTestTheme
-[2026-03-20 10:43:40.880] [DBG] [004] [ConfigService] Config details: Duration=120min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.889] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_0e00119d-8fbe-4132-807e-106158171beb\reset_defaults.json
-[2026-03-20 10:43:40.889] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0e00119d-8fbe-4132-807e-106158171beb\reset_defaults.json
-[2026-03-20 10:43:40.891] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0e00119d-8fbe-4132-807e-106158171beb\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.892] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0e00119d-8fbe-4132-807e-106158171beb\reset_defaults.json
-[2026-03-20 10:43:40.893] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.893] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.894] [DBG] [004] [ConfigService] Config found at canonical location: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 10:43:40.894] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 10:43:40.895] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json (2574 bytes)
-[2026-03-20 10:43:40.896] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 10:43:40.896] [INF] [004] [ConfigService] Configuration ready: Heartbeat=42s, Theme=LoadTestTheme
-[2026-03-20 10:43:40.897] [DBG] [004] [ConfigService] Config details: Duration=120min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.903] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_92d77c8f-06c1-4e2a-b29e-c7b2e1abc813\reset_defaults.json
-[2026-03-20 10:43:40.904] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_92d77c8f-06c1-4e2a-b29e-c7b2e1abc813\reset_defaults.json
-[2026-03-20 10:43:40.906] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_92d77c8f-06c1-4e2a-b29e-c7b2e1abc813\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.907] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_92d77c8f-06c1-4e2a-b29e-c7b2e1abc813\reset_defaults.json
-[2026-03-20 10:43:40.907] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.908] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.909] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_92d77c8f-06c1-4e2a-b29e-c7b2e1abc813\invalid.json
-[2026-03-20 10:43:40.910] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_92d77c8f-06c1-4e2a-b29e-c7b2e1abc813\invalid.json
-[2026-03-20 10:43:40.912] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_92d77c8f-06c1-4e2a-b29e-c7b2e1abc813\invalid.json (16 bytes)
-[2026-03-20 10:43:40.914] [WRN] [004] [ConfigService] Failed to load config from C:\Users\karll\AppData\Local\Temp\redball_config_test_92d77c8f-06c1-4e2a-b29e-c7b2e1abc813\invalid.json: 'i' is an invalid start of a property name. Expected a '"'. Path: $ | LineNumber: 0 | BytePositionInLine: 2.
-[2026-03-20 10:43:40.923] [WRN] [004] [ConfigService] Attempting property-level recovery from: C:\Users\karll\AppData\Local\Temp\redball_config_test_92d77c8f-06c1-4e2a-b29e-c7b2e1abc813\invalid.json
-[2026-03-20 10:43:40.925] [WRN] [004] [ConfigService] Property-level recovery failed for C:\Users\karll\AppData\Local\Temp\redball_config_test_92d77c8f-06c1-4e2a-b29e-c7b2e1abc813\invalid.json: 'i' is an invalid start of a property name. Expected a '"'. LineNumber: 0 | BytePositionInLine: 2.
-[2026-03-20 10:43:40.925] [WRN] [004] [ConfigService] All load attempts failed, using defaults
-[2026-03-20 10:43:40.925] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.926] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.929] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_086badc0-d7a7-40b3-8cfd-95a23af3ca77\reset_defaults.json
-[2026-03-20 10:43:40.930] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_086badc0-d7a7-40b3-8cfd-95a23af3ca77\reset_defaults.json
-[2026-03-20 10:43:40.932] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_086badc0-d7a7-40b3-8cfd-95a23af3ca77\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.932] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_086badc0-d7a7-40b3-8cfd-95a23af3ca77\reset_defaults.json
-[2026-03-20 10:43:40.938] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.939] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.940] [INF] [004] [ConfigService] Exporting config to: C:\Users\karll\AppData\Local\Temp\redball_config_test_086badc0-d7a7-40b3-8cfd-95a23af3ca77\export.json
-[2026-03-20 10:43:40.946] [INF] [004] [ConfigService] Config exported successfully
-[2026-03-20 10:43:40.981] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_aca6af4e-659a-4725-bbba-addad0301fd0\reset_defaults.json
-[2026-03-20 10:43:40.982] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_aca6af4e-659a-4725-bbba-addad0301fd0\reset_defaults.json
-[2026-03-20 10:43:40.990] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_aca6af4e-659a-4725-bbba-addad0301fd0\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:40.991] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_aca6af4e-659a-4725-bbba-addad0301fd0\reset_defaults.json
-[2026-03-20 10:43:40.991] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:40.991] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:40.995] [INF] [004] [ConfigService] Importing config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_aca6af4e-659a-4725-bbba-addad0301fd0\import_backup.json
-[2026-03-20 10:43:41.015] [INF] [004] [ConfigService] Config imported from backup format
-[2026-03-20 10:43:41.025] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_09bcb84a-43b2-4a3e-aead-bd09b2aafd86\reset_defaults.json
-[2026-03-20 10:43:41.025] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_09bcb84a-43b2-4a3e-aead-bd09b2aafd86\reset_defaults.json
-[2026-03-20 10:43:41.027] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_09bcb84a-43b2-4a3e-aead-bd09b2aafd86\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:41.028] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_09bcb84a-43b2-4a3e-aead-bd09b2aafd86\reset_defaults.json
-[2026-03-20 10:43:41.028] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:41.028] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:41.030] [INF] [004] [ConfigService] Importing config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_09bcb84a-43b2-4a3e-aead-bd09b2aafd86\import_plain.json
-[2026-03-20 10:43:41.032] [INF] [004] [ConfigService] Config imported from plain format
-[2026-03-20 10:43:41.041] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_8ca3514d-5135-4cd2-ade5-ba62f2773f36\reset_defaults.json
-[2026-03-20 10:43:41.041] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8ca3514d-5135-4cd2-ade5-ba62f2773f36\reset_defaults.json
-[2026-03-20 10:43:41.042] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8ca3514d-5135-4cd2-ade5-ba62f2773f36\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:41.043] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8ca3514d-5135-4cd2-ade5-ba62f2773f36\reset_defaults.json
-[2026-03-20 10:43:41.043] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:41.044] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:41.044] [INF] [004] [ConfigService] Importing config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8ca3514d-5135-4cd2-ade5-ba62f2773f36\does_not_exist.json
-[2026-03-20 10:43:41.044] [WRN] [004] [ConfigService] Import file not found
-[2026-03-20 10:43:41.048] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_c477855e-10bd-49de-a9fe-2d4dc6e50a7f\reset_defaults.json
-[2026-03-20 10:43:41.049] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_c477855e-10bd-49de-a9fe-2d4dc6e50a7f\reset_defaults.json
-[2026-03-20 10:43:41.056] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_c477855e-10bd-49de-a9fe-2d4dc6e50a7f\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:41.056] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_c477855e-10bd-49de-a9fe-2d4dc6e50a7f\reset_defaults.json
-[2026-03-20 10:43:41.057] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:41.058] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:41.059] [DBG] [004] [ConfigService] Config found at canonical location: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 10:43:41.059] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 10:43:41.060] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json (2574 bytes)
-[2026-03-20 10:43:41.060] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 10:43:41.061] [INF] [004] [ConfigService] Configuration ready: Heartbeat=42s, Theme=LoadTestTheme
-[2026-03-20 10:43:41.061] [DBG] [004] [ConfigService] Config details: Duration=120min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:41.061] [INF] [004] [ConfigService] Saving configuration to: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 10:43:41.062] [DBG] [004] [ConfigService] Serialized config: 2574 bytes
-[2026-03-20 10:43:41.064] [DBG] [004] [ConfigService] Backup created before save
-[2026-03-20 10:43:41.066] [INF] [004] [ConfigService] Configuration saved successfully
-[2026-03-20 10:43:41.075] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_8d6ca91c-16cb-4eb4-95d7-379d0a7edf4b\reset_defaults.json
-[2026-03-20 10:43:41.076] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8d6ca91c-16cb-4eb4-95d7-379d0a7edf4b\reset_defaults.json
-[2026-03-20 10:43:41.078] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8d6ca91c-16cb-4eb4-95d7-379d0a7edf4b\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:41.079] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8d6ca91c-16cb-4eb4-95d7-379d0a7edf4b\reset_defaults.json
-[2026-03-20 10:43:41.079] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:41.079] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:41.083] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_41bba710-d038-4811-a09b-072c40336f5c\reset_defaults.json
-[2026-03-20 10:43:41.087] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_41bba710-d038-4811-a09b-072c40336f5c\reset_defaults.json
-[2026-03-20 10:43:41.089] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_41bba710-d038-4811-a09b-072c40336f5c\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:41.089] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_41bba710-d038-4811-a09b-072c40336f5c\reset_defaults.json
-[2026-03-20 10:43:41.090] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:41.090] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:41.096] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_8b09ef1f-5b91-466a-99d3-4b8166b72a51\reset_defaults.json
-[2026-03-20 10:43:41.096] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8b09ef1f-5b91-466a-99d3-4b8166b72a51\reset_defaults.json
-[2026-03-20 10:43:41.098] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8b09ef1f-5b91-466a-99d3-4b8166b72a51\reset_defaults.json (2128 bytes)
-[2026-03-20 10:43:41.099] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_8b09ef1f-5b91-466a-99d3-4b8166b72a51\reset_defaults.json
-[2026-03-20 10:43:41.099] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 10:43:41.107] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 10:43:41.125] [DBG] [004] [CrashRecovery] Crash flag set
-[2026-03-20 10:43:41.128] [DBG] [004] [CrashRecovery] Crash flag cleared
-[2026-03-20 10:43:41.140] [DBG] [004] [CrashRecovery] Crash flag set
-[2026-03-20 10:43:41.142] [DBG] [004] [CrashRecovery] Crash flag cleared
-[2026-03-20 10:43:41.143] [DBG] [004] [CrashRecovery] Crash flag set
-[2026-03-20 10:43:41.144] [DBG] [004] [CrashRecovery] Crash flag cleared
-[2026-03-20 10:43:41.146] [DBG] [004] [CrashRecovery] Crash flag set
-[2026-03-20 10:43:41.146] [WRN] [004] [CrashRecovery] Previous abnormal termination detected. Resetting to safe defaults.
-[2026-03-20 10:43:41.147] [DBG] [004] [CrashRecovery] Crash flag set
-[2026-03-20 10:43:41.782] [VRB] [004] [HotkeyService] Parsing hotkey: 'A'
-[2026-03-20 10:43:41.789] [DBG] [004] [HotkeyService] Parsed 'A' -> modifiers=0x0, vk=0x41
-[2026-03-20 10:43:41.794] [VRB] [004] [HotkeyService] Parsing hotkey: 'Ctrl+A'
-[2026-03-20 10:43:41.794] [DBG] [004] [HotkeyService] Parsed 'Ctrl+A' -> modifiers=0x2, vk=0x41
-[2026-03-20 10:43:41.795] [VRB] [004] [HotkeyService] Parsing hotkey: 'Alt+F1'
-[2026-03-20 10:43:41.807] [DBG] [004] [HotkeyService] Parsed 'Alt+F1' -> modifiers=0x1, vk=0x70
-[2026-03-20 10:43:41.808] [VRB] [004] [HotkeyService] Parsing hotkey: 'Ctrl+Shift+V'
-[2026-03-20 10:43:41.809] [DBG] [004] [HotkeyService] Parsed 'Ctrl+Shift+V' -> modifiers=0x6, vk=0x56
-[2026-03-20 10:43:41.811] [VRB] [004] [HotkeyService] Parsing hotkey: 'F12'
-[2026-03-20 10:43:41.812] [DBG] [004] [HotkeyService] Parsed 'F12' -> modifiers=0x0, vk=0x7B
-[2026-03-20 10:43:41.813] [VRB] [004] [HotkeyService] Parsing hotkey: ''
-[2026-03-20 10:43:41.813] [DBG] [004] [HotkeyService] Parsed '' -> modifiers=0x0, vk=0x0
-[2026-03-20 10:43:41.814] [VRB] [004] [HotkeyService] Parsing hotkey: '@#$'
-[2026-03-20 10:43:41.815] [WRN] [004] [HotkeyService] Unknown key '@#$', returning 0
-[2026-03-20 10:43:41.815] [DBG] [004] [HotkeyService] Parsed '@#$' -> modifiers=0x0, vk=0x0
-[2026-03-20 10:43:41.816] [VRB] [004] [HotkeyService] Parsing hotkey: 'TAB'
-[2026-03-20 10:43:41.817] [DBG] [004] [HotkeyService] Parsed 'TAB' -> modifiers=0x0, vk=0x9
-[2026-03-20 10:43:41.822] [VRB] [004] [HotkeyService] Parsing hotkey: 'SPACE'
-[2026-03-20 10:43:41.823] [DBG] [004] [HotkeyService] Parsed 'SPACE' -> modifiers=0x0, vk=0x20
-[2026-03-20 10:43:41.824] [VRB] [004] [HotkeyService] Parsing hotkey: 'UP'
-[2026-03-20 10:43:41.824] [DBG] [004] [HotkeyService] Parsed 'UP' -> modifiers=0x0, vk=0x26
-[2026-03-20 10:43:41.825] [VRB] [004] [HotkeyService] Parsing hotkey: 'DOWN'
-[2026-03-20 10:43:41.825] [DBG] [004] [HotkeyService] Parsed 'DOWN' -> modifiers=0x0, vk=0x28
-[2026-03-20 10:43:41.825] [VRB] [004] [HotkeyService] Parsing hotkey: 'LEFT'
-[2026-03-20 10:43:41.826] [DBG] [004] [HotkeyService] Parsed 'LEFT' -> modifiers=0x0, vk=0x25
-[2026-03-20 10:43:41.826] [VRB] [004] [HotkeyService] Parsing hotkey: 'RIGHT'
-[2026-03-20 10:43:41.826] [DBG] [004] [HotkeyService] Parsed 'RIGHT' -> modifiers=0x0, vk=0x27
-[2026-03-20 10:43:41.826] [VRB] [004] [HotkeyService] Parsing hotkey: 'HOME'
-[2026-03-20 10:43:41.827] [DBG] [004] [HotkeyService] Parsed 'HOME' -> modifiers=0x0, vk=0x24
-[2026-03-20 10:43:41.827] [VRB] [004] [HotkeyService] Parsing hotkey: 'END'
-[2026-03-20 10:43:41.827] [DBG] [004] [HotkeyService] Parsed 'END' -> modifiers=0x0, vk=0x23
-[2026-03-20 10:43:41.828] [VRB] [004] [HotkeyService] Parsing hotkey: 'INSERT'
-[2026-03-20 10:43:41.828] [DBG] [004] [HotkeyService] Parsed 'INSERT' -> modifiers=0x0, vk=0x2D
-[2026-03-20 10:43:41.828] [VRB] [004] [HotkeyService] Parsing hotkey: 'DELETE'
-[2026-03-20 10:43:41.828] [DBG] [004] [HotkeyService] Parsed 'DELETE' -> modifiers=0x0, vk=0x2E
-[2026-03-20 10:43:41.829] [VRB] [004] [HotkeyService] Parsing hotkey: 'DEL'
-[2026-03-20 10:43:41.829] [DBG] [004] [HotkeyService] Parsed 'DEL' -> modifiers=0x0, vk=0x2E
-[2026-03-20 10:43:41.829] [VRB] [004] [HotkeyService] Parsing hotkey: 'PAGEUP'
-[2026-03-20 10:43:41.829] [DBG] [004] [HotkeyService] Parsed 'PAGEUP' -> modifiers=0x0, vk=0x21
-[2026-03-20 10:43:41.830] [VRB] [004] [HotkeyService] Parsing hotkey: 'PAGEDOWN'
-[2026-03-20 10:43:41.831] [DBG] [004] [HotkeyService] Parsed 'PAGEDOWN' -> modifiers=0x0, vk=0x22
-[2026-03-20 10:43:41.831] [VRB] [004] [HotkeyService] Parsing hotkey: 'PAUSE'
-[2026-03-20 10:43:41.831] [DBG] [004] [HotkeyService] Parsed 'PAUSE' -> modifiers=0x0, vk=0x13
-[2026-03-20 10:43:41.831] [VRB] [004] [HotkeyService] Parsing hotkey: 'BREAK'
-[2026-03-20 10:43:41.832] [DBG] [004] [HotkeyService] Parsed 'BREAK' -> modifiers=0x0, vk=0x13
-[2026-03-20 10:43:41.832] [VRB] [004] [HotkeyService] Parsing hotkey: 'Ctrl+Alt+Shift+Win+X'
-[2026-03-20 10:43:41.833] [DBG] [004] [HotkeyService] Parsed 'Ctrl+Alt+Shift+Win+X' -> modifiers=0xF, vk=0x58
-[2026-03-20 10:43:41.839] [VRB] [004] [HotkeyService] Parsing hotkey: 'ctrl+SHIFT+v'
-[2026-03-20 10:43:41.840] [DBG] [004] [HotkeyService] Parsed 'ctrl+SHIFT+v' -> modifiers=0x6, vk=0x56
-[2026-03-20 10:43:41.855] [VRB] [004] [KeepAwakeService] Instance created
-[2026-03-20 10:43:41.857] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 10:43:41.859] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 10:43:41.859] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 10:43:41.860] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 10:43:41.860] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 10:43:41.861] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 10:43:41.863] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 10:43:41.864] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 10:43:41.864] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 10:43:41.865] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 10:43:41.865] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 10:43:41.865] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 10:43:41.874] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: False
-[2026-03-20 10:43:41.875] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: True
-[2026-03-20 10:43:41.876] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: False
-[2026-03-20 10:43:41.878] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=20/03/2026 11:13:41
-[2026-03-20 10:43:41.878] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 10:43:41.879] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 10:43:41.879] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 10:43:41.880] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 10:43:41.880] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 10:43:41.881] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 10:43:41.881] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 10:43:41.882] [WRN] [004] [KeepAwakeService] Invalid timed duration: 0
-[2026-03-20 10:43:41.882] [WRN] [004] [KeepAwakeService] Invalid timed duration: 800
-[2026-03-20 10:43:41.889] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 10:43:41.890] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 10:43:41.890] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 10:43:41.891] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 10:43:41.891] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 10:43:41.892] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 10:43:41.892] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 10:43:41.893] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 10:43:41.893] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 10:43:41.894] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 10:43:41.894] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 10:43:41.895] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 10:43:41.896] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 10:43:41.896] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 10:43:41.899] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 10:43:41.900] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 10:43:41.900] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 10:43:41.907] [VRB] [004] [LocalizationService] Instance created
-[2026-03-20 10:43:41.910] [INF] [004] [LocalizationService] Locale set to: es
-[2026-03-20 10:43:41.910] [INF] [004] [LocalizationService] Locale set to: en
-[2026-03-20 10:43:41.911] [WRN] [004] [LocalizationService] Unknown locale 'invalid_locale', keeping 'en'
-[2026-03-20 10:43:41.914] [INF] [004] [LocalizationService] Locale set to: bl
+[2026-03-20 13:03:12.003] [INF] [004] [StressTests] Concurrent logging - expected: 500, actual: 1496
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:12.013] [VRB] [004] [TemplateService] Templates file: C:\Users\<user>\AppData\Local\Redball\templates.json, count: 1
+[2026-03-20 13:03:12.018] [INF] [004] [TemplateService] Template saved: TestTemplate (13 chars)
+[2026-03-20 13:03:12.035] [INF] [004] [TemplateService] Template saved: DeleteTest (7 chars)
+[2026-03-20 13:03:12.036] [INF] [004] [TemplateService] Template deleted: DeleteTest
+[2026-03-20 13:03:12.038] [INF] [004] [TemplateService] Template saved: Test1_951f70c7-c6eb-450c-9a86-41a44b979f30 (8 chars)
+[2026-03-20 13:03:12.039] [INF] [004] [TemplateService] Template saved: Test2_05d6e6df-719a-47b5-b6d1-2f08a1b1a24b (8 chars)
+[2026-03-20 13:03:12.040] [INF] [004] [TemplateService] Template deleted: Test1_951f70c7-c6eb-450c-9a86-41a44b979f30
+[2026-03-20 13:03:12.041] [INF] [004] [TemplateService] Template deleted: Test2_05d6e6df-719a-47b5-b6d1-2f08a1b1a24b
+[2026-03-20 13:03:12.042] [VRB] [004] [TextToSpeechService] Instance created
+[2026-03-20 13:03:12.136] [INF] [004] [TextToSpeechService] SpeechSynthesizer initialized
+[2026-03-20 13:03:12.251] [DBG] [004] [UpdateService] Current assembly version: 2.1.117.0
+[2026-03-20 13:03:12.253] [DBG] [004] [UpdateService] Fetching all releases from: https://api.github.com/repos/ArMaTeC/Redball/releases
+[2026-03-20 13:03:12.585] [DBG] [013] [UpdateService] API response length: 148321 chars
+[2026-03-20 13:03:12.588] [DBG] [013] [UpdateService] Checking 30 releases for highest version
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.115 -> version 2.1.115
+[2026-03-20 13:03:12.588] [DBG] [013] [UpdateService] New highest version found: 2.1.115 from v2.1.115
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.110 -> version 2.1.110
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.109 -> version 2.1.109
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.107 -> version 2.1.107
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.106 -> version 2.1.106
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.97 -> version 2.1.97
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.96 -> version 2.1.96
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.94 -> version 2.1.94
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.93 -> version 2.1.93
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.92 -> version 2.1.92
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.90 -> version 2.1.90
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.89 -> version 2.1.89
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.88 -> version 2.1.88
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.87 -> version 2.1.87
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.86 -> version 2.1.86
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.85 -> version 2.1.85
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.84 -> version 2.1.84
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.83 -> version 2.1.83
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.82 -> version 2.1.82
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.54 -> version 2.1.54
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.53 -> version 2.1.53
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.52 -> version 2.1.52
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.50 -> version 2.1.50
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.49 -> version 2.1.49
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.48 -> version 2.1.48
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.47 -> version 2.1.47
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.45 -> version 2.1.45
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.44 -> version 2.1.44
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.43 -> version 2.1.43
+[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.37 -> version 2.1.37
+[2026-03-20 13:03:12.588] [INF] [013] [UpdateService] Highest version release: v2.1.115 (2.1.115)
+[2026-03-20 13:03:12.588] [DBG] [013] [UpdateService] Latest release tag: v2.1.115
+[2026-03-20 13:03:12.588] [INF] [013] [UpdateService] Comparing versions: current=2.1.117, latest=2.1.115
+[2026-03-20 13:03:12.588] [INF] [013] [UpdateService] Up to date (current: 2.1.117, latest: 2.1.115)
+[2026-03-20 13:03:12.597] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:12.599] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:12.599] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:12.886] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:12.887] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:12.887] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:12.887] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:12.905] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:12.908] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:12.908] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:12.908] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:12.922] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:12.924] [INF] [004] [MainViewModel] IsActive changed to: False
+[2026-03-20 13:03:12.924] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:12.924] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:12.924] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:12.924] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:12.937] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:12.937] [VRB] [004] [MainViewModel] StatusText changed to: 'Test Status 9277208a-e9ff-41d3-8458-e18bf0cc22c6'
+[2026-03-20 13:03:12.937] [INF] [004] [MainViewModel] IsActive changed to: False
+[2026-03-20 13:03:12.937] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:12.937] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:12.938] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:12.938] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:12.938] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:12.952] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:12.952] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:12.952] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:12.952] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:12.969] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:12.969] [VRB] [004] [MainViewModel] StatusText changed to: 'Test Status'
+[2026-03-20 13:03:12.970] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:12.970] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:12.970] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:12.982] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:12.982] [INF] [004] [MainViewModel] IsDarkMode changed to: False
+[2026-03-20 13:03:12.987] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:12.987] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:12.987] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.003] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.004] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.004] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.004] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.015] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.017] [DBG] [004] [MainViewModel] Setting MainWindow reference
+[2026-03-20 13:03:13.018] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.018] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.018] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.027] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.027] [INF] [004] [MainViewModel] IsDarkMode changed to: False
+[2026-03-20 13:03:13.027] [INF] [004] [MainViewModel] IsDarkMode changed to: True
+[2026-03-20 13:03:13.028] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.028] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.028] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.039] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.042] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.042] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.042] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.054] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.055] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.055] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.055] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.066] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.067] [INF] [004] [MainViewModel] ToggleActive called
+[2026-03-20 13:03:13.067] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:13.067] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:13.074] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:13.075] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:13.076] [INF] [004] [MainViewModel] ToggleActive called
+[2026-03-20 13:03:13.076] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:13.076] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:13.076] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:13.076] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 13:03:13.077] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.077] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.077] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.092] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.092] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: False
+[2026-03-20 13:03:13.092] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000001)
+[2026-03-20 13:03:13.092] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display Normal | Heartbeat Off'
+[2026-03-20 13:03:13.092] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display Normal | Heartbeat Off
+[2026-03-20 13:03:13.093] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.093] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display Normal | Heartbeat Off'
+[2026-03-20 13:03:13.093] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display Normal | Heartbeat Off
+[2026-03-20 13:03:13.105] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.105] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: True
+[2026-03-20 13:03:13.108] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display Normal | F15 On'
+[2026-03-20 13:03:13.108] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display Normal | F15 On
+[2026-03-20 13:03:13.108] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.108] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display Normal | F15 On'
+[2026-03-20 13:03:13.108] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display Normal | F15 On
+[2026-03-20 13:03:13.120] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.120] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: True
+[2026-03-20 13:03:13.120] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:13.121] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | F15 On'
+[2026-03-20 13:03:13.121] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | F15 On
+[2026-03-20 13:03:13.121] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.121] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | F15 On
+[2026-03-20 13:03:13.133] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.133] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: False
+[2026-03-20 13:03:13.133] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.133] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.134] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.134] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.134] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.151] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.151] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.151] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.151] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.179] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.179] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.179] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.179] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.191] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.191] [INF] [004] [MainViewModel] OpenSettings called
+[2026-03-20 13:03:13.193] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.193] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.193] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.205] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.205] [INF] [004] [MainViewModel] StartTypeThing called
+[2026-03-20 13:03:13.205] [WRN] [004] [MainViewModel] MainWindow reference not available, cannot start TypeThing
+[2026-03-20 13:03:13.206] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.206] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.206] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.217] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.217] [INF] [004] [MainViewModel] ShowAbout called
+[2026-03-20 13:03:13.218] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.218] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.218] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.228] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.228] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.228] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.228] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.240] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.241] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.241] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.241] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.256] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.257] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.257] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.257] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.269] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.269] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.270] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.270] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.279] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.280] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.280] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.280] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.292] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.293] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.293] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.293] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.321] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.322] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.322] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.322] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.337] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.338] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.338] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.338] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.356] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.356] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.356] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.356] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.373] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.374] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.374] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.374] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.389] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.390] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.390] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.390] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.419] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.420] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.420] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.420] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.444] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.444] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.444] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.444] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.467] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.468] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.468] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.468] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.488] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.488] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.488] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.488] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.511] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.517] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.517] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.517] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.534] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.534] [VRB] [004] [MainViewModel] StatusText changed to: 'Before refresh 22573e01-2904-471e-a2d4-487b9ea643af'
+[2026-03-20 13:03:13.534] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.534] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.535] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 13:03:13.535] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 13:03:13.535] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 13:03:13.545] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 13:03:13.545] [INF] [004] [MainViewModel] ToggleActive called
+[2026-03-20 13:03:13.545] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 13:03:13.545] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 13:03:13.545] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 13:03:13.545] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 13:03:13.545] [INF] [004] [MainViewModel] ToggleActive called
+[2026-03-20 13:03:13.545] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 13:03:13.545] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 13:03:13.545] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 13:03:13.545] [INF] [004] [KeepAwakeService] Timers started

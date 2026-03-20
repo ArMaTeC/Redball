@@ -1,0 +1,46 @@
+{
+  "projectName": "Redball",
+  "projectOwner": "ArMaTeC",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "CONTRIBUTORS.md",
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitConvention": "angular",
+  "contributors": [],
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "types": {
+    "code": {
+      "symbol": "💻",
+      "description": "Code"
+    },
+    "doc": {
+      "symbol": "📖",
+      "description": "Documentation"
+    },
+    "design": {
+      "symbol": "🎨",
+      "description": "Design"
+    },
+    "bug": {
+      "symbol": "🐛",
+      "description": "Bug reports"
+    },
+    "ideas": {
+      "symbol": "💡",
+      "description": "Ideas & Planning"
+    },
+    "maintenance": {
+      "symbol": "🔧",
+      "description": "Maintenance"
+    },
+    "test": {
+      "symbol": "⚠️",
+      "description": "Tests"
+    }
+  }
+}

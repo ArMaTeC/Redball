@@ -482,10 +482,6 @@ try {
     if (Test-Path $bundlePath) { $uploadFiles += $bundlePath }
     if (Test-Path $bundleVersioned) { $uploadFiles += $bundleVersioned }
 
-    # Also pick up any .wixpdb for debugging
-    $wixpdb = Join-Path $DistDir "Redball-$version.wixpdb"
-    if (Test-Path $wixpdb) { $uploadFiles += $wixpdb }
-
     Write-HostSafe "`nArtifacts to upload:"
     $uploadFiles | ForEach-Object { Write-HostSafe "  - $(Split-Path $_ -Leaf)" }
 

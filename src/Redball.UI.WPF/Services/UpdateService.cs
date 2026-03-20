@@ -24,6 +24,12 @@ public class UpdateService : IUpdateService
     private readonly string _updateChannel;
     private readonly bool _verifySignature;
 
+    // Circuit breaker: stop calling GitHub API after consecutive failures
+    private static int _consecutiveFailures;
+    private static DateTime _circuitOpenUntil = DateTime.MinValue;
+    private const int CircuitBreakerThreshold = 3;
+    private static readonly TimeSpan CircuitBreakerCooldown = TimeSpan.FromMinutes(30);
+
     static UpdateService()
     {
         _httpClient = new HttpClient();
@@ -46,6 +52,13 @@ public class UpdateService : IUpdateService
     /// <returns>Update info if an update is available, null if up to date or error.</returns>
     public async Task<UpdateInfo?> CheckForUpdateAsync(CancellationToken cancellationToken = default)
     {
+        // Circuit breaker: skip if too many recent failures
+        if (_consecutiveFailures >= CircuitBreakerThreshold && DateTime.UtcNow < _circuitOpenUntil)
+        {
+            Logger.Warning("UpdateService", $"Circuit breaker open — skipping update check until {_circuitOpenUntil:HH:mm:ss UTC}");
+            return null;
+        }
+
         try
         {
             var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
@@ -98,6 +111,9 @@ public class UpdateService : IUpdateService
             Logger.Info("UpdateService", $"Selected release {latestRelease.TagName} with asset {asset.Name}");
             Logger.Debug("UpdateService", $"Selected asset download URL: {asset.DownloadUrl}");
 
+            // Success — reset circuit breaker
+            _consecutiveFailures = 0;
+
             return new UpdateInfo
             {
                 CurrentVersion = currentNormalized,
@@ -115,6 +131,12 @@ public class UpdateService : IUpdateService
         }
         catch (Exception ex)
         {
+            _consecutiveFailures++;
+            if (_consecutiveFailures >= CircuitBreakerThreshold)
+            {
+                _circuitOpenUntil = DateTime.UtcNow.Add(CircuitBreakerCooldown);
+                Logger.Warning("UpdateService", $"Circuit breaker tripped after {_consecutiveFailures} failures — cooldown until {_circuitOpenUntil:HH:mm:ss UTC}");
+            }
             Logger.Error("UpdateService", "Update check failed", ex);
             return null;
         }
@@ -132,6 +154,27 @@ public class UpdateService : IUpdateService
         {
             var tempDir = Path.Combine(Path.GetTempPath(), "RedballUpdate");
             Directory.CreateDirectory(tempDir);
+
+            // Restrict temp directory ACL to current user only (#88)
+            try
+            {
+                var dirInfo = new DirectoryInfo(tempDir);
+                var security = dirInfo.GetAccessControl();
+                security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+                var currentUser = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+                security.AddAccessRule(new System.Security.AccessControl.FileSystemAccessRule(
+                    currentUser,
+                    System.Security.AccessControl.FileSystemRights.FullControl,
+                    System.Security.AccessControl.InheritanceFlags.ContainerInherit |
+                    System.Security.AccessControl.InheritanceFlags.ObjectInherit,
+                    System.Security.AccessControl.PropagationFlags.None,
+                    System.Security.AccessControl.AccessControlType.Allow));
+                dirInfo.SetAccessControl(security);
+            }
+            catch (Exception aclEx)
+            {
+                Logger.Debug("UpdateService", $"Could not set restrictive ACL on temp dir: {aclEx.Message}");
+            }
 
             Logger.Info("UpdateService", $"Preparing to download update {updateInfo.LatestVersion} ({updateInfo.FileName})");
             Logger.Debug("UpdateService", $"Download URL requested: {updateInfo.DownloadUrl}");

@@ -23,6 +23,7 @@ public class MainViewModel : ViewModelBase
     private WeakReference<MainWindow>? _mainWindowRef;
     private readonly KeepAwakeService _keepAwake;
     private readonly DispatcherTimer _statusBarTimer;
+    private readonly BatteryMonitorService _batteryMonitor = new();
 
     public bool PreventDisplaySleep
     {
@@ -193,8 +194,12 @@ public class MainViewModel : ViewModelBase
     {
         Logger.Info("MainViewModel", "ToggleActive called");
         _keepAwake.Toggle();
-        var analytics = new AnalyticsService(ConfigService.Instance.Config.EnableTelemetry);
-        analytics.TrackFeature(_keepAwake.IsActive ? "keepawake.enabled" : "keepawake.disabled");
+        try
+        {
+            var analytics = ServiceLocator.Get<IAnalyticsService>();
+            analytics?.TrackFeature(_keepAwake.IsActive ? "keepawake.enabled" : "keepawake.disabled");
+        }
+        catch { /* Analytics is non-critical */ }
     }
 
     private void ToggleDisplaySleep()
@@ -436,8 +441,7 @@ public class MainViewModel : ViewModelBase
 
         try
         {
-            var batteryService = new BatteryMonitorService();
-            var status = batteryService.GetStatus();
+            var status = _batteryMonitor.GetStatus();
             if (!status.HasBattery)
                 BatteryText = "AC Power";
             else

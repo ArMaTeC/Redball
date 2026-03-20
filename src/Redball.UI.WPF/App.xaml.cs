@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,6 +16,8 @@ public partial class App : Application
     private Views.MainWindow? _mainWindow; // Keep reference to prevent GC
     private Services.SingletonService? _singleton;
     private IServiceProvider? _serviceProvider;
+    private readonly Stopwatch _startupStopwatch = Stopwatch.StartNew();
+    public static TimeSpan StartupDuration { get; private set; }
 
     public App()
     {
@@ -206,7 +209,13 @@ public partial class App : Application
             _mainWindow.Show();
             _mainWindow.Hide();
             ShutdownMode = ShutdownMode.OnMainWindowClose;
-            Services.Logger.Info("App", "MainWindow initialized in tray-only mode, startup sequence complete");
+            _startupStopwatch.Stop();
+            StartupDuration = _startupStopwatch.Elapsed;
+            Services.Logger.Info("App", $"MainWindow initialized in tray-only mode, startup sequence complete (took {StartupDuration.TotalSeconds:F2}s)");
+            if (StartupDuration.TotalSeconds > 2.0)
+            {
+                Services.Logger.Warning("App", $"Startup exceeded 2-second target: {StartupDuration.TotalSeconds:F2}s");
+            }
             Services.Logger.LogMemoryStats("App");
         }
         catch (Exception ex)

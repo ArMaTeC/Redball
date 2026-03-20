@@ -1,98 +1,126 @@
 # Troubleshooting
 
-## Tray Icon Not Appearing
+Use the decision trees below to quickly diagnose common issues. Start at the top of the relevant section and follow the Yes/No branches.
 
-- Check Windows notification area settings: **Settings → Personalization → Taskbar → Select which icons appear on the taskbar**
-- Click "Show hidden icons" (the `^` arrow) in the system tray
-- Redball includes automatic tray icon recovery — it checks every 30 seconds and recreates the icon if needed
-- Restart Windows Explorer if needed:
+---
 
-```powershell
-Stop-Process -Name explorer -Force
-```
+## 🔴 Is the tray icon visible?
 
-## System Still Sleeps
+**→ No:** Is it hidden behind the overflow arrow (`^`) in the system tray?
+  - **→ Yes:** Click the arrow and drag the Redball icon onto the taskbar. Done.
+  - **→ No:** Is Redball running? Check Task Manager for `Redball.UI.WPF`.
+    - **→ Not running:** Launch Redball. If it exits immediately, check for a crash log in `%LocalAppData%\Redball\UserData\`.
+    - **→ Running but no icon:** Redball auto-recovers the tray icon every 30 seconds. If it doesn't appear:
+      1. Restart Windows Explorer: `Stop-Process -Name explorer -Force`
+      2. Check **Settings → Personalization → Taskbar → Select which icons appear**
 
-- Check Windows power plan settings (some plans override API calls)
-- Ensure no group policy is overriding `SetThreadExecutionState`
-- Try enabling **Prevent Display Sleep** in the tray menu
-- Enable **Verbose Logging** in Settings → General to diagnose the issue
-- Check the Diagnostics section in the main window for runtime state
+**→ Yes:** Continue to the relevant section below.
 
-## Multiple Instances Conflict
+---
 
-Redball uses a named mutex (`Global\Redball_Singleton_Mutex`) to enforce a single instance. If a stale instance is detected, it will show a message and exit.
+## 💤 Is the system still sleeping despite Redball being active?
 
-If that fails:
+**→ Is Redball showing "Active" in the tray tooltip?**
+  - **→ No:** Redball is paused. Check if auto-pause triggered (battery, network, idle, schedule).
+  - **→ Yes:** Is **Prevent Display Sleep** enabled?
+    - **→ No:** Enable it in the tray right-click menu or Settings.
+    - **→ Yes:** Is a Windows Group Policy overriding `SetThreadExecutionState`?
+      - **→ Check:** Run `powercfg /requests` in an admin terminal. If Redball's request isn't listed, a GPO may be blocking it.
+      - **→ Still sleeping:** Enable **Verbose Logging** in Settings → General, reproduce the issue, then check Diagnostics → Recent Log for clues.
 
-```powershell
-# Find and stop Redball processes manually
-Get-Process Redball.UI.WPF | Stop-Process -Force
-```
+---
 
-## Log File Locked
+## ⌨️ TypeThing not working?
 
-If the log file is locked by a previous instance, Redball automatically:
+**→ Does the hotkey respond at all?**
+  - **→ No:** Is TypeThing enabled in Settings?
+    - **→ No:** Enable `TypeThingEnabled` in Settings.
+    - **→ Yes:** Another app may have claimed the hotkey. Check Diagnostics → Log for "Failed to register" messages. Change the hotkey in Settings.
+  - **→ Yes, but characters aren't appearing:**
+    - Click directly in the target text field before pressing the hotkey.
+    - Try switching to **HID input mode** in Settings if you're using RDP/remote desktop.
+  - **→ Yes, but wrong characters or double newlines:**
+    - **Double newlines:** Source text may have `\r\n` endings — Redball handles this, but check for unusual encodings.
+    - **Wrong characters:** Ensure the target app's keyboard layout matches your system layout.
 
+---
+
+## 🔋 Battery-aware not detecting battery?
+
+**→ Is this a desktop PC (no battery)?**
+  - **→ Yes:** Expected — battery monitoring is automatically skipped.
+  - **→ No (laptop):** WMI battery queries may have failed. Check Diagnostics for "WMI battery query failed" messages.
+    - After 3 consecutive failures, battery monitoring is automatically disabled with a log warning.
+    - Restart Redball to retry.
+
+---
+
+## 🌐 Network-aware causing false disconnects?
+
+**→ Are you on WiFi?**
+  - **→ Yes:** Brief WiFi dropouts will trigger pause/resume — this is by design.
+  - **→ No:** Virtual adapters (VPN, Hyper-V) may be excluded from detection. Check Diagnostics for network-related log entries.
+
+---
+
+## ⏰ Schedule not activating?
+
+1. Is `ScheduleEnabled` set to `true`? → If not, enable it.
+2. Is today's day listed in `ScheduleDays`? → Check Settings.
+3. Is the time format correct (`HH:mm`, 24-hour)? → e.g., `09:00`, not `9:00 AM`.
+4. The schedule is checked every 30 seconds — wait up to 30s after the start time.
+
+---
+
+## 💥 "Previous crash detected" message?
+
+**→ What happened:**
+  - The previous session did not shut down cleanly.
+  - All monitoring features are disabled as a safety measure.
+
+**→ What to do:**
+  1. Re-enable your desired features in Settings.
+  2. Check Diagnostics → Log for crash-related entries.
+  3. If crashes persist, delete `%LocalAppData%\Redball\UserData\Redball.json` to reset to defaults.
+
+---
+
+## 🔒 Multiple instances conflict?
+
+**→ Redball says "Another instance is already running":**
+  - A previous instance may not have released the singleton mutex.
+  - Kill it manually: `Get-Process Redball.UI.WPF | Stop-Process -Force`
+  - Then relaunch.
+
+---
+
+## 📁 Log file locked?
+
+Redball handles this automatically:
 1. Retries with exponential backoff (3 attempts)
 2. Falls back to `%TEMP%\Redball_fallback.log`
 
-## Crash Recovery Activated
+If the main log is permanently locked, delete it when Redball is not running.
 
-If you see "Previous crash detected. Settings reset to safe defaults":
+---
 
-- Redball detected that the previous session did not shut down cleanly
-- All monitoring features are disabled as a safety measure
-- Re-enable your desired features via the Settings sections in the main window
-- Check the Diagnostics section for log entries about the crash
+## 🖥️ High DPI / Blurry icon?
 
-## TypeThing Hotkeys Not Working
+- Ensure Windows display scaling is consistent across monitors.
+- The tray icon is rendered at 32×32px with GDI+ anti-aliasing.
 
-- **Hotkey already in use:** Another application may have registered the same hotkey. Change the hotkey in the TypeThing section.
-- **Not enabled:** Check that `TypeThingEnabled` is `true` in settings
-- **Check the log:** Open the Diagnostics section and look for "Failed to register" messages in the recent log viewer
+---
 
-## TypeThing Typing Issues
+## 🐌 Performance issues (high CPU/memory)?
 
-- **Characters not appearing:** The target application may not accept `SendInput`. Try clicking directly in the text field before pressing the hotkey.
-- **Double newlines:** This can happen with `\r\n` line endings. Redball skips `\r` when followed by `\n` to prevent this — check if the source text has unusual line endings.
-- **Wrong characters:** Ensure the target application's keyboard layout matches your system. `KEYEVENTF_UNICODE` bypasses the keyboard layout but some apps may not support it.
+1. **Is `EnablePerformanceMetrics` on?** → Disable it to reduce overhead.
+2. **Check Diagnostics for rapid error loops** — a failing service retrying constantly.
+3. **Disable unused monitors** — battery, network, idle, schedule, presentation, thermal.
+4. **Is the log file very large?** → Reduce `MaxLogSizeMB` or delete the log file.
 
-## Battery-Aware Not Detecting Battery
+---
 
-- Desktop systems without batteries are unaffected — this is expected
-- WMI queries can fail on some systems. Check the Diagnostics section for battery-related errors.
-
-## Network-Aware False Disconnects
-
-- Network monitoring checks hardware interfaces
-- Virtual adapters (VPN, Hyper-V) may be excluded
-- If you're on WiFi and it briefly disconnects, Redball will pause and resume
-
-## Schedule Not Activating
-
-- Ensure `ScheduleEnabled` is `true`
-- Check that today's day is in `ScheduleDays`
-- Verify time format is `HH:mm` (24-hour)
-- The schedule is checked every 30 seconds by the duration timer
-
-## High DPI / Blurry Icon
-
-Redball is DPI-aware and renders the icon with anti-aliasing. If the icon appears blurry:
-
-- Ensure your Windows display scaling is set consistently
-- The GDI+ icon is rendered at 32x32 pixels with anti-aliasing
-
-## Performance Issues
-
-If Redball uses too much CPU or memory:
-
-- Disable `EnablePerformanceMetrics` if enabled (reduces overhead)
-- Check the Diagnostics section for rapid error loops
-- Disable monitoring features you don't need (battery, network, idle, schedule, presentation, thermal)
-- Check log file size — if it's very large, reduce `MaxLogSizeMB` or delete the log
-
-## Getting Diagnostic Info
+## 📋 Getting Diagnostic Info
 
 1. Open the main window → **Diagnostics** section
 2. View runtime state, config validation, logging paths, and recent log entries

@@ -111,4 +111,7 @@ public class RedballConfig
     // Mini Widget position (-1 = not set, use default)
     public double MiniWidgetLeft { get; set; } = -1;
     public double MiniWidgetTop { get; set; } = -1;
+
+    // Config encryption (DPAPI, current-user scope)
+    public bool EncryptConfig { get; set; }
 }

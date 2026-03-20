@@ -13,8 +13,24 @@ namespace Redball.UI.Views;
 public partial class MainWindow
 {
     private DispatcherTimer? _updateCheckTimer;
+    private DispatcherTimer? _startupUpdateCheckTimer;
     private string? _skippedVersion;
     private bool _isShowingUpdateDialog;
+
+    private void EnsureUpdateService()
+    {
+        if (_updateService != null)
+        {
+            return;
+        }
+
+        var config = ConfigService.Instance.Config;
+        _updateService = new UpdateService(
+            config.UpdateRepoOwner,
+            config.UpdateRepoName,
+            config.UpdateChannel ?? "stable",
+            config.VerifyUpdateSignature);
+    }
 
     /// <summary>
     /// Starts the background update check timer if enabled in config.
@@ -22,6 +38,8 @@ public partial class MainWindow
     /// </summary>
     private void StartAutoUpdateCheck()
     {
+        StopAutoUpdateCheck();
+
         var config = ConfigService.Instance.Config;
 
         if (!config.AutoUpdateCheckEnabled)
@@ -47,13 +65,14 @@ public partial class MainWindow
         _updateCheckTimer.Start();
 
         // Also run the first check after a short delay (30 seconds) so the app has time to fully initialize
-        var startupDelayTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
-        startupDelayTimer.Tick += async (s, _) =>
+        _startupUpdateCheckTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _startupUpdateCheckTimer.Tick += async (s, _) =>
         {
             ((DispatcherTimer)s!).Stop();
+            _startupUpdateCheckTimer = null;
             await PerformAutoUpdateCheckAsync();
         };
-        startupDelayTimer.Start();
+        _startupUpdateCheckTimer.Start();
     }
 
     private async System.Threading.Tasks.Task PerformAutoUpdateCheckAsync()
@@ -67,10 +86,7 @@ public partial class MainWindow
         try
         {
             // Ensure update service is available
-            if (_updateService == null)
-            {
-                LoadEmbeddedSettings();
-            }
+            EnsureUpdateService();
 
             if (_updateService == null)
             {
@@ -154,5 +170,7 @@ public partial class MainWindow
     {
         _updateCheckTimer?.Stop();
         _updateCheckTimer = null;
+        _startupUpdateCheckTimer?.Stop();
+        _startupUpdateCheckTimer = null;
     }
 }

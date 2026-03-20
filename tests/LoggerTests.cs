@@ -10,12 +10,22 @@ namespace Redball.Tests
     {
         private string _testLogPath = "";
 
+        private static readonly System.Reflection.BindingFlags BF = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+
+        private static void ResetLogger()
+        {
+            // Flush and shut down the async channel before resetting
+            Logger.Shutdown();
+            typeof(Logger).GetField("_channel", BF)?.SetValue(null, null);
+            typeof(Logger).GetField("_writerTask", BF)?.SetValue(null, null);
+            typeof(Logger).GetField("_initialized", BF)?.SetValue(null, false);
+        }
+
         [TestInitialize]
         public void TestInitialize()
         {
             _testLogPath = Path.Combine(Path.GetTempPath(), $"redball_test_{Guid.NewGuid()}.log");
-            // Clear any existing initialization
-            typeof(Logger).GetField("_initialized", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)?.SetValue(null, false);
+            ResetLogger();
         }
 
         [TestCleanup]
@@ -23,6 +33,7 @@ namespace Redball.Tests
         {
             try
             {
+                ResetLogger();
                 if (File.Exists(_testLogPath))
                     File.Delete(_testLogPath);
             }
@@ -35,6 +46,7 @@ namespace Redball.Tests
             // Act
             Logger.Initialize(_testLogPath);
             Logger.Info("Test", "Test message");
+            Logger.Flush();
 
             // Assert
             Assert.IsTrue(File.Exists(_testLogPath), "Log file should be created");
@@ -62,6 +74,7 @@ namespace Redball.Tests
 
             // Act
             Logger.Verbose("TestComponent", "Verbose message");
+            Logger.Flush();
 
             // Assert
             var content = File.ReadAllText(_testLogPath);
@@ -78,6 +91,7 @@ namespace Redball.Tests
 
             // Act
             Logger.Verbose("TestComponent", "Should not appear");
+            Logger.Flush();
 
             // Assert
             var content = File.ReadAllText(_testLogPath);
@@ -93,6 +107,7 @@ namespace Redball.Tests
 
             // Act
             Logger.Debug("TestComponent", "Debug message");
+            Logger.Flush();
 
             // Assert
             var content = File.ReadAllText(_testLogPath);
@@ -109,6 +124,7 @@ namespace Redball.Tests
 
             // Act
             Logger.Info("TestComponent", "Info message");
+            Logger.Flush();
 
             // Assert
             var content = File.ReadAllText(_testLogPath);
@@ -125,6 +141,7 @@ namespace Redball.Tests
 
             // Act
             Logger.Info("TestComponent", "Should not appear");
+            Logger.Flush();
 
             // Assert
             var content = File.ReadAllText(_testLogPath);
@@ -140,6 +157,7 @@ namespace Redball.Tests
 
             // Act
             Logger.Warning("TestComponent", "Warning message");
+            Logger.Flush();
 
             // Assert
             var content = File.ReadAllText(_testLogPath);
@@ -156,6 +174,7 @@ namespace Redball.Tests
 
             // Act
             Logger.Error("TestComponent", "Error message");
+            Logger.Flush();
 
             // Assert
             var content = File.ReadAllText(_testLogPath);
@@ -172,6 +191,7 @@ namespace Redball.Tests
 
             // Act
             Logger.Error("TestComponent", "Operation failed", ex);
+            Logger.Flush();
 
             // Assert
             var content = File.ReadAllText(_testLogPath);
@@ -188,6 +208,7 @@ namespace Redball.Tests
 
             // Act
             Logger.Fatal("TestComponent", "Fatal error");
+            Logger.Flush();
 
             // Assert
             var content = File.ReadAllText(_testLogPath);
@@ -205,6 +226,7 @@ namespace Redball.Tests
 
             // Act
             Logger.Fatal("TestComponent", "Critical failure", ex);
+            Logger.Flush();
 
             // Assert
             var content = File.ReadAllText(_testLogPath);
@@ -221,6 +243,7 @@ namespace Redball.Tests
             // Act - set to invalid values
             Logger.SetLogLevel(-1);
             Logger.Info("Test", "Should log after negative clamp");
+            Logger.Flush();
 
             // Assert - Info should still log (clamped to 0)
             var content = File.ReadAllText(_testLogPath);
@@ -229,6 +252,7 @@ namespace Redball.Tests
             // Act - set above max
             Logger.SetLogLevel(10);
             Logger.Info("Test", "Should not appear after high clamp");
+            Logger.Flush();
 
             // Assert - Info should not log (clamped to 5)
             content = File.ReadAllText(_testLogPath);
@@ -266,9 +290,9 @@ namespace Redball.Tests
 
             // Act
             Logger.LogMemoryStats("TestComponent");
+            Logger.Flush();
 
-            // Assert - allow time for file write
-            Thread.Sleep(100);
+            // Assert
             var content = File.ReadAllText(_testLogPath);
             // Memory stats log with the pattern "Memory: WorkingSet=XMB"
             Assert.IsTrue(content.Contains("Memory:"), "Should log memory stats");
@@ -284,6 +308,7 @@ namespace Redball.Tests
             {
                 Logger.Info("Test", new string('x', 1000));
             }
+            Logger.Flush();
 
             // Act
             Logger.RotateLog(1); // 1 byte threshold to force rotation
@@ -302,9 +327,9 @@ namespace Redball.Tests
 
             // Act
             Logger.Info("Test", "Line 1\r\nLine 2\nLine 3");
+            Logger.Flush();
 
-            // Assert - allow time for file write
-            Thread.Sleep(100);
+            // Assert
             var content = File.ReadAllText(_testLogPath);
             // Logger splits lines and writes each separately
             Assert.IsTrue(content.Contains("Line 1") || content.Contains("Line 2") || content.Contains("Line 3"),

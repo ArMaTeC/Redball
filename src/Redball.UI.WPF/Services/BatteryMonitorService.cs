@@ -12,6 +12,9 @@ public class BatteryMonitorService
     private DateTime? _lastCheck;
     private BatteryStatus? _cachedStatus;
     private static readonly TimeSpan CacheExpiry = TimeSpan.FromSeconds(60);
+    private int _consecutiveWmiFailures;
+    private const int MaxWmiFailures = 3;
+    private bool _wmiDisabled;
 
     public bool IsEnabled { get; set; }
     public int Threshold { get; set; } = 20;
@@ -56,8 +59,21 @@ public class BatteryMonitorService
         }
         catch (Exception ex)
         {
-            Logger.Debug("BatteryMonitor", $"Battery query failed: {ex.Message}");
-            return new BatteryStatus { HasBattery = false };
+            _consecutiveWmiFailures++;
+            if (_consecutiveWmiFailures >= MaxWmiFailures && !_wmiDisabled)
+            {
+                _wmiDisabled = true;
+                Logger.Warning("BatteryMonitor",
+                    $"WMI battery query failed {_consecutiveWmiFailures} times — disabling battery monitoring. " +
+                    $"Last error: {ex.Message}");
+            }
+            else
+            {
+                Logger.Debug("BatteryMonitor", $"Battery query failed ({_consecutiveWmiFailures}/{MaxWmiFailures}): {ex.Message}");
+            }
+            _cachedStatus = new BatteryStatus { HasBattery = false };
+            _lastCheck = DateTime.Now;
+            return _cachedStatus;
         }
     }
 
@@ -66,7 +82,7 @@ public class BatteryMonitorService
     /// </summary>
     public void CheckAndUpdate(KeepAwakeService keepAwake)
     {
-        if (!IsEnabled) return;
+        if (!IsEnabled || _wmiDisabled) return;
 
         var status = GetStatus();
         if (!status.HasBattery) return;

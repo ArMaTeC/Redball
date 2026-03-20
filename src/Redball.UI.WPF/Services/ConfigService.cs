@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -115,8 +117,12 @@ public class ConfigService : IConfigService
         return true;
     }
 
+    // Magic header prefixed to DPAPI-encrypted config files
+    private const string EncryptedHeader = "RBENC:";
+
     /// <summary>
     /// Attempts standard JSON deserialization from a file.
+    /// Automatically detects and decrypts DPAPI-encrypted files (prefixed with RBENC:).
     /// </summary>
     private bool TryLoadFromFile(string filePath)
     {
@@ -124,11 +130,22 @@ public class ConfigService : IConfigService
         {
             if (!File.Exists(filePath)) return false;
 
-            var json = File.ReadAllText(filePath);
-            if (string.IsNullOrWhiteSpace(json))
+            var raw = File.ReadAllText(filePath);
+            if (string.IsNullOrWhiteSpace(raw))
             {
                 Logger.Warning("ConfigService", $"Config file is empty: {filePath}");
                 return false;
+            }
+
+            string json;
+            if (raw.StartsWith(EncryptedHeader, StringComparison.Ordinal))
+            {
+                Logger.Debug("ConfigService", $"Detected DPAPI-encrypted config: {filePath}");
+                json = DpapiDecrypt(raw[EncryptedHeader.Length..]);
+            }
+            else
+            {
+                json = raw;
             }
 
             Logger.Debug("ConfigService", $"Attempting to load config from: {filePath} ({json.Length} bytes)");
@@ -136,6 +153,12 @@ public class ConfigService : IConfigService
             IsDirty = false;
             Logger.Info("ConfigService", $"Config loaded successfully from: {filePath}");
             return true;
+        }
+        catch (CryptographicException cryptoEx)
+        {
+            Logger.Warning("ConfigService", $"Failed to decrypt config from {filePath}: {cryptoEx.Message}");
+            Config = new RedballConfig();
+            return false;
         }
         catch (Exception ex)
         {
@@ -263,9 +286,17 @@ public class ConfigService : IConfigService
                 Logger.Debug("ConfigService", $"Backup before save skipped: {bakEx.Message}");
             }
 
+            // Optionally encrypt with DPAPI (current-user scope)
+            var payload = json;
+            if (Config.EncryptConfig)
+            {
+                payload = EncryptedHeader + DpapiEncrypt(json);
+                Logger.Debug("ConfigService", "Config encrypted with DPAPI");
+            }
+
             // Write to temp file first, then rename for atomic save
             var tempPath = savePath + ".tmp";
-            File.WriteAllText(tempPath, json);
+            File.WriteAllText(tempPath, payload);
             File.Move(tempPath, savePath, true);
             IsDirty = false;
 
@@ -654,5 +685,27 @@ public class ConfigService : IConfigService
             Config.UseHeartbeatKeypress = useHeartbeatKeypress;
             IsDirty = true;
         }
+    }
+
+    /// <summary>
+    /// Encrypts a plaintext string using DPAPI (CurrentUser scope).
+    /// Returns a Base64-encoded ciphertext.
+    /// </summary>
+    private static string DpapiEncrypt(string plaintext)
+    {
+        var plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
+        var encrypted = ProtectedData.Protect(plaintextBytes, null, DataProtectionScope.CurrentUser);
+        return Convert.ToBase64String(encrypted);
+    }
+
+    /// <summary>
+    /// Decrypts a Base64-encoded DPAPI ciphertext back to plaintext.
+    /// Throws CryptographicException if decryption fails (wrong user, corrupt data).
+    /// </summary>
+    private static string DpapiDecrypt(string base64Ciphertext)
+    {
+        var encrypted = Convert.FromBase64String(base64Ciphertext);
+        var decrypted = ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser);
+        return Encoding.UTF8.GetString(decrypted);
     }
 }

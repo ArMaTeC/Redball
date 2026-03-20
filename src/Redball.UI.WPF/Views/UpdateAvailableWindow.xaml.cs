@@ -186,6 +186,12 @@ public partial class UpdateAvailableWindow : Window
             _analytics.TrackFeature("update.download_succeeded");
             DialogResult = true;
             Close();
+            if (Application.Current.MainWindow is MainWindow mw)
+            {
+                mw.ExitApplication();
+                return;
+            }
+
             Application.Current.Shutdown();
         }
         else

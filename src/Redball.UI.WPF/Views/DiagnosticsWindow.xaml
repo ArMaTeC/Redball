@@ -81,6 +81,31 @@
                     <UniformGrid Columns="2" Margin="0,0,0,16">
                         <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
                             <StackPanel>
+                                <TextBlock Text="Memory Health" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                <TextBlock x:Name="WorkingSetText" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="GcTotalText" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="GcGen0Text" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="GcGen1Text" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="GcGen2Text" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="MemoryTrendText" Margin="0,0,0,6" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
+                            <StackPanel>
+                                <TextBlock Text="Memory Samples" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                <TextBox x:Name="MemorySamplesText"
+                                         IsReadOnly="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         AcceptsReturn="True"
+                                         Height="120"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <UniformGrid Columns="2" Margin="0,0,0,16">
+                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
+                            <StackPanel>
                                 <TextBlock Text="Validation Issues" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12"/>
                                 <TextBox x:Name="ValidationIssuesText"
                                          IsReadOnly="True"

@@ -438,5 +438,93 @@ namespace Redball.Tests
             Assert.AreEqual(2, (int)NotificationMode.Errors, "Errors should be 2");
             Assert.AreEqual(3, (int)NotificationMode.Silent, "Silent should be 3");
         }
+
+        [TestMethod]
+        public void ConfigService_EncryptConfig_SavesEncryptedFile()
+        {
+            // Arrange
+            var service = ConfigService.Instance;
+            service.Config.EncryptConfig = true;
+            service.Config.HeartbeatSeconds = 42;
+            var path = Path.Combine(_tempDir, "encrypted.json");
+
+            // Act
+            service.Save(path);
+
+            // Assert — file should start with RBENC: header, not plain JSON
+            var raw = File.ReadAllText(path);
+            Assert.IsTrue(raw.StartsWith("RBENC:"), "Encrypted file should start with RBENC: header");
+            Assert.IsFalse(raw.Contains("HeartbeatSeconds"), "Encrypted file should not contain plaintext property names");
+        }
+
+        [TestMethod]
+        public void ConfigService_EncryptConfig_RoundTrip_PreservesValues()
+        {
+            // Arrange
+            var service = ConfigService.Instance;
+            service.Config.EncryptConfig = true;
+            service.Config.HeartbeatSeconds = 77;
+            service.Config.Theme = "Light";
+            service.Config.DefaultDuration = 500;
+            var path = Path.Combine(_tempDir, "roundtrip.json");
+            service.Save(path);
+
+            // Act — reset key values then reload from encrypted file
+            service.Config.HeartbeatSeconds = 59;
+            service.Config.Theme = "Dark";
+            service.Config.DefaultDuration = 60;
+            service.Load(path);
+
+            // Assert
+            Assert.AreEqual(77, service.Config.HeartbeatSeconds);
+            Assert.AreEqual("Light", service.Config.Theme);
+            Assert.AreEqual(500, service.Config.DefaultDuration);
+        }
+
+        [TestMethod]
+        public void ConfigService_PlaintextConfig_StillLoadsNormally()
+        {
+            // Arrange — save without encryption
+            var service = ConfigService.Instance;
+            service.Config.EncryptConfig = false;
+            service.Config.HeartbeatSeconds = 33;
+            var path = Path.Combine(_tempDir, "plain.json");
+            service.Save(path);
+
+            // Assert — file should be plain JSON
+            var raw = File.ReadAllText(path);
+            Assert.IsFalse(raw.StartsWith("RBENC:"), "Plaintext file should not have RBENC: header");
+            Assert.IsTrue(raw.Contains("HeartbeatSeconds"), "Plaintext file should contain property names");
+
+            // Act — reload
+            service.Config.HeartbeatSeconds = 59;
+            service.Load(path);
+
+            // Assert
+            Assert.AreEqual(33, service.Config.HeartbeatSeconds);
+        }
+
+        [TestMethod]
+        public void ConfigService_CorruptEncryptedFile_FallsBackToDefaults()
+        {
+            // Arrange — write a file with the encrypted header but garbage data
+            var path = Path.Combine(_tempDir, "corrupt_enc.json");
+            File.WriteAllText(path, "RBENC:not-valid-base64!!!");
+
+            // Act
+            var service = ConfigService.Instance;
+            service.Load(path);
+
+            // Assert — should fall back to defaults
+            var defaults = new RedballConfig();
+            Assert.AreEqual(defaults.HeartbeatSeconds, service.Config.HeartbeatSeconds);
+        }
+
+        [TestMethod]
+        public void ConfigService_EncryptConfig_DefaultIsFalse()
+        {
+            var config = new RedballConfig();
+            Assert.IsFalse(config.EncryptConfig, "EncryptConfig should default to false");
+        }
     }
 }

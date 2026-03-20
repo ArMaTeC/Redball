@@ -69,6 +69,9 @@
                         <RadioButton x:Name="UpdatesTab" Content="Updates"
                                     Style="{DynamicResource NavRadioButton}"
                                     Checked="Tab_Checked"/>
+                        <RadioButton x:Name="PrivacyTab" Content="Privacy"
+                                    Style="{DynamicResource NavRadioButton}"
+                                    Checked="Tab_Checked"/>
                         <RadioButton x:Name="AboutTab" Content="About"
                                     Style="{DynamicResource NavRadioButton}"
                                     Checked="Tab_Checked"/>
@@ -246,6 +249,25 @@
                             <TextBlock x:Name="CurrentVersionText" FontSize="12"
                                       Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                       Margin="0,16,0,0"/>
+                        </StackPanel>
+
+                        <!-- Privacy Tab -->
+                        <StackPanel x:Name="PrivacyPanel" Visibility="Collapsed">
+                            <TextBlock Text="Privacy &amp; Data" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                            <TextBlock Text="Data Encryption" FontWeight="Medium" Margin="0,0,0,8"/>
+                            <CheckBox x:Name="EncryptConfigCheck" Content="Encrypt configuration file (DPAPI)"
+                                     Style="{DynamicResource ModernCheckBox}"/>
+                            <TextBlock Text="Encrypts Redball.json using Windows DPAPI (current-user scope)."
+                                      FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
+                                      Margin="24,0,0,16"/>
+
+                            <TextBlock Text="GDPR Data Export" FontWeight="Medium" Margin="0,8,0,8"/>
+                            <TextBlock Text="Export all your data (config, analytics, logs, session state) as a ZIP file for GDPR compliance."
+                                      FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
+                                      Margin="0,0,0,8" TextWrapping="Wrap"/>
+                            <Button Content="Export All My Data" Style="{DynamicResource PrimaryButton}"
+                                   HorizontalAlignment="Left" Click="ExportAllDataButton_Click"/>
                         </StackPanel>
 
                         <!-- About Tab -->
