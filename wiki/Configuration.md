@@ -1,39 +1,63 @@
 # Configuration
 
-Settings are stored in `Redball.json` in the same directory as the script. A default file is created on first run if one doesn't exist. You can also change all settings from the **Settings** dialog in the tray menu.
+Settings are stored in `%LocalAppData%\Redball\UserData\Redball.json`. A default file is created on first run. You can change all settings from the main window's navigation sections or by editing the JSON file directly.
 
 ## Configuration File Location
 
-- **Script mode:** Same directory as `Redball.ps1`
-- **MSI installation:** `%LocalAppData%\Redball\Redball.json`
-- **Custom:** Use `-ConfigPath "C:\path\to\Redball.json"`
+- **Default:** `%LocalAppData%\Redball\UserData\Redball.json`
+- **Custom:** Use `-config "C:\path\to\Redball.json"` command-line argument
+
+Config is migrated automatically from legacy locations (install dir, old LocalAppData root, roaming AppData) on first run.
 
 ## Full Configuration Reference
 
-### General Settings
+### General & UI Settings
 
 | Setting | Type | Description | Default |
 | ------- | ---- | ----------- | ------- |
-| `HeartbeatSeconds` | int | Interval between keep-awake refreshes and F15 keypresses | `59` |
+| `HeartbeatSeconds` | int | Interval between keep-awake refreshes | `59` |
 | `PreventDisplaySleep` | bool | Keep the display on in addition to preventing system sleep | `true` |
-| `UseHeartbeatKeypress` | bool | Send invisible F15 keypresses to prevent app-level idle detection | `true` |
+| `UseHeartbeatKeypress` | bool | Send invisible keypresses to prevent app-level idle detection | `true` |
+| `HeartbeatInputMode` | string | Which function key to send (`F13`, `F14`, `F15`, `F16`) | `F15` |
 | `DefaultDuration` | int | Default timer duration in minutes | `60` |
-| `LogPath` | string | Path to log file | `Redball.log` |
-| `MaxLogSizeMB` | int | Log rotation threshold in MB | `10` |
-| `ShowBalloonOnStart` | bool | Show tray notification when Redball starts | `true` |
-| `Locale` | string | Display language (`en`, `es`, `fr`, `de`) | Auto-detected |
+| `Theme` | string | UI theme (System, Dark, Light, MidnightBlue, ForestGreen, OceanBlue, SunsetOrange, RoyalPurple, SlateGray, RoseGold, Cyberpunk, Coffee, ArcticFrost, HighContrast) | `Dark` |
+| `Locale` | string | Display language (`en`, `es`, `fr`, `de`, `bl`) | `en` |
 | `MinimizeOnStart` | bool | Start minimized to system tray | `false` |
+| `MinimizeToTray` | bool | Minimize to tray instead of taskbar | `false` |
+| `ConfirmOnExit` | bool | Show confirmation dialog when exiting | `true` |
+| `ShowNotifications` | bool | Enable tray/toast notifications | `true` |
+| `SoundNotifications` | bool | Play sound with notifications | `false` |
+| `NotificationMode` | enum | Notification filter (`All`, `Important`, `Errors`, `Silent`) | `All` |
+| `VerboseLogging` | bool | Record extra diagnostic log details | `false` |
+| `MaxLogSizeMB` | int | Log rotation threshold in MB | `10` |
 | `AutoExitOnComplete` | bool | Exit automatically when a timed session finishes | `false` |
+| `FirstRun` | bool | Whether this is the first run (triggers onboarding) | `true` |
 
-### Power & Monitoring Settings
+### Smart Features
 
 | Setting | Type | Description | Default |
 | ------- | ---- | ----------- | ------- |
 | `BatteryAware` | bool | Auto-pause when battery is low | `false` |
 | `BatteryThreshold` | int | Battery % below which to auto-pause | `20` |
 | `NetworkAware` | bool | Auto-pause when network disconnects | `false` |
-| `IdleDetection` | bool | Auto-pause after 30 min of user inactivity | `false` |
+| `IdleDetection` | bool | Auto-pause after user inactivity | `false` |
+| `IdleThreshold` | int | Minutes of inactivity before auto-pause | `30` |
 | `PresentationModeDetection` | bool | Auto-activate for PowerPoint/Teams presentations | `false` |
+| `PauseOnScreenLock` | bool | Auto-pause when the screen is locked | `false` |
+| `VpnAutoKeepAwake` | bool | Auto-activate when VPN is connected | `false` |
+| `ProcessWatcherEnabled` | bool | Auto-activate when target process is running | `false` |
+| `ProcessWatcherTarget` | string | Process name to watch (e.g. `code.exe`) | `""` |
+| `ThermalProtectionEnabled` | bool | Auto-pause when CPU temperature is too high | `false` |
+| `ThermalThreshold` | int | CPU temperature threshold (°C) | `85` |
+| `AppRulesEnabled` | bool | Enable app-specific keep-awake/pause rules | `false` |
+| `KeepAwakeApps` | string | Apps that trigger keep-awake (one per line) | `""` |
+| `PauseApps` | string | Apps that trigger a pause (one per line) | `""` |
+| `PowerPlanAutoSwitch` | bool | Auto-switch Windows power plan | `false` |
+| `WifiProfileSwitchEnabled` | bool | Switch profiles based on WiFi network | `false` |
+| `WifiProfileMappings` | string | WiFi-to-profile mappings (`WiFiName=Profile` per line) | `""` |
+| `RestartReminderEnabled` | bool | Remind to restart after N days | `false` |
+| `RestartReminderDays` | int | Days before restart reminder | `7` |
+| `AutoRestartEnabled` | bool | Auto-restart instead of just reminding | `false` |
 
 ### Schedule Settings
 
@@ -44,17 +68,17 @@ Settings are stored in `Redball.json` in the same directory as the script. A def
 | `ScheduleStopTime` | string | Time to auto-stop (HH:mm) | `18:00` |
 | `ScheduleDays` | string[] | Days of the week the schedule applies | Weekdays |
 
-### Advanced Settings
+### Pomodoro Settings
 
 | Setting | Type | Description | Default |
 | ------- | ---- | ----------- | ------- |
-| `ProcessIsolation` | bool | Run keep-awake API in a separate runspace | `false` |
-| `EnablePerformanceMetrics` | bool | Track CPU, memory, and handle metrics | `false` |
-| `EnableTelemetry` | bool | Opt-in anonymous usage telemetry (logged locally) | `false` |
-| `UpdateRepoOwner` | string | GitHub owner for update checks | `ArMaTeC` |
-| `UpdateRepoName` | string | GitHub repo for update checks | `Redball` |
-| `UpdateChannel` | string | Release channel (`stable` or `beta`) | `stable` |
-| `VerifyUpdateSignature` | bool | Require valid digital signature on updates | `false` |
+| `PomodoroEnabled` | bool | Enable the Pomodoro timer | `false` |
+| `PomodoroFocusMinutes` | int | Focus session duration | `25` |
+| `PomodoroBreakMinutes` | int | Short break duration | `5` |
+| `PomodoroLongBreakMinutes` | int | Long break duration | `15` |
+| `PomodoroLongBreakInterval` | int | Focus sessions before a long break | `4` |
+| `PomodoroAutoStart` | bool | Auto-start next session | `true` |
+| `PomodoroKeepAwakeDuringBreak` | bool | Stay awake during breaks | `false` |
 
 ### TypeThing Settings
 
@@ -72,75 +96,48 @@ Settings are stored in `Redball.json` in the same directory as the script. A def
 | `TypeThingRandomPauseMaxMs` | int | Maximum random pause duration (ms) | `500` |
 | `TypeThingTypeNewlines` | bool | Press Enter when a newline is encountered | `true` |
 | `TypeThingNotifications` | bool | Show tray notifications for typing events | `true` |
+| `TypeThingInputMode` | string | Input method (`SendInput` or `Interception`) | `SendInput` |
+| `TypeThingTtsEnabled` | bool | Enable text-to-speech while typing | `false` |
 
-## Example Configuration
+### Update Settings
 
-```json
-{
-    "HeartbeatSeconds": 59,
-    "PreventDisplaySleep": true,
-    "UseHeartbeatKeypress": true,
-    "DefaultDuration": 60,
-    "LogPath": "Redball.log",
-    "MaxLogSizeMB": 10,
-    "ShowBalloonOnStart": true,
-    "Locale": "en",
-    "MinimizeOnStart": false,
-    "BatteryAware": false,
-    "BatteryThreshold": 20,
-    "NetworkAware": false,
-    "IdleDetection": false,
-    "AutoExitOnComplete": false,
-    "ScheduleEnabled": false,
-    "ScheduleStartTime": "09:00",
-    "ScheduleStopTime": "18:00",
-    "ScheduleDays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-    "PresentationModeDetection": false,
-    "ProcessIsolation": false,
-    "EnablePerformanceMetrics": false,
-    "EnableTelemetry": false,
-    "UpdateRepoOwner": "ArMaTeC",
-    "UpdateRepoName": "Redball",
-    "UpdateChannel": "stable",
-    "VerifyUpdateSignature": false,
-    "TypeThingEnabled": true,
-    "TypeThingMinDelayMs": 30,
-    "TypeThingMaxDelayMs": 120,
-    "TypeThingStartDelaySec": 3,
-    "TypeThingStartHotkey": "Ctrl+Shift+V",
-    "TypeThingStopHotkey": "Ctrl+Shift+X",
-    "TypeThingTheme": "dark",
-    "TypeThingAddRandomPauses": true,
-    "TypeThingRandomPauseChance": 5,
-    "TypeThingRandomPauseMaxMs": 500,
-    "TypeThingTypeNewlines": true,
-    "TypeThingNotifications": true
-}
-```
+| Setting | Type | Description | Default |
+| ------- | ---- | ----------- | ------- |
+| `AutoUpdateCheckEnabled` | bool | Check for updates automatically | `true` |
+| `AutoUpdateCheckIntervalMinutes` | int | Minutes between automatic update checks | `120` |
+| `UpdateRepoOwner` | string | GitHub owner for update checks | `ArMaTeC` |
+| `UpdateRepoName` | string | GitHub repo for update checks | `Redball` |
+| `UpdateChannel` | string | Release channel (`stable` or `beta`) | `stable` |
+| `VerifyUpdateSignature` | bool | Require valid digital signature on updates | `false` |
+
+### Advanced Settings
+
+| Setting | Type | Description | Default |
+| ------- | ---- | ----------- | ------- |
+| `EnablePerformanceMetrics` | bool | Track CPU, memory, and handle metrics | `false` |
+| `EnableTelemetry` | bool | Opt-in anonymous usage telemetry (logged locally) | `false` |
+| `WebApiEnabled` | bool | Enable local REST API for remote control | `false` |
+| `WebApiPort` | int | Port for the local Web API | `48080` |
 
 ## Settings Backup & Restore
 
-Export and import all settings using PowerShell:
+Export and import settings from the main window:
 
-```powershell
-# Export settings to a backup file
-Export-RedballSettings -Path '.\Redball.backup.json'
+1. Open the main window → **Diagnostics** section
+2. Click **Export Diagnostics** to export a diagnostics report
+3. Use `ConfigService.Instance.Export("backup.json")` / `Import("backup.json")` programmatically
 
-# Import settings from a backup file
-Import-RedballSettings -Path '.\Redball.backup.json'
-```
-
-The backup includes both `$script:config` and relevant `$script:state` values, along with metadata (export timestamp, version).
+Or use the tray menu → **Settings...** to access all settings with immediate apply.
 
 ## Installer Registry Defaults
 
-When installed via the MSI, the installer can write default values to the registry at:
+When installed via the MSI, the installer writes default values to the registry at:
 
 ```text
-HKCU:\Software\Redball\InstallerDefaults
+HKCU\Software\Redball\InstallerDefaults
 ```
 
-These are read by `Import-RedballInstallerDefaults` on first run (when no saved session state exists) and include:
+These are read on first run (when no saved config exists) and include:
 
 - `BatteryAware` (DWORD 1 = enabled)
 - `NetworkAware` (DWORD 1 = enabled)

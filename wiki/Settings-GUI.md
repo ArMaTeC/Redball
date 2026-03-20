@@ -6,13 +6,13 @@ Redball provides a comprehensive settings dialog accessible from the main window
 
 Open via **Settings** in the main window navigation panel, or **Settings...** in the tray menu (or press **G**).
 
-The settings are organized into five dedicated sections:
+The settings are organized into dedicated sections accessible via the left navigation panel:
 
 ### General Tab
 
 | Control | Type | Config Key | Description |
 | ------- | ---- | ---------- | ----------- |
-| Theme | Dropdown (13 options) | `Theme` | Visual theme: System, Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost |
+| Theme | Dropdown (14 options) | `Theme` | Visual theme: System, Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost, High Contrast |
 | Minimize to tray on start | CheckBox | `MinimizeOnStart` | Start without visible window |
 | Show notifications | CheckBox | `ShowBalloonOnStart` | Tray notifications on startup and events |
 | Notification Mode | Dropdown | `NotificationMode` | All events, Important only, Errors only, or Silent |
@@ -51,11 +51,25 @@ The settings are organized into five dedicated sections:
 | Add random pauses | CheckBox | `TypeThingAddRandomPauses` | Insert natural-feeling random delays |
 | Type newlines as Enter key | CheckBox | `TypeThingTypeNewlines` | Send Enter key for line breaks |
 
+### Pomodoro Tab
+
+| Control | Type | Config Key | Description |
+| ------- | ---- | ---------- | ----------- |
+| Enable Pomodoro | CheckBox | `PomodoroEnabled` | Master switch for Pomodoro timer |
+| Focus duration (min) | Slider (1–90) | `PomodoroFocusMinutes` | Length of focus sessions |
+| Short break (min) | Slider (1–30) | `PomodoroBreakMinutes` | Length of short breaks |
+| Long break (min) | Slider (5–60) | `PomodoroLongBreakMinutes` | Length of long breaks |
+| Sessions before long break | Slider (2–8) | `PomodoroLongBreakInterval` | Focus sessions before a long break |
+| Auto-start next session | CheckBox | `PomodoroAutoStart` | Automatically start the next session |
+| Keep awake during breaks | CheckBox | `PomodoroKeepAwakeDuringBreak` | Stay awake during break periods |
+
 ### Updates Tab
 
 | Control | Type | Config Key | Description |
 | ------- | ---- | ---------- | ----------- |
-| Update Channel | Dropdown (stable/beta/disabled) | `UpdateChannel` | Release channel preference |
+| Auto-check for updates | CheckBox | `AutoUpdateCheckEnabled` | Enable background update checks |
+| Check interval (minutes) | Slider | `AutoUpdateCheckIntervalMinutes` | How often to check automatically |
+| Update Channel | Dropdown (stable/beta) | `UpdateChannel` | Release channel preference |
 | Verify update signatures | CheckBox | `VerifyUpdateSignature` | Require valid digital signature on updates |
 | Check for Updates Now | Button | — | Query update service immediately |
 | Current Version | Label | — | Display installed version |
@@ -116,7 +130,7 @@ This is a dedicated, themed dialog with grouped controls:
 
 ### Theme System
 
-The dialog supports three themes applied via `Set-TypeThingFormTheme`:
+The dialog supports three visual themes:
 
 | Theme | Background | Text | Accent | Font |
 | ----- | ---------- | ---- | ------ | ---- |
@@ -124,7 +138,7 @@ The dialog supports three themes applied via `Set-TypeThingFormTheme`:
 | `dark` | #1E1E1E | #E0E0E0 | #4FC3F7 | Segoe UI |
 | `hacker` | #0A0A0A | #00FF00 | #00FF41 | Consolas |
 
-Switching themes applies instantly via the `SelectedIndexChanged` event.
+Switching themes applies instantly.
 
 ---
 
@@ -141,19 +155,20 @@ The main Redball window features a modern custom chrome design:
 
 ### Navigation Panel
 
-Left-side navigation with nine sections:
+Left-side navigation with ten sections:
 
 | Section | Description |
 | ------- | ----------- |
 | **Home** | Overview dashboard with quick access cards |
-| **Analytics** | Session counts, usage patterns, tracked activity |
-| **Metrics** | Feature adoption and product usage metrics |
-| **Diagnostics** | Runtime state, logging paths, app health |
+| **Analytics** | Session counts, usage patterns, feature events with CSV/JSON export |
+| **Metrics** | Feature adoption rates, retention, and product usage metrics |
+| **Diagnostics** | Runtime state, logging paths, temperature, session stats, app health |
 | **Settings** | General application settings (theme, notifications, logging) |
-| **Behavior** | Keep-awake controls (display sleep, heartbeat, duration) |
-| **Smart Features** | Battery-aware, network-aware, idle detection, scheduling |
-| **TypeThing** | Typing automation hotkeys and behavior |
-| **Updates** | Update channels and version management |
+| **Behavior** | Keep-awake controls (display sleep, heartbeat key, duration) |
+| **Smart Features** | Battery, network, idle, schedule, presentation, process watcher, VPN, thermal, session lock, app rules |
+| **TypeThing** | Typing automation hotkeys, speed, and behavior |
+| **Pomodoro** | Focus/break cycle timer with configurable intervals |
+| **Updates** | Update channels, auto-check, and version management |
 
 Click any navigation item to switch the content area. All navigation items show descriptive tooltips on hover.
 

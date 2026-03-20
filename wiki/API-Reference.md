@@ -195,37 +195,99 @@ Crash detection and safe recovery.
 | `SetCrashFlag()` | void | Set crash flag for this session |
 | `ClearCrashFlag()` | void | Clear flag on clean exit |
 
-## Configuration Classes
+### PomodoroService
+
+Focus/break cycle timer.
+
+**Methods:**
+
+| Method | Returns | Description |
+| --- | --- | --- |
+| `Start()` | void | Start a Pomodoro focus session |
+| `Stop()` | void | Stop the Pomodoro timer |
+| `Skip()` | void | Skip to the next phase (focus → break or break → focus) |
+
+---
+
+### ProcessWatcherService
+
+Auto-activate when a target process is running.
+
+**Methods:**
+
+| Method | Returns | Description |
+| --- | --- | --- |
+| `CheckAndUpdate(KeepAwakeService service)` | void | Check for target process and update state |
+
+---
+
+### TemperatureMonitorService
+
+CPU thermal protection monitoring.
+
+**Methods:**
+
+| Method | Returns | Description |
+| --- | --- | --- |
+| `GetStatusText()` | string | Get current temperature status text |
+
+---
+
+### AnalyticsService
+
+Local analytics and feature tracking.
+
+**Methods:**
+
+| Method | Parameters | Returns | Description |
+| --- | --- | --- | --- |
+| `TrackFeature(string feature)` | `feature` | void | Record a feature usage event |
+| `GetSummary()` | - | AnalyticsSummary | Get analytics summary |
+| `ExportToCsv()` | - | string | Export analytics as CSV |
+| `Export()` | - | string | Export analytics as JSON |
+
+---
+
+### HealthCheckService
+
+Application self-monitoring and diagnostics.
+
+---
+
+### WebApiService
+
+Optional local REST API for remote control.
+
+**Configuration:** `WebApiEnabled` (default: false), `WebApiPort` (default: 48080)
+
+---
+
+### PluginService
+
+Plugin loading and management via `IRedballPlugin` interface.
+
+---
+
+### TextToSpeechService
+
+Text-to-speech for TypeThing feature.
+
+---
+
+## Configuration Class
 
 ### RedballConfig
 
-```csharp
-public class RedballConfig
-{
-    public int HeartbeatSeconds { get; set; } = 59;
-    public bool PreventDisplaySleep { get; set; } = true;
-    public bool UseHeartbeatKeypress { get; set; } = true;
-    public int DefaultDuration { get; set; } = 60;
-    public string LogPath { get; set; } = "Redball.log";
-    public int MaxLogSizeMB { get; set; } = 10;
-    public bool ShowBalloonOnStart { get; set; } = true;
-    public string Locale { get; set; } = "en";
-    public bool MinimizeOnStart { get; set; } = false;
-    public bool BatteryAware { get; set; } = false;
-    public int BatteryThreshold { get; set; } = 20;
-    public bool NetworkAware { get; set; } = false;
-    public bool IdleDetection { get; set; } = false;
-    public int IdleThresholdMinutes { get; set; } = 30;
-    public bool AutoExitOnComplete { get; set; } = false;
-    public bool ScheduleEnabled { get; set; } = false;
-    public string ScheduleStartTime { get; set; } = "09:00";
-    public string ScheduleStopTime { get; set; } = "18:00";
-    public List<string> ScheduleDays { get; set; } = new();
-    public bool PresentationModeDetection { get; set; } = false;
-    public bool EnableTelemetry { get; set; } = false;
-    // ... TypeThing settings
-}
-```
+The full configuration model is defined in `Models/RedballConfig.cs`. See the [Configuration](Configuration) wiki page for a complete reference of all settings.
+
+Key sections:
+
+- **General & UI** — Theme, locale, notifications, logging
+- **Smart Features** — Battery, network, idle, schedule, presentation, thermal, process watcher, VPN, session lock, app rules, power plan, WiFi profiles, restart reminders
+- **Pomodoro** — Focus/break timer settings
+- **TypeThing** — Clipboard typer settings including TTS
+- **Updates** — Auto-update check, channel, signature verification
+- **Advanced** — Telemetry, performance metrics, Web API
 
 ## Events
 

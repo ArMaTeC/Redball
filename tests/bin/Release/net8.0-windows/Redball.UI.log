@@ -1,325 +1,325 @@
 
-[2026-03-20 09:10:27] ========== Redball WPF Started ==========
-[2026-03-20 09:10:27] Version: 2.1.107.0
-[2026-03-20 09:10:27] Process ID: 13976
-[2026-03-20 09:10:27] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\
-[2026-03-20 09:10:27] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows
-[2026-03-20 09:10:27] OS: Microsoft Windows NT 10.0.26100.0
-[2026-03-20 09:10:27] .NET Version: 8.0.25
-[2026-03-20 09:10:27] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\testhost.dll --port 59205 --endpoint 127.0.0.1:059205 --role client --parentprocessid 18008 --telemetryoptedin false
-[2026-03-20 09:10:27.944] [DBG] [004] [Analytics] Tracked feature: TestFeature
-[2026-03-20 09:10:27.950] [DBG] [004] [Analytics] Tracked feature: TestFeature
-[2026-03-20 09:10:28.033] [DBG] [004] [Analytics] Tracked feature: KeepAwake
-[2026-03-20 09:10:28.033] [DBG] [004] [Analytics] Tracked feature: KeepAwake
-[2026-03-20 09:10:28.154] [DBG] [004] [Analytics] Analytics data flushed to disk
-[2026-03-20 09:10:28.294] [DBG] [004] [Analytics] Tracked feature: Test
-[2026-03-20 09:10:28.410] [VRB] [004] [ConfigService] Instance created (lazy initialization)
-[2026-03-20 09:10:28.445] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_a3933cac-2d47-4aa6-8ce0-cb39351a271c\reset_defaults.json
-[2026-03-20 09:10:28.446] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a3933cac-2d47-4aa6-8ce0-cb39351a271c\reset_defaults.json
-[2026-03-20 09:10:28.448] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a3933cac-2d47-4aa6-8ce0-cb39351a271c\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.483] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a3933cac-2d47-4aa6-8ce0-cb39351a271c\reset_defaults.json
-[2026-03-20 09:10:28.494] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.495] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.514] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 09:10:28.514] [DBG] [004] [ConfigService] Configuration validation passed
-[2026-03-20 09:10:28.541] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_d2a34d12-5eda-4481-9f4b-439f6bcb0c97\reset_defaults.json
-[2026-03-20 09:10:28.541] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_d2a34d12-5eda-4481-9f4b-439f6bcb0c97\reset_defaults.json
-[2026-03-20 09:10:28.542] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_d2a34d12-5eda-4481-9f4b-439f6bcb0c97\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.543] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_d2a34d12-5eda-4481-9f4b-439f6bcb0c97\reset_defaults.json
-[2026-03-20 09:10:28.543] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.544] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.544] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 09:10:28.545] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
-[2026-03-20 09:10:28.545] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 09:10:28.548] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_7c603d25-7030-4555-947f-aa408c441bca\reset_defaults.json
-[2026-03-20 09:10:28.549] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_7c603d25-7030-4555-947f-aa408c441bca\reset_defaults.json
-[2026-03-20 09:10:28.551] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_7c603d25-7030-4555-947f-aa408c441bca\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.551] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_7c603d25-7030-4555-947f-aa408c441bca\reset_defaults.json
-[2026-03-20 09:10:28.552] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.553] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.554] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 09:10:28.555] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (400) out of range
-[2026-03-20 09:10:28.555] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 09:10:28.558] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_074f6af6-be29-4313-a60d-0c2cfd4602d1\reset_defaults.json
-[2026-03-20 09:10:28.559] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_074f6af6-be29-4313-a60d-0c2cfd4602d1\reset_defaults.json
-[2026-03-20 09:10:28.582] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_074f6af6-be29-4313-a60d-0c2cfd4602d1\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.582] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_074f6af6-be29-4313-a60d-0c2cfd4602d1\reset_defaults.json
-[2026-03-20 09:10:28.583] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.583] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.584] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 09:10:28.585] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
-[2026-03-20 09:10:28.585] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 09:10:28.590] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_68c4d870-b775-49f9-b1ec-cf176f65bffb\reset_defaults.json
-[2026-03-20 09:10:28.590] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_68c4d870-b775-49f9-b1ec-cf176f65bffb\reset_defaults.json
-[2026-03-20 09:10:28.592] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_68c4d870-b775-49f9-b1ec-cf176f65bffb\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.593] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_68c4d870-b775-49f9-b1ec-cf176f65bffb\reset_defaults.json
-[2026-03-20 09:10:28.593] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.594] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.594] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 09:10:28.594] [WRN] [004] [ConfigService] Validation: DefaultDuration (800) out of range
-[2026-03-20 09:10:28.595] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 09:10:28.609] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_5f575bc9-ee3e-46db-9ff7-8eb73f290a0b\reset_defaults.json
-[2026-03-20 09:10:28.610] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_5f575bc9-ee3e-46db-9ff7-8eb73f290a0b\reset_defaults.json
-[2026-03-20 09:10:28.648] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_5f575bc9-ee3e-46db-9ff7-8eb73f290a0b\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.649] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_5f575bc9-ee3e-46db-9ff7-8eb73f290a0b\reset_defaults.json
-[2026-03-20 09:10:28.650] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.650] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.651] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 09:10:28.651] [WRN] [004] [ConfigService] Validation: BatteryThreshold (3) out of range
-[2026-03-20 09:10:28.652] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 09:10:28.661] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_0163acbe-e7fe-4893-9f9d-0da68ba3f876\reset_defaults.json
-[2026-03-20 09:10:28.661] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0163acbe-e7fe-4893-9f9d-0da68ba3f876\reset_defaults.json
-[2026-03-20 09:10:28.680] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0163acbe-e7fe-4893-9f9d-0da68ba3f876\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.681] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0163acbe-e7fe-4893-9f9d-0da68ba3f876\reset_defaults.json
-[2026-03-20 09:10:28.681] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.682] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.682] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 09:10:28.682] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
-[2026-03-20 09:10:28.683] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 09:10:28.686] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_651b2fdb-f45d-4a1d-a075-5c58484f16a5\reset_defaults.json
-[2026-03-20 09:10:28.686] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_651b2fdb-f45d-4a1d-a075-5c58484f16a5\reset_defaults.json
-[2026-03-20 09:10:28.690] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_651b2fdb-f45d-4a1d-a075-5c58484f16a5\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.691] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_651b2fdb-f45d-4a1d-a075-5c58484f16a5\reset_defaults.json
-[2026-03-20 09:10:28.691] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.692] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.692] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 09:10:28.693] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
-[2026-03-20 09:10:28.693] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 09:10:28.696] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_eaa24af9-85eb-4630-8b5b-94963d7895fa\reset_defaults.json
-[2026-03-20 09:10:28.696] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_eaa24af9-85eb-4630-8b5b-94963d7895fa\reset_defaults.json
-[2026-03-20 09:10:28.698] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_eaa24af9-85eb-4630-8b5b-94963d7895fa\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.698] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_eaa24af9-85eb-4630-8b5b-94963d7895fa\reset_defaults.json
-[2026-03-20 09:10:28.699] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.699] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.700] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 09:10:28.700] [WRN] [004] [ConfigService] Validation: TypeThingStartDelaySec (35) out of range
-[2026-03-20 09:10:28.701] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 09:10:28.718] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_49dcb73c-4ef4-46ac-8b29-40576bde58f3\reset_defaults.json
-[2026-03-20 09:10:28.719] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_49dcb73c-4ef4-46ac-8b29-40576bde58f3\reset_defaults.json
-[2026-03-20 09:10:28.729] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_49dcb73c-4ef4-46ac-8b29-40576bde58f3\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.730] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_49dcb73c-4ef4-46ac-8b29-40576bde58f3\reset_defaults.json
-[2026-03-20 09:10:28.731] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.731] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.732] [DBG] [004] [ConfigService] Validating configuration...
-[2026-03-20 09:10:28.732] [WRN] [004] [ConfigService] Validation: MaxLogSizeMB (0) out of range
-[2026-03-20 09:10:28.732] [WRN] [004] [ConfigService] Configuration validation found 1 errors
-[2026-03-20 09:10:28.739] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_206a2a10-6860-4da8-a5df-1629a73b6a0b\reset_defaults.json
-[2026-03-20 09:10:28.739] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_206a2a10-6860-4da8-a5df-1629a73b6a0b\reset_defaults.json
-[2026-03-20 09:10:28.741] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_206a2a10-6860-4da8-a5df-1629a73b6a0b\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.742] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_206a2a10-6860-4da8-a5df-1629a73b6a0b\reset_defaults.json
-[2026-03-20 09:10:28.742] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.743] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.744] [INF] [004] [ConfigService] Saving configuration to: C:\Users\karll\AppData\Local\Temp\redball_config_test_206a2a10-6860-4da8-a5df-1629a73b6a0b\test_config.json
-[2026-03-20 09:10:28.747] [DBG] [004] [ConfigService] Serialized config: 2520 bytes
-[2026-03-20 09:10:28.749] [INF] [004] [ConfigService] Configuration saved successfully
-[2026-03-20 09:10:28.754] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_bbd37f6b-7cfe-4ebb-9750-88d9d255c80c\reset_defaults.json
-[2026-03-20 09:10:28.754] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_bbd37f6b-7cfe-4ebb-9750-88d9d255c80c\reset_defaults.json
-[2026-03-20 09:10:28.756] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_bbd37f6b-7cfe-4ebb-9750-88d9d255c80c\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.757] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_bbd37f6b-7cfe-4ebb-9750-88d9d255c80c\reset_defaults.json
-[2026-03-20 09:10:28.757] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.758] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.759] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_bbd37f6b-7cfe-4ebb-9750-88d9d255c80c\load_test.json
-[2026-03-20 09:10:28.759] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_bbd37f6b-7cfe-4ebb-9750-88d9d255c80c\load_test.json
-[2026-03-20 09:10:28.761] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_bbd37f6b-7cfe-4ebb-9750-88d9d255c80c\load_test.json (2099 bytes)
-[2026-03-20 09:10:28.762] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_bbd37f6b-7cfe-4ebb-9750-88d9d255c80c\load_test.json
-[2026-03-20 09:10:28.762] [INF] [004] [ConfigService] Configuration ready: Heartbeat=42s, Theme=LoadTestTheme
-[2026-03-20 09:10:28.762] [DBG] [004] [ConfigService] Config details: Duration=120min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.766] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_45ace9e4-9d1f-4a1f-9db8-89f35e8614aa\reset_defaults.json
-[2026-03-20 09:10:28.766] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_45ace9e4-9d1f-4a1f-9db8-89f35e8614aa\reset_defaults.json
-[2026-03-20 09:10:28.809] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_45ace9e4-9d1f-4a1f-9db8-89f35e8614aa\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.830] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_45ace9e4-9d1f-4a1f-9db8-89f35e8614aa\reset_defaults.json
-[2026-03-20 09:10:28.830] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.831] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.832] [DBG] [004] [ConfigService] Config found at canonical location: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 09:10:28.833] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 09:10:28.834] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json (2525 bytes)
-[2026-03-20 09:10:28.834] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 09:10:28.836] [INF] [004] [ConfigService] Configuration ready: Heartbeat=42s, Theme=LoadTestTheme
-[2026-03-20 09:10:28.836] [DBG] [004] [ConfigService] Config details: Duration=120min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.842] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_03832c4e-80db-4e99-896f-4c4211253c4e\reset_defaults.json
-[2026-03-20 09:10:28.842] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_03832c4e-80db-4e99-896f-4c4211253c4e\reset_defaults.json
-[2026-03-20 09:10:28.844] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_03832c4e-80db-4e99-896f-4c4211253c4e\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.845] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_03832c4e-80db-4e99-896f-4c4211253c4e\reset_defaults.json
-[2026-03-20 09:10:28.845] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.845] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.847] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_03832c4e-80db-4e99-896f-4c4211253c4e\invalid.json
-[2026-03-20 09:10:28.847] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_03832c4e-80db-4e99-896f-4c4211253c4e\invalid.json
-[2026-03-20 09:10:28.849] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_03832c4e-80db-4e99-896f-4c4211253c4e\invalid.json (16 bytes)
-[2026-03-20 09:10:28.851] [WRN] [004] [ConfigService] Failed to load config from C:\Users\karll\AppData\Local\Temp\redball_config_test_03832c4e-80db-4e99-896f-4c4211253c4e\invalid.json: 'i' is an invalid start of a property name. Expected a '"'. Path: $ | LineNumber: 0 | BytePositionInLine: 2.
-[2026-03-20 09:10:28.857] [WRN] [004] [ConfigService] Attempting property-level recovery from: C:\Users\karll\AppData\Local\Temp\redball_config_test_03832c4e-80db-4e99-896f-4c4211253c4e\invalid.json
-[2026-03-20 09:10:28.858] [WRN] [004] [ConfigService] Property-level recovery failed for C:\Users\karll\AppData\Local\Temp\redball_config_test_03832c4e-80db-4e99-896f-4c4211253c4e\invalid.json: 'i' is an invalid start of a property name. Expected a '"'. LineNumber: 0 | BytePositionInLine: 2.
-[2026-03-20 09:10:28.859] [WRN] [004] [ConfigService] All load attempts failed, using defaults
-[2026-03-20 09:10:28.859] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.860] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.864] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_592f6da4-c9b8-42c9-b6f3-3f40ad5c850b\reset_defaults.json
-[2026-03-20 09:10:28.864] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_592f6da4-c9b8-42c9-b6f3-3f40ad5c850b\reset_defaults.json
-[2026-03-20 09:10:28.866] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_592f6da4-c9b8-42c9-b6f3-3f40ad5c850b\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.866] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_592f6da4-c9b8-42c9-b6f3-3f40ad5c850b\reset_defaults.json
-[2026-03-20 09:10:28.867] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.867] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.868] [INF] [004] [ConfigService] Exporting config to: C:\Users\karll\AppData\Local\Temp\redball_config_test_592f6da4-c9b8-42c9-b6f3-3f40ad5c850b\export.json
-[2026-03-20 09:10:28.875] [INF] [004] [ConfigService] Config exported successfully
-[2026-03-20 09:10:28.934] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_72c8dd66-8348-422a-8a95-6b5e38abd26f\reset_defaults.json
-[2026-03-20 09:10:28.937] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_72c8dd66-8348-422a-8a95-6b5e38abd26f\reset_defaults.json
-[2026-03-20 09:10:28.956] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_72c8dd66-8348-422a-8a95-6b5e38abd26f\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.957] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_72c8dd66-8348-422a-8a95-6b5e38abd26f\reset_defaults.json
-[2026-03-20 09:10:28.957] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.958] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.961] [INF] [004] [ConfigService] Importing config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_72c8dd66-8348-422a-8a95-6b5e38abd26f\import_backup.json
-[2026-03-20 09:10:28.978] [INF] [004] [ConfigService] Config imported from backup format
-[2026-03-20 09:10:28.982] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_777382c0-1a15-47a1-a426-cdbe19572d15\reset_defaults.json
-[2026-03-20 09:10:28.982] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_777382c0-1a15-47a1-a426-cdbe19572d15\reset_defaults.json
-[2026-03-20 09:10:28.984] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_777382c0-1a15-47a1-a426-cdbe19572d15\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.985] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_777382c0-1a15-47a1-a426-cdbe19572d15\reset_defaults.json
-[2026-03-20 09:10:28.985] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.986] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.987] [INF] [004] [ConfigService] Importing config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_777382c0-1a15-47a1-a426-cdbe19572d15\import_plain.json
-[2026-03-20 09:10:28.990] [INF] [004] [ConfigService] Config imported from plain format
-[2026-03-20 09:10:28.993] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_0524a445-7fb5-4477-aa98-29ff1eb3541a\reset_defaults.json
-[2026-03-20 09:10:28.993] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0524a445-7fb5-4477-aa98-29ff1eb3541a\reset_defaults.json
-[2026-03-20 09:10:28.995] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0524a445-7fb5-4477-aa98-29ff1eb3541a\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:28.996] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0524a445-7fb5-4477-aa98-29ff1eb3541a\reset_defaults.json
-[2026-03-20 09:10:28.996] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:28.996] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:28.997] [INF] [004] [ConfigService] Importing config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0524a445-7fb5-4477-aa98-29ff1eb3541a\does_not_exist.json
-[2026-03-20 09:10:28.997] [WRN] [004] [ConfigService] Import file not found
-[2026-03-20 09:10:29.002] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_d786bb9b-823e-45ea-b89c-8b87271d6c5b\reset_defaults.json
-[2026-03-20 09:10:29.002] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_d786bb9b-823e-45ea-b89c-8b87271d6c5b\reset_defaults.json
-[2026-03-20 09:10:29.006] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_d786bb9b-823e-45ea-b89c-8b87271d6c5b\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:29.006] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_d786bb9b-823e-45ea-b89c-8b87271d6c5b\reset_defaults.json
-[2026-03-20 09:10:29.007] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:29.056] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:29.057] [DBG] [004] [ConfigService] Config found at canonical location: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 09:10:29.057] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 09:10:29.058] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json (2525 bytes)
-[2026-03-20 09:10:29.059] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 09:10:29.059] [INF] [004] [ConfigService] Configuration ready: Heartbeat=42s, Theme=LoadTestTheme
-[2026-03-20 09:10:29.060] [DBG] [004] [ConfigService] Config details: Duration=120min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:29.060] [INF] [004] [ConfigService] Saving configuration to: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
-[2026-03-20 09:10:29.061] [DBG] [004] [ConfigService] Serialized config: 2525 bytes
-[2026-03-20 09:10:29.063] [DBG] [004] [ConfigService] Backup created before save
-[2026-03-20 09:10:29.065] [INF] [004] [ConfigService] Configuration saved successfully
-[2026-03-20 09:10:29.071] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_156d24f2-35b2-403c-9125-969435570bfb\reset_defaults.json
-[2026-03-20 09:10:29.071] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_156d24f2-35b2-403c-9125-969435570bfb\reset_defaults.json
-[2026-03-20 09:10:29.073] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_156d24f2-35b2-403c-9125-969435570bfb\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:29.074] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_156d24f2-35b2-403c-9125-969435570bfb\reset_defaults.json
-[2026-03-20 09:10:29.075] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:29.075] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:29.078] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_c9fefc8f-73a4-4964-bf84-26fb2c2a6f71\reset_defaults.json
-[2026-03-20 09:10:29.078] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_c9fefc8f-73a4-4964-bf84-26fb2c2a6f71\reset_defaults.json
-[2026-03-20 09:10:29.080] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_c9fefc8f-73a4-4964-bf84-26fb2c2a6f71\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:29.081] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_c9fefc8f-73a4-4964-bf84-26fb2c2a6f71\reset_defaults.json
-[2026-03-20 09:10:29.081] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:29.081] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:29.087] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_121b9881-518a-4cef-b3bb-bf38e8732df5\reset_defaults.json
-[2026-03-20 09:10:29.087] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_121b9881-518a-4cef-b3bb-bf38e8732df5\reset_defaults.json
-[2026-03-20 09:10:29.089] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_121b9881-518a-4cef-b3bb-bf38e8732df5\reset_defaults.json (2089 bytes)
-[2026-03-20 09:10:29.090] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_121b9881-518a-4cef-b3bb-bf38e8732df5\reset_defaults.json
-[2026-03-20 09:10:29.090] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
-[2026-03-20 09:10:29.091] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
-[2026-03-20 09:10:29.126] [DBG] [004] [CrashRecovery] Crash flag set
-[2026-03-20 09:10:29.127] [DBG] [004] [CrashRecovery] Crash flag cleared
-[2026-03-20 09:10:29.128] [DBG] [004] [CrashRecovery] Crash flag set
-[2026-03-20 09:10:29.129] [DBG] [004] [CrashRecovery] Crash flag cleared
-[2026-03-20 09:10:29.130] [DBG] [004] [CrashRecovery] Crash flag set
-[2026-03-20 09:10:29.131] [DBG] [004] [CrashRecovery] Crash flag cleared
-[2026-03-20 09:10:29.133] [DBG] [004] [CrashRecovery] Crash flag set
-[2026-03-20 09:10:29.133] [WRN] [004] [CrashRecovery] Previous abnormal termination detected. Resetting to safe defaults.
-[2026-03-20 09:10:29.134] [DBG] [004] [CrashRecovery] Crash flag set
-[2026-03-20 09:10:30.302] [VRB] [004] [HotkeyService] Parsing hotkey: 'A'
-[2026-03-20 09:10:30.306] [DBG] [004] [HotkeyService] Parsed 'A' -> modifiers=0x0, vk=0x41
-[2026-03-20 09:10:30.316] [VRB] [004] [HotkeyService] Parsing hotkey: 'Ctrl+A'
-[2026-03-20 09:10:30.316] [DBG] [004] [HotkeyService] Parsed 'Ctrl+A' -> modifiers=0x2, vk=0x41
-[2026-03-20 09:10:30.317] [VRB] [004] [HotkeyService] Parsing hotkey: 'Alt+F1'
-[2026-03-20 09:10:30.318] [DBG] [004] [HotkeyService] Parsed 'Alt+F1' -> modifiers=0x1, vk=0x70
-[2026-03-20 09:10:30.319] [VRB] [004] [HotkeyService] Parsing hotkey: 'Ctrl+Shift+V'
-[2026-03-20 09:10:30.319] [DBG] [004] [HotkeyService] Parsed 'Ctrl+Shift+V' -> modifiers=0x6, vk=0x56
-[2026-03-20 09:10:30.321] [VRB] [004] [HotkeyService] Parsing hotkey: 'F12'
-[2026-03-20 09:10:30.321] [DBG] [004] [HotkeyService] Parsed 'F12' -> modifiers=0x0, vk=0x7B
-[2026-03-20 09:10:30.322] [VRB] [004] [HotkeyService] Parsing hotkey: ''
-[2026-03-20 09:10:30.323] [DBG] [004] [HotkeyService] Parsed '' -> modifiers=0x0, vk=0x0
-[2026-03-20 09:10:30.325] [VRB] [004] [HotkeyService] Parsing hotkey: '@#$'
-[2026-03-20 09:10:30.325] [WRN] [004] [HotkeyService] Unknown key '@#$', returning 0
-[2026-03-20 09:10:30.326] [DBG] [004] [HotkeyService] Parsed '@#$' -> modifiers=0x0, vk=0x0
-[2026-03-20 09:10:30.328] [VRB] [004] [HotkeyService] Parsing hotkey: 'TAB'
-[2026-03-20 09:10:30.328] [DBG] [004] [HotkeyService] Parsed 'TAB' -> modifiers=0x0, vk=0x9
-[2026-03-20 09:10:30.329] [VRB] [004] [HotkeyService] Parsing hotkey: 'SPACE'
-[2026-03-20 09:10:30.329] [DBG] [004] [HotkeyService] Parsed 'SPACE' -> modifiers=0x0, vk=0x20
-[2026-03-20 09:10:30.330] [VRB] [004] [HotkeyService] Parsing hotkey: 'UP'
-[2026-03-20 09:10:30.330] [DBG] [004] [HotkeyService] Parsed 'UP' -> modifiers=0x0, vk=0x26
-[2026-03-20 09:10:30.330] [VRB] [004] [HotkeyService] Parsing hotkey: 'DOWN'
-[2026-03-20 09:10:30.331] [DBG] [004] [HotkeyService] Parsed 'DOWN' -> modifiers=0x0, vk=0x28
-[2026-03-20 09:10:30.331] [VRB] [004] [HotkeyService] Parsing hotkey: 'LEFT'
-[2026-03-20 09:10:30.331] [DBG] [004] [HotkeyService] Parsed 'LEFT' -> modifiers=0x0, vk=0x25
-[2026-03-20 09:10:30.332] [VRB] [004] [HotkeyService] Parsing hotkey: 'RIGHT'
-[2026-03-20 09:10:30.332] [DBG] [004] [HotkeyService] Parsed 'RIGHT' -> modifiers=0x0, vk=0x27
-[2026-03-20 09:10:30.332] [VRB] [004] [HotkeyService] Parsing hotkey: 'HOME'
-[2026-03-20 09:10:30.333] [DBG] [004] [HotkeyService] Parsed 'HOME' -> modifiers=0x0, vk=0x24
-[2026-03-20 09:10:30.333] [VRB] [004] [HotkeyService] Parsing hotkey: 'END'
-[2026-03-20 09:10:30.333] [DBG] [004] [HotkeyService] Parsed 'END' -> modifiers=0x0, vk=0x23
-[2026-03-20 09:10:30.334] [VRB] [004] [HotkeyService] Parsing hotkey: 'INSERT'
-[2026-03-20 09:10:30.334] [DBG] [004] [HotkeyService] Parsed 'INSERT' -> modifiers=0x0, vk=0x2D
-[2026-03-20 09:10:30.334] [VRB] [004] [HotkeyService] Parsing hotkey: 'DELETE'
-[2026-03-20 09:10:30.335] [DBG] [004] [HotkeyService] Parsed 'DELETE' -> modifiers=0x0, vk=0x2E
-[2026-03-20 09:10:30.335] [VRB] [004] [HotkeyService] Parsing hotkey: 'DEL'
-[2026-03-20 09:10:30.335] [DBG] [004] [HotkeyService] Parsed 'DEL' -> modifiers=0x0, vk=0x2E
-[2026-03-20 09:10:30.335] [VRB] [004] [HotkeyService] Parsing hotkey: 'PAGEUP'
-[2026-03-20 09:10:30.336] [DBG] [004] [HotkeyService] Parsed 'PAGEUP' -> modifiers=0x0, vk=0x21
-[2026-03-20 09:10:30.336] [VRB] [004] [HotkeyService] Parsing hotkey: 'PAGEDOWN'
-[2026-03-20 09:10:30.337] [DBG] [004] [HotkeyService] Parsed 'PAGEDOWN' -> modifiers=0x0, vk=0x22
-[2026-03-20 09:10:30.338] [VRB] [004] [HotkeyService] Parsing hotkey: 'PAUSE'
-[2026-03-20 09:10:30.339] [DBG] [004] [HotkeyService] Parsed 'PAUSE' -> modifiers=0x0, vk=0x13
-[2026-03-20 09:10:30.339] [VRB] [004] [HotkeyService] Parsing hotkey: 'BREAK'
-[2026-03-20 09:10:30.340] [DBG] [004] [HotkeyService] Parsed 'BREAK' -> modifiers=0x0, vk=0x13
-[2026-03-20 09:10:30.341] [VRB] [004] [HotkeyService] Parsing hotkey: 'Ctrl+Alt+Shift+Win+X'
-[2026-03-20 09:10:30.341] [DBG] [004] [HotkeyService] Parsed 'Ctrl+Alt+Shift+Win+X' -> modifiers=0xF, vk=0x58
-[2026-03-20 09:10:30.342] [VRB] [004] [HotkeyService] Parsing hotkey: 'ctrl+SHIFT+v'
-[2026-03-20 09:10:30.343] [DBG] [004] [HotkeyService] Parsed 'ctrl+SHIFT+v' -> modifiers=0x6, vk=0x56
-[2026-03-20 09:10:30.351] [VRB] [004] [KeepAwakeService] Instance created
-[2026-03-20 09:10:30.354] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 09:10:30.355] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 09:10:30.356] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 09:10:30.357] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 09:10:30.357] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 09:10:30.358] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 09:10:30.362] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 09:10:30.363] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 09:10:30.363] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 09:10:30.364] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 09:10:30.364] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 09:10:30.365] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 09:10:30.370] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: False
-[2026-03-20 09:10:30.371] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: True
-[2026-03-20 09:10:30.373] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: False
-[2026-03-20 09:10:30.375] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=20/03/2026 09:40:30
-[2026-03-20 09:10:30.376] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 09:10:30.377] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 09:10:30.407] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 09:10:30.408] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 09:10:30.409] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 09:10:30.409] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 09:10:30.410] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 09:10:30.411] [WRN] [004] [KeepAwakeService] Invalid timed duration: 0
-[2026-03-20 09:10:30.411] [WRN] [004] [KeepAwakeService] Invalid timed duration: 800
-[2026-03-20 09:10:30.413] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 09:10:30.414] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 09:10:30.414] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 09:10:30.415] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 09:10:30.415] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 09:10:30.415] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 09:10:30.416] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 09:10:30.417] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 09:10:30.417] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 09:10:30.417] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 09:10:30.418] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 09:10:30.419] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 09:10:30.419] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 09:10:30.420] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 09:10:30.423] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 09:10:30.424] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 09:10:30.424] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 09:10:30.427] [VRB] [004] [LocalizationService] Instance created
-[2026-03-20 09:10:30.429] [INF] [004] [LocalizationService] Locale set to: es
-[2026-03-20 09:10:30.430] [INF] [004] [LocalizationService] Locale set to: en
-[2026-03-20 09:10:30.430] [WRN] [004] [LocalizationService] Unknown locale 'invalid_locale', keeping 'en'
-[2026-03-20 09:10:30.432] [INF] [004] [LocalizationService] Locale set to: bl
+[2026-03-20 09:49:57] ========== Redball WPF Started ==========
+[2026-03-20 09:49:57] Version: 2.1.109.0
+[2026-03-20 09:49:57] Process ID: 16064
+[2026-03-20 09:49:57] Base Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\
+[2026-03-20 09:49:57] Current Directory: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows
+[2026-03-20 09:49:57] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-20 09:49:57] .NET Version: 8.0.25
+[2026-03-20 09:49:57] Command Line: C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\testhost.dll --port 59915 --endpoint 127.0.0.1:059915 --role client --parentprocessid 11468 --telemetryoptedin false
+[2026-03-20 09:49:57.586] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-20 09:49:57.592] [DBG] [004] [Analytics] Tracked feature: TestFeature
+[2026-03-20 09:49:57.655] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-20 09:49:57.656] [DBG] [004] [Analytics] Tracked feature: KeepAwake
+[2026-03-20 09:49:57.750] [DBG] [004] [Analytics] Analytics data flushed to disk
+[2026-03-20 09:49:57.794] [DBG] [004] [Analytics] Tracked feature: Test
+[2026-03-20 09:49:57.899] [VRB] [004] [ConfigService] Instance created (lazy initialization)
+[2026-03-20 09:49:57.901] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_65dc34cc-8cb7-4022-b7ea-11bc6d01d581\reset_defaults.json
+[2026-03-20 09:49:57.902] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_65dc34cc-8cb7-4022-b7ea-11bc6d01d581\reset_defaults.json
+[2026-03-20 09:49:57.907] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_65dc34cc-8cb7-4022-b7ea-11bc6d01d581\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:57.954] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_65dc34cc-8cb7-4022-b7ea-11bc6d01d581\reset_defaults.json
+[2026-03-20 09:49:57.967] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:57.968] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:57.969] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-20 09:49:57.970] [DBG] [004] [ConfigService] Configuration validation passed
+[2026-03-20 09:49:57.973] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_05ec1678-099f-41ee-adb2-365e88da3f72\reset_defaults.json
+[2026-03-20 09:49:57.974] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_05ec1678-099f-41ee-adb2-365e88da3f72\reset_defaults.json
+[2026-03-20 09:49:57.975] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_05ec1678-099f-41ee-adb2-365e88da3f72\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:57.976] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_05ec1678-099f-41ee-adb2-365e88da3f72\reset_defaults.json
+[2026-03-20 09:49:57.977] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:57.978] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:57.978] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-20 09:49:57.979] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (5) out of range
+[2026-03-20 09:49:57.979] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-20 09:49:57.982] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_ffd0044d-9583-41b3-b1d7-3f7d535e7056\reset_defaults.json
+[2026-03-20 09:49:57.983] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_ffd0044d-9583-41b3-b1d7-3f7d535e7056\reset_defaults.json
+[2026-03-20 09:49:57.984] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_ffd0044d-9583-41b3-b1d7-3f7d535e7056\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:57.985] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_ffd0044d-9583-41b3-b1d7-3f7d535e7056\reset_defaults.json
+[2026-03-20 09:49:57.985] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:57.986] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:57.986] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-20 09:49:57.991] [WRN] [004] [ConfigService] Validation: HeartbeatSeconds (400) out of range
+[2026-03-20 09:49:57.992] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-20 09:49:57.995] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_3b0ff1e9-3c29-4e1e-8cdc-1abade70dcbc\reset_defaults.json
+[2026-03-20 09:49:57.996] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_3b0ff1e9-3c29-4e1e-8cdc-1abade70dcbc\reset_defaults.json
+[2026-03-20 09:49:57.997] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_3b0ff1e9-3c29-4e1e-8cdc-1abade70dcbc\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:57.998] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_3b0ff1e9-3c29-4e1e-8cdc-1abade70dcbc\reset_defaults.json
+[2026-03-20 09:49:57.998] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:57.999] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:57.999] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-20 09:49:58.000] [WRN] [004] [ConfigService] Validation: DefaultDuration (0) out of range
+[2026-03-20 09:49:58.000] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-20 09:49:58.002] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_7b74835d-9eb4-45d5-be19-1d07fcf5a760\reset_defaults.json
+[2026-03-20 09:49:58.003] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_7b74835d-9eb4-45d5-be19-1d07fcf5a760\reset_defaults.json
+[2026-03-20 09:49:58.004] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_7b74835d-9eb4-45d5-be19-1d07fcf5a760\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.005] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_7b74835d-9eb4-45d5-be19-1d07fcf5a760\reset_defaults.json
+[2026-03-20 09:49:58.005] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.006] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.006] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-20 09:49:58.007] [WRN] [004] [ConfigService] Validation: DefaultDuration (800) out of range
+[2026-03-20 09:49:58.007] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-20 09:49:58.011] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_a6d2cf05-26d6-4dbd-a9f3-fc38a679dae7\reset_defaults.json
+[2026-03-20 09:49:58.011] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a6d2cf05-26d6-4dbd-a9f3-fc38a679dae7\reset_defaults.json
+[2026-03-20 09:49:58.013] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a6d2cf05-26d6-4dbd-a9f3-fc38a679dae7\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.013] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a6d2cf05-26d6-4dbd-a9f3-fc38a679dae7\reset_defaults.json
+[2026-03-20 09:49:58.014] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.014] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.015] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-20 09:49:58.015] [WRN] [004] [ConfigService] Validation: BatteryThreshold (3) out of range
+[2026-03-20 09:49:58.016] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-20 09:49:58.018] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_169232b6-0d0f-485b-828a-47a204bde2a0\reset_defaults.json
+[2026-03-20 09:49:58.018] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_169232b6-0d0f-485b-828a-47a204bde2a0\reset_defaults.json
+[2026-03-20 09:49:58.020] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_169232b6-0d0f-485b-828a-47a204bde2a0\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.021] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_169232b6-0d0f-485b-828a-47a204bde2a0\reset_defaults.json
+[2026-03-20 09:49:58.021] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.021] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.022] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-20 09:49:58.022] [WRN] [004] [ConfigService] Validation: BatteryThreshold (100) out of range
+[2026-03-20 09:49:58.022] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-20 09:49:58.025] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_411d589a-1f6d-4501-ac8b-16859d76b5e1\reset_defaults.json
+[2026-03-20 09:49:58.025] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_411d589a-1f6d-4501-ac8b-16859d76b5e1\reset_defaults.json
+[2026-03-20 09:49:58.027] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_411d589a-1f6d-4501-ac8b-16859d76b5e1\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.028] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_411d589a-1f6d-4501-ac8b-16859d76b5e1\reset_defaults.json
+[2026-03-20 09:49:58.029] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.029] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.030] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-20 09:49:58.030] [WRN] [004] [ConfigService] Validation: TypeThing delays invalid (100 >= 50)
+[2026-03-20 09:49:58.031] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-20 09:49:58.037] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_d430e1be-0849-42ab-bbec-ca1b4157fe5f\reset_defaults.json
+[2026-03-20 09:49:58.037] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_d430e1be-0849-42ab-bbec-ca1b4157fe5f\reset_defaults.json
+[2026-03-20 09:49:58.039] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_d430e1be-0849-42ab-bbec-ca1b4157fe5f\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.040] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_d430e1be-0849-42ab-bbec-ca1b4157fe5f\reset_defaults.json
+[2026-03-20 09:49:58.040] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.040] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.041] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-20 09:49:58.041] [WRN] [004] [ConfigService] Validation: TypeThingStartDelaySec (35) out of range
+[2026-03-20 09:49:58.041] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-20 09:49:58.046] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_3a4cdc43-b726-47bd-a4a6-87058bfb9fb8\reset_defaults.json
+[2026-03-20 09:49:58.046] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_3a4cdc43-b726-47bd-a4a6-87058bfb9fb8\reset_defaults.json
+[2026-03-20 09:49:58.048] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_3a4cdc43-b726-47bd-a4a6-87058bfb9fb8\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.049] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_3a4cdc43-b726-47bd-a4a6-87058bfb9fb8\reset_defaults.json
+[2026-03-20 09:49:58.049] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.049] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.050] [DBG] [004] [ConfigService] Validating configuration...
+[2026-03-20 09:49:58.050] [WRN] [004] [ConfigService] Validation: MaxLogSizeMB (0) out of range
+[2026-03-20 09:49:58.051] [WRN] [004] [ConfigService] Configuration validation found 1 errors
+[2026-03-20 09:49:58.053] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_baf496ce-86f7-4673-b2b3-717d770d0f25\reset_defaults.json
+[2026-03-20 09:49:58.054] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_baf496ce-86f7-4673-b2b3-717d770d0f25\reset_defaults.json
+[2026-03-20 09:49:58.055] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_baf496ce-86f7-4673-b2b3-717d770d0f25\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.056] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_baf496ce-86f7-4673-b2b3-717d770d0f25\reset_defaults.json
+[2026-03-20 09:49:58.056] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.057] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.058] [INF] [004] [ConfigService] Saving configuration to: C:\Users\karll\AppData\Local\Temp\redball_config_test_baf496ce-86f7-4673-b2b3-717d770d0f25\test_config.json
+[2026-03-20 09:49:58.062] [DBG] [004] [ConfigService] Serialized config: 2569 bytes
+[2026-03-20 09:49:58.064] [INF] [004] [ConfigService] Configuration saved successfully
+[2026-03-20 09:49:58.068] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_73325bc0-a0f6-4311-9a1c-0361cc6a3501\reset_defaults.json
+[2026-03-20 09:49:58.068] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_73325bc0-a0f6-4311-9a1c-0361cc6a3501\reset_defaults.json
+[2026-03-20 09:49:58.070] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_73325bc0-a0f6-4311-9a1c-0361cc6a3501\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.071] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_73325bc0-a0f6-4311-9a1c-0361cc6a3501\reset_defaults.json
+[2026-03-20 09:49:58.071] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.072] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.082] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_73325bc0-a0f6-4311-9a1c-0361cc6a3501\load_test.json
+[2026-03-20 09:49:58.083] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_73325bc0-a0f6-4311-9a1c-0361cc6a3501\load_test.json
+[2026-03-20 09:49:58.097] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_73325bc0-a0f6-4311-9a1c-0361cc6a3501\load_test.json (2138 bytes)
+[2026-03-20 09:49:58.098] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_73325bc0-a0f6-4311-9a1c-0361cc6a3501\load_test.json
+[2026-03-20 09:49:58.098] [INF] [004] [ConfigService] Configuration ready: Heartbeat=42s, Theme=LoadTestTheme
+[2026-03-20 09:49:58.098] [DBG] [004] [ConfigService] Config details: Duration=120min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.103] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_2b26367e-8bdd-4211-9b1e-820f9c111b8f\reset_defaults.json
+[2026-03-20 09:49:58.104] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_2b26367e-8bdd-4211-9b1e-820f9c111b8f\reset_defaults.json
+[2026-03-20 09:49:58.112] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_2b26367e-8bdd-4211-9b1e-820f9c111b8f\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.113] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_2b26367e-8bdd-4211-9b1e-820f9c111b8f\reset_defaults.json
+[2026-03-20 09:49:58.113] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.114] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.114] [DBG] [004] [ConfigService] Config found at canonical location: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
+[2026-03-20 09:49:58.115] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
+[2026-03-20 09:49:58.115] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json (2574 bytes)
+[2026-03-20 09:49:58.117] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
+[2026-03-20 09:49:58.117] [INF] [004] [ConfigService] Configuration ready: Heartbeat=42s, Theme=LoadTestTheme
+[2026-03-20 09:49:58.118] [DBG] [004] [ConfigService] Config details: Duration=120min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.121] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_0ad5d0a5-abde-4947-b6a9-593cfc6ac021\reset_defaults.json
+[2026-03-20 09:49:58.121] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0ad5d0a5-abde-4947-b6a9-593cfc6ac021\reset_defaults.json
+[2026-03-20 09:49:58.122] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0ad5d0a5-abde-4947-b6a9-593cfc6ac021\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.123] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0ad5d0a5-abde-4947-b6a9-593cfc6ac021\reset_defaults.json
+[2026-03-20 09:49:58.123] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.124] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.125] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_0ad5d0a5-abde-4947-b6a9-593cfc6ac021\invalid.json
+[2026-03-20 09:49:58.125] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0ad5d0a5-abde-4947-b6a9-593cfc6ac021\invalid.json
+[2026-03-20 09:49:58.128] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0ad5d0a5-abde-4947-b6a9-593cfc6ac021\invalid.json (16 bytes)
+[2026-03-20 09:49:58.130] [WRN] [004] [ConfigService] Failed to load config from C:\Users\karll\AppData\Local\Temp\redball_config_test_0ad5d0a5-abde-4947-b6a9-593cfc6ac021\invalid.json: 'i' is an invalid start of a property name. Expected a '"'. Path: $ | LineNumber: 0 | BytePositionInLine: 2.
+[2026-03-20 09:49:58.132] [WRN] [004] [ConfigService] Attempting property-level recovery from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0ad5d0a5-abde-4947-b6a9-593cfc6ac021\invalid.json
+[2026-03-20 09:49:58.133] [WRN] [004] [ConfigService] Property-level recovery failed for C:\Users\karll\AppData\Local\Temp\redball_config_test_0ad5d0a5-abde-4947-b6a9-593cfc6ac021\invalid.json: 'i' is an invalid start of a property name. Expected a '"'. LineNumber: 0 | BytePositionInLine: 2.
+[2026-03-20 09:49:58.133] [WRN] [004] [ConfigService] All load attempts failed, using defaults
+[2026-03-20 09:49:58.134] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.134] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.137] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_dd5718e0-63f4-464a-a223-494f8d1afd5a\reset_defaults.json
+[2026-03-20 09:49:58.137] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_dd5718e0-63f4-464a-a223-494f8d1afd5a\reset_defaults.json
+[2026-03-20 09:49:58.139] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_dd5718e0-63f4-464a-a223-494f8d1afd5a\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.139] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_dd5718e0-63f4-464a-a223-494f8d1afd5a\reset_defaults.json
+[2026-03-20 09:49:58.140] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.140] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.141] [INF] [004] [ConfigService] Exporting config to: C:\Users\karll\AppData\Local\Temp\redball_config_test_dd5718e0-63f4-464a-a223-494f8d1afd5a\export.json
+[2026-03-20 09:49:58.150] [INF] [004] [ConfigService] Config exported successfully
+[2026-03-20 09:49:58.167] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_510825c1-7fd1-4921-94bd-ea2272cd2eda\reset_defaults.json
+[2026-03-20 09:49:58.167] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_510825c1-7fd1-4921-94bd-ea2272cd2eda\reset_defaults.json
+[2026-03-20 09:49:58.169] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_510825c1-7fd1-4921-94bd-ea2272cd2eda\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.170] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_510825c1-7fd1-4921-94bd-ea2272cd2eda\reset_defaults.json
+[2026-03-20 09:49:58.170] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.170] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.174] [INF] [004] [ConfigService] Importing config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_510825c1-7fd1-4921-94bd-ea2272cd2eda\import_backup.json
+[2026-03-20 09:49:58.188] [INF] [004] [ConfigService] Config imported from backup format
+[2026-03-20 09:49:58.192] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_99bbf83b-f366-4dc3-b7d2-50ac7a498025\reset_defaults.json
+[2026-03-20 09:49:58.192] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_99bbf83b-f366-4dc3-b7d2-50ac7a498025\reset_defaults.json
+[2026-03-20 09:49:58.195] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_99bbf83b-f366-4dc3-b7d2-50ac7a498025\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.196] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_99bbf83b-f366-4dc3-b7d2-50ac7a498025\reset_defaults.json
+[2026-03-20 09:49:58.196] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.197] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.198] [INF] [004] [ConfigService] Importing config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_99bbf83b-f366-4dc3-b7d2-50ac7a498025\import_plain.json
+[2026-03-20 09:49:58.200] [INF] [004] [ConfigService] Config imported from plain format
+[2026-03-20 09:49:58.205] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_6a4a0123-8d8e-4e32-96bc-f70fcf11b45c\reset_defaults.json
+[2026-03-20 09:49:58.206] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_6a4a0123-8d8e-4e32-96bc-f70fcf11b45c\reset_defaults.json
+[2026-03-20 09:49:58.207] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_6a4a0123-8d8e-4e32-96bc-f70fcf11b45c\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.208] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_6a4a0123-8d8e-4e32-96bc-f70fcf11b45c\reset_defaults.json
+[2026-03-20 09:49:58.208] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.209] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.210] [INF] [004] [ConfigService] Importing config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_6a4a0123-8d8e-4e32-96bc-f70fcf11b45c\does_not_exist.json
+[2026-03-20 09:49:58.211] [WRN] [004] [ConfigService] Import file not found
+[2026-03-20 09:49:58.215] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_3461e5c6-e30c-496e-a9f5-3e6e972a338e\reset_defaults.json
+[2026-03-20 09:49:58.217] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_3461e5c6-e30c-496e-a9f5-3e6e972a338e\reset_defaults.json
+[2026-03-20 09:49:58.221] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_3461e5c6-e30c-496e-a9f5-3e6e972a338e\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.221] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_3461e5c6-e30c-496e-a9f5-3e6e972a338e\reset_defaults.json
+[2026-03-20 09:49:58.222] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.222] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.223] [DBG] [004] [ConfigService] Config found at canonical location: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
+[2026-03-20 09:49:58.223] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
+[2026-03-20 09:49:58.223] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json (2574 bytes)
+[2026-03-20 09:49:58.224] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
+[2026-03-20 09:49:58.224] [INF] [004] [ConfigService] Configuration ready: Heartbeat=42s, Theme=LoadTestTheme
+[2026-03-20 09:49:58.225] [DBG] [004] [ConfigService] Config details: Duration=120min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.225] [INF] [004] [ConfigService] Saving configuration to: C:\Users\karll\AppData\Local\Redball\UserData\Redball.json
+[2026-03-20 09:49:58.225] [DBG] [004] [ConfigService] Serialized config: 2574 bytes
+[2026-03-20 09:49:58.228] [DBG] [004] [ConfigService] Backup created before save
+[2026-03-20 09:49:58.230] [INF] [004] [ConfigService] Configuration saved successfully
+[2026-03-20 09:49:58.233] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_f61bfb68-50ad-4b4a-bb33-2f08599fd854\reset_defaults.json
+[2026-03-20 09:49:58.233] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_f61bfb68-50ad-4b4a-bb33-2f08599fd854\reset_defaults.json
+[2026-03-20 09:49:58.235] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_f61bfb68-50ad-4b4a-bb33-2f08599fd854\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.236] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_f61bfb68-50ad-4b4a-bb33-2f08599fd854\reset_defaults.json
+[2026-03-20 09:49:58.236] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.237] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.240] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_0da0291f-2da7-4d0e-ac3d-dc1266c06826\reset_defaults.json
+[2026-03-20 09:49:58.240] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0da0291f-2da7-4d0e-ac3d-dc1266c06826\reset_defaults.json
+[2026-03-20 09:49:58.242] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0da0291f-2da7-4d0e-ac3d-dc1266c06826\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.242] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_0da0291f-2da7-4d0e-ac3d-dc1266c06826\reset_defaults.json
+[2026-03-20 09:49:58.244] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.245] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.251] [DBG] [004] [ConfigService] Using explicit config path: C:\Users\karll\AppData\Local\Temp\redball_config_test_a96d4555-fa22-40d2-aff3-150a637f39d3\reset_defaults.json
+[2026-03-20 09:49:58.251] [INF] [004] [ConfigService] Loading configuration from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a96d4555-fa22-40d2-aff3-150a637f39d3\reset_defaults.json
+[2026-03-20 09:49:58.253] [DBG] [004] [ConfigService] Attempting to load config from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a96d4555-fa22-40d2-aff3-150a637f39d3\reset_defaults.json (2128 bytes)
+[2026-03-20 09:49:58.253] [INF] [004] [ConfigService] Config loaded successfully from: C:\Users\karll\AppData\Local\Temp\redball_config_test_a96d4555-fa22-40d2-aff3-150a637f39d3\reset_defaults.json
+[2026-03-20 09:49:58.254] [INF] [004] [ConfigService] Configuration ready: Heartbeat=59s, Theme=Dark
+[2026-03-20 09:49:58.254] [DBG] [004] [ConfigService] Config details: Duration=60min, BatteryAware=False, NetworkAware=False
+[2026-03-20 09:49:58.264] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-20 09:49:58.265] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-20 09:49:58.270] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-20 09:49:58.270] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-20 09:49:58.272] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-20 09:49:58.272] [DBG] [004] [CrashRecovery] Crash flag cleared
+[2026-03-20 09:49:58.279] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-20 09:49:58.279] [WRN] [004] [CrashRecovery] Previous abnormal termination detected. Resetting to safe defaults.
+[2026-03-20 09:49:58.282] [DBG] [004] [CrashRecovery] Crash flag set
+[2026-03-20 09:49:58.754] [VRB] [004] [HotkeyService] Parsing hotkey: 'A'
+[2026-03-20 09:49:58.757] [DBG] [004] [HotkeyService] Parsed 'A' -> modifiers=0x0, vk=0x41
+[2026-03-20 09:49:58.763] [VRB] [004] [HotkeyService] Parsing hotkey: 'Ctrl+A'
+[2026-03-20 09:49:58.764] [DBG] [004] [HotkeyService] Parsed 'Ctrl+A' -> modifiers=0x2, vk=0x41
+[2026-03-20 09:49:58.765] [VRB] [004] [HotkeyService] Parsing hotkey: 'Alt+F1'
+[2026-03-20 09:49:58.765] [DBG] [004] [HotkeyService] Parsed 'Alt+F1' -> modifiers=0x1, vk=0x70
+[2026-03-20 09:49:58.766] [VRB] [004] [HotkeyService] Parsing hotkey: 'Ctrl+Shift+V'
+[2026-03-20 09:49:58.767] [DBG] [004] [HotkeyService] Parsed 'Ctrl+Shift+V' -> modifiers=0x6, vk=0x56
+[2026-03-20 09:49:58.768] [VRB] [004] [HotkeyService] Parsing hotkey: 'F12'
+[2026-03-20 09:49:58.768] [DBG] [004] [HotkeyService] Parsed 'F12' -> modifiers=0x0, vk=0x7B
+[2026-03-20 09:49:58.770] [VRB] [004] [HotkeyService] Parsing hotkey: ''
+[2026-03-20 09:49:58.770] [DBG] [004] [HotkeyService] Parsed '' -> modifiers=0x0, vk=0x0
+[2026-03-20 09:49:58.772] [VRB] [004] [HotkeyService] Parsing hotkey: '@#$'
+[2026-03-20 09:49:58.772] [WRN] [004] [HotkeyService] Unknown key '@#$', returning 0
+[2026-03-20 09:49:58.772] [DBG] [004] [HotkeyService] Parsed '@#$' -> modifiers=0x0, vk=0x0
+[2026-03-20 09:49:58.774] [VRB] [004] [HotkeyService] Parsing hotkey: 'TAB'
+[2026-03-20 09:49:58.774] [DBG] [004] [HotkeyService] Parsed 'TAB' -> modifiers=0x0, vk=0x9
+[2026-03-20 09:49:58.775] [VRB] [004] [HotkeyService] Parsing hotkey: 'SPACE'
+[2026-03-20 09:49:58.775] [DBG] [004] [HotkeyService] Parsed 'SPACE' -> modifiers=0x0, vk=0x20
+[2026-03-20 09:49:58.776] [VRB] [004] [HotkeyService] Parsing hotkey: 'UP'
+[2026-03-20 09:49:58.776] [DBG] [004] [HotkeyService] Parsed 'UP' -> modifiers=0x0, vk=0x26
+[2026-03-20 09:49:58.776] [VRB] [004] [HotkeyService] Parsing hotkey: 'DOWN'
+[2026-03-20 09:49:58.778] [DBG] [004] [HotkeyService] Parsed 'DOWN' -> modifiers=0x0, vk=0x28
+[2026-03-20 09:49:58.779] [VRB] [004] [HotkeyService] Parsing hotkey: 'LEFT'
+[2026-03-20 09:49:58.779] [DBG] [004] [HotkeyService] Parsed 'LEFT' -> modifiers=0x0, vk=0x25
+[2026-03-20 09:49:58.779] [VRB] [004] [HotkeyService] Parsing hotkey: 'RIGHT'
+[2026-03-20 09:49:58.780] [DBG] [004] [HotkeyService] Parsed 'RIGHT' -> modifiers=0x0, vk=0x27
+[2026-03-20 09:49:58.780] [VRB] [004] [HotkeyService] Parsing hotkey: 'HOME'
+[2026-03-20 09:49:58.780] [DBG] [004] [HotkeyService] Parsed 'HOME' -> modifiers=0x0, vk=0x24
+[2026-03-20 09:49:58.781] [VRB] [004] [HotkeyService] Parsing hotkey: 'END'
+[2026-03-20 09:49:58.781] [DBG] [004] [HotkeyService] Parsed 'END' -> modifiers=0x0, vk=0x23
+[2026-03-20 09:49:58.781] [VRB] [004] [HotkeyService] Parsing hotkey: 'INSERT'
+[2026-03-20 09:49:58.781] [DBG] [004] [HotkeyService] Parsed 'INSERT' -> modifiers=0x0, vk=0x2D
+[2026-03-20 09:49:58.782] [VRB] [004] [HotkeyService] Parsing hotkey: 'DELETE'
+[2026-03-20 09:49:58.782] [DBG] [004] [HotkeyService] Parsed 'DELETE' -> modifiers=0x0, vk=0x2E
+[2026-03-20 09:49:58.782] [VRB] [004] [HotkeyService] Parsing hotkey: 'DEL'
+[2026-03-20 09:49:58.782] [DBG] [004] [HotkeyService] Parsed 'DEL' -> modifiers=0x0, vk=0x2E
+[2026-03-20 09:49:58.783] [VRB] [004] [HotkeyService] Parsing hotkey: 'PAGEUP'
+[2026-03-20 09:49:58.783] [DBG] [004] [HotkeyService] Parsed 'PAGEUP' -> modifiers=0x0, vk=0x21
+[2026-03-20 09:49:58.783] [VRB] [004] [HotkeyService] Parsing hotkey: 'PAGEDOWN'
+[2026-03-20 09:49:58.783] [DBG] [004] [HotkeyService] Parsed 'PAGEDOWN' -> modifiers=0x0, vk=0x22
+[2026-03-20 09:49:58.784] [VRB] [004] [HotkeyService] Parsing hotkey: 'PAUSE'
+[2026-03-20 09:49:58.784] [DBG] [004] [HotkeyService] Parsed 'PAUSE' -> modifiers=0x0, vk=0x13
+[2026-03-20 09:49:58.784] [VRB] [004] [HotkeyService] Parsing hotkey: 'BREAK'
+[2026-03-20 09:49:58.785] [DBG] [004] [HotkeyService] Parsed 'BREAK' -> modifiers=0x0, vk=0x13
+[2026-03-20 09:49:58.787] [VRB] [004] [HotkeyService] Parsing hotkey: 'Ctrl+Alt+Shift+Win+X'
+[2026-03-20 09:49:58.788] [DBG] [004] [HotkeyService] Parsed 'Ctrl+Alt+Shift+Win+X' -> modifiers=0xF, vk=0x58
+[2026-03-20 09:49:58.789] [VRB] [004] [HotkeyService] Parsing hotkey: 'ctrl+SHIFT+v'
+[2026-03-20 09:49:58.789] [DBG] [004] [HotkeyService] Parsed 'ctrl+SHIFT+v' -> modifiers=0x6, vk=0x56
+[2026-03-20 09:49:58.815] [VRB] [004] [KeepAwakeService] Instance created
+[2026-03-20 09:49:58.819] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 09:49:58.865] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 09:49:58.866] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 09:49:58.867] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 09:49:58.867] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 09:49:58.868] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 09:49:58.869] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 09:49:58.869] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 09:49:58.869] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 09:49:58.870] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 09:49:58.870] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 09:49:58.870] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 09:49:58.873] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: False
+[2026-03-20 09:49:58.873] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: True
+[2026-03-20 09:49:58.874] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: False
+[2026-03-20 09:49:58.876] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=20/03/2026 10:19:58
+[2026-03-20 09:49:58.878] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 09:49:58.878] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 09:49:58.879] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 09:49:58.879] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 09:49:58.879] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 09:49:58.880] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 09:49:58.880] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 09:49:58.881] [WRN] [004] [KeepAwakeService] Invalid timed duration: 0
+[2026-03-20 09:49:58.881] [WRN] [004] [KeepAwakeService] Invalid timed duration: 800
+[2026-03-20 09:49:58.890] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 09:49:58.890] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 09:49:58.891] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 09:49:58.891] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 09:49:58.892] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 09:49:58.892] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 09:49:58.892] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 09:49:58.894] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 09:49:58.895] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 09:49:58.896] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 09:49:58.897] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 09:49:58.898] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 09:49:58.899] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 09:49:58.901] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 09:49:58.903] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 09:49:58.903] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 09:49:58.904] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 09:49:58.907] [VRB] [004] [LocalizationService] Instance created
+[2026-03-20 09:49:58.967] [INF] [004] [LocalizationService] Locale set to: es
+[2026-03-20 09:49:58.968] [INF] [004] [LocalizationService] Locale set to: en
+[2026-03-20 09:49:58.969] [WRN] [004] [LocalizationService] Unknown locale 'invalid_locale', keeping 'en'
+[2026-03-20 09:49:58.979] [INF] [004] [LocalizationService] Locale set to: bl

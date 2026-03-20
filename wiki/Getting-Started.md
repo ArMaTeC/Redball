@@ -54,7 +54,7 @@ If you have the self-contained EXE from the repository or a custom build:
 
 On first run, Redball will:
 
-1. Create a default `Redball.json` configuration file in the application directory
+1. Create a default `Redball.json` configuration file in `%LocalAppData%\Redball\UserData`
 2. Check for singleton instance (only one Redball can run at a time)
 3. Check for crash recovery from a previous abnormal termination
 4. Display a bright red 3D ball icon in your system tray
@@ -64,7 +64,7 @@ On first run, Redball will:
 The main window opens with a modern custom chrome design featuring:
 
 - **Title bar** with app icon, title, and window controls (minimize, maximize, close)
-- **Left navigation panel** with nine sections: Home, Analytics, Metrics, Diagnostics, Settings, Behavior, Smart Features, TypeThing, and Updates
+- **Left navigation panel** with ten sections: Home, Analytics, Metrics, Diagnostics, Settings, Behavior, Smart Features, TypeThing, Pomodoro, and Updates
 - **Content area** showing the selected section's controls and information
 
 Right-click the tray icon to access quick controls, or use the main window for full access to all features and settings.

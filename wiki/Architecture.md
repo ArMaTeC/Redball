@@ -12,43 +12,66 @@ Redball/
 ├── src/Redball.UI.WPF/              # WPF application (.NET 8)
 │   ├── Interop/
 │   │   └── NativeMethods.cs         # All Win32 P/Invoke declarations
-│   ├── Services/
+│   ├── Models/
+│   │   └── RedballConfig.cs         # Strongly-typed configuration model
+│   ├── Services/                    # 40+ singleton services
 │   │   ├── KeepAwakeService.cs      # Core keep-awake engine
 │   │   ├── BatteryMonitorService.cs # Battery monitoring + auto-pause
 │   │   ├── NetworkMonitorService.cs # Network monitoring + auto-pause
 │   │   ├── IdleDetectionService.cs  # Idle detection + auto-pause
 │   │   ├── ScheduleService.cs       # Scheduled activation
 │   │   ├── PresentationModeService.cs # Presentation detection
+│   │   ├── PomodoroService.cs       # Focus/break cycle timer
+│   │   ├── ProcessWatcherService.cs # Process-based auto-activation
+│   │   ├── SessionLockService.cs    # Screen lock detection
+│   │   ├── TemperatureMonitorService.cs # CPU thermal protection
+│   │   ├── PowerPlanService.cs      # Windows power plan switching
+│   │   ├── ScheduledRestartService.cs # Uptime restart reminders
+│   │   ├── AnalyticsService.cs      # Local analytics + feature tracking
 │   │   ├── SessionStateService.cs   # Session save/restore
+│   │   ├── SessionStatsService.cs   # Session statistics
 │   │   ├── StartupService.cs        # Windows startup registration
 │   │   ├── SingletonService.cs      # Named mutex singleton
 │   │   ├── CrashRecoveryService.cs  # Crash flag detection
-│   │   ├── NotificationService.cs   # Tray balloon notifications
+│   │   ├── NotificationService.cs   # Tray/toast notifications
 │   │   ├── LocalizationService.cs   # i18n (en, es, fr, de, bl)
-│   │   ├── TelemetryService.cs      # Opt-in local telemetry
 │   │   ├── ConfigService.cs         # JSON config load/save/export/import
 │   │   ├── HotkeyService.cs         # Global hotkey registration
 │   │   ├── UpdateService.cs         # GitHub release auto-updater
+│   │   ├── HealthCheckService.cs    # App self-monitoring
+│   │   ├── PluginService.cs         # Plugin loading + management
+│   │   ├── WebApiService.cs         # Local REST API
+│   │   ├── ProfileService.cs        # WiFi-based config profiles
+│   │   ├── ForegroundAppService.cs  # Foreground app tracking
+│   │   ├── TextToSpeechService.cs   # TTS for TypeThing
+│   │   ├── SecurityService.cs       # Security + integrity checks
+│   │   ├── TelemetryService.cs      # Opt-in local telemetry
 │   │   └── Logger.cs                # Structured logging with rotation
 │   ├── ViewModels/
 │   │   └── MainViewModel.cs         # MVVM state + commands
 │   ├── Views/
-│   │   ├── MainWindow.xaml/.cs      # Tray icon, TypeThing, hotkeys
-│   │   ├── SettingsWindow.xaml/.cs   # Tabbed settings UI
-│   │   └── AboutWindow.xaml/.cs     # Version info + update check
-│   ├── Themes/                      # 12 theme XAML dictionaries
+│   │   ├── MainWindow.xaml/.cs      # Main window (partial classes)
+│   │   ├── MainWindow.Navigation.cs # Section switching
+│   │   ├── MainWindow.Settings.cs   # Embedded settings
+│   │   ├── MainWindow.TrayIcon.cs   # Tray icon setup/recovery
+│   │   ├── MainWindow.TypeThing.cs  # TypeThing integration
+│   │   ├── MainWindow.Pomodoro.cs   # Pomodoro integration
+│   │   ├── MainWindow.Updates.cs    # Update management
+│   │   ├── AboutWindow.xaml/.cs     # Version info + update check
+│   │   ├── MiniWidgetWindow.xaml/.cs # Floating mini widget
+│   │   ├── OnboardingWindow.xaml/.cs # First-run tutorial
+│   │   ├── ToastNotification.xaml/.cs # Toast notification UI
+│   │   └── QuickSettingsPopup.xaml/.cs # Quick settings
+│   ├── Themes/                      # Dark/Light base XAML + Controls
 │   ├── Converters/                  # WPF value converters
 │   ├── Assets/redball.ico           # Application icon
-│   ├── ThemeManager.cs              # Theme switching engine
+│   ├── ThemeManager.cs              # 14-theme switching engine
 │   ├── App.xaml / App.xaml.cs       # Application entry point
 │   └── Redball.UI.WPF.csproj       # Project file
 ├── installer/                       # WiX MSI installer
 ├── scripts/                         # Build helper scripts
-├── tests/                           # Test suite
+├── tests/                           # Unit test suite
 ├── wiki/                            # Documentation
-├── Redball.json                     # Configuration file
-├── Redball.ps1                      # Legacy PowerShell script (retained for rollback)
-├── build.ps1                        # Build pipeline
 └── locales.json                     # External locale overrides
 ```
 
@@ -60,18 +83,25 @@ All services are instantiated as singletons and coordinated by `App.xaml.cs` and
 App.xaml.cs (entry point)
   ├── SingletonService        — Mutex check (first thing)
   ├── CrashRecoveryService    — Crash flag check
-  ├── ConfigService           — Load Redball.json
-  ├── ThemeManager            — Apply saved theme
+  ├── ConfigService           — Load Redball.json from UserData
+  ├── ThemeManager            — Apply saved theme (14 themes)
   ├── KeepAwakeService        — Initialize + SetActive + StartMonitoring
-  │     ├── HeartbeatTimer    — SetThreadExecutionState + F15 (every Ns)
+  │     ├── HeartbeatTimer    — SetThreadExecutionState + F13–F16 (every Ns)
   │     └── DurationTimer     — 1s tick driving all monitors:
-  │           ├── IdleDetectionService      (every 1s — cheap P/Invoke)
-  │           ├── BatteryMonitorService     (every 10s — WMI cached 60s)
-  │           ├── NetworkMonitorService     (every 10s)
-  │           ├── PresentationModeService   (every 10s — process scan cached 10s)
-  │           └── ScheduleService           (every 30s)
+  │           ├── IdleDetectionService        (every 1s — cheap P/Invoke)
+  │           ├── BatteryMonitorService       (every 10s — WMI cached 60s)
+  │           ├── NetworkMonitorService       (every 10s)
+  │           ├── PresentationModeService     (every 10s — process scan cached 10s)
+  │           ├── ScheduleService             (every 30s)
+  │           ├── ProcessWatcherService       (process scanning)
+  │           ├── SessionLockService          (session events)
+  │           ├── TemperatureMonitorService   (CPU temp checks)
+  │           └── PomodoroService             (focus/break cycles)
+  ├── AnalyticsService        — Feature tracking + session analytics
   ├── SessionStateService     — Restore previous session
-  └── MainWindow              — Tray icon, hotkeys, TypeThing
+  ├── HealthCheckService      — App self-monitoring
+  ├── WebApiService           — Optional local REST API
+  └── MainWindow              — Tray icon, hotkeys, TypeThing, Pomodoro
         └── MainViewModel     — Binds to KeepAwakeService.ActiveStateChanged
 ```
 

@@ -9,7 +9,7 @@
 
 > A system tray utility to prevent Windows from sleeping, with style.
 
-Redball is a keep-awake utility for Windows built as a **native WPF desktop application** (.NET 8) with 12 custom themes. It keeps your computer awake using the `SetThreadExecutionState` API, with smart monitoring features (battery, network, idle, schedule, presentation mode), a built-in settings GUI, auto-updating, code signing, and a branded MSI installer.
+Redball is a keep-awake utility for Windows built as a **native WPF desktop application** (.NET 8) with 14 custom themes. It keeps your computer awake using the `SetThreadExecutionState` API, with smart monitoring features (battery, network, idle, schedule, presentation mode, thermal protection, process watcher, VPN detection), a Pomodoro timer, clipboard typer, built-in analytics dashboard, auto-updating, code signing, and a branded MSI installer.
 
 ![Redball Icon](installer/redball.png)
 
@@ -19,10 +19,10 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 
 ### Modern WPF Desktop Application (.NET 8)
 
-- **Native WPF UI** — Built with .NET 8 WPF, self-contained single-file EXE (~64MB)
-- **12 Custom Themes** — System (auto-detect), Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost
+- **Native WPF UI** — Built with .NET 8 WPF, self-contained single-file EXE (~3.3MB compressed)
+- **14 Custom Themes** — System (auto-detect), Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost, High Contrast
 - **Custom Window Chrome** — Modern borderless window with custom title bar, minimize/maximize/close buttons, and rounded corners via `WindowChrome`
-- **Settings Window** — Tabbed settings with live slider value labels for duration and typing speed, organized into General, Behavior, Smart Features, TypeThing, and Updates sections
+- **Settings Window** — Tabbed settings with live slider value labels for duration and typing speed, organized into General, Behavior, Smart Features, TypeThing, Pomodoro, and Updates sections
 - **About & Update Windows** — Built-in version info, update checker, and download progress
 - **P/Invoke SendInput** — Native Windows API for typing simulation (no WinForms dependency)
 - **Theme Persistence** — Selected theme saved to config and restored on startup
@@ -35,6 +35,14 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 - **Idle Detection** — Auto-pause after configurable minutes of user inactivity, resume on input
 - **Scheduled Operation** — Auto-start/stop at configured times and days of the week
 - **Presentation Mode Detection** — Auto-activate when PowerPoint is open or Teams is screen-sharing
+- **Thermal Protection** — Auto-pause when CPU temperature exceeds a configurable threshold
+- **Process Watcher** — Auto-activate keep-awake when a specific process is running
+- **VPN Auto Keep-Awake** — Auto-activate when a VPN connection is detected
+- **Session Lock Detection** — Auto-pause when the screen is locked
+- **App-Specific Rules** — Define apps that should keep awake or trigger a pause
+- **Power Plan Auto-Switch** — Automatically switch Windows power plan when Redball activates
+- **WiFi-Based Profiles** — Switch configuration profiles based on the connected WiFi network
+- **Scheduled Restart Reminder** — Notify (or auto-restart) after a configurable number of days uptime
 - **Session Restore** — Saves state on exit, restores on next startup
 - **Singleton Instance** — Named mutex prevents multiple instances
 - **Crash Recovery** — Detects previous abnormal termination and resets to safe defaults
@@ -43,19 +51,26 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 
 - **Timed Sessions** — Set duration (15, 30, 60, 120 minutes) or run indefinitely
 - **Display Sleep Control** — Optionally keep display awake too
-- **F15 Heartbeat** — Sends invisible F15 keypresses to prevent idle detection via native `SendInput`
+- **Configurable Heartbeat Key** — Sends invisible F13–F16 keypresses to prevent idle detection via native `SendInput`
+- **Pomodoro Timer** — Built-in focus/break cycle timer with configurable intervals and auto-start
 - **Startup with Windows** — Launch automatically via Registry Run key or MSI installer
-- **Tray Notifications** — Configurable balloon tip notifications with mode filtering
-- **JSON Configuration** — Persistent settings via `Redball.json`
-- **Structured Logging** — Rotating log files with configurable size limits
+- **Toast Notifications** — Modern toast-style notifications with configurable mode filtering (All, Important, Errors, Silent)
+- **JSON Configuration** — Persistent settings via `Redball.json` in `%LocalAppData%\Redball\UserData`
+- **Structured Logging** — Rotating log files with configurable size limits and verbose mode
 - **Settings Backup/Restore** — Export and import all settings to a JSON backup file
 - **Global Hotkey** — Ctrl+Alt+Pause to toggle pause/resume system-wide
 - **Localization (i18n)** — English, Spanish, French, German, and Blade Runner theme
-- **Auto-Updater** — Check for and install updates from GitHub Releases
+- **Auto-Updater** — Automatic background update checks with configurable interval, or manual check from GitHub Releases
 - **Code Signing** — EXE and MSI signed with SHA-256 certificate via `signtool` in CI
-- **TypeThing — Clipboard Typer** — Simulates human-like typing of clipboard contents via global hotkeys
+- **TypeThing — Clipboard Typer** — Simulates human-like typing of clipboard contents via global hotkeys, with optional TTS
+- **Analytics Dashboard** — Built-in session tracking, feature adoption metrics, and CSV/JSON export
+- **Mini Widget** — Floating mini widget window for quick status and controls
+- **Onboarding Tutorial** — Interactive first-run tutorial for new users
+- **Local Web API** — Optional REST API for remote control and integration (configurable port)
+- **Plugin System** — Extensible plugin interface for custom functionality
+- **Health Check Service** — Self-monitoring and diagnostics
 - **MSI Installer** — WiX v4 installer with branded UI, shortcuts, and post-install launch
-- **CI/CD** — GitHub Actions with Pester tests, PSScriptAnalyzer lint, WPF build, security scan, and GitHub Release creation
+- **CI/CD** — GitHub Actions with unit tests, PSScriptAnalyzer lint, WPF build, security scan, and GitHub Release creation
 
 ## Quick Start
 
@@ -89,66 +104,117 @@ If you have the self-contained EXE from the repository or a custom build:
 
 ## Configuration
 
-Settings are stored in `Redball.json` in the application directory. A default file is created on first run if one doesn't exist. You can also change all settings from the **Settings** dialog in the tray menu.
+Settings are stored in `%LocalAppData%\Redball\UserData\Redball.json`. A default file is created on first run. You can also change all settings from the **Settings** sections in the main window.
 
 ```json
 {
     "HeartbeatSeconds": 59,
     "PreventDisplaySleep": true,
     "UseHeartbeatKeypress": true,
+    "HeartbeatInputMode": "F15",
     "DefaultDuration": 60,
-    "LogPath": "Redball.log",
-    "MaxLogSizeMB": 10,
-    "ShowBalloonOnStart": true,
+    "Theme": "Dark",
     "Locale": "en",
     "MinimizeOnStart": false,
+    "MinimizeToTray": false,
+    "ConfirmOnExit": true,
+    "ShowNotifications": true,
+    "NotificationMode": "All",
+    "VerboseLogging": false,
+    "MaxLogSizeMB": 10,
     "BatteryAware": false,
     "BatteryThreshold": 20,
     "NetworkAware": false,
     "IdleDetection": false,
-    "AutoExitOnComplete": false,
+    "IdleThreshold": 30,
     "ScheduleEnabled": false,
     "ScheduleStartTime": "09:00",
     "ScheduleStopTime": "18:00",
     "ScheduleDays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
     "PresentationModeDetection": false,
-    "ProcessIsolation": false,
-    "EnablePerformanceMetrics": false,
-    "EnableTelemetry": false,
-    "UpdateRepoOwner": "ArMaTeC",
-    "UpdateRepoName": "Redball",
-    "UpdateChannel": "stable",
-    "VerifyUpdateSignature": false
+    "PomodoroEnabled": false,
+    "PomodoroFocusMinutes": 25,
+    "PomodoroBreakMinutes": 5,
+    "PomodoroLongBreakMinutes": 15,
+    "PomodoroLongBreakInterval": 4,
+    "ProcessWatcherEnabled": false,
+    "ProcessWatcherTarget": "",
+    "PauseOnScreenLock": false,
+    "VpnAutoKeepAwake": false,
+    "ThermalProtectionEnabled": false,
+    "ThermalThreshold": 85,
+    "AutoUpdateCheckEnabled": true,
+    "AutoUpdateCheckIntervalMinutes": 120,
+    "UpdateChannel": "stable"
 }
 ```
 
+### General & UI
+
 | Setting | Description | Default |
 | ------- | ----------- | ------- |
-| `HeartbeatSeconds` | Interval between keep-awake refreshes and F15 keypresses | `59` |
+| `HeartbeatSeconds` | Interval between keep-awake refreshes | `59` |
 | `PreventDisplaySleep` | Keep the display on in addition to preventing system sleep | `true` |
-| `UseHeartbeatKeypress` | Send invisible F15 keypresses to prevent app-level idle detection | `true` |
+| `UseHeartbeatKeypress` | Send invisible keypresses to prevent app-level idle detection | `true` |
+| `HeartbeatInputMode` | Which function key to send (`F13`, `F14`, `F15`, `F16`) | `F15` |
 | `DefaultDuration` | Default timer duration in minutes | `60` |
-| `LogPath` | Path to log file | `Redball.log` |
-| `MaxLogSizeMB` | Log rotation threshold in MB | `10` |
-| `ShowBalloonOnStart` | Show tray notification when Redball starts | `true` |
-| `Locale` | Display language (`en`, `es`, `fr`, `de`, `bl`) | Auto-detected |
+| `Theme` | UI theme name (see theme list above) | `Dark` |
+| `Locale` | Display language (`en`, `es`, `fr`, `de`, `bl`) | `en` |
 | `MinimizeOnStart` | Start minimized to system tray | `false` |
+| `MinimizeToTray` | Minimize to tray instead of taskbar | `false` |
+| `ConfirmOnExit` | Show confirmation dialog when exiting | `true` |
+| `ShowNotifications` | Enable tray/toast notifications | `true` |
+| `SoundNotifications` | Play sound with notifications | `false` |
+| `NotificationMode` | Notification filter (`All`, `Important`, `Errors`, `Silent`) | `All` |
+| `VerboseLogging` | Record extra diagnostic log details | `false` |
+| `MaxLogSizeMB` | Log rotation threshold in MB | `10` |
+| `AutoExitOnComplete` | Exit automatically when a timed session finishes | `false` |
+
+### Smart Features
+
+| Setting | Description | Default |
+| ------- | ----------- | ------- |
 | `BatteryAware` | Auto-pause when battery is low | `false` |
 | `BatteryThreshold` | Battery % below which to auto-pause | `20` |
 | `NetworkAware` | Auto-pause when network disconnects | `false` |
 | `IdleDetection` | Auto-pause after user inactivity | `false` |
-| `IdleThresholdMinutes` | Minutes of inactivity before auto-pause | `30` |
-| `AutoExitOnComplete` | Exit automatically when a timed session finishes | `false` |
+| `IdleThreshold` | Minutes of inactivity before auto-pause | `30` |
 | `ScheduleEnabled` | Enable daily scheduled activation | `false` |
 | `ScheduleStartTime` | Time to auto-start (HH:mm) | `09:00` |
 | `ScheduleStopTime` | Time to auto-stop (HH:mm) | `18:00` |
 | `ScheduleDays` | Days of the week the schedule applies | Weekdays |
 | `PresentationModeDetection` | Auto-activate for PowerPoint/Teams presentations | `false` |
-| `EnableTelemetry` | Opt-in anonymous usage telemetry (logged locally) | `false` |
-| `UpdateRepoOwner` | GitHub owner for update checks | `ArMaTeC` |
-| `UpdateRepoName` | GitHub repo for update checks | `Redball` |
-| `UpdateChannel` | Release channel (`stable` or `beta`) | `stable` |
-| `VerifyUpdateSignature` | Require valid digital signature on updates | `false` |
+| `PauseOnScreenLock` | Auto-pause when the screen is locked | `false` |
+| `VpnAutoKeepAwake` | Auto-activate when VPN is connected | `false` |
+| `ProcessWatcherEnabled` | Auto-activate when target process is running | `false` |
+| `ProcessWatcherTarget` | Process name to watch (e.g. `code.exe`) | `""` |
+| `ThermalProtectionEnabled` | Auto-pause when CPU temperature is too high | `false` |
+| `ThermalThreshold` | CPU temperature threshold (°C) | `85` |
+| `AppRulesEnabled` | Enable app-specific keep-awake/pause rules | `false` |
+| `KeepAwakeApps` | Apps that trigger keep-awake (one per line) | `""` |
+| `PauseApps` | Apps that trigger a pause (one per line) | `""` |
+| `PowerPlanAutoSwitch` | Auto-switch Windows power plan | `false` |
+| `WifiProfileSwitchEnabled` | Switch profiles based on WiFi network | `false` |
+| `WifiProfileMappings` | WiFi-to-profile mappings (`WiFiName=Profile` per line) | `""` |
+| `RestartReminderEnabled` | Remind to restart after N days | `false` |
+| `RestartReminderDays` | Days before restart reminder | `7` |
+
+### Pomodoro
+
+| Setting | Description | Default |
+| ------- | ----------- | ------- |
+| `PomodoroEnabled` | Enable the Pomodoro timer | `false` |
+| `PomodoroFocusMinutes` | Focus session duration | `25` |
+| `PomodoroBreakMinutes` | Short break duration | `5` |
+| `PomodoroLongBreakMinutes` | Long break duration | `15` |
+| `PomodoroLongBreakInterval` | Focus sessions before a long break | `4` |
+| `PomodoroAutoStart` | Auto-start next session | `true` |
+| `PomodoroKeepAwakeDuringBreak` | Stay awake during breaks | `false` |
+
+### TypeThing (Clipboard Typer)
+
+| Setting | Description | Default |
+| ------- | ----------- | ------- |
 | `TypeThingEnabled` | Enable the clipboard typing feature | `true` |
 | `TypeThingMinDelayMs` | Minimum delay between keystrokes (ms) | `30` |
 | `TypeThingMaxDelayMs` | Maximum delay between keystrokes (ms) | `120` |
@@ -161,6 +227,26 @@ Settings are stored in `Redball.json` in the application directory. A default fi
 | `TypeThingRandomPauseMaxMs` | Maximum random pause duration (ms) | `500` |
 | `TypeThingTypeNewlines` | Press Enter when a newline is encountered | `true` |
 | `TypeThingNotifications` | Show tray notifications for typing events | `true` |
+| `TypeThingInputMode` | Input method (`SendInput` or `Interception`) | `SendInput` |
+| `TypeThingTtsEnabled` | Enable text-to-speech while typing | `false` |
+
+### Updates
+
+| Setting | Description | Default |
+| ------- | ----------- | ------- |
+| `AutoUpdateCheckEnabled` | Check for updates automatically | `true` |
+| `AutoUpdateCheckIntervalMinutes` | Minutes between automatic update checks | `120` |
+| `UpdateChannel` | Release channel (`stable` or `beta`) | `stable` |
+| `VerifyUpdateSignature` | Require valid digital signature on updates | `false` |
+
+### Advanced
+
+| Setting | Description | Default |
+| ------- | ----------- | ------- |
+| `EnableTelemetry` | Opt-in anonymous usage telemetry (logged locally) | `false` |
+| `EnablePerformanceMetrics` | Track CPU, memory, and handle metrics | `false` |
+| `WebApiEnabled` | Enable local REST API for remote control | `false` |
+| `WebApiPort` | Port for the local Web API | `48080` |
 
 ## Usage
 
@@ -190,7 +276,7 @@ Right-click the red ball icon in your system tray:
 | Main UI | Description |
 | ------- | ----------- |
 | **Title Bar** | Custom chrome with app icon, title, subtitle, and window controls (minimize, maximize, close) |
-| **Navigation Panel** | Left-side navigation with Home, Analytics, Metrics, Diagnostics, Settings, Behavior, Smart Features, TypeThing, and Updates sections |
+| **Navigation Panel** | Left-side navigation with Home, Analytics, Metrics, Diagnostics, Settings, Behavior, Smart Features, TypeThing, Pomodoro, and Updates sections |
 | **Content Area** | Dynamic content that changes based on selected navigation item |
 | **Tray Icon** | Right-click for quick controls; left-click to toggle pause/resume |
 
@@ -214,15 +300,20 @@ The WPF application supports the following command-line arguments:
 
 ## Settings GUI
 
-Open the settings dialog from the tray menu (**Settings...** or press **G**). The dialog has five tabs:
+The main window provides a left-side navigation panel with dedicated sections:
 
-- **General** — Theme, notifications, logging, minimize behavior
+- **Home** — Overview dashboard with quick access cards
+- **Analytics** — Session counts, usage patterns, feature events with CSV/JSON export
+- **Metrics** — Feature adoption rates, retention, TypeThing success rates
+- **Diagnostics** — Runtime state, logging, config validation, recent log viewer
+- **Settings** — Theme, notifications, logging, minimize behavior
 - **Behavior** — Display sleep prevention, heartbeat key, default duration, auto-exit
-- **Smart Features** — Battery-aware, network-aware, idle detection, presentation mode, scheduled operation
-- **TypeThing** — Enable/disable, typing speed, hotkeys, random pauses, newlines
-- **Updates** — Update channel, signature verification, version check, notifications
+- **Smart Features** — Battery, network, idle, schedule, presentation, process watcher, VPN, thermal, session lock, app rules
+- **TypeThing** — Enable/disable, typing speed, hotkeys, random pauses, newlines, TTS
+- **Pomodoro** — Focus/break timer with configurable intervals
+- **Updates** — Update channel, auto-check interval, signature verification
 
-Changes are saved to `Redball.json` when you click **OK**.
+Changes are saved to `Redball.json` when you click **Apply Settings**.
 
 TypeThing also has its own dedicated settings dialog (accessible from the TypeThing tray submenu) with grouped controls for speed, behaviour, hotkeys, and appearance — including a live WPM estimate and theme preview.
 
@@ -234,21 +325,36 @@ Redball v3.0 is implemented as a pure C# WPF application. The core functionality
 
 | Service | Purpose |
 | --------- | --------- |
-| `KeepAwakeService` | Core keep-awake engine with `SetThreadExecutionState` and F15 heartbeat |
+| `KeepAwakeService` | Core keep-awake engine with `SetThreadExecutionState` and heartbeat |
 | `BatteryMonitorService` | WMI-based battery monitoring with auto-pause/resume |
 | `NetworkMonitorService` | Network connectivity monitoring |
 | `IdleDetectionService` | User idle detection via `GetLastInputInfo` |
 | `ScheduleService` | Time/day-based scheduled activation |
-| `PresentationModeService` | PowerPoint/Teams presentation detection |
+| `PresentationModeService` | PowerPoint/Teams/Windows presentation detection |
+| `PomodoroService` | Focus/break cycle timer |
+| `ProcessWatcherService` | Auto-activate when target process is running |
+| `SessionLockService` | Pause on screen lock |
+| `TemperatureMonitorService` | CPU thermal protection |
+| `PowerPlanService` | Automatic Windows power plan switching |
+| `ProfileService` | WiFi-based configuration profiles |
+| `ScheduledRestartService` | Uptime-based restart reminders |
 | `SessionStateService` | Save/restore session state |
+| `SessionStatsService` | Session statistics tracking |
 | `StartupService` | Windows startup registration (Registry Run key) |
 | `SingletonService` | Named mutex for single instance enforcement |
 | `CrashRecoveryService` | Crash flag detection and safe recovery |
 | `NotificationService` | Tray balloon notifications |
 | `LocalizationService` | i18n with built-in and external locale support |
-| `ConfigService` | JSON configuration with export/import |
+| `ConfigService` | JSON configuration with export/import/validation |
 | `HotkeyService` | Global hotkey registration |
 | `UpdateService` | GitHub release auto-updater |
+| `AnalyticsService` | Local analytics and feature tracking |
+| `HealthCheckService` | Application self-monitoring |
+| `PluginService` | Plugin loading and management |
+| `WebApiService` | Local REST API for remote control |
+| `TextToSpeechService` | TTS for TypeThing |
+| `ForegroundAppService` | Track active foreground application |
+| `SecurityService` | Security and integrity checks |
 | `Logger` | Structured logging with rotation |
 
 ### Usage Example
@@ -281,7 +387,7 @@ dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj --configuration Release 
 .\scripts\build.ps1
 ```
 
-The published EXE (~64MB) includes the .NET runtime, uses compression and native library embedding, and has embedded debug symbols (no separate PDB file).
+The published EXE (~3.3MB compressed) includes the .NET runtime, uses compression and native library embedding, and has embedded debug symbols (no separate PDB file).
 
 ### MSI Installer
 
@@ -352,26 +458,37 @@ Redball v3.0 is a **pure C# WPF application** — all functionality runs nativel
 ```text
 src/Redball.UI.WPF/
 ├── Interop/NativeMethods.cs          # All Win32 P/Invoke declarations
-├── Services/
-│   ├── KeepAwakeService.cs           # Core engine (SetThreadExecutionState + F15)
+├── Services/                         # 40+ singleton services
+│   ├── KeepAwakeService.cs           # Core engine (SetThreadExecutionState + heartbeat)
 │   ├── BatteryMonitorService.cs      # WMI battery monitoring
 │   ├── NetworkMonitorService.cs      # Network connectivity monitoring
 │   ├── IdleDetectionService.cs       # GetLastInputInfo idle detection
 │   ├── ScheduleService.cs            # Time/day scheduled activation
 │   ├── PresentationModeService.cs    # PowerPoint/Teams/Windows detection
+│   ├── PomodoroService.cs            # Focus/break cycle timer
+│   ├── ProcessWatcherService.cs      # Process-based auto-activation
+│   ├── SessionLockService.cs         # Screen lock detection
+│   ├── TemperatureMonitorService.cs  # CPU thermal protection
+│   ├── PowerPlanService.cs           # Windows power plan switching
+│   ├── ScheduledRestartService.cs    # Uptime restart reminders
+│   ├── AnalyticsService.cs           # Local analytics and feature tracking
 │   ├── SessionStateService.cs        # Session save/restore
-│   ├── StartupService.cs             # Windows startup (Registry Run key)
-│   ├── SingletonService.cs           # Named mutex singleton
-│   ├── CrashRecoveryService.cs       # Crash flag detection
-│   ├── NotificationService.cs        # Tray balloon notifications
-│   ├── LocalizationService.cs        # i18n (en, es, fr, de, bl)
-│   ├── ConfigService.cs              # JSON config with export/import
-│   ├── HotkeyService.cs              # Global hotkey registration
+│   ├── SessionStatsService.cs        # Session statistics
+│   ├── ConfigService.cs              # JSON config with export/import/validation
+│   ├── HealthCheckService.cs         # App self-monitoring
+│   ├── PluginService.cs              # Plugin system
+│   ├── WebApiService.cs              # Local REST API
 │   ├── UpdateService.cs              # GitHub release auto-updater
+│   ├── HotkeyService.cs              # Global hotkey registration
+│   ├── NotificationService.cs        # Tray/toast notifications
+│   ├── LocalizationService.cs        # i18n (en, es, fr, de, bl)
+│   ├── TextToSpeechService.cs        # TTS for TypeThing
 │   └── Logger.cs                     # Structured logging with rotation
+├── Models/RedballConfig.cs           # Strongly-typed configuration
 ├── ViewModels/MainViewModel.cs       # MVVM state + commands
-├── Views/                            # MainWindow, SettingsWindow, AboutWindow
-├── Themes/                           # 12 theme XAML dictionaries
+├── Views/                            # MainWindow (partial classes), About, Settings, etc.
+├── Themes/                           # Dark/Light base + ThemeManager variants
+├── ThemeManager.cs                   # 14-theme switching engine
 ├── App.xaml.cs                       # Entry point + service orchestration
 └── Redball.UI.WPF.csproj             # .NET 8 WPF project
 ```
@@ -397,7 +514,7 @@ src/Redball.UI.WPF/
 - Check Windows power plan settings (some plans override API calls)
 - Ensure no group policy is overriding `SetThreadExecutionState`
 - Try enabling **Prevent Display Sleep** in the tray menu
-- Try enabling **Process Isolation** in Settings → Advanced
+- Try enabling **Verbose Logging** in Settings to diagnose the issue
 
 ### Multiple instances conflict
 
@@ -405,7 +522,7 @@ Redball uses a named mutex to enforce a single instance. If a stale instance is 
 
 ```powershell
 # Find and stop Redball processes manually
-Get-Process Redball | Stop-Process -Force
+Get-Process Redball.UI.WPF | Stop-Process -Force
 ```
 
 ### Log file locked
@@ -448,7 +565,6 @@ dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 - [x] Network-aware mode
 - [x] Dark mode detection
 - [x] High contrast / High DPI awareness
-- [x] PowerShell Core (7.x) compatibility (legacy, archived in `legacy/`)
 - [x] Battery-aware mode
 - [x] Idle detection
 - [x] Scheduled operation
@@ -459,7 +575,6 @@ dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 - [x] Code signing support
 - [x] Singleton instance management
 - [x] Crash recovery
-- [x] Process isolation (legacy PowerShell feature)
 - [x] Settings backup/restore
 - [x] Global hotkey (Ctrl+Alt+Pause)
 - [x] CI/CD (GitHub Actions)
@@ -468,14 +583,36 @@ dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 - [x] About dialog with update checker
 - [x] Themed TypeThing settings dialog (light/dark/hacker)
 - [x] Modern WPF desktop application (.NET 8)
-- [x] 12 custom UI themes (Midnight Blue, Cyberpunk, Rose Gold, etc.)
+- [x] 14 custom UI themes (Midnight Blue, Cyberpunk, Rose Gold, High Contrast, etc.)
 - [x] P/Invoke SendInput (replaced WinForms SendKeys)
-- [x] Self-contained compressed EXE (~64MB, down from 150MB)
+- [x] Self-contained compressed EXE (~3.3MB)
 - [x] Branded MSI installer UI (custom banner/dialog images)
 - [x] Automated code signing (EXE + MSI) in CI
 - [x] Comprehensive build system (`build.ps1`)
 - [x] Version management script (`Bump-Version.ps1`)
 - [x] Node.js 24-compatible GitHub Actions (v5)
+- [x] Pomodoro focus/break timer
+- [x] Process watcher (auto-activate for specific processes)
+- [x] Session lock detection (pause on screen lock)
+- [x] VPN auto keep-awake
+- [x] App-specific keep-awake/pause rules
+- [x] Power plan auto-switch
+- [x] WiFi-based configuration profiles
+- [x] Scheduled restart reminders
+- [x] Thermal protection (CPU temperature monitoring)
+- [x] TypeThing text-to-speech
+- [x] Local Web API for remote control
+- [x] Analytics dashboard with CSV/JSON export
+- [x] Product metrics (feature adoption, retention)
+- [x] Mini widget floating window
+- [x] Onboarding tutorial for new users
+- [x] Toast notification system
+- [x] Plugin system
+- [x] Health check service
+- [x] Session statistics tracking
+- [x] High Contrast accessibility theme
+- [x] Configurable heartbeat key (F13–F16)
+- [x] Automatic background update checks
 
 ## License
 

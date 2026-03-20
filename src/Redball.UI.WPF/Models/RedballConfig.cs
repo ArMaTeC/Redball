@@ -107,4 +107,8 @@ public class RedballConfig
     // Local Web API
     public bool WebApiEnabled { get; set; }
     public int WebApiPort { get; set; } = 48080;
+
+    // Mini Widget position (-1 = not set, use default)
+    public double MiniWidgetLeft { get; set; } = -1;
+    public double MiniWidgetTop { get; set; } = -1;
 }

@@ -48,6 +48,8 @@ All TypeThing settings are stored in `Redball.json`:
 | `TypeThingRandomPauseMaxMs` | int | `500` | Maximum random pause duration (ms) |
 | `TypeThingTypeNewlines` | bool | `true` | Press Enter when a newline is encountered |
 | `TypeThingNotifications` | bool | `true` | Show tray notifications for typing events |
+| `TypeThingInputMode` | string | `SendInput` | Input method (`SendInput` or `Interception`) |
+| `TypeThingTtsEnabled` | bool | `false` | Enable text-to-speech while typing |
 
 ## Typing Speed
 
@@ -104,7 +106,7 @@ The dedicated dialog groups settings into four sections:
 | `dark` | Dark background with blue accents (default) |
 | `hacker` | Black background with green text, Consolas font |
 
-The theme is applied recursively to all form controls via `Set-TypeThingFormTheme`.
+The theme is applied to the TypeThing settings dialog controls.
 
 ## Tray Menu Integration
 
@@ -115,55 +117,33 @@ When `TypeThingEnabled` is `true`, a **TypeThing** submenu appears in the Redbal
 - **Status: Idle** — Shows current typing progress (e.g., "Typing 150/500 chars...")
 - **TypeThing Settings...** — Open the settings dialog
 
-## State Properties
+## Runtime State
 
-The following `$script:state` properties track TypeThing's runtime state:
+TypeThing tracks its state internally in `MainWindow.TypeThing.cs`:
 
-| Property | Type | Description |
-| -------- | ---- | ----------- |
-| `TypeThingIsTyping` | bool | Currently typing characters |
-| `TypeThingShouldStop` | bool | Emergency stop has been requested |
-| `TypeThingText` | string | The text being typed (cleared on stop/complete) |
-| `TypeThingIndex` | int | Current character position |
-| `TypeThingTotalChars` | int | Total characters to type |
-| `TypeThingStartTime` | DateTime | When typing started (for elapsed time) |
-| `TypeThingTimer` | Timer | WinForms timer for per-character typing |
-| `TypeThingCountdown` | Timer | WinForms timer for start countdown |
-| `TypeThingCountdownRemaining` | int | Seconds remaining in countdown |
-| `TypeThingHotkeyWindow` | NativeWindow | Hidden window for receiving hotkey messages |
-| `TypeThingHotkeysRegistered` | bool | Whether global hotkeys are currently registered |
-
-## Functions
-
-| Function | Description |
-| -------- | ----------- |
-| `Start-TypeThingTyping` | Reads clipboard and begins simulated typing with countdown |
-| `Stop-TypeThingTyping` | Immediately stops typing, clears sensitive text from memory |
-| `Complete-TypeThingTyping` | Called when all characters have been typed successfully |
-| `Start-TypeThingTimer` | Creates and starts the per-character WinForms timer |
-| `Send-TypeThingChar` | Sends a single character via `SendInput` / `KEYEVENTF_UNICODE` |
-| `Get-ClipboardText` | Gets text from clipboard with retry logic |
-| `ConvertTo-HotkeyParams` | Parses hotkey string into modifier flags and virtual key code |
-| `Register-TypeThingHotkeys` | Registers global hotkeys with Windows |
-| `Unregister-TypeThingHotkeys` | Unregisters global hotkeys |
-| `Show-TypeThingSettings` | Opens the themed settings dialog |
-| `Get-TypeThingTheme` | Returns the theme hashtable for the given theme name |
-| `Set-TypeThingFormTheme` | Applies a theme recursively to a WinForms control tree |
+- **IsTyping** — Whether typing is currently in progress
+- **ShouldStop** — Emergency stop has been requested
+- **CurrentIndex / TotalChars** — Progress tracking
+- **CountdownRemaining** — Seconds remaining before typing starts
+- **HotkeysRegistered** — Whether global hotkeys are active
 
 ## Security Considerations
 
-- Clipboard text is stored in `$script:state.TypeThingText` only during active typing
-- The text is explicitly cleared from memory when typing stops or completes
+- Clipboard text is held in memory only during active typing
+- The text is explicitly cleared when typing stops or completes
 - TypeThing does not persist clipboard content to disk
 - Large clipboard warnings (>10,000 characters) prevent accidental long-running operations
 
 ## Interop Details
 
-TypeThing uses a C# interop layer compiled at runtime:
+TypeThing uses native Win32 APIs via P/Invoke in `Interop/NativeMethods.cs`:
 
-- **`TypeThingInput`** — Static class wrapping `user32.dll!SendInput`
-- **`INPUT` / `KEYBDINPUT`** — Win32 structures for keyboard input
-- **`HotkeyMessageWindow`** — `NativeWindow` subclass that receives `WM_HOTKEY` messages
-- **`HotkeyHelper`** — Wraps `RegisterHotKey` / `UnregisterHotKey`
+- **`SendInput`** (`user32.dll`) — Sends keyboard input with `KEYEVENTF_UNICODE` for full Unicode support
+- **`RegisterHotKey` / `UnregisterHotKey`** (`user32.dll`) — Global hotkey registration via `HotkeyService`
+- **`INPUT` / `KEYBDINPUT`** — Win32 structures for keyboard input simulation
 
-The `SendInput` approach ensures compatibility with applications that don't accept `WM_CHAR` messages (unlike `SendKeys`).
+The `SendInput` approach ensures compatibility with applications that don't accept `WM_CHAR` messages.
+
+## Text-to-Speech
+
+When `TypeThingTtsEnabled` is `true`, typed text is also spoken aloud using the `TextToSpeechService`, which wraps the Windows `System.Speech.Synthesis.SpeechSynthesizer` API.

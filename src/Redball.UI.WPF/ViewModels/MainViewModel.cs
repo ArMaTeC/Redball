@@ -84,6 +84,7 @@ public class MainViewModel : ViewModelBase
         OpenAboutCommand = new RelayCommand(() => ShowAbout());
         ShowQuickSettingsCommand = new RelayCommand(ShowQuickSettings);
         ShowMiniWidgetCommand = new RelayCommand(ShowMiniWidget);
+        ResetMiniWidgetPositionCommand = new RelayCommand(ResetMiniWidgetPosition);
 
         // Sync initial state
         _isActive = _keepAwake.IsActive;
@@ -164,6 +165,9 @@ public class MainViewModel : ViewModelBase
     public ICommand OpenAboutCommand { get; }
     public ICommand ShowQuickSettingsCommand { get; }
     public ICommand ShowMiniWidgetCommand { get; }
+    public ICommand ResetMiniWidgetPositionCommand { get; }
+
+    public bool IsMiniWidgetVisible => _miniWidget != null && _miniWidget.IsVisible;
 
     public string MemoryUsageText
     {
@@ -466,9 +470,23 @@ public class MainViewModel : ViewModelBase
         }
 
         _miniWidget = new Views.MiniWidgetWindow();
-        _miniWidget.Closed += (_, _) => _miniWidget = null;
+        _miniWidget.Closed += (_, _) =>
+        {
+            _miniWidget = null;
+            OnPropertyChanged(nameof(IsMiniWidgetVisible));
+        };
         _miniWidget.Show();
+        OnPropertyChanged(nameof(IsMiniWidgetVisible));
         Logger.Info("MainViewModel", "Mini widget opened");
+    }
+
+    private void ResetMiniWidgetPosition()
+    {
+        if (_miniWidget != null && _miniWidget.IsVisible)
+        {
+            _miniWidget.ResetPosition();
+            Logger.Info("MainViewModel", "Mini widget position reset");
+        }
     }
 
     private void ShowQuickSettings()
