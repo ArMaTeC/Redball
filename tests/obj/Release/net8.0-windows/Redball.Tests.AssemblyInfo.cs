@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Redball.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2cd0ca0ab3f7f898a24f379a3fd0e2e15141f19e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e3e81e77d054262fb527da8f84eb418b1b58f7eb")]
 [assembly: System.Reflection.AssemblyProductAttribute("Redball.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Redball.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

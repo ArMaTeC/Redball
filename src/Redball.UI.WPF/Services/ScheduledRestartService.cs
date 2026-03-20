@@ -72,7 +72,7 @@ public class ScheduledRestartService
                     return;
                 }
 
-                System.Windows.Application.Current.Shutdown();
+                System.Windows.Application.Current?.Shutdown();
             }
         }
         catch (Exception ex)
