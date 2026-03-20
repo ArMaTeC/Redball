@@ -41,6 +41,15 @@ public partial class QuickSettingsPopup : UserControl
         RefreshState();
     }
 
+    private void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        ClosePopup();
+        if (Application.Current.MainWindow is MainWindow mw)
+        {
+            _ = mw.CheckForUpdatesAsync();
+        }
+    }
+
     private void OpenSettings_Click(object sender, RoutedEventArgs e)
     {
         ClosePopup();
