@@ -11,7 +11,8 @@ namespace Redball.Tests
         public void CrashRecoveryService_WasPreviousCrash_NoFlag_ReturnsFalse()
         {
             // Arrange - ensure no flag exists
-            var flagPath = Path.Combine(AppContext.BaseDirectory, "Redball.crash.flag");
+            var flagPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData", "Redball.crash.flag");
             if (File.Exists(flagPath))
             {
                 File.Delete(flagPath);
@@ -28,7 +29,8 @@ namespace Redball.Tests
         public void CrashRecoveryService_SetCrashFlag_CreatesFlag()
         {
             // Arrange - clean up first
-            var flagPath = Path.Combine(AppContext.BaseDirectory, "Redball.crash.flag");
+            var flagPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData", "Redball.crash.flag");
             if (File.Exists(flagPath))
             {
                 File.Delete(flagPath);
@@ -49,7 +51,8 @@ namespace Redball.Tests
         {
             // Arrange - set flag first
             CrashRecoveryService.SetCrashFlag();
-            var flagPath = Path.Combine(AppContext.BaseDirectory, "Redball.crash.flag");
+            var flagPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData", "Redball.crash.flag");
 
             // Act
             CrashRecoveryService.ClearCrashFlag();

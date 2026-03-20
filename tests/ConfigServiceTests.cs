@@ -16,6 +16,13 @@ namespace Redball.Tests
         {
             _tempDir = Path.Combine(Path.GetTempPath(), $"redball_config_test_{Guid.NewGuid()}");
             Directory.CreateDirectory(_tempDir);
+            
+            // Reset Config to defaults before each test to prevent singleton pollution.
+            // Write a fresh default config file and load it — this also overwrites
+            // LocalAppData config/backup with defaults so fallback paths are clean.
+            var resetPath = Path.Combine(_tempDir, "reset_defaults.json");
+            File.WriteAllText(resetPath, JsonSerializer.Serialize(new RedballConfig()));
+            ConfigService.Instance.Load(resetPath);
         }
 
         [TestCleanup]
@@ -242,7 +249,7 @@ namespace Redball.Tests
         }
 
         [TestMethod]
-        public void ConfigService_Load_InvalidJson_ReturnsFalse()
+        public void ConfigService_Load_InvalidJson_RecoverGracefully()
         {
             // Arrange
             var service = ConfigService.Instance;
@@ -252,8 +259,10 @@ namespace Redball.Tests
             // Act
             var result = service.Load(testPath);
 
-            // Assert
-            Assert.IsFalse(result, "Load should return false for invalid JSON");
+            // Assert — Load now self-heals: returns true with defaults rather than failing
+            Assert.IsTrue(result, "Load should recover gracefully from invalid JSON");
+            Assert.IsNotNull(service.Config, "Config should not be null after recovery");
+            Assert.AreEqual(59, service.Config.HeartbeatSeconds, "Config should have default HeartbeatSeconds after recovery");
         }
 
         [TestMethod]

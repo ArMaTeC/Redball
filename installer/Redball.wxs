@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package Name="Redball"
            Manufacturer="ArMaTeC"
            Version="$(var.ProductVersion)"
@@ -59,6 +60,9 @@
     <Icon Id="RedballIcon" SourceFile="Redball.ico" />
     <Property Id="ARPPRODUCTICON" Value="RedballIcon" />
 
+    <!-- UserData folder lives OUTSIDE the MSI-managed install tree so config survives upgrades -->
+    <SetProperty Id="USERDATAFOLDER" Value="[LocalAppDataFolder]Redball\UserData" Before="CostFinalize" Sequence="both" />
+
     <!-- .NET 8 prerequisite is handled by the Bundle (Setup.exe) installer.
          If the MSI is run standalone without .NET 8, Windows will show the
          standard .NET runtime-not-found dialog with a direct download link. -->
@@ -103,6 +107,7 @@
       <ComponentGroupRef Id="AssetsComponents" />
       <ComponentGroupRef Id="ShortcutComponents" />
       <ComponentGroupRef Id="FileAssociationComponents" />
+      <ComponentGroupRef Id="UserDataCleanupComponents" />
       
       <!-- Desktop shortcut as optional sub-feature -->
       <Feature Id="DesktopShortcutFeature" Title="Desktop Shortcut" Description="Add shortcut to Desktop" Level="1000" AllowAdvertise="no">
@@ -248,6 +253,16 @@
     <ComponentGroup Id="CfgIdleDetectionComponents" Directory="INSTALLFOLDER">
       <Component Id="CfgIdleDetectionComponent" Guid="90CC4352-C1F4-48D1-B60A-99729AF5EA7A">
         <RegistryValue Root="HKCU" Key="Software\Redball\InstallerDefaults" Name="IdleDetection" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Clean up UserData folder (config, crash flag, backups) on FULL uninstall only.
+         This folder is NOT managed by any install component, so it survives upgrades.
+         The RemoveFolder + registry key combo ensures WiX only cleans it on uninstall. -->
+    <ComponentGroup Id="UserDataCleanupComponents" Directory="INSTALLFOLDER">
+      <Component Id="UserDataCleanupComponent" Guid="F7A8B9C0-1D2E-3F4A-5B6C-7D8E9F0A1B2C">
+        <RegistryValue Root="HKCU" Key="Software\Redball" Name="UserDataCleanup" Type="integer" Value="1" KeyPath="yes" />
+        <util:RemoveFolderEx On="uninstall" Property="USERDATAFOLDER" />
       </Component>
     </ComponentGroup>
   </Fragment>

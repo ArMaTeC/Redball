@@ -46,7 +46,7 @@ else {
     $outputMsi = Join-Path $outputDir 'Redball.msi'
 }
 
-$requiredExtensions = @('WixToolset.UI.wixext', 'WixToolset.Netfx.wixext', 'WixToolset.Bal.wixext')
+$requiredExtensions = @('WixToolset.UI.wixext', 'WixToolset.Util.wixext')
 
 function New-RedballBannerBmp {
     param(
@@ -217,8 +217,9 @@ if (-not $wixExe) {
 
 Write-HostSafe "Building MSI from $wxsPath ..." -ForegroundColor Cyan
 
-# Skip extension installation check - assume extensions are available via wix.exe
+# Ensure required extensions are installed globally
 foreach ($extension in $requiredExtensions) {
+    $null = Install-WixExtensionIfMissing -WixExe $wixExe -ExtensionId $extension
     Write-HostSafe "Using WiX extension: $extension" -ForegroundColor Gray
 }
 
@@ -228,11 +229,11 @@ $buildArgs = @(
     '-o', $outputMsi
 )
 
-# Use explicit extension paths
-$projectRoot = Split-Path -Parent $scriptRoot
-$uiExtPath = Join-Path (Join-Path $env:USERPROFILE '.wix') 'extensions'
-$buildArgs += '-ext'
-$buildArgs += (Join-Path (Join-Path (Join-Path (Join-Path $uiExtPath 'WixToolset.UI.wixext') '7.0.0-rc.2') 'wixext7') 'WixToolset.UI.wixext.dll')
+# Pass all required extensions to the build
+foreach ($extension in $requiredExtensions) {
+    $buildArgs += '-ext'
+    $buildArgs += $extension
+}
 
 if ($AddLocalFeatures) {
     $buildArgs += '-d'

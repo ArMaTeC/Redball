@@ -184,7 +184,7 @@ function Get-ProjectVersion {
 function Get-ChangeLog {
     param([string]$CurrentTag)
 
-    # Find previous tag
+    # Find previous tag (excluding the current one)
     $allTags = git tag --sort=-v:refname 2>$null
     $previousTag = $null
     if ($allTags) {
@@ -196,33 +196,50 @@ function Get-ChangeLog {
         }
     }
 
+    # Always get the commit list — try tag range first, then full log
     if ($previousTag) {
         Write-Info "Generating changelog from $previousTag to HEAD..."
         $commits = git log "$previousTag..HEAD" --pretty=format:"- %s (%h)" --no-merges 2>$null
+        $rangeLabel = "Changes since $previousTag"
     }
     else {
-        Write-Info "No previous tag found, using last 20 commits..."
-        $commits = git log --pretty=format:"- %s (%h)" --no-merges -20 2>$null
+        Write-Info "No previous tag found, listing all commits..."
+        $commits = git log --pretty=format:"- %s (%h)" --no-merges 2>$null
+        $rangeLabel = "All Changes"
     }
+
+    # If we still got nothing (e.g. single-commit repo), try without --no-merges
+    if (-not $commits) {
+        Write-Info "No non-merge commits found, including merge commits..."
+        if ($previousTag) {
+            $commits = git log "$previousTag..HEAD" --pretty=format:"- %s (%h)" 2>$null
+        }
+        else {
+            $commits = git log --pretty=format:"- %s (%h)" 2>$null
+        }
+    }
+
+    $changelog = "## $rangeLabel`n`n"
 
     if ($commits) {
-        $changelog = "## Changes in this Release`n`n"
-        $changelog += $commits -join "`n"
-        $changelog += "`n`n## Installation`n`n"
-        $changelog += "Download and run ``Redball.msi`` to install.`n`n"
-        $changelog += "## SHA256 Checksums`n`n"
-
-        # Calculate checksums for all artifacts in dist
-        $artifacts = Get-ChildItem $DistDir -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -in '.msi', '.exe' }
-        foreach ($artifact in $artifacts) {
-            $hash = (Get-FileHash $artifact.FullName -Algorithm SHA256).Hash
-            $changelog += "- ``$($artifact.Name)``: ``$hash```n"
-        }
-
-        return $changelog
+        $changelog += ($commits -join "`n")
+    }
+    else {
+        $changelog += "- No commits found in range`n"
     }
 
-    return "## Release $CurrentTag`n`nSee commit history for detailed changes."
+    $changelog += "`n`n## Installation`n`n"
+    $changelog += "Download and run ``Redball.msi`` to install.`n`n"
+    $changelog += "## SHA256 Checksums`n`n"
+
+    # Calculate checksums for all artifacts in dist
+    $artifacts = Get-ChildItem $DistDir -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -in '.msi', '.exe' }
+    foreach ($artifact in $artifacts) {
+        $hash = (Get-FileHash $artifact.FullName -Algorithm SHA256).Hash
+        $changelog += "- ``$($artifact.Name)``: ``$hash```n"
+    }
+
+    return $changelog
 }
 
 function Invoke-BuildIfNeeded {

@@ -27,7 +27,7 @@ public partial class MainWindow : Window
     private Views.AboutWindow? _aboutWindow;
     private HotkeyService? _hotkeyService;
     private bool _isTyping;
-    private bool _isLoadingSettings;
+    private bool _isLoadingSettings = true;
     private DispatcherTimer? _typeThingCountdownTimer;
     private DispatcherTimer? _typeThingTimer;
 

@@ -10,7 +10,7 @@ namespace Redball.UI.Services;
 public static class CrashRecoveryService
 {
     private static readonly string CrashFlagPath = Path.Combine(
-        AppContext.BaseDirectory, "Redball.crash.flag");
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData", "Redball.crash.flag");
 
     /// <summary>
     /// Checks if a crash flag exists from a previous session.
@@ -35,6 +35,9 @@ public static class CrashRecoveryService
     {
         try
         {
+            var dir = Path.GetDirectoryName(CrashFlagPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
             File.WriteAllText(CrashFlagPath, "Running");
             Logger.Debug("CrashRecovery", "Crash flag set");
         }
