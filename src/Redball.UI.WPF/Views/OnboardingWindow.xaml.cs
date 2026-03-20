@@ -21,7 +21,7 @@ public partial class OnboardingWindow : Window
         UpdateStepUI();
     }
 
-    private bool _isLoading;
+    private bool _isLoading = true;
 
     private void LoadCurrentSettings()
     {
