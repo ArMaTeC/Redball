@@ -320,6 +320,8 @@ public partial class MainWindow
                 };
 
                 AddToTypeThingHistory(clipboardText);
+                // Trigger text-to-speech if enabled
+                TextToSpeechService.Instance.SpeakAsync(clipboardText);
                 NotificationService.Instance.ShowInfo("TypeThing", $"Typing {clipboardText.Length} characters in {countdown} seconds... Switch to target window now!");
                 _typeThingCountdownTimer.Start();
             }

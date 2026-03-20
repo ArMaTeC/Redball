@@ -69,7 +69,8 @@
             </StackPanel>
 
             <!-- Step 2: Features -->
-            <StackPanel x:Name="Step2Panel" Visibility="Collapsed">
+            <ScrollViewer x:Name="Step2Panel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
                 <TextBlock Text="Key Features" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15"/>
                 <Border Style="{DynamicResource CardStyle}" Margin="0,5">
                     <Grid>
@@ -123,7 +124,8 @@
                         </StackPanel>
                     </Grid>
                 </Border>
-            </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
 
             <!-- Step 3: Settings -->
             <Grid x:Name="Step3Panel" Visibility="Collapsed">
