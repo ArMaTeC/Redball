@@ -14,7 +14,7 @@
           "MSTest.TestFramework": "3.1.1",
           "Microsoft.NET.Test.Sdk": "17.8.0",
           "Moq": "4.20.70",
-          "Redball.UI.WPF": "2.1.117",
+          "Redball.UI.WPF": "2.1.120",
           "coverlet.collector": "6.0.0",
           "Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions": "14.0.0.0"
         },
@@ -550,7 +550,7 @@
           "System.Drawing.Common": "5.0.2"
         }
       },
-      "Redball.UI.WPF/2.1.117": {
+      "Redball.UI.WPF/2.1.120": {
         "dependencies": {
           "CommunityToolkit.Mvvm": "8.2.2",
           "Hardcodet.NotifyIcon.Wpf": "1.1.0",
@@ -563,8 +563,8 @@
         },
         "runtime": {
           "Redball.UI.WPF.dll": {
-            "assemblyVersion": "2.1.117.0",
-            "fileVersion": "2.1.117.0"
+            "assemblyVersion": "2.1.120.0",
+            "fileVersion": "2.1.120.0"
           }
         }
       },
@@ -843,7 +843,7 @@
       "path": "system.windows.extensions/5.0.0",
       "hashPath": "system.windows.extensions.5.0.0.nupkg.sha512"
     },
-    "Redball.UI.WPF/2.1.117": {
+    "Redball.UI.WPF/2.1.120": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

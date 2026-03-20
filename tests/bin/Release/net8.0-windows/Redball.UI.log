@@ -1,661 +1,661 @@
-[2026-03-20 13:03:12.003] [INF] [004] [StressTests] Concurrent logging - expected: 500, actual: 1496
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.005] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.005] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.006] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.006] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.007] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.007] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:12.008] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:12.008] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:12.013] [VRB] [004] [TemplateService] Templates file: C:\Users\<user>\AppData\Local\Redball\templates.json, count: 1
-[2026-03-20 13:03:12.018] [INF] [004] [TemplateService] Template saved: TestTemplate (13 chars)
-[2026-03-20 13:03:12.035] [INF] [004] [TemplateService] Template saved: DeleteTest (7 chars)
-[2026-03-20 13:03:12.036] [INF] [004] [TemplateService] Template deleted: DeleteTest
-[2026-03-20 13:03:12.038] [INF] [004] [TemplateService] Template saved: Test1_951f70c7-c6eb-450c-9a86-41a44b979f30 (8 chars)
-[2026-03-20 13:03:12.039] [INF] [004] [TemplateService] Template saved: Test2_05d6e6df-719a-47b5-b6d1-2f08a1b1a24b (8 chars)
-[2026-03-20 13:03:12.040] [INF] [004] [TemplateService] Template deleted: Test1_951f70c7-c6eb-450c-9a86-41a44b979f30
-[2026-03-20 13:03:12.041] [INF] [004] [TemplateService] Template deleted: Test2_05d6e6df-719a-47b5-b6d1-2f08a1b1a24b
-[2026-03-20 13:03:12.042] [VRB] [004] [TextToSpeechService] Instance created
-[2026-03-20 13:03:12.136] [INF] [004] [TextToSpeechService] SpeechSynthesizer initialized
-[2026-03-20 13:03:12.251] [DBG] [004] [UpdateService] Current assembly version: 2.1.117.0
-[2026-03-20 13:03:12.253] [DBG] [004] [UpdateService] Fetching all releases from: https://api.github.com/repos/ArMaTeC/Redball/releases
-[2026-03-20 13:03:12.585] [DBG] [013] [UpdateService] API response length: 148321 chars
-[2026-03-20 13:03:12.588] [DBG] [013] [UpdateService] Checking 30 releases for highest version
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.115 -> version 2.1.115
-[2026-03-20 13:03:12.588] [DBG] [013] [UpdateService] New highest version found: 2.1.115 from v2.1.115
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.110 -> version 2.1.110
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.109 -> version 2.1.109
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.107 -> version 2.1.107
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.106 -> version 2.1.106
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.97 -> version 2.1.97
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.96 -> version 2.1.96
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.94 -> version 2.1.94
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.93 -> version 2.1.93
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.92 -> version 2.1.92
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.90 -> version 2.1.90
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.89 -> version 2.1.89
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.88 -> version 2.1.88
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.87 -> version 2.1.87
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.86 -> version 2.1.86
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.85 -> version 2.1.85
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.84 -> version 2.1.84
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.83 -> version 2.1.83
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.82 -> version 2.1.82
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.54 -> version 2.1.54
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.53 -> version 2.1.53
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.52 -> version 2.1.52
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.50 -> version 2.1.50
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.49 -> version 2.1.49
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.48 -> version 2.1.48
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.47 -> version 2.1.47
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.45 -> version 2.1.45
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.44 -> version 2.1.44
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.43 -> version 2.1.43
-[2026-03-20 13:03:12.588] [VRB] [013] [UpdateService] Release v2.1.37 -> version 2.1.37
-[2026-03-20 13:03:12.588] [INF] [013] [UpdateService] Highest version release: v2.1.115 (2.1.115)
-[2026-03-20 13:03:12.588] [DBG] [013] [UpdateService] Latest release tag: v2.1.115
-[2026-03-20 13:03:12.588] [INF] [013] [UpdateService] Comparing versions: current=2.1.117, latest=2.1.115
-[2026-03-20 13:03:12.588] [INF] [013] [UpdateService] Up to date (current: 2.1.117, latest: 2.1.115)
-[2026-03-20 13:03:12.597] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:12.599] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:12.599] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:12.886] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:12.887] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:12.887] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:12.887] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:12.905] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:12.908] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:12.908] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:12.908] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:12.922] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:12.924] [INF] [004] [MainViewModel] IsActive changed to: False
-[2026-03-20 13:03:12.924] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:12.924] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:12.924] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:12.924] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:12.937] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:12.937] [VRB] [004] [MainViewModel] StatusText changed to: 'Test Status 9277208a-e9ff-41d3-8458-e18bf0cc22c6'
-[2026-03-20 13:03:12.937] [INF] [004] [MainViewModel] IsActive changed to: False
-[2026-03-20 13:03:12.937] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:12.937] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:12.938] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:12.938] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:12.938] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:12.952] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:12.952] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:12.952] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:12.952] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:12.969] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:12.969] [VRB] [004] [MainViewModel] StatusText changed to: 'Test Status'
-[2026-03-20 13:03:12.970] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:12.970] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:12.970] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:12.982] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:12.982] [INF] [004] [MainViewModel] IsDarkMode changed to: False
-[2026-03-20 13:03:12.987] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:12.987] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:12.987] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.003] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.004] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.004] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.004] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.015] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.017] [DBG] [004] [MainViewModel] Setting MainWindow reference
-[2026-03-20 13:03:13.018] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.018] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.018] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.027] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.027] [INF] [004] [MainViewModel] IsDarkMode changed to: False
-[2026-03-20 13:03:13.027] [INF] [004] [MainViewModel] IsDarkMode changed to: True
-[2026-03-20 13:03:13.028] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.028] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.028] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.039] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.042] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.042] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.042] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.054] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.055] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.055] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.055] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.066] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.067] [INF] [004] [MainViewModel] ToggleActive called
-[2026-03-20 13:03:13.067] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:13.067] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:13.074] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:13.075] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:13.076] [INF] [004] [MainViewModel] ToggleActive called
-[2026-03-20 13:03:13.076] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:13.076] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:13.076] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:13.076] [INF] [004] [KeepAwakeService] Timers started
-[2026-03-20 13:03:13.077] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.077] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.077] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.092] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.092] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: False
-[2026-03-20 13:03:13.092] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000001)
-[2026-03-20 13:03:13.092] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display Normal | Heartbeat Off'
-[2026-03-20 13:03:13.092] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display Normal | Heartbeat Off
-[2026-03-20 13:03:13.093] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.093] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display Normal | Heartbeat Off'
-[2026-03-20 13:03:13.093] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display Normal | Heartbeat Off
-[2026-03-20 13:03:13.105] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.105] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: True
-[2026-03-20 13:03:13.108] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display Normal | F15 On'
-[2026-03-20 13:03:13.108] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display Normal | F15 On
-[2026-03-20 13:03:13.108] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.108] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display Normal | F15 On'
-[2026-03-20 13:03:13.108] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display Normal | F15 On
-[2026-03-20 13:03:13.120] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.120] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: True
-[2026-03-20 13:03:13.120] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:13.121] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | F15 On'
-[2026-03-20 13:03:13.121] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | F15 On
-[2026-03-20 13:03:13.121] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.121] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | F15 On
-[2026-03-20 13:03:13.133] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.133] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: False
-[2026-03-20 13:03:13.133] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.133] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.134] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.134] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.134] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.151] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.151] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.151] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.151] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.179] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.179] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.179] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.179] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.191] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.191] [INF] [004] [MainViewModel] OpenSettings called
-[2026-03-20 13:03:13.193] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.193] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.193] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.205] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.205] [INF] [004] [MainViewModel] StartTypeThing called
-[2026-03-20 13:03:13.205] [WRN] [004] [MainViewModel] MainWindow reference not available, cannot start TypeThing
-[2026-03-20 13:03:13.206] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.206] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.206] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.217] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.217] [INF] [004] [MainViewModel] ShowAbout called
-[2026-03-20 13:03:13.218] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.218] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.218] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.228] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.228] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.228] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.228] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.240] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.241] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.241] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.241] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.256] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.257] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.257] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.257] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.269] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.269] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.270] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.270] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.279] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.280] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.280] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.280] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.292] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.293] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.293] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.293] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.321] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.322] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.322] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.322] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.337] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.338] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.338] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.338] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.356] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.356] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.356] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.356] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.373] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.374] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.374] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.374] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.389] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.390] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.390] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.390] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.419] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.420] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.420] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.420] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.444] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.444] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.444] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.444] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.467] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.468] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.468] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.468] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.488] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.488] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.488] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.488] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.511] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.517] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.517] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.517] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.534] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.534] [VRB] [004] [MainViewModel] StatusText changed to: 'Before refresh 22573e01-2904-471e-a2d4-487b9ea643af'
-[2026-03-20 13:03:13.534] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.534] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.535] [INF] [004] [MainViewModel] Constructor called
-[2026-03-20 13:03:13.535] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
-[2026-03-20 13:03:13.535] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
-[2026-03-20 13:03:13.545] [INF] [004] [MainViewModel] Commands initialized
-[2026-03-20 13:03:13.545] [INF] [004] [MainViewModel] ToggleActive called
-[2026-03-20 13:03:13.545] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
-[2026-03-20 13:03:13.545] [INF] [004] [KeepAwakeService] IsActive changed to: False
-[2026-03-20 13:03:13.545] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
-[2026-03-20 13:03:13.545] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
-[2026-03-20 13:03:13.545] [INF] [004] [MainViewModel] ToggleActive called
-[2026-03-20 13:03:13.545] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
-[2026-03-20 13:03:13.545] [INF] [004] [KeepAwakeService] IsActive changed to: True
-[2026-03-20 13:03:13.545] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
-[2026-03-20 13:03:13.545] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.971] [INF] [004] [StressTests] Concurrent logging - expected: 500, actual: 1493
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.987] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.987] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.987] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.987] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.987] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.987] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.988] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.988] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.989] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.989] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:00.990] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:00.990] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:00.994] [VRB] [004] [TemplateService] Templates file: C:\Users\<user>\AppData\Local\Redball\templates.json, count: 1
+[2026-03-20 15:00:00.999] [INF] [004] [TemplateService] Template saved: TestTemplate (13 chars)
+[2026-03-20 15:00:01.018] [INF] [004] [TemplateService] Template saved: DeleteTest (7 chars)
+[2026-03-20 15:00:01.021] [INF] [004] [TemplateService] Template deleted: DeleteTest
+[2026-03-20 15:00:01.025] [INF] [004] [TemplateService] Template saved: Test1_be2e7d1d-62a9-40a0-bd01-8509fca075ad (8 chars)
+[2026-03-20 15:00:01.027] [INF] [004] [TemplateService] Template saved: Test2_dad33efc-158f-420e-ae62-3e7d8ecab329 (8 chars)
+[2026-03-20 15:00:01.029] [INF] [004] [TemplateService] Template deleted: Test1_be2e7d1d-62a9-40a0-bd01-8509fca075ad
+[2026-03-20 15:00:01.029] [INF] [004] [TemplateService] Template deleted: Test2_dad33efc-158f-420e-ae62-3e7d8ecab329
+[2026-03-20 15:00:01.031] [VRB] [004] [TextToSpeechService] Instance created
+[2026-03-20 15:00:01.413] [INF] [004] [TextToSpeechService] SpeechSynthesizer initialized
+[2026-03-20 15:00:01.561] [DBG] [004] [UpdateService] Current assembly version: 2.1.120.0
+[2026-03-20 15:00:01.562] [DBG] [004] [UpdateService] Fetching all releases from: https://api.github.com/repos/ArMaTeC/Redball/releases
+[2026-03-20 15:00:02.057] [DBG] [011] [UpdateService] API response length: 146515 chars
+[2026-03-20 15:00:02.063] [DBG] [011] [UpdateService] Checking 30 releases for highest version
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.117 -> version 2.1.117
+[2026-03-20 15:00:02.063] [DBG] [011] [UpdateService] New highest version found: 2.1.117 from v2.1.117
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.115 -> version 2.1.115
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.110 -> version 2.1.110
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.109 -> version 2.1.109
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.107 -> version 2.1.107
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.106 -> version 2.1.106
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.97 -> version 2.1.97
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.96 -> version 2.1.96
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.94 -> version 2.1.94
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.93 -> version 2.1.93
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.92 -> version 2.1.92
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.90 -> version 2.1.90
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.89 -> version 2.1.89
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.88 -> version 2.1.88
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.87 -> version 2.1.87
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.86 -> version 2.1.86
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.85 -> version 2.1.85
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.84 -> version 2.1.84
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.83 -> version 2.1.83
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.82 -> version 2.1.82
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.54 -> version 2.1.54
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.53 -> version 2.1.53
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.52 -> version 2.1.52
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.50 -> version 2.1.50
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.49 -> version 2.1.49
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.48 -> version 2.1.48
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.47 -> version 2.1.47
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.45 -> version 2.1.45
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.44 -> version 2.1.44
+[2026-03-20 15:00:02.063] [VRB] [011] [UpdateService] Release v2.1.43 -> version 2.1.43
+[2026-03-20 15:00:02.063] [INF] [011] [UpdateService] Highest version release: v2.1.117 (2.1.117)
+[2026-03-20 15:00:02.063] [DBG] [011] [UpdateService] Latest release tag: v2.1.117
+[2026-03-20 15:00:02.063] [INF] [011] [UpdateService] Comparing versions: current=2.1.120, latest=2.1.117
+[2026-03-20 15:00:02.063] [INF] [011] [UpdateService] Up to date (current: 2.1.120, latest: 2.1.117)
+[2026-03-20 15:00:02.071] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:02.072] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.073] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.286] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:02.289] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:02.289] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.289] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.362] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:02.365] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:02.365] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.365] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.425] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:02.425] [INF] [004] [MainViewModel] IsActive changed to: False
+[2026-03-20 15:00:02.425] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.426] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:02.426] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.426] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.478] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:02.478] [VRB] [004] [MainViewModel] StatusText changed to: 'Test Status 697d1ce1-2234-49ad-a4d6-b0d130c537fc'
+[2026-03-20 15:00:02.478] [INF] [004] [MainViewModel] IsActive changed to: False
+[2026-03-20 15:00:02.478] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.478] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.478] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:02.478] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.478] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.527] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:02.528] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:02.528] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.528] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.565] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:02.565] [VRB] [004] [MainViewModel] StatusText changed to: 'Test Status'
+[2026-03-20 15:00:02.566] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:02.566] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.566] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.612] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:02.612] [INF] [004] [MainViewModel] IsDarkMode changed to: False
+[2026-03-20 15:00:02.624] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:02.624] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.625] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.684] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:02.685] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:02.685] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.685] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.763] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:02.776] [DBG] [004] [MainViewModel] Setting MainWindow reference
+[2026-03-20 15:00:02.777] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:02.777] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.777] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.864] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:02.864] [INF] [004] [MainViewModel] IsDarkMode changed to: False
+[2026-03-20 15:00:02.864] [INF] [004] [MainViewModel] IsDarkMode changed to: True
+[2026-03-20 15:00:02.865] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:02.865] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.865] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:02.930] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:02.932] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:02.932] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:02.932] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.001] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.002] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.002] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.002] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.081] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.082] [INF] [004] [MainViewModel] ToggleActive called
+[2026-03-20 15:00:03.082] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:03.082] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:03.095] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:03.095] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:03.096] [INF] [004] [MainViewModel] ToggleActive called
+[2026-03-20 15:00:03.096] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:03.096] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:03.096] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:03.096] [INF] [004] [KeepAwakeService] Timers started
+[2026-03-20 15:00:03.097] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.097] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.097] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.211] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.211] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: False
+[2026-03-20 15:00:03.211] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000001)
+[2026-03-20 15:00:03.211] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display Normal | Heartbeat Off'
+[2026-03-20 15:00:03.211] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display Normal | Heartbeat Off
+[2026-03-20 15:00:03.211] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.211] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display Normal | Heartbeat Off'
+[2026-03-20 15:00:03.211] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display Normal | Heartbeat Off
+[2026-03-20 15:00:03.249] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.249] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: True
+[2026-03-20 15:00:03.250] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display Normal | F15 On'
+[2026-03-20 15:00:03.250] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display Normal | F15 On
+[2026-03-20 15:00:03.250] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.251] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display Normal | F15 On'
+[2026-03-20 15:00:03.251] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display Normal | F15 On
+[2026-03-20 15:00:03.316] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.316] [INF] [004] [KeepAwakeService] PreventDisplaySleep changed to: True
+[2026-03-20 15:00:03.316] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:03.317] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | F15 On'
+[2026-03-20 15:00:03.317] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | F15 On
+[2026-03-20 15:00:03.317] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.317] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | F15 On
+[2026-03-20 15:00:03.353] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.353] [INF] [004] [KeepAwakeService] UseHeartbeat changed to: False
+[2026-03-20 15:00:03.353] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.353] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.353] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.353] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.353] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.382] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.382] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.382] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.382] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.451] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.451] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.451] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.451] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.513] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.513] [INF] [004] [MainViewModel] OpenSettings called
+[2026-03-20 15:00:03.515] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.515] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.515] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.537] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.537] [INF] [004] [MainViewModel] StartTypeThing called
+[2026-03-20 15:00:03.537] [WRN] [004] [MainViewModel] MainWindow reference not available, cannot start TypeThing
+[2026-03-20 15:00:03.538] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.538] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.538] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.613] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.614] [INF] [004] [MainViewModel] ShowAbout called
+[2026-03-20 15:00:03.614] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.614] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.614] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.674] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.675] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.675] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.675] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.745] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.745] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.745] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.745] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.785] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.786] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.786] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.786] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.854] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.854] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.854] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.854] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.886] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.886] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.887] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.887] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.901] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.902] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.902] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.902] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.958] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.960] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.960] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.960] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:03.979] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:03.979] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:03.979] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:03.979] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:04.004] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:04.005] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:04.005] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:04.005] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:04.128] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:04.129] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:04.129] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:04.129] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:04.166] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:04.167] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:04.167] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:04.167] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:04.231] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:04.232] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:04.234] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:04.234] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:04.272] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:04.273] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:04.273] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:04.273] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:04.361] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:04.362] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:04.362] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:04.362] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:04.410] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:04.410] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:04.410] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:04.410] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:04.472] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:04.475] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:04.475] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:04.475] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:04.504] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:04.504] [VRB] [004] [MainViewModel] StatusText changed to: 'Before refresh fe7750f3-8079-4d23-8464-04857ebafb7f'
+[2026-03-20 15:00:04.504] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:04.504] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:04.505] [INF] [004] [MainViewModel] Constructor called
+[2026-03-20 15:00:04.505] [VRB] [004] [MainViewModel] StatusText changed to: 'Active | Display On | Heartbeat Off'
+[2026-03-20 15:00:04.505] [DBG] [004] [MainViewModel] StatusText updated to: Active | Display On | Heartbeat Off
+[2026-03-20 15:00:04.643] [INF] [004] [MainViewModel] Commands initialized
+[2026-03-20 15:00:04.643] [INF] [004] [MainViewModel] ToggleActive called
+[2026-03-20 15:00:04.643] [INF] [004] [KeepAwakeService] SetActive called: active=False, until=
+[2026-03-20 15:00:04.643] [INF] [004] [KeepAwakeService] IsActive changed to: False
+[2026-03-20 15:00:04.643] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000000)
+[2026-03-20 15:00:04.643] [INF] [004] [KeepAwakeService] Heartbeat timer stopped
+[2026-03-20 15:00:04.643] [INF] [004] [MainViewModel] ToggleActive called
+[2026-03-20 15:00:04.643] [INF] [004] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-20 15:00:04.643] [INF] [004] [KeepAwakeService] IsActive changed to: True
+[2026-03-20 15:00:04.643] [VRB] [004] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-20 15:00:04.643] [INF] [004] [KeepAwakeService] Timers started
