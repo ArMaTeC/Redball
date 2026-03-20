@@ -316,14 +316,73 @@ jobs:
         echo "MSI ready for release"
         echo "Bundle ready for release"
 
+    - name: Generate release notes
+      id: notes
+      shell: bash
+      run: |
+        VERSION="${{ needs.tag.outputs.version }}"
+        TAG="${{ needs.tag.outputs.tag }}"
+        NOTES_FILE="release_notes.md"
+
+        # --- 1. Extract CHANGELOG.md section for this version ---
+        CHANGELOG=""
+        if [ -f docs/CHANGELOG.md ]; then
+          # Grab lines between ## [VERSION] and the next ## header
+          CHANGELOG=$(awk -v ver="$VERSION" '
+            /^## \[/ { if (found) exit; if (index($0, ver)) found=1; next }
+            found { print }
+          ' docs/CHANGELOG.md)
+        fi
+
+        # --- 2. Categorised git log since previous tag ---
+        PREV_TAG=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | head -1)
+        RANGE="${PREV_TAG:+${PREV_TAG}..HEAD}"
+        RANGE="${RANGE:-HEAD}"
+
+        FEATURES=$(git log "$RANGE" --pretty=format:"- %s" --grep="feat" -i 2>/dev/null || true)
+        FIXES=$(git log "$RANGE" --pretty=format:"- %s" --grep="fix" -i 2>/dev/null || true)
+        OTHER=$(git log "$RANGE" --pretty=format:"- %s" --invert-grep --grep="feat" --grep="fix" -i 2>/dev/null | head -20 || true)
+
+        # --- 3. Assemble release notes ---
+        {
+          echo "# Redball $TAG"
+          echo ""
+          if [ -n "$CHANGELOG" ]; then
+            echo "## What's New"
+            echo "$CHANGELOG"
+            echo ""
+          fi
+          if [ -n "$FEATURES" ]; then
+            echo "## Features"
+            echo "$FEATURES"
+            echo ""
+          fi
+          if [ -n "$FIXES" ]; then
+            echo "## Bug Fixes"
+            echo "$FIXES"
+            echo ""
+          fi
+          if [ -n "$OTHER" ]; then
+            echo "## Other Changes"
+            echo "$OTHER"
+            echo ""
+          fi
+          echo "---"
+          echo "*Full changelog: https://github.com/${{ github.repository }}/compare/${PREV_TAG:-initial}...$TAG*"
+        } > "$NOTES_FILE"
+
+        echo "Generated release notes:"
+        cat "$NOTES_FILE"
+
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
+        body_path: release_notes.md
         files: |
           ./release/Redball.msi
           ./release/Redball-Setup.exe
           ./release/Redball-Setup-${{ needs.tag.outputs.version }}.exe
-        generate_release_notes: true
+        generate_release_notes: false
         draft: false
         prerelease: false

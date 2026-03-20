@@ -38,15 +38,79 @@ public class RedballUIAutomation : IDisposable
         {
             _app = Application.Launch(exePath);
             
-            // Give the app time to start before trying to get the window
-            Thread.Sleep(2000);
+            // Give the app time to start - tray-only mode takes longer to initialize
+            Thread.Sleep(3000);
             
-            _mainWindow = _app.GetMainWindow(_automation);
+            // For tray-only apps, GetMainWindow fails because window is hidden.
+            // Get window by process ID instead, then show it.
+            var processId = _app.ProcessId;
+            _mainWindow = GetWindowByProcessId(processId, TimeSpan.FromSeconds(10));
+            
+            if (_mainWindow == null)
+            {
+                throw new InvalidOperationException("Could not find main window. Application may have crashed or failed to start.");
+            }
+            
+            // Show the window for UI automation testing using WindowPattern
+            var windowPattern = _mainWindow!.Patterns.Window.Pattern;
+            windowPattern.SetWindowVisualState(WindowVisualState.Normal);
+            _mainWindow.Focus();
+            Thread.Sleep(500);
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException($"Failed to launch application: {ex.Message}", ex);
         }
+    }
+
+    private Window? GetWindowByProcessId(int processId, TimeSpan timeout)
+    {
+        var start = DateTime.Now;
+        while (DateTime.Now - start < timeout)
+        {
+            try
+            {
+                // Find desktop and search for window by process ID
+                var desktop = _automation?.GetDesktop();
+                var windows = desktop?.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
+                
+                if (windows != null)
+                {
+                    foreach (var window in windows)
+                    {
+                        try
+                        {
+                            // Check if this window belongs to our process
+                            var windowPattern = window.Patterns.Window.PatternOrDefault;
+                            if (windowPattern != null)
+                            {
+                                // Get the process ID through the window handle
+                                var hwnd = window.Properties.NativeWindowHandle;
+                                if (hwnd != IntPtr.Zero)
+                                {
+                                    try
+                                    {
+                                        var windowProcess = System.Diagnostics.Process.GetProcessById(processId);
+                                        if (windowProcess.MainWindowHandle == hwnd || 
+                                            window.Name.Contains("Redball", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            return window.AsWindow();
+                                        }
+                                    }
+                                    catch { }
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+                }
+            }
+            catch { }
+            
+            Thread.Sleep(100);
+        }
+        
+        return null;
     }
 
     private static string FindExecutablePath()

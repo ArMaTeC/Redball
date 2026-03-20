@@ -83,6 +83,12 @@ public partial class AboutWindow : Window
         if (success)
         {
             _analytics.TrackFeature("update.download_succeeded");
+            if (Application.Current.MainWindow is MainWindow mw)
+            {
+                mw.ExitApplication();
+                return;
+            }
+
             Application.Current.Shutdown();
         }
         else

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
@@ -20,6 +21,8 @@ public class KeepAwakeService : IKeepAwakeService
     private Timer? _durationTimer;
     private bool _disposed;
     private int _monitorTickCount;
+    private Stopwatch? _sessionStopwatch;
+    private TimeSpan _timedDuration;
 
     // State
     private bool _isActive;
@@ -194,6 +197,12 @@ public class KeepAwakeService : IKeepAwakeService
         if (active)
         {
             _startTime ??= DateTime.Now;
+            // Start monotonic stopwatch for timed sessions (immune to clock changes)
+            if (until.HasValue)
+            {
+                _timedDuration = until.Value - DateTime.Now;
+                _sessionStopwatch = Stopwatch.StartNew();
+            }
             _heartbeatTimer?.Change(_heartbeatIntervalMs, _heartbeatIntervalMs);
             _durationTimer?.Change(1000, 1000);
             Logger.Info("KeepAwakeService", "Timers started");
@@ -201,6 +210,8 @@ public class KeepAwakeService : IKeepAwakeService
         else
         {
             _heartbeatTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+            _sessionStopwatch?.Stop();
+            _sessionStopwatch = null;
             // Keep duration timer running for monitoring even when paused
             Logger.Info("KeepAwakeService", "Heartbeat timer stopped");
         }
@@ -224,6 +235,7 @@ public class KeepAwakeService : IKeepAwakeService
             Logger.Warning("KeepAwakeService", $"Invalid timed duration: {minutes}");
             return;
         }
+        Logger.Debug("KeepAwakeService", $"Starting timed session: {minutes} min (monotonic Stopwatch)");
         SetActive(true, DateTime.Now.AddMinutes(minutes));
     }
 
@@ -285,7 +297,13 @@ public class KeepAwakeService : IKeepAwakeService
                 : "Heartbeat Off";
             var status = $"Active | {display} | {heartbeat}";
 
-            if (_until.HasValue)
+            if (_until.HasValue && _sessionStopwatch != null)
+            {
+                var remaining = _timedDuration - _sessionStopwatch.Elapsed;
+                var minsLeft = Math.Max(0, (int)remaining.TotalMinutes);
+                status += $" | {minsLeft} min left";
+            }
+            else if (_until.HasValue)
             {
                 var minsLeft = Math.Max(0, (int)(_until.Value - DateTime.Now).TotalMinutes);
                 status += $" | {minsLeft} min left";
@@ -416,8 +434,9 @@ public class KeepAwakeService : IKeepAwakeService
     {
         try
         {
-            // Check timed expiry
-            if (IsActive && _until.HasValue && DateTime.Now >= _until.Value)
+            // Check timed expiry using monotonic Stopwatch (immune to DST/NTP/clock changes)
+            if (IsActive && _until.HasValue && _sessionStopwatch != null &&
+                _sessionStopwatch.Elapsed >= _timedDuration)
             {
                 Logger.Info("KeepAwakeService", "Timed awake expired");
                 _until = null;

@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace Redball.UI.Services;
 
@@ -17,6 +20,12 @@ public static class Logger
     private static string _logPath = "";
     private static volatile bool _initialized = false;
     private static int _logLevel = 0; // 0=Verbose, 1=Debug, 2=Info, 3=Warning, 4=Error, 5=Fatal
+    private static readonly char[] NewLineChars = { '\r', '\n' };
+
+    // Async log channel: callers enqueue formatted strings, background task writes to disk
+    private static Channel<string>? _channel;
+    private static Task? _writerTask;
+    private static readonly CancellationTokenSource _cts = new();
 
     public static string LogPath => _logPath;
 
@@ -44,16 +53,24 @@ public static class Logger
                     Directory.CreateDirectory(dir);
                 }
 
-                // Write startup header
-                File.AppendAllText(_logPath, $"{Environment.NewLine}[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] ========== Redball WPF Started =========={Environment.NewLine}");
-                File.AppendAllText(_logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Version: {GetAppVersion()}{Environment.NewLine}");
-                File.AppendAllText(_logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Process ID: {Environment.ProcessId}{Environment.NewLine}");
-                File.AppendAllText(_logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Base Directory: {AppContext.BaseDirectory}{Environment.NewLine}");
-                File.AppendAllText(_logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Current Directory: {Environment.CurrentDirectory}{Environment.NewLine}");
-                File.AppendAllText(_logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] OS: {Environment.OSVersion}{Environment.NewLine}");
-                File.AppendAllText(_logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] .NET Version: {Environment.Version}{Environment.NewLine}");
-                File.AppendAllText(_logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Command Line: {Environment.CommandLine}{Environment.NewLine}");
-                
+                // Write startup header — single write instead of 8 separate File.AppendAllText calls
+                var ts = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                var header = new StringBuilder(512);
+                header.AppendLine();
+                header.AppendLine($"[{ts}] ========== Redball WPF Started ==========");
+                header.AppendLine($"[{ts}] Version: {GetAppVersion()}");
+                header.AppendLine($"[{ts}] Process ID: {Environment.ProcessId}");
+                header.AppendLine($"[{ts}] Base Directory: {AppContext.BaseDirectory}");
+                header.AppendLine($"[{ts}] Current Directory: {Environment.CurrentDirectory}");
+                header.AppendLine($"[{ts}] OS: {Environment.OSVersion}");
+                header.AppendLine($"[{ts}] .NET Version: {Environment.Version}");
+                header.AppendLine($"[{ts}] Command Line: {Environment.CommandLine}");
+                File.AppendAllText(_logPath, header.ToString());
+
+                // Start the async background writer
+                _channel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions { SingleReader = true });
+                _writerTask = Task.Run(() => BackgroundWriterAsync(_cts.Token));
+
                 _initialized = true;
             }
             catch (Exception ex)
@@ -123,9 +140,21 @@ public static class Logger
             if (File.Exists(_logPath))
             {
                 diagnostics.AppendLine("Recent Log Output:");
-                var logLines = File.ReadAllLines(_logPath);
-                var recentLines = logLines.Skip(Math.Max(0, logLines.Length - 200));
-                foreach (var line in recentLines)
+                // Stream-read only the tail instead of loading entire file into memory
+                var tailLines = new LinkedList<string>();
+                const int maxTailLines = 200;
+                using (var reader = new StreamReader(_logPath, Encoding.UTF8, detectEncodingFromByteOrderMarks: true,
+                    new FileStreamOptions { Access = FileAccess.Read, Share = FileShare.ReadWrite }))
+                {
+                    string? line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        tailLines.AddLast(line);
+                        if (tailLines.Count > maxTailLines)
+                            tailLines.RemoveFirst();
+                    }
+                }
+                foreach (var line in tailLines)
                 {
                     diagnostics.AppendLine(line);
                 }
@@ -387,28 +416,128 @@ public static class Logger
         }
     }
 
+    private static readonly string _userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    private static readonly string _userName = Environment.UserName;
+
+    private static string RedactPii(string message)
+    {
+        // Redact Windows user profile paths (e.g. C:\Users\JohnDoe\... → C:\Users\<user>\...)
+        if (!string.IsNullOrEmpty(_userProfile))
+        {
+            message = message.Replace(_userProfile, Path.Combine(Path.GetDirectoryName(_userProfile)!, "<user>"));
+        }
+
+        // Redact bare username occurrences in paths
+        if (_userName.Length >= 3)
+        {
+            message = message.Replace($"\\{_userName}\\", "\\<user>\\");
+        }
+
+        return message;
+    }
+
     private static void Write(string level, string component, string message)
     {
         if (!_initialized) Initialize();
 
+        var redacted = RedactPii(message);
+
+        // Format synchronously on the caller's thread (captures accurate timestamp & thread ID)
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        var threadId = Thread.CurrentThread.ManagedThreadId;
+        var lines = redacted.Split(NewLineChars, StringSplitOptions.RemoveEmptyEntries);
+
+        var sb = new StringBuilder(lines.Length * 80);
+        foreach (var line in lines)
+        {
+            sb.Append('[').Append(timestamp).Append("] [").Append(level)
+              .Append("] [").Append(threadId.ToString("D3")).Append("] [")
+              .Append(component).Append("] ").AppendLine(line);
+        }
+        var formatted = sb.ToString();
+
+        // Enqueue to async channel if available; fall back to synchronous write
+        if (_channel != null && _channel.Writer.TryWrite(formatted))
+        {
+            return;
+        }
+
+        // Fallback: synchronous write (channel not ready, or backpressure)
         lock (_lock)
         {
             try
             {
-                var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                var threadId = Thread.CurrentThread.ManagedThreadId;
-                var lines = message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                
-                foreach (var line in lines)
+                File.AppendAllText(_logPath, formatted);
+            }
+            catch { /* Silent fail */ }
+        }
+    }
+
+    /// <summary>
+    /// Background task that drains the log channel and writes to disk in batches.
+    /// </summary>
+    private static async Task BackgroundWriterAsync(CancellationToken ct)
+    {
+        var batch = new List<string>(32);
+        try
+        {
+            while (await _channel!.Reader.WaitToReadAsync(ct).ConfigureAwait(false))
+            {
+                batch.Clear();
+                while (_channel.Reader.TryRead(out var entry))
                 {
-                    var logLine = $"[{timestamp}] [{level}] [{threadId:D3}] [{component}] {line}{Environment.NewLine}";
-                    File.AppendAllText(_logPath, logLine);
+                    batch.Add(entry);
+                    if (batch.Count >= 64) break; // flush in chunks
+                }
+
+                if (batch.Count > 0)
+                {
+                    var combined = string.Concat(batch);
+                    try
+                    {
+                        File.AppendAllText(_logPath, combined);
+                    }
+                    catch { /* Silent fail */ }
                 }
             }
-            catch
+        }
+        catch (OperationCanceledException) { /* Expected on shutdown */ }
+    }
+
+    /// <summary>
+    /// Flushes all pending log entries to disk synchronously. Call before app exit.
+    /// </summary>
+    public static void Flush()
+    {
+        if (_channel == null) return;
+
+        // Drain remaining items from the channel
+        var remaining = new List<string>();
+        while (_channel.Reader.TryRead(out var entry))
+        {
+            remaining.Add(entry);
+        }
+
+        if (remaining.Count > 0)
+        {
+            lock (_lock)
             {
-                // Silent fail - can't log logging errors
+                try
+                {
+                    File.AppendAllText(_logPath, string.Concat(remaining));
+                }
+                catch { /* Silent fail */ }
             }
         }
+    }
+
+    /// <summary>
+    /// Shuts down the background writer gracefully. Call once during app shutdown.
+    /// </summary>
+    public static void Shutdown()
+    {
+        _channel?.Writer.TryComplete();
+        try { _writerTask?.Wait(TimeSpan.FromSeconds(2)); } catch { }
+        Flush();
     }
 }

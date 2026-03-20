@@ -21,5 +21,6 @@
   </ImportGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <PkgMicrosoft_Xaml_Behaviors_Wpf Condition=" '$(PkgMicrosoft_Xaml_Behaviors_Wpf)' == '' ">C:\Users\karll\.nuget\packages\microsoft.xaml.behaviors.wpf\1.1.77</PkgMicrosoft_Xaml_Behaviors_Wpf>
+    <PkgInterop_UIAutomationClient Condition=" '$(PkgInterop_UIAutomationClient)' == '' ">C:\Users\karll\.nuget\packages\interop.uiautomationclient\10.19041.0</PkgInterop_UIAutomationClient>
   </PropertyGroup>
 </Project>

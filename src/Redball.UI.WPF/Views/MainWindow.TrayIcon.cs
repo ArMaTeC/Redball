@@ -2,6 +2,8 @@ using System;
 using System.Drawing;
 using System.Drawing.Text;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -15,6 +17,12 @@ namespace Redball.UI.Views;
 public partial class MainWindow
 {
     private Icon? _originalTrayIcon;
+    private Icon? _generatedTrayIcon;
+    private bool _isRecreatingTrayIcon;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool DestroyIcon(IntPtr hIcon);
+
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         // Check for TaskbarCreated message (Explorer restart)
@@ -24,12 +32,12 @@ public partial class MainWindow
             handled = true;
             // Recreate tray icon with delay to ensure Explorer is ready
             var delayTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-            delayTimer.Tick += (_, _) =>
+            delayTimer.Tick += async (_, _) =>
             {
                 delayTimer.Stop();
                 try
                 {
-                    RecreateTrayIcon();
+                    await RecreateTrayIconAsync();
                 }
                 catch (Exception ex)
                 {
@@ -41,14 +49,27 @@ public partial class MainWindow
         return IntPtr.Zero;
     }
 
-    private void RecreateTrayIcon()
+    private async Task RecreateTrayIconAsync()
     {
+        if (_isRecreatingTrayIcon)
+        {
+            Logger.Debug("MainWindow", "Tray icon recreation already in progress, skipping duplicate request");
+            return;
+        }
+
+        _isRecreatingTrayIcon = true;
         Logger.Info("MainWindow", "Recreating tray icon...");
         try
         {
             // Dispose existing tray icon
             if (_trayIcon != null)
             {
+                if (_generatedTrayIcon != null)
+                {
+                    _generatedTrayIcon.Dispose();
+                    _generatedTrayIcon = null;
+                }
+
                 _trayIcon.Visibility = Visibility.Collapsed;
                 _trayIcon = null;
                 Logger.Debug("MainWindow", "Existing tray icon hidden");
@@ -56,8 +77,8 @@ public partial class MainWindow
 
             _isTrayIconInitialized = false;
 
-            // Small delay to ensure cleanup
-            System.Threading.Thread.Sleep(100);
+            // Small async delay to ensure cleanup without blocking the UI thread
+            await Task.Delay(100);
 
             // Re-setup tray icon
             SetupTrayIcon();
@@ -78,6 +99,10 @@ public partial class MainWindow
         {
             Logger.Error("MainWindow", "Error recreating tray icon", ex);
         }
+        finally
+        {
+            _isRecreatingTrayIcon = false;
+        }
     }
 
     private void SetupTrayIconRefreshTimer()
@@ -93,7 +118,7 @@ public partial class MainWindow
             int retryCount = 0;
             const int maxRetries = 3;
 
-            _trayIconRefreshTimer.Tick += (s, e) =>
+            _trayIconRefreshTimer.Tick += async (s, e) =>
             {
                 try
                 {
@@ -106,7 +131,7 @@ public partial class MainWindow
                         if (retryCount <= maxRetries)
                         {
                             Logger.Warning("MainWindow", $"Tray icon not initialized, attempt {retryCount}/{maxRetries} to recreate...");
-                            RecreateTrayIcon();
+                            await RecreateTrayIconAsync();
                         }
                         else
                         {
@@ -148,14 +173,15 @@ public partial class MainWindow
             Logger.Debug("MainWindow", "Tray icon already initialized, skipping");
             return;
         }
-        
+
         Logger.Info("MainWindow", "Setting up tray icon...");
+
         _isTrayIconInitialized = true;
-        
+
         // Tray icon is defined in XAML, ensure it's properly initialized
         _trayIcon = TrayIcon;
         Logger.Debug("MainWindow", $"TrayIcon from XAML: {_trayIcon != null}");
-        
+
         if (_trayIcon != null)
         {
             // Load icon from multiple possible locations
@@ -166,7 +192,7 @@ public partial class MainWindow
                 Path.Combine(Environment.CurrentDirectory, "Assets", "redball.ico"),
                 Path.Combine(Environment.CurrentDirectory, "redball.ico")
             };
-            
+
             string? foundPath = null;
             foreach (var path in iconPaths)
             {
@@ -178,12 +204,15 @@ public partial class MainWindow
                     break;
                 }
             }
-            
+
             if (foundPath != null)
             {
                 try
                 {
                     Logger.Info("MainWindow", $"Loading icon from: {foundPath}");
+                    _generatedTrayIcon?.Dispose();
+                    _generatedTrayIcon = null;
+                    _originalTrayIcon?.Dispose();
                     var icon = new System.Drawing.Icon(foundPath);
                     _trayIcon.Icon = icon;
                     Logger.Info("MainWindow", "Icon loaded successfully");
@@ -198,11 +227,11 @@ public partial class MainWindow
             {
                 Logger.Warning("MainWindow", "Icon file not found in any expected location");
             }
-            
+
             // Ensure visibility is set
             _trayIcon.Visibility = Visibility.Visible;
             NotificationService.Instance.SetTrayIcon(_trayIcon);
-            
+
             // Set tooltip with actual version
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             _trayIcon.ToolTipText = $"Redball v{version?.Major}.{version?.Minor}.{version?.Build}";
@@ -212,10 +241,11 @@ public partial class MainWindow
         {
             Logger.Error("MainWindow", "TrayIcon not found in XAML!");
         }
-        
+
         Logger.Info("MainWindow", "Tray icon setup complete");
 
         // Subscribe to state changes for icon updates
+        KeepAwakeService.Instance.ActiveStateChanged -= OnKeepAwakeStateChanged;
         KeepAwakeService.Instance.ActiveStateChanged += OnKeepAwakeStateChanged;
     }
 
@@ -242,18 +272,70 @@ public partial class MainWindow
             {
                 var minsLeft = Math.Max(0, (int)(until.Value - DateTime.Now).TotalMinutes);
                 _trayIcon.ToolTipText = $"Redball {versionStr} — Timed: {minsLeft} min left";
-                _trayIcon.Icon = GenerateStateIcon(_originalTrayIcon, System.Drawing.Color.FromArgb(253, 126, 20)); // Orange for timed
+                SetGeneratedTrayIcon(GenerateStateIcon(_originalTrayIcon, System.Drawing.Color.FromArgb(253, 126, 20))); // Orange for timed
             }
             else
             {
                 _trayIcon.ToolTipText = $"Redball {versionStr} — Active";
-                _trayIcon.Icon = GenerateStateIcon(_originalTrayIcon, System.Drawing.Color.FromArgb(76, 175, 80)); // Green for active
+                SetGeneratedTrayIcon(GenerateStateIcon(_originalTrayIcon, System.Drawing.Color.FromArgb(76, 175, 80))); // Green for active
             }
         }
         else
         {
             _trayIcon.ToolTipText = $"Redball {versionStr} — Paused";
-            _trayIcon.Icon = GenerateStateIcon(_originalTrayIcon, System.Drawing.Color.FromArgb(108, 117, 125)); // Gray for paused
+            SetGeneratedTrayIcon(GenerateStateIcon(_originalTrayIcon, System.Drawing.Color.FromArgb(108, 117, 125))); // Gray for paused
+        }
+    }
+
+    private void SetGeneratedTrayIcon(Icon icon)
+    {
+        if (ReferenceEquals(icon, _originalTrayIcon))
+        {
+            RestoreOriginalTrayIcon();
+            return;
+        }
+
+        if (_generatedTrayIcon != null)
+        {
+            _generatedTrayIcon.Dispose();
+        }
+
+        _generatedTrayIcon = icon;
+
+        if (_trayIcon != null)
+        {
+            _trayIcon.Icon = icon;
+        }
+    }
+
+    private void RestoreOriginalTrayIcon()
+    {
+        if (_generatedTrayIcon != null && !ReferenceEquals(_generatedTrayIcon, _originalTrayIcon))
+        {
+            _generatedTrayIcon.Dispose();
+        }
+
+        _generatedTrayIcon = null;
+
+        if (_trayIcon != null && _originalTrayIcon != null)
+        {
+            _trayIcon.Icon = _originalTrayIcon;
+        }
+    }
+
+    private void DisposeTrayIcons()
+    {
+        if (_generatedTrayIcon != null && !ReferenceEquals(_generatedTrayIcon, _originalTrayIcon))
+        {
+            _generatedTrayIcon.Dispose();
+        }
+
+        _generatedTrayIcon = null;
+
+        if (_originalTrayIcon != null)
+        {
+            _originalTrayIcon.Dispose();
+            _originalTrayIcon = null;
         }
     }
 
@@ -275,7 +357,11 @@ public partial class MainWindow
             using var pen = new System.Drawing.Pen(System.Drawing.Color.White, 1f);
             g.DrawEllipse(pen, 10, 10, 6, 6);
 
-            return System.Drawing.Icon.FromHandle(bmp.GetHicon());
+            var handle = bmp.GetHicon();
+            using var tempIcon = System.Drawing.Icon.FromHandle(handle);
+            var clonedIcon = (Icon)tempIcon.Clone();
+            DestroyIcon(handle);
+            return clonedIcon;
         }
         catch
         {
@@ -292,13 +378,12 @@ public partial class MainWindow
         {
             var minsLeft = Math.Max(0, (int)(until.Value - DateTime.Now).TotalMinutes);
             var text = minsLeft > 99 ? "99+" : minsLeft.ToString();
-            _trayIcon.Icon = GenerateCountdownIcon(_originalTrayIcon, text);
+            SetGeneratedTrayIcon(GenerateCountdownIcon(_originalTrayIcon, text));
         }
         else
         {
             // Restore original icon when no timed session
-            if (_trayIcon.Icon != _originalTrayIcon)
-                _trayIcon.Icon = _originalTrayIcon;
+            RestoreOriginalTrayIcon();
         }
     }
 
@@ -325,7 +410,11 @@ public partial class MainWindow
             var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
             g.DrawString(text, font, textBrush, new RectangleF(0, 7, 16, 9), sf);
 
-            return System.Drawing.Icon.FromHandle(bmp.GetHicon());
+            var handle = bmp.GetHicon();
+            using var tempIcon = System.Drawing.Icon.FromHandle(handle);
+            var clonedIcon = (Icon)tempIcon.Clone();
+            DestroyIcon(handle);
+            return clonedIcon;
         }
         catch (Exception ex)
         {

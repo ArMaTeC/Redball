@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using Redball.UI.Services;
 
@@ -12,16 +15,36 @@ public partial class DiagnosticsWindow : Window
     private static readonly string AnalyticsPath = Path.Combine(AppContext.BaseDirectory, "analytics.json");
     private readonly AnalyticsService _analytics = new(ConfigService.Instance.Config.EnableTelemetry);
 
+    // Memory leak detection: rolling window of working-set samples
+    private static readonly List<(DateTime Time, long WorkingSetBytes)> _memorySamples = new();
+    private const int MaxMemorySamples = 60;
+    private DispatcherTimer? _memoryTimer;
+
     public DiagnosticsWindow()
     {
         InitializeComponent();
         Loaded += DiagnosticsWindow_Loaded;
+        Closed += (_, _) => _memoryTimer?.Stop();
     }
 
     private void DiagnosticsWindow_Loaded(object sender, RoutedEventArgs e)
     {
         _analytics.TrackFeature("diagnostics.opened");
+        TakeMemorySample();
         LoadDiagnostics();
+
+        // Sample memory every 10 seconds while the window is open
+        _memoryTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
+        _memoryTimer.Tick += (_, _) => { TakeMemorySample(); UpdateMemoryHealth(); };
+        _memoryTimer.Start();
+    }
+
+    private static void TakeMemorySample()
+    {
+        using var proc = Process.GetCurrentProcess();
+        _memorySamples.Add((DateTime.Now, proc.WorkingSet64));
+        if (_memorySamples.Count > MaxMemorySamples)
+            _memorySamples.RemoveAt(0);
     }
 
     private void LoadDiagnostics()
@@ -75,6 +98,63 @@ public partial class DiagnosticsWindow : Window
         {
             RecentLogText.Text = "No log file found.";
         }
+
+        UpdateMemoryHealth();
+    }
+
+    private void UpdateMemoryHealth()
+    {
+        using var proc = Process.GetCurrentProcess();
+        var workingSetMb = proc.WorkingSet64 / 1024.0 / 1024.0;
+        var gcTotalMb = GC.GetTotalMemory(false) / 1024.0 / 1024.0;
+
+        WorkingSetText.Text = $"Working Set: {workingSetMb:F1} MB";
+        GcTotalText.Text = $"GC Allocated: {gcTotalMb:F1} MB";
+        GcGen0Text.Text = $"GC Gen 0 Collections: {GC.CollectionCount(0)}";
+        GcGen1Text.Text = $"GC Gen 1 Collections: {GC.CollectionCount(1)}";
+        GcGen2Text.Text = $"GC Gen 2 Collections: {GC.CollectionCount(2)}";
+
+        // Detect memory growth trend from samples
+        if (_memorySamples.Count >= 5)
+        {
+            var recent = _memorySamples.Skip(_memorySamples.Count - 5).Select(s => s.WorkingSetBytes).ToList();
+            var isGrowing = true;
+            for (int i = 1; i < recent.Count; i++)
+            {
+                if (recent[i] <= recent[i - 1]) { isGrowing = false; break; }
+            }
+
+            var firstMb = _memorySamples[0].WorkingSetBytes / 1024.0 / 1024.0;
+            var lastMb = _memorySamples[^1].WorkingSetBytes / 1024.0 / 1024.0;
+            var deltaPercent = firstMb > 0 ? ((lastMb - firstMb) / firstMb) * 100 : 0;
+
+            if (isGrowing && deltaPercent > 10)
+            {
+                MemoryTrendText.Text = $"\u26A0 Memory growing: +{deltaPercent:F0}% ({firstMb:F1} \u2192 {lastMb:F1} MB)";
+                MemoryTrendText.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 50, 50));
+            }
+            else if (isGrowing)
+            {
+                MemoryTrendText.Text = $"Memory slightly growing: +{deltaPercent:F1}%";
+                MemoryTrendText.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(200, 150, 0));
+            }
+            else
+            {
+                MemoryTrendText.Text = $"Memory stable ({deltaPercent:+0.0;-0.0}%)";
+                MemoryTrendText.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 160, 0));
+            }
+        }
+        else
+        {
+            MemoryTrendText.Text = $"Collecting samples ({_memorySamples.Count}/5)...";
+            MemoryTrendText.Foreground = (System.Windows.Media.Brush)FindResource("ForegroundBrush");
+        }
+
+        // Display sample history
+        var sampleLines = _memorySamples
+            .Select(s => $"{s.Time:HH:mm:ss}  {s.WorkingSetBytes / 1024.0 / 1024.0:F1} MB")
+            .TakeLast(15);
+        MemorySamplesText.Text = string.Join(Environment.NewLine, sampleLines);
     }
 
     private void RefreshButton_Click(object sender, RoutedEventArgs e)

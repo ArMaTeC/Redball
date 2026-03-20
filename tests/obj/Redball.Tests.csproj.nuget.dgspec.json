@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\Users\\karll\\Desktop\\Redball\\src\\Redball.UI.WPF\\Redball.UI.WPF.csproj": {
-      "version": "2.1.110",
+      "version": "2.1.117",
       "restore": {
         "projectUniqueName": "C:\\Users\\karll\\Desktop\\Redball\\src\\Redball.UI.WPF\\Redball.UI.WPF.csproj",
         "projectName": "Redball.UI.WPF",
@@ -167,6 +167,14 @@
         "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
           "dependencies": {
+            "FlaUI.Core": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            },
+            "FlaUI.UIA3": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            },
             "MSTest.TestAdapter": {
               "target": "Package",
               "version": "[3.1.1, )"

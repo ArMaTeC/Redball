@@ -83,10 +83,7 @@ public partial class MainWindow
 
     public async Task CheckForUpdatesAsync()
     {
-        if (_updateService == null)
-        {
-            LoadEmbeddedSettings();
-        }
+        EnsureUpdateService();
 
         if (_updateService == null)
         {

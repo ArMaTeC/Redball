@@ -17,8 +17,9 @@ public class AnalyticsService : IAnalyticsService
     private static readonly string AnalyticsFile = Path.Combine(
         AppContext.BaseDirectory, "analytics.json");
     private const int TrendWindowDays = 7;
+    private const int DataRetentionDays = 90;
     
-    private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion);
+    private static readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion);
     private AnalyticsData _data = new();
     private Timer? _flushTimer;
     private readonly bool _enabled;
@@ -525,6 +526,8 @@ public class AnalyticsService : IAnalyticsService
             _data = JsonSerializer.Deserialize<AnalyticsData>(json) ?? new AnalyticsData();
             if (_data.FirstSeen == default)
                 _data.FirstSeen = DateTime.UtcNow;
+
+            PruneStaleData();
         }
         catch (Exception ex)
         {
@@ -534,6 +537,46 @@ public class AnalyticsService : IAnalyticsService
         finally
         {
             _lock.ExitWriteLock();
+        }
+    }
+
+    private void PruneStaleData()
+    {
+        var cutoff = DateTime.UtcNow.AddDays(-DataRetentionDays);
+        var cutoffKey = cutoff.ToString("yyyy-MM-dd");
+        var pruned = 0;
+
+        // Prune daily usage from feature stats
+        foreach (var feature in _data.Features.Values)
+        {
+            var staleKeys = feature.DailyUsage.Keys
+                .Where(k => string.Compare(k, cutoffKey, StringComparison.Ordinal) < 0)
+                .ToList();
+            foreach (var key in staleKeys)
+            {
+                feature.DailyUsage.Remove(key);
+                pruned++;
+            }
+        }
+
+        // Prune session history
+        var staleSessionKeys = _data.SessionHistory.Keys
+            .Where(k => string.Compare(k, cutoffKey, StringComparison.Ordinal) < 0)
+            .ToList();
+        foreach (var key in staleSessionKeys)
+        {
+            _data.SessionHistory.Remove(key);
+            pruned++;
+        }
+
+        // Prune old NPS responses
+        var beforeCount = _data.NpsResponses.Count;
+        _data.NpsResponses.RemoveAll(r => r.Timestamp < cutoff);
+        pruned += beforeCount - _data.NpsResponses.Count;
+
+        if (pruned > 0)
+        {
+            Logger.Info("Analytics", $"Pruned {pruned} stale entries older than {DataRetentionDays} days");
         }
     }
 

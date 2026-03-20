@@ -14,8 +14,11 @@ C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.Tests.dl
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Redball.Tests.pdb
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Castle.Core.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\CommunityToolkit.Mvvm.dll
+C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\FlaUI.Core.dll
+C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\FlaUI.UIA3.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Hardcodet.NotifyIcon.Wpf.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\InputInterceptor.dll
+C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Interop.UIAutomationClient.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.VisualStudio.CodeCoverage.Shim.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.Extensions.DependencyInjection.dll
 C:\Users\karll\Desktop\Redball\tests\bin\Release\net8.0-windows\Microsoft.Extensions.DependencyInjection.Abstractions.dll

@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private bool _isTrayIconInitialized;
     private DispatcherTimer? _trayIconRefreshTimer;
     private uint _taskbarCreatedMsg;
+    private HwndSource? _windowHwndSource;
     private readonly AnalyticsService _analytics = new(ConfigService.Instance.Config.EnableTelemetry);
     private readonly Random _random = new();
     private UpdateService? _updateService;
@@ -28,6 +29,7 @@ public partial class MainWindow : Window
     private HotkeyService? _hotkeyService;
     private bool _isTyping;
     private bool _isLoadingSettings = true;
+    private bool _isExiting;
     private DispatcherTimer? _typeThingCountdownTimer;
     private DispatcherTimer? _typeThingTimer;
 
@@ -48,10 +50,10 @@ public partial class MainWindow : Window
         try
         {
             // Hook window messages for taskbar recreation
-            var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
-            if (hwndSource != null)
+            _windowHwndSource = PresentationSource.FromVisual(this) as HwndSource;
+            if (_windowHwndSource != null)
             {
-                hwndSource.AddHook(WndProc);
+                _windowHwndSource.AddHook(WndProc);
                 Logger.Debug("MainWindow", "Window message hook added for tray icon recovery");
             }
 
@@ -100,7 +102,7 @@ public partial class MainWindow : Window
         Logger.Debug("MainWindow", $"OnClosing called, Cancel={e.Cancel}");
         // If closing from tray exit command, allow close
         // If closing from X button, move off-screen instead (tray-only mode)
-        if (_trayIcon?.Visibility == Visibility.Visible && e.Cancel == false)
+        if (!_isExiting && _trayIcon?.Visibility == Visibility.Visible && e.Cancel == false)
         {
             Logger.Info("MainWindow", "Moving window off-screen instead of closing (tray-only mode)");
             ShowInTaskbar = false;
@@ -109,6 +111,56 @@ public partial class MainWindow : Window
             e.Cancel = true;
         }
         base.OnClosing(e);
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        Logger.Info("MainWindow", "OnClosed called, cleaning up window resources");
+
+        try
+        {
+            Loaded -= OnWindowLoaded;
+
+            StopAutoUpdateCheck();
+
+            _trayIconRefreshTimer?.Stop();
+            _trayIconRefreshTimer = null;
+
+            if (_windowHwndSource != null)
+            {
+                try
+                {
+                    _windowHwndSource.RemoveHook(WndProc);
+                    Logger.Debug("MainWindow", "Window message hook removed");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning("MainWindow", $"Failed to remove window hook: {ex.Message}");
+                }
+
+                _windowHwndSource = null;
+            }
+
+            KeepAwakeService.Instance.ActiveStateChanged -= OnKeepAwakeStateChanged;
+
+            _hotkeyService?.Dispose();
+            _hotkeyService = null;
+
+            DisposeTrayIcons();
+
+            if (_trayIcon != null)
+            {
+                _trayIcon.Visibility = Visibility.Collapsed;
+                _trayIcon.Dispose();
+                _trayIcon = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Error during MainWindow cleanup", ex);
+        }
+
+        base.OnClosed(e);
     }
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

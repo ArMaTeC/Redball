@@ -66,6 +66,12 @@ public class ScheduledRestartService
                     FileName = exePath,
                     UseShellExecute = true
                 });
+                if (System.Windows.Application.Current?.MainWindow is Views.MainWindow mainWindow)
+                {
+                    mainWindow.ExitApplication();
+                    return;
+                }
+
                 System.Windows.Application.Current.Shutdown();
             }
         }

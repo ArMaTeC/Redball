@@ -175,6 +175,25 @@ public partial class MainWindow
                     return;
                 }
 
+                // Sanitise content — warn on sensitive patterns or excessive length
+                var sanitiseWarnings = ClipboardSanitiser.Analyse(text);
+                if (sanitiseWarnings.Count > 0)
+                {
+                    var warningMsg = string.Join("\n• ", sanitiseWarnings);
+                    Logger.Warning("MainWindow", $"TypeThing: Content sanitisation warnings: {warningMsg}");
+
+                    var result = MessageBox.Show(
+                        $"⚠ Content warnings:\n\n• {warningMsg}\n\nDo you still want to type this content?",
+                        "TypeThing — Content Warning",
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                    if (result != MessageBoxResult.Yes)
+                    {
+                        _isTyping = false;
+                        return;
+                    }
+                }
+
                 var avgDelayMs = (config.TypeThingMinDelayMs + config.TypeThingMaxDelayMs) / 2.0;
                 var estimatedSeconds = (int)Math.Ceiling(text.Length * avgDelayMs / 1000.0);
                 var preview = text.Length > 200 ? text[..200] + "..." : text;
@@ -254,6 +273,28 @@ public partial class MainWindow
                 }
 
                 Logger.Info("MainWindow", $"TypeThing: Got {clipboardText.Length} chars from clipboard");
+
+                // Sanitise clipboard content — warn on sensitive patterns or excessive length
+                var sanitiseWarnings = ClipboardSanitiser.Analyse(clipboardText);
+                if (sanitiseWarnings.Count > 0)
+                {
+                    var warningMsg = string.Join("\n• ", sanitiseWarnings);
+                    Logger.Warning("MainWindow", $"TypeThing: Clipboard sanitisation warnings: {warningMsg}");
+                    _analytics.TrackFeature("typething.sanitise_warning");
+
+                    var result = MessageBox.Show(
+                        $"⚠ Clipboard content warnings:\n\n• {warningMsg}\n\nDo you still want to type this content?",
+                        "TypeThing — Content Warning",
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                    if (result != MessageBoxResult.Yes)
+                    {
+                        _analytics.TrackFeature("typething.sanitise_cancelled");
+                        _isTyping = false;
+                        return;
+                    }
+                    _analytics.TrackFeature("typething.sanitise_accepted");
+                }
 
                 // Start typing after a short delay so user can switch to target window
                 var countdown = Math.Max(1, config.TypeThingStartDelaySec);
@@ -516,14 +557,7 @@ public partial class MainWindow
     public void ExitApplication()
     {
         Logger.Info("MainWindow", "ExitApplication called");
-        _trayIconRefreshTimer?.Stop();
-        _trayIconRefreshTimer = null;
-        _hotkeyService?.Dispose();
-        if (_trayIcon != null)
-        {
-            _trayIcon.Dispose();
-            _trayIcon = null;
-        }
+        _isExiting = true;
         Logger.Info("MainWindow", "Shutting down application");
         Application.Current.Shutdown();
     }

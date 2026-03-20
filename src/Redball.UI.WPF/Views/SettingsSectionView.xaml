@@ -1,0 +1,73 @@
+<UserControl x:Class="Redball.UI.Views.SettingsSectionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+        <TextBlock Text="Settings" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <TextBlock Text="General application settings. Choose your theme, control notifications, manage configuration profiles, and adjust general app preferences." 
+                   TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+        
+        <Grid Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="SettingsSearchBox" Grid.Column="0" Style="{DynamicResource ModernTextBox}"
+                     Tag="Search settings..."/>
+            <Button Grid.Column="1" Content="Undo" Style="{DynamicResource ModernButton}" Margin="8,0,0,0"/>
+            <Button Grid.Column="2" Content="Reset" Style="{DynamicResource ModernButton}" Margin="8,0,0,0"/>
+        </Grid>
+
+        <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="Theme" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                <ComboBox x:Name="ThemeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8">
+                    <ComboBoxItem Content="System Default"/>
+                    <ComboBoxItem Content="Dark Mode"/>
+                    <ComboBoxItem Content="Light Mode"/>
+                    <ComboBoxItem Content="Midnight Blue"/>
+                    <ComboBoxItem Content="Forest Green"/>
+                    <ComboBoxItem Content="Ocean Blue"/>
+                    <ComboBoxItem Content="Sunset Orange"/>
+                    <ComboBoxItem Content="Royal Purple"/>
+                    <ComboBoxItem Content="Slate Gray"/>
+                    <ComboBoxItem Content="Rose Gold"/>
+                    <ComboBoxItem Content="Cyberpunk"/>
+                    <ComboBoxItem Content="Coffee"/>
+                    <ComboBoxItem Content="Arctic Frost"/>
+                </ComboBox>
+                <CheckBox x:Name="MinimizeToTrayCheck" Content="Minimize to tray on start" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"/>
+                <CheckBox x:Name="ShowNotificationsCheck" Content="Show notifications" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"/>
+                <CheckBox x:Name="SoundNotificationsCheck" Content="Play sound with notifications" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"/>
+            </StackPanel>
+        </Border>
+
+        <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="Profiles" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="ProfileCombo" Grid.Column="0" Style="{DynamicResource ModernComboBox}"/>
+                    <Button Grid.Column="1" Content="Load" Style="{DynamicResource ModernButton}" Margin="8,0,0,0"/>
+                    <Button Grid.Column="2" Content="Save" Style="{DynamicResource PrimaryButton}" Margin="8,0,0,0"/>
+                    <Button Grid.Column="3" Content="Delete" Style="{DynamicResource ModernButton}" Margin="8,0,0,0"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <Border Style="{DynamicResource CardStyle}">
+            <StackPanel>
+                <TextBlock Text="Logging" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                <CheckBox x:Name="VerboseLoggingCheck" Content="Enable verbose logging" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"/>
+                <TextBlock Text="Max Log Size (MB)" FontWeight="Medium" Margin="0,8,0,8"/>
+                <Slider x:Name="MaxLogSizeSlider" Minimum="1" Maximum="100" Value="10" Style="{DynamicResource ModernSlider}"/>
+                <TextBlock x:Name="MaxLogSizeText" Text="Max log size: 10 MB" FontSize="12" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>
