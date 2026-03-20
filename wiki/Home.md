@@ -10,12 +10,12 @@ Welcome to the Redball wiki — the complete documentation for every feature, fu
 - [Getting Started](Getting-Started) — Installation, prerequisites, and first run
 - [Configuration](Configuration) — All JSON settings explained
 - [Tray Menu & Keyboard Shortcuts](Tray-Menu-and-Shortcuts) — UI interaction guide
-- [Settings GUI](Settings-GUI) — Main window navigation, tabbed settings dialog, and TypeThing settings
+- [Settings GUI](Settings-GUI) — Main window navigation and all settings sections
 - [TypeThing — Clipboard Typer](TypeThing) — Full documentation for the clipboard typing feature
-- [Monitoring & Smart Features](Monitoring-and-Smart-Features) — Battery, network, idle, schedule, and presentation mode
-- [API Reference](API-Reference) — Every function documented with parameters and examples
+- [Monitoring & Smart Features](Monitoring-and-Smart-Features) — Battery, network, idle, schedule, presentation, thermal, process watcher, VPN, session lock, and more
+- [API Reference](API-Reference) — C# service API with properties, methods, and events
 - [Auto-Updater & Code Signing](Updates-and-Signing) — Update system and digital signatures
-- [Building & CI/CD](Building-and-CICD) — MSI installer, deploy pipeline, and GitHub Actions
+- [Building & CI/CD](Building-and-CICD) — MSI installer, build pipeline, and GitHub Actions
 - [Architecture](Architecture) — Component flow, state management, and internals
 - [Troubleshooting](Troubleshooting) — Common issues and solutions
 - [Localization](Localization) — i18n system and adding new languages
@@ -29,10 +29,6 @@ Welcome to the Redball wiki — the complete documentation for every feature, fu
 | [CHANGELOG.md](https://github.com/ArMaTeC/Redball/blob/main/docs/CHANGELOG.md) | Version history |
 | [LICENSE](https://github.com/ArMaTeC/Redball/blob/main/LICENSE) | MIT License |
 
-## Legacy
-
-The original PowerShell script (`Redball.ps1`) is archived in `legacy/Redball-v2.1.19-legacy.zip` for reference.
-
 ## Version
 
-Current version: **3.0.0**
+See [Releases](https://github.com/ArMaTeC/Redball/releases) for the latest version.

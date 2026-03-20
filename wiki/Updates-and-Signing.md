@@ -2,7 +2,7 @@
 
 ## Auto-Updater
 
-Redball includes a built-in update system that checks GitHub Releases for newer versions.
+Redball includes a built-in update system that checks GitHub Releases for newer versions. Updates can be checked automatically in the background or manually.
 
 ### Update Channels
 
@@ -13,109 +13,74 @@ Redball includes a built-in update system that checks GitHub Releases for newer 
 
 ### Checking for Updates
 
-#### Via CLI
+#### Automatic Background Checks
 
-```powershell
-# Check for updates (returns JSON)
-.\Redball.ps1 -CheckUpdate
+When `AutoUpdateCheckEnabled` is `true` (default), Redball checks for updates every `AutoUpdateCheckIntervalMinutes` minutes (default: 120). If an update is found, a toast notification is shown.
 
-# Download and install the latest update
-.\Redball.ps1 -Update
-```
+#### Via Main Window
+
+1. Navigate to the **Updates** section in the main window
+2. Click **Check for Updates Now**
+3. If an update is available, release notes and download options are shown
 
 #### Via About Dialog
 
 1. Open the tray menu → **About...**
 2. Click **Check for Updates**
-3. If an update is available, release notes are shown
-4. Click **Download Update** to open the release page in your browser
+3. If an update is available, a changelog dialog appears with release notes
+4. Click **Download** to download and install the update
 
 ### Update Process
 
-When `-Update` is used:
-
-1. `Test-RedballUpdateAvailable` queries the GitHub API
-2. If a newer version exists, finds the `Redball.ps1` asset in the release
-3. Downloads to `%TEMP%`
-4. If `VerifyUpdateSignature` is enabled, verifies the Authenticode signature
-5. Creates a backup of the current script (e.g., `Redball.ps1.bak.20240309123456`)
-6. Replaces the current script with the downloaded version
-7. Optionally restarts Redball with `-RestartAfterUpdate`
+1. `UpdateService.CheckForUpdateAsync()` queries the GitHub API
+2. If a newer version exists, shows the `UpdateAvailableWindow` with changelog
+3. User clicks Download → `UpdateProgressWindow` shows download progress
+4. If `VerifyUpdateSignature` is enabled, verifies the digital signature
+5. MSI installer is downloaded and launched
 
 ### Configuration
 
 | Setting | Default | Description |
 | ------- | ------- | ----------- |
+| `AutoUpdateCheckEnabled` | `true` | Enable automatic background update checks |
+| `AutoUpdateCheckIntervalMinutes` | `120` | Minutes between automatic checks |
 | `UpdateRepoOwner` | `ArMaTeC` | GitHub account or organization |
 | `UpdateRepoName` | `Redball` | GitHub repository name |
 | `UpdateChannel` | `stable` | Release channel |
 | `VerifyUpdateSignature` | `false` | Require valid digital signature |
 
-### Functions (Update)
+### UpdateService API
 
-| Function | Description |
-| -------- | ----------- |
-| `Get-RedballLatestRelease` | Queries GitHub API for the latest release |
-| `Test-RedballUpdateAvailable` | Compares versions and returns update status |
-| `Install-RedballUpdate` | Downloads, verifies, backs up, and installs the update |
+| Method | Description |
+| ------ | ----------- |
+| `CheckForUpdateAsync()` | Queries GitHub API for the latest release |
+| `DownloadUpdateAsync(updateInfo)` | Downloads the update MSI |
 
 ---
 
 ## Code Signing
 
-Redball supports Authenticode code signing for script integrity verification.
+Both the EXE and MSI are automatically code-signed during CI releases.
 
-### Signing the Script
+### Signing Details
 
-```powershell
-# Sign with auto-detected certificate
-.\Redball.ps1 -SignScript
+- **Algorithm:** SHA-256 with RSA 2048-bit key
+- **Timestamping:** DigiCert RFC 3161 timestamp server
+- **Tool:** Windows SDK `signtool.exe`
+- **Secrets:** `CODE_SIGNING_CERT` (base64 PFX) and `CODE_SIGNING_PASSWORD` stored as GitHub repository secrets
 
-# Sign with a specific certificate
-.\Redball.ps1 -SignScript -CertThumbprint "ABC123..."
+### Setting Up Code Signing
 
-# Sign with a custom timestamp server
-.\Redball.ps1 -SignScript -TimestampServer "http://timestamp.digicert.com"
-
-# Sign a different file
-.\Redball.ps1 -SignScript -SignPath "C:\Scripts\MyScript.ps1"
-```
-
-### Certificate Selection
-
-`Set-RedballCodeSignature` selects a certificate in this order:
-
-1. If `-CertThumbprint` is provided, finds that specific cert
-2. Otherwise, finds the newest valid code-signing cert in `Cert:\CurrentUser\My`
-3. If no cert is found, offers to create a self-signed certificate
-
-### Self-Signed Certificates
-
-`New-RedballSelfSignedCodeSigningCertificate` creates a code-signing certificate with:
-
-- Subject: `CN=Redball Self-Signed Code Signing`
-- Store: `Cert:\CurrentUser\My`
-- Validity: 3 years
-- Key export: Enabled
-
-### Verifying Signatures
+To use your own certificate, set the GitHub secrets:
 
 ```powershell
-# Basic signature check
-Test-RedballFileSignature -Path '.\Redball.ps1'
-
-# Verify against a list of trusted thumbprints
-Test-RedballFileSignature -Path '.\update.ps1' -AllowedThumbprints @('ABC123...')
+# Base64-encode your PFX certificate
+$base64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes("your-cert.pfx"))
+$base64 | gh secret set CODE_SIGNING_CERT --repo YourOrg/Redball
+"your-password" | gh secret set CODE_SIGNING_PASSWORD --repo YourOrg/Redball
 ```
 
-### Functions
-
-| Function | Description |
-| -------- | ----------- |
-| `Get-RedballCodeSigningCertificate` | Finds code-signing certs by thumbprint or newest |
-| `New-RedballSelfSignedCodeSigningCertificate` | Creates a self-signed cert (3-year validity) |
-| `Set-RedballCodeSignature` | Signs a script with Authenticode + timestamp |
-| `Test-RedballFileSignature` | Verifies signature status and optional signer allowlist |
+If no certificate secrets are configured, the CI creates a self-signed development certificate as a fallback.
 
 ### Deploy Pipeline Integration
 

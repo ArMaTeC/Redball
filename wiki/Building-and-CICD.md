@@ -78,8 +78,10 @@ The MSI provides:
 **Steps:**
 
 1. **WPF Build** — Build the .NET 8 WPF application
-2. **JSON Validation** — Validate `Redball.json` and `locales.json`
-3. **Security Scan** — Basic security checks
+2. **Unit Tests** — Run MSTest suite
+3. **JSON Validation** — Validate `Redball.json` and `locales.json`
+4. **PSScriptAnalyzer** — Lint build scripts
+5. **Security Scan** — Basic security checks
 
 ### Build Output
 

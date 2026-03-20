@@ -5,7 +5,7 @@
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run tests (`Invoke-Pester -Path .\Redball.Tests.ps1 -Output Detailed`)
+4. Build and test (`dotnet build src/Redball.UI.WPF && dotnet test`)
 5. Commit your changes (`git commit -m 'Add amazing feature'`)
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
@@ -16,11 +16,17 @@
 git clone https://github.com/ArMaTeC/Redball.git
 cd Redball
 
-# Run in development mode
-.\Redball.ps1 -ConfigPath ".\Redball.json"
+# Build the WPF application
+dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj
 
-# Run tests
-Invoke-Pester -Path ".\Redball.Tests.ps1" -Output Detailed
+# Run in development mode
+dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
+
+# Run unit tests
+dotnet test
+
+# Full build pipeline (build, test, lint, MSI)
+pwsh -File scripts/build.ps1
 
 # Build installer locally
 .\installer\Deploy-Redball.ps1 -BuildMsi
@@ -28,39 +34,37 @@ Invoke-Pester -Path ".\Redball.Tests.ps1" -Output Detailed
 
 ## Code Style
 
-- Follow existing PowerShell conventions used in the codebase
-- Use `PascalCase` for function names following PowerShell verb-noun convention
-- Use `$script:` scope for module-level state and configuration
-- Include `[CmdletBinding()]` and `SupportsShouldProcess` on functions that modify state
-- Add `.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER`, and `.EXAMPLE` comment-based help for all public functions
-- Use `Write-RedballLog` for all logging (never `Write-Host`)
+- Follow existing C# conventions used in the codebase
+- Use `PascalCase` for public members, `_camelCase` for private fields
+- Services are singletons accessed via `ServiceName.Instance`
+- Use `Logger.Info/Warning/Error` for all logging
+- Use XML doc comments (`///`) for public API documentation
+- Keep services focused — one responsibility per service class
 
 ## Testing
 
-The project uses [Pester](https://pester.dev/) for testing.
+The project uses MSTest for unit testing:
 
 ```powershell
-# Install Pester if needed
-Install-Module Pester -Force -SkipPublisherCheck
-
 # Run all tests
-Invoke-Pester -Path ".\Redball.Tests.ps1"
+dotnet test
 
-# Run with detailed output
-Invoke-Pester -Path ".\Redball.Tests.ps1" -Output Detailed
+# Run with verbose output
+dotnet test --verbosity detailed
 
-# Run specific test block
-Invoke-Pester -Path ".\Redball.Tests.ps1" -TestName "*Icon*"
+# Run specific test class
+dotnet test --filter "ClassName=ConfigServiceTests"
 ```
 
-When adding new features, include corresponding Pester tests in `Redball.Tests.ps1`.
+Tests are located in the `tests/` directory. When adding new features, include corresponding unit tests.
 
 ## CI Pipeline
 
 All PRs are validated by GitHub Actions (`ci.yml`):
 
-- **Pester Tests** — Full test suite
-- **PSScriptAnalyzer** — PowerShell linting
+- **WPF Build** — Build the .NET 8 WPF application
+- **Unit Tests** — Run the full test suite
+- **PSScriptAnalyzer** — Lint build scripts
 - **JSON Validation** — Config and locale files
 - **Security Scan** — Basic security checks
 
@@ -70,38 +74,36 @@ Ensure all checks pass before requesting review.
 
 ### Adding a New Monitoring Feature
 
-1. Add config settings to `$script:config` defaults
-2. Add state tracking properties to `$script:state`
-3. Create `Update-*State` function following the existing pattern (auto-pause/resume)
-4. Add the check to the duration timer tick handler
-5. Add UI controls to the Settings dialog
-6. Add settings apply/save logic in the Settings OK handler
+1. Add config properties to `Models/RedballConfig.cs`
+2. Create a new service class in `Services/` following the singleton pattern
+3. Implement `CheckAndUpdate(KeepAwakeService service)` method
+4. Register the check in `KeepAwakeService`'s duration timer
+5. Add UI controls to the appropriate section in `MainWindow.xaml`
+6. Add settings apply/save logic in `MainWindow.Settings.cs`
 7. Add a tray menu item if needed
 8. Update the wiki documentation
-9. Add Pester tests
+9. Add unit tests
 
 ### Adding a New Locale
 
-1. Add the locale block to `$script:embeddedLocales` JSON
-2. Add the locale code to the Settings dialog dropdown
-3. Optionally add to `locales.json` for external override
-4. See [Localization](Localization.md) for details
+1. Add the locale strings to `LocalizationService`
+2. Optionally add to `locales.json` for external override
+3. See [Localization](Localization.md) for details
 
 ### Adding TypeThing Features
 
-1. Add config settings to the `TypeThing` section of `$script:config`
-2. Add state properties to the `TypeThing` section of `$script:state`
-3. Update both the main Settings dialog TypeThing tab and the dedicated TypeThing settings dialog
+1. Add config properties to the TypeThing section of `RedballConfig.cs`
+2. Update `MainWindow.TypeThing.cs` with the new functionality
+3. Update the TypeThing section UI in `MainWindow.xaml`
 4. See [TypeThing](TypeThing.md) for architecture details
 
 ## Reporting Issues
 
 - Use [GitHub Issues](https://github.com/ArMaTeC/Redball/issues) to report bugs
 - Include:
-  - Redball version (`.\Redball.ps1 -Status | ConvertFrom-Json | Select Version`)
-  - PowerShell version (`$PSVersionTable.PSVersion`)
+  - Redball version (from **About** dialog or Diagnostics section)
   - Windows version
-  - Relevant log entries from `Redball.log`
+  - Relevant log entries (export via Diagnostics → Export Diagnostics)
   - Steps to reproduce
 
 ## License
