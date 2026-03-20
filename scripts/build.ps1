@@ -893,16 +893,21 @@ try {
         Step-CommitVersionBump
     }
 
-    # Call release script to create GitHub release
-    $releaseScript = Join-Path $PSScriptRoot "release.ps1"
-    $releaseTag = "v$Version"
-    if (Test-Path $releaseScript) {
-        Write-HostSafe "  Calling release script..." -ForegroundColor Cyan
-        & $releaseScript -Version $Version -Tag $releaseTag -SkipAutoBuild -AllowDirty
+    # Call release script to create GitHub release (only when MSI was built)
+    if (-not $SkipMSI) {
+        $releaseScript = Join-Path $PSScriptRoot "release.ps1"
+        $releaseTag = "v$Version"
+        if (Test-Path $releaseScript) {
+            Write-HostSafe "  Calling release script..." -ForegroundColor Cyan
+            & $releaseScript -Version $Version -Tag $releaseTag -SkipAutoBuild -AllowDirty
+        }
+        else {
+            Write-HostSafe "  release.ps1 not found. GitHub release not created." -ForegroundColor Yellow
+            Write-HostSafe "  Run manually: .\scripts\release.ps1 -Version $Version -Tag $releaseTag" -ForegroundColor Gray
+        }
     }
     else {
-        Write-HostSafe "  release.ps1 not found. GitHub release not created." -ForegroundColor Yellow
-        Write-HostSafe "  Run manually: .\scripts\release.ps1 -Version $Version -Tag $releaseTag" -ForegroundColor Gray
+        Write-HostSafe "  Skipping GitHub release (no MSI artifact — use full build to create a release)" -ForegroundColor Yellow
     }
 
     Write-HostSafe "`n══════════════════════════════════════════════════════════" -ForegroundColor Green

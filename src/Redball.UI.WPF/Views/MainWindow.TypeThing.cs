@@ -349,13 +349,27 @@ public partial class MainWindow
             }
 
             var ch = text[index];
-            if (ch == '\n' && config.TypeThingTypeNewlines)
+            if (ch == '\r')
             {
-                SendKeyPress(0x0D); // VK_RETURN
+                // If next char is \n, skip \r (the \n will send Enter)
+                // If standalone \r, treat it as a newline
+                if (index + 1 < text.Length && text[index + 1] == '\n')
+                {
+                    // Skip — the following \n will handle it
+                }
+                else if (config.TypeThingTypeNewlines)
+                {
+                    SendKeyPress(0x0D); // VK_RETURN
+                }
+                // else: TypeThingTypeNewlines is false, skip silently
             }
-            else if (ch == '\r')
+            else if (ch == '\n')
             {
-                // Skip carriage return (handled by \n)
+                if (config.TypeThingTypeNewlines)
+                {
+                    SendKeyPress(0x0D); // VK_RETURN
+                }
+                // else: skip silently (don't fall through to SendCharacter)
             }
             else if (ch == '\t')
             {
@@ -611,27 +625,21 @@ public partial class MainWindow
             Logger.Debug("MainWindow", $"TypeThing: HID SendVirtualKey failed for VK 0x{vk:X4}, falling back to SendInput");
         }
 
-        // Use hardware scan codes — works with VMware, fullscreen/maximized apps, and RDP
+        // Send using wVk (virtual key code) for control keys like Enter/Tab.
+        // KEYEVENTF_SCANCODE tells Windows to ignore wVk, which causes many apps
+        // to silently drop the keystroke for non-printable keys. Populate wScan
+        // as a hint but let wVk drive the input.
         var scan = (ushort)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-        if (scan != 0)
-        {
-            var inputs = new[] {
-                MakeScanCodeInput(scan),
-                MakeScanCodeInput(scan, KEYEVENTF_KEYUP)
-            };
-            SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
-        }
-        else
-        {
-            // Fallback: virtual-key based SendInput
-            var inputs = new INPUT[2];
-            inputs[0].type = INPUT_KEYBOARD;
-            inputs[0].u.ki.wVk = vk;
-            inputs[1].type = INPUT_KEYBOARD;
-            inputs[1].u.ki.wVk = vk;
-            inputs[1].u.ki.dwFlags = KEYEVENTF_KEYUP;
-            SendInput(2, inputs, Marshal.SizeOf<INPUT>());
-        }
+        var inputs = new INPUT[2];
+        inputs[0].type = INPUT_KEYBOARD;
+        inputs[0].u.ki.wVk = vk;
+        inputs[0].u.ki.wScan = scan;
+        inputs[0].u.ki.dwFlags = 0;
+        inputs[1].type = INPUT_KEYBOARD;
+        inputs[1].u.ki.wVk = vk;
+        inputs[1].u.ki.wScan = scan;
+        inputs[1].u.ki.dwFlags = KEYEVENTF_KEYUP;
+        SendInput(2, inputs, Marshal.SizeOf<INPUT>());
     }
 
     private void SendCharacter(char ch)
