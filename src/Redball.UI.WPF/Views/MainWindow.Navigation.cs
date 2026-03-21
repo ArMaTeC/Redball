@@ -95,7 +95,7 @@ public partial class MainWindow
         var updateInfo = await _updateService.CheckForUpdateAsync();
         if (updateInfo == null)
         {
-            MessageBox.Show(this, "You're running the latest version.", "No Updates", MessageBoxButton.OK, MessageBoxImage.Information);
+            NotificationWindow.Show("Up to Date", "You're running the latest version of Redball.", "\uE73E"); 
             return;
         }
 
@@ -140,7 +140,7 @@ public partial class MainWindow
         catch (Exception ex)
         {
             Logger.Error("MainWindow", "Failed to export diagnostics", ex);
-            MessageBox.Show(this, $"Export failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Export failed: {ex.Message}", "\uE783");
         }
     }
 
@@ -231,7 +231,7 @@ public partial class MainWindow
         catch (Exception ex)
         {
             Logger.Error("MainWindow", "Failed to export analytics CSV", ex);
-            MessageBox.Show(this, $"Export failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Export failed: {ex.Message}", "\uE783");
         }
     }
 
@@ -255,7 +255,7 @@ public partial class MainWindow
         catch (Exception ex)
         {
             Logger.Error("MainWindow", "Failed to export analytics JSON", ex);
-            MessageBox.Show(this, $"Export failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Export failed: {ex.Message}", "\uE783");
         }
     }
 

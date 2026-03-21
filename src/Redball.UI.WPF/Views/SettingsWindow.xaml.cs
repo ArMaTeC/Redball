@@ -55,8 +55,8 @@ public partial class SettingsWindow : Window
         if (_updateService == null) return;
 
         // Show checking dialog
-        var checkingDialog = MessageBox.Show("Checking for updates...", "Update", MessageBoxButton.OKCancel, MessageBoxImage.Information);
-        if (checkingDialog != MessageBoxResult.OK) return;
+        var checking = NotificationWindow.Show("Check for Update", "Checking for updates...", "\uE896", true);
+        if (!checking) return;
 
         // Check for updates
         var updateInfo = await _updateService.CheckForUpdateAsync();
@@ -89,11 +89,7 @@ public partial class SettingsWindow : Window
         }
         else
         {
-            MessageBox.Show(
-                "Failed to download or install the update. Please try again later or download manually from GitHub.",
-                "Update Failed",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            NotificationWindow.Show("Update Failed", "Failed to download or install the update. Please check the log for details.", "\uE783");
         }
     }
 
