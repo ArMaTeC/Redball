@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 [CmdletBinding()]
 param(
     [string]$WixBinPath = 'C:\Program Files\WiX Toolset v4.0\bin',
@@ -968,3 +968,4 @@ or preinstall required tools (ps2exe and WiX) and re-run.
 "@
     exit 1
 }
+

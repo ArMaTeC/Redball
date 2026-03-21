@@ -83,6 +83,7 @@ public class MainViewModel : ViewModelBase
         OpenPomodoroCommand = new RelayCommand(OpenPomodoro);
         OpenUpdatesCommand = new RelayCommand(OpenUpdates);
         OpenAboutCommand = new RelayCommand(() => ShowAbout());
+        ShowWindowCommand = new RelayCommand(ShowWindow);
         ShowQuickSettingsCommand = new RelayCommand(ShowQuickSettings);
         ShowMiniWidgetCommand = new RelayCommand(ShowMiniWidget);
         ResetMiniWidgetPositionCommand = new RelayCommand(ResetMiniWidgetPosition);
@@ -165,6 +166,7 @@ public class MainViewModel : ViewModelBase
     public ICommand OpenPomodoroCommand { get; }
     public ICommand OpenUpdatesCommand { get; }
     public ICommand OpenAboutCommand { get; }
+    public ICommand ShowWindowCommand { get; }
     public ICommand ShowQuickSettingsCommand { get; }
     public ICommand ShowMiniWidgetCommand { get; }
     public ICommand ResetMiniWidgetPositionCommand { get; }
@@ -248,6 +250,22 @@ public class MainViewModel : ViewModelBase
             else
             {
                 Logger.Warning("MainViewModel", "MainWindow reference not available, cannot open embedded settings");
+            }
+        }
+    }
+
+    private void ShowWindow()
+    {
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.ShowMainWindow();
+        }
+        else
+        {
+            var fallbackMainWindow = Application.Current.MainWindow as MainWindow;
+            if (fallbackMainWindow != null)
+            {
+                fallbackMainWindow.ShowMainWindow();
             }
         }
     }

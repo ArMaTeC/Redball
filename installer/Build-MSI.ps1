@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 [CmdletBinding()]
 param(
     [string]$WixBinPath = "C:\Program Files\WiX Toolset v4.0\bin",
@@ -22,14 +22,25 @@ function Write-HostSafe {
     Write-Host $Object -ForegroundColor $ForegroundColor
 }
 
-$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$projectRoot = Split-Path -Parent $scriptRoot
+$scriptRoot = $PSScriptRoot
+if (-not $scriptRoot -and $MyInvocation.MyCommand.Path) { 
+    $scriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent 
+}
+if (-not $scriptRoot) { $scriptRoot = Get-Location }
+
+Write-HostSafe "Debug: scriptRoot='$scriptRoot'" -ForegroundColor Gray
+
+$projectRoot = Split-Path $scriptRoot -Parent
+Write-HostSafe "Debug: projectRoot='$projectRoot'" -ForegroundColor Gray
+
 $wxsPath = Join-Path $scriptRoot 'Redball.wxs'
 $iconPath = Join-Path $scriptRoot 'Redball.ico'
 $licenseSourcePath = Join-Path $projectRoot 'LICENSE'
 $licenseRtfPath = Join-Path $scriptRoot 'Redball-License.rtf'
 $outputDir = Join-Path $projectRoot 'dist'
-$versionFilePath = Join-Path $projectRoot 'scripts\version.txt'
+$versionFilePath = Join-Path $projectRoot 'scripts' 'version.txt'
+
+Write-HostSafe "Debug: outputDir='$outputDir'" -ForegroundColor Gray
 
 # Read version from version.txt if not provided
 if (-not $Version -and (Test-Path $versionFilePath)) {
@@ -266,3 +277,4 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-HostSafe "MSI created: $outputMsi" -ForegroundColor Green
+

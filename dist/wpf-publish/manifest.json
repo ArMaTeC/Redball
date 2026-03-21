@@ -1,0 +1,86 @@
+{
+  "files": [
+    {
+      "hash": "4981F8E7DD07EF65224393DE5DFA5698FFBA6105E4DE72A65DE24330D44FFE81",
+      "size": 2725,
+      "name": "anifest.json"
+    },
+    {
+      "hash": "F1B847032A4D747CE6BD1A74EF05915DBDA433503C728F145E6342B33690CBD8",
+      "size": 8484,
+      "name": "edball.UI.WPF.deps.json"
+    },
+    {
+      "hash": "A5CA55D842C58E746F983FF04D0FF3A9DD2E9EEE2EFC232851FD9A7C08F64B4B",
+      "size": 1398784,
+      "name": "edball.UI.WPF.dll"
+    },
+    {
+      "hash": "26CC659AA68B41B0C28ACE973523C46086780D8E2E0E112DD5FA2C22D11B76A5",
+      "size": 363008,
+      "name": "edball.UI.WPF.exe"
+    },
+    {
+      "hash": "37D46802799243F68A41252E9DA4474F59AF8D6C7D1B4D7D7632E64088FA488E",
+      "size": 1351,
+      "name": "edball.UI.WPF.runtimeconfig.json"
+    },
+    {
+      "hash": "1115214EB7C70C7DEC87A60FD25C8CAA261701E5D21310025ECA8CF6958D4F37",
+      "size": 210491,
+      "name": "ssets\\redball.ico"
+    },
+    {
+      "hash": "A2AB2E94556733B0BB8A56C7F79E8EA0A363F984C49A0AE757E329A273A45774",
+      "size": 117392,
+      "name": "in\\CommunityToolkit.Mvvm.dll"
+    },
+    {
+      "hash": "2059222C4AE5D0291FCE13BD296ADCC448D79B6FAE27746AEDF347608ED3090C",
+      "size": 103424,
+      "name": "in\\Hardcodet.NotifyIcon.Wpf.dll"
+    },
+    {
+      "hash": "4583DEFC5F2A547A51671FF997BE7393F807108CED8B4678B3B45C5762777C41",
+      "size": 519168,
+      "name": "in\\InputInterceptor.dll"
+    },
+    {
+      "hash": "67FA4325000DB017DC0C35829B416F024F042D24EFB868BCF17A895EE6500A93",
+      "size": 63768,
+      "name": "in\\Microsoft.Extensions.DependencyInjection.Abstractions.dll"
+    },
+    {
+      "hash": "158761CE778E799949F3A3060C461B1055BB35F1F5A65EFF0E42397849F09ECD",
+      "size": 92952,
+      "name": "in\\Microsoft.Extensions.DependencyInjection.dll"
+    },
+    {
+      "hash": "ACF2664D35F432AB9EA003040E5154AE8BB40A8F07D3EEBEE7093E97F44A96EA",
+      "size": 146864,
+      "name": "in\\Microsoft.Xaml.Behaviors.dll"
+    },
+    {
+      "hash": "8D6BFB5F05DB992C82277275467ECD349FCDFC35ED3E4A37165B4754F915965A",
+      "size": 1398784,
+      "name": "in\\Redball.UI.WPF.dll"
+    },
+    {
+      "hash": "B2D6E7E991DC9EF154B29F4966F04FD8ED4EBB2C1D1242EA1D5F3E90F8AE5143",
+      "size": 311984,
+      "name": "in\\System.Management.dll"
+    },
+    {
+      "hash": "D156C5349BCE411159AFFAA1369EE2BBAC3D4CBA7793BCEDAF9C85F9C9FB5839",
+      "size": 685216,
+      "name": "in\\System.Speech.dll"
+    },
+    {
+      "hash": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "size": 0,
+      "name": "ogs\\.keep"
+    }
+  ],
+  "timestamp": "2026-03-21T16:39:53Z",
+  "version": "2.1.172"
+}

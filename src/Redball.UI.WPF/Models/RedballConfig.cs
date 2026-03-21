@@ -43,6 +43,7 @@ public class RedballConfig
     public string TypeThingStartHotkey { get; set; } = "Ctrl+Shift+V";
     public string TypeThingStopHotkey { get; set; } = "Ctrl+Shift+X";
     public string TypeThingTheme { get; set; } = "dark";
+    public bool UseLowLevelHotkey { get; set; } = false;
     public bool TypeThingAddRandomPauses { get; set; } = true;
     public int TypeThingRandomPauseChance { get; set; } = 5;
     public int TypeThingRandomPauseMaxMs { get; set; } = 500;

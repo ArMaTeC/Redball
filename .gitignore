@@ -51,3 +51,4 @@ tests-integration/bin/
 tests-integration/obj/
 tests-ui-automation/bin/
 tests-ui-automation/obj/
+scripts/build_error.log

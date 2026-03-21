@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '', Justification = 'Parameters are used within function scope')]
 [CmdletBinding()]
 param(
@@ -55,19 +55,24 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# Resolve project root (parent of scripts directory)
-$script:ProjectRoot = Split-Path $PSScriptRoot -Parent
-$script:DistPath = Join-Path $ProjectRoot $OutputPath
+# Resolve paths safely
+$currentScriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path $MyInvocation.MyCommand.Path -Parent }
+if (-not $currentScriptRoot) { $currentScriptRoot = (Get-Item .).FullName }
+
+$script:ProjectRoot = Split-Path $currentScriptRoot -Parent
+if (-not $script:ProjectRoot) { $script:ProjectRoot = (Get-Item .).FullName }
+
+$script:DistPath = Join-Path $script:ProjectRoot $OutputPath
 
 # Import version from version.txt or WPF project if not specified
 if (-not $Version) {
-    $versionFilePath = Join-Path $PSScriptRoot 'version.txt'
+    $versionFilePath = Join-Path $currentScriptRoot 'version.txt'
     if (Test-Path $versionFilePath) {
         $Version = (Get-Content $versionFilePath -Raw).Trim()
     }
     else {
         # Try to read from WPF project
-        $wpfProjectPath = Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
+        $wpfProjectPath = Join-Path $script:ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
         if (Test-Path $wpfProjectPath) {
             $versionMatch = Get-Content $wpfProjectPath | Select-String -Pattern '<Version>([0-9]+\.[0-9]+\.[0-9]+)</Version>'
             if ($versionMatch) {
@@ -253,6 +258,16 @@ function Step-RunLinting {
     param()
     Write-BuildHeader "Running PSScriptAnalyzer"
     
+    # Fix BOM encoding for all ps1 files in scripts directory before linting
+    # This addresses the PSUseBOMForUnicodeEncodedFile rule warnings
+    # Exclude the currently running script to avoid self-modification/file lock issues
+    Write-HostSafe "  Fixing UTF-8 BOM encoding for scripts..." -ForegroundColor Gray
+    $scriptsToUpdate = Get-ChildItem -Path $PSScriptRoot -Filter *.ps1 -Recurse | Where-Object { $_.FullName -ne $PSCommandPath }
+    foreach ($scriptToUpdate in $scriptsToUpdate) {
+        $contentToFix = Get-Content -Path $scriptToUpdate.FullName -Raw
+        $contentToFix | Set-Content -Path $scriptToUpdate.FullName -Encoding utf8BOM
+    }
+    
     Import-Module PSScriptAnalyzer -Force
     
     $results = Invoke-ScriptAnalyzer -Path $PSScriptRoot -Severity Warning, Error
@@ -302,20 +317,25 @@ function Step-BumpVersion {
     
     Write-BuildHeader "Bumping Version ($BumpComponent)"
     
+    $propsPath = Join-Path $ProjectRoot 'Directory.Build.props'
     $wpfProjectPath = Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
     $versionFilePath = Join-Path $PSScriptRoot 'version.txt'
     
-    if (-not (Test-Path $wpfProjectPath)) {
-        throw "WPF project not found at: $wpfProjectPath"
+    $targetPath = $propsPath
+    if (-not (Test-Path $targetPath)) {
+        $targetPath = $wpfProjectPath
     }
     
-    # Read current version from WPF project
-    $csprojContent = Get-Content $wpfProjectPath -Raw
+    if (-not (Test-Path $targetPath)) {
+        throw "Version target file not found at: $targetPath"
+    }
+    
+    $targetContent = Get-Content $targetPath -Raw
     $versionPattern = '<Version>([0-9]+)\.([0-9]+)\.([0-9]+)</Version>'
-    $match = [regex]::Match($csprojContent, $versionPattern)
+    $match = [regex]::Match($targetContent, $versionPattern)
     
     if (-not $match.Success) {
-        throw "Could not find version pattern in $wpfProjectPath"
+        throw "Could not find version pattern in $targetPath"
     }
     
     $major = [int]$match.Groups[1].Value
@@ -323,7 +343,7 @@ function Step-BumpVersion {
     $patch = [int]$match.Groups[3].Value
     $currentVersion = "$major.$minor.$patch"
     
-    Write-HostSafe "Current version: $currentVersion" -ForegroundColor Cyan
+    Write-HostSafe "Current version (from $(Split-Path $targetPath -Leaf)): $currentVersion" -ForegroundColor Cyan
     
     # Calculate new version
     switch ($BumpComponent) {
@@ -344,13 +364,13 @@ function Step-BumpVersion {
     $newVersion = "$major.$minor.$patch"
     Write-HostSafe "New version: $newVersion" -ForegroundColor Green
     
-    # Update WPF .csproj
-    $csprojContent = $csprojContent -replace '<Version>[0-9]+\.[0-9]+\.[0-9]+</Version>', "<Version>$newVersion</Version>"
-    $csprojContent = $csprojContent -replace '<FileVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</FileVersion>', "<FileVersion>$newVersion.0</FileVersion>"
-    $csprojContent = $csprojContent -replace '<AssemblyVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</AssemblyVersion>', "<AssemblyVersion>$newVersion.0</AssemblyVersion>"
+    # Update target file
+    $targetContent = $targetContent -replace '<Version>[0-9]+\.[0-9]+\.[0-9]+</Version>', "<Version>$newVersion</Version>"
+    $targetContent = $targetContent -replace '<FileVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</FileVersion>', "<FileVersion>$newVersion.0</FileVersion>"
+    $targetContent = $targetContent -replace '<AssemblyVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</AssemblyVersion>', "<AssemblyVersion>$newVersion.0</AssemblyVersion>"
     
-    Set-Content -Path $wpfProjectPath -Value $csprojContent -NoNewline
-    Write-BuildSuccess "Updated $wpfProjectPath"
+    Set-Content -Path $targetPath -Value $targetContent -NoNewline
+    Write-BuildSuccess "Updated $targetPath"
     
     # Write version file for MSI and other build processes
     Set-Content -Path $versionFilePath -Value $newVersion -NoNewline
@@ -368,14 +388,17 @@ function Step-CommitVersionBump {
     
     Write-BuildHeader "Committing Version Bump"
     
+    $propsPath = Join-Path $ProjectRoot 'Directory.Build.props'
     $wpfProjectPath = Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
     $versionFilePath = Join-Path $PSScriptRoot 'version.txt'
+    
+    $targetPath = if (Test-Path $propsPath) { $propsPath } else { $wpfProjectPath }
     
     $commitMessage = if ($BumpMessage) { $BumpMessage } else { "Bump version to $Version" }
     
     Write-BuildStep "Committing with message: $commitMessage"
     git add $versionFilePath
-    git add $wpfProjectPath
+    git add $targetPath
     git commit -m $commitMessage
     
     if ($BumpPush) {
@@ -522,9 +545,9 @@ function Step-BuildWpfApp {
     param()
     Write-BuildHeader "Building WPF Application"
     
-    $solutionPath = Join-Path $ProjectRoot 'Redball.v3.sln'
-    $projectPath = Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
-    $publishDir = Join-Path $DistPath 'wpf-publish'
+    $solutionPath = Join-Path $script:ProjectRoot 'Redball.v3.sln'
+    $projectPath = Join-Path $script:ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
+    $publishDir = Join-Path $script:DistPath 'wpf-publish'
     
     if (-not (Test-Path $projectPath)) {
         Write-Warning "WPF project not found: $projectPath"
@@ -592,21 +615,83 @@ function Step-BuildWpfApp {
     }
     Write-BuildSuccess "Build completed"
     
-    # Publish single-file executable
-    Write-BuildStep "Publishing single-file executable..."
+    # Publish modular application
+    Write-BuildStep "Publishing modular application..."
     dotnet publish $projectPath `
         --configuration $Configuration `
         --output $publishDir `
         --self-contained false `
         --runtime win-x64 `
-        --property:PublishSingleFile=true `
+        --property:PublishSingleFile=false `
         --property:PublishTrimmed=false `
         --property:EnableCompressionInSingleFile=false
     
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet publish failed"
     }
-    Write-BuildSuccess "Published to: $publishDir"
+    # Finalize Publish Directory
+    Write-BuildStep "Finalizing modular publish assets (moving DLLs to bin/)..."
+    Start-Sleep -Seconds 1 # Give OS time to release locks
+    
+    $binDir = Join-Path $publishDir "bin"
+    if (-not (Test-Path $binDir)) { New-Item -ItemType Directory -Path $binDir -Force | Out-Null }
+    
+    # Move DLLs to bin folder (excluding the main executable's primary assembly)
+    $dllsToMove = Get-ChildItem -Path $publishDir -Filter "*.dll" | Where-Object { $_.Name -ne "Redball.UI.WPF.dll" }
+    if ($null -ne $dllsToMove -and $dllsToMove.Count -gt 0) {
+        $dllsToMove | Move-Item -Destination $binDir -Force
+        Write-BuildSuccess "Moved $($dllsToMove.Count) DLLs to $binDir"
+    }
+
+    # Update runtimeconfig.json with additionalProbingPaths
+    $runtimeConfig = Join-Path $publishDir "Redball.UI.WPF.runtimeconfig.json"
+    if (Test-Path $runtimeConfig) {
+        Write-BuildStep "Updating runtimeconfig.json for library probing..."
+        $config = Get-Content $runtimeConfig | ConvertFrom-Json
+        # Add probing paths if not already present
+        if (-not $config.runtimeOptions.additionalProbingPaths) {
+            $config.runtimeOptions | Add-Member -MemberType NoteProperty -Name "additionalProbingPaths" -Value @("bin")
+            $config | ConvertTo-Json -Depth 10 | Set-Content $runtimeConfig -Encoding UTF8
+            Write-BuildSuccess "Probing path 'bin' added to runtimeconfig.json"
+        }
+    }
+
+    # Unblock InputInterceptor.dll (prevents Windows security blocks)
+    $interceptorFile = Join-Path $binDir "InputInterceptor.dll"
+    if (Test-Path $interceptorFile) {
+        Write-HostSafe "  Unblocking InputInterceptor.dll..." -ForegroundColor Gray
+        Unblock-File -Path $interceptorFile -ErrorAction SilentlyContinue
+    }
+    
+    # Create logs folder placeholder
+    $logsDir = Join-Path $publishDir "logs"
+    if (-not (Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir -Force | Out-Null }
+    New-Item -ItemType File -Path (Join-Path $logsDir ".keep") -Force | Out-Null
+
+    # Generate Update Manifest
+    Write-BuildStep "Generating Update Manifest..."
+    $pubFiles = Get-ChildItem -Path $publishDir -File -Recurse
+    $manifestFiles = @()
+    foreach ($file in $pubFiles) {
+        $relativePath = $file.FullName.Substring($publishDir.Length).TrimStart("\")
+        if ($relativePath -eq "manifest.json") { continue }
+        $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash
+        $manifestFiles += @{
+            name = $relativePath
+            hash = $hash
+            size = $file.Length
+        }
+    }
+
+    $manifest = @{
+        version = $Version
+        timestamp = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
+        files = $manifestFiles
+    }
+
+    $manifestPath = Join-Path $publishDir "manifest.json"
+    $manifest | ConvertTo-Json -Depth 10 | Set-Content $manifestPath -Encoding UTF8
+    Write-BuildSuccess "Publish completed and manifest generated in $publishDir"
     
     # Copy Assets folder to publish directory for MSI packaging
     $assetsSource = Join-Path (Split-Path $projectPath -Parent) 'Assets'
@@ -632,26 +717,26 @@ function Step-BuildMsiInstaller {
     param()
     Write-BuildHeader "Building MSI Installer"
     
-    $msiScript = Join-Path $ProjectRoot 'installer' 'Build-MSI.ps1'
+    $msiScript = Join-Path $script:ProjectRoot 'installer' 'Build-MSI.ps1'
     if (-not (Test-Path $msiScript)) {
         Write-Warning "MSI build script not found: $msiScript"
         return
     }
     
-    if (-not $PSCmdlet.ShouldProcess("MSI for v$Version", 'Build')) {
+    if (-not $PSCmdlet.ShouldProcess("MSI for v$($script:Version)", 'Build')) {
         return
     }
     
     # Accept WiX v7 OSMF EULA
     $env:WIX_OSMF_EULA_ACCEPTED = '1'
     
-    & $msiScript -Configuration $Configuration -Version $Version
+    & $msiScript -Configuration $Configuration -Version $script:Version
     
     if ($LASTEXITCODE -ne 0) {
         throw "MSI build failed"
     }
     
-    $msiPath = Join-Path $DistPath "Redball-$Version.msi"
+    $msiPath = Join-Path $script:DistPath "Redball-$($script:Version).msi"
     if (Test-Path $msiPath) {
         $fileInfo = Get-Item $msiPath
         Write-BuildSuccess "MSI created: $($fileInfo.Name) ($([math]::Round($fileInfo.Length / 1MB, 2)) MB)"
@@ -785,7 +870,7 @@ function Step-CleanBuild {
     $ProgressPreference = $oldProgressPreference
 
     # Run dotnet clean on the solution
-    $solutionPath = Join-Path $ProjectRoot 'Redball.v3.sln'
+    $solutionPath = Join-Path $script:ProjectRoot 'Redball.v3.sln'
     if (Test-Path $solutionPath) {
         Write-BuildStep "Running dotnet clean..."
         dotnet clean $solutionPath --verbosity quiet
@@ -800,7 +885,7 @@ function Step-CleanBuild {
     Write-BuildSuccess "Clean build completed"
 }
 
-#endregion
+# End Helper Functions
 
 # Build timing
 $script:BuildStartTime = Get-Date
@@ -831,8 +916,8 @@ try {
     }
     
     # Ensure dist directory exists
-    if (-not (Test-Path $DistPath)) {
-        New-Item -ItemType Directory -Path $DistPath -Force | Out-Null
+    if (-not (Test-Path $script:DistPath)) {
+        New-Item -ItemType Directory -Path $script:DistPath -Force | Out-Null
     }
     
     # Always run these
@@ -895,11 +980,11 @@ try {
 
     # Call release script to create GitHub release (only when MSI was built)
     if (-not $SkipMSI) {
-        $releaseScript = Join-Path $PSScriptRoot "release.ps1"
-        $releaseTag = "v$Version"
+        $releaseScript = Join-Path $currentScriptRoot "release.ps1"
+        $releaseTag = "v$($script:Version)"
         if (Test-Path $releaseScript) {
             Write-HostSafe "  Calling release script..." -ForegroundColor Cyan
-            & $releaseScript -Version $Version -Tag $releaseTag -SkipAutoBuild -AllowDirty
+            & $releaseScript -Version $script:Version -Tag $releaseTag -SkipAutoBuild -AllowDirty
         }
         else {
             Write-HostSafe "  release.ps1 not found. GitHub release not created." -ForegroundColor Yellow
@@ -920,11 +1005,13 @@ try {
     exit 0
 }
 catch {
-    $errorMessage = $_
+    $script:errorMessage = $_
+    $script:stackTrace = $_.ScriptStackTrace
     Write-HostSafe "`n══════════════════════════════════════════════════════════" -ForegroundColor Red
     Write-HostSafe "  BUILD FAILED" -ForegroundColor Red
     Write-HostSafe "══════════════════════════════════════════════════════════" -ForegroundColor Red
-    Write-HostSafe "  Error: $errorMessage" -ForegroundColor Red
+    Write-HostSafe "  Error: $script:errorMessage" -ForegroundColor Red
+    Write-HostSafe "  Trace: $script:stackTrace" -ForegroundColor Gray
     if ($script:BuildStartTime) {
         $duration = (Get-Date) - $script:BuildStartTime
         Write-HostSafe "  Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor Gray
@@ -932,3 +1019,11 @@ catch {
     Write-HostSafe "══════════════════════════════════════════════════════════`n" -ForegroundColor Red
     exit 1
 }
+
+
+
+
+
+
+
+

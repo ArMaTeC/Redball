@@ -70,7 +70,7 @@ public class UpdateService : IUpdateService
                 return null;
             }
             
-            // Get all releases and find the highest version (not just "latest" by date)
+            // Get all releases and find the highest version
             var allReleases = await GetAllReleasesAsync(cancellationToken);
             var latestRelease = FindHighestVersionRelease(allReleases);
             
@@ -80,63 +80,102 @@ public class UpdateService : IUpdateService
                 return null;
             }
 
-            // Parse version from tag (remove 'v' prefix if present)
+            // Parse version from tag
             var tagName = latestRelease.TagName.TrimStart('v', 'V');
-            Logger.Debug("UpdateService", $"Latest release tag: {latestRelease.TagName}");
-            
             if (!Version.TryParse(tagName, out var latestVersion))
             {
                 Logger.Error("UpdateService", $"Failed to parse version from tag: {tagName}");
                 return null;
             }
             
-            // Normalize versions for comparison (ignore revision number)
+            // Normalize versions
             var currentNormalized = new Version(currentVersion.Major, currentVersion.Minor, currentVersion.Build);
             var latestNormalized = new Version(latestVersion.Major, latestVersion.Minor, latestVersion.Build);
             
-            Logger.Info("UpdateService", $"Comparing versions: current={currentNormalized}, latest={latestNormalized}");
-
-            // Compare versions
             if (latestNormalized <= currentNormalized)
             {
                 Logger.Info("UpdateService", $"Up to date (current: {currentNormalized}, latest: {latestNormalized})");
                 return null;
             }
 
-            // Find appropriate asset (prefer standalone/portable versions)
-            var asset = FindBestAsset(latestRelease);
-            if (asset == null)
+            // Check for manifest.json for differential updates
+            var manifestAsset = latestRelease.Assets.Find(a => a.Name.Equals("manifest.json", StringComparison.OrdinalIgnoreCase));
+            if (manifestAsset != null)
+            {
+                Logger.Info("UpdateService", "Found update manifest, checking for differential updates...");
+                var manifestJson = await _httpClient.GetStringAsync(manifestAsset.DownloadUrl, cancellationToken);
+                var manifest = JsonSerializer.Deserialize<UpdateManifest>(manifestJson);
+                
+                if (manifest != null)
+                {
+                    var filesToUpdate = new List<FileUpdateInfo>();
+                    var appDir = AppDomain.CurrentDomain.BaseDirectory;
+                    
+                    foreach (var file in manifest.Files)
+                    {
+                        var localPath = Path.Combine(appDir, file.Name);
+                        bool needsUpdate = true;
+                        
+                        if (File.Exists(localPath))
+                        {
+                            var localHash = (await CalculateHashAsync(localPath)).ToUpper();
+                            if (localHash == file.Hash.ToUpper())
+                            {
+                                needsUpdate = false;
+                            }
+                        }
+                        
+                        if (needsUpdate)
+                        {
+                            var asset = latestRelease.Assets.Find(a => a.Name.Equals(Path.GetFileName(file.Name), StringComparison.OrdinalIgnoreCase));
+                            if (asset != null)
+                            {
+                                filesToUpdate.Add(new FileUpdateInfo
+                                {
+                                    Name = file.Name,
+                                    DownloadUrl = asset.DownloadUrl,
+                                    Hash = file.Hash,
+                                    Size = file.Size
+                                });
+                            }
+                        }
+                    }
+                    
+                    if (filesToUpdate.Count > 0)
+                    {
+                        Logger.Info("UpdateService", $"Differential update available: {filesToUpdate.Count} files need updating.");
+                        _consecutiveFailures = 0;
+                        return new UpdateInfo
+                        {
+                            CurrentVersion = currentNormalized,
+                            LatestVersion = latestNormalized,
+                            FilesToUpdate = filesToUpdate,
+                            ReleaseNotes = latestRelease.Body,
+                            ReleaseDate = latestRelease.PublishedAt
+                        };
+                    }
+                }
+            }
+
+            // Fallback to full asset (MSI/ZIP)
+            var bestAsset = FindBestAsset(latestRelease);
+            if (bestAsset == null)
                 return null;
 
-            Logger.Info("UpdateService", $"Selected release {latestRelease.TagName} with asset {asset.Name}");
-            Logger.Debug("UpdateService", $"Selected asset download URL: {asset.DownloadUrl}");
-
-            // Success — reset circuit breaker
             _consecutiveFailures = 0;
-
             return new UpdateInfo
             {
                 CurrentVersion = currentNormalized,
                 LatestVersion = latestNormalized,
-                DownloadUrl = asset.DownloadUrl,
-                FileName = asset.Name,
+                DownloadUrl = bestAsset.DownloadUrl,
+                FileName = bestAsset.Name,
                 ReleaseNotes = latestRelease.Body,
                 ReleaseDate = latestRelease.PublishedAt
             };
         }
-        catch (OperationCanceledException)
-        {
-            Logger.Info("UpdateService", "Update check was cancelled");
-            return null;
-        }
         catch (Exception ex)
         {
             _consecutiveFailures++;
-            if (_consecutiveFailures >= CircuitBreakerThreshold)
-            {
-                _circuitOpenUntil = DateTime.UtcNow.Add(CircuitBreakerCooldown);
-                Logger.Warning("UpdateService", $"Circuit breaker tripped after {_consecutiveFailures} failures — cooldown until {_circuitOpenUntil:HH:mm:ss UTC}");
-            }
             Logger.Error("UpdateService", "Update check failed", ex);
             return null;
         }
@@ -153,67 +192,51 @@ public class UpdateService : IUpdateService
         try
         {
             var tempDir = Path.Combine(Path.GetTempPath(), "RedballUpdate");
+            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
             Directory.CreateDirectory(tempDir);
+            var stagingDir = Path.Combine(tempDir, "staging");
+            Directory.CreateDirectory(stagingDir);
 
-            // Restrict temp directory ACL to current user only (#88)
-            try
+            if (updateInfo.FilesToUpdate != null && updateInfo.FilesToUpdate.Count > 0)
             {
-                var dirInfo = new DirectoryInfo(tempDir);
-                var security = dirInfo.GetAccessControl();
-                security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
-                var currentUser = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-                security.AddAccessRule(new System.Security.AccessControl.FileSystemAccessRule(
-                    currentUser,
-                    System.Security.AccessControl.FileSystemRights.FullControl,
-                    System.Security.AccessControl.InheritanceFlags.ContainerInherit |
-                    System.Security.AccessControl.InheritanceFlags.ObjectInherit,
-                    System.Security.AccessControl.PropagationFlags.None,
-                    System.Security.AccessControl.AccessControlType.Allow));
-                dirInfo.SetAccessControl(security);
-            }
-            catch (Exception aclEx)
-            {
-                Logger.Debug("UpdateService", $"Could not set restrictive ACL on temp dir: {aclEx.Message}");
+                Logger.Info("UpdateService", $"Starting differential download of {updateInfo.FilesToUpdate.Count} files...");
+                int completed = 0;
+                foreach (var file in updateInfo.FilesToUpdate)
+                {
+                    var destPath = Path.Combine(stagingDir, file.Name);
+                    var destDir = Path.GetDirectoryName(destPath);
+                    if (destDir != null && !Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
+                    
+                    if (!await DownloadFileAsync(file.DownloadUrl, destPath, null, cancellationToken))
+                        return false;
+                    
+                    completed++;
+                    progress?.Report(completed * 100 / updateInfo.FilesToUpdate.Count);
+                }
+                
+                var scriptPath = CreateUpdateScript(stagingDir);
+                if (scriptPath == null) return false;
+                
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\"",
+                    UseShellExecute = true,
+                    CreateNoWindow = false
+                });
+                return true;
             }
 
-            Logger.Info("UpdateService", $"Preparing to download update {updateInfo.LatestVersion} ({updateInfo.FileName})");
-            Logger.Debug("UpdateService", $"Download URL requested: {updateInfo.DownloadUrl}");
-
-            // Download the update package
+            // Fallback: Original full asset download logic
             var downloadPath = Path.Combine(tempDir, updateInfo.FileName);
             if (!await DownloadFileAsync(updateInfo.DownloadUrl, downloadPath, progress, cancellationToken))
                 return false;
-
-            Logger.Debug("UpdateService", $"Downloaded file path: {downloadPath}");
-
-            // Verify signature if enabled
-            if (_verifySignature)
-            {
-                var hashFileName = updateInfo.FileName + ".sha256";
-                var expectedHash = await DownloadHashFileAsync(updateInfo.DownloadUrl + ".sha256", hashFileName, cancellationToken);
-                
-                if (!string.IsNullOrEmpty(expectedHash))
-                {
-                    if (!VerifyFileHash(downloadPath, expectedHash))
-                    {
-                        Logger.Warning("UpdateService", "Signature verification failed - file hash mismatch");
-                        File.Delete(downloadPath);
-                        return false;
-                    }
-                    Logger.Info("UpdateService", "Signature verification passed");
-                }
-                else
-                {
-                    Logger.Warning("UpdateService", "No hash file available for verification, proceeding without verification");
-                }
-            }
 
             if (updateInfo.FileName.EndsWith(".msi", StringComparison.OrdinalIgnoreCase) ||
                 updateInfo.FileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
             {
                 var installerScriptPath = CreateInstallerLaunchScript(downloadPath, updateInfo.FileName);
-                if (installerScriptPath == null)
-                    return false;
+                if (installerScriptPath == null) return false;
 
                 Process.Start(new ProcessStartInfo
                 {
@@ -222,51 +245,43 @@ public class UpdateService : IUpdateService
                     UseShellExecute = true,
                     CreateNoWindow = false
                 });
-
                 return true;
             }
 
-            // Extract if it's a zip file
-            var extractDir = Path.Combine(tempDir, "extracted");
+            // ZIP extraction fallback
             if (updateInfo.FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
             {
-                if (!ExtractZip(downloadPath, extractDir))
-                    return false;
+                if (!ExtractZip(downloadPath, stagingDir)) return false;
+                var scriptPath = CreateUpdateScript(stagingDir);
+                if (scriptPath == null) return false;
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\"",
+                    UseShellExecute = true,
+                    CreateNoWindow = false
+                });
+                return true;
             }
-            else
-            {
-                // Single file update (e.g., Redball.ps1)
-                Directory.CreateDirectory(extractDir);
-                File.Copy(downloadPath, Path.Combine(extractDir, updateInfo.FileName), true);
-            }
 
-            // Create update script that will run after this process exits
-            var updateScriptPath = CreateUpdateScript(extractDir);
-            if (updateScriptPath == null)
-                return false;
-
-            // Launch the update script
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "powershell.exe",
-                Arguments = $"-ExecutionPolicy Bypass -File \"{updateScriptPath}\"",
-                UseShellExecute = true,
-                CreateNoWindow = false
-            });
-
-            return true;
-        }
-        catch (OperationCanceledException)
-        {
-            Logger.Info("UpdateService", "Update download was cancelled");
             return false;
         }
         catch (Exception ex)
         {
-            Logger.Error("UpdateService", "Update installation failed", ex);
+            Logger.Error("UpdateService", "Update download/install failed", ex);
             return false;
         }
     }
+
+    private async Task<string> CalculateHashAsync(string filePath)
+    {
+        using var sha256 = SHA256.Create();
+        using var stream = File.OpenRead(filePath);
+        var hashBytes = await sha256.ComputeHashAsync(stream);
+        return BitConverter.ToString(hashBytes).Replace("-", "");
+    }
+
+
 
     private async Task<List<GitHubRelease>> GetAllReleasesAsync(CancellationToken cancellationToken = default)
     {
@@ -389,8 +404,8 @@ public class UpdateService : IUpdateService
             "Redball.msi",
             "Redball-Setup-",
             "Redball-Setup.exe",
-            ".exe",
-            ".msi"
+            ".msi",
+            ".exe"
         };
 
         foreach (var priority in priorities)
@@ -649,7 +664,27 @@ public class UpdateInfo
     public string ReleaseNotes { get; set; } = "";
     public DateTime ReleaseDate { get; set; }
 
+    public List<FileUpdateInfo>? FilesToUpdate { get; set; }
     public string VersionDisplay => $"v{LatestVersion.Major}.{LatestVersion.Minor}.{LatestVersion.Build}";
+}
+
+public class UpdateManifest
+{
+    [System.Text.Json.Serialization.JsonPropertyName("version")]
+    public string Version { get; set; } = "";
+    [System.Text.Json.Serialization.JsonPropertyName("files")]
+    public List<FileUpdateInfo> Files { get; set; } = new();
+}
+
+public class FileUpdateInfo
+{
+    [System.Text.Json.Serialization.JsonPropertyName("name")]
+    public string Name { get; set; } = "";
+    [System.Text.Json.Serialization.JsonPropertyName("hash")]
+    public string Hash { get; set; } = "";
+    [System.Text.Json.Serialization.JsonPropertyName("size")]
+    public long Size { get; set; }
+    public string DownloadUrl { get; set; } = "";
 }
 
 /// <summary>

@@ -16,10 +16,11 @@
     <SolidColorBrush x:Key="ForegroundSecondaryBrush" Color="#FF6C757D"/>
     <SolidColorBrush x:Key="ForegroundDisabledBrush" Color="#FFADB5BD"/>
 
-    <!-- Accent colors (Redball brand) -->
-    <SolidColorBrush x:Key="AccentBrush" Color="#FFDC3545"/>
+    <Color x:Key="AccentColor">#FFDC3545</Color>
+    <Color x:Key="AccentDarkColor">#FFB52B3A</Color>
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="AccentLightBrush" Color="#FFE34B5C"/>
-    <SolidColorBrush x:Key="AccentDarkBrush" Color="#FFB52B3A"/>
+    <SolidColorBrush x:Key="AccentDarkBrush" Color="{StaticResource AccentDarkColor}"/>
 
     <!-- State colors -->
     <SolidColorBrush x:Key="ActiveBrush" Color="#FFDC3545"/>
@@ -33,12 +34,10 @@
     <SolidColorBrush x:Key="BorderBrush" Color="#70DEE2E6"/>
     <SolidColorBrush x:Key="BorderLightBrush" Color="#90E9ECEF"/>
 
-    <!-- Window and Panel backgrounds -->
+
+    <!-- Panel Backgrounds -->
     <SolidColorBrush x:Key="WindowBackground" Color="#FFFAFAFA"/>
     <SolidColorBrush x:Key="PanelBackground" Color="#B0F0F0F0"/>
-
-    <!-- Accent color reference for onboarding -->
-    <SolidColorBrush x:Key="AccentColor" Color="#FFDC3545"/>
 
 
 </ResourceDictionary>

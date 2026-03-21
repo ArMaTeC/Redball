@@ -42,7 +42,7 @@ public static class Logger
         {
             if (_initialized) return;
 
-            _logPath = logPath ?? Path.Combine(AppContext.BaseDirectory, "Redball.UI.log");
+            _logPath = logPath ?? Path.Combine(AppContext.BaseDirectory, "logs", "Redball.UI.log");
             
             try
             {
@@ -493,11 +493,14 @@ public static class Logger
                 if (batch.Count > 0)
                 {
                     var combined = string.Concat(batch);
-                    try
+                    lock (_lock)
                     {
-                        File.AppendAllText(_logPath, combined);
+                        try
+                        {
+                            File.AppendAllText(_logPath, combined);
+                        }
+                        catch { /* Silent fail */ }
                     }
-                    catch { /* Silent fail */ }
                 }
             }
         }

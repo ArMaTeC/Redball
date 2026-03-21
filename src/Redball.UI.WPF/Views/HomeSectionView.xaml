@@ -1,116 +1,158 @@
 <UserControl x:Class="Redball.UI.Views.HomeSectionView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StackPanel>
-        <TextBlock Text="Home" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-        <TextBlock Text="Welcome to Redball. Use the navigation on the left to jump to any section, or click a card below to get started. Redball keeps your PC awake, types clipboard text for you, and includes a focus timer to help you stay productive."
-                   TextWrapping="Wrap"
-                   Margin="0,0,0,18"
-                   Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,0,24">
+            <!-- Header Section -->
+            <Grid Margin="0,0,0,24">
+                <Border CornerRadius="16" Height="140">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="{DynamicResource AccentColor}" Offset="0"/>
+                            <GradientStop Color="{DynamicResource AccentDarkColor}" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid Margin="24">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Welcome back to Redball" FontSize="14" Foreground="#CCFFFFFF" FontWeight="SemiBold"/>
+                            <TextBlock Text="Dashboard Overview" FontSize="28" Foreground="White" FontWeight="Bold" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        
+                        <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="#33FFFFFF" CornerRadius="12" Padding="16,10">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE930;" FontFamily="Segoe Fluent Icons" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="18"/>
+                                <TextBlock Text="{Binding StatusText}" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
 
-        <UniformGrid Columns="2" Margin="0,0,0,16">
-            <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                <StackPanel>
-                    <TextBlock Text="Analytics" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="See how long you've used Redball, how many sessions you've run, and which features you use most."
-                               Margin="0,8,0,12"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                    <Button Content="Go to Analytics" Command="{Binding OpenAnalyticsCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left" ToolTipService.ShowDuration="12000" ToolTip="Open the analytics dashboard section."/>
-                </StackPanel>
-            </Border>
-            <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
-                <StackPanel>
-                    <TextBlock Text="Product Metrics" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="Detailed breakdown of feature usage, settings changes, and onboarding progress."
-                               Margin="0,8,0,12"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                    <Button Content="Go to Product Metrics" Command="{Binding OpenMetricsCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left" ToolTipService.ShowDuration="12000" ToolTip="Open the product metrics section."/>
-                </StackPanel>
-            </Border>
-        </UniformGrid>
+            <!-- Quick Stats Section -->
+            <UniformGrid Columns="3" Margin="0,0,0,24">
+                <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="MEM USAGE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ForegroundSecondaryBrush}" Opacity="0.7"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBlock Text="&#xE950;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock Text="{Binding MemoryUsageText}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <Border Style="{DynamicResource CardStyle}" Margin="8,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="BATTERY" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ForegroundSecondaryBrush}" Opacity="0.7"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBlock Text="&#xEBAA;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock Text="{Binding BatteryText}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-        <UniformGrid Columns="2">
-            <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                <StackPanel>
-                    <TextBlock Text="Diagnostics" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="Check system health, view live logs, and troubleshoot issues with configuration and hardware info."
-                               Margin="0,8,0,12"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                    <Button Content="Go to Diagnostics" Command="{Binding OpenDiagnosticsCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left" ToolTipService.ShowDuration="12000" ToolTip="Open diagnostics and runtime information."/>
-                </StackPanel>
-            </Border>
-            <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
-                <StackPanel>
-                    <TextBlock Text="Settings" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="Choose your theme, control notifications, manage profiles, and adjust general app preferences."
-                               Margin="0,8,0,12"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                    <Button Content="Go to Settings" Command="{Binding OpenSettingsCommand}" Style="{DynamicResource PrimaryButton}" HorizontalAlignment="Left" ToolTipService.ShowDuration="12000" ToolTip="Open general Redball settings."/>
-                </StackPanel>
-            </Border>
-        </UniformGrid>
+                <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="UPTIME" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ForegroundSecondaryBrush}" Opacity="0.7"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBlock Text="&#xE916;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock Text="{Binding UptimeText}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
 
-        <UniformGrid Columns="2">
-            <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                <StackPanel>
-                    <TextBlock Text="Behavior" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="Set how long Redball keeps your PC awake, pick the heartbeat key, and configure timed sessions."
-                               Margin="0,8,0,12"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                    <Button Content="Go to Behavior" Command="{Binding OpenBehaviorCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left" ToolTipService.ShowDuration="12000" ToolTip="Open behavior settings for display sleep, heartbeat, and duration."/>
-                </StackPanel>
-            </Border>
-            <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
-                <StackPanel>
-                    <TextBlock Text="Smart Features" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="Smart rules that adapt to your situation: battery level, network, idle time, schedules, and linked processes."
-                               Margin="0,8,0,12"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                    <Button Content="Go to Smart Features" Command="{Binding OpenSmartFeaturesCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left" ToolTipService.ShowDuration="12000" ToolTip="Open battery-aware, network-aware, idle, and schedule settings."/>
-                </StackPanel>
-            </Border>
-        </UniformGrid>
+            <!-- Main Actions -->
+            <TextBlock Text="Quick Actions" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16"/>
+            <UniformGrid Columns="2" Margin="0,0,0,24">
+                <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
+                            <TextBlock Text="&#xE768;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <TextBlock Text="Keep-Awake Engine" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="Toggle the global keep-awake state." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+                            <Button Content="Toggle Active" Command="{Binding ToggleActiveCommand}" Style="{DynamicResource PrimaryButton}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
-        <UniformGrid Columns="2">
-            <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                <StackPanel>
-                    <TextBlock Text="TypeThing" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="Type clipboard text character-by-character. Great for remote desktops and apps that block paste."
-                               Margin="0,8,0,12"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                    <Button Content="Go to TypeThing" Command="{Binding OpenTypeThingCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left" ToolTipService.ShowDuration="12000" ToolTip="Open TypeThing typing automation settings."/>
-                </StackPanel>
-            </Border>
-            <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
-                <StackPanel>
-                    <TextBlock Text="Pomodoro Timer" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="Focus timer: work in timed bursts with short breaks in between to stay productive and avoid burnout."
-                               Margin="0,8,0,12"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                    <Button Content="Go to Pomodoro" Command="{Binding OpenPomodoroCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left" ToolTipService.ShowDuration="12000" ToolTip="Open the Pomodoro focus timer."/>
-                </StackPanel>
-            </Border>
-        </UniformGrid>
+                <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
+                            <TextBlock Text="&#xE8D2;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <TextBlock Text="Start TypeThing" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="Paste clipboard text as character-by-character typing." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+                            <Button Content="Launch Now" Command="{Binding OpenTypeThingCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
-        <UniformGrid Columns="2">
-            <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                <StackPanel>
-                    <TextBlock Text="Updates" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="Check for new Redball versions, choose stable or beta updates, and verify download signatures."
-                               Margin="0,8,0,12"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                    <Button Content="Go to Updates" Command="{Binding OpenUpdatesCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left" ToolTipService.ShowDuration="12000" ToolTip="Open update preferences and version controls."/>
-                </StackPanel>
+                <Border Style="{DynamicResource CardStyle}" Margin="0,8,8,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
+                            <TextBlock Text="&#xED5A;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <TextBlock Text="Pomodoro Timer" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="Start a focus session to boost your productivity." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+                            <Button Content="Open Timer" Command="{Binding OpenPomodoroCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Style="{DynamicResource CardStyle}" Margin="8,8,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
+                            <TextBlock Text="&#xE8A5;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <TextBlock Text="System Logs" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="Review application logs and diagnostic information." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+                            <Button Content="View Logs" Command="{Binding OpenLogsCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </UniformGrid>
+
+            <!-- Secondary Links -->
+            <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Configuration &amp; Personalization" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="Customize how Redball works, manage profiles, and check for updates." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Settings" Command="{Binding OpenSettingsCommand}" Style="{DynamicResource ModernButton}" Margin="0,0,8,0"/>
+                        <Button Content="Check Updates" Command="{Binding CheckForUpdatesCommand}" Style="{DynamicResource ModernButton}"/>
+                    </StackPanel>
+                </Grid>
             </Border>
-        </UniformGrid>
-    </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

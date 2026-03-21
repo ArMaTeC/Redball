@@ -91,8 +91,8 @@ namespace Redball.Tests
                 }
             });
 
-            // Assert — flush async writes then read log
-            Logger.Flush();
+            // Assert — shutdown async writes then read log
+            Logger.Shutdown();
             var content = File.ReadAllText(_testLogPath);
             var expectedTotal = threadCount * messagesPerThread;
             var actualCount = 0;
@@ -163,7 +163,7 @@ namespace Redball.Tests
             // Assert
             Assert.AreEqual(0, exceptions.Count, "Concurrent error logging with exceptions should not throw");
 
-            Logger.Flush();
+            Logger.Shutdown();
             var content = File.ReadAllText(_testLogPath);
             Assert.IsTrue(content.Contains(marker), "Log should contain the error messages");
         }

@@ -97,12 +97,12 @@ public static class ThemeManager
         // Load shared control styles once (was previously in App.xaml statically)
         if (!_controlsLoaded)
         {
-            _controlsLoaded = true;
             var controlsDict = new ResourceDictionary
             {
                 Source = new Uri("pack://application:,,,/Themes/Controls.xaml")
             };
             Application.Current.Resources.MergedDictionaries.Add(controlsDict);
+            _controlsLoaded = true;
         }
 
         // Remove current theme if exists
@@ -147,11 +147,13 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundBrush", 224, 224, 224);
                 SetBrush(res, "ForegroundSecondaryBrush", 176, 176, 176);
                 SetBrush(res, "ForegroundDisabledBrush", 128, 128, 128);
-                SetBrush(res, "AccentBrush", 220, 53, 69);
+                SetBrush(res, "AccentBrush", 220, 53, 69); // Bootstrap Danger Red
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255); // White on Red
                 SetBrush(res, "AccentLightBrush", 227, 75, 92);
                 SetBrush(res, "AccentDarkBrush", 181, 43, 58);
                 SetBrush(res, "BorderBrush", 0x60, 64, 64, 64);
                 SetBrush(res, "BorderLightBrush", 0x80, 80, 80, 80);
+                SetBrush(res, "HoverBrush", 0x40, 100, 100, 100);
                 break;
 
             case Theme.Light:
@@ -163,10 +165,12 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundSecondaryBrush", 108, 117, 125);
                 SetBrush(res, "ForegroundDisabledBrush", 173, 181, 189);
                 SetBrush(res, "AccentBrush", 220, 53, 69);
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255); // White on Red
                 SetBrush(res, "AccentLightBrush", 227, 75, 92);
                 SetBrush(res, "AccentDarkBrush", 181, 43, 58);
                 SetBrush(res, "BorderBrush", 0x70, 222, 226, 230);
                 SetBrush(res, "BorderLightBrush", 0x90, 233, 236, 239);
+                SetBrush(res, "HoverBrush", 0x20, 0, 0, 0);
                 break;
 
             case Theme.MidnightBlue:
@@ -176,10 +180,12 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundBrush", 200, 210, 230);
                 SetBrush(res, "ForegroundSecondaryBrush", 140, 155, 185);
                 SetBrush(res, "AccentBrush", 70, 130, 230);
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255);
                 SetBrush(res, "AccentLightBrush", 100, 155, 240);
                 SetBrush(res, "AccentDarkBrush", 50, 100, 190);
-                SetBrush(res, "BorderBrush", 0x60, 40, 55, 85);
-                SetBrush(res, "BorderLightBrush", 0x80, 55, 70, 100);
+                SetBrush(res, "BorderBrush", 0x60, 40, 50, 60);
+                SetBrush(res, "BorderLightBrush", 0x80, 60, 70, 80);
+                SetBrush(res, "HoverBrush", 0x40, 80, 100, 120);
                 break;
 
             case Theme.ForestGreen:
@@ -189,10 +195,12 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundBrush", 210, 230, 210);
                 SetBrush(res, "ForegroundSecondaryBrush", 150, 180, 150);
                 SetBrush(res, "AccentBrush", 76, 175, 80);
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255);
                 SetBrush(res, "AccentLightBrush", 102, 195, 106);
                 SetBrush(res, "AccentDarkBrush", 56, 142, 60);
-                SetBrush(res, "BorderBrush", 0x60, 45, 65, 48);
-                SetBrush(res, "BorderLightBrush", 0x80, 58, 80, 60);
+                SetBrush(res, "BorderBrush", 0x60, 40, 60, 40);
+                SetBrush(res, "BorderLightBrush", 0x80, 60, 80, 60);
+                SetBrush(res, "HoverBrush", 0x40, 80, 120, 80);
                 break;
 
             case Theme.OceanBlue:
@@ -202,10 +210,12 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundBrush", 205, 225, 240);
                 SetBrush(res, "ForegroundSecondaryBrush", 140, 170, 200);
                 SetBrush(res, "AccentBrush", 0, 150, 200);
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255);
                 SetBrush(res, "AccentLightBrush", 30, 175, 220);
                 SetBrush(res, "AccentDarkBrush", 0, 120, 170);
                 SetBrush(res, "BorderBrush", 0x60, 35, 55, 75);
                 SetBrush(res, "BorderLightBrush", 0x80, 48, 68, 90);
+                SetBrush(res, "HoverBrush", 0x40, 60, 90, 110);
                 break;
 
             case Theme.SunsetOrange:
@@ -215,10 +225,12 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundBrush", 240, 220, 205);
                 SetBrush(res, "ForegroundSecondaryBrush", 200, 170, 145);
                 SetBrush(res, "AccentBrush", 255, 120, 50);
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255);
                 SetBrush(res, "AccentLightBrush", 255, 145, 80);
                 SetBrush(res, "AccentDarkBrush", 220, 95, 30);
-                SetBrush(res, "BorderBrush", 0x60, 75, 48, 35);
-                SetBrush(res, "BorderLightBrush", 0x80, 90, 60, 45);
+                SetBrush(res, "BorderBrush", 0x60, 60, 40, 30);
+                SetBrush(res, "BorderLightBrush", 0x80, 80, 60, 50);
+                SetBrush(res, "HoverBrush", 0x40, 120, 80, 60);
                 break;
 
             case Theme.RoyalPurple:
@@ -228,10 +240,12 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundBrush", 225, 210, 240);
                 SetBrush(res, "ForegroundSecondaryBrush", 170, 150, 195);
                 SetBrush(res, "AccentBrush", 156, 90, 220);
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255);
                 SetBrush(res, "AccentLightBrush", 178, 120, 235);
                 SetBrush(res, "AccentDarkBrush", 130, 65, 190);
                 SetBrush(res, "BorderBrush", 0x60, 58, 42, 82);
                 SetBrush(res, "BorderLightBrush", 0x80, 72, 55, 98);
+                SetBrush(res, "HoverBrush", 0x40, 90, 70, 110);
                 break;
 
             case Theme.SlateGray:
@@ -241,10 +255,12 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundBrush", 220, 225, 230);
                 SetBrush(res, "ForegroundSecondaryBrush", 160, 170, 180);
                 SetBrush(res, "AccentBrush", 0, 188, 212);
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255);
                 SetBrush(res, "AccentLightBrush", 38, 206, 228);
                 SetBrush(res, "AccentDarkBrush", 0, 151, 167);
-                SetBrush(res, "BorderBrush", 0x60, 65, 72, 80);
-                SetBrush(res, "BorderLightBrush", 0x80, 80, 88, 96);
+                SetBrush(res, "BorderBrush", 0x60, 60, 60, 60);
+                SetBrush(res, "BorderLightBrush", 0x80, 80, 80, 80);
+                SetBrush(res, "HoverBrush", 0x40, 100, 100, 100);
                 break;
 
             case Theme.RoseGold:
@@ -254,10 +270,12 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundBrush", 240, 215, 220);
                 SetBrush(res, "ForegroundSecondaryBrush", 200, 165, 175);
                 SetBrush(res, "AccentBrush", 230, 130, 150);
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255);
                 SetBrush(res, "AccentLightBrush", 240, 158, 175);
                 SetBrush(res, "AccentDarkBrush", 200, 100, 120);
-                SetBrush(res, "BorderBrush", 0x60, 78, 52, 58);
-                SetBrush(res, "BorderLightBrush", 0x80, 92, 65, 72);
+                SetBrush(res, "BorderBrush", 0x60, 70, 50, 50);
+                SetBrush(res, "BorderLightBrush", 0x80, 90, 70, 70);
+                SetBrush(res, "HoverBrush", 0x40, 120, 90, 90);
                 break;
 
             case Theme.Cyberpunk:
@@ -267,10 +285,12 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundBrush", 0, 255, 230);
                 SetBrush(res, "ForegroundSecondaryBrush", 0, 190, 180);
                 SetBrush(res, "AccentBrush", 255, 0, 128);
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255);
                 SetBrush(res, "AccentLightBrush", 255, 50, 160);
                 SetBrush(res, "AccentDarkBrush", 210, 0, 100);
-                SetBrush(res, "BorderBrush", 0x60, 40, 30, 60);
-                SetBrush(res, "BorderLightBrush", 0x80, 55, 42, 78);
+                SetBrush(res, "BorderBrush", 0x60, 40, 40, 60);
+                SetBrush(res, "BorderLightBrush", 0x80, 60, 60, 80);
+                SetBrush(res, "HoverBrush", 0x40, 80, 80, 120);
                 break;
 
             case Theme.Coffee:
@@ -280,10 +300,12 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundBrush", 235, 220, 200);
                 SetBrush(res, "ForegroundSecondaryBrush", 185, 165, 140);
                 SetBrush(res, "AccentBrush", 195, 140, 60);
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255);
                 SetBrush(res, "AccentLightBrush", 215, 165, 85);
                 SetBrush(res, "AccentDarkBrush", 165, 115, 40);
                 SetBrush(res, "BorderBrush", 0x60, 70, 55, 42);
                 SetBrush(res, "BorderLightBrush", 0x80, 85, 68, 52);
+                SetBrush(res, "HoverBrush", 0x40, 100, 80, 60);
                 break;
 
             case Theme.ArcticFrost:
@@ -294,10 +316,12 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundBrush", 30, 50, 70);
                 SetBrush(res, "ForegroundSecondaryBrush", 80, 105, 135);
                 SetBrush(res, "AccentBrush", 50, 130, 200);
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255);
                 SetBrush(res, "AccentLightBrush", 80, 155, 220);
                 SetBrush(res, "AccentDarkBrush", 30, 105, 175);
                 SetBrush(res, "BorderBrush", 0x70, 195, 210, 230);
                 SetBrush(res, "BorderLightBrush", 0x90, 210, 222, 238);
+                SetBrush(res, "HoverBrush", 0x20, 150, 180, 200);
                 break;
 
             case Theme.HighContrast:
@@ -309,10 +333,12 @@ public static class ThemeManager
                 SetBrush(res, "ForegroundBrush", 255, 255, 255);
                 SetBrush(res, "ForegroundSecondaryBrush", 255, 255, 255);
                 SetBrush(res, "AccentBrush", 255, 255, 0); // Yellow
+                SetBrush(res, "AccentForegroundBrush", 0, 0, 0); // Black on Yellow
                 SetBrush(res, "AccentLightBrush", 255, 255, 100);
                 SetBrush(res, "AccentDarkBrush", 200, 200, 0);
-                SetBrush(res, "BorderBrush", 255, 255, 255);
-                SetBrush(res, "BorderLightBrush", 255, 255, 255);
+                SetBrush(res, "BorderBrush", 0x60, 255, 255, 255);
+                SetBrush(res, "BorderLightBrush", 0x80, 255, 255, 255);
+                SetBrush(res, "HoverBrush", 0x40, 255, 255, 255);
                 break;
         }
     }

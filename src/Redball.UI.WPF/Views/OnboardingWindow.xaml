@@ -41,21 +41,21 @@
                     <TextBlock x:Name="HeaderTitle" Text="Welcome to Redball" 
                                FontSize="24" 
                                FontWeight="SemiBold"
-                               Foreground="White"/>
+                               Foreground="{DynamicResource AccentForegroundBrush}"/>
                     <TextBlock x:Name="HeaderSubtitle" Text="Keep your Windows PC awake — intelligently" 
                                FontSize="14"
                                Opacity="0.9"
-                               Foreground="White"/>
+                               Foreground="{DynamicResource AccentForegroundBrush}"/>
                 </StackPanel>
             </Grid>
         </Border>
         
         <!-- Progress Indicator -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,8">
-            <Ellipse x:Name="Dot1" Width="8" Height="8" Fill="White" Margin="3,0"/>
-            <Ellipse x:Name="Dot2" Width="8" Height="8" Fill="White" Opacity="0.4" Margin="3,0"/>
-            <Ellipse x:Name="Dot3" Width="8" Height="8" Fill="White" Opacity="0.4" Margin="3,0"/>
-            <Ellipse x:Name="Dot4" Width="8" Height="8" Fill="White" Opacity="0.4" Margin="3,0"/>
+            <Ellipse x:Name="Dot1" Width="8" Height="8" Fill="{DynamicResource AccentForegroundBrush}" Margin="3,0"/>
+            <Ellipse x:Name="Dot2" Width="8" Height="8" Fill="{DynamicResource AccentForegroundBrush}" Opacity="0.4" Margin="3,0"/>
+            <Ellipse x:Name="Dot3" Width="8" Height="8" Fill="{DynamicResource AccentForegroundBrush}" Opacity="0.4" Margin="3,0"/>
+            <Ellipse x:Name="Dot4" Width="8" Height="8" Fill="{DynamicResource AccentForegroundBrush}" Opacity="0.4" Margin="3,0"/>
         </StackPanel>
 
         <!-- Content Area - Steps as overlapping grids -->

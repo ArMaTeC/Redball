@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <!-- Centralized Versioning -->
+    <Version>2.1.172</Version>
+    <Authors>ArMaTeC</Authors>
+    <Company>ArMaTeC</Company>
+    <Product>Redball</Product>
+    <Copyright>Copyright © 2024 ArMaTeC</Copyright>
+    
+    <!-- Build Flags (Common for all projects) -->
+    <AssemblyVersion>$(Version).0</AssemblyVersion>
+    <FileVersion>$(Version).0</FileVersion>
+    <Platforms>x64;AnyCPU</Platforms>
+    <OutputPath>..\..\bin\$(Configuration)\</OutputPath> <!-- Shared build path structure -->
+  </PropertyGroup>
+</Project>

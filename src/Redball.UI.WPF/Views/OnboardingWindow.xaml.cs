@@ -82,7 +82,8 @@ public partial class OnboardingWindow : Window
         config.UseHeartbeatKeypress = UseHeartbeatCheck.IsChecked ?? true;
         config.BatteryAware = BatteryAwareCheck.IsChecked ?? false;
         config.NetworkAware = NetworkAwareCheck.IsChecked ?? false;
-        config.FirstRun = ShowOnStartupCheck.IsChecked ?? false;
+        // FirstRun should only be true initially; once adjusted here, we consider onboarding engaged.
+        // We'll explicitly set it to false on completion in GetStartedButton_Click.
         config.Theme = GetSelectedTheme();
 
         if (StartWithWindowsCheck.IsChecked == true)
@@ -163,6 +164,10 @@ public partial class OnboardingWindow : Window
         }
         
         Logger.Info("OnboardingWindow", "First-run onboarding completed, settings saved");
+        
+        // Ensure the FirstRun flag is permanently disabled after successful completion
+        ConfigService.Instance.Config.FirstRun = false;
+        ConfigService.Instance.Save();
         
         DialogResult = true;
         Close();

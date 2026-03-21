@@ -39,9 +39,9 @@ public class HotkeyService : IDisposable
     {
         Services.Logger.Info("HotkeyService", "Initializing HotkeyService...");
         
-        // Detect if we're in a remote session (RDP)
-        _useLowLevelHook = IsRemoteSession();
-        Services.Logger.Info("HotkeyService", $"Remote session detected: {_useLowLevelHook}");
+        // Detect if we're in a remote session (RDP) or if the user enabled the low-level hook
+        _useLowLevelHook = IsRemoteSession() || Services.ConfigService.Instance.Config.UseLowLevelHotkey;
+        Services.Logger.Info("HotkeyService", $"Remote session detected: {IsRemoteSession()}, using low level hook: {_useLowLevelHook}");
 
         if (_useLowLevelHook)
         {

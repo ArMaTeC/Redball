@@ -9,8 +9,8 @@ namespace Redball.UI.Services;
 /// </summary>
 public static class CrashRecoveryService
 {
-    private static readonly string CrashFlagPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData", "Redball.crash.flag");
+    internal static string CrashFlagPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ArMaTeC", "Redball", "Redball.crash.flag");
 
     /// <summary>
     /// Checks if a crash flag exists from a previous session.
