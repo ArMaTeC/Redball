@@ -46,17 +46,15 @@ public partial class AboutWindow : Window
 
     private async void UpdateButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_updateService == null) return;
+        _analytics.TrackFeature("update.check_started");
 
         // Show checking dialog
-        var checkingDialog = MessageBox.Show("Checking for updates...", "Update", MessageBoxButton.OKCancel, MessageBoxImage.Information);
-        if (checkingDialog != MessageBoxResult.OK)
+        var checking = NotificationWindow.Show("Check for Updates", "Checking for updates...", "\uE896", true);
+        if (!checking)
         {
             _analytics.TrackFeature("update.check_cancelled");
             return;
         }
-
-        _analytics.TrackFeature("update.check_started");
 
         // Check for updates
         var updateInfo = await _updateService.CheckForUpdateAsync();
@@ -64,7 +62,7 @@ public partial class AboutWindow : Window
         if (updateInfo == null)
         {
             _analytics.TrackFeature("update.not_available");
-            MessageBox.Show("You're running the latest version.", "No Updates", MessageBoxButton.OK, MessageBoxImage.Information);
+            NotificationWindow.Show("Up to Date", "Your version of Redball is already current.", "\uE73E"); 
             return;
         }
 
@@ -94,11 +92,7 @@ public partial class AboutWindow : Window
         else
         {
             _analytics.TrackFeature("update.download_failed");
-            MessageBox.Show(
-                "Failed to download or install the update. Please try again later or download manually from GitHub.",
-                "Update Failed",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            NotificationWindow.Show("Update Failed", "Could not download or install the update. Please check the log for details.", "\uE783");
         }
     }
 }

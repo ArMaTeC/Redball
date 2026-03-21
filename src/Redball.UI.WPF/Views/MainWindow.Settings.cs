@@ -481,13 +481,13 @@ public partial class MainWindow
 
     private void SettingsResetButton_Click(object sender, RoutedEventArgs e)
     {
-        var result = MessageBox.Show(
-            "Reset all settings to their default values?",
+        var result = NotificationWindow.Show(
             "Reset Settings",
-            MessageBoxButton.OKCancel,
-            MessageBoxImage.Warning);
+            "Reset all settings to their default values? This action cannot be easily undone.",
+            "\uE7BA", // Warning icon
+            true);
 
-        if (result != MessageBoxResult.OK) return;
+        if (!result) return;
 
         // Snapshot current for undo
         _settingsUndoStack.Push(JsonSerializer.Serialize(ConfigService.Instance.Config));
@@ -572,8 +572,8 @@ public partial class MainWindow
     {
         if (ProfileCombo.SelectedItem is System.Windows.Controls.ComboBoxItem item && item.Content is string name)
         {
-            var result = MessageBox.Show($"Delete profile \"{name}\"?", "Delete Profile", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-            if (result != MessageBoxResult.OK) return;
+            var result = NotificationWindow.Show("Delete Profile", $"Delete profile \"{name}\"?", "\uE74D", true);
+            if (!result) return;
 
             if (ProfileService.Instance.DeleteProfile(name))
             {

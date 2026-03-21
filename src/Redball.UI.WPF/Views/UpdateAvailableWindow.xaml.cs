@@ -199,11 +199,7 @@ public partial class UpdateAvailableWindow : Window
             _analytics.TrackFeature("update.download_failed");
             updateBtn.IsEnabled = true;
             updateBtn.Content = "Update Now";
-            MessageBox.Show(this,
-                "Failed to download or install the update. Please try again later or download manually from GitHub.",
-                "Update Failed",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            NotificationWindow.Show("Update Failed", "Could not download or install the update. Please check your internet connection or the logs for details.", "\uE783");
         }
     }
 }

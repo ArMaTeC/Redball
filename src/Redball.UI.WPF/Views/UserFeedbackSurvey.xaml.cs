@@ -64,8 +64,7 @@ public partial class UserFeedbackSurvey : Window
         {
             if (_rating == 0)
             {
-                MessageBox.Show("Please select a star rating before submitting.", "Rating Required",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationWindow.Show("Rating Required", "Please select a star rating before submitting.", "\uE734");
                 return;
             }
 
@@ -105,8 +104,7 @@ public partial class UserFeedbackSurvey : Window
             }
 
             Logger.Info("UserFeedbackSurvey", "Feedback submitted successfully");
-            MessageBox.Show("Thank you for your feedback! It helps us improve Redball.", "Feedback Sent",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            NotificationWindow.Show("Feedback Sent", "Thank you for your feedback! It helps us improve Redball.", "\uE73E");
             
             DialogResult = true;
             Close();
@@ -114,8 +112,7 @@ public partial class UserFeedbackSurvey : Window
         catch (Exception ex)
         {
             Logger.Error("UserFeedbackSurvey", "Failed to submit feedback", ex);
-            MessageBox.Show("Failed to send feedback. It has been saved locally for later submission.", 
-                "Partial Success", MessageBoxButton.OK, MessageBoxImage.Warning);
+            NotificationWindow.Show("Partial Success", "Failed to send feedback online, but it has been saved locally for later submission.", "\uE7BA");
             DialogResult = true;
             Close();
         }
