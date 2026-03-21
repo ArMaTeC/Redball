@@ -168,6 +168,9 @@
       <Component Id="WPFExeComponent" Guid="C8D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F">
         <File Id="WPFExecutable" Source="..\dist\wpf-publish\Redball.UI.WPF.exe" KeyPath="yes" />
       </Component>
+      <Component Id="WPFDllComponent" Guid="B7C8D9E0-1F2A-3B4C-5D6E-7F8A9B0C1D2E">
+        <File Id="WPFMainDll" Source="..\dist\wpf-publish\Redball.UI.WPF.dll" KeyPath="yes" />
+      </Component>
       <Component Id="WPFRuntimeConfigComponent" Guid="D9E6F7A8-9B0C-1D2E-3F4A-5B6C7D8E9F0A">
         <File Id="WPFRuntimeConfig" Source="..\dist\wpf-publish\Redball.UI.WPF.runtimeconfig.json" KeyPath="yes" />
       </Component>

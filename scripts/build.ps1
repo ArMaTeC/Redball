@@ -558,6 +558,20 @@ function Step-BuildWpfApp {
         return
     }
     
+    # Stop Redball processes running from the project folder early to prevent locks
+    $runningProcesses = Get-Process -Name 'Redball.UI.WPF', 'Redball' -ErrorAction SilentlyContinue
+    if ($runningProcesses) {
+        $projectProcesses = $runningProcesses | Where-Object {
+            try { $_.Path -and $_.Path.StartsWith($ProjectRoot, [System.StringComparison]::OrdinalIgnoreCase) } catch { $false }
+        }
+        if ($projectProcesses) {
+            Write-BuildStep "Stopping Redball processes from project folder to prevent file locks..."
+            $projectProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 2
+            Write-BuildSuccess "Project processes stopped"
+        }
+    }
+
     # Detect and resolve file locks before building
     $objDir = Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'obj' $Configuration 'net8.0-windows' 'win-x64'
     $dllPath = Join-Path $objDir 'Redball.UI.WPF.dll'
@@ -572,29 +586,7 @@ function Step-BuildWpfApp {
             Write-Warning "DLL file is locked by another process"
             $resolved = Stop-LockingProcess -FilePath $dllPath
             if (-not $resolved) {
-                throw "Cannot resolve file lock. Please close locking applications manually."
-            }
-        }
-    }
-    
-    # Stop only Redball processes running from the project folder (not the user's installed copy)
-    if ($PSCmdlet.ShouldProcess("Running Redball processes from project folder", 'Stop')) {
-        $runningProcesses = Get-Process -Name 'Redball.UI.WPF', 'Redball' -ErrorAction SilentlyContinue
-        if ($runningProcesses) {
-            $projectProcesses = $runningProcesses | Where-Object {
-                try { $_.Path -and $_.Path.StartsWith($ProjectRoot, [System.StringComparison]::OrdinalIgnoreCase) } catch { $false }
-            }
-            if ($projectProcesses) {
-                Write-BuildStep "Stopping Redball processes from project folder..."
-                $projectProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
-                Start-Sleep -Seconds 2
-                Write-BuildSuccess "Project-folder processes stopped"
-            }
-            $skippedProcesses = $runningProcesses | Where-Object {
-                try { -not $_.Path -or -not $_.Path.StartsWith($ProjectRoot, [System.StringComparison]::OrdinalIgnoreCase) } catch { $true }
-            }
-            if ($skippedProcesses) {
-                Write-BuildStep "Leaving installed Redball instance(s) running (not in project folder)"
+                Write-Warning "Cannot resolve file lock automatically. Build might fail."
             }
         }
     }
@@ -638,23 +630,34 @@ function Step-BuildWpfApp {
     
     # Move DLLs to bin folder (excluding the main executable's primary assembly)
     $dllsToMove = Get-ChildItem -Path $publishDir -Filter "*.dll" | Where-Object { $_.Name -ne "Redball.UI.WPF.dll" }
+    
     if ($null -ne $dllsToMove -and $dllsToMove.Count -gt 0) {
-        $dllsToMove | Move-Item -Destination $binDir -Force
-        Write-BuildSuccess "Moved $($dllsToMove.Count) DLLs to $binDir"
+        foreach ($file in $dllsToMove) {
+            $moved = $false
+            for ($attempt = 1; $attempt -le 3; $attempt++) {
+                try {
+                    Move-Item -Path $file.FullName -Destination $binDir -Force -ErrorAction Stop
+                    $moved = $true
+                    break
+                }
+                catch {
+                    Write-Warning "  Attempt ${attempt}: Failed to move $($file.Name): $($_.Exception.Message)"
+                    if ($attempt -lt 3) {
+                        # Try to identify and stop locking process
+                        $null = Stop-LockingProcess -FilePath $file.FullName
+                        Start-Sleep -Seconds ($attempt * 2)
+                    }
+                }
+            }
+            if (-not $moved) {
+                throw "Could not move file $($file.Name) after multiple attempts. File is likely locked."
+            }
+        }
+        Write-BuildSuccess "Successfully moved dependencies to $binDir"
     }
 
-    # Update runtimeconfig.json with additionalProbingPaths
-    $runtimeConfig = Join-Path $publishDir "Redball.UI.WPF.runtimeconfig.json"
-    if (Test-Path $runtimeConfig) {
-        Write-BuildStep "Updating runtimeconfig.json for library probing..."
-        $config = Get-Content $runtimeConfig | ConvertFrom-Json
-        # Add probing paths if not already present
-        if (-not $config.runtimeOptions.additionalProbingPaths) {
-            $config.runtimeOptions | Add-Member -MemberType NoteProperty -Name "additionalProbingPaths" -Value @("bin")
-            $config | ConvertTo-Json -Depth 10 | Set-Content $runtimeConfig -Encoding UTF8
-            Write-BuildSuccess "Probing path 'bin' added to runtimeconfig.json"
-        }
-    }
+    # Note: Assembly resolution from bin/ is handled by Program.cs at runtime
+    # via AssemblyLoadContext.Default.Resolving - no runtimeconfig patching needed
 
     # Unblock InputInterceptor.dll (prevents Windows security blocks)
     $interceptorFile = Join-Path $binDir "InputInterceptor.dll"
