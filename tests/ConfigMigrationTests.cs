@@ -17,6 +17,9 @@ namespace Redball.Tests
             _tempDir = Path.Combine(Path.GetTempPath(), $"redball_migration_test_{Guid.NewGuid()}");
             Directory.CreateDirectory(_tempDir);
 
+            // Isolate from real LocalAppData config persistence logic during tests
+            ConfigService.Instance.IsTestMode = true;
+
             // Reset Config to defaults before each test
             var resetPath = Path.Combine(_tempDir, "reset_defaults.json");
             File.WriteAllText(resetPath, JsonSerializer.Serialize(new RedballConfig()));

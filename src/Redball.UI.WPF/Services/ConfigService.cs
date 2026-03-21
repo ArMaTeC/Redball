@@ -20,12 +20,12 @@ public class ConfigService : IConfigService
     // UserData subfolder is NOT managed by the MSI (INSTALLFOLDER = %LocalAppData%\Redball)
     // so its contents survive MajorUpgrade cycles that remove/reinstall the install directory.
     private static readonly string UserDataDir = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ArMaTeC", "Redball");
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData");
     private static readonly string LocalAppDataConfigPath = Path.Combine(UserDataDir, "Redball.json");
     private static readonly string BackupConfigPath = Path.Combine(UserDataDir, "Redball.json.bak");
     // Legacy paths for migration from older versions
-    private static readonly string LegacyUserDataConfigPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData", "Redball.json");
+    private static readonly string LegacyArMaTeCConfigPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ArMaTeC", "Redball", "Redball.json");
     private static readonly string LegacyLocalAppDataConfigPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "Redball.json");
     private static readonly string AppDataConfigPath = Path.Combine(
@@ -50,66 +50,134 @@ public class ConfigService : IConfigService
     public RedballConfig Config { get; internal set; } = new();
     public string ConfigPath { get; private set; } = "";
     public bool IsDirty { get; set; }
+    
+    /// <summary>
+    /// When true, disables automatic discovery scans of AppData folders and prevents
+    /// accidental persistence to LocalAppData during unit tests.
+    /// </summary>
+    public bool IsTestMode { get; set; }
+
+    private static readonly object _syncLock = new();
 
     private ConfigService() 
     { 
         Logger.Verbose("ConfigService", "Instance created (lazy initialization)");
     }
 
+
+
     public bool Load(string? path = null)
     {
-        // Always reset to defaults at start — prevents stale values from previous tests/sessions
-        Config = new RedballConfig();
-        IsDirty = false;
-        
-        // Priority list of paths to check
-        var candidates = GetConfigPathCandidates(path);
-        var loaded = false;
-        string? successfulPath = null;
-
-        foreach (var candidate in candidates)
+        lock (_syncLock)
         {
-            if (TryLoadFromFile(candidate) || TryRecoverFromFile(candidate))
-            {
-                loaded = true;
-                successfulPath = candidate;
-                Logger.Info("ConfigService", $"Configuration loaded successfully from: {candidate} (FirstRun={Config.FirstRun})");
-                break;
-            }
-        }
-
-        if (!loaded)
-        {
-            Logger.Warning("ConfigService", "All load attempts failed, using defaults");
+            // Reset to default instance state first to ensure no cross-test pollution
             Config = new RedballConfig();
-            ConfigPath = LocalAppDataConfigPath;
+            IsDirty = false;
+
+        RedballConfig? bestConfig = null;
+        string? bestPath = null;
+
+        if (!string.IsNullOrEmpty(path))
+        {
+            // Explicit path requested (common in tests/overrides).
+            // We ONLY use this path and bypass discovery/migration scans
+            // to ensure strict isolation and predictable behavior.
+            Logger.Info("ConfigService", $"Loading from explicit path: {path}");
+            bestConfig = TryLoadFromFile(path) ?? TryRecoverFromFile(path);
+            bestPath = path;
+            ConfigPath = path;
+        }
+        else if (IsTestMode)
+        {
+            // In test mode with no path, we just stick to defaults.
+            // DO NOT scan AppData as it breaks isolation.
+            Logger.Warning("ConfigService", "Load() called without path in TestMode; using memory-only defaults.");
+             ConfigPath = Path.Combine(Path.GetTempPath(), "redball_test_fallback.json");
         }
         else
         {
-            // If we loaded from a fallback path, mark as dirty to ensure we save it back to the canonical location
-            if (!string.Equals(successfulPath, LocalAppDataConfigPath, StringComparison.OrdinalIgnoreCase))
+            // Normal Launch: DiscoveryScan
+            var candidates = GetConfigPathCandidates(null);
+            DateTime latestTime = DateTime.MinValue;
+
+            foreach (var candidate in candidates)
             {
-                Logger.Info("ConfigService", $"Migrated/Restored config from {successfulPath} to canonical storage");
-                IsDirty = true;
+                if (!File.Exists(candidate)) continue;
+                
+                try
+                {
+                    var cfgCandidate = TryLoadFromFile(candidate) ?? TryRecoverFromFile(candidate);
+                    
+                    if (cfgCandidate != null)
+                    {
+                        var writeTime = File.GetLastWriteTime(candidate);
+                        bool isBetter = false;
+
+                        if (bestConfig == null)
+                        {
+                            isBetter = true;
+                        }
+                        else if (!cfgCandidate.FirstRun && bestConfig.FirstRun)
+                        {
+                            isBetter = true;
+                        }
+                        else if (cfgCandidate.FirstRun == bestConfig.FirstRun)
+                        {
+                            if (writeTime > latestTime) isBetter = true;
+                        }
+
+                        if (isBetter)
+                        {
+                            bestConfig = cfgCandidate;
+                            bestPath = candidate;
+                            latestTime = writeTime;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning("ConfigService", $"Failed to scan candidate {candidate}: {ex.Message}");
+                }
             }
         }
 
-        // Always run self-healing to fix missing/corrupt/out-of-range values
+        if (bestConfig == null)
+        {
+            Logger.Info("ConfigService", "No config file loaded; using defaults");
+            Config = new RedballConfig();
+            if (!IsTestMode) ConfigPath = LocalAppDataConfigPath;
+        }
+        else
+        {
+            Config = bestConfig;
+            Logger.Info("ConfigService", $"Config finalized from: {bestPath} (FirstRun={Config.FirstRun})");
+            
+            // Migration check: only happens in real launch
+            if (!IsTestMode && !string.IsNullOrEmpty(bestPath) && !string.Equals(bestPath, LocalAppDataConfigPath, StringComparison.OrdinalIgnoreCase))
+            {
+                Logger.Info("ConfigService", $"Migration required: {bestPath} -> {LocalAppDataConfigPath}");
+                IsDirty = true;
+                ConfigPath = LocalAppDataConfigPath;
+            }
+        }
+
+        // Always run self-healing
         SanitizeConfig();
         NormalizeConfig();
 
-        // Ensure ConfigPath always points to LocalAppData for future saves
-        ConfigPath = LocalAppDataConfigPath;
-
-        // Persist the (possibly healed or migrated) config to ensure a clean file exists
-        if (IsDirty || !File.Exists(ConfigPath))
+        // Persist only if necessary and NOT in test mode (unless explicitly requested via Save)
+        if (!IsTestMode && (IsDirty || !File.Exists(ConfigPath)))
         {
-            Save();
+            SaveNoLock();
         }
 
-        Logger.Info("ConfigService", $"Configuration ready: HEARTBEAT={Config.HeartbeatSeconds}s, THEME={Config.Theme}");
+        Logger.Info("ConfigService", $"Configuration ready: FirstRun={Config.FirstRun}, HEARTBEAT={Config.HeartbeatSeconds}s, THEME={Config.Theme}");
         return true;
+        }
     }
+
+
+
 
     // Magic header prefixed to DPAPI-encrypted config files
     private const string EncryptedHeader = "RBENC:";
@@ -118,17 +186,17 @@ public class ConfigService : IConfigService
     /// Attempts standard JSON deserialization from a file.
     /// Automatically detects and decrypts DPAPI-encrypted files (prefixed with RBENC:).
     /// </summary>
-    private bool TryLoadFromFile(string filePath)
+    private RedballConfig? TryLoadFromFile(string filePath)
     {
         try
         {
-            if (!File.Exists(filePath)) return false;
+            if (!File.Exists(filePath)) return null;
 
             var raw = File.ReadAllText(filePath);
             if (string.IsNullOrWhiteSpace(raw))
             {
                 Logger.Warning("ConfigService", $"Config file is empty: {filePath}");
-                return false;
+                return null;
             }
 
             string json;
@@ -142,39 +210,35 @@ public class ConfigService : IConfigService
                 json = raw;
             }
 
-            Logger.Debug("ConfigService", $"Attempting to load config from: {filePath} ({json.Length} bytes)");
-            Config = JsonSerializer.Deserialize<RedballConfig>(json, ReadOptions) ?? new RedballConfig();
-            IsDirty = false;
-            Logger.Info("ConfigService", $"Config loaded successfully from: {filePath}");
-            return true;
+            Logger.Debug("ConfigService", $"Attempting to deserialize from: {filePath}");
+            return JsonSerializer.Deserialize<RedballConfig>(json, ReadOptions);
         }
         catch (CryptographicException cryptoEx)
         {
             Logger.Warning("ConfigService", $"Failed to decrypt config from {filePath}: {cryptoEx.Message}");
-            Config = new RedballConfig();
-            return false;
+            return null;
         }
         catch (Exception ex)
         {
-            Logger.Warning("ConfigService", $"Failed to load config from {filePath}: {ex.Message}");
-            Config = new RedballConfig(); // Reset to defaults on failure
-            return false;
+            Logger.Warning("ConfigService", $"Failed to deserialize from {filePath}: {ex.Message}");
+            return null;
         }
     }
+
 
     /// <summary>
     /// If standard deserialization fails (corrupt JSON), attempt property-by-property recovery.
     /// Reads each JSON property individually and maps it onto a fresh defaults instance,
     /// so one corrupt value doesn't wipe out all the others.
     /// </summary>
-    private bool TryRecoverFromFile(string filePath)
+    private RedballConfig? TryRecoverFromFile(string filePath)
     {
         try
         {
-            if (!File.Exists(filePath)) return false;
+            if (!File.Exists(filePath)) return null;
 
             var json = File.ReadAllText(filePath);
-            if (string.IsNullOrWhiteSpace(json)) return false;
+            if (string.IsNullOrWhiteSpace(json)) return null;
 
             Logger.Warning("ConfigService", $"Attempting property-level recovery from: {filePath}");
 
@@ -185,7 +249,7 @@ public class ConfigService : IConfigService
             });
 
             var defaults = new RedballConfig();
-            Config = new RedballConfig();
+            var recoveredConfig = new RedballConfig();
             var recovered = 0;
             var failed = 0;
 
@@ -213,35 +277,43 @@ public class ConfigService : IConfigService
                         var value = JsonSerializer.Deserialize(element.GetRawText(), prop.PropertyType, ReadOptions);
                         if (value != null)
                         {
-                            prop.SetValue(Config, value);
+                            prop.SetValue(recoveredConfig, value);
                             recovered++;
                             continue;
                         }
                     }
 
-                    // Property not in JSON or null — use default
-                    prop.SetValue(Config, prop.GetValue(defaults));
+                    // Not found or null — use default
+                    failed++;
+                    prop.SetValue(recoveredConfig, prop.GetValue(defaults));
                 }
                 catch
                 {
-                    // This specific property is corrupt — use default
                     failed++;
-                    try { prop.SetValue(Config, prop.GetValue(defaults)); } catch { }
+                    try { prop.SetValue(recoveredConfig, prop.GetValue(defaults)); } catch { }
                 }
             }
 
             Logger.Info("ConfigService", $"Property-level recovery: {recovered} recovered, {failed} failed (used defaults)");
-            IsDirty = true;
-            return recovered > 0;
+            return recovered > 0 ? recoveredConfig : null;
         }
         catch (Exception ex)
         {
             Logger.Warning("ConfigService", $"Property-level recovery failed for {filePath}: {ex.Message}");
-            return false;
+            return null;
         }
     }
 
+
     public bool Save(string? path = null)
+    {
+        lock (_syncLock)
+        {
+            return SaveNoLock(path);
+        }
+    }
+
+    private bool SaveNoLock(string? path = null)
     {
         var savePath = path ?? ConfigPath;
         // Force all saves to LocalAppData unless an explicit path was provided
@@ -489,10 +561,13 @@ public class ConfigService : IConfigService
         candidates.Add(BackupConfigPath);
 
         // 5. Legacy Paths (Migration)
-        candidates.Add(LegacyUserDataConfigPath);
+        candidates.Add(LegacyArMaTeCConfigPath);
         candidates.Add(LegacyLocalAppDataConfigPath);
-        candidates.Add(Path.Combine(AppContext.BaseDirectory, "Redball.json"));
-        candidates.Add(Path.Combine(Environment.CurrentDirectory, "Redball.json"));
+
+        // NOTE: We intentionally do NOT include AppContext.BaseDirectory or
+        // Environment.CurrentDirectory here. The Redball.json in the install
+        // folder is a template/default file, not user configuration. Loading
+        // it would overwrite the user's real settings with factory defaults.
 
         return candidates.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }

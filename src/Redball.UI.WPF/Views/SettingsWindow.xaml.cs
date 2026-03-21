@@ -63,7 +63,7 @@ public partial class SettingsWindow : Window
         
         if (updateInfo == null)
         {
-            MessageBox.Show("You're running the latest version.", "No Updates", MessageBoxButton.OK, MessageBoxImage.Information);
+            NotificationWindow.Show("Up to Date", "You're running the latest version of Redball.", "\uE73E"); 
             return;
         }
 
@@ -71,7 +71,7 @@ public partial class SettingsWindow : Window
         var progressWindow = new UpdateProgressWindow();
         progressWindow.Show();
 
-        var progress = new Progress<int>(percent => progressWindow.SetProgress(percent));
+        var progress = new Progress<UpdateDownloadProgress>(dp => progressWindow.UpdateProgress(dp));
         
         bool success = await _updateService.DownloadAndInstallAsync(updateInfo, progress);
         

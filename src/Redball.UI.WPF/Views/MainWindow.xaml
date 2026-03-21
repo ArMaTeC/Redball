@@ -48,7 +48,7 @@
                        DoubleClickCommand="{Binding ShowWindowCommand}"
                        Visibility="Visible">
             <tb:TaskbarIcon.ContextMenu>
-                <ContextMenu Style="{StaticResource ModernContextMenu}">
+                <ContextMenu Style="{DynamicResource ModernContextMenu}">
                     <!-- Status Header -->
                     <MenuItem Style="{StaticResource StatusMenuItem}">
                         <MenuItem.Header>
