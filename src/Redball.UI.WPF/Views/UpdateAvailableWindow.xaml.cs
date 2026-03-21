@@ -176,7 +176,7 @@ public partial class UpdateAvailableWindow : Window
         var progressWindow = new UpdateProgressWindow();
         progressWindow.Show();
 
-        var progress = new Progress<int>(percent => progressWindow.SetProgress(percent));
+        var progress = new Progress<UpdateDownloadProgress>(dp => progressWindow.UpdateProgress(dp));
         bool success = await _updateService.DownloadAndInstallAsync(_updateInfo, progress);
 
         progressWindow.Close();

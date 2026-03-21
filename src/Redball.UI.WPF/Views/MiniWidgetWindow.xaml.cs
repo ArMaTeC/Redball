@@ -11,19 +11,149 @@ public partial class MiniWidgetWindow : Window
 {
     private readonly DispatcherTimer _refreshTimer;
     private readonly EventHandler<bool> _activeStateChangedHandler;
+    private readonly EventHandler _heartbeatHandler;
+    private readonly System.Windows.Media.Animation.Storyboard? _heartbeatStoryboard;
 
     public MiniWidgetWindow()
     {
         InitializeComponent();
         RestorePosition();
+
+        _heartbeatStoryboard = TryFindResource("HeartbeatStoryboard") as System.Windows.Media.Animation.Storyboard;
+
         RefreshState();
 
         _activeStateChangedHandler = (_, _) => Dispatcher.BeginInvoke(RefreshState);
-        KeepAwakeService.Instance.ActiveStateChanged += _activeStateChangedHandler;
+        _heartbeatHandler = (_, _) => Dispatcher.BeginInvoke(PlayHeartbeatEffect);
 
-        _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
+        KeepAwakeService.Instance.ActiveStateChanged += _activeStateChangedHandler;
+        KeepAwakeService.Instance.HeartbeatTick += _heartbeatHandler;
+
+        _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) }; // Faster refresh for timer
         _refreshTimer.Tick += (_, _) => RefreshState();
         _refreshTimer.Start();
+    }
+
+    private void PlayHeartbeatEffect()
+    {
+        _heartbeatStoryboard?.Begin();
+    }
+
+    private void RefreshState()
+    {
+        var ka = KeepAwakeService.Instance;
+        var config = ConfigService.Instance.Config;
+        
+        // Status Text & Color
+        StatusText.Text = ka.GetStatusText();
+        
+        if (ka.IsActive)
+        {
+            StatusDot.Fill = ka.Until.HasValue
+                ? new SolidColorBrush(Color.FromRgb(253, 126, 20))   // Orange for timed
+                : new SolidColorBrush(Color.FromRgb(76, 175, 80));   // Green for active
+            ToggleBtn.Content = "\uE769"; // Pause icon
+        }
+        else
+        {
+            StatusDot.Fill = new SolidColorBrush(Color.FromRgb(108, 117, 125)); // Gray for paused
+            ToggleBtn.Content = "\uE768"; // Play icon
+        }
+
+        // Active Timer / Countdown
+        if (ka.IsActive && ka.StartTime.HasValue)
+        {
+            if (ka.Until.HasValue)
+            {
+                var remaining = ka.Until.Value - DateTime.Now;
+                var total = (ka.Until.Value - ka.StartTime.Value).TotalSeconds;
+                var elapsed = (DateTime.Now - ka.StartTime.Value).TotalSeconds;
+
+                if (remaining.TotalSeconds > 0)
+                {
+                    TimeText.Text = remaining.TotalMinutes >= 1 
+                        ? $"{(int)remaining.TotalMinutes}m remaining"
+                        : $"{(int)remaining.TotalSeconds}s remaining";
+                    UpdateProgressRing(elapsed / total);
+                }
+                else
+                {
+                    TimeText.Text = "Expiring...";
+                    UpdateProgressRing(1);
+                }
+            }
+            else
+            {
+                var duration = DateTime.Now - ka.StartTime.Value;
+                TimeText.Text = duration.TotalHours >= 1
+                    ? $"{(int)duration.TotalHours}h {(int)duration.Minutes}m"
+                    : $"{(int)duration.TotalMinutes}m active";
+                ProgressRing.Visibility = Visibility.Collapsed;
+            }
+        }
+        else
+        {
+            TimeText.Text = "";
+            ProgressRing.Visibility = Visibility.Collapsed;
+        }
+
+        // Mode Text
+        ModeText.Text = config.HeartbeatInputMode;
+
+        // Battery Icon
+        var batteryStatus = StaticBatteryMonitor.GetStatus(); // Using a static helper or instance
+        if (batteryStatus.HasBattery)
+        {
+            BatteryIcon.Visibility = Visibility.Visible;
+            BatteryIcon.Text = GetBatteryIcon(batteryStatus.ChargePercent, batteryStatus.IsOnBattery);
+            BatteryIcon.Foreground = batteryStatus.ChargePercent <= 20 && batteryStatus.IsOnBattery
+                ? new SolidColorBrush(Color.FromRgb(220, 53, 69)) // Red for low
+                : (SolidColorBrush)FindResource("ForegroundSecondaryBrush");
+        }
+        else
+        {
+            BatteryIcon.Visibility = Visibility.Collapsed;
+        }
+
+        // Network Icon
+        var isVpn = StaticNetworkMonitor.IsVpnConnected();
+        var isConnected = StaticNetworkMonitor.IsConnected();
+        
+        NetworkIcon.Text = isConnected ? "\uE774" : "\uEB55"; // Check or Disconnected
+        VpnIcon.Visibility = isVpn ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private string GetBatteryIcon(int percent, bool onBattery)
+    {
+        if (!onBattery) return "\uEBA1"; // Charging
+        if (percent > 90) return "\uEBAA"; // Full
+        if (percent > 70) return "\uEBA8";
+        if (percent > 50) return "\uEBA6";
+        if (percent > 30) return "\uEBA4";
+        return "\uEBA0"; // Low
+    }
+
+    private void UpdateProgressRing(double percentage)
+    {
+        percentage = Math.Clamp(percentage, 0, 0.999);
+        ProgressRing.Visibility = Visibility.Visible;
+        
+        double radius = 15;
+        double angle = percentage * 360;
+        
+        var startPoint = new Point(16, 1);
+        var endPoint = new Point(
+            16 + radius * Math.Sin(angle * Math.PI / 180),
+            16 - radius * Math.Cos(angle * Math.PI / 180));
+
+        bool isLargeArc = angle > 180;
+        
+        var geometry = new PathGeometry();
+        var figure = new PathFigure { StartPoint = startPoint, IsClosed = false };
+        figure.Segments.Add(new ArcSegment(endPoint, new Size(radius, radius), 0, isLargeArc, SweepDirection.Clockwise, true));
+        geometry.Figures.Add(figure);
+        
+        ProgressRing.Data = geometry;
     }
 
     private void RestorePosition()
@@ -40,7 +170,6 @@ public partial class MiniWidgetWindow : Window
         }
         else
         {
-            // Default: bottom-right of primary screen with some padding
             SetDefaultPosition();
         }
     }
@@ -55,8 +184,6 @@ public partial class MiniWidgetWindow : Window
 
     private static bool IsPositionOnScreen(double left, double top)
     {
-        // Check if at least part of the widget overlaps the virtual screen
-        // (covers all monitors). Use a margin so the widget is still grabbable.
         const double margin = 40;
         var virtualLeft = SystemParameters.VirtualScreenLeft - margin;
         var virtualTop = SystemParameters.VirtualScreenTop - margin;
@@ -64,7 +191,7 @@ public partial class MiniWidgetWindow : Window
         var virtualBottom = SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight + margin;
 
         return left + 220 > virtualLeft && left < virtualRight &&
-               top + 80 > virtualTop && top < virtualBottom;
+               top + 90 > virtualTop && top < virtualBottom;
     }
 
     private void SavePosition()
@@ -82,33 +209,11 @@ public partial class MiniWidgetWindow : Window
         }
     }
 
-    /// <summary>
-    /// Resets the widget to the default bottom-right position and saves.
-    /// </summary>
     public void ResetPosition()
     {
         SetDefaultPosition();
         SavePosition();
         Activate();
-    }
-
-    private void RefreshState()
-    {
-        var ka = KeepAwakeService.Instance;
-        StatusText.Text = ka.GetStatusText();
-
-        if (ka.IsActive)
-        {
-            StatusDot.Fill = ka.Until.HasValue
-                ? new SolidColorBrush(Color.FromRgb(253, 126, 20))   // Orange for timed
-                : new SolidColorBrush(Color.FromRgb(76, 175, 80));   // Green for active
-            ToggleBtn.Content = "\uE769"; // Pause icon
-        }
-        else
-        {
-            StatusDot.Fill = new SolidColorBrush(Color.FromRgb(108, 117, 125)); // Gray for paused
-            ToggleBtn.Content = "\uE768"; // Play icon
-        }
     }
 
     private void ToggleBtn_Click(object sender, RoutedEventArgs e)
@@ -127,7 +232,6 @@ public partial class MiniWidgetWindow : Window
         if (e.ChangedButton == MouseButton.Left)
         {
             DragMove();
-            // Save position after user finishes dragging
             SavePosition();
         }
     }
@@ -136,7 +240,22 @@ public partial class MiniWidgetWindow : Window
     {
         _refreshTimer.Stop();
         KeepAwakeService.Instance.ActiveStateChanged -= _activeStateChangedHandler;
+        KeepAwakeService.Instance.HeartbeatTick -= _heartbeatHandler;
         SavePosition();
         base.OnClosed(e);
     }
+}
+
+// Static helpers to avoid creating new service instances or if services are accessible via Instance
+internal static class StaticBatteryMonitor 
+{
+    private static readonly BatteryMonitorService _monitor = new();
+    public static BatteryStatus GetStatus() => _monitor.GetStatus();
+}
+
+internal static class StaticNetworkMonitor
+{
+    private static readonly NetworkMonitorService _monitor = new();
+    public static bool IsVpnConnected() => _monitor.IsVpnConnected();
+    public static bool IsConnected() => _monitor.IsConnected();
 }

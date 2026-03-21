@@ -187,7 +187,13 @@ public class UpdateService : IUpdateService
     /// <param name="updateInfo">Update information from CheckForUpdateAsync.</param>
     /// <param name="progress">Callback for download progress (0-100).</param>
     /// <returns>True if update was downloaded and prepared successfully.</returns>
-    public async Task<bool> DownloadAndInstallAsync(UpdateInfo updateInfo, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Downloads and installs the update.
+    /// </summary>
+    /// <param name="updateInfo">Update information from CheckForUpdateAsync.</param>
+    /// <param name="progress">Callback for download progress.</param>
+    /// <returns>True if update was downloaded and prepared successfully.</returns>
+    public async Task<bool> DownloadAndInstallAsync(UpdateInfo updateInfo, IProgress<UpdateDownloadProgress>? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -207,11 +213,15 @@ public class UpdateService : IUpdateService
                     var destDir = Path.GetDirectoryName(destPath);
                     if (destDir != null && !Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
                     
-                    if (!await DownloadFileAsync(file.DownloadUrl, destPath, null, cancellationToken))
+                    if (!await DownloadFileAsync(file.DownloadUrl, destPath, progress, cancellationToken))
                         return false;
                     
                     completed++;
-                    progress?.Report(completed * 100 / updateInfo.FilesToUpdate.Count);
+                    progress?.Report(new UpdateDownloadProgress 
+                    { 
+                        Percentage = completed * 100 / updateInfo.FilesToUpdate.Count,
+                        StatusText = $"File {completed} of {updateInfo.FilesToUpdate.Count}: {file.Name}"
+                    });
                 }
                 
                 var scriptPath = CreateUpdateScript(stagingDir);
@@ -439,7 +449,7 @@ public class UpdateService : IUpdateService
         return fallbackAsset;
     }
 
-    private async Task<bool> DownloadFileAsync(string url, string destinationPath, IProgress<int>? progress, CancellationToken cancellationToken = default)
+    private async Task<bool> DownloadFileAsync(string url, string destinationPath, IProgress<UpdateDownloadProgress>? progress, CancellationToken cancellationToken = default)
     {
         Logger.Info("UpdateService", $"Downloading update from: {url}");
         using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -451,22 +461,36 @@ public class UpdateService : IUpdateService
         await using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
         await using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None);
 
-        var buffer = new byte[8192];
+        var buffer = new byte[16384]; // Larger buffer for speed
         int read;
+        var stopwatch = Stopwatch.StartNew();
+        var lastReport = Stopwatch.StartNew();
+        
         while ((read = await contentStream.ReadAsync(buffer, cancellationToken)) > 0)
         {
-            cancellationToken.ThrowIfCancellationRequested();
             await fileStream.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
             downloadedBytes += read;
 
-            if (totalBytes > 0 && progress != null)
+            if (lastReport.ElapsedMilliseconds > 250 || downloadedBytes == totalBytes)
             {
-                var percent = (int)((downloadedBytes * 100) / totalBytes);
-                progress.Report(percent);
+                if (totalBytes > 0 && progress != null)
+                {
+                    var percent = (int)((downloadedBytes * 100) / totalBytes);
+                    var speed = downloadedBytes / (stopwatch.Elapsed.TotalSeconds + 0.001);
+                    
+                    progress.Report(new UpdateDownloadProgress
+                    {
+                        Percentage = percent,
+                        BytesReceived = downloadedBytes,
+                        TotalBytes = totalBytes,
+                        BytesPerSecond = speed,
+                        StatusText = $"Downloading {Path.GetFileName(destinationPath)}..."
+                    });
+                }
+                lastReport.Restart();
             }
         }
 
-        progress?.Report(100);
         return true;
     }
 

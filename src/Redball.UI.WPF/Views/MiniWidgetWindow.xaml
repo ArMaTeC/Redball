@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Redball Widget"
-        Width="220" Height="80"
+        Width="220" Height="90"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -10,14 +10,39 @@
         ShowInTaskbar="False"
         ResizeMode="NoResize"
         MouseLeftButtonDown="Window_MouseLeftButtonDown">
-    <Border Background="{DynamicResource SurfaceBrush}"
-            BorderBrush="{DynamicResource BorderBrush}"
-            BorderThickness="1"
-            CornerRadius="10"
-            Opacity="0.92">
+    <Window.Resources>
+        <!-- Heartbeat pulse animation -->
+        <Storyboard x:Key="HeartbeatStoryboard">
+            <DoubleAnimation Storyboard.TargetName="HeartbeatDot"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.2" AutoReverse="True"/>
+            <DoubleAnimation Storyboard.TargetName="HeartbeatDot"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                             From="0.5" To="1.5" Duration="0:0:0.2" AutoReverse="True"/>
+            <DoubleAnimation Storyboard.TargetName="HeartbeatDot"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                             From="0.5" To="1.5" Duration="0:0:0.2" AutoReverse="True"/>
+        </Storyboard>
+    </Window.Resources>
+    
+    <Border BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1.2"
+            CornerRadius="14"
+            ClipToBounds="True">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{DynamicResource BackgroundColor}" Offset="0"/>
+                <GradientStop Color="{DynamicResource LocalSurfaceColor}" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.Background>
         <Border.Effect>
-            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.3" Color="Black"/>
+            <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.5" Color="Black"/>
         </Border.Effect>
+        <Border.Resources>
+            <!-- Fallback colors if the dynamic resource is missing -->
+            <Color x:Key="BackgroundColor">#802D2D2D</Color>
+            <Color x:Key="LocalSurfaceColor">#B03C3C3C</Color>
+        </Border.Resources>
         <Grid Margin="12,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -27,44 +52,66 @@
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Status dot -->
-            <Ellipse x:Name="StatusDot" Grid.Column="0" Grid.RowSpan="2"
-                     Width="12" Height="12" Fill="#4CAF50"
-                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <!-- Status Ring and Dot -->
+            <Grid Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Margin="0,0,10,0" VerticalAlignment="Center">
+                <!-- Outer Ring (Progress for timed sessions) -->
+                <Ellipse Width="32" Height="32" Stroke="{DynamicResource BorderBrush}" StrokeThickness="2" Opacity="0.3"/>
+                <Path x:Name="ProgressRing" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Visibility="Collapsed"/>
+                
+                <!-- Inner Dot -->
+                <Ellipse x:Name="StatusDot" Width="14" Height="14" Fill="#4CAF50" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                
+                <!-- Heartbeat Flash -->
+                <Ellipse x:Name="HeartbeatDot" Width="14" Height="14" Fill="White" Opacity="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Ellipse.RenderTransform>
+                        <ScaleTransform CenterX="7" CenterY="7"/>
+                    </Ellipse.RenderTransform>
+                </Ellipse>
+            </Grid>
 
-            <!-- Title -->
-            <TextBlock Grid.Column="1" Grid.Row="0"
-                       Text="Redball" FontWeight="SemiBold" FontSize="12"
-                       Foreground="{DynamicResource ForegroundBrush}"/>
+            <!-- Title and Active Timer -->
+            <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Redball" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource ForegroundBrush}"/>
+                <TextBlock x:Name="TimeText" Margin="6,0,0,0" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Bottom"/>
+            </StackPanel>
 
             <!-- Status text -->
             <TextBlock x:Name="StatusText" Grid.Column="1" Grid.Row="1"
-                       FontSize="10.5"
+                       FontSize="10.5" Margin="0,2,0,0"
                        Foreground="{DynamicResource ForegroundSecondaryBrush}"
-                       TextTrimming="CharacterEllipsis"/>
+                       TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
 
-            <!-- Toggle button -->
-            <Button x:Name="ToggleBtn" Grid.Column="2" Grid.RowSpan="2"
-                    Content="&#xE769;" FontFamily="Segoe Fluent Icons" FontSize="16"
-                    Background="Transparent" BorderThickness="0"
-                    Foreground="{DynamicResource ForegroundSecondaryBrush}"
-                    Width="28" Height="28" Padding="0"
-                    VerticalAlignment="Center"
-                    Click="ToggleBtn_Click" Cursor="Hand"
-                    ToolTip="Toggle keep-awake"/>
+            <!-- Action Buttons -->
+            <StackPanel Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="0" Grid.RowSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="ToggleBtn" 
+                        Content="&#xE768;" FontFamily="Segoe Fluent Icons" FontSize="16"
+                        Background="Transparent" BorderThickness="0"
+                        Foreground="{DynamicResource ForegroundBrush}"
+                        Width="32" Height="32" Click="ToggleBtn_Click" Cursor="Hand"
+                        ToolTip="Toggle session"/>
+                <Button Click="CloseBtn_Click" Margin="4,0,0,0"
+                        Content="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="12"
+                        Background="Transparent" BorderThickness="0"
+                        Foreground="{DynamicResource ForegroundSecondaryBrush}"
+                        Width="24" Height="24" Cursor="Hand"
+                        ToolTip="Close widget"/>
+            </StackPanel>
 
-            <!-- Close button -->
-            <Button Grid.Column="3" Grid.RowSpan="2"
-                    Content="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="11"
-                    Background="Transparent" BorderThickness="0"
-                    Foreground="{DynamicResource ForegroundSecondaryBrush}"
-                    Width="20" Height="20" Padding="0"
-                    VerticalAlignment="Center" Margin="2,0,0,0"
-                    Click="CloseBtn_Click" Cursor="Hand"
-                    ToolTip="Close widget"/>
+            <!-- Bottom Status Icons Row -->
+            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" Margin="0,4,0,0">
+                <!-- Battery -->
+                <TextBlock x:Name="BatteryIcon" Text="&#xEBA0;" FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,10,0"/>
+                <!-- Network -->
+                <TextBlock x:Name="NetworkIcon" Text="&#xE774;" FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,10,0"/>
+                <!-- VPN (Only Visible when active) -->
+                <TextBlock x:Name="VpnIcon" Text="&#xEA89;" FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{DynamicResource AccentBrush}" Margin="0,0,10,0" Visibility="Collapsed"/>
+                <!-- Mode (Direct or HID) -->
+                <TextBlock x:Name="ModeText" FontSize="9" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            </StackPanel>
         </Grid>
     </Border>
 </Window>

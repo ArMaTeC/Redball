@@ -1,19 +1,19 @@
 {
-  "version": "2.1.177",
+  "timestamp": "2026-03-21T21:57:24Z",
   "files": [
     {
       "size": 8484,
-      "hash": "9BEC18F56667A197774DE9FA0F95C169F6E3205EDB0B198A11B759EAAB216F72",
+      "hash": "98C5AA8AAC51D9025F51B0962AC8F505E89C7863BC26ABFC82110055EBB669F7",
       "name": "edball.UI.WPF.deps.json"
     },
     {
-      "size": 1400832,
-      "hash": "719EBEBDF392C4EB8DDA93014EDEB0FC7C7E114D140C03D2DC87EAE5F0B6C0B5",
+      "size": 1413632,
+      "hash": "83749E775E438DFD88B3D0C14D48A2D3CAC1C2B39CEF029FFA2C48AA311D6C65",
       "name": "edball.UI.WPF.dll"
     },
     {
       "size": 363008,
-      "hash": "B881743D4A6FAB347322AE1CA2E23F017A71A8ED55881E8E2EE937A8999A014D",
+      "hash": "3FB32870E8B67F3D8EE85C962FC9E7C195C70AC58E16AB979281E68B79807649",
       "name": "edball.UI.WPF.exe"
     },
     {
@@ -72,5 +72,5 @@
       "name": "ogs\\.keep"
     }
   ],
-  "timestamp": "2026-03-21T18:10:30Z"
+  "version": "2.1.191"
 }

@@ -431,11 +431,11 @@
     <Style x:Key="ModernContextMenu" TargetType="ContextMenu">
         <Style.Resources>
             <Style TargetType="Separator">
-                <Setter Property="Margin" Value="0,4"/>
+                <Setter Property="Margin" Value="0,6"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Separator">
-                            <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="10,0"/>
+                            <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="12,0" Opacity="0.4"/>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
@@ -445,23 +445,52 @@
                 <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="BorderThickness" Value="0"/>
-                <Setter Property="Padding" Value="10,6"/>
+                <Setter Property="Padding" Value="12,8"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="MenuItem">
-                            <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}" Margin="4,1">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" SharedSizeGroup="Icon"/>
+                                        <ColumnDefinition Width="36"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Gesture"/>
                                     </Grid.ColumnDefinitions>
-                                    <ContentPresenter x:Name="Icon" ContentSource="Icon" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                    <ContentPresenter ContentSource="Header" Grid.Column="1" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{TemplateBinding InputGestureText}" Grid.Column="2" Margin="10,0,0,0" VerticalAlignment="Center" Opacity="0.5"/>
+                                    
+                                    <!-- Icon or Checkmark (Fixed width host for perfect alignment) -->
+                                    <Grid x:Name="IconHost" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <ContentPresenter x:Name="Icon" ContentSource="Icon" Visibility="Visible"/>
+                                        <TextBlock x:Name="CheckMark" 
+                                                   Text="&#xE73E;" 
+                                                   FontFamily="Segoe Fluent Icons" 
+                                                   FontSize="14" 
+                                                   Foreground="{DynamicResource AccentBrush}"
+                                                   Visibility="Collapsed"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <ContentPresenter ContentSource="Header" Grid.Column="1" VerticalAlignment="Center" Margin="4,0,0,0">
+                                        <ContentPresenter.Resources>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontSize" Value="13.5"/>
+                                            </Style>
+                                        </ContentPresenter.Resources>
+                                    </ContentPresenter>
+                                    
+                                    <TextBlock Text="{TemplateBinding InputGestureText}" 
+                                               Grid.Column="2" 
+                                               Margin="16,0,8,0" 
+                                               VerticalAlignment="Center" 
+                                               FontSize="11"
+                                               Opacity="0.5"/>
                                 </Grid>
                             </Border>
                             <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                                    <Setter TargetName="Icon" Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
                                 <Trigger Property="IsHighlighted" Value="True">
                                     <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}"/>
                                 </Trigger>
@@ -478,17 +507,41 @@
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Padding" Value="4"/>
+        <Setter Property="Padding" Value="2"/>
+        <Setter Property="MinWidth" Value="220"/>
+        <Setter Property="Grid.IsSharedSizeScope" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContextMenu">
                     <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="8"
-                            Padding="{TemplateBinding Padding}">
-                        <ItemsPresenter/>
+                            CornerRadius="10"
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="15" ShadowDepth="4" Opacity="0.35" Color="Black"/>
+                        </Border.Effect>
+                        <StackPanel IsItemsHost="True" Opacity="0" x:Name="MenuWrapper">
+                            <StackPanel.RenderTransform>
+                                <TranslateTransform Y="5"/>
+                            </StackPanel.RenderTransform>
+                        </StackPanel>
                     </Border>
+                    <ControlTemplate.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="MenuWrapper" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15"/>
+                                    <DoubleAnimation Storyboard.TargetName="MenuWrapper" Storyboard.TargetProperty="(StackPanel.RenderTransform).(TranslateTransform.Y)" To="0" Duration="0:0:0.2">
+                                        <DoubleAnimation.EasingFunction>
+                                            <PowerEase Power="3" EasingMode="EaseOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -500,7 +553,18 @@
         <Setter Property="IsEnabled" Value="False"/>
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Opacity" Value="1.0" />
+        <Setter Property="Padding" Value="12,12,12,8"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Grid Background="Transparent" Margin="{TemplateBinding Padding}">
+                        <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="3,0,0,0" Padding="12,0,0,0">
+                            <ContentPresenter ContentSource="Header"/>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- Global ToolTip Style -->

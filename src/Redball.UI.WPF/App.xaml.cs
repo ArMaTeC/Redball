@@ -176,6 +176,13 @@ public partial class App : Application
                 {
                     analytics.TrackFeature("onboarding.dismissed");
                 }
+
+                // ALWAYS disable FirstRun after the onboarding window closes,
+                // whether completed or dismissed. This prevents the onboarding
+                // loop where the app keeps showing it after updates/restarts.
+                cfg.FirstRun = false;
+                Services.ConfigService.Instance.Save();
+                Services.Logger.Info("App", "FirstRun flag permanently disabled and config saved");
             }
 
             // Initialize keep-awake engine
