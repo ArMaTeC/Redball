@@ -20,10 +20,12 @@ public class ConfigService : IConfigService
     // UserData subfolder is NOT managed by the MSI (INSTALLFOLDER = %LocalAppData%\Redball)
     // so its contents survive MajorUpgrade cycles that remove/reinstall the install directory.
     private static readonly string UserDataDir = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData");
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ArMaTeC", "Redball");
     private static readonly string LocalAppDataConfigPath = Path.Combine(UserDataDir, "Redball.json");
     private static readonly string BackupConfigPath = Path.Combine(UserDataDir, "Redball.json.bak");
     // Legacy paths for migration from older versions
+    private static readonly string LegacyUserDataConfigPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData", "Redball.json");
     private static readonly string LegacyLocalAppDataConfigPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "Redball.json");
     private static readonly string AppDataConfigPath = Path.Combine(
@@ -60,43 +62,36 @@ public class ConfigService : IConfigService
         Config = new RedballConfig();
         IsDirty = false;
         
-        // Always use LocalAppData as the canonical config location.
-        // Migrate from old locations (install dir, roaming appdata) on first run.
-        ConfigPath = ResolveConfigPath(path);
-        Logger.Info("ConfigService", $"Loading configuration from: {ConfigPath}");
+        // Priority list of paths to check
+        var candidates = GetConfigPathCandidates(path);
+        var loaded = false;
+        string? successfulPath = null;
 
-        if (string.IsNullOrEmpty(ConfigPath))
+        foreach (var candidate in candidates)
         {
-            Logger.Warning("ConfigService", "Config path is null or empty, using defaults");
-            Config = new RedballConfig();
-            ConfigPath = LocalAppDataConfigPath;
-            Save();
-            return false;
-        }
-
-        // Attempt to load from primary, then backup, then recover property-by-property.
-        // When an explicit path was provided and resolved, only try that path —
-        // don't fall back to the global backup which may contain unrelated data.
-        var isExplicitPath = !string.IsNullOrEmpty(path) &&
-            string.Equals(ConfigPath, path, StringComparison.OrdinalIgnoreCase);
-
-        bool loaded;
-        if (isExplicitPath)
-        {
-            loaded = TryLoadFromFile(ConfigPath) || TryRecoverFromFile(ConfigPath);
-        }
-        else
-        {
-            loaded = TryLoadFromFile(ConfigPath)
-                  || TryLoadFromFile(BackupConfigPath)
-                  || TryRecoverFromFile(ConfigPath)
-                  || TryRecoverFromFile(BackupConfigPath);
+            if (TryLoadFromFile(candidate) || TryRecoverFromFile(candidate))
+            {
+                loaded = true;
+                successfulPath = candidate;
+                Logger.Info("ConfigService", $"Configuration loaded successfully from: {candidate} (FirstRun={Config.FirstRun})");
+                break;
+            }
         }
 
         if (!loaded)
         {
             Logger.Warning("ConfigService", "All load attempts failed, using defaults");
-            // Config already reset to defaults at start of method
+            Config = new RedballConfig();
+            ConfigPath = LocalAppDataConfigPath;
+        }
+        else
+        {
+            // If we loaded from a fallback path, mark as dirty to ensure we save it back to the canonical location
+            if (!string.Equals(successfulPath, LocalAppDataConfigPath, StringComparison.OrdinalIgnoreCase))
+            {
+                Logger.Info("ConfigService", $"Migrated/Restored config from {successfulPath} to canonical storage");
+                IsDirty = true;
+            }
         }
 
         // Always run self-healing to fix missing/corrupt/out-of-range values
@@ -106,14 +101,13 @@ public class ConfigService : IConfigService
         // Ensure ConfigPath always points to LocalAppData for future saves
         ConfigPath = LocalAppDataConfigPath;
 
-        // Persist the (possibly healed) config to ensure a clean file exists
+        // Persist the (possibly healed or migrated) config to ensure a clean file exists
         if (IsDirty || !File.Exists(ConfigPath))
         {
             Save();
         }
 
-        Logger.Info("ConfigService", $"Configuration ready: Heartbeat={Config.HeartbeatSeconds}s, Theme={Config.Theme}");
-        Logger.Debug("ConfigService", $"Config details: Duration={Config.DefaultDuration}min, BatteryAware={Config.BatteryAware}, NetworkAware={Config.NetworkAware}");
+        Logger.Info("ConfigService", $"Configuration ready: HEARTBEAT={Config.HeartbeatSeconds}s, THEME={Config.Theme}");
         return true;
     }
 
@@ -298,6 +292,25 @@ public class ConfigService : IConfigService
             var tempPath = savePath + ".tmp";
             File.WriteAllText(tempPath, payload);
             File.Move(tempPath, savePath, true);
+            
+            // Save a resilient backup to Roaming AppData so it survives MSI MajorUpgrades
+            // that erroneously wipe out the LocalAppData UserData folder during old-version uninstall.
+            try
+            {
+                var roamingDir = Path.GetDirectoryName(AppDataConfigPath);
+                if (!string.IsNullOrEmpty(roamingDir) && !Directory.Exists(roamingDir))
+                {
+                    Directory.CreateDirectory(roamingDir);
+                }
+                var roamingTemp = AppDataConfigPath + ".tmp";
+                File.WriteAllText(roamingTemp, payload);
+                File.Move(roamingTemp, AppDataConfigPath, true);
+            }
+            catch (Exception roamEx)
+            {
+                Logger.Debug("ConfigService", $"Failed to save roaming backup: {roamEx.Message}");
+            }
+            
             IsDirty = false;
 
             Logger.Info("ConfigService", "Configuration saved successfully");
@@ -454,70 +467,34 @@ public class ConfigService : IConfigService
     }
 
     /// <summary>
-    /// Resolves the canonical config path. Always returns the UserData path.
-    /// On first run, migrates config from legacy locations (install dir, old LocalAppData root, roaming appdata).
+    /// Gets an ordered list of potential config file paths to try.
     /// </summary>
-    private static string ResolveConfigPath(string? path)
+    private static List<string> GetConfigPathCandidates(string? explicitPath)
     {
-        // If an explicit path was provided and exists, use it (e.g. for testing)
-        if (!string.IsNullOrEmpty(path) && File.Exists(path))
+        var candidates = new List<string>();
+
+        // 1. Explicit path if provided
+        if (!string.IsNullOrEmpty(explicitPath))
         {
-            Logger.Debug("ConfigService", $"Using explicit config path: {path}");
-            return path;
+            candidates.Add(explicitPath);
         }
 
-        // If config already exists in UserData subfolder, use it immediately
-        if (File.Exists(LocalAppDataConfigPath))
-        {
-            Logger.Debug("ConfigService", $"Config found at canonical location: {LocalAppDataConfigPath}");
-            return LocalAppDataConfigPath;
-        }
+        // 2. Stable Canonical path (Primary)
+        candidates.Add(LocalAppDataConfigPath);
 
-        // Config doesn't exist in UserData yet — check legacy locations for one-time migration
-        Logger.Info("ConfigService", "Config not found in UserData, checking legacy locations for migration...");
-        var legacyCandidates = new[]
-        {
-            // Old path: directly in install folder (%LocalAppData%\Redball\Redball.json)
-            LegacyLocalAppDataConfigPath,
-            // Install directory (for portable/dev scenarios)
-            Path.Combine(AppContext.BaseDirectory, "Redball.json"),
-            Path.Combine(Environment.CurrentDirectory, "Redball.json"),
-            Path.Combine(AppContext.BaseDirectory, "..", "Redball.json"),
-            // Roaming AppData
-            AppDataConfigPath,
-        };
+        // 3. Stable Roaming Backup (Extra Safety)
+        candidates.Add(AppDataConfigPath);
 
-        foreach (var candidate in legacyCandidates)
-        {
-            try
-            {
-                var fullPath = Path.GetFullPath(candidate);
-                if (File.Exists(fullPath))
-                {
-                    Logger.Info("ConfigService", $"Found legacy config at: {fullPath}, migrating to UserData...");
-                    try
-                    {
-                        EnsureUserDataDir();
-                        File.Copy(fullPath, LocalAppDataConfigPath, true);
-                        Logger.Info("ConfigService", $"Config migrated to: {LocalAppDataConfigPath}");
-                    }
-                    catch (Exception copyEx)
-                    {
-                        Logger.Warning("ConfigService", $"Migration failed: {copyEx.Message}, will use legacy path");
-                        return fullPath;
-                    }
-                    return LocalAppDataConfigPath;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Verbose("ConfigService", $"Error checking legacy path '{candidate}': {ex.Message}");
-            }
-        }
+        // 4. Local Backup (.bak)
+        candidates.Add(BackupConfigPath);
 
-        // No config found anywhere — return canonical path for a fresh start
-        Logger.Info("ConfigService", $"No existing config found, will create fresh config at: {LocalAppDataConfigPath}");
-        return LocalAppDataConfigPath;
+        // 5. Legacy Paths (Migration)
+        candidates.Add(LegacyUserDataConfigPath);
+        candidates.Add(LegacyLocalAppDataConfigPath);
+        candidates.Add(Path.Combine(AppContext.BaseDirectory, "Redball.json"));
+        candidates.Add(Path.Combine(Environment.CurrentDirectory, "Redball.json"));
+
+        return candidates.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     private static void EnsureUserDataDir()

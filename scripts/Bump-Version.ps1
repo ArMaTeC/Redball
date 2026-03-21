@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Bumps the version number in Redball.UI.WPF.csproj
@@ -50,19 +50,25 @@ function Write-HostSafe {
 
 $projectRoot = Split-Path $PSScriptRoot -Parent
 $wpfProjectPath = Join-Path $projectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
+$propsPath = Join-Path $projectRoot 'Directory.Build.props'
 $versionFilePath = Join-Path $PSScriptRoot 'version.txt'
 
-if (-not (Test-Path $wpfProjectPath)) {
-    throw "WPF project not found at: $wpfProjectPath"
+$targetPath = $propsPath
+if (-not (Test-Path $targetPath)) {
+    $targetPath = $wpfProjectPath
 }
 
-# Read current version from WPF project
-$csprojContent = Get-Content $wpfProjectPath -Raw
+if (-not (Test-Path $targetPath)) {
+    throw "Version target file not found at: $targetPath"
+}
+
+# Read current version from target file
+$targetContent = Get-Content $targetPath -Raw
 $versionPattern = '<Version>([0-9]+)\.([0-9]+)\.([0-9]+)</Version>'
-$match = [regex]::Match($csprojContent, $versionPattern)
+$match = [regex]::Match($targetContent, $versionPattern)
 
 if (-not $match.Success) {
-    throw "Could not find version pattern in $wpfProjectPath"
+    throw "Could not find version pattern in $targetPath"
 }
 
 $major = [int]$match.Groups[1].Value
@@ -70,7 +76,7 @@ $minor = [int]$match.Groups[2].Value
 $patch = [int]$match.Groups[3].Value
 $currentVersion = "$major.$minor.$patch"
 
-Write-HostSafe "Current version: $currentVersion" -ForegroundColor Cyan
+Write-HostSafe "Current version (from $(Split-Path $targetPath -Leaf)): $currentVersion" -ForegroundColor Cyan
 
 # Calculate new version
 switch ($Component) {
@@ -91,13 +97,13 @@ switch ($Component) {
 $newVersion = "$major.$minor.$patch"
 Write-HostSafe "New version: $newVersion" -ForegroundColor Green
 
-# Update WPF .csproj
-$csprojContent = $csprojContent -replace '<Version>[0-9]+\.[0-9]+\.[0-9]+</Version>', "<Version>$newVersion</Version>"
-$csprojContent = $csprojContent -replace '<FileVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</FileVersion>', "<FileVersion>$newVersion.0</FileVersion>"
-$csprojContent = $csprojContent -replace '<AssemblyVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</AssemblyVersion>', "<AssemblyVersion>$newVersion.0</AssemblyVersion>"
+# Update target file
+$targetContent = $targetContent -replace '<Version>[0-9]+\.[0-9]+\.[0-9]+</Version>', "<Version>$newVersion</Version>"
+$targetContent = $targetContent -replace '<FileVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</FileVersion>', "<FileVersion>$newVersion.0</FileVersion>"
+$targetContent = $targetContent -replace '<AssemblyVersion>[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?</AssemblyVersion>', "<AssemblyVersion>$newVersion.0</AssemblyVersion>"
 
-Set-Content -Path $wpfProjectPath -Value $csprojContent -NoNewline
-Write-HostSafe "Updated $wpfProjectPath" -ForegroundColor Green
+Set-Content -Path $targetPath -Value $targetContent -NoNewline
+Write-HostSafe "Updated $targetPath" -ForegroundColor Green
 
 # Write version file for MSI and other build processes
 Set-Content -Path $versionFilePath -Value $newVersion -NoNewline
@@ -109,7 +115,7 @@ if ($Commit -or $Push) {
 
     Write-HostSafe "Committing with message: $commitMessage" -ForegroundColor Yellow
     git add $versionFilePath
-    git add $wpfProjectPath
+    git add $targetPath
     git commit -m $commitMessage
 
     if ($Push) {
@@ -119,3 +125,28 @@ if ($Commit -or $Push) {
 }
 
 Write-HostSafe "Done!" -ForegroundColor Green
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

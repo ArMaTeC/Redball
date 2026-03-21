@@ -33,16 +33,17 @@
                            Text="📊 Product Metrics Dashboard" 
                            FontSize="22" 
                            FontWeight="SemiBold"
-                           Foreground="White"
+                           Foreground="{DynamicResource AccentForegroundBrush}"
                            VerticalAlignment="Center"/>
                 <Button Grid.Column="1" 
                         x:Name="RefreshButton"
                         Content="🔄 Refresh"
                         Click="RefreshButton_Click"
                         Padding="15,8"
-                        Background="White"
-                        Foreground="{DynamicResource AccentColor}"
-                        FontWeight="SemiBold"/>
+                        Background="{DynamicResource AccentForegroundBrush}"
+                        Foreground="{DynamicResource AccentBrush}"
+                        FontWeight="SemiBold"
+                        Style="{DynamicResource ModernButton}"/>
             </Grid>
         </Border>
         
@@ -241,8 +242,7 @@
                         Content="Close" 
                         Click="CloseButton_Click"
                         Padding="25,5"
-                        Background="{DynamicResource AccentColor}"
-                        Foreground="White"/>
+                        Style="{DynamicResource PrimaryButton}"/>
             </Grid>
         </Border>
     </Grid>

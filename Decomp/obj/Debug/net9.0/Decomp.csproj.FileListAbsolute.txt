@@ -1,0 +1,5 @@
+C:\Users\karll\Desktop\Redball\Decomp\obj\Debug\net9.0\Decomp.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\karll\Desktop\Redball\Decomp\obj\Debug\net9.0\Decomp.AssemblyInfoInputs.cache
+C:\Users\karll\Desktop\Redball\Decomp\obj\Debug\net9.0\Decomp.AssemblyInfo.cs
+C:\Users\karll\Desktop\Redball\Decomp\obj\Debug\net9.0\Decomp.csproj.CoreCompileInputs.cache
+C:\Users\karll\Desktop\Redball\Decomp\obj\Debug\net9.0\Decomp.sourcelink.json

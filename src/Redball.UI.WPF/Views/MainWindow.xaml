@@ -44,12 +44,13 @@
     <Grid ClipToBounds="True">
         <!-- Tray Icon (primary UI for v3.0) -->
         <tb:TaskbarIcon x:Name="TrayIcon"
-                       LeftClickCommand="{Binding ShowQuickSettingsCommand}"
+                       LeftClickCommand="{Binding ShowWindowCommand}"
+                       DoubleClickCommand="{Binding ShowWindowCommand}"
                        Visibility="Visible">
             <tb:TaskbarIcon.ContextMenu>
-                <ContextMenu>
+                <ContextMenu Style="{StaticResource ModernContextMenu}">
                     <!-- Status Header -->
-                    <MenuItem IsEnabled="False">
+                    <MenuItem Style="{StaticResource StatusMenuItem}">
                         <MenuItem.Header>
                             <StackPanel>
                                 <TextBlock Text="Redball" FontWeight="Bold"/>
@@ -648,6 +649,14 @@
                                             <CheckBox x:Name="MainTypeNewlinesCheck" Content="Type newlines as Enter key" Style="{DynamicResource ModernCheckBox}" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Send real Enter key presses for line breaks instead of plain newline text."/>
                                             <CheckBox x:Name="MainTypeThingNotificationsCheck" Content="Show TypeThing notifications" Style="{DynamicResource ModernCheckBox}" Margin="0,8,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Display toast notifications when TypeThing starts and stops."/>
                                             <CheckBox x:Name="MainTypeThingTtsCheck" Content="Read aloud while typing (Text-to-Speech)" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Use Windows text-to-speech to read aloud what TypeThing is typing. Useful for presentations or accessibility."/>
+                                            <TextBlock Text="Input &amp; Hotkeys" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,8"/>
+                                            <CheckBox x:Name="MainUseLowLevelHotkeyCheck" Content="Detect hotkeys inside Remote Desktop" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Uses a low-level keyboard hook to capture hotkeys even when RDC or VMs have focus."/>
+                                            <TextBlock Text="Input Method" FontWeight="Medium" Margin="0,8,0,4"/>
+                                            <ComboBox x:Name="MainTypeThingInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Use Driver-Level (HID) to type into Remote Desktop windows (requires Interception driver).">
+                                                <ComboBoxItem Content="Standard (SendInput)" Tag="SendInput"/>
+                                                <ComboBoxItem Content="Driver-Level (HID)" Tag="HID"/>
+                                            </ComboBox>
+                                            <Button x:Name="MainInstallHidDriverBtn" Content="Install HID Driver (Requires Admin &amp; Reboot)" Style="{DynamicResource ModernButton}" Margin="0,0,0,12" Click="MainInstallHidDriverBtn_Click" Visibility="Collapsed"/>
                                             <TextBlock Text="Advanced Settings" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,8"/>
                                             <TextBlock Text="Minimum Delay (ms)" FontWeight="Medium" Margin="0,8,0,4"/>
                                             <Slider x:Name="MainTypeThingMinDelaySlider" Minimum="10" Maximum="200" Value="30" TickFrequency="5" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypeThingMinDelaySlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Minimum milliseconds between keystrokes (must be less than max)."/>

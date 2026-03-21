@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$OutputPath = "coverage.xml",
     [switch]$HtmlReport = $false
 )
@@ -107,3 +107,26 @@ else {
 
 Write-HostSafe "" 
 Write-HostSafe "Coverage analysis complete!" -ForegroundColor Green
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

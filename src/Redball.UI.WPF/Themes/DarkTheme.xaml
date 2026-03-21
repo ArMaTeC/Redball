@@ -16,10 +16,11 @@
     <SolidColorBrush x:Key="ForegroundSecondaryBrush" Color="#FFB0B0B0"/>
     <SolidColorBrush x:Key="ForegroundDisabledBrush" Color="#FF808080"/>
 
-    <!-- Accent colors (Redball brand) -->
-    <SolidColorBrush x:Key="AccentBrush" Color="#FFDC3545"/>
+    <Color x:Key="AccentColor">#FFDC3545</Color>
+    <Color x:Key="AccentDarkColor">#FFB52B3A</Color>
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="AccentLightBrush" Color="#FFE34B5C"/>
-    <SolidColorBrush x:Key="AccentDarkBrush" Color="#FFB52B3A"/>
+    <SolidColorBrush x:Key="AccentDarkBrush" Color="{StaticResource AccentDarkColor}"/>
 
     <!-- State colors -->
     <SolidColorBrush x:Key="ActiveBrush" Color="#FFDC3545"/>

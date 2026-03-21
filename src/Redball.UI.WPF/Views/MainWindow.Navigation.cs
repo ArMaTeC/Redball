@@ -268,6 +268,19 @@ public partial class MainWindow
     private void ShowTypeThingButton_Click(object sender, RoutedEventArgs e) => ShowTypeThing();
     private void ShowUpdatesButton_Click(object sender, RoutedEventArgs e) => ShowUpdates();
 
+    public void ShowMainWindow()
+    {
+        Logger.Info("MainWindow", "ShowMainWindow called");
+        Dispatcher.Invoke(() =>
+        {
+            ShowInTaskbar = true;
+            if (!IsVisible) Show();
+            WindowState = WindowState.Normal;
+            Activate();
+            Focus();
+        });
+    }
+
     public void ShowSettings()
     {
         Logger.Info("MainWindow", "ShowSettings called");

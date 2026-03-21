@@ -60,8 +60,7 @@
     <Icon Id="RedballIcon" SourceFile="Redball.ico" />
     <Property Id="ARPPRODUCTICON" Value="RedballIcon" />
 
-    <!-- UserData folder lives OUTSIDE the MSI-managed install tree so config survives upgrades -->
-    <SetProperty Id="USERDATAFOLDER" Value="[LocalAppDataFolder]Redball\UserData" Before="CostFinalize" Sequence="both" />
+
 
     <!-- .NET 8 prerequisite is handled by the Bundle (Setup.exe) installer.
          If the MSI is run standalone without .NET 8, Windows will show the
@@ -90,6 +89,8 @@
     <StandardDirectory Id="LocalAppDataFolder">
       <Directory Id="INSTALLFOLDER" Name="Redball">
         <Directory Id="AssetsFolder" Name="Assets" />
+        <Directory Id="DllFolder" Name="bin" />
+        <Directory Id="LogsFolder" Name="logs" />
       </Directory>
     </StandardDirectory>
 
@@ -105,9 +106,10 @@
       <ComponentGroupRef Id="CoreComponents" />
       <ComponentGroupRef Id="WPFComponents" />
       <ComponentGroupRef Id="AssetsComponents" />
+      <ComponentGroupRef Id="DllComponents" />
+      <ComponentGroupRef Id="LogsComponents" />
       <ComponentGroupRef Id="ShortcutComponents" />
       <ComponentGroupRef Id="FileAssociationComponents" />
-      <ComponentGroupRef Id="UserDataCleanupComponents" />
       
       <!-- Desktop shortcut as optional sub-feature -->
       <Feature Id="DesktopShortcutFeature" Title="Desktop Shortcut" Description="Add shortcut to Desktop" Level="1000" AllowAdvertise="no">
@@ -166,6 +168,24 @@
       <Component Id="WPFExeComponent" Guid="C8D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F">
         <File Id="WPFExecutable" Source="..\dist\wpf-publish\Redball.UI.WPF.exe" KeyPath="yes" />
       </Component>
+      <Component Id="WPFRuntimeConfigComponent" Guid="D9E6F7A8-9B0C-1D2E-3F4A-5B6C7D8E9F0A">
+        <File Id="WPFRuntimeConfig" Source="..\dist\wpf-publish\Redball.UI.WPF.runtimeconfig.json" KeyPath="yes" />
+      </Component>
+      <Component Id="WPFDepsComponent" Guid="E0F1A2B3-C4D5-6E7F-8A9B-0C1D2E3F4A5B">
+        <File Id="WPFDeps" Source="..\dist\wpf-publish\Redball.UI.WPF.deps.json" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="DllComponents" Directory="DllFolder">
+        <Files Include="..\dist\wpf-publish\bin\*.dll" />
+        <Files Include="..\dist\wpf-publish\Redball.json" />
+    </ComponentGroup>
+
+    <ComponentGroup Id="LogsComponents" Directory="LogsFolder">
+        <Component Id="LogsKeepComponent" Guid="A3B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D8">
+            <CreateFolder />
+            <File Id="LogsKeepFile" Source="..\dist\wpf-publish\logs\.keep" KeyPath="yes" />
+        </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="AssetsComponents">
@@ -256,14 +276,5 @@
       </Component>
     </ComponentGroup>
 
-    <!-- Clean up UserData folder (config, crash flag, backups) on FULL uninstall only.
-         This folder is NOT managed by any install component, so it survives upgrades.
-         The RemoveFolder + registry key combo ensures WiX only cleans it on uninstall. -->
-    <ComponentGroup Id="UserDataCleanupComponents" Directory="INSTALLFOLDER">
-      <Component Id="UserDataCleanupComponent" Guid="F7A8B9C0-1D2E-3F4A-5B6C-7D8E9F0A1B2C">
-        <RegistryValue Root="HKCU" Key="Software\Redball" Name="UserDataCleanup" Type="integer" Value="1" KeyPath="yes" />
-        <util:RemoveFolderEx On="uninstall" Property="USERDATAFOLDER" />
-      </Component>
-    </ComponentGroup>
   </Fragment>
 </Wix>

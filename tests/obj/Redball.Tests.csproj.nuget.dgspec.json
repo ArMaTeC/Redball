@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\Users\\karll\\Desktop\\Redball\\src\\Redball.UI.WPF\\Redball.UI.WPF.csproj": {
-      "version": "2.1.120",
+      "version": "2.1.172",
       "restore": {
         "projectUniqueName": "C:\\Users\\karll\\Desktop\\Redball\\src\\Redball.UI.WPF\\Redball.UI.WPF.csproj",
         "projectName": "Redball.UI.WPF",
@@ -66,12 +66,6 @@
               "target": "Package",
               "version": "[8.0.1, )"
             },
-            "Microsoft.NET.ILLink.Tasks": {
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[8.0.24, )",
-              "autoReferenced": true
-            },
             "Microsoft.Xaml.Behaviors.Wpf": {
               "target": "Package",
               "version": "[1.1.77, )"
@@ -118,7 +112,7 @@
       }
     },
     "C:\\Users\\karll\\Desktop\\Redball\\tests\\Redball.Tests.csproj": {
-      "version": "1.0.0",
+      "version": "2.1.172",
       "restore": {
         "projectUniqueName": "C:\\Users\\karll\\Desktop\\Redball\\tests\\Redball.Tests.csproj",
         "projectName": "Redball.Tests",

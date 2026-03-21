@@ -19,6 +19,14 @@
         <Setter Property="TextOptions.TextHintingMode" Value="Animated"/>
     </Style>
 
+    <Style TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+    </Style>
+
+    <Style TargetType="Label">
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+    </Style>
+
     <!-- Button styling -->
     <Style x:Key="ModernButton" TargetType="Button">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
@@ -76,7 +84,7 @@
     <!-- Primary Button (Accent color) -->
     <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
         <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource AccentDarkBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
@@ -260,11 +268,11 @@
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
                                                         <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                                        <Setter Property="Foreground" Value="White"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                                                     </Trigger>
                                                     <Trigger Property="IsSelected" Value="True">
                                                         <Setter Property="Background" Value="{DynamicResource AccentDarkBrush}"/>
-                                                        <Setter Property="Foreground" Value="White"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -420,9 +428,21 @@
         </Setter>
     </Style>
 
-    <!-- Context Menu Style -->
     <Style x:Key="ModernContextMenu" TargetType="ContextMenu">
+        <Style.Resources>
+            <Style TargetType="Separator">
+                <Setter Property="Margin" Value="0,4"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Separator">
+                            <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="10,0"/>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Style.Resources>
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="4"/>
@@ -439,13 +459,52 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="MenuItem">
+                    <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="10,6"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="MenuItem">
+                                <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="Icon"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="Gesture"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ContentPresenter x:Name="Icon" ContentSource="Icon" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <ContentPresenter ContentSource="Header" Grid.Column="1" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{TemplateBinding InputGestureText}" Grid.Column="2" Margin="10,0,0,0" VerticalAlignment="Center" Opacity="0.5"/>
+                                    </Grid>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsHighlighted" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.5"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
     </Style>
 
-    <!-- Menu Item Style -->
+
+    <!-- Menu Item Style (specifically for non-interactive header) -->
     <Style x:Key="StatusMenuItem" TargetType="MenuItem">
         <Setter Property="IsEnabled" Value="False"/>
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
         <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Opacity" Value="1.0" />
     </Style>
 
 </ResourceDictionary>
+

@@ -25,10 +25,12 @@ public class ProfileService
     {
         _profilesDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Redball", "Profiles");
+            "ArMaTeC", "Redball", "Profiles");
 
         if (!Directory.Exists(_profilesDir))
             Directory.CreateDirectory(_profilesDir);
+
+        MigrateLegacyProfiles();
 
         Logger.Verbose("ProfileService", $"Profiles directory: {_profilesDir}");
     }
@@ -132,5 +134,33 @@ public class ProfileService
     {
         var invalid = Path.GetInvalidFileNameChars();
         return new string(name.Select(c => invalid.Contains(c) ? '_' : c).ToArray());
+    }
+
+    private void MigrateLegacyProfiles()
+    {
+        try
+        {
+            var legacyDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Redball", "Profiles");
+
+            if (Directory.Exists(legacyDir))
+            {
+                var files = Directory.GetFiles(legacyDir, "*.json");
+                foreach (var file in files)
+                {
+                    var dest = Path.Combine(_profilesDir, Path.GetFileName(file));
+                    if (!File.Exists(dest))
+                    {
+                        File.Move(file, dest);
+                        Logger.Info("ProfileService", $"Migrated legacy profile: {Path.GetFileName(file)}");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("ProfileService", $"Legacy profile migration skipped: {ex.Message}");
+        }
     }
 }

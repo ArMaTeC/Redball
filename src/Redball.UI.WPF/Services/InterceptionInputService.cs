@@ -301,7 +301,7 @@ public class InterceptionInputService : IDisposable
     /// A reboot is required after installation.
     /// </summary>
     /// <returns>True if installation was initiated successfully.</returns>
-    public bool InstallDriver()
+    public bool InstallDriver(bool elevateIfNeeded = true)
     {
         try
         {
@@ -313,11 +313,66 @@ public class InterceptionInputService : IDisposable
 
             if (!InputInterceptor.CheckAdministratorRights())
             {
-                Logger.Warning("InterceptionInputService", "Admin rights required to install driver");
+                if (!elevateIfNeeded)
+                {
+                    Logger.Warning("InterceptionInputService", "Admin rights required to install driver, but elevateIfNeeded is false.");
+                    return false;
+                }
+
+                Logger.Info("InterceptionInputService", "Attempting to elevate for driver installation");
+                var processInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? "Redball.UI.WPF.exe",
+                    Arguments = "--install-driver",
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
+
+                try
+                {
+                    using var process = System.Diagnostics.Process.Start(processInfo);
+                    process?.WaitForExit();
+                    return process?.ExitCode == 0;
+                }
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    Logger.Warning("InterceptionInputService", "User cancelled UAC elevation");
+                    return false;
+                }
+            }
+
+            var tempExe = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "install-interception.exe");
+            var asm = System.Reflection.Assembly.GetExecutingAssembly();
+            var names = asm.GetManifestResourceNames();
+            var targetName = System.Linq.Enumerable.FirstOrDefault(names, n => n.EndsWith("install-interception.exe") || n.EndsWith("install_interception.exe"));
+            
+            if (targetName == null)
+            {
+                Logger.Error("InterceptionInputService", "Could not find install-interception.exe embedded resource. Available resources: " + string.Join(", ", names));
                 return false;
             }
 
-            var result = InputInterceptor.InstallDriver();
+            using (var stream = asm.GetManifestResourceStream(targetName))
+            {
+                using (var fileStream = new System.IO.FileStream(tempExe, System.IO.FileMode.Create, System.IO.FileAccess.Write))
+                {
+                    stream!.CopyTo(fileStream);
+                }
+            }
+
+            var startInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = tempExe,
+                Arguments = "/install",
+                UseShellExecute = true,
+                CreateNoWindow = true,
+                WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
+            };
+
+            using var driverProcess = System.Diagnostics.Process.Start(startInfo);
+            driverProcess?.WaitForExit();
+            var result = driverProcess?.ExitCode == 0;
+
             Logger.Info("InterceptionInputService", $"Driver installation result: {result}");
             return result;
         }

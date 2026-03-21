@@ -1,0 +1,76 @@
+# Redball Project Rules (Antigravity Assistant)
+
+You are Antigravity, an AI coding assistant. Follow these project-specific rules when working on **Redball**, a .NET 8 WPF system tray utility.
+
+## 1. Framework & Architecture
+
+- **Tech Stack**: .NET 8 (C# 12+), Windows Presentation Foundation (WPF).
+- **Pattern**: Strict MVVM (Model-View-ViewModel).
+  - **Models**: `src/Redball.UI.WPF/Models/` (Data structures and configuration).
+  - **ViewModels**: `src/Redball.UI.WPF/ViewModels/` (Logic and UI state).
+  - **Views**: `src/Redball.UI.WPF/Views/` (XAML and minimal code-behind).
+  - **Services**: `src/Redball.UI.WPF/Services/` (Singleton-based business logic).
+
+## 2. Service Management
+
+- Access services via the static `.Instance` property (Singleton pattern).
+- Core services include: `KeepAwakeService`, `ConfigService`, `NotificationService`, `Logger`.
+- Initialize new services in `App.xaml.cs`.
+
+## 3. UI/UX & Theming
+
+- **Theming**: Support 14 custom themes.
+- **Resources**: Use `DynamicResource` for colors/brushes instead of `StaticResource` or hardcoded values.
+- **Window Chrome**: Uses `WindowChrome` for modern borderless windows with custom title bars.
+- **Modernity**: Prioritize "Wow" factor with gradients, micro-animations, and sleek dark modes.
+
+## 4. Win32 Interop
+
+- Consolidate all P/Invoke declarations in `src/Redball.UI.WPF/Interop/NativeMethods.cs`.
+- Use descriptive names and proper XML documentation for native calls.
+
+## 5. Configuration
+
+- Configuration is stored in `Redball.json` at `%LocalAppData%\Redball\UserData\`.
+- Use `ConfigService.Instance` for all configuration operations (Save, Load, Export, Import).
+- Always validate the configuration structure when making changes.
+
+## 6. Logging & Diagnostics
+
+- Use the `Logger` class for structured logging.
+- Prefer `Logger.Instance.LogInfo()` or `LogVerbose()` for tracking application state.
+- Redball automatically rotates logs; maintain this behavior.
+
+## 7. Quality & Testing
+
+- **Mandatory Tests**: Every new feature or service *must* have associated tests.
+- **Test Suites**:
+  - Unit Tests (`tests/`)
+  - Integration Tests (`tests-integration/`)
+  - E2E Tests (`tests-e2e/`)
+  - UI Automation (`tests-ui-automation/`)
+- Run `Invoke-Pester` for PowerShell tests and `dotnet test` for C# tests.
+
+## 8. Naming Conventions & Style
+
+- **C#**: PascalCase for public/internal members, camelCase for private fields (with optional `_` prefix if already present in the file).
+- **XML Documentation**: Add `<summary>` and `<param>` tags to all public APIs.
+- **PowerShell**: Follow Verb-Noun naming for scripts/functions in the `scripts/` directory.
+
+## 9. Deployment
+
+- Self-contained single-file EXE publishing using `dotnet publish`.
+- MSI installer creation via WiX Toolset v4 (scripts in `installer/`).
+
+## 10. MCP Servers
+
+- **Capabilities**: Use MCP servers defined in `mcp-servers.json` to extend functionality.
+- **GitHub**: Use the GitHub MCP server for repository management (issues, PRs).
+- **Fetch**: Use the Fetch MCP server for retrieving external documentation.
+- **Memory**: Use the Memory MCP server for persistent project knowledge.
+
+## 11. Assistant Autonomy
+
+- **Auto-run**: Follow the "Auto-run Permissions" defined in `.antigravity/rules.md`.
+- **Safe Commands**: Set `SafeToAutoRun: true` for non-destructive operations (builds, tests, discovery).
+- **Destructive Actions**: ALWAYS request manual approval for `git push`, `rm`, or any process termination.

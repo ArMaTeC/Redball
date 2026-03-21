@@ -101,6 +101,9 @@ public partial class MainWindow
             SessionLockService.Instance.Stop();
 
         MainEnableTypeThingCheck.IsChecked = config.TypeThingEnabled;
+        MainUseLowLevelHotkeyCheck.IsChecked = config.UseLowLevelHotkey;
+        MainTypeThingInputModeCombo.SelectedIndex = config.TypeThingInputMode?.Equals("HID", StringComparison.OrdinalIgnoreCase) == true ? 1 : 0;
+        RefreshHidDriverInstallVisibility();
         MainStartHotkeyBox.Text = config.TypeThingStartHotkey;
         MainStopHotkeyBox.Text = config.TypeThingStopHotkey;
         MainTypingSpeedSlider.Value = config.TypeThingMaxDelayMs;
@@ -238,6 +241,9 @@ public partial class MainWindow
             if (MainScheduleSunCheck.IsChecked == true) config.ScheduleDays.Add("Sunday");
 
             config.TypeThingEnabled = MainEnableTypeThingCheck.IsChecked ?? true;
+            config.UseLowLevelHotkey = MainUseLowLevelHotkeyCheck.IsChecked ?? false;
+            config.TypeThingInputMode = MainTypeThingInputModeCombo.SelectedIndex == 1 ? "HID" : "SendInput";
+            RefreshHidDriverInstallVisibility();
             config.TypeThingStartHotkey = MainStartHotkeyBox.Text;
             config.TypeThingStopHotkey = MainStopHotkeyBox.Text;
             config.TypeThingMaxDelayMs = (int)MainTypingSpeedSlider.Value;
@@ -744,5 +750,31 @@ public partial class MainWindow
         }
 
         ResumeHotkeys();
+        AutoApplySettings();
+    }
+
+    private void RefreshHidDriverInstallVisibility()
+    {
+        if (MainTypeThingInputModeCombo.SelectedIndex == 1 && !InterceptionInputService.Instance.IsReady)
+        {
+            MainInstallHidDriverBtn.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            MainInstallHidDriverBtn.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void MainInstallHidDriverBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (InterceptionInputService.Instance.InstallDriver())
+        {
+            NotificationService.Instance.ShowInfo("Driver Installed", "Please restart your computer to finish the installation.");
+            MainInstallHidDriverBtn.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            NotificationService.Instance.ShowError("Install Failed", "Failed to install driver. Try running Redball as Administrator.");
+        }
     }
 }

@@ -7,17 +7,34 @@ namespace Redball.Tests
     [TestClass]
     public class CrashRecoveryServiceTests
     {
+        private string _originalFlagPath = string.Empty;
+        private string _tempFlagPath = string.Empty;
+
+        [TestInitialize]
+        public void Setup()
+        {
+            _originalFlagPath = CrashRecoveryService.CrashFlagPath;
+            _tempFlagPath = Path.Combine(Path.GetTempPath(), "Redball_Tests", "Redball.crash.flag");
+            CrashRecoveryService.CrashFlagPath = _tempFlagPath;
+            
+            // Ensure clean start
+            if (File.Exists(_tempFlagPath)) File.Delete(_tempFlagPath);
+            var dir = Path.GetDirectoryName(_tempFlagPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        }
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+            if (File.Exists(_tempFlagPath)) File.Delete(_tempFlagPath);
+            CrashRecoveryService.CrashFlagPath = _originalFlagPath;
+        }
+
         [TestMethod]
         public void CrashRecoveryService_WasPreviousCrash_NoFlag_ReturnsFalse()
         {
-            // Arrange - ensure no flag exists
-            var flagPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData", "Redball.crash.flag");
-            if (File.Exists(flagPath))
-            {
-                File.Delete(flagPath);
-            }
-
+            // Arrange - already cleaned in Setup
+            
             // Act
             var result = CrashRecoveryService.WasPreviousCrash();
 
@@ -28,43 +45,30 @@ namespace Redball.Tests
         [TestMethod]
         public void CrashRecoveryService_SetCrashFlag_CreatesFlag()
         {
-            // Arrange - clean up first
-            var flagPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData", "Redball.crash.flag");
-            if (File.Exists(flagPath))
-            {
-                File.Delete(flagPath);
-            }
-
             // Act
             CrashRecoveryService.SetCrashFlag();
 
             // Assert
-            Assert.IsTrue(File.Exists(flagPath), "Crash flag file should exist after SetCrashFlag");
-
-            // Cleanup
-            CrashRecoveryService.ClearCrashFlag();
+            Assert.IsTrue(File.Exists(_tempFlagPath), "Crash flag file should exist after SetCrashFlag");
         }
 
         [TestMethod]
         public void CrashRecoveryService_ClearCrashFlag_RemovesFlag()
         {
-            // Arrange - set flag first
+            // Arrange
             CrashRecoveryService.SetCrashFlag();
-            var flagPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData", "Redball.crash.flag");
 
             // Act
             CrashRecoveryService.ClearCrashFlag();
 
             // Assert
-            Assert.IsFalse(File.Exists(flagPath), "Crash flag file should not exist after ClearCrashFlag");
+            Assert.IsFalse(File.Exists(_tempFlagPath), "Crash flag file should not exist after ClearCrashFlag");
         }
 
         [TestMethod]
         public void CrashRecoveryService_WasPreviousCrash_WithFlag_ReturnsTrue()
         {
-            // Arrange - set flag
+            // Arrange
             CrashRecoveryService.SetCrashFlag();
 
             // Act
@@ -72,17 +76,11 @@ namespace Redball.Tests
 
             // Assert
             Assert.IsTrue(result, "Should return true when crash flag exists");
-
-            // Cleanup
-            CrashRecoveryService.ClearCrashFlag();
         }
 
         [TestMethod]
         public void CrashRecoveryService_CheckAndRecover_NoFlag_ReturnsFalse()
         {
-            // Arrange - ensure no flag
-            CrashRecoveryService.ClearCrashFlag();
-
             // Act
             var result = CrashRecoveryService.CheckAndRecover();
 
@@ -93,7 +91,7 @@ namespace Redball.Tests
         [TestMethod]
         public void CrashRecoveryService_CheckAndRecover_WithFlag_ReturnsTrue()
         {
-            // Arrange - set flag
+            // Arrange
             CrashRecoveryService.SetCrashFlag();
 
             // Act

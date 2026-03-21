@@ -1,4 +1,5 @@
 ﻿#Requires -Version 7
+
 <#
 .SYNOPSIS
     Create GitHub release with changelog and artifacts.
@@ -64,13 +65,20 @@ param(
 $ErrorActionPreference = "Stop"
 $script:stashedChanges = $false
 
-# Configuration
-$ProjectRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
-if (-not $DistDir) {
-    $DistDir = Join-Path $ProjectRoot "dist"
-}
+# Resolve project root safely
+$currentScriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path $MyInvocation.MyCommand.Path -Parent }
+if (-not $currentScriptRoot) { $currentScriptRoot = (Get-Item .).FullName }
+$script:ProjectRoot = Resolve-Path (Join-Path $currentScriptRoot "..")
 
-#region Helper Functions
+if (-not $DistDir) {
+    $script:DistDir = Join-Path $script:ProjectRoot "dist"
+}
+else {
+    $script:DistDir = Resolve-Path $DistDir
+}
+$script:PublishDir = Join-Path $script:DistDir "wpf-publish"
+
+# Helper Functions
 
 function Write-HostSafe {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'Release script requires console output for user feedback')]
@@ -279,15 +287,15 @@ function Restore-StashedChange {
     }
 }
 
-#endregion
+# End Helper Functions
 
-#region Main Script
+# Main Script
 
 try {
 
     Write-Step "Redball GitHub Release Script"
-    Write-HostSafe "Project root: $ProjectRoot"
-    Write-HostSafe "Dist directory: $DistDir"
+    Write-HostSafe "Project root: $($script:ProjectRoot)"
+    Write-HostSafe "Dist directory: $($script:DistDir)"
     if ($DryRun) { Write-Warn "DRY RUN MODE - no changes will be made" }
 
     # ── 1. Validate we're in a git repo ──
@@ -482,6 +490,29 @@ try {
     if (Test-Path $bundlePath) { $uploadFiles += $bundlePath }
     if (Test-Path $bundleVersioned) { $uploadFiles += $bundleVersioned }
 
+    # Create a generic Redball.msi copy to satisfy old updater's priority #0
+    $genericMsi = Join-Path $DistDir "Redball.msi"
+    if (Test-Path $msiVersioned) {
+        Copy-Item -Path $msiVersioned -Destination $genericMsi -Force
+        $uploadFiles += $genericMsi
+        Write-Success "Created generic MSI for legacy updaters: $genericMsi"
+    }
+
+    # Add all modular files from wpf-publish for differential updates
+    if (Test-Path $script:PublishDir) {
+        # Unblock InputInterceptor.dll if present
+        $interceptorFile = Join-Path $script:PublishDir "InputInterceptor.dll"
+        if (Test-Path $interceptorFile) {
+            Write-HostSafe "  Unblocking InputInterceptor.dll in publish folder..." -ForegroundColor Gray
+            Unblock-File -Path $interceptorFile -ErrorAction SilentlyContinue
+        }
+        
+        $modFiles = Get-ChildItem -Path $script:PublishDir -File -Recurse | Where-Object { $_.Name -ne ".keep" }
+        foreach ($file in $modFiles) {
+            $uploadFiles += $file.FullName
+        }
+    }
+
     Write-HostSafe "`nArtifacts to upload:"
     $uploadFiles | ForEach-Object { Write-HostSafe "  - $(Split-Path $_ -Leaf)" }
 
@@ -489,16 +520,16 @@ try {
         throw "No uploadable artifacts found."
     }
 
-    # ── 11. Skip release if requested ──
+    # -- 11. Skip release if requested --
     if ($SkipRelease) {
         Write-Info "Skipping release creation (-SkipRelease specified)"
         Restore-StashedChange
         Write-HostSafe ""
         Write-Success "Validation completed successfully!"
-        exit 0
+        return
     }
 
-    # ── 12. Generate release notes ──
+    # -- 12. Generate release notes --
     Write-Step "Creating GitHub Release: $Tag"
 
     if (-not $ReleaseNotes) {
@@ -574,19 +605,38 @@ try {
 
     Write-HostSafe ""
     Write-Success "Release $Tag completed successfully!"
-
-}
-catch {
+} catch {
     # Ensure stashed changes are restored even on failure
     Restore-StashedChange
     Write-Err "Release failed: $_"
     throw
-}
-finally {
+} finally {
     # Belt-and-suspenders: always try to restore stash
     if ($script:stashedChanges) {
         Restore-StashedChange
     }
 }
 
-#endregion
+# End Main Script
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

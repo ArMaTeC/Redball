@@ -74,6 +74,16 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         Services.Logger.Info("App", "=== OnStartup Begin ===");
+        
+        // Handle driver installation elevation
+        if (e.Args.Length > 0 && e.Args[0] == "--install-driver")
+        {
+            Services.Logger.Info("App", "Running in elevated driver installation mode");
+            var success = Services.InterceptionInputService.Instance.InstallDriver(false);
+            Environment.Exit(success ? 0 : 1);
+            return;
+        }
+
         Services.Logger.LogMemoryStats("App");
         
         try

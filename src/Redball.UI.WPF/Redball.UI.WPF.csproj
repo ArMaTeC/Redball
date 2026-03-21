@@ -11,17 +11,22 @@
     <AssemblyName>Redball.UI.WPF</AssemblyName>
     <AssemblyTitle>Redball</AssemblyTitle>
     <ApplicationIcon>Assets\redball.ico</ApplicationIcon>
-    <Version>2.1.120</Version>
-    <FileVersion>2.1.120.0</FileVersion>
-    <AssemblyVersion>2.1.120.0</AssemblyVersion>
-    <PublishSingleFile>true</PublishSingleFile>
+    <PublishSingleFile>false</PublishSingleFile>
     <SelfContained>false</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <EnableCompressionInSingleFile>false</EnableCompressionInSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <DebugType>embedded</DebugType>
     <DebugSymbols>false</DebugSymbols>
+    <!-- Use a bin subfolder for DLLs -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Redball.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
@@ -48,5 +53,24 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\install-interception.exe" />
+  </ItemGroup>
+
+  <!-- Post-build step to move DLLs to bin folder and update runtimeconfig for probing -->
+  <Target Name="MoveDllsToBin" AfterTargets="Build" Condition="'$(PublishProtocol)' == ''">
+    <PropertyGroup>
+      <BinFolder>$(OutputPath)bin</BinFolder>
+    </PropertyGroup>
+    <MakeDir Directories="$(BinFolder)" Condition="!Exists('$(BinFolder)')" />
+    <ItemGroup>
+      <DllFiles Include="$(OutputPath)*.dll" Exclude="$(OutputPath)$(AssemblyName).dll" />
+    </ItemGroup>
+    <Move SourceFiles="@(DllFiles)" DestinationFolder="$(BinFolder)" />
+    
+    <!-- Use PowerShell to update runtimeconfig.json with additionalProbingPaths -->
+    <Exec Command="powershell -Command &quot;$configPath = '$(OutputPath)$(AssemblyName).runtimeconfig.json'; if (Test-Path $configPath) { $config = Get-Content $configPath | ConvertFrom-Json; if (-not $config.runtimeOptions.additionalProbingPaths) { $config.runtimeOptions | Add-Member -MemberType NoteProperty -Name 'additionalProbingPaths' -Value @('bin'); $config | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding UTF8 } }&quot;" />
+  </Target>
 
 </Project>
