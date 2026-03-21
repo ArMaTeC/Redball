@@ -117,6 +117,14 @@
                     </MenuItem>
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
+
+            <tb:TaskbarIcon.TrayToolTip>
+                <Grid Margin="12,10">
+                    <TextBlock Text="{Binding ElementName=TrayIcon, Path=ToolTipText}" 
+                             FontWeight="SemiBold"
+                             FontSize="13"/>
+                </Grid>
+            </tb:TaskbarIcon.TrayToolTip>
         </tb:TaskbarIcon>
 
         <Grid Margin="0">

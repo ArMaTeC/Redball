@@ -8,6 +8,9 @@
     <UseWPF>true</UseWPF>
     <!-- WinForms removed: SendKeys replaced with P/Invoke SendInput -->
     <RootNamespace>Redball.UI</RootNamespace>
+    <!-- Use custom Program.cs entry point for bin-subfolder assembly resolution -->
+    <StartupObject>Redball.UI.Program</StartupObject>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
     <AssemblyName>Redball.UI.WPF</AssemblyName>
     <AssemblyTitle>Redball</AssemblyTitle>
     <ApplicationIcon>Assets\redball.ico</ApplicationIcon>
@@ -58,19 +61,9 @@
     <EmbeddedResource Include="Resources\install-interception.exe" />
   </ItemGroup>
 
-  <!-- Post-build step to move DLLs to bin folder and update runtimeconfig for probing -->
-  <Target Name="MoveDllsToBin" AfterTargets="Build" Condition="'$(PublishProtocol)' == ''">
-    <PropertyGroup>
-      <BinFolder>$(OutputPath)bin</BinFolder>
-    </PropertyGroup>
-    <MakeDir Directories="$(BinFolder)" Condition="!Exists('$(BinFolder)')" />
-    <ItemGroup>
-      <DllFiles Include="$(OutputPath)*.dll" Exclude="$(OutputPath)$(AssemblyName).dll" />
-    </ItemGroup>
-    <Move SourceFiles="@(DllFiles)" DestinationFolder="$(BinFolder)" />
-    
-    <!-- Use PowerShell to update runtimeconfig.json with additionalProbingPaths -->
-    <Exec Command="powershell -Command &quot;$configPath = '$(OutputPath)$(AssemblyName).runtimeconfig.json'; if (Test-Path $configPath) { $config = Get-Content $configPath | ConvertFrom-Json; if (-not $config.runtimeOptions.additionalProbingPaths) { $config.runtimeOptions | Add-Member -MemberType NoteProperty -Name 'additionalProbingPaths' -Value @('bin'); $config | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding UTF8 } }&quot;" />
-  </Target>
+  <!-- App.xaml must be listed as ApplicationDefinition since we disabled the default -->
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml" />
+  </ItemGroup>
 
 </Project>
