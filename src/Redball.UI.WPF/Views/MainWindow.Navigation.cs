@@ -116,7 +116,7 @@ public partial class MainWindow
         catch (Exception ex)
         {
             Logger.Error("MainWindow", "Failed to open log folder", ex);
-            MessageBox.Show(this, $"Could not open log folder: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Could not open log folder: {ex.Message}", "\uE783");
         }
     }
 
@@ -134,7 +134,7 @@ public partial class MainWindow
             if (dialog.ShowDialog() == true)
             {
                 var path = Logger.ExportDiagnostics(dialog.FileName);
-                MessageBox.Show(this, $"Diagnostics exported to:{Environment.NewLine}{path}", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationWindow.Show("Export Complete", $"Diagnostics exported to:\n{path}", "\uE73E");
             }
         }
         catch (Exception ex)
@@ -225,7 +225,7 @@ public partial class MainWindow
             {
                 System.IO.File.WriteAllText(dialog.FileName, _analytics.ExportToCsv());
                 _analytics.TrackFeature("analytics.exported_csv");
-                MessageBox.Show(this, $"Analytics exported to:\n{dialog.FileName}", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationWindow.Show("Export Complete", $"Analytics exported to:\n{dialog.FileName}", "\uE73E");
             }
         }
         catch (Exception ex)
@@ -249,7 +249,7 @@ public partial class MainWindow
             {
                 System.IO.File.WriteAllText(dialog.FileName, _analytics.Export());
                 _analytics.TrackFeature("analytics.exported_json");
-                MessageBox.Show(this, $"Analytics exported to:\n{dialog.FileName}", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationWindow.Show("Export Complete", $"Analytics exported to:\n{dialog.FileName}", "\uE73E");
             }
         }
         catch (Exception ex)

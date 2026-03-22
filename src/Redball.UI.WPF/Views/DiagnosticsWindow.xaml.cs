@@ -173,7 +173,7 @@ public partial class DiagnosticsWindow : Window
         catch (Exception ex)
         {
             Logger.Error("DiagnosticsWindow", "Failed to open log folder", ex);
-            MessageBox.Show($"Could not open log folder: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Could not open log folder: {ex.Message}", "\uE783");
         }
     }
 
@@ -187,7 +187,7 @@ public partial class DiagnosticsWindow : Window
         catch (Exception ex)
         {
             Logger.Error("DiagnosticsWindow", "Failed to open config file", ex);
-            MessageBox.Show($"Could not open config file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Could not open config file: {ex.Message}", "\uE783");
         }
     }
 
@@ -198,7 +198,7 @@ public partial class DiagnosticsWindow : Window
             if (!File.Exists(AnalyticsPath))
             {
                 _analytics.TrackFeature("analytics.opened_file_missing");
-                MessageBox.Show("Analytics file not found yet.", "Analytics", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationWindow.Show("Analytics", "Analytics file not found yet.", "\uE946");
                 return;
             }
 
@@ -208,7 +208,7 @@ public partial class DiagnosticsWindow : Window
         catch (Exception ex)
         {
             Logger.Error("DiagnosticsWindow", "Failed to open analytics file", ex);
-            MessageBox.Show($"Could not open analytics file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Could not open analytics file: {ex.Message}", "\uE783");
         }
     }
 
@@ -227,13 +227,16 @@ public partial class DiagnosticsWindow : Window
             {
                 var success = ConfigService.Instance.Export(dialog.FileName);
                 _analytics.TrackFeature(success ? "config.exported" : "config.export_failed");
-                MessageBox.Show(success ? $"Config exported to:\n{dialog.FileName}" : "Config export failed.", success ? "Export Complete" : "Export Failed", MessageBoxButton.OK, success ? MessageBoxImage.Information : MessageBoxImage.Error);
+                NotificationWindow.Show(
+                    success ? "Export Complete" : "Export Failed",
+                    success ? $"Config exported to:\n{dialog.FileName}" : "Config export failed.",
+                    success ? "\uE73E" : "\uE783");
             }
         }
         catch (Exception ex)
         {
             Logger.Error("DiagnosticsWindow", "Failed to export config", ex);
-            MessageBox.Show($"Config export failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Config export failed: {ex.Message}", "\uE783");
         }
     }
 
@@ -252,13 +255,13 @@ public partial class DiagnosticsWindow : Window
             {
                 var path = Logger.ExportDiagnostics(dialog.FileName);
                 _analytics.TrackFeature("diagnostics.exported");
-                MessageBox.Show($"Diagnostics exported to:\n{path}", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationWindow.Show("Export Complete", $"Diagnostics exported to:\n{path}", "\uE73E");
             }
         }
         catch (Exception ex)
         {
             Logger.Error("DiagnosticsWindow", "Failed to export diagnostics", ex);
-            MessageBox.Show($"Export failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Export failed: {ex.Message}", "\uE783");
         }
     }
 
@@ -313,7 +316,7 @@ public partial class DiagnosticsWindow : Window
         catch (Exception ex)
         {
             Logger.Error("DiagnosticsWindow", "Failed to copy diagnostics to clipboard", ex);
-            MessageBox.Show($"Failed to copy: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Failed to copy: {ex.Message}", "\uE783");
         }
     }
 
