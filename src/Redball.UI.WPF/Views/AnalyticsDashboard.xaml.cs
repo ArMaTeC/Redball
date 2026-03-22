@@ -146,15 +146,13 @@ public partial class AnalyticsDashboard : Window
                 File.WriteAllText(dialog.FileName, data);
                 
                 Logger.Info("AnalyticsDashboard", $"Analytics exported to: {dialog.FileName}");
-                MessageBox.Show("Analytics data exported successfully!", "Export Complete", 
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationWindow.Show("Export Complete", "Analytics data exported successfully!", "\uE73E");
             }
         }
         catch (Exception ex)
         {
             Logger.Error("AnalyticsDashboard", "Failed to export analytics", ex);
-            MessageBox.Show($"Export failed: {ex.Message}", "Error", 
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Export failed: {ex.Message}", "\uE783");
         }
     }
 

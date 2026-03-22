@@ -176,14 +176,14 @@ public partial class SettingsWindow : Window
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_isDirty && PromptUnsavedChanges() == MessageBoxResult.Cancel)
+        if (_isDirty && !PromptUnsavedChanges())
             return;
         Close();
     }
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_isDirty && PromptUnsavedChanges() == MessageBoxResult.Cancel)
+        if (_isDirty && !PromptUnsavedChanges())
             return;
         Close();
     }
@@ -196,8 +196,7 @@ public partial class SettingsWindow : Window
         if (errors.Count > 0)
         {
             _analytics.TrackFeature("settings.save_validation_failed");
-            MessageBox.Show(string.Join("\n", errors), "Validation Errors",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+            NotificationWindow.Show("Validation Errors", string.Join("\n", errors), "\uE7BA");
             return;
         }
         if (svc.Save())
@@ -213,8 +212,7 @@ public partial class SettingsWindow : Window
         else
         {
             _analytics.TrackFeature("settings.save_failed");
-            MessageBox.Show("Failed to save configuration.", "Error",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", "Failed to save configuration.", "\uE783");
         }
     }
 
@@ -293,10 +291,9 @@ public partial class SettingsWindow : Window
         if (VerifyUpdateSignatureCheck != null) cfg.VerifyUpdateSignature = VerifyUpdateSignatureCheck.IsChecked ?? false;
     }
 
-    private MessageBoxResult PromptUnsavedChanges()
+    private bool PromptUnsavedChanges()
     {
-        return MessageBox.Show("You have unsaved changes. Close without saving?",
-            "Unsaved Changes", MessageBoxButton.OKCancel, MessageBoxImage.Question);
+        return NotificationWindow.Show("Unsaved Changes", "You have unsaved changes. Close without saving?", "\uE9CE", true);
     }
 
     private void GitHubButton_Click(object sender, RoutedEventArgs e)
@@ -346,7 +343,7 @@ public partial class SettingsWindow : Window
         catch (Exception ex)
         {
             Logger.Error("SettingsWindow", "Failed to open log folder", ex);
-            MessageBox.Show($"Could not open log folder: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Could not open log folder: {ex.Message}", "\uE783");
         }
     }
 
@@ -364,13 +361,13 @@ public partial class SettingsWindow : Window
             if (dialog.ShowDialog() == true)
             {
                 var path = Logger.ExportDiagnostics(dialog.FileName);
-                MessageBox.Show($"Diagnostics exported to:\n{path}", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationWindow.Show("Export Complete", $"Diagnostics exported to:\n{path}", "\uE73E");
             }
         }
         catch (Exception ex)
         {
             Logger.Error("SettingsWindow", "Failed to export diagnostics", ex);
-            MessageBox.Show($"Export failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Export failed: {ex.Message}", "\uE783");
         }
     }
 
@@ -515,18 +512,18 @@ public partial class SettingsWindow : Window
                 if (success)
                 {
                     _analytics.TrackFeature("privacy.data_exported");
-                    MessageBox.Show($"Your data has been exported to:\n{dialog.FileName}", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationWindow.Show("Export Complete", $"Your data has been exported to:\n{dialog.FileName}", "\uE73E");
                 }
                 else
                 {
-                    MessageBox.Show("Failed to export data. Check the log for details.", "Export Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationWindow.Show("Export Failed", "Failed to export data. Check the log for details.", "\uE783");
                 }
             }
         }
         catch (Exception ex)
         {
             Logger.Error("SettingsWindow", "Failed to export all data", ex);
-            MessageBox.Show($"Export failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Export failed: {ex.Message}", "\uE783");
         }
     }
 }

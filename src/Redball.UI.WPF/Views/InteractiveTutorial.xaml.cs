@@ -94,8 +94,7 @@ public partial class InteractiveTutorial : Window
                 TryItButton.Click += (s, e) => 
                 {
                     // Would show tray notification in real implementation
-                    MessageBox.Show("Right-click the red ball in your system tray!", "Try It",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationWindow.Show("Try It", "Right-click the red ball in your system tray!", "\uE73E");
                 };
                 break;
                 
@@ -227,13 +226,13 @@ public partial class InteractiveTutorial : Window
 
     private void SkipButton_Click(object sender, RoutedEventArgs e)
     {
-        var result = MessageBox.Show(
-            "Skip the tutorial? You can always access it from Settings → Help.",
+        var result = NotificationWindow.Show(
             "Skip Tutorial",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+            "Skip the tutorial? You can always access it from Settings → Help.",
+            "\uE897", // Help/Info icon
+            true);
         
-        if (result == MessageBoxResult.Yes)
+        if (result)
         {
             ConfigService.Instance.Config.FirstRun = false;
             ConfigService.Instance.Save();

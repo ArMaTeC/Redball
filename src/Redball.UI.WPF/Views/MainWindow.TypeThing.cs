@@ -182,12 +182,13 @@ public partial class MainWindow
                     var warningMsg = string.Join("\n• ", sanitiseWarnings);
                     Logger.Warning("MainWindow", $"TypeThing: Content sanitisation warnings: {warningMsg}");
 
-                    var result = MessageBox.Show(
-                        $"⚠ Content warnings:\n\n• {warningMsg}\n\nDo you still want to type this content?",
+                    var result = NotificationWindow.Show(
                         "TypeThing — Content Warning",
-                        MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                        $"⚠ Content warnings:\n\n• {warningMsg}\n\nDo you still want to type this content?",
+                        "\uE7BA", // Warning icon
+                        true);
 
-                    if (result != MessageBoxResult.Yes)
+                    if (!result)
                     {
                         _isTyping = false;
                         return;
@@ -199,10 +200,9 @@ public partial class MainWindow
                 var preview = text.Length > 200 ? text[..200] + "..." : text;
                 var previewMsg = $"Characters: {text.Length}\nEstimated time: ~{estimatedSeconds}s\n\nPreview:\n{preview}";
 
-                var confirm = MessageBox.Show(previewMsg, "TypeThing — Confirm Typing",
-                    MessageBoxButton.OKCancel, MessageBoxImage.Information);
+                var confirm = NotificationWindow.Show("TypeThing — Confirm Typing", previewMsg, "\uE946", true);
 
-                if (confirm != MessageBoxResult.OK)
+                if (!confirm)
                 {
                     _isTyping = false;
                     return;
@@ -282,12 +282,13 @@ public partial class MainWindow
                     Logger.Warning("MainWindow", $"TypeThing: Clipboard sanitisation warnings: {warningMsg}");
                     _analytics.TrackFeature("typething.sanitise_warning");
 
-                    var result = MessageBox.Show(
-                        $"⚠ Clipboard content warnings:\n\n• {warningMsg}\n\nDo you still want to type this content?",
+                    var result = NotificationWindow.Show(
                         "TypeThing — Content Warning",
-                        MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                        $"⚠ Clipboard content warnings:\n\n• {warningMsg}\n\nDo you still want to type this content?",
+                        "\uE7BA", // Warning icon
+                        true);
 
-                    if (result != MessageBoxResult.Yes)
+                    if (!result)
                     {
                         _analytics.TrackFeature("typething.sanitise_cancelled");
                         _isTyping = false;

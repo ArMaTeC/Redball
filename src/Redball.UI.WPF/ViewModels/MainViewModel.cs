@@ -415,14 +415,13 @@ public class MainViewModel : ViewModelBase
                     : Application.Current.MainWindow;
             }
 
-            var result = System.Windows.MessageBox.Show(
-                ownerWindow,
-                "Redball is currently keeping your system awake. Are you sure you want to exit?",
+            var result = NotificationWindow.Show(
                 "Confirm Exit",
-                MessageBoxButton.OKCancel,
-                MessageBoxImage.Question);
+                "Redball is currently keeping your system awake. Are you sure you want to exit?",
+                "\uE7E8", // Power/Exit icon
+                true);
                 
-            if (result != MessageBoxResult.OK)
+            if (!result)
             {
                 Logger.Info("MainViewModel", "User cancelled exit");
                 return;

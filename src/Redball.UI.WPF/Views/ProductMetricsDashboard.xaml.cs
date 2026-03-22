@@ -196,15 +196,13 @@ public partial class ProductMetricsDashboard : Window
                 File.WriteAllText(dialog.FileName, csv);
                 
                 Logger.Info("ProductMetricsDashboard", $"Metrics exported to: {dialog.FileName}");
-                MessageBox.Show("Metrics report exported successfully!", "Export Complete", 
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationWindow.Show("Export Complete", "Metrics report exported successfully!", "\uE73E");
             }
         }
         catch (Exception ex)
         {
             Logger.Error("ProductMetricsDashboard", "Failed to export metrics", ex);
-            MessageBox.Show($"Export failed: {ex.Message}", "Error", 
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            NotificationWindow.Show("Error", $"Export failed: {ex.Message}", "\uE783");
         }
     }
 
