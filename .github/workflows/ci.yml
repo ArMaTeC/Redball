@@ -195,13 +195,13 @@ jobs:
     - name: Check version consistency
       shell: pwsh
       run: |
-        $csproj = Get-Content src/Redball.UI.WPF/Redball.UI.WPF.csproj -Raw
-        $csprojVersion = ($csproj | Select-String '<Version>([\d.]+)</Version>').Matches.Groups[1].Value
+        $propsFile = Get-Content Directory.Build.props -Raw
+        $propsVersion = ($propsFile | Select-String '<Version>([\d.]+)</Version>').Matches.Groups[1].Value
         $versionTxt = (Get-Content scripts/version.txt -Raw).Trim()
-        Write-Host "csproj Version : $csprojVersion"
+        Write-Host "Build.props Version : $propsVersion"
         Write-Host "version.txt    : $versionTxt"
-        if ($csprojVersion -ne $versionTxt) {
-          throw "Version mismatch! .csproj=$csprojVersion vs version.txt=$versionTxt"
+        if ($propsVersion -ne $versionTxt) {
+          throw "Version mismatch! Directory.Build.props=$propsVersion vs version.txt=$versionTxt"
         }
         Write-Host "✓ Versions are in sync"
 
