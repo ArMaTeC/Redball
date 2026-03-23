@@ -44,13 +44,13 @@
 
             <StackPanel x:Name="ButtonPanel" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button x:Name="CancelButton" Content="Cancel" 
-                        Width="85" Height="32" 
+                        Width="96" Height="32" 
                         Margin="0,0,8,0"
                         Visibility="Collapsed"
                         Click="CancelButton_Click"
                         Style="{DynamicResource ModernButton}"/>
                 <Button x:Name="OkButton" Content="OK" 
-                        Width="85" Height="32" 
+                        Width="96" Height="32" 
                         Click="OkButton_Click"
                         Style="{DynamicResource PrimaryButton}"/>
             </StackPanel>

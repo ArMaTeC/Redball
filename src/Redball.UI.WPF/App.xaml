@@ -4,12 +4,31 @@
              xmlns:converters="clr-namespace:Redball.UI.Converters">
     <Application.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <!-- Animation styles (must be loaded before control styles) -->
-                <ResourceDictionary Source="/Themes/Animations.xaml"/>
-                <!-- Theme dictionaries are loaded dynamically by ThemeManager in App.xaml.cs -->
-                <!-- Value Converters -->
-            </ResourceDictionary.MergedDictionaries>
+            <!-- Essential theme brushes and styles defined inline (pack URIs fail at runtime) -->
+            <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E1E"/>
+            <SolidColorBrush x:Key="SurfaceBrush" Color="#252525"/>
+            <SolidColorBrush x:Key="CardBrush" Color="#2D2D2D"/>
+            <SolidColorBrush x:Key="BorderBrush" Color="#3E3E3E"/>
+            <SolidColorBrush x:Key="BorderLightBrush" Color="#4E4E4E"/>
+            <SolidColorBrush x:Key="ForegroundBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="ForegroundSecondaryBrush" Color="#AAAAAA"/>
+            <SolidColorBrush x:Key="AccentBrush" Color="#0078D4"/>
+            <SolidColorBrush x:Key="AccentDarkBrush" Color="#005A9E"/>
+            <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="HoverBrush" Color="#3E3E3E"/>
+            
+            <!-- ModernWindow style defined inline -->
+            <Style x:Key="ModernWindow" TargetType="Window">
+                <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+                <Setter Property="FontFamily" Value="Segoe UI, Microsoft Sans Serif"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="UseLayoutRounding" Value="True"/>
+                <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+                <Setter Property="TextOptions.TextHintingMode" Value="Animated"/>
+            </Style>
+            
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <converters:SliderValueToWidthConverter x:Key="SliderValueToWidthConverter"/>
         </ResourceDictionary>

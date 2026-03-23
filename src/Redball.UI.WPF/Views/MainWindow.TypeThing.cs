@@ -16,6 +16,30 @@ public partial class MainWindow
 {
     private readonly List<(string Preview, string FullText, DateTime Time)> _typeThingHistory = new();
     private const int MaxTypeThingHistory = 10;
+    private bool _typeThingBusyNotificationShown;
+
+    private void MarkTypeThingOperationStarted()
+    {
+        _isTyping = true;
+        _typeThingBusyNotificationShown = false;
+    }
+
+    private void MarkTypeThingOperationFinished()
+    {
+        _isTyping = false;
+        _typeThingBusyNotificationShown = false;
+    }
+
+    private void ShowTypeThingBusyNotificationOnce()
+    {
+        if (_typeThingBusyNotificationShown)
+        {
+            return;
+        }
+
+        _typeThingBusyNotificationShown = true;
+        NotificationService.Instance.ShowWarning("TypeThing", "Already typing! Please wait for current operation to complete.");
+    }
 
     private void AddToTypeThingHistory(string text)
     {
@@ -158,11 +182,11 @@ public partial class MainWindow
     {
         if (_isTyping)
         {
-            NotificationService.Instance.ShowWarning("TypeThing", "Already typing! Please wait for current operation to complete.");
+            ShowTypeThingBusyNotificationOnce();
             return;
         }
 
-        _isTyping = true;
+        MarkTypeThingOperationStarted();
         Dispatcher.Invoke(() =>
         {
             try
@@ -171,7 +195,7 @@ public partial class MainWindow
                 if (!config.TypeThingEnabled)
                 {
                     NotificationService.Instance.ShowWarning("TypeThing", "TypeThing is disabled in settings.");
-                    _isTyping = false;
+                    MarkTypeThingOperationFinished();
                     return;
                 }
 
@@ -190,7 +214,7 @@ public partial class MainWindow
 
                     if (!result)
                     {
-                        _isTyping = false;
+                        MarkTypeThingOperationFinished();
                         return;
                     }
                 }
@@ -204,7 +228,7 @@ public partial class MainWindow
 
                 if (!confirm)
                 {
-                    _isTyping = false;
+                    MarkTypeThingOperationFinished();
                     return;
                 }
 
@@ -231,7 +255,7 @@ public partial class MainWindow
             catch (Exception ex)
             {
                 Logger.Error("MainWindow", "TypeThing file error", ex);
-                _isTyping = false;
+                MarkTypeThingOperationFinished();
             }
         });
     }
@@ -242,13 +266,13 @@ public partial class MainWindow
         {
             Logger.Warning("MainWindow", "TypeThing already running, ignoring request");
             _analytics.TrackFeature("typething.rejected_busy");
-            NotificationService.Instance.ShowWarning("TypeThing", "Already typing! Please wait for current operation to complete.");
+            ShowTypeThingBusyNotificationOnce();
             return;
         }
 
         Logger.Info("MainWindow", "StartTypeThing called");
         _analytics.TrackFeature("typething.started");
-        _isTyping = true;
+        MarkTypeThingOperationStarted();
         Dispatcher.Invoke(() =>
         {
             try
@@ -258,7 +282,7 @@ public partial class MainWindow
                 {
                     _analytics.TrackFeature("typething.blocked_disabled");
                     NotificationService.Instance.ShowWarning("TypeThing", "TypeThing is disabled in settings.");
-                    _isTyping = false;
+                    MarkTypeThingOperationFinished();
                     return;
                 }
 
@@ -268,7 +292,7 @@ public partial class MainWindow
                     Logger.Warning("MainWindow", "TypeThing: Clipboard is empty");
                     _analytics.TrackFeature("typething.failed_empty_clipboard");
                     NotificationService.Instance.ShowWarning("TypeThing", "Clipboard is empty. Copy some text first.");
-                    _isTyping = false;
+                    MarkTypeThingOperationFinished();
                     return;
                 }
 
@@ -291,7 +315,7 @@ public partial class MainWindow
                     if (!result)
                     {
                         _analytics.TrackFeature("typething.sanitise_cancelled");
-                        _isTyping = false;
+                        MarkTypeThingOperationFinished();
                         return;
                     }
                     _analytics.TrackFeature("typething.sanitise_accepted");
@@ -330,7 +354,7 @@ public partial class MainWindow
             {
                 Logger.Error("MainWindow", "TypeThing error", ex);
                 _analytics.TrackFeature("typething.failed_exception");
-                _isTyping = false;
+                MarkTypeThingOperationFinished();
             }
         });
     }
@@ -385,7 +409,7 @@ public partial class MainWindow
             {
                 _typeThingTimer?.Stop();
                 _typeThingTimer = null;
-                _isTyping = false;
+                MarkTypeThingOperationFinished();
                 Logger.Info("MainWindow", "TypeThing: Typing complete");
                 _analytics.TrackFeature("typething.completed");
                 NotificationService.Instance.ShowInfo("TypeThing", $"Done! Typed {text.Length} characters.");
@@ -454,7 +478,7 @@ public partial class MainWindow
             _typeThingCountdownTimer = null;
             _typeThingTimer?.Stop();
             _typeThingTimer = null;
-            _isTyping = false;
+            MarkTypeThingOperationFinished();
             _analytics.TrackFeature("typething.stop_requested");
             NotificationService.Instance.ShowInfo("TypeThing", "TypeThing stopped.");
         });
