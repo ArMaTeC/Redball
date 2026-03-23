@@ -123,6 +123,34 @@ public class KeyMappingAccuracyTests
         }
     }
 
+    [TestMethod]
+    public void VkMappings_ExtendedTypeThingCharset_LayoutMappingsAreCovered()
+    {
+        const string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:'\",.<>/?`~ \\\u00E9\u00E0\u00EE\u00F8\u00E7\u00F1\u00DF\u00A1\u00BF\u20AC\u00A3\u00A5\u00A9\u00AE\u2122\u03C0\u03A9\u221A\u221E\u2206\u2248\u2260\u2264\u2265";
+        var failures = new List<string>();
+
+        foreach (var ch in charset)
+        {
+            var vkResult = VkKeyScanW(ch);
+            var isDeadKeyResult = (vkResult & unchecked((short)0x8000)) != 0;
+
+            // Characters with no direct VK mapping (or dead-key mappings) are expected
+            // to use Unicode fallback in TypeThing.
+            if (vkResult == -1 || isDeadKeyResult)
+            {
+                continue;
+            }
+
+            var vk = (ushort)(vkResult & 0xFF);
+            if (!HasInterceptionMapping(vk))
+            {
+                failures.Add($"'{ch}' mapped to VK 0x{vk:X2}, but no Interception key mapping exists.");
+            }
+        }
+
+        Assert.AreEqual(0, failures.Count, string.Join(Environment.NewLine, failures));
+    }
+
     private static bool HasInterceptionMapping(ushort vk)
     {
         var result = _virtualKeyToKeyCodeMethod!.Invoke(null, new object[] { vk });

@@ -691,6 +691,14 @@ public partial class MainWindow
 
         // Try hardware scan code approach — works with VMware, fullscreen/maximized apps
         var vkResult = VkKeyScanW(ch);
+        var isDeadKeyResult = (vkResult & unchecked((short)0x8000)) != 0;
+
+        if (isDeadKeyResult)
+        {
+            Logger.Debug("MainWindow", $"TypeThing: Dead-key mapping detected for '{ch}' (U+{(int)ch:X4}), using Unicode fallback");
+            vkResult = -1;
+        }
+
         if (vkResult != -1)
         {
             var vk = (byte)(vkResult & 0xFF);

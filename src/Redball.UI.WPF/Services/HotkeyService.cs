@@ -287,6 +287,31 @@ public class HotkeyService : IDisposable
             0x28 => "Down",
             0x25 => "Left",
             0x27 => "Right",
+            0x1B => "Esc",
+            0x0D => "Enter",
+            0x08 => "Backspace",
+            0x14 => "CapsLock",
+            0x90 => "NumLock",
+            0x91 => "ScrollLock",
+            0x2C => "PrintScreen",
+            0x5B => "LWin",
+            0x5C => "RWin",
+            0x5D => "AppsKey",
+            0x60 => "Numpad0",
+            0x61 => "Numpad1",
+            0x62 => "Numpad2",
+            0x63 => "Numpad3",
+            0x64 => "Numpad4",
+            0x65 => "Numpad5",
+            0x66 => "Numpad6",
+            0x67 => "Numpad7",
+            0x68 => "Numpad8",
+            0x69 => "Numpad9",
+            0x6A => "NumpadMult",
+            0x6B => "NumpadAdd",
+            0x6D => "NumpadSub",
+            0x6E => "NumpadDec",
+            0x6F => "NumpadDiv",
             _ => $"0x{vk:X}"
         };
     }
@@ -325,6 +350,59 @@ public class HotkeyService : IDisposable
             return 0x25;
         if (key.Equals("RIGHT", StringComparison.OrdinalIgnoreCase))
             return 0x27;
+        if (key.Equals("ESCAPE", StringComparison.OrdinalIgnoreCase) || key.Equals("ESC", StringComparison.OrdinalIgnoreCase))
+            return 0x1B;
+        if (key.Equals("ENTER", StringComparison.OrdinalIgnoreCase) || key.Equals("RETURN", StringComparison.OrdinalIgnoreCase))
+            return 0x0D;
+        if (key.Equals("BACKSPACE", StringComparison.OrdinalIgnoreCase) || key.Equals("BS", StringComparison.OrdinalIgnoreCase))
+            return 0x08;
+        if (key.Equals("CAPSLOCK", StringComparison.OrdinalIgnoreCase) || key.Equals("CAPS", StringComparison.OrdinalIgnoreCase))
+            return 0x14;
+        if (key.Equals("NUMLOCK", StringComparison.OrdinalIgnoreCase) || key.Equals("NUM", StringComparison.OrdinalIgnoreCase))
+            return 0x90;
+        if (key.Equals("SCROLLLOCK", StringComparison.OrdinalIgnoreCase) || key.Equals("SCROLL", StringComparison.OrdinalIgnoreCase))
+            return 0x91;
+        if (key.Equals("PRINTSCREEN", StringComparison.OrdinalIgnoreCase) || key.Equals("PRTSC", StringComparison.OrdinalIgnoreCase) || key.Equals("SNAPSHOT", StringComparison.OrdinalIgnoreCase))
+            return 0x2C;
+        if (key.Equals("LWIN", StringComparison.OrdinalIgnoreCase) || key.Equals("LWINDOWS", StringComparison.OrdinalIgnoreCase))
+            return 0x5B;
+        if (key.Equals("RWIN", StringComparison.OrdinalIgnoreCase) || key.Equals("RWINDOWS", StringComparison.OrdinalIgnoreCase))
+            return 0x5C;
+        if (key.Equals("APPSKEY", StringComparison.OrdinalIgnoreCase) || key.Equals("APP", StringComparison.OrdinalIgnoreCase) || key.Equals("MENU", StringComparison.OrdinalIgnoreCase))
+            return 0x5D;
+        // Numpad keys
+        if (key.Equals("NUMPAD0", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADINS", StringComparison.OrdinalIgnoreCase))
+            return 0x60;
+        if (key.Equals("NUMPAD1", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADEND", StringComparison.OrdinalIgnoreCase))
+            return 0x61;
+        if (key.Equals("NUMPAD2", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADDOWN", StringComparison.OrdinalIgnoreCase))
+            return 0x62;
+        if (key.Equals("NUMPAD3", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADPGDN", StringComparison.OrdinalIgnoreCase))
+            return 0x63;
+        if (key.Equals("NUMPAD4", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADLEFT", StringComparison.OrdinalIgnoreCase))
+            return 0x64;
+        if (key.Equals("NUMPAD5", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADCLEAR", StringComparison.OrdinalIgnoreCase))
+            return 0x65;
+        if (key.Equals("NUMPAD6", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADRIGHT", StringComparison.OrdinalIgnoreCase))
+            return 0x66;
+        if (key.Equals("NUMPAD7", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADHOME", StringComparison.OrdinalIgnoreCase))
+            return 0x67;
+        if (key.Equals("NUMPAD8", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADUP", StringComparison.OrdinalIgnoreCase))
+            return 0x68;
+        if (key.Equals("NUMPAD9", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADPGUP", StringComparison.OrdinalIgnoreCase))
+            return 0x69;
+        if (key.Equals("NUMPADMULT", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADASTERISK", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPAD*", StringComparison.OrdinalIgnoreCase))
+            return 0x6A;
+        if (key.Equals("NUMPADADD", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADPLUS", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPAD+", StringComparison.OrdinalIgnoreCase))
+            return 0x6B;
+        if (key.Equals("NUMPADSUB", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADMINUS", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPAD-", StringComparison.OrdinalIgnoreCase))
+            return 0x6D;
+        if (key.Equals("NUMPADDEC", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADDEL", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPAD.", StringComparison.OrdinalIgnoreCase))
+            return 0x6E;
+        if (key.Equals("NUMPADDIV", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPADSLASH", StringComparison.OrdinalIgnoreCase) || key.Equals("NUMPAD/", StringComparison.OrdinalIgnoreCase))
+            return 0x6F;
+        if (key.Equals("NUMPADENTER", StringComparison.OrdinalIgnoreCase))
+            return 0x0D;
         
         Services.Logger.Warning("HotkeyService", $"Unknown key '{key}', returning 0");
         return 0;

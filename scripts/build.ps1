@@ -19,6 +19,9 @@ param(
     [switch]$SkipWPF,
 
     [Parameter()]
+    [switch]$SkipHidTestApp,
+
+    [Parameter()]
     [switch]$SkipMSI,
 
     [Parameter()]
@@ -66,6 +69,49 @@ $ErrorActionPreference = 'Stop'
 
 # Resolve paths safely
 $currentScriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path $MyInvocation.MyCommand.Path -Parent }
+
+function Step-BuildHidTestApp {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
+
+    Write-BuildHeader "Building HID Test Application"
+
+    $hidTestProjectPath = Join-Path $script:ProjectRoot 'tests-e2e' 'Redball.E2E.Tests.csproj'
+    if (-not (Test-Path $hidTestProjectPath)) {
+        Write-Warning "HID test project not found: $hidTestProjectPath"
+        return
+    }
+
+    $hidTestOutDir = Join-Path $script:DistPath 'hid-test-app'
+    if (-not $PSCmdlet.ShouldProcess("HID Test App v$Version", 'Build')) {
+        return
+    }
+
+    if (Test-Path $hidTestOutDir) {
+        Remove-Item -Path $hidTestOutDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    New-Item -ItemType Directory -Path $hidTestOutDir -Force | Out-Null
+
+    Write-BuildStep "Publishing HID test executable..."
+    dotnet publish $hidTestProjectPath `
+        --configuration $Configuration `
+        --output $hidTestOutDir `
+        --self-contained false `
+        --runtime win-x64
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "HID test application publish failed"
+    }
+
+    $hidExePath = Join-Path $hidTestOutDir 'Redball.E2E.Tests.exe'
+    if (Test-Path $hidExePath) {
+        $hidExe = Get-Item $hidExePath
+        Write-BuildSuccess "HID test executable ready: $($hidExe.FullName) ($([math]::Round($hidExe.Length / 1MB, 2)) MB)"
+    }
+    else {
+        Write-Warning "HID test publish completed, but executable was not found at expected path: $hidExePath"
+    }
+}
 if (-not $currentScriptRoot) { $currentScriptRoot = (Get-Item .).FullName }
 
 $script:ProjectRoot = Split-Path $currentScriptRoot -Parent
@@ -745,7 +791,8 @@ function Step-BuildWpfApp {
     $pubFiles = Get-ChildItem -Path $publishDir -File -Recurse
     $manifestFiles = @()
     foreach ($file in $pubFiles) {
-        $relativePath = $file.FullName.Substring($publishDir.Length).TrimStart("\")
+        $relativePath = [System.IO.Path]::GetRelativePath($publishDir, $file.FullName)
+        if ([string]::IsNullOrWhiteSpace($relativePath) -or $relativePath.StartsWith("..")) { continue }
         if ($relativePath -eq "manifest.json") { continue }
         $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash
         $manifestFiles += @{
@@ -1027,7 +1074,15 @@ try {
     else {
         Write-HostSafe "  Skipping WPF build ( -SkipWPF )" -ForegroundColor Yellow
     }
-    
+
+    # HID Test App Build (publishes runnable exe to dist\hid-test-app)
+    if (-not $SkipHidTestApp) {
+        Step-BuildHidTestApp
+    }
+    else {
+        Write-HostSafe "  Skipping HID test app build ( -SkipHidTestApp )" -ForegroundColor Yellow
+    }
+
     # MSI Build (requires WPF files)
     if (-not $SkipMSI) {
         if ($SkipWPF) {

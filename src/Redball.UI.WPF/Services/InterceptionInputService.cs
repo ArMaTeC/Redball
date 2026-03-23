@@ -114,7 +114,17 @@ public class InterceptionInputService : IDisposable
 
                 // Create keyboard hook with no filter (we only want to send, not intercept)
                 // KeyboardFilter.None means we won't capture any incoming keystrokes
-                _keyboardHook = new KeyboardHook(KeyboardFilter.All);
+                _keyboardHook = new KeyboardHook(KeyboardFilter.None);
+                if (!_keyboardHook.CanSimulateInput)
+                {
+                    Logger.Error("InterceptionInputService", "Keyboard hook created but cannot simulate input. Releasing interception resources to avoid blocking keyboard input.");
+                    _keyboardHook.Dispose();
+                    _keyboardHook = null;
+                    InputInterceptor.Dispose();
+                    _initialized = false;
+                    return false;
+                }
+
                 _initialized = true;
 
                 Logger.Info("InterceptionInputService", $"Initialized successfully. CanSimulateInput: {_keyboardHook.CanSimulateInput}");
@@ -123,6 +133,18 @@ public class InterceptionInputService : IDisposable
             catch (Exception ex)
             {
                 Logger.Error("InterceptionInputService", "Failed to initialize", ex);
+
+                try
+                {
+                    _keyboardHook?.Dispose();
+                    _keyboardHook = null;
+                    InputInterceptor.Dispose();
+                }
+                catch (Exception cleanupEx)
+                {
+                    Logger.Debug("InterceptionInputService", $"Failed to fully cleanup after initialize error: {cleanupEx.Message}");
+                }
+
                 _initialized = false;
                 return false;
             }
@@ -316,6 +338,13 @@ public class InterceptionInputService : IDisposable
             // symbols: £ (Shift+3 on UK), @ (Shift+' on UK), # (dedicated key on UK),
             // € (AltGr+4 on UK/DE), ñ, ü, ß, § etc.
             var vkResult = VkKeyScanW(ch);
+            var isDeadKeyResult = (vkResult & unchecked((short)0x8000)) != 0;
+
+            if (isDeadKeyResult)
+            {
+                Logger.Debug("InterceptionInputService", $"Dead-key mapping detected for '{ch}' (U+{(int)ch:X4}), using Unicode fallback");
+                return SendUnicodeFallback(ch);
+            }
 
             if (vkResult != -1)
             {

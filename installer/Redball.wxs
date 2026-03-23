@@ -31,6 +31,50 @@
     <!-- Add install scope selection (per-user is default) -->
     <Property Id="ALLUSERS" Value="2" />
     <Property Id="MSIINSTALLPERUSER" Value="1" />
+    <Property Id="REDBALL_USERDATA_DIR" Value="[LocalAppDataFolder]Redball\UserData" />
+
+    <!-- UserData backup/restore for upgrades -->
+    <CustomAction Id="SetBackupDir" Property="REDBALL_BACKUP_DIR" Value="[TempFolder]RedballBackup_[Date][Time]" />
+    
+    <CustomAction Id="BackupUserData" 
+                  BinaryRef="PowerShellExe"
+                  ExeCommand="-ExecutionPolicy Bypass -Command &quot;&amp; { $src='[REDBALL_USERDATA_DIR]'; if (Test-Path $src) { $dst='[REDBALL_BACKUP_DIR]\UserData'; New-Item -ItemType Directory -Path $dst -Force | Out-Null; robocopy $src $dst /E /COPY:DAT /R:2 /W:1 /NFL /NDL /NJH /NJS; if ($LASTEXITCODE -le 7) { exit 0 } else { exit 1 } } }&quot;"
+                  Execute="deferred" 
+                  Return="check" 
+                  Impersonate="yes" />
+    
+    <CustomAction Id="RestoreUserData"
+                  BinaryRef="PowerShellExe"
+                  ExeCommand="-ExecutionPolicy Bypass -Command &quot;&amp; { $src='[REDBALL_BACKUP_DIR]\UserData'; $dst='[REDBALL_USERDATA_DIR]'; if (Test-Path $src) { if (-not (Test-Path (Split-Path $dst))) { New-Item -ItemType Directory -Path (Split-Path $dst) -Force | Out-Null }; robocopy $src $dst /E /COPY:DAT /R:2 /W:1 /NFL /NDL /NJH /NJS; if ($LASTEXITCODE -le 7) { Remove-Item -Path '[REDBALL_BACKUP_DIR]' -Recurse -Force -ErrorAction SilentlyContinue; exit 0 } else { exit 1 } } }&quot;"
+                  Execute="deferred"
+                  Return="check"
+                  Impersonate="yes" />
+    
+    <CustomAction Id="CleanupBackup"
+                  BinaryRef="PowerShellExe"
+                  ExeCommand="-ExecutionPolicy Bypass -Command &quot;&amp; { if (Test-Path '[REDBALL_BACKUP_DIR]') { Remove-Item -Path '[REDBALL_BACKUP_DIR]' -Recurse -Force -ErrorAction SilentlyContinue } }&quot;"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="yes" />
+
+    <InstallExecuteSequence>
+      <!-- Set backup directory before upgrade -->
+      <Custom Action="SetBackupDir" Before="BackupUserData" Condition="UPGRADINGPRODUCTCODE" />
+      
+      <!-- Backup before upgrade (only when upgrading) -->
+      <Custom Action="BackupUserData" Before="RemoveExistingProducts" Condition="UPGRADINGPRODUCTCODE AND REDBALL_BACKUP_DIR" />
+      
+      <!-- Restore after install (always try restore if backup exists) -->
+      <Custom Action="RestoreUserData" After="InstallFiles" Condition="REDBALL_BACKUP_DIR AND (UPGRADINGPRODUCTCODE OR NOT Installed)" />
+      
+      <!-- Cleanup backup on install finalization -->
+      <Custom Action="CleanupBackup" After="InstallFinalize" Condition="REDBALL_BACKUP_DIR AND NOT Installed" />
+    </InstallExecuteSequence>
+
+    <!-- PowerShell location for custom actions -->
+    <Property Id="POWERSHELLEXE" Value="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe" />
+    
+    <Binary Id="PowerShellExe" SourceFile="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe" />
 
     <!-- UI: Use InstallDir dialog set for streamlined experience -->
     <!-- WixUI_InstallDir = Welcome, License, Install Directory, Progress, Exit -->
@@ -88,7 +132,7 @@
 
     <!-- Installation layout -->
     <StandardDirectory Id="LocalAppDataFolder">
-      <Directory Id="INSTALLFOLDER" Name="RedballApp">
+      <Directory Id="INSTALLFOLDER" Name="Redball">
         <Directory Id="AssetsFolder" Name="Assets" />
         <Directory Id="DllFolder" Name="bin" />
         <Directory Id="LogsFolder" Name="logs" />
@@ -167,6 +211,11 @@
       <Component Id="InstalledMarkerComponent" Guid="4B9B1F2A-5B5E-4C3A-95D7-6DBE8468D8E1">
         <RegistryValue Root="HKCU" Key="Software\Redball" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
         <RegistryValue Root="HKCU" Key="Software\Redball" Name="InstallPath" Type="string" Value="[INSTALLFOLDER]Redball.UI.WPF.exe" />
+      </Component>
+
+      <Component Id="UserDataCleanupComponent" Guid="BE2AA645-2AB8-4442-9F64-D8E6F2E9E0A7">
+        <RegistryValue Root="HKCU" Key="Software\Redball" Name="UserDataCleanupMarker" Type="integer" Value="1" KeyPath="yes" />
+        <util:RemoveFolderEx Property="REDBALL_USERDATA_DIR" On="uninstall" />
       </Component>
     </ComponentGroup>
 

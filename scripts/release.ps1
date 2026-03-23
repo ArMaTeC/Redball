@@ -605,12 +605,14 @@ try {
 
     Write-HostSafe ""
     Write-Success "Release $Tag completed successfully!"
-} catch {
+}
+catch {
     # Ensure stashed changes are restored even on failure
     Restore-StashedChange
     Write-Err "Release failed: $_"
     throw
-} finally {
+}
+finally {
     # Belt-and-suspenders: always try to restore stash
     if ($script:stashedChanges) {
         Restore-StashedChange
@@ -618,51 +620,6 @@ try {
 }
 
 # End Main Script
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,6 +37,31 @@ public class UpdateService : IUpdateService
         _httpClient.DefaultRequestHeaders.UserAgent.Add(
             new ProductInfoHeaderValue("Redball-Updater", 
                 Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0"));
+    }
+
+    private static string NormalizeRelativeUpdatePath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            throw new InvalidOperationException("Update manifest contained an empty file path.");
+        }
+
+        var normalized = path.Replace('/', Path.DirectorySeparatorChar)
+            .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        if (Path.IsPathRooted(normalized))
+        {
+            throw new InvalidOperationException($"Update manifest contained a rooted path: {path}");
+        }
+
+        var fullPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, normalized));
+        var appBase = Path.GetFullPath(AppContext.BaseDirectory);
+        if (!fullPath.StartsWith(appBase, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Update manifest path escapes app directory: {path}");
+        }
+
+        return normalized;
     }
 
     public UpdateService(string repoOwner, string repoName, string updateChannel = "stable", bool verifySignature = false)
@@ -113,7 +139,8 @@ public class UpdateService : IUpdateService
                     
                     foreach (var file in manifest.Files)
                     {
-                        var localPath = Path.Combine(appDir, file.Name);
+                        var normalizedName = NormalizeRelativeUpdatePath(file.Name);
+                        var localPath = Path.Combine(appDir, normalizedName);
                         bool needsUpdate = true;
                         
                         if (File.Exists(localPath))
@@ -132,7 +159,7 @@ public class UpdateService : IUpdateService
                             {
                                 filesToUpdate.Add(new FileUpdateInfo
                                 {
-                                    Name = file.Name,
+                                    Name = normalizedName,
                                     DownloadUrl = asset.DownloadUrl,
                                     Hash = file.Hash,
                                     Size = file.Size
@@ -209,7 +236,8 @@ public class UpdateService : IUpdateService
                 int completed = 0;
                 foreach (var file in updateInfo.FilesToUpdate)
                 {
-                    var destPath = Path.Combine(stagingDir, file.Name);
+                    var normalizedName = NormalizeRelativeUpdatePath(file.Name);
+                    var destPath = Path.Combine(stagingDir, normalizedName);
                     var destDir = Path.GetDirectoryName(destPath);
                     if (destDir != null && !Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
                     
@@ -220,7 +248,7 @@ public class UpdateService : IUpdateService
                     progress?.Report(new UpdateDownloadProgress 
                     { 
                         Percentage = completed * 100 / updateInfo.FilesToUpdate.Count,
-                        StatusText = $"File {completed} of {updateInfo.FilesToUpdate.Count}: {file.Name}"
+                        StatusText = $"File {completed} of {updateInfo.FilesToUpdate.Count}: {normalizedName}"
                     });
                 }
                 
@@ -567,52 +595,189 @@ public class UpdateService : IUpdateService
             var appDir = AppContext.BaseDirectory;
             var scriptPath = Path.Combine(Path.GetTempPath(), "RedballUpdate", "update.ps1");
             
-            // Create PowerShell script to replace files and restart
-            var script = $@"
-# Redball Auto-Update Script
-$ErrorActionPreference = 'Stop'
-$sourceDir = '{sourceDir.Replace("'", "''")}'
-$targetDir = '{appDir.Replace("'", "''")}'
-$processName = 'Redball.UI.WPF'
+            // Build PowerShell script using StringBuilder to avoid escaping hell
+            var sb = new StringBuilder();
+            sb.AppendLine("# Redball Auto-Update Script");
+            sb.AppendLine("$ErrorActionPreference = 'Stop'");
+            sb.AppendLine($"$sourceDir = '{sourceDir.Replace("'", "''")}'");
+            sb.AppendLine($"$targetDir = '{appDir.Replace("'", "''")}'");
+            sb.AppendLine("$processName = 'Redball.UI.WPF'");
+            sb.AppendLine("$logRoot = Join-Path $env:TEMP 'RedballUpdate'");
+            sb.AppendLine("if (-not (Test-Path $logRoot)) {");
+            sb.AppendLine("    New-Item -ItemType Directory -Path $logRoot -Force | Out-Null");
+            sb.AppendLine("}");
+            sb.AppendLine("$logFile = Join-Path $logRoot 'update-error.log'");
+            sb.AppendLine();
+            sb.AppendLine("# UserData backup/restore helpers");
+            sb.AppendLine("$backupDir = Join-Path $env:TEMP ('RedballBackup_' + (Get-Date -Format 'yyyyMMdd_HHmmss'))");
+            sb.AppendLine("$protectedUserDataDir = Join-Path $targetDir 'UserData'");
+            sb.AppendLine();
+            sb.AppendLine("function Backup-UserData {");
+            sb.AppendLine("    if (Test-Path $protectedUserDataDir) {");
+            sb.AppendLine("        $backupUserData = Join-Path $backupDir 'UserData'");
+            sb.AppendLine("        Write-Host ('Backing up UserData to: ' + $backupUserData)");
+            sb.AppendLine("        New-Item -ItemType Directory -Path $backupUserData -Force | Out-Null");
+            sb.AppendLine("        robocopy $protectedUserDataDir $backupUserData /E /COPY:DAT /R:2 /W:1 /NFL /NDL /NJH /NJS | Out-Null");
+            sb.AppendLine("        if ($LASTEXITCODE -le 7) {");
+            sb.AppendLine("            Write-Host 'UserData backup complete'");
+            sb.AppendLine("            return $true");
+            sb.AppendLine("        } else {");
+            sb.AppendLine("            Write-Warning ('UserData backup may have issues (robocopy exit code: ' + $LASTEXITCODE + ')')");
+            sb.AppendLine("            return $true");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine("    return $false");
+            sb.AppendLine("}");
+            sb.AppendLine();
+            sb.AppendLine("function Restore-UserData {");
+            sb.AppendLine("    $backupUserData = Join-Path $backupDir 'UserData'");
+            sb.AppendLine("    if (Test-Path $backupUserData) {");
+            sb.AppendLine("        Write-Host 'Restoring UserData from backup...' -ForegroundColor Yellow");
+            sb.AppendLine("        if (-not (Test-Path $protectedUserDataDir)) {");
+            sb.AppendLine("            New-Item -ItemType Directory -Path $protectedUserDataDir -Force | Out-Null");
+            sb.AppendLine("        }");
+            sb.AppendLine("        robocopy $backupUserData $protectedUserDataDir /E /COPY:DAT /R:2 /W:1 /NFL /NDL /NJH /NJS | Out-Null");
+            sb.AppendLine("        if ($LASTEXITCODE -le 7) {");
+            sb.AppendLine("            Write-Host 'UserData restore complete' -ForegroundColor Green");
+            sb.AppendLine("        } else {");
+            sb.AppendLine("            Write-Warning ('UserData restore completed with warnings (robocopy exit code: ' + $LASTEXITCODE + ')')");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine("}");
+            sb.AppendLine();
+            sb.AppendLine("function Remove-Backup {");
+            sb.AppendLine("    if (Test-Path $backupDir) {");
+            sb.AppendLine("        Remove-Item -Path $backupDir -Recurse -Force -ErrorAction SilentlyContinue");
+            sb.AppendLine("    }");
+            sb.AppendLine("}");
+            sb.AppendLine();
+            sb.AppendLine("try {");
+            sb.AppendLine("    Write-Host 'Waiting for Redball to close...'");
+            sb.AppendLine("    while (Get-Process -Name $processName -ErrorAction SilentlyContinue) {");
+            sb.AppendLine("        Start-Sleep -Seconds 1");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    Write-Host 'Creating backup of UserData...'");
+            sb.AppendLine("    $hasBackup = Backup-UserData");
+            sb.AppendLine();
+            sb.AppendLine("    Write-Host 'Installing update...'");
+            sb.AppendLine("    Start-Sleep -Seconds 2");
+            sb.AppendLine();
+            sb.AppendLine("    $sourceRoot = [System.IO.Path]::GetFullPath($sourceDir)");
+            sb.AppendLine("    if (-not $sourceRoot.EndsWith([System.IO.Path]::DirectorySeparatorChar.ToString())) {");
+            sb.AppendLine("        $sourceRoot += [System.IO.Path]::DirectorySeparatorChar");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    Get-ChildItem -Path $sourceDir -File -Recurse | ForEach-Object {");
+            sb.AppendLine("        $fullPath = [System.IO.Path]::GetFullPath($_.FullName)");
+            sb.AppendLine("        if (-not $fullPath.StartsWith($sourceRoot, [System.StringComparison]::OrdinalIgnoreCase)) {");
+            sb.AppendLine("            return");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        $relativePath = $fullPath.Substring($sourceRoot.Length)");
+            sb.AppendLine("        if ([string]::IsNullOrWhiteSpace($relativePath) -or $relativePath.StartsWith('..')) {");
+            sb.AppendLine("            return");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        if ($relativePath.StartsWith('UserData\\', [System.StringComparison]::OrdinalIgnoreCase) -or");
+            sb.AppendLine("            $relativePath.StartsWith('UserData/', [System.StringComparison]::OrdinalIgnoreCase)) {");
+            sb.AppendLine("            Write-Host ('Skipping protected path: ' + $relativePath)");
+            sb.AppendLine("            return");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        $targetPath = Join-Path $targetDir $relativePath");
+            sb.AppendLine("        $parentDir = Split-Path -Parent $targetPath");
+            sb.AppendLine();
+            sb.AppendLine("        if (-not (Test-Path $parentDir)) {");
+            sb.AppendLine("            New-Item -ItemType Directory -Path $parentDir -Force | Out-Null");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        $copied = $false");
+            sb.AppendLine("        for ($attempt = 1; $attempt -le 5; $attempt++) {");
+            sb.AppendLine("            try {");
+            sb.AppendLine("                Copy-Item -Path $_.FullName -Destination $targetPath -Force -ErrorAction Stop");
+            sb.AppendLine("                $copied = $true");
+            sb.AppendLine("                break");
+            sb.AppendLine("            }");
+            sb.AppendLine("            catch {");
+            sb.AppendLine("                if ($attempt -lt 5) {");
+            sb.AppendLine("                    Start-Sleep -Milliseconds (300 * $attempt)");
+            sb.AppendLine("                }");
+            sb.AppendLine("                else {");
+            sb.AppendLine("                    throw");
+            sb.AppendLine("                }");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        if ($copied) {");
+            sb.AppendLine("            Write-Host ('Updated: ' + $relativePath)");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    Write-Host 'Update complete!'");
+            sb.AppendLine("    Write-Host 'Starting Redball...'");
+            sb.AppendLine();
+            sb.AppendLine("    $appExe = Join-Path $targetDir 'Redball.UI.WPF.exe'");
+            sb.AppendLine("    if (-not (Test-Path $appExe)) {");
+            sb.AppendLine("        try {");
+            sb.AppendLine("            $regInstallPath = (Get-ItemProperty -Path 'HKCU:\\Software\\Redball' -Name 'InstallPath' -ErrorAction Stop).InstallPath");
+            sb.AppendLine("            if (-not [string]::IsNullOrWhiteSpace($regInstallPath)) {");
+            sb.AppendLine("                $appExe = $regInstallPath");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
+            sb.AppendLine("        catch {");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    if (-not (Test-Path $appExe)) {");
+            sb.AppendLine("        $fallbackRedball = Join-Path $env:LOCALAPPDATA 'Redball\\Redball.UI.WPF.exe'");
+            sb.AppendLine("        $fallbackRedballApp = Join-Path $env:LOCALAPPDATA 'RedballApp\\Redball.UI.WPF.exe'");
+            sb.AppendLine("        if (Test-Path $fallbackRedball) {");
+            sb.AppendLine("            $appExe = $fallbackRedball");
+            sb.AppendLine("        }");
+            sb.AppendLine("        elseif (Test-Path $fallbackRedballApp) {");
+            sb.AppendLine("            $appExe = $fallbackRedballApp");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    if (-not (Test-Path $appExe)) {");
+            sb.AppendLine("        throw \"Updated application executable not found. Expected at: $appExe\"");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    Start-Process -FilePath $appExe");
+            sb.AppendLine();
+            sb.AppendLine("    Write-Host 'Cleaning up backup...'");
+            sb.AppendLine("    Remove-Backup");
+            sb.AppendLine();
+            sb.AppendLine("    Remove-Item -Path (Split-Path -Parent $sourceDir) -Recurse -Force -ErrorAction SilentlyContinue");
+            sb.AppendLine("    Remove-Item -Path $PSCommandPath -Force -ErrorAction SilentlyContinue");
+            sb.AppendLine("}");
+            sb.AppendLine("catch {");
+            sb.AppendLine("    $errorText = ($_ | Out-String)");
+            sb.AppendLine("    $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'");
+            sb.AppendLine("    \"[$timestamp] Update failed\" | Out-File -FilePath $logFile -Encoding UTF8 -Append");
+            sb.AppendLine("    $errorText | Out-File -FilePath $logFile -Encoding UTF8 -Append");
+            sb.AppendLine();
+            sb.AppendLine("    if ($hasBackup) {");
+            sb.AppendLine("        Write-Host \"`nAttempting to restore UserData from backup...\" -ForegroundColor Yellow");
+            sb.AppendLine("        try {");
+            sb.AppendLine("            Restore-UserData");
+            sb.AppendLine("            Write-Host 'UserData restored successfully.' -ForegroundColor Green");
+            sb.AppendLine("        }");
+            sb.AppendLine("        catch {");
+            sb.AppendLine("            $restoreError = $_ | Out-String");
+            sb.AppendLine("            \"[$timestamp] UserData restore failed: $restoreError\" | Out-File -FilePath $logFile -Encoding UTF8 -Append");
+            sb.AppendLine("            Write-Warning ('Failed to restore UserData: ' + $restoreError)");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    Write-Host ('Update failed. Details saved to: ' + $logFile) -ForegroundColor Red");
+            sb.AppendLine("    Write-Host $errorText -ForegroundColor Red");
+            sb.AppendLine("    Read-Host 'Press Enter to close updater'");
+            sb.AppendLine("    exit 1");
+            sb.AppendLine("}");
 
-Write-Host 'Waiting for Redball to close...'
-# Wait for process to exit
-while (Get-Process -Name $processName -ErrorAction SilentlyContinue) {{
-    Start-Sleep -Seconds 1
-}}
-
-Write-Host 'Installing update...'
-Start-Sleep -Seconds 2
-
-# Copy files
-Get-ChildItem -Path $sourceDir -Recurse | ForEach-Object {{
-    $targetPath = $_.FullName.Replace($sourceDir, $targetDir)
-    $parentDir = Split-Path -Parent $targetPath
-    
-    if (-not (Test-Path $parentDir)) {{
-        New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
-    }}
-    
-    if (-not $_.PSIsContainer) {{
-        Copy-Item -Path $_.FullName -Destination $targetPath -Force
-        Write-Host ""Updated: $($_.Name)""
-    }}
-}}
-
-Write-Host 'Update complete!'
-Write-Host 'Starting Redball...'
-
-# Restart application
-Start-Process -FilePath (Join-Path $targetDir 'Redball.UI.WPF.exe')
-
-# Cleanup
-Remove-Item -Path (Split-Path -Parent $sourceDir) -Recurse -Force -ErrorAction SilentlyContinue
-
-# Self-delete
-Remove-Item -Path $PSCommandPath -Force -ErrorAction SilentlyContinue
-";
-
-            File.WriteAllText(scriptPath, script);
+            File.WriteAllText(scriptPath, sb.ToString());
             return scriptPath;
         }
         catch (Exception ex)
