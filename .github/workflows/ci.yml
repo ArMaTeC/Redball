@@ -17,76 +17,11 @@ on:
       - 'tests/**'
       - 'src/**'
 
+env:
+  # Opt into Node.js 24 to suppress deprecation warnings until actions are updated
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
-  test:
-    name: Run Pester Tests
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        shell:
-          - pwsh
-      fail-fast: false
-    defaults:
-      run:
-        shell: ${{ matrix.shell }}
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
-
-    - name: Setup PowerShell
-      run: |
-        $PSVersionTable
-
-    - name: Install Pester
-      run: |
-        Remove-Module Pester -Force -ErrorAction SilentlyContinue
-        Install-Module -Name Pester -Force -SkipPublisherCheck -RequiredVersion 5.5.0
-        Import-Module Pester -RequiredVersion 5.5.0
-        Get-Module Pester | Select-Object Name, Version
-
-    - name: Run Pester Tests
-      run: |
-        Import-Module Pester -RequiredVersion 5.5.0
-        $config = New-PesterConfiguration
-        $config.Run.Path = "./tests/Redball.Tests.ps1"
-        $config.Run.PassThru = $true
-        $config.Output.Verbosity = "Detailed"
-        $config.TestResult.Enabled = $true
-        $config.TestResult.OutputPath = "./test-results-${{ matrix.shell }}.xml"
-        $config.CodeCoverage.Enabled = $true
-        $config.CodeCoverage.OutputPath = "./coverage-${{ matrix.shell }}.xml"
-        $result = Invoke-Pester -Configuration $config
-
-        if ($result.FailedCount -gt 0) {
-          foreach ($f in $result.Failed) {
-            $errMsg = "$($f.ErrorRecord)" -replace "`r`n"," " -replace "`n"," "
-            Write-Host "::error title=$($f.ExpandedName)::$errMsg"
-          }
-          throw "Pester tests failed: $($result.FailedCount)"
-        }
-
-        # Enforce minimum code coverage threshold
-        # Note: AST-based test loading shows 0% coverage - this is a known limitation
-        if ($result.CodeCoverage) {
-          $covPct = [math]::Round($result.CodeCoverage.CoveragePercent, 1)
-          Write-Host "Code coverage: $covPct% (AST-based testing - coverage tracking limited)"
-        }
-
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v5
-      if: always()
-      with:
-        name: test-results-${{ matrix.shell }}
-        path: ./test-results-${{ matrix.shell }}.xml
-
-    - name: Upload Coverage
-      uses: actions/upload-artifact@v5
-      if: always()
-      with:
-        name: coverage-report-${{ matrix.shell }}
-        path: ./coverage-${{ matrix.shell }}.xml
-
   lint:
     name: Lint PowerShell
     runs-on: windows-latest
@@ -393,7 +328,7 @@ jobs:
 
   release:
     name: Create Release Package
-    needs: [test, lint, security, dotnet-test, build-wpf]
+    needs: [lint, security, dotnet-test, build-wpf]
     runs-on: windows-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 

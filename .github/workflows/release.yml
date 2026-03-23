@@ -24,6 +24,10 @@ permissions:
   id-token: write
   actions: read
 
+env:
+  # Opt into Node.js 24 to suppress deprecation warnings until actions are updated
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   tag:
     name: Auto-Tag Version

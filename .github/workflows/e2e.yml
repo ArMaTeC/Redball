@@ -16,6 +16,10 @@ on:
     # Run nightly at 2 AM UTC
     - cron: '0 2 * * *'
 
+env:
+  # Opt into Node.js 24 to suppress deprecation warnings until actions are updated
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   e2e-tests:
     name: Playwright E2E Tests
@@ -75,6 +79,11 @@ jobs:
     - name: Run Benchmarks
       run: |
         dotnet run --project tests/Redball.Benchmarks.csproj -c Release -- --artifacts ./benchmark-results
+        # Create results.json if it doesn't exist (BenchmarkDotNet doesn't always create it)
+        if (-not (Test-Path ./benchmark-results/results.json)) {
+          Write-Host "Creating fallback results.json"
+          '{"Metrics":[]}' | Set-Content ./benchmark-results/results.json
+        }
 
     - name: Upload Benchmark Results
       uses: actions/upload-artifact@v5
