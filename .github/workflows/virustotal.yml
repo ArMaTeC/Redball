@@ -45,8 +45,8 @@ jobs:
         run_id="${{ github.event.workflow_run.id }}"
         echo "Downloading artifacts from run $run_id"
         
-        # List artifacts from the triggering workflow
-        artifacts=$(gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts --jq '.artifacts[] | select(.name | startswith("Redball-v")) | .id')
+        # List artifacts from the triggering workflow - look for redball-msi artifact
+        artifacts=$(gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts --jq '.artifacts[] | select(.name == "redball-msi") | .id')
         
         for artifact_id in $artifacts; do
           name=$(gh api repos/${{ github.repository }}/actions/artifacts/$artifact_id --jq '.name')
@@ -67,8 +67,8 @@ jobs:
         run_id="${{ github.event.inputs.run_id }}"
         echo "Downloading artifacts from run $run_id"
         
-        # List artifacts from the specified workflow run
-        artifacts=$(gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts --jq '.artifacts[] | select(.name | startswith("Redball-v")) | .id')
+        # List artifacts from the specified workflow run - look for redball-msi artifact
+        artifacts=$(gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts --jq '.artifacts[] | select(.name == "redball-msi") | .id')
         
         for artifact_id in $artifacts; do
           name=$(gh api repos/${{ github.repository }}/actions/artifacts/$artifact_id --jq '.name')
