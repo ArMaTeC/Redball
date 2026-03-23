@@ -456,7 +456,9 @@ public class InterceptionInputService : IDisposable
     {
         try
         {
-            if (IsDriverInstalled)
+            var alreadyInstalled = InputInterceptor.CheckDriverInstalled();
+            IsDriverInstalled = alreadyInstalled;
+            if (alreadyInstalled)
             {
                 Logger.Info("InterceptionInputService", "Driver already installed");
                 return true;
@@ -522,9 +524,19 @@ public class InterceptionInputService : IDisposable
 
             using var driverProcess = Process.Start(startInfo);
             driverProcess?.WaitForExit();
-            var result = driverProcess?.ExitCode == 0;
+            var exitCode = driverProcess?.ExitCode ?? -1;
+            var result = exitCode == 0;
 
-            Logger.Info("InterceptionInputService", $"Driver installation result: {result}");
+            var installedAfterRun = InputInterceptor.CheckDriverInstalled();
+            IsDriverInstalled = installedAfterRun;
+
+            if (!result && installedAfterRun)
+            {
+                Logger.Warning("InterceptionInputService", $"Driver installer exit code was {exitCode}, but driver is installed. Continuing as success.");
+                return true;
+            }
+
+            Logger.Info("InterceptionInputService", $"Driver installation result: {result} (exitCode={exitCode}, installedAfterRun={installedAfterRun})");
             return result;
         }
         catch (Exception ex)
