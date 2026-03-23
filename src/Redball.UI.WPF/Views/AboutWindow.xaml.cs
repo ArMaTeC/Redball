@@ -56,6 +56,13 @@ public partial class AboutWindow : Window
             return;
         }
 
+        if (_updateService == null)
+        {
+            _analytics.TrackFeature("update.check_failed");
+            NotificationWindow.Show("Update Failed", "Update service is unavailable. Please restart Redball and try again.", "\uE783");
+            return;
+        }
+
         // Check for updates
         var updateInfo = await _updateService.CheckForUpdateAsync();
         

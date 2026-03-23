@@ -327,7 +327,7 @@ function Step-RunLinting {
 }
 
 function Step-RunTest {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param()
     Write-BuildHeader "Running Tests"
     
@@ -335,6 +335,24 @@ function Step-RunTest {
     if (-not (Test-Path $testPath)) {
         Write-Warning "Test project not found: $testPath"
         return
+    }
+
+    $runningRedballProcesses = Get-Process -Name 'Redball.UI.WPF', 'Redball' -ErrorAction SilentlyContinue
+    if ($runningRedballProcesses) {
+        Write-BuildStep "Stopping running Redball processes to avoid test-time file locks..."
+        foreach ($proc in $runningRedballProcesses) {
+            try {
+                if ($PSCmdlet.ShouldProcess("$($proc.ProcessName) (PID: $($proc.Id))", 'Stop process')) {
+                    Stop-Process -Id $proc.Id -Force -ErrorAction Stop
+                    Write-BuildSuccess "Stopped: $($proc.ProcessName) (PID: $($proc.Id))"
+                }
+            }
+            catch {
+                Write-Warning "Failed to stop $($proc.ProcessName) (PID: $($proc.Id)): $($_.Exception.Message)"
+            }
+        }
+
+        Start-Sleep -Seconds 2
     }
     
     Write-HostSafe "Running dotnet test..." -ForegroundColor Yellow
