@@ -417,6 +417,20 @@ The `build.ps1` script (located in `scripts/`) provides a comprehensive build pi
 .\scripts\build.ps1 -SkipWPF      # Skip WPF build
 ```
 
+For release builds (when MSI is enabled), `build.ps1` now commits and pushes the version bump before calling `release.ps1` so GitHub release notes always have commit history.
+
+```powershell
+# Release build with default release commit message
+.\scripts\build.ps1
+
+# Override release commit message
+.\scripts\build.ps1 -ReleaseMessage "chore(release): v3.1.0 + HID fixes"
+
+# Opt out of auto release commit/push behavior
+.\scripts\build.ps1 -SkipReleaseCommit
+.\scripts\build.ps1 -SkipReleasePush
+```
+
 ### Version Management
 
 Version is defined in two places (kept in sync by `scripts/Bump-Version.ps1`):

@@ -47,6 +47,15 @@ param(
     [string]$BumpMessage = '',
 
     [Parameter()]
+    [switch]$SkipReleaseCommit,
+
+    [Parameter()]
+    [switch]$SkipReleasePush,
+
+    [Parameter()]
+    [string]$ReleaseMessage = '',
+
+    [Parameter()]
     [switch]$NoClean,
 
     [Parameter()]
@@ -411,7 +420,10 @@ function Step-BumpVersion {
 
 function Step-CommitVersionBump {
     [CmdletBinding()]
-    param()
+    param(
+        [string]$CommitMessage = '',
+        [switch]$PushToRemote
+    )
     
     Write-BuildHeader "Committing Version Bump"
     
@@ -421,16 +433,28 @@ function Step-CommitVersionBump {
     
     $targetPath = if (Test-Path $propsPath) { $propsPath } else { $wpfProjectPath }
     
-    $commitMessage = if ($BumpMessage) { $BumpMessage } else { "Bump version to $Version" }
+    $resolvedMessage = if ($CommitMessage) { $CommitMessage } elseif ($BumpMessage) { $BumpMessage } else { "Bump version to $Version" }
     
-    Write-BuildStep "Committing with message: $commitMessage"
+    Write-BuildStep "Committing with message: $resolvedMessage"
     git add $versionFilePath
     git add $targetPath
-    git commit -m $commitMessage
+    git diff --cached --quiet
+    if ($LASTEXITCODE -eq 0) {
+        Write-BuildStep "No staged version changes detected; skipping commit"
+        return
+    }
+
+    git commit -m $resolvedMessage
+    if ($LASTEXITCODE -ne 0) {
+        throw "git commit failed"
+    }
     
-    if ($BumpPush) {
+    if ($PushToRemote) {
         Write-BuildStep "Pushing to remote..."
         git push
+        if ($LASTEXITCODE -ne 0) {
+            throw "git push failed"
+        }
         Write-BuildSuccess "Pushed version bump to remote"
     }
 }
@@ -1004,8 +1028,23 @@ try {
     }
     
     # Commit/push version bump only if build succeeded
-    if ((-not $SkipVersionBump) -and ($BumpCommit -or $BumpPush)) {
-        Step-CommitVersionBump
+    $isReleaseBuild = -not $SkipMSI
+    $autoReleaseCommit = $isReleaseBuild -and (-not $SkipVersionBump) -and (-not $SkipReleaseCommit)
+    $autoReleasePush = $isReleaseBuild -and (-not $SkipVersionBump) -and (-not $SkipReleasePush)
+    $shouldCommitVersion = (-not $SkipVersionBump) -and ($BumpCommit -or $BumpPush -or $autoReleaseCommit)
+
+    if ($shouldCommitVersion) {
+        $resolvedReleaseMessage = if ($ReleaseMessage) {
+            $ReleaseMessage
+        }
+        elseif ($isReleaseBuild -and (-not $BumpMessage)) {
+            "chore(release): v$($script:Version)"
+        }
+        else {
+            $BumpMessage
+        }
+
+        Step-CommitVersionBump -CommitMessage $resolvedReleaseMessage -PushToRemote:($BumpPush -or $autoReleasePush)
     }
 
     # Call release script to create GitHub release (only when MSI was built)

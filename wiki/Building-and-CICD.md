@@ -17,6 +17,22 @@ The MSI is built with [WiX Toolset v4](https://wixtoolset.org/).
 .\installer\Build-MSI.ps1 -WixBinPath "C:\Tools\wix"
 ```
 
+### Build Script Release Behavior
+
+For release builds (when MSI is enabled), `scripts/build.ps1` commits and pushes the version bump before calling `scripts/release.ps1` so GitHub release notes always include commit history.
+
+```powershell
+# Release build with default release commit message
+.\scripts\build.ps1
+
+# Override release commit message
+.\scripts\build.ps1 -ReleaseMessage "chore(release): v3.1.0 + HID fixes"
+
+# Opt out of auto release commit/push behavior
+.\scripts\build.ps1 -SkipReleaseCommit
+.\scripts\build.ps1 -SkipReleasePush
+```
+
 ### Deploy Pipeline
 
 `Deploy-Redball.ps1` automatically:
