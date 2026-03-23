@@ -257,20 +257,47 @@ function Step-RunLinting {
     [CmdletBinding()]
     param()
     Write-BuildHeader "Running PSScriptAnalyzer"
+
+    $lintRoot = if ($PSScriptRoot) { $PSScriptRoot } elseif ($currentScriptRoot) { $currentScriptRoot } else { $script:ProjectRoot }
+    if (-not (Test-Path $lintRoot)) {
+        throw "Lint path not found: $lintRoot"
+    }
     
     # Fix BOM encoding for all ps1 files in scripts directory before linting
     # This addresses the PSUseBOMForUnicodeEncodedFile rule warnings
     # Exclude the currently running script to avoid self-modification/file lock issues
     Write-HostSafe "  Fixing UTF-8 BOM encoding for scripts..." -ForegroundColor Gray
-    $scriptsToUpdate = Get-ChildItem -Path $PSScriptRoot -Filter *.ps1 -Recurse | Where-Object { $_.FullName -ne $PSCommandPath }
+    $scriptsToUpdate = Get-ChildItem -Path $lintRoot -Filter *.ps1 -Recurse | Where-Object { $_.FullName -ne $PSCommandPath }
     foreach ($scriptToUpdate in $scriptsToUpdate) {
-        $contentToFix = Get-Content -Path $scriptToUpdate.FullName -Raw
-        $contentToFix | Set-Content -Path $scriptToUpdate.FullName -Encoding utf8BOM
+        try {
+            $contentToFix = Get-Content -Path $scriptToUpdate.FullName -Raw
+            $contentToFix | Set-Content -Path $scriptToUpdate.FullName -Encoding utf8BOM
+        }
+        catch {
+            Write-Warning "Skipping BOM update for $($scriptToUpdate.FullName): $($_.Exception.Message)"
+        }
     }
     
     Import-Module PSScriptAnalyzer -Force
-    
-    $results = Invoke-ScriptAnalyzer -Path $PSScriptRoot -Severity Warning, Error
+
+    $results = @()
+    try {
+        $analysis = Invoke-ScriptAnalyzer -Path $lintRoot -Severity Warning, Error -ErrorAction Stop
+        if ($analysis) { $results += $analysis }
+    }
+    catch {
+        Write-Warning "Directory lint failed, falling back to per-file lint: $($_.Exception.Message)"
+        $lintFiles = Get-ChildItem -Path $lintRoot -Filter *.ps1 -Recurse
+        foreach ($lintFile in $lintFiles) {
+            try {
+                $fileAnalysis = Invoke-ScriptAnalyzer -Path $lintFile.FullName -Severity Warning, Error -ErrorAction Stop
+                if ($fileAnalysis) { $results += $fileAnalysis }
+            }
+            catch {
+                Write-Warning "Failed to lint $($lintFile.FullName): $($_.Exception.Message)"
+            }
+        }
+    }
     
     if ($results) {
         foreach ($result in $results) {
@@ -687,9 +714,9 @@ function Step-BuildWpfApp {
     }
 
     $manifest = @{
-        version = $Version
+        version   = $Version
         timestamp = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
-        files = $manifestFiles
+        files     = $manifestFiles
     }
 
     $manifestPath = Join-Path $publishDir "manifest.json"

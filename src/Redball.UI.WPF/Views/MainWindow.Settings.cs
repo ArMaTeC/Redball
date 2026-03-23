@@ -767,14 +767,22 @@ public partial class MainWindow
 
     private void MainInstallHidDriverBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (InterceptionInputService.Instance.InstallDriver())
+        if (InterceptionInputService.Instance.InstallDriverNoRestart())
         {
-            NotificationService.Instance.ShowInfo("Driver Installed", "Please restart your computer to finish the installation.");
-            MainInstallHidDriverBtn.Visibility = Visibility.Collapsed;
+            var ready = InterceptionInputService.Instance.IsReady || InterceptionInputService.Instance.Initialize();
+            if (ready)
+            {
+                NotificationService.Instance.ShowInfo("Driver Installed", "HID driver installed and activated without reboot.");
+                MainInstallHidDriverBtn.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                NotificationService.Instance.ShowWarning("Driver Installed", "Driver installed, but activation may still require a restart.");
+            }
         }
         else
         {
-            NotificationService.Instance.ShowError("Install Failed", "Failed to install driver. Try running Redball as Administrator.");
+            NotificationService.Instance.ShowError("Install Failed", "Failed to install driver. Please allow UAC elevation and try again.");
         }
     }
 }

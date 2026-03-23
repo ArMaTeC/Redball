@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using InputInterceptorNS;
 
@@ -125,6 +127,137 @@ public class InterceptionInputService : IDisposable
                 return false;
             }
         }
+    }
+
+    /// <summary>
+    /// Installs the Interception driver and attempts to activate it without requiring reboot
+    /// by restarting keyboard devices. Falls back gracefully if activation cannot be completed.
+    /// </summary>
+    /// <returns>True if installation completed. Activation status can be checked via IsReady.</returns>
+    public bool InstallDriverNoRestart(bool elevateIfNeeded = true)
+    {
+        try
+        {
+            if (!InputInterceptor.CheckAdministratorRights())
+            {
+                if (!elevateIfNeeded)
+                {
+                    Logger.Warning("InterceptionInputService", "Admin rights required to install driver (no-restart), but elevateIfNeeded is false.");
+                    return false;
+                }
+
+                Logger.Info("InterceptionInputService", "Attempting to elevate for no-restart driver installation");
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = Process.GetCurrentProcess().MainModule?.FileName ?? "Redball.UI.WPF.exe",
+                    Arguments = "--install-driver-no-restart",
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
+
+                try
+                {
+                    using var process = Process.Start(processInfo);
+                    process?.WaitForExit();
+                    return process?.ExitCode == 0;
+                }
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    Logger.Warning("InterceptionInputService", "User cancelled UAC elevation for no-restart install");
+                    return false;
+                }
+            }
+
+            var installOk = InstallDriver(false);
+            if (!installOk)
+            {
+                return false;
+            }
+
+            var restartedAny = TryRestartKeyboardDevices();
+            if (!restartedAny)
+            {
+                Logger.Warning("InterceptionInputService", "No keyboard devices were restarted. Reboot may still be required.");
+            }
+
+            Thread.Sleep(500);
+            var ready = Initialize();
+            Logger.Info("InterceptionInputService", ready
+                ? "Driver activated without reboot"
+                : "Driver installed but not ready after no-restart attempt (reboot may be required)");
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("InterceptionInputService", "No-restart driver installation failed", ex);
+            return false;
+        }
+    }
+
+    private bool TryRestartKeyboardDevices()
+    {
+        try
+        {
+            var enumResult = RunProcess("pnputil", "/enum-devices /class Keyboard /connected");
+            if (enumResult.ExitCode != 0)
+            {
+                Logger.Warning("InterceptionInputService", $"pnputil enum failed (exit {enumResult.ExitCode}): {enumResult.StdErr}");
+                return false;
+            }
+
+            var matches = Regex.Matches(enumResult.StdOut ?? string.Empty, @"Instance ID:\s+(.+)", RegexOptions.IgnoreCase);
+            if (matches.Count == 0)
+            {
+                Logger.Warning("InterceptionInputService", "No connected keyboard instance IDs found for restart");
+                return false;
+            }
+
+            var restarted = 0;
+            foreach (Match m in matches)
+            {
+                var instanceId = m.Groups[1].Value.Trim();
+                if (string.IsNullOrWhiteSpace(instanceId)) continue;
+
+                var restartResult = RunProcess("pnputil", $"/restart-device \"{instanceId}\"");
+                if (restartResult.ExitCode == 0)
+                {
+                    restarted++;
+                    Logger.Debug("InterceptionInputService", $"Restarted keyboard device: {instanceId}");
+                }
+                else
+                {
+                    Logger.Warning("InterceptionInputService", $"Failed to restart keyboard device {instanceId} (exit {restartResult.ExitCode})");
+                }
+            }
+
+            Logger.Info("InterceptionInputService", $"Restarted {restarted}/{matches.Count} keyboard device(s)");
+            return restarted > 0;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("InterceptionInputService", $"Keyboard device restart attempt failed: {ex.Message}");
+            return false;
+        }
+    }
+
+    private static (int ExitCode, string StdOut, string StdErr) RunProcess(string fileName, string arguments)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+
+        using var process = Process.Start(psi)!;
+        var stdout = process.StandardOutput.ReadToEnd();
+        var stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        return (process.ExitCode, stdout, stderr);
     }
 
     /// <summary>
@@ -338,9 +471,9 @@ public class InterceptionInputService : IDisposable
                 }
 
                 Logger.Info("InterceptionInputService", "Attempting to elevate for driver installation");
-                var processInfo = new System.Diagnostics.ProcessStartInfo
+                var processInfo = new ProcessStartInfo
                 {
-                    FileName = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? "Redball.UI.WPF.exe",
+                    FileName = Process.GetCurrentProcess().MainModule?.FileName ?? "Redball.UI.WPF.exe",
                     Arguments = "--install-driver",
                     UseShellExecute = true,
                     Verb = "runas"
@@ -348,7 +481,7 @@ public class InterceptionInputService : IDisposable
 
                 try
                 {
-                    using var process = System.Diagnostics.Process.Start(processInfo);
+                    using var process = Process.Start(processInfo);
                     process?.WaitForExit();
                     return process?.ExitCode == 0;
                 }
@@ -378,16 +511,16 @@ public class InterceptionInputService : IDisposable
                 }
             }
 
-            var startInfo = new System.Diagnostics.ProcessStartInfo
+            var startInfo = new ProcessStartInfo
             {
                 FileName = tempExe,
                 Arguments = "/install",
                 UseShellExecute = true,
                 CreateNoWindow = true,
-                WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
+                WindowStyle = ProcessWindowStyle.Hidden
             };
 
-            using var driverProcess = System.Diagnostics.Process.Start(startInfo);
+            using var driverProcess = Process.Start(startInfo);
             driverProcess?.WaitForExit();
             var result = driverProcess?.ExitCode == 0;
 

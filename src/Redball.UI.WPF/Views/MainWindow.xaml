@@ -664,7 +664,7 @@
                                                 <ComboBoxItem Content="Standard (SendInput)" Tag="SendInput"/>
                                                 <ComboBoxItem Content="Driver-Level (HID)" Tag="HID"/>
                                             </ComboBox>
-                                            <Button x:Name="MainInstallHidDriverBtn" Content="Install HID Driver (Requires Admin &amp; Reboot)" Style="{DynamicResource ModernButton}" Margin="0,0,0,12" Click="MainInstallHidDriverBtn_Click" Visibility="Collapsed"/>
+                                            <Button x:Name="MainInstallHidDriverBtn" Content="Install HID Driver (No-Restart Attempt)" Style="{DynamicResource ModernButton}" Margin="0,0,0,12" Click="MainInstallHidDriverBtn_Click" Visibility="Collapsed"/>
                                             <TextBlock Text="Advanced Settings" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,8"/>
                                             <TextBlock Text="Minimum Delay (ms)" FontWeight="Medium" Margin="0,8,0,4"/>
                                             <Slider x:Name="MainTypeThingMinDelaySlider" Minimum="10" Maximum="200" Value="30" TickFrequency="5" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypeThingMinDelaySlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Minimum milliseconds between keystrokes (must be less than max)."/>

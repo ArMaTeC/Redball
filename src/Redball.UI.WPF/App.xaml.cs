@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
 
 namespace Redball.UI;
 
@@ -32,6 +33,48 @@ public partial class App : Application
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         
         Services.Logger.Debug("App", "Exception handlers registered");
+    }
+
+    private static void TryApplyInstallerHidOption()
+    {
+        const string subKeyPath = @"Software\Redball\InstallerDefaults";
+        const string valueName = "InstallHidDriverNoRestart";
+
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(subKeyPath, writable: true);
+            if (key == null)
+            {
+                return;
+            }
+
+            var value = key.GetValue(valueName);
+            var enabled = value is int intVal && intVal == 1;
+            if (!enabled)
+            {
+                return;
+            }
+
+            Services.Logger.Info("App", "Installer default detected: InstallHidDriverNoRestart=1. Attempting no-restart HID install...");
+            var installOk = Services.InterceptionInputService.Instance.InstallDriverNoRestart();
+            if (installOk)
+            {
+                var ready = Services.InterceptionInputService.Instance.IsReady || Services.InterceptionInputService.Instance.Initialize();
+                Services.Logger.Info("App", ready
+                    ? "Installer-triggered HID install completed and driver is ready"
+                    : "Installer-triggered HID install completed; driver not ready yet (restart may still be required)");
+            }
+            else
+            {
+                Services.Logger.Warning("App", "Installer-triggered HID install failed or was cancelled");
+            }
+
+            key.DeleteValue(valueName, throwOnMissingValue: false);
+        }
+        catch (Exception ex)
+        {
+            Services.Logger.Warning("App", $"Failed to apply installer HID option: {ex.Message}");
+        }
     }
 
     private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -84,6 +127,15 @@ public partial class App : Application
             return;
         }
 
+        // Handle no-restart driver installation elevation
+        if (e.Args.Length > 0 && e.Args[0] == "--install-driver-no-restart")
+        {
+            Services.Logger.Info("App", "Running in elevated no-restart driver installation mode");
+            var success = Services.InterceptionInputService.Instance.InstallDriverNoRestart(false);
+            Environment.Exit(success ? 0 : 1);
+            return;
+        }
+
         Services.Logger.LogMemoryStats("App");
         
         try
@@ -113,6 +165,10 @@ public partial class App : Application
             Services.Logger.Info("App", "Loading configuration...");
             var configLoaded = Services.ConfigService.Instance.Load();
             Services.Logger.Info("App", configLoaded ? "Configuration loaded successfully" : "Using default configuration (file not found)");
+
+            // Apply one-time installer-selected HID option if present.
+            // This is set by MSI optional feature and consumed on first launch.
+            TryApplyInstallerHidOption();
 
             // Log configuration details
             var cfg = Services.ConfigService.Instance.Config;
