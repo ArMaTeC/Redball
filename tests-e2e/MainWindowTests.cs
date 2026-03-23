@@ -2,13 +2,16 @@ using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
 using FlaUI.UIA3;
 using NUnit.Framework;
+using System.IO;
+using System.Threading;
+using FlaApplication = FlaUI.Core.Application;
 
 namespace Redball.E2E.Tests;
 
 [TestFixture]
 public class MainWindowTests
 {
-    private Application? _app;
+    private FlaApplication? _app;
     private UIA3Automation? _automation;
     private Window? _mainWindow;
 
@@ -38,7 +41,7 @@ public class MainWindowTests
         }
 
         _automation = new UIA3Automation();
-        _app = Application.Launch(appPath);
+        _app = FlaApplication.Launch(appPath);
         _mainWindow = _app.GetMainWindow(_automation);
     }
 

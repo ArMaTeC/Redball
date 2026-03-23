@@ -40,6 +40,11 @@ public class InterceptionInputService : IDisposable
     [DllImport("user32.dll")]
     private static extern short VkKeyScanW(char ch);
 
+    [DllImport("user32.dll")]
+    private static extern uint MapVirtualKeyW(uint uCode, uint uMapType);
+
+    private const uint MAPVK_VK_TO_VSC = 0;
+
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint SendInput(uint nInputs, NativeINPUT[] pInputs, int cbSize);
 
@@ -183,7 +188,20 @@ public class InterceptionInputService : IDisposable
             {
                 var vk = (byte)(vkResult & 0xFF);
                 var shiftState = (byte)((vkResult >> 8) & 0xFF);
-                var keyCode = VirtualKeyToKeyCode(vk);
+
+                // Prefer layout-aware physical scan-code mapping for character typing.
+                // This avoids US-centric OEM key assumptions and preserves symbol fidelity
+                // on UK/DE/etc keyboard layouts.
+                KeyCode? keyCode = null;
+                var scan = (ushort)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+                if (scan != 0)
+                {
+                    keyCode = (KeyCode)scan;
+                }
+                else
+                {
+                    keyCode = VirtualKeyToKeyCode(vk);
+                }
 
                 if (keyCode != null)
                 {
@@ -517,6 +535,7 @@ public class InterceptionInputService : IDisposable
             0xDC => KeyCode.Backslash,       // VK_OEM_5  (\| on US, #~ on UK)
             0xDD => KeyCode.CloseBracketBrace, // VK_OEM_6  (]} on US)
             0xDE => KeyCode.Apostrophe,      // VK_OEM_7  ('" on US, #~ on UK)
+            0xDF => KeyCode.Tilde,           // VK_OEM_8  (` on UK/international layouts; map to physical OEM3 key)
             0xE2 => KeyCode.Backslash,       // VK_OEM_102 (extra key on 102-key European keyboards: \| on UK, <> on DE)
             _ => null
         };
