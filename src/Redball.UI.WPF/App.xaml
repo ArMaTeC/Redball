@@ -4,8 +4,12 @@
              xmlns:converters="clr-namespace:Redball.UI.Converters">
     <Application.Resources>
         <ResourceDictionary>
-            <!-- Theme dictionaries are loaded dynamically by ThemeManager in App.xaml.cs -->
-            <!-- Value Converters -->
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Animation styles (must be loaded before control styles) -->
+                <ResourceDictionary Source="/Themes/Animations.xaml"/>
+                <!-- Theme dictionaries are loaded dynamically by ThemeManager in App.xaml.cs -->
+                <!-- Value Converters -->
+            </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <converters:SliderValueToWidthConverter x:Key="SliderValueToWidthConverter"/>
         </ResourceDictionary>

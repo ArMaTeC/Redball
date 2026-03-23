@@ -2,17 +2,17 @@
   "files": [
     {
       "name": "Redball.UI.WPF.deps.json",
-      "hash": "4B3E75668E74901BE2235AF9FDAFD77F6CB480D12E636273C46A2FFFAD1AE52F",
+      "hash": "871C5525134E30A1B979695C2A5ED8E8A2C454FA87F36D231D33316D647AFBEF",
       "size": 8484
     },
     {
       "name": "Redball.UI.WPF.dll",
-      "hash": "B8EE719075F47B5C9251EBE8BAAE85951875440747C0E8096F71E6060C861125",
-      "size": 1441792
+      "hash": "3E48CC655904E9E7FA5A23F54F7E3E0A865318FD42489837DBA442E84D223BAE",
+      "size": 1457664
     },
     {
       "name": "Redball.UI.WPF.exe",
-      "hash": "133C7443F4C9200DAC47549896BEF62213ED0ABE5C0206BB22F3CAD46EB74392",
+      "hash": "25B7FF06CA8A5CDE0AC631471FFA30F73C4F910F0BC0CFB1AC73E1FC94D18B39",
       "size": 363008
     },
     {
@@ -71,6 +71,6 @@
       "size": 0
     }
   ],
-  "timestamp": "2026-03-23T16:15:32Z",
-  "version": "2.1.210"
+  "timestamp": "2026-03-23T17:39:31Z",
+  "version": "2.1.218"
 }

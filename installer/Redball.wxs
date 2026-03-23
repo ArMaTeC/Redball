@@ -31,7 +31,8 @@
     <!-- Add install scope selection (per-user is default) -->
     <Property Id="ALLUSERS" Value="2" />
     <Property Id="MSIINSTALLPERUSER" Value="1" />
-    <Property Id="REDBALL_USERDATA_DIR" Value="[LocalAppDataFolder]Redball\UserData" />
+    <Property Id="REDBALL_USERDATA_DIR" Secure="yes" />
+    <SetProperty Id="REDBALL_USERDATA_DIR" Value="[LocalAppDataFolder]Redball\UserData" After="CostFinalize" Sequence="first" />
 
     <!-- UserData backup/restore for upgrades -->
     <CustomAction Id="SetBackupDir" Property="REDBALL_BACKUP_DIR" Value="[TempFolder]RedballBackup_[Date][Time]" />
@@ -71,10 +72,8 @@
       <Custom Action="CleanupBackup" After="InstallFinalize" Condition="REDBALL_BACKUP_DIR AND NOT Installed" />
     </InstallExecuteSequence>
 
-    <!-- PowerShell location for custom actions -->
-    <Property Id="POWERSHELLEXE" Value="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe" />
-    
-    <Binary Id="PowerShellExe" SourceFile="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe" />
+    <!-- PowerShell executable embedded for custom actions -->
+    <Binary Id="PowerShellExe" SourceFile="C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" />
 
     <!-- UI: Use InstallDir dialog set for streamlined experience -->
     <!-- WixUI_InstallDir = Welcome, License, Install Directory, Progress, Exit -->

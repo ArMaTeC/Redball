@@ -33,7 +33,7 @@
 
             <!-- Quick Stats Section -->
             <UniformGrid Columns="3" Margin="0,0,0,24">
-                <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,0">
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="0,0,8,0">
                     <StackPanel>
                         <TextBlock Text="MEM USAGE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ForegroundSecondaryBrush}" Opacity="0.7"/>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
@@ -43,7 +43,7 @@
                     </StackPanel>
                 </Border>
                 
-                <Border Style="{DynamicResource CardStyle}" Margin="8,0,8,0">
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="8,0,8,0">
                     <StackPanel>
                         <TextBlock Text="BATTERY" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ForegroundSecondaryBrush}" Opacity="0.7"/>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
@@ -53,7 +53,7 @@
                     </StackPanel>
                 </Border>
 
-                <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,0">
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="8,0,0,0">
                     <StackPanel>
                         <TextBlock Text="UPTIME" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ForegroundSecondaryBrush}" Opacity="0.7"/>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
@@ -67,7 +67,7 @@
             <!-- Main Actions -->
             <TextBlock Text="Quick Actions" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16"/>
             <UniformGrid Columns="2" Margin="0,0,0,24">
-                <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="0,0,8,8">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -79,12 +79,12 @@
                         <StackPanel Grid.Column="1" Margin="16,0,0,0">
                             <TextBlock Text="Keep-Awake Engine" FontSize="16" FontWeight="SemiBold"/>
                             <TextBlock Text="Toggle the global keep-awake state." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
-                            <Button Content="Toggle Active" Command="{Binding ToggleActiveCommand}" Style="{DynamicResource PrimaryButton}" HorizontalAlignment="Left"/>
+                            <Button Content="Toggle Active" Command="{Binding ToggleActiveCommand}" Style="{DynamicResource AnimatedPrimaryButton}" HorizontalAlignment="Left"/>
                         </StackPanel>
                     </Grid>
                 </Border>
 
-                <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="8,0,0,8">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -96,12 +96,12 @@
                         <StackPanel Grid.Column="1" Margin="16,0,0,0">
                             <TextBlock Text="Start TypeThing" FontSize="16" FontWeight="SemiBold"/>
                             <TextBlock Text="Paste clipboard text as character-by-character typing." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
-                            <Button Content="Launch Now" Command="{Binding OpenTypeThingCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left"/>
+                            <Button Content="Launch Now" Command="{Binding OpenTypeThingCommand}" Style="{DynamicResource AnimatedModernButton}" HorizontalAlignment="Left"/>
                         </StackPanel>
                     </Grid>
                 </Border>
 
-                <Border Style="{DynamicResource CardStyle}" Margin="0,8,8,0">
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="0,8,8,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -113,12 +113,12 @@
                         <StackPanel Grid.Column="1" Margin="16,0,0,0">
                             <TextBlock Text="Pomodoro Timer" FontSize="16" FontWeight="SemiBold"/>
                             <TextBlock Text="Start a focus session to boost your productivity." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
-                            <Button Content="Open Timer" Command="{Binding OpenPomodoroCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left"/>
+                            <Button Content="Open Timer" Command="{Binding OpenPomodoroCommand}" Style="{DynamicResource AnimatedModernButton}" HorizontalAlignment="Left"/>
                         </StackPanel>
                     </Grid>
                 </Border>
 
-                <Border Style="{DynamicResource CardStyle}" Margin="8,8,0,0">
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="8,8,0,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -130,14 +130,14 @@
                         <StackPanel Grid.Column="1" Margin="16,0,0,0">
                             <TextBlock Text="System Logs" FontSize="16" FontWeight="SemiBold"/>
                             <TextBlock Text="Review application logs and diagnostic information." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
-                            <Button Content="View Logs" Command="{Binding OpenLogsCommand}" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left"/>
+                            <Button Content="View Logs" Command="{Binding OpenLogsCommand}" Style="{DynamicResource AnimatedModernButton}" HorizontalAlignment="Left"/>
                         </StackPanel>
                     </Grid>
                 </Border>
             </UniformGrid>
 
             <!-- Secondary Links -->
-            <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,0">
+            <Border Style="{DynamicResource AnimatedCardStyle}" Margin="0,0,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -148,8 +148,8 @@
                         <TextBlock Text="Customize how Redball works, manage profiles, and check for updates." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,0"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="Settings" Command="{Binding OpenSettingsCommand}" Style="{DynamicResource ModernButton}" Margin="0,0,8,0"/>
-                        <Button Content="Check Updates" Command="{Binding CheckForUpdatesCommand}" Style="{DynamicResource ModernButton}"/>
+                        <Button Content="Settings" Command="{Binding OpenSettingsCommand}" Style="{DynamicResource AnimatedModernButton}" Margin="0,0,8,0"/>
+                        <Button Content="Check Updates" Command="{Binding CheckForUpdatesCommand}" Style="{DynamicResource AnimatedModernButton}"/>
                     </StackPanel>
                 </Grid>
             </Border>

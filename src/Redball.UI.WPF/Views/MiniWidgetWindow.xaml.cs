@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Redball.UI.Services;
 
@@ -32,6 +33,45 @@ public partial class MiniWidgetWindow : Window
         _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) }; // Faster refresh for timer
         _refreshTimer.Tick += (_, _) => RefreshState();
         _refreshTimer.Start();
+
+        // Apply entrance animation
+        Loaded += OnWindowLoaded;
+    }
+
+    private void OnWindowLoaded(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // Apply scale and fade entrance animation
+            var transform = new ScaleTransform(0.9, 0.9);
+            RenderTransform = transform;
+            RenderTransformOrigin = new Point(0.5, 0.5);
+            Opacity = 0;
+
+            var scaleAnimation = new DoubleAnimation
+            {
+                From = 0.9,
+                To = 1.0,
+                Duration = TimeSpan.FromMilliseconds(250),
+                EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.3 }
+            };
+
+            var fadeAnimation = new DoubleAnimation
+            {
+                From = 0,
+                To = 1,
+                Duration = TimeSpan.FromMilliseconds(200),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            transform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
+            transform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
+            BeginAnimation(OpacityProperty, fadeAnimation);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("MiniWidget", $"Failed to apply entrance animation: {ex.Message}");
+        }
     }
 
     private void PlayHeartbeatEffect()
@@ -241,6 +281,7 @@ public partial class MiniWidgetWindow : Window
         _refreshTimer.Stop();
         KeepAwakeService.Instance.ActiveStateChanged -= _activeStateChangedHandler;
         KeepAwakeService.Instance.HeartbeatTick -= _heartbeatHandler;
+        Loaded -= OnWindowLoaded;
         SavePosition();
         base.OnClosed(e);
     }

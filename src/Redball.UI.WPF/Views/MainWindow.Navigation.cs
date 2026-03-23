@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media.Animation;
 using Microsoft.Win32;
 using Redball.UI.Services;
 
@@ -15,6 +17,9 @@ namespace Redball.UI.Views;
 /// </summary>
 public partial class MainWindow
 {
+    // Track the currently visible section for animations
+    private string? _currentSection;
+
     private void LoadEmbeddedDashboardContent()
     {
         try
@@ -160,16 +165,89 @@ public partial class MainWindow
             return;
         }
 
-        HomePanel.Visibility = section == "Home" ? Visibility.Visible : Visibility.Collapsed;
-        AnalyticsPanel.Visibility = section == "Analytics" ? Visibility.Visible : Visibility.Collapsed;
-        MetricsPanel.Visibility = section == "Metrics" ? Visibility.Visible : Visibility.Collapsed;
-        DiagnosticsPanel.Visibility = section == "Diagnostics" ? Visibility.Visible : Visibility.Collapsed;
-        SettingsPanel.Visibility = section == "Settings" ? Visibility.Visible : Visibility.Collapsed;
-        BehaviorPanel.Visibility = section == "Behavior" ? Visibility.Visible : Visibility.Collapsed;
-        SmartFeaturesPanel.Visibility = section == "SmartFeatures" ? Visibility.Visible : Visibility.Collapsed;
-        TypeThingPanel.Visibility = section == "TypeThing" ? Visibility.Visible : Visibility.Collapsed;
-        PomodoroPanel.Visibility = section == "Pomodoro" ? Visibility.Visible : Visibility.Collapsed;
-        UpdatesPanel.Visibility = section == "Updates" ? Visibility.Visible : Visibility.Collapsed;
+        // Don't animate if we're already on this section
+        if (_currentSection == section)
+            return;
+
+        // Get all panels
+        var panels = new (string name, UIElement panel)[]
+        {
+            ("Home", HomePanel),
+            ("Analytics", AnalyticsPanel),
+            ("Metrics", MetricsPanel),
+            ("Diagnostics", DiagnosticsPanel),
+            ("Settings", SettingsPanel),
+            ("Behavior", BehaviorPanel),
+            ("SmartFeatures", SmartFeaturesPanel),
+            ("TypeThing", TypeThingPanel),
+            ("Pomodoro", PomodoroPanel),
+            ("Updates", UpdatesPanel)
+        };
+
+        // Get the target panel to show
+        var targetPanel = panels.FirstOrDefault(p => p.name == section).panel;
+        if (targetPanel == null) return;
+
+        // Hide all panels with fade out animation
+        foreach (var item in panels)
+        {
+            var panel = item.panel;
+            if (panel.Visibility == Visibility.Visible)
+            {
+                // Apply fade out animation
+                var fadeOut = new DoubleAnimation
+                {
+                    From = 1,
+                    To = 0,
+                    Duration = TimeSpan.FromMilliseconds(100),
+                    EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+                };
+                
+                fadeOut.Completed += (s, e) =>
+                {
+                    panel.Visibility = Visibility.Collapsed;
+                    panel.Opacity = 0;
+                };
+                
+                panel.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+            }
+            else
+            {
+                panel.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        // Show the target panel with fade in and slide animation
+        targetPanel.Visibility = Visibility.Visible;
+        targetPanel.Opacity = 0;
+
+        // Apply transform for slide animation
+        var transform = new System.Windows.Media.TranslateTransform(0, 15);
+        targetPanel.RenderTransform = transform;
+
+        // Fade in animation
+        var fadeIn = new DoubleAnimation
+        {
+            From = 0,
+            To = 1,
+            Duration = TimeSpan.FromMilliseconds(250),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+
+        // Slide in animation
+        var slideIn = new DoubleAnimation
+        {
+            From = 15,
+            To = 0,
+            Duration = TimeSpan.FromMilliseconds(300),
+            EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.2 }
+        };
+
+        // Apply animations
+        targetPanel.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+        transform.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty, slideIn);
+
+        _currentSection = section;
 
         if (HomeNavButton != null && section == "Home" && HomeNavButton.IsChecked != true) HomeNavButton.IsChecked = true;
         if (AnalyticsNavButton != null && section == "Analytics" && AnalyticsNavButton.IsChecked != true) AnalyticsNavButton.IsChecked = true;

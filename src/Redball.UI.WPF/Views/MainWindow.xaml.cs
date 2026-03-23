@@ -2,6 +2,8 @@ using System;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Hardcodet.Wpf.TaskbarNotification;
 using Redball.UI.Services;
@@ -84,10 +86,56 @@ public partial class MainWindow : Window
             RefreshTemplateCombo();
             StartAutoUpdateCheck();
             Logger.Info("MainWindow", "Initialization complete");
+
+            // Apply window entrance animation
+            ApplyWindowEntranceAnimation();
         }
         catch (Exception ex)
         {
             Logger.Error("MainWindow", "Failed during window initialization", ex);
+        }
+    }
+
+    private void ApplyWindowEntranceAnimation()
+    {
+        try
+        {
+            // Find the main content border for animation
+            if (Content is FrameworkElement rootElement)
+            {
+                // Set initial transform state
+                var transform = new ScaleTransform(0.95, 0.95);
+                rootElement.RenderTransform = transform;
+                rootElement.RenderTransformOrigin = new Point(0.5, 0.5);
+                rootElement.Opacity = 0;
+
+                // Create scale animation
+                var scaleAnimation = new DoubleAnimation
+                {
+                    From = 0.95,
+                    To = 1.0,
+                    Duration = TimeSpan.FromMilliseconds(300),
+                    EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.3 }
+                };
+
+                // Create fade animation
+                var fadeAnimation = new DoubleAnimation
+                {
+                    From = 0,
+                    To = 1,
+                    Duration = TimeSpan.FromMilliseconds(250),
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
+
+                // Apply animations
+                transform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
+                transform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
+                rootElement.BeginAnimation(OpacityProperty, fadeAnimation);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("MainWindow", $"Failed to apply entrance animation: {ex.Message}");
         }
     }
 

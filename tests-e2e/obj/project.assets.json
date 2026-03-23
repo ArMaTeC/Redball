@@ -815,7 +815,7 @@
           }
         }
       },
-      "Redball.UI.WPF/2.1.210": {
+      "Redball.UI.WPF/2.1.218": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
@@ -1585,7 +1585,7 @@
           }
         }
       },
-      "Redball.UI.WPF/2.1.210": {
+      "Redball.UI.WPF/2.1.218": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
@@ -2805,7 +2805,7 @@
         "version.txt"
       ]
     },
-    "Redball.UI.WPF/2.1.210": {
+    "Redball.UI.WPF/2.1.218": {
       "type": "project",
       "path": "../src/Redball.UI.WPF/Redball.UI.WPF.csproj",
       "msbuildProject": "../src/Redball.UI.WPF/Redball.UI.WPF.csproj"
@@ -2820,7 +2820,7 @@
       "NUnit.Analyzers >= 3.10.0",
       "NUnit3TestAdapter >= 4.5.0",
       "NUnitLite >= 4.0.1",
-      "Redball.UI.WPF >= 2.1.210"
+      "Redball.UI.WPF >= 2.1.218"
     ]
   },
   "packageFolders": {
@@ -2828,7 +2828,7 @@
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
-    "version": "2.1.210",
+    "version": "2.1.218",
     "restore": {
       "projectUniqueName": "C:\\Users\\karll\\Desktop\\Redball\\tests-e2e\\Redball.E2E.Tests.csproj",
       "projectName": "Redball.E2E.Tests",

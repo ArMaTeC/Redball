@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Win32;
 
 namespace Redball.UI.Services;
 
@@ -30,6 +31,8 @@ public class ConfigService : IConfigService
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "Redball.json");
     private static readonly string AppDataConfigPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Redball", "Redball.json");
+    private const string RegistryConfigSubKey = @"Software\Redball\UserData";
+    private const string RegistryConfigValueName = "ConfigPayload";
 
     private static readonly JsonSerializerOptions ReadOptions = new()
     {
@@ -64,6 +67,41 @@ public class ConfigService : IConfigService
         Logger.Verbose("ConfigService", "Instance created (lazy initialization)");
     }
 
+    private RedballConfig? TryLoadFromRegistry()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(RegistryConfigSubKey);
+            var payload = key?.GetValue(RegistryConfigValueName) as string;
+            if (string.IsNullOrWhiteSpace(payload))
+            {
+                return null;
+            }
+
+            string json;
+            if (payload.StartsWith(EncryptedHeader, StringComparison.Ordinal))
+            {
+                json = DpapiDecrypt(payload[EncryptedHeader.Length..]);
+            }
+            else
+            {
+                json = payload;
+            }
+
+            var config = JsonSerializer.Deserialize<RedballConfig>(json, ReadOptions);
+            if (config != null)
+            {
+                Logger.Info("ConfigService", "Configuration loaded from registry");
+            }
+            return config;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("ConfigService", $"Failed to load config from registry: {ex.Message}");
+            return null;
+        }
+    }
+
 
 
     public bool Load(string? path = null)
@@ -96,47 +134,57 @@ public class ConfigService : IConfigService
         }
         else
         {
-            // Normal Launch: DiscoveryScan
-            var candidates = GetConfigPathCandidates(null);
-            DateTime latestTime = DateTime.MinValue;
-
-            foreach (var candidate in candidates)
+            var registryConfig = TryLoadFromRegistry();
+            if (registryConfig != null)
             {
-                if (!File.Exists(candidate)) continue;
-                
-                try
+                bestConfig = registryConfig;
+                bestPath = $"HKCU\\{RegistryConfigSubKey} ({RegistryConfigValueName})";
+                ConfigPath = LocalAppDataConfigPath;
+            }
+            else
+            {
+                // Fallback: file discovery scan
+                var candidates = GetConfigPathCandidates(null);
+                DateTime latestTime = DateTime.MinValue;
+
+                foreach (var candidate in candidates)
                 {
-                    var cfgCandidate = TryLoadFromFile(candidate) ?? TryRecoverFromFile(candidate);
+                    if (!File.Exists(candidate)) continue;
                     
-                    if (cfgCandidate != null)
+                    try
                     {
-                        var writeTime = File.GetLastWriteTime(candidate);
-                        bool isBetter = false;
+                        var cfgCandidate = TryLoadFromFile(candidate) ?? TryRecoverFromFile(candidate);
+                        
+                        if (cfgCandidate != null)
+                        {
+                            var writeTime = File.GetLastWriteTime(candidate);
+                            bool isBetter = false;
 
-                        if (bestConfig == null)
-                        {
-                            isBetter = true;
-                        }
-                        else if (!cfgCandidate.FirstRun && bestConfig.FirstRun)
-                        {
-                            isBetter = true;
-                        }
-                        else if (cfgCandidate.FirstRun == bestConfig.FirstRun)
-                        {
-                            if (writeTime > latestTime) isBetter = true;
-                        }
+                            if (bestConfig == null)
+                            {
+                                isBetter = true;
+                            }
+                            else if (!cfgCandidate.FirstRun && bestConfig.FirstRun)
+                            {
+                                isBetter = true;
+                            }
+                            else if (cfgCandidate.FirstRun == bestConfig.FirstRun)
+                            {
+                                if (writeTime > latestTime) isBetter = true;
+                            }
 
-                        if (isBetter)
-                        {
-                            bestConfig = cfgCandidate;
-                            bestPath = candidate;
-                            latestTime = writeTime;
+                            if (isBetter)
+                            {
+                                bestConfig = cfgCandidate;
+                                bestPath = candidate;
+                                latestTime = writeTime;
+                            }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Logger.Warning("ConfigService", $"Failed to scan candidate {candidate}: {ex.Message}");
+                    catch (Exception ex)
+                    {
+                        Logger.Warning("ConfigService", $"Failed to scan candidate {candidate}: {ex.Message}");
+                    }
                 }
             }
         }
@@ -358,6 +406,20 @@ public class ConfigService : IConfigService
             {
                 payload = EncryptedHeader + DpapiEncrypt(json);
                 Logger.Debug("ConfigService", "Config encrypted with DPAPI");
+            }
+
+            if (!IsTestMode)
+            {
+                try
+                {
+                    using var key = Registry.CurrentUser.CreateSubKey(RegistryConfigSubKey);
+                    key?.SetValue(RegistryConfigValueName, payload, RegistryValueKind.String);
+                    Logger.Debug("ConfigService", "Configuration persisted to registry");
+                }
+                catch (Exception regEx)
+                {
+                    Logger.Warning("ConfigService", $"Failed to save config to registry: {regEx.Message}");
+                }
             }
 
             // Write to temp file first, then rename for atomic save

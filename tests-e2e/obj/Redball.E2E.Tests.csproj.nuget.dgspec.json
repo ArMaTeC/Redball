@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\Users\\karll\\Desktop\\Redball\\src\\Redball.UI.WPF\\Redball.UI.WPF.csproj": {
-      "version": "2.1.210",
+      "version": "2.1.218",
       "restore": {
         "projectUniqueName": "C:\\Users\\karll\\Desktop\\Redball\\src\\Redball.UI.WPF\\Redball.UI.WPF.csproj",
         "projectName": "Redball.UI.WPF",
@@ -112,7 +112,7 @@
       }
     },
     "C:\\Users\\karll\\Desktop\\Redball\\tests-e2e\\Redball.E2E.Tests.csproj": {
-      "version": "2.1.210",
+      "version": "2.1.218",
       "restore": {
         "projectUniqueName": "C:\\Users\\karll\\Desktop\\Redball\\tests-e2e\\Redball.E2E.Tests.csproj",
         "projectName": "Redball.E2E.Tests",

@@ -7,7 +7,7 @@
   "targets": {
     ".NETCoreApp,Version=v8.0": {},
     ".NETCoreApp,Version=v8.0/win-x64": {
-      "Redball.E2E.Tests/2.1.210": {
+      "Redball.E2E.Tests/2.1.218": {
         "dependencies": {
           "FlaUI.Core": "4.0.0",
           "FlaUI.UIA3": "4.0.0",
@@ -16,7 +16,7 @@
           "NUnit.Analyzers": "3.10.0",
           "NUnit3TestAdapter": "4.5.0",
           "NUnitLite": "4.0.1",
-          "Redball.UI.WPF": "2.1.210"
+          "Redball.UI.WPF": "2.1.218"
         },
         "runtime": {
           "Redball.E2E.Tests.dll": {}
@@ -485,7 +485,7 @@
           "System.Drawing.Common": "5.0.2"
         }
       },
-      "Redball.UI.WPF/2.1.210": {
+      "Redball.UI.WPF/2.1.218": {
         "dependencies": {
           "CommunityToolkit.Mvvm": "8.2.2",
           "Hardcodet.NotifyIcon.Wpf": "1.1.0",
@@ -498,15 +498,15 @@
         },
         "runtime": {
           "Redball.UI.WPF.dll": {
-            "assemblyVersion": "2.1.210.0",
-            "fileVersion": "2.1.210.0"
+            "assemblyVersion": "2.1.218.0",
+            "fileVersion": "2.1.218.0"
           }
         }
       }
     }
   },
   "libraries": {
-    "Redball.E2E.Tests/2.1.210": {
+    "Redball.E2E.Tests/2.1.218": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -756,7 +756,7 @@
       "path": "system.windows.extensions/5.0.0",
       "hashPath": "system.windows.extensions.5.0.0.nupkg.sha512"
     },
-    "Redball.UI.WPF/2.1.210": {
+    "Redball.UI.WPF/2.1.218": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
