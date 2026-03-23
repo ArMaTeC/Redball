@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/ArMaTeC/Redball/ci.yml?label=CI)](https://github.com/ArMaTeC/Redball/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/actions/workflow/status/ArMaTeC/Redball/release.yml?label=Release)](https://github.com/ArMaTeC/Redball/actions/workflows/release.yml)
+[![VirusTotal](https://img.shields.io/github/actions/workflow/status/ArMaTeC/Redball/virustotal.yml?label=VirusTotal&logo=virustotal&color=green)](https://github.com/ArMaTeC/Redball/actions/workflows/virustotal.yml)
 [![Signed](https://img.shields.io/badge/Code_Signed-SHA256-success.svg)](#code-signing)
 
 > A system tray utility to prevent Windows from sleeping, with style.

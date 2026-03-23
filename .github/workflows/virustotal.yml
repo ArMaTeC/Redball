@@ -22,6 +22,8 @@ permissions:
 
 env:
   VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
+  # Opt into Node.js 24 to suppress deprecation warnings until actions are updated
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   scan:
@@ -35,23 +37,47 @@ jobs:
 
     - name: Download artifacts from triggering workflow
       if: github.event_name == 'workflow_run'
-      uses: actions/download-artifact@v5
-      with:
-        path: ./artifacts
-        pattern: Redball-v*
-        merge-multiple: false
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        run-id: ${{ github.event.workflow_run.id }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        mkdir -p ./artifacts
+        run_id="${{ github.event.workflow_run.id }}"
+        echo "Downloading artifacts from run $run_id"
+        
+        # List artifacts from the triggering workflow
+        artifacts=$(gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts --jq '.artifacts[] | select(.name | startswith("Redball-v")) | .id')
+        
+        for artifact_id in $artifacts; do
+          name=$(gh api repos/${{ github.repository }}/actions/artifacts/$artifact_id --jq '.name')
+          echo "Downloading artifact: $name (ID: $artifact_id)"
+          gh api repos/${{ github.repository }}/actions/artifacts/$artifact_id/zip > "./artifacts/$name.zip"
+          unzip -q "./artifacts/$name.zip" -d "./artifacts/$name" || true
+        done
+        
+        ls -la ./artifacts/
 
     - name: Download artifacts via manual input
       if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_id != ''
-      uses: actions/download-artifact@v5
-      with:
-        path: ./artifacts
-        pattern: Redball-v*
-        merge-multiple: false
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        run-id: ${{ github.event.inputs.run_id }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        mkdir -p ./artifacts
+        run_id="${{ github.event.inputs.run_id }}"
+        echo "Downloading artifacts from run $run_id"
+        
+        # List artifacts from the specified workflow run
+        artifacts=$(gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts --jq '.artifacts[] | select(.name | startswith("Redball-v")) | .id')
+        
+        for artifact_id in $artifacts; do
+          name=$(gh api repos/${{ github.repository }}/actions/artifacts/$artifact_id --jq '.name')
+          echo "Downloading artifact: $name (ID: $artifact_id)"
+          gh api repos/${{ github.repository }}/actions/artifacts/$artifact_id/zip > "./artifacts/$name.zip"
+          unzip -q "./artifacts/$name.zip" -d "./artifacts/$name" || true
+        done
+        
+        ls -la ./artifacts/
 
     - name: Setup Python
       uses: actions/setup-python@v5
