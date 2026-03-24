@@ -268,9 +268,84 @@ Plugin loading and management via `IRedballPlugin` interface.
 
 ---
 
+---
+
+### InterceptionInputService
+
+Provides driver-level keyboard input simulation via the Interception driver for RDP compatibility.
+
+**Properties:**
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `IsDriverInstalled` | bool | Whether the Interception driver is detected |
+| `IsReady` | bool | Whether service is ready to send keystrokes |
+| `LastErrorSummary` | string | Last initialization or runtime error |
+
+**Methods:**
+
+| Method | Parameters | Description |
+| --- | --- | --- |
+| `Initialize()` | - | Initialize the driver and keyboard hook |
+| `SendCharacter(char ch)` | `ch` | Type a character at the driver level |
+| `InstallDriver(bool elev)` | `elev` | Install driver (system reboot required) |
+| `UninstallDriver(bool elev)` | `elev` | Uninstall driver |
+
+---
+
+### CalendarIntegrationService
+
+Auto-activates during meetings based on local JSON calendar data.
+
+**Methods:**
+
+| Method | Returns | Description |
+| --- | --- | --- |
+| `LoadEvents()` | void | Reload events from `calendar.json` |
+| `GetStatusText()` | string | Get current meeting or next event info |
+
+---
+
+### CloudAnalyticsService
+
+Opt-in remote analytics collection and cohort analysis.
+
+---
+
+### DataExportService
+
+GDPR-style data bundling.
+
+**Methods:**
+
+| Method | Parameters | Description |
+| --- | --- | --- |
+| `ExportAll(string path)` | `path` | Bundle all data into a ZIP archive |
+
+---
+
+### TemplateService
+
+Manages named text templates for TypeThing.
+
+---
+
 ### TextToSpeechService
 
 Text-to-speech for TypeThing feature.
+
+---
+
+### SecurityService
+
+Provides application integrity checks, Authenticode verification, and SBOM generation.
+
+**Methods:**
+
+| Method | Parameters | Description |
+| --- | --- | --- |
+| `VerifyAuthenticodeSignature(string path)` | `path` | Verify file digital signature |
+| `GenerateSBOM()` | - | Generate SPDX 2.3 SBOM |
 
 ---
 

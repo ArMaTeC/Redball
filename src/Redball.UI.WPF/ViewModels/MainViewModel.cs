@@ -24,6 +24,7 @@ public class MainViewModel : ViewModelBase
     private readonly KeepAwakeService _keepAwake;
     private readonly DispatcherTimer _statusBarTimer;
     private readonly BatteryMonitorService _batteryMonitor = new();
+    private CommandPaletteViewModel? _palette;
 
     public bool PreventDisplaySleep
     {
@@ -120,7 +121,63 @@ public class MainViewModel : ViewModelBase
         _statusBarTimer.Tick += (_, _) => UpdateStatusBar();
         _statusBarTimer.Start();
         
+        InitializePalette();
+        
         Logger.Info("MainViewModel", "Commands initialized");
+    }
+
+    public CommandPaletteViewModel? Palette
+    {
+        get => _palette;
+        set => SetProperty(ref _palette, value);
+    }
+
+    private void InitializePalette()
+    {
+        var commands = new List<PaletteCommand>
+        {
+            new PaletteCommand { Name = "Toggle Keep Awake", Description = "Turn keep-awake ON or OFF", Icon = "\uE708", Action = () => ToggleActive() },
+            new PaletteCommand { Name = "Enable/Disable Display Sleep", Description = "Allow or prevent monitor sleep", Icon = "\uE7F4", Action = () => ToggleDisplaySleep() },
+            new PaletteCommand { Name = "Toggle Heartbeat (F15)", Description = "Simulate F15 keypresses", Icon = "\uE945", Action = () => ToggleHeartbeat() },
+            new PaletteCommand { Name = "Open Settings", Description = "View and modify Redball settings", Icon = "\uE713", Action = () => OpenSettings() },
+            new PaletteCommand { Name = "Open Diagnostics", Description = "System and HID diagnostics", Icon = "\uEBE1", Action = () => OpenDiagnostics() },
+            new PaletteCommand { Name = "Exit Application", Description = "Close Redball completely", Icon = "\uE711", Action = () => ExitApplication() }
+        };
+
+        // Load Custom Commands from Config
+        foreach (var cmd in ConfigService.Instance.Config.CustomCommands)
+        {
+            commands.Add(new PaletteCommand 
+            { 
+                Name = cmd.Name, 
+                Description = cmd.Description, 
+                Icon = cmd.Icon, 
+                Action = () => ExecuteCustomCommand(cmd) 
+            });
+        }
+
+        Palette = new CommandPaletteViewModel(commands);
+    }
+
+    private void ExecuteCustomCommand(CustomCommandMetadata cmd)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(cmd.Command)) return;
+
+            Logger.Info("MainViewModel", $"Executing custom command: {cmd.Name} ({cmd.Command})");
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = cmd.Command,
+                Arguments = cmd.Arguments,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainViewModel", $"Failed to execute custom command {cmd.Name}", ex);
+            NotificationService.Instance.ShowError("Command Failed", $"Could not execute '{cmd.Name}': {ex.Message}");
+        }
     }
 
     /// <summary>

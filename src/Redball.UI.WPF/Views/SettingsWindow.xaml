@@ -72,6 +72,9 @@
                         <RadioButton x:Name="PrivacyTab" Content="Privacy"
                                     Style="{DynamicResource NavRadioButton}"
                                     Checked="Tab_Checked"/>
+                        <RadioButton x:Name="CustomCommandsTab" Content="Palette"
+                                    Style="{DynamicResource NavRadioButton}"
+                                    Checked="Tab_Checked"/>
                         <RadioButton x:Name="AboutTab" Content="About"
                                     Style="{DynamicResource NavRadioButton}"
                                     Checked="Tab_Checked"/>
@@ -273,6 +276,51 @@
                                       Margin="0,0,0,8" TextWrapping="Wrap"/>
                             <Button Content="Export All My Data" Style="{DynamicResource PrimaryButton}"
                                    HorizontalAlignment="Left" Click="ExportAllDataButton_Click"/>
+                        </StackPanel>
+
+                        <!-- Palette / Custom Commands Tab -->
+                        <StackPanel x:Name="CustomCommandsPanel" Visibility="Collapsed">
+                            <TextBlock Text="Command Palette Customization" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Add custom shortcuts to the Ctrl+Shift+P menu." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+
+                            <ItemsControl x:Name="CustomCommandsList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding Description}" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Content="&#xE74D;" FontFamily="Segoe Fluent Icons"
+                                                       Style="{DynamicResource ModernButton}" Width="32" Height="32"
+                                                       Click="RemoveCustomCommand_Click" Tag="{Binding}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Border Style="{DynamicResource CardStyle}" Margin="0,8,0,0" Background="{DynamicResource SurfaceBrush}">
+                                <StackPanel>
+                                    <TextBlock Text="Add New Command" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                    <TextBox x:Name="NewCmdName" Tag="Command Name" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"/>
+                                    <TextBox x:Name="NewCmdDesc" Tag="Description" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"/>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="NewCmdPath" Tag="Path or URL" Style="{DynamicResource ModernTextBox}"/>
+                                        <Button Grid.Column="1" Content="..." Style="{DynamicResource ModernButton}" Margin="8,0,0,0" Click="BrowseCommand_Click"/>
+                                    </Grid>
+                                    <Button Content="Add to Palette" Style="{DynamicResource PrimaryButton}" HorizontalAlignment="Right" Click="AddCustomCommand_Click"/>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
                         <!-- About Tab -->

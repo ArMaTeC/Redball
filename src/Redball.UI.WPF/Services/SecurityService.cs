@@ -203,6 +203,7 @@ public class SecurityService
     {
         try
         {
+            if (!File.Exists(filePath)) return string.Empty;
             using var stream = File.OpenRead(filePath);
             using var sha256 = SHA256.Create();
             var hash = sha256.ComputeHash(stream);
@@ -213,6 +214,36 @@ public class SecurityService
             Logger.Error("SecurityService", $"Failed to compute hash for {filePath}", ex);
             return string.Empty;
         }
+    }
+
+    /// <summary>
+    /// Computes SHA256 hash of a string.
+    /// </summary>
+    public static string ComputeStringHash(string input)
+    {
+        try
+        {
+            var bytes = Encoding.UTF8.GetBytes(input);
+            using var sha256 = SHA256.Create();
+            var hash = sha256.ComputeHash(bytes);
+            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("SecurityService", "Failed to compute string hash", ex);
+            return string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Verifies if a configuration file has been tampered with.
+    /// </summary>
+    public static bool VerifyConfigIntegrity(string json, string? storedSignature)
+    {
+        if (string.IsNullOrEmpty(storedSignature)) return true; // Legacy support or first run
+
+        var computed = ComputeStringHash(json);
+        return string.Equals(computed, storedSignature, StringComparison.OrdinalIgnoreCase);
     }
 }
 

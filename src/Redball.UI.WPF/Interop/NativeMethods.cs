@@ -116,4 +116,21 @@ internal static class NativeMethods
         public uint cbSize;
         public uint dwTime;
     }
+
+    // --- DWM Theming (dwmapi.dll) ---
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int attrSize);
+
+    public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    public const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
+
+    public enum DWM_SYSTEMBACKDROP_TYPE
+    {
+        DWMSBT_AUTO = 0,
+        DWMSBT_NONE = 1,
+        DWMSBT_MAINWINDOW = 2, // Mica
+        DWMSBT_TRANSIENTWINDOW = 3, // Acrylic
+        DWMSBT_TABBEDWINDOW = 4 // Mica Alt
+    }
 }

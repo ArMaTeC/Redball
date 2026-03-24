@@ -128,4 +128,22 @@ public class RedballConfig
 
     // Config encryption (DPAPI, current-user scope)
     public bool EncryptConfig { get; set; }
+
+    // Integrity signature (SHA256 of the JSON without this property)
+    public string? ConfigSignature { get; set; }
+    
+    // Salt used for unique device hashing if needed
+    public string? ConfigSalt { get; set; }
+
+    // Custom Commands for Palette
+    public List<CustomCommandMetadata> CustomCommands { get; set; } = new();
+}
+
+public class CustomCommandMetadata
+{
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string Command { get; set; } = ""; // Path or URL
+    public string Arguments { get; set; } = "";
+    public string Icon { get; set; } = "\uE71D"; // Default Segoe Icon (Generic)
 }

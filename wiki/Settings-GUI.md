@@ -50,6 +50,13 @@ The settings are organized into dedicated sections accessible via the left navig
 | Typing Speed (ms per char) | Slider (10–500) | `TypeThingMinDelayMs` / `TypeThingMaxDelayMs` | Character typing delay range |
 | Add random pauses | CheckBox | `TypeThingAddRandomPauses` | Insert natural-feeling random delays |
 | Type newlines as Enter key | CheckBox | `TypeThingTypeNewlines` | Send Enter key for line breaks |
+| **Input Method** | Dropdown | `TypeThingInputMode` | **Standard (SendInput)** or **Driver-Level (HID)** for Remote Desktop |
+| HID Safe Mode | CheckBox | `TypeThingHidSafeMode` | **Emergency safety**: Forces SendInput-only, disables HID typing |
+| Install/Uninstall HID Driver | Button | — | One-click driver management with confirmation dialogs |
+| Reset HID Stack | Button | — | Emergency recovery if keyboard becomes unresponsive |
+| Emergency Release Keyboard (HID) | Button | — | Immediately releases HID resources and stops typing |
+| HID Status Indicator | Visual + Text | — | Live status: Ready / Not Ready / Driver: Installed or Not Installed |
+| Last refresh / Next refresh | Detail text | — | Diagnostics: timestamps, last action, init failures, errors |
 
 ### Pomodoro Tab
 

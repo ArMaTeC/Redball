@@ -970,6 +970,9 @@
                 </Grid>
             </Border>
         </Grid>
+        
+        <views:CommandPaletteView DataContext="{Binding Palette}" 
+                                  Panel.ZIndex="1000"/>
     </Grid>
     </Border>
 </Window>

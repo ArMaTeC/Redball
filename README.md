@@ -43,6 +43,7 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 - **App-Specific Rules** — Define apps that should keep awake or trigger a pause
 - **Power Plan Auto-Switch** — Automatically switch Windows power plan when Redball activates
 - **WiFi-Based Profiles** — Switch configuration profiles based on the connected WiFi network
+- **Calendar Integration** — Auto-activate during meetings from local JSON calendar
 - **Scheduled Restart Reminder** — Notify (or auto-restart) after a configurable number of days uptime
 - **Session Restore** — Saves state on exit, restores on next startup
 - **Singleton Instance** — Named mutex prevents multiple instances
@@ -63,12 +64,13 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 - **Localization (i18n)** — English, Spanish, French, German, and Blade Runner theme
 - **Auto-Updater** — Automatic background update checks with configurable interval, or manual check from GitHub Releases
 - **Code Signing** — EXE and MSI signed with SHA-256 certificate via `signtool` in CI
-- **TypeThing — Clipboard Typer** — Simulates human-like typing of clipboard contents via global hotkeys, with optional TTS
+- **TypeThing — Clipboard Typer** — Simulates human-like typing of clipboard contents via global hotkeys, with optional TTS and Driver-Level (HID) support
 - **Analytics Dashboard** — Built-in session tracking, feature adoption metrics, and CSV/JSON export
-- **Mini Widget** — Floating mini widget window for quick status and controls
+- **Mini Widget** — Floating mini widget window for quick status and controls with customizable presets
 - **Onboarding Tutorial** — Interactive first-run tutorial for new users
 - **Local Web API** — Optional REST API for remote control and integration (configurable port)
 - **Plugin System** — Extensible plugin interface for custom functionality
+- **Data Export** — GDPR-style user data export (config, analytics, session, logs)
 - **Health Check Service** — Self-monitoring and diagnostics
 - **MSI Installer** — WiX v4 installer with branded UI, shortcuts, and post-install launch
 - **CI/CD** — GitHub Actions with unit tests, PSScriptAnalyzer lint, WPF build, security scan, and GitHub Release creation
@@ -146,7 +148,8 @@ Settings are stored in `%LocalAppData%\Redball\UserData\Redball.json`. A default
     "ThermalThreshold": 85,
     "AutoUpdateCheckEnabled": true,
     "AutoUpdateCheckIntervalMinutes": 120,
-    "UpdateChannel": "stable"
+    "UpdateChannel": "stable",
+    "EncryptConfig": false
 }
 ```
 
@@ -248,6 +251,8 @@ Settings are stored in `%LocalAppData%\Redball\UserData\Redball.json`. A default
 | `EnablePerformanceMetrics` | Track CPU, memory, and handle metrics | `false` |
 | `WebApiEnabled` | Enable local REST API for remote control | `false` |
 | `WebApiPort` | Port for the local Web API | `48080` |
+| `EncryptConfig` | Encrypt Redball.json with DPAPI | `false` |
+| `MiniWidgetPreset` | Floating widget preset (`Focus`, `Meeting`, `BatterySafe`) | `Custom` |
 
 ## Usage
 
@@ -297,6 +302,9 @@ The WPF application supports the following command-line arguments:
 | -------- | ----------- |
 | `-minimized` | Start minimized to system tray |
 | `-config <path>` | Specify a custom config file path |
+| `--install-driver` | Install Interception driver and prompt reboot |
+| `--install-driver-no-restart` | Install and attempt to restart HIDs |
+| `--uninstall-driver` | Uninstall Interception driver |
 | `-help` | Show help information |
 
 ## Settings GUI
@@ -332,6 +340,7 @@ Redball v3.0 is implemented as a pure C# WPF application. The core functionality
 | `IdleDetectionService` | User idle detection via `GetLastInputInfo` |
 | `ScheduleService` | Time/day-based scheduled activation |
 | `PresentationModeService` | PowerPoint/Teams/Windows presentation detection |
+| `CalendarIntegrationService` | JSON calendar meeting auto-activation |
 | `PomodoroService` | Focus/break cycle timer |
 | `ProcessWatcherService` | Auto-activate when target process is running |
 | `SessionLockService` | Pause on screen lock |
@@ -341,21 +350,18 @@ Redball v3.0 is implemented as a pure C# WPF application. The core functionality
 | `ScheduledRestartService` | Uptime-based restart reminders |
 | `SessionStateService` | Save/restore session state |
 | `SessionStatsService` | Session statistics tracking |
-| `StartupService` | Windows startup registration (Registry Run key) |
-| `SingletonService` | Named mutex for single instance enforcement |
-| `CrashRecoveryService` | Crash flag detection and safe recovery |
-| `NotificationService` | Tray balloon notifications |
-| `LocalizationService` | i18n with built-in and external locale support |
-| `ConfigService` | JSON configuration with export/import/validation |
-| `HotkeyService` | Global hotkey registration |
-| `UpdateService` | GitHub release auto-updater |
 | `AnalyticsService` | Local analytics and feature tracking |
+| `CloudAnalyticsService` | Opt-in remote analytics collection |
+| `DataExportService` | GDPR-style user data bundling |
 | `HealthCheckService` | Application self-monitoring |
 | `PluginService` | Plugin loading and management |
 | `WebApiService` | Local REST API for remote control |
 | `TextToSpeechService` | TTS for TypeThing |
 | `ForegroundAppService` | Track active foreground application |
-| `SecurityService` | Security and integrity checks |
+| `SecurityService` | Security, code signing, and SBOM |
+| `InterceptionInputService` | Driver-level (HID) input simulation |
+| `TemplateService` | Named text templates for TypeThing |
+| `ServiceLocator` | Central DI container management |
 | `Logger` | Structured logging with rotation |
 
 ### Usage Example

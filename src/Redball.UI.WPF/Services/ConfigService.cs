@@ -259,7 +259,20 @@ public class ConfigService : IConfigService
             }
 
             Logger.Debug("ConfigService", $"Attempting to deserialize from: {filePath}");
-            return JsonSerializer.Deserialize<RedballConfig>(json, ReadOptions);
+            var config = JsonSerializer.Deserialize<RedballConfig>(json, ReadOptions);
+            
+            if (config != null && !IsTestMode)
+            {
+                // Verify integrity if signature exists
+                if (!SecurityService.VerifyConfigIntegrity(json, config.ConfigSignature))
+                {
+                    Logger.Warning("ConfigService", "CONFIG TAMPERED! Signature mismatch detected.");
+                    NotificationService.Instance.ShowWarning("Security Alert", "Your configuration file was modified outside of Redball and failed integrity verification.");
+                    // Fallback to recovery if tampered? For now we just log it.
+                }
+            }
+            
+            return config;
         }
         catch (CryptographicException cryptoEx)
         {
@@ -400,11 +413,20 @@ public class ConfigService : IConfigService
                 Logger.Debug("ConfigService", $"Backup before save skipped: {bakEx.Message}");
             }
 
+            // SIGN CONFIG BEFORE SAVING
+            // We clear the signature, serialize, hash it, update the signature, then serialize again for the real file.
+            Config.ConfigSignature = null;
+            var unsignedJson = JsonSerializer.Serialize(Config, WriteOptions);
+            Config.ConfigSignature = SecurityService.ComputeStringHash(unsignedJson);
+            
+            var finalJson = JsonSerializer.Serialize(Config, WriteOptions);
+            Logger.Debug("ConfigService", $"Serialized signed config: {finalJson.Length} bytes");
+
             // Optionally encrypt with DPAPI (current-user scope)
-            var payload = json;
+            var payload = finalJson;
             if (Config.EncryptConfig)
             {
-                payload = EncryptedHeader + DpapiEncrypt(json);
+                payload = EncryptedHeader + DpapiEncrypt(finalJson);
                 Logger.Debug("ConfigService", "Config encrypted with DPAPI");
             }
 
@@ -780,6 +802,7 @@ public class ConfigService : IConfigService
         Config.KeepAwakeApps ??= d.KeepAwakeApps;
         Config.PauseApps ??= d.PauseApps;
         Config.WifiProfileMappings ??= d.WifiProfileMappings;
+        Config.CustomCommands ??= d.CustomCommands;
 
         if (healed > 0)
         {

@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:lottie="clr-namespace:LottieSharp;assembly=LottieSharp"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="0,0,0,24">
@@ -17,14 +18,14 @@
                     </Border.Background>
                     <Grid Margin="24">
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Welcome back to Redball" FontSize="14" Foreground="#CCFFFFFF" FontWeight="SemiBold"/>
-                            <TextBlock Text="Dashboard Overview" FontSize="28" Foreground="White" FontWeight="Bold" Margin="0,4,0,0"/>
+                            <TextBlock Text="Welcome back to Redball" FontSize="14" Foreground="{DynamicResource AccentForegroundSecondaryBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Text="Dashboard Overview" FontSize="28" Foreground="{DynamicResource AccentForegroundBrush}" FontWeight="Bold" Margin="0,4,0,0"/>
                         </StackPanel>
                         
-                        <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="#33FFFFFF" CornerRadius="12" Padding="16,10">
+                        <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="{DynamicResource AccentSurfaceBrush}" CornerRadius="12" Padding="16,10">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE930;" FontFamily="Segoe Fluent Icons" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="18"/>
-                                <TextBlock Text="{Binding StatusText}" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE930;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentForegroundBrush}" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="18"/>
+                                <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource AccentForegroundBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -37,7 +38,7 @@
                     <StackPanel>
                         <TextBlock Text="MEM USAGE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ForegroundSecondaryBrush}" Opacity="0.7"/>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <TextBlock Text="&#xE950;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <lottie:LottieAnimationView Width="24" Height="24" FileName="Assets/Animations/ram_usage.json" AutoPlay="True" RepeatCount="-1" VerticalAlignment="Center" Margin="0,0,12,0"/>
                             <TextBlock Text="{Binding MemoryUsageText}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
@@ -74,7 +75,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
-                            <TextBlock Text="&#xE768;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <lottie:LottieAnimationView Width="32" Height="32" FileName="Assets/Animations/engine_toggle.json" AutoPlay="True" RepeatCount="-1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel Grid.Column="1" Margin="16,0,0,0">
                             <TextBlock Text="Keep-Awake Engine" FontSize="16" FontWeight="SemiBold"/>
@@ -91,7 +92,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
-                            <TextBlock Text="&#xE8D2;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <lottie:LottieAnimationView Width="32" Height="32" FileName="Assets/Animations/typething_launch.json" AutoPlay="True" RepeatCount="-1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel Grid.Column="1" Margin="16,0,0,0">
                             <TextBlock Text="Start TypeThing" FontSize="16" FontWeight="SemiBold"/>
@@ -108,7 +109,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
-                            <TextBlock Text="&#xED5A;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <lottie:LottieAnimationView Width="32" Height="32" FileName="Assets/Animations/pomodoro_timer.json" AutoPlay="True" RepeatCount="-1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel Grid.Column="1" Margin="16,0,0,0">
                             <TextBlock Text="Pomodoro Timer" FontSize="16" FontWeight="SemiBold"/>

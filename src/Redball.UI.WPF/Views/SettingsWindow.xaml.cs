@@ -174,6 +174,18 @@ public partial class SettingsWindow : Window
 
         // Privacy settings
         if (EncryptConfigCheck != null) EncryptConfigCheck.IsChecked = cfg.EncryptConfig;
+
+        // Custom Commands
+        RefreshCustomCommandsList();
+    }
+
+    private void RefreshCustomCommandsList()
+    {
+        if (CustomCommandsList != null)
+        {
+            CustomCommandsList.ItemsSource = null;
+            CustomCommandsList.ItemsSource = ConfigService.Instance.Config.CustomCommands;
+        }
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -485,6 +497,7 @@ public partial class SettingsWindow : Window
         else if (sender == TypeThingTab) target = TypeThingPanel;
         else if (sender == UpdatesTab) target = UpdatesPanel;
         else if (sender == PrivacyTab) target = PrivacyPanel;
+        else if (sender == CustomCommandsTab) target = CustomCommandsPanel;
         else if (sender == AboutTab) target = AboutPanel;
 
         // Show with fade-in animation
@@ -593,6 +606,54 @@ public partial class SettingsWindow : Window
         {
             Logger.Error("SettingsWindow", "Failed to export all data", ex);
             NotificationWindow.Show("Error", $"Export failed: {ex.Message}", "\uE783");
+        }
+    }
+
+    private void BrowseCommand_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*",
+            Title = "Select Command"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            NewCmdPath.Text = dialog.FileName;
+        }
+    }
+
+    private void AddCustomCommand_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(NewCmdName.Text) || string.IsNullOrWhiteSpace(NewCmdPath.Text))
+        {
+            NotificationWindow.Show("Invalid Command", "Name and Path/URL are required.", "\uE783");
+            return;
+        }
+
+        var newCmd = new CustomCommandMetadata
+        {
+            Name = NewCmdName.Text,
+            Description = NewCmdDesc.Text,
+            Command = NewCmdPath.Text
+        };
+
+        ConfigService.Instance.Config.CustomCommands.Add(newCmd);
+        NewCmdName.Text = "";
+        NewCmdDesc.Text = "";
+        NewCmdPath.Text = "";
+        
+        RefreshCustomCommandsList();
+        _isDirty = true;
+    }
+
+    private void RemoveCustomCommand_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is CustomCommandMetadata cmd)
+        {
+            ConfigService.Instance.Config.CustomCommands.Remove(cmd);
+            RefreshCustomCommandsList();
+            _isDirty = true;
         }
     }
 }

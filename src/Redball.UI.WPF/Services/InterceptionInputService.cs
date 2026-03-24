@@ -33,9 +33,43 @@ public class InterceptionInputService : IDisposable
     private DateTime? _lastRefreshUtc;
     private DateTime _nextAllowedRefreshUtc = DateTime.MinValue;
     private string _lastErrorSummary = "None";
+    private DateTime? _lastDriverActionUtc;
+    private string _lastDriverAction = "None";
+    private int _consecutiveInitializeFailures;
 
+    /// <summary>
+    /// Maximum time to wait for a key send operation before considering it failed (ms).
+    /// </summary>
+    private const int KeySendTimeoutMs = 5000;
+
+    /// <summary>
+    /// Maximum retries for a single character send before failing.
+    /// </summary>
+    private const int MaxCharacterSendRetries = 3;
+
+    /// <summary>
+    /// Backoff multiplier between retries (ms).
+    /// </summary>
+    private const int CharacterRetryBackoffMs = 50;
+
+    /// <summary>
+    /// Idle timeout before auto-releasing HID resources (minutes).
+    /// </summary>
+    private const int IdleTimeoutMinutes = 30;
+
+    /// <summary>
+    /// Debounce delay for USB device refresh (ms).
+    /// </summary>
     private const int DeviceRefreshDebounceMs = 1200;
+
+    /// <summary>
+    /// Cooldown between HID refreshes (ms).
+    /// </summary>
     private const int RefreshCooldownMs = 2500;
+
+    private DateTime _lastActivityUtc = DateTime.UtcNow;
+    private Timer? _idleCheckTimer;
+    private string? _driverVersion;
 
     /// <summary>
     /// Whether the Interception driver is installed on this system.
@@ -50,6 +84,10 @@ public class InterceptionInputService : IDisposable
     public DateTime? LastRefreshUtc => _lastRefreshUtc;
     public DateTime? NextAllowedRefreshUtc => _nextAllowedRefreshUtc == DateTime.MinValue ? null : _nextAllowedRefreshUtc;
     public string LastErrorSummary => _lastErrorSummary;
+    public DateTime? LastDriverActionUtc => _lastDriverActionUtc;
+    public string LastDriverAction => _lastDriverAction;
+    public int ConsecutiveInitializeFailures => _consecutiveInitializeFailures;
+    public string? DriverVersion => _driverVersion;
 
     // --- P/Invoke for layout-aware character→key mapping ---
 
@@ -75,6 +113,96 @@ public class InterceptionInputService : IDisposable
         public NativeINPUTUNION u;
     }
 
+    public bool UninstallDriver(bool elevateIfNeeded = true)
+    {
+        try
+        {
+            ReleaseResources("Driver uninstall requested");
+
+            if (!InputInterceptor.CheckAdministratorRights())
+            {
+                if (!elevateIfNeeded)
+                {
+                    Logger.Warning("InterceptionInputService", "Admin rights required to uninstall driver, but elevateIfNeeded is false.");
+                    return false;
+                }
+
+                Logger.Info("InterceptionInputService", "Attempting to elevate for driver uninstall");
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = Process.GetCurrentProcess().MainModule?.FileName ?? "Redball.UI.WPF.exe",
+                    Arguments = "--uninstall-driver",
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
+
+                try
+                {
+                    using var process = Process.Start(processInfo);
+                    process?.WaitForExit();
+                    return process?.ExitCode == 0;
+                }
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    Logger.Warning("InterceptionInputService", "User cancelled UAC elevation for uninstall");
+                    return false;
+                }
+            }
+
+            var tempExe = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "install-interception.exe");
+            var asm = System.Reflection.Assembly.GetExecutingAssembly();
+            var names = asm.GetManifestResourceNames();
+            var targetName = System.Linq.Enumerable.FirstOrDefault(names, n => n.EndsWith("install-interception.exe") || n.EndsWith("install_interception.exe"));
+
+            if (targetName == null)
+            {
+                Logger.Error("InterceptionInputService", "Could not find install-interception.exe embedded resource for uninstall. Available resources: " + string.Join(", ", names));
+                return false;
+            }
+
+            using (var stream = asm.GetManifestResourceStream(targetName))
+            {
+                using (var fileStream = new System.IO.FileStream(tempExe, System.IO.FileMode.Create, System.IO.FileAccess.Write))
+                {
+                    stream!.CopyTo(fileStream);
+                }
+            }
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = tempExe,
+                Arguments = "/uninstall",
+                UseShellExecute = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+
+            using var uninstallProcess = Process.Start(startInfo);
+            uninstallProcess?.WaitForExit();
+            var exitCode = uninstallProcess?.ExitCode ?? -1;
+
+            Thread.Sleep(500);
+            TryRestartKeyboardDevices();
+            IsDriverInstalled = InputInterceptor.CheckDriverInstalled();
+            var uninstalled = !IsDriverInstalled;
+            SetLastDriverAction(uninstalled ? "Driver uninstall completed" : "Driver uninstall attempted (still installed)");
+
+            if (!uninstalled && exitCode != 0)
+            {
+                Logger.Warning("InterceptionInputService", $"Driver uninstall failed (exitCode={exitCode})");
+                return false;
+            }
+
+            Logger.Info("InterceptionInputService", $"Driver uninstall result: {uninstalled} (exitCode={exitCode})");
+            return uninstalled;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("InterceptionInputService", "Driver uninstall failed", ex);
+            return false;
+        }
+    }
+
     [StructLayout(LayoutKind.Explicit)]
     private struct NativeINPUTUNION
     {
@@ -94,6 +222,31 @@ public class InterceptionInputService : IDisposable
     private InterceptionInputService()
     {
         Logger.Verbose("InterceptionInputService", "Instance created");
+    }
+
+    public bool RefreshDriverInstalledState()
+    {
+        try
+        {
+            IsDriverInstalled = InputInterceptor.CheckDriverInstalled();
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("InterceptionInputService", $"RefreshDriverInstalledState failed: {ex.Message}");
+        }
+
+        return IsDriverInstalled;
+    }
+
+    public string GetDriverInstallStateText()
+    {
+        return RefreshDriverInstalledState() ? "Installed" : "Not Installed";
+    }
+
+    private void SetLastDriverAction(string action)
+    {
+        _lastDriverAction = action;
+        _lastDriverActionUtc = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -117,6 +270,8 @@ public class InterceptionInputService : IDisposable
                 {
                     Logger.Warning("InterceptionInputService", "Interception driver not installed. HID input mode unavailable.");
                     _lastErrorSummary = "Driver not installed";
+                    _consecutiveInitializeFailures++;
+                    SetLastDriverAction("Initialize failed (driver not installed)");
                     return false;
                 }
 
@@ -125,6 +280,8 @@ public class InterceptionInputService : IDisposable
                 {
                     Logger.Error("InterceptionInputService", "Failed to initialize InputInterceptor DLL");
                     _lastErrorSummary = "InputInterceptor initialization failed";
+                    _consecutiveInitializeFailures++;
+                    SetLastDriverAction("Initialize failed (InputInterceptor init)");
                     return false;
                 }
 
@@ -139,13 +296,19 @@ public class InterceptionInputService : IDisposable
                     InputInterceptor.Dispose();
                     _initialized = false;
                     _lastErrorSummary = "Keyboard hook cannot simulate input";
+                    _consecutiveInitializeFailures++;
+                    SetLastDriverAction("Initialize failed (hook cannot simulate)");
                     return false;
                 }
 
                 _initialized = true;
+                _consecutiveInitializeFailures = 0;
+                _driverVersion = DetectDriverVersion();
                 EnsureUsbDeviceWatchers();
+                StartIdleCheckTimer();
                 _lastRefreshUtc = DateTime.UtcNow;
                 _lastErrorSummary = "None";
+                SetLastDriverAction("Initialize success");
 
                 Logger.Info("InterceptionInputService", $"Initialized successfully. CanSimulateInput: {_keyboardHook.CanSimulateInput}");
                 return IsReady;
@@ -167,6 +330,8 @@ public class InterceptionInputService : IDisposable
 
                 _initialized = false;
                 _lastErrorSummary = ex.Message;
+                _consecutiveInitializeFailures++;
+                SetLastDriverAction("Initialize failed (exception)");
                 return false;
             }
         }
@@ -225,6 +390,7 @@ public class InterceptionInputService : IDisposable
 
             Thread.Sleep(500);
             IsDriverInstalled = InputInterceptor.CheckDriverInstalled();
+            SetLastDriverAction(IsDriverInstalled ? "Driver install completed (no-restart path)" : "Driver install attempted (not detected)");
             Logger.Info("InterceptionInputService", IsDriverInstalled
                 ? "Driver installed successfully. HID initialization is deferred until an active typing session."
                 : "Driver install command completed but driver is still not detected.");
@@ -416,6 +582,7 @@ public class InterceptionInputService : IDisposable
     /// <returns>True if the keystroke was sent successfully.</returns>
     public bool SendKeyPress(KeyCode keyCode, int releaseDelayMs = 10)
     {
+        UpdateActivityTimestamp();
         if (!IsReady)
         {
             Logger.Debug("InterceptionInputService", "SendKeyPress called but service not ready");
@@ -616,6 +783,7 @@ public class InterceptionInputService : IDisposable
             if (alreadyInstalled)
             {
                 Logger.Info("InterceptionInputService", "Driver already installed");
+                SetLastDriverAction("Driver install skipped (already installed)");
                 return true;
             }
 
@@ -684,6 +852,7 @@ public class InterceptionInputService : IDisposable
 
             var installedAfterRun = InputInterceptor.CheckDriverInstalled();
             IsDriverInstalled = installedAfterRun;
+            SetLastDriverAction(installedAfterRun ? "Driver install completed" : "Driver install attempted (not detected)");
 
             if (!result && installedAfterRun)
             {
@@ -706,7 +875,7 @@ public class InterceptionInputService : IDisposable
     /// </summary>
     public string GetStatusText()
     {
-        if (!IsDriverInstalled) return "Driver not installed";
+        if (!RefreshDriverInstalledState()) return "Driver not installed";
         if (!_initialized) return "Not initialized";
         if (!IsReady) return "Initialized but not ready (no device captured)";
         return "Ready (HID keyboard active)";
@@ -721,11 +890,16 @@ public class InterceptionInputService : IDisposable
         return string.Join(Environment.NewLine,
             "HID Diagnostics",
             $"Status: {GetStatusText()}",
-            $"Driver Installed: {IsDriverInstalled}",
+            $"Driver Installed: {GetDriverInstallStateText()}",
+            $"Driver Version: {_driverVersion ?? "Unknown"}",
+            $"Windows Compatible: {CheckWindowsCompatibility()}",
             $"Initialized: {_initialized}",
             $"Ready: {IsReady}",
             $"Last Refresh: {lastRefreshText}",
             $"Next Allowed Refresh: {(_nextAllowedRefreshUtc == DateTime.MinValue ? "Now" : _nextAllowedRefreshUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"))}",
+            $"Last Driver Action: {_lastDriverAction} ({(_lastDriverActionUtc.HasValue ? _lastDriverActionUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") : "Never")})",
+            $"Consecutive Initialize Failures: {_consecutiveInitializeFailures}",
+            $"Idle Timeout (min): {IdleTimeoutMinutes}",
             $"Last Error: {_lastErrorSummary}");
     }
 
@@ -858,6 +1032,110 @@ public class InterceptionInputService : IDisposable
         };
     }
 
+    private void StartIdleCheckTimer()
+    {
+        if (_idleCheckTimer != null) return;
+        _idleCheckTimer = new Timer(_ => CheckIdleTimeout(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+    }
+
+    private void CheckIdleTimeout()
+    {
+        var idleMinutes = (DateTime.UtcNow - _lastActivityUtc).TotalMinutes;
+        if (idleMinutes >= IdleTimeoutMinutes && _initialized)
+        {
+            Logger.Info("InterceptionInputService", $"Idle timeout reached ({idleMinutes:F0} min). Auto-releasing HID resources.");
+            ReleaseResources("Idle timeout");
+        }
+    }
+
+    private void UpdateActivityTimestamp()
+    {
+        _lastActivityUtc = DateTime.UtcNow;
+    }
+
+    private string? DetectDriverVersion()
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\keyboard") ??
+                          Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\interception");
+            if (key != null)
+            {
+                var version = key.GetValue("Version") as string;
+                if (!string.IsNullOrEmpty(version)) return version;
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("InterceptionInputService", $"Driver version detection failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    public bool CheckWindowsCompatibility()
+    {
+        var os = Environment.OSVersion;
+        if (os.Platform != PlatformID.Win32NT) return false;
+        var version = os.Version;
+        // Windows 7 SP1 (6.1.7601) and later are supported
+        if (version.Major < 6) return false;
+        if (version.Major == 6 && version.Minor < 1) return false;
+        if (version.Major == 6 && version.Minor == 1 && version.Build < 7601) return false;
+        return true;
+    }
+
+    public bool SendCharacterWithRetry(char ch, int maxRetries = MaxCharacterSendRetries)
+    {
+        UpdateActivityTimestamp();
+        for (int attempt = 0; attempt < maxRetries; attempt++)
+        {
+            if (SendCharacter(ch)) return true;
+            if (attempt < maxRetries - 1)
+            {
+                var delay = CharacterRetryBackoffMs * (attempt + 1);
+                Logger.Debug("InterceptionInputService", $"Character send failed for '{ch}', retrying in {delay}ms (attempt {attempt + 1}/{maxRetries})");
+                Thread.Sleep(delay);
+            }
+        }
+        Logger.Warning("InterceptionInputService", $"Character send failed after {maxRetries} attempts: '{ch}'");
+        return false;
+    }
+
+    public bool SendKeyPressWithTimeout(KeyCode keyCode, int releaseDelayMs = 10)
+    {
+        UpdateActivityTimestamp();
+        if (!IsReady) return false;
+        try
+        {
+            using var cts = new CancellationTokenSource(KeySendTimeoutMs);
+            var task = System.Threading.Tasks.Task.Run(() => _keyboardHook!.SimulateKeyPress(keyCode, releaseDelayMs), cts.Token);
+            if (!task.Wait(KeySendTimeoutMs, cts.Token))
+            {
+                Logger.Warning("InterceptionInputService", $"Key send timeout for {keyCode}");
+                return false;
+            }
+            return task.Result;
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("InterceptionInputService", $"SendKeyPressWithTimeout failed for {keyCode}: {ex.Message}");
+            return false;
+        }
+    }
+
+    public void PerformHealthCheck()
+    {
+        if (!_initialized) return;
+        var wasReady = IsReady;
+        var stillReady = _keyboardHook?.CanSimulateInput ?? false;
+        if (wasReady && !stillReady)
+        {
+            Logger.Warning("InterceptionInputService", "Health check: Keyboard hook lost simulation capability. Releasing resources.");
+            ReleaseResources("Health check failure");
+        }
+    }
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -890,10 +1168,13 @@ public class InterceptionInputService : IDisposable
 
             _deviceRefreshDebounceTimer?.Dispose();
             _deviceRefreshDebounceTimer = null;
+            _idleCheckTimer?.Dispose();
+            _idleCheckTimer = null;
             StopUsbDeviceWatchers();
 
             _initialized = false;
             _lastRefreshUtc = DateTime.UtcNow;
+            SetLastDriverAction($"Resources released ({reason})");
             Logger.Info("InterceptionInputService", "Interception resources released");
         }
     }

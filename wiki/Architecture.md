@@ -21,6 +21,7 @@ Redball/
 │   │   ├── IdleDetectionService.cs  # Idle detection + auto-pause
 │   │   ├── ScheduleService.cs       # Scheduled activation
 │   │   ├── PresentationModeService.cs # Presentation detection
+│   │   ├── CalendarIntegrationService.cs # Calendar auto-activation
 │   │   ├── PomodoroService.cs       # Focus/break cycle timer
 │   │   ├── ProcessWatcherService.cs # Process-based auto-activation
 │   │   ├── SessionLockService.cs    # Screen lock detection
@@ -28,6 +29,8 @@ Redball/
 │   │   ├── PowerPlanService.cs      # Windows power plan switching
 │   │   ├── ScheduledRestartService.cs # Uptime restart reminders
 │   │   ├── AnalyticsService.cs      # Local analytics + feature tracking
+│   │   ├── CloudAnalyticsService.cs # Remote opt-in analytics
+│   │   ├── DataExportService.cs     # User data bundling (GDPR)
 │   │   ├── SessionStateService.cs   # Session save/restore
 │   │   ├── SessionStatsService.cs   # Session statistics
 │   │   ├── StartupService.cs        # Windows startup registration
@@ -42,10 +45,13 @@ Redball/
 │   │   ├── PluginService.cs         # Plugin loading + management
 │   │   ├── WebApiService.cs         # Local REST API
 │   │   ├── ProfileService.cs        # WiFi-based config profiles
+│   │   ├── InterceptionInputService.cs # Driver-level (HID) input
 │   │   ├── ForegroundAppService.cs  # Foreground app tracking
 │   │   ├── TextToSpeechService.cs   # TTS for TypeThing
+│   │   ├── TemplateService.cs       # Named text templates
 │   │   ├── SecurityService.cs       # Security + integrity checks
 │   │   ├── TelemetryService.cs      # Opt-in local telemetry
+│   │   ├── ServiceLocator.cs        # DI Container management
 │   │   └── Logger.cs                # Structured logging with rotation
 │   ├── ViewModels/
 │   │   └── MainViewModel.cs         # MVVM state + commands
@@ -92,13 +98,16 @@ App.xaml.cs (entry point)
   │           ├── BatteryMonitorService       (every 10s — WMI cached 60s)
   │           ├── NetworkMonitorService       (every 10s)
   │           ├── PresentationModeService     (every 10s — process scan cached 10s)
+  │           ├── CalendarIntegrationService  (every 60s)
   │           ├── ScheduleService             (every 30s)
   │           ├── ProcessWatcherService       (process scanning)
   │           ├── SessionLockService          (session events)
   │           ├── TemperatureMonitorService   (CPU temp checks)
   │           └── PomodoroService             (focus/break cycles)
   ├── AnalyticsService        — Feature tracking + session analytics
+  ├── InterceptionInputService — HID driver management (ready on demand)
   ├── SessionStateService     — Restore previous session
+  ├── DataExportService       — User data packaging service
   ├── HealthCheckService      — App self-monitoring
   ├── WebApiService           — Optional local REST API
   └── MainWindow              — Tray icon, hotkeys, TypeThing, Pomodoro

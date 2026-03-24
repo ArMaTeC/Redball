@@ -7,7 +7,7 @@
     -->
 
     <!-- Background colors -->
-    <SolidColorBrush x:Key="BackgroundBrush" Color="#FFFAFAFA"/>
+    <SolidColorBrush x:Key="BackgroundBrush" Color="#01FAFAFA"/> <!-- Transparent to allow Mica show through -->
     <SolidColorBrush x:Key="SurfaceBrush" Color="#E0FFFFFF"/>
     <SolidColorBrush x:Key="CardBrush" Color="#D0F5F5F5"/>
 

@@ -136,6 +136,15 @@ public partial class App : Application
             return;
         }
 
+        // Handle driver uninstall elevation
+        if (e.Args.Length > 0 && e.Args[0] == "--uninstall-driver")
+        {
+            Services.Logger.Info("App", "Running in elevated driver uninstall mode");
+            var success = Services.InterceptionInputService.Instance.UninstallDriver(false);
+            Environment.Exit(success ? 0 : 1);
+            return;
+        }
+
         Services.Logger.LogMemoryStats("App");
         
         try

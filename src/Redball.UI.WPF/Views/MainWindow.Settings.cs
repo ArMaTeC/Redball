@@ -1023,10 +1023,16 @@ public partial class MainWindow
     {
         var hidSafeModeEnabled = MainTypeThingHidSafeModeCheck?.IsChecked == true;
         var hidSelected = MainTypeThingInputModeCombo.SelectedIndex == 1 && !hidSafeModeEnabled;
+        var hid = InterceptionInputService.Instance;
+        var driverInstalled = hid.RefreshDriverInstalledState();
 
         MainTypeThingInputModeCombo.IsEnabled = !hidSafeModeEnabled;
 
-        if (hidSelected && !InterceptionInputService.Instance.IsReady)
+        MainInstallHidDriverBtn.Content = driverInstalled
+            ? "Uninstall HID Driver"
+            : "Install HID Driver (No-Restart Attempt)";
+
+        if (hidSelected)
         {
             MainInstallHidDriverBtn.Visibility = Visibility.Visible;
         }
@@ -1040,6 +1046,7 @@ public partial class MainWindow
             MainResetHidStackBtn.Visibility = hidSelected
                 ? Visibility.Visible
                 : Visibility.Collapsed;
+            MainResetHidStackBtn.IsEnabled = driverInstalled;
         }
 
         if (MainHidDetailsText != null)
@@ -1061,6 +1068,7 @@ public partial class MainWindow
             MainEmergencyReleaseHidBtn.Visibility = hidSelected
                 ? Visibility.Visible
                 : Visibility.Collapsed;
+            MainEmergencyReleaseHidBtn.IsEnabled = true;
         }
 
         if (MainHidStatusIndicator != null)
@@ -1069,24 +1077,31 @@ public partial class MainWindow
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }
+
+        MainInstallHidDriverBtn.ToolTip = driverInstalled
+            ? "Uninstall the Interception HID driver from this machine."
+            : "Install the Interception HID driver without requiring a restart when possible.";
     }
 
     private void UpdateHidStatusText()
     {
         if (MainHidStatusText == null) return;
 
+        var driverInstalled = InterceptionInputService.Instance.RefreshDriverInstalledState();
+        var driverStateText = driverInstalled ? "Installed" : "Not Installed";
+
         if (MainTypeThingInputModeCombo.SelectedIndex != 1)
         {
-            MainHidStatusText.Text = "HID status: Not in use (SendInput mode)";
+            MainHidStatusText.Text = $"HID status: Not in use (SendInput mode) • Driver: {driverStateText}";
             return;
         }
 
         if (MainTypeThingHidSafeModeCheck?.IsChecked == true)
         {
-            MainHidStatusText.Text = "HID status: Disabled by HID Safe Mode";
+            MainHidStatusText.Text = $"HID status: Disabled by HID Safe Mode • Driver: {driverStateText}";
             if (MainHidDetailsText != null)
             {
-                MainHidDetailsText.Text = "HID Safe Mode is ON. TypeThing is locked to SendInput for safety.";
+                MainHidDetailsText.Text = "HID Safe Mode is ON. TypeThing is locked to SendInput for safety. Last error: None";
             }
             if (MainHidStatusIndicator != null)
             {
@@ -1096,13 +1111,14 @@ public partial class MainWindow
         }
 
         var hid = InterceptionInputService.Instance;
-        MainHidStatusText.Text = hid.GetStatusText() switch
+        var hidStatusText = hid.GetStatusText() switch
         {
-            "Ready (HID keyboard active)" => "HID status: Ready (active device attached)",
-            "Initialized but not ready (no device captured)" => "HID status: Initialized, waiting for keyboard capture",
-            "Driver not installed" => "HID status: Driver not installed",
-            _ => $"HID status: {hid.GetStatusText()}"
+            "Ready (HID keyboard active)" => "Ready (active device attached)",
+            "Initialized but not ready (no device captured)" => "Initialized, waiting for keyboard capture",
+            "Driver not installed" => "Driver not installed",
+            _ => hid.GetStatusText()
         };
+        MainHidStatusText.Text = $"HID status: {hidStatusText} • Driver: {driverStateText}";
 
         if (MainHidDetailsText != null)
         {
@@ -1112,7 +1128,11 @@ public partial class MainWindow
             var nextRefresh = hid.NextAllowedRefreshUtc.HasValue
                 ? hid.NextAllowedRefreshUtc.Value.ToLocalTime().ToString("HH:mm:ss")
                 : "Now";
-            MainHidDetailsText.Text = $"Last refresh: {lastRefresh} • Next refresh: {nextRefresh} • Last error: {hid.LastErrorSummary}";
+            var lastDriverActionTime = hid.LastDriverActionUtc.HasValue
+                ? hid.LastDriverActionUtc.Value.ToLocalTime().ToString("HH:mm:ss")
+                : "Never";
+            MainHidDetailsText.Text =
+                $"Last refresh: {lastRefresh} • Next refresh: {nextRefresh} • Install: {driverStateText} • Last action: {hid.LastDriverAction} ({lastDriverActionTime}) • Init fails: {hid.ConsecutiveInitializeFailures} • Last error: {hid.LastErrorSummary}";
         }
 
         if (MainHidStatusIndicator != null)
@@ -1137,18 +1157,56 @@ public partial class MainWindow
 
     private void MainInstallHidDriverBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (InterceptionInputService.Instance.InstallDriverNoRestart())
-        {
-            NotificationService.Instance.ShowInfo("Driver Installed", "HID driver installed. It will initialize only during active TypeThing typing.");
+        var hid = InterceptionInputService.Instance;
+        var driverInstalled = hid.RefreshDriverInstalledState();
 
-            RefreshHidDriverInstallVisibility();
-            UpdateHidStatusText();
+        if (!driverInstalled)
+        {
+            var confirmInstall = NotificationWindow.Show(
+                "Install HID Driver",
+                "Install the Interception HID driver now? Admin approval may be required.",
+                "\uE7BA",
+                true);
+
+            if (!confirmInstall)
+            {
+                return;
+            }
+
+            if (hid.InstallDriverNoRestart())
+            {
+                NotificationService.Instance.ShowInfo("Driver Installed", "HID driver installed. It will initialize only during active TypeThing typing.");
+            }
+            else
+            {
+                NotificationService.Instance.ShowError("Install Failed", "Failed to install driver. Please allow UAC elevation and try again.");
+            }
         }
         else
         {
-            NotificationService.Instance.ShowError("Install Failed", "Failed to install driver. Please allow UAC elevation and try again.");
-            UpdateHidStatusText();
+            var confirmUninstall = NotificationWindow.Show(
+                "Uninstall HID Driver",
+                "This will uninstall the HID driver and disable driver-level typing until reinstalled. Continue?",
+                "\uE74D",
+                true);
+
+            if (!confirmUninstall)
+            {
+                return;
+            }
+
+            if (hid.UninstallDriver())
+            {
+                NotificationService.Instance.ShowInfo("Driver Uninstalled", "HID driver uninstalled successfully.");
+            }
+            else
+            {
+                NotificationService.Instance.ShowError("Uninstall Failed", "Failed to uninstall HID driver. Please allow UAC elevation and try again.");
+            }
         }
+
+        RefreshHidDriverInstallVisibility();
+        UpdateHidStatusText();
     }
 
     private void MainResetHidStackBtn_Click(object sender, RoutedEventArgs e)

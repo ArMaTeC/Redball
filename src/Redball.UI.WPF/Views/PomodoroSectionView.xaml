@@ -1,10 +1,20 @@
 <UserControl x:Class="Redball.UI.Views.PomodoroSectionView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lottie="clr-namespace:LottieSharp;assembly=LottieSharp">
     <StackPanel>
-        <TextBlock Text="Pomodoro" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-        <TextBlock Text="The Pomodoro Technique helps you stay focused by working in timed intervals. Redball keeps your PC awake during focus sessions and can optionally pause during breaks." 
-                   TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+        <Grid Margin="0,0,0,16">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Pomodoro" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <TextBlock Text="The Pomodoro Technique helps you stay focused by working in timed intervals." 
+                           TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+            </StackPanel>
+            <lottie:LottieAnimationView x:Name="PomodoroLottie" Width="64" Height="48" 
+                                       FileName="Assets/Animations/pomodoro_timer.json" 
+                                       AutoPlay="{Binding IsPomodoroActive}" 
+                                       RepeatCount="-1" 
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
+        </Grid>
         
         <Border Style="{DynamicResource CardStyle}">
             <StackPanel>

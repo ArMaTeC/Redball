@@ -387,7 +387,15 @@ public partial class MainWindow
             else
             {
                 Logger.Warning("MainWindow", "TypeThing: HID mode requested but driver not available, falling back to SendInput");
-                NotificationService.Instance.ShowWarning("TypeThing", "HID driver not available. Falling back to SendInput mode.");
+                NotificationService.Instance.ShowWarning("TypeThing", $"HID not available ({interception.LastErrorSummary}). Falling back to SendInput mode.");
+
+                if (interception.ConsecutiveInitializeFailures >= 3)
+                {
+                    config.TypeThingHidSafeMode = true;
+                    config.TypeThingInputMode = "SendInput";
+                    ConfigService.Instance.Save();
+                    NotificationService.Instance.ShowWarning("HID Safe Mode", "Enabled automatically after repeated HID initialization failures. You can re-enable HID later in Settings.");
+                }
             }
         }
 
@@ -454,9 +462,27 @@ public partial class MainWindow
             }
             else
             {
-                SendCharacter(ch);
+                // Use retry logic for HID to improve reliability
+                if (_useHidInput)
+                {
+                    if (!InterceptionInputService.Instance.SendCharacterWithRetry(ch))
+                    {
+                        Logger.Warning("MainWindow", $"TypeThing: HID SendCharacterWithRetry failed for '{ch}', falling back to SendInput");
+                        SendCharacter(ch);
+                    }
+                }
+                else
+                {
+                    SendCharacter(ch);
+                }
             }
             index++;
+
+            // Show progress notification every 100 characters
+            if (index % 100 == 0 && index < text.Length)
+            {
+                NotificationService.Instance.ShowInfo("TypeThing", $"Typing progress: {index}/{text.Length} characters...");
+            }
 
             // Randomize interval for human-like typing
             if (config.TypeThingAddRandomPauses && _random.Next(1, 101) <= Math.Max(0, config.TypeThingRandomPauseChance))

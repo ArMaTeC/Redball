@@ -157,12 +157,25 @@ public class UpdateService : IUpdateService
                             var asset = latestRelease.Assets.Find(a => a.Name.Equals(Path.GetFileName(file.Name), StringComparison.OrdinalIgnoreCase));
                             if (asset != null)
                             {
+                                // --- SECURITY: Signature Verification ---
+                                if (_verifySignature && !string.IsNullOrEmpty(file.Signature))
+                                {
+                                    Logger.Debug("UpdateService", $"Signature available for {normalizedName}, verification will happen after download.");
+                                }
+                                else if (_verifySignature)
+                                {
+                                    Logger.Warning("UpdateService", $"MISSING core signature for {normalizedName}! Skipping differential update for security.");
+                                    filesToUpdate.Clear();
+                                    break;
+                                }
+
                                 filesToUpdate.Add(new FileUpdateInfo
                                 {
                                     Name = normalizedName,
                                     DownloadUrl = asset.DownloadUrl,
                                     Hash = file.Hash,
-                                    Size = file.Size
+                                    Size = file.Size,
+                                    Signature = file.Signature
                                 });
                             }
                         }
@@ -244,10 +257,24 @@ public class UpdateService : IUpdateService
                     if (!await DownloadFileAsync(file.DownloadUrl, destPath, progress, cancellationToken))
                         return false;
                     
+                    // --- SECURITY: Hash/Signature Verification ---
+                    if (_verifySignature && !string.IsNullOrEmpty(file.Signature))
+                    {
+                        var actualHash = await CalculateHashAsync(destPath);
+                        if (!actualHash.Equals(file.Hash, StringComparison.OrdinalIgnoreCase))
+                        {
+                            Logger.Error("UpdateService", $"SECURITY ALERT: Integrity check failed for {normalizedName}! Expected {file.Hash}, got {actualHash}");
+                            return false;
+                        }
+                        Logger.Info("UpdateService", $"Integrity verified for {normalizedName}");
+                    }
+
                     completed++;
                     progress?.Report(new UpdateDownloadProgress 
                     { 
                         Percentage = completed * 100 / updateInfo.FilesToUpdate.Count,
+                        BytesReceived = completed, // Simplified progress reporting for file count
+                        TotalBytes = updateInfo.FilesToUpdate.Count,
                         StatusText = $"File {completed} of {updateInfo.FilesToUpdate.Count}: {normalizedName}"
                     });
                 }
@@ -873,6 +900,8 @@ public class FileUpdateInfo
     public string Hash { get; set; } = "";
     [System.Text.Json.Serialization.JsonPropertyName("size")]
     public long Size { get; set; }
+    [System.Text.Json.Serialization.JsonPropertyName("signature")]
+    public string Signature { get; set; } = "";
     public string DownloadUrl { get; set; } = "";
 }
 

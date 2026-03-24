@@ -57,6 +57,26 @@ public partial class MainWindow : Window
             {
                 _windowHwndSource.AddHook(WndProc);
                 Logger.Debug("MainWindow", "Window message hook added for tray icon recovery");
+                
+                // --- MICA BACKDROP SUPPORT ---
+                try
+                {
+                    var hwnd = _windowHwndSource.Handle;
+                    var micaValue = (int)NativeMethods.DWM_SYSTEMBACKDROP_TYPE.DWMSBT_MAINWINDOW;
+                    var darkMode = ConfigService.Instance.Config.Theme == "Dark" ? 1 : 0;
+                    
+                    // Set Immersive Dark Mode attribute for title bar
+                    NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
+                    
+                    // Set Mica background (Windows 11 22H2+)
+                    NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_SYSTEMBACKDROP_TYPE, ref micaValue, sizeof(int));
+                    
+                    Logger.Info("MainWindow", "DWM Mica backdrop and dark mode attributes applied");
+                }
+                catch (Exception dwmEx)
+                {
+                    Logger.Debug("MainWindow", $"Failed to apply DWM attributes: {dwmEx.Message}");
+                }
             }
 
             // Set DataContext here instead of XAML to prevent constructor issues during parsing
@@ -243,11 +263,35 @@ public partial class MainWindow : Window
         Close();
     }
 
-    private void ToggleWindowState()
+    protected override void OnKeyDown(KeyEventArgs e)
     {
-        WindowState = WindowState == WindowState.Maximized
-            ? WindowState.Normal
-            : WindowState.Maximized;
+        base.OnKeyDown(e);
+
+        // Global Command Palette Shortcut: Ctrl + Shift + P
+        if (e.Key == Key.P && 
+            (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && 
+            (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
+        {
+            if (_viewModel?.Palette != null)
+            {
+                _viewModel.Palette.IsVisible = !_viewModel.Palette.IsVisible;
+                Logger.Info("MainWindow", $"Command Palette visibility toggled to: {_viewModel.Palette.IsVisible}");
+            }
+        }
+    }
+
+    protected override void OnActivated(EventArgs e)
+    {
+        base.OnActivated(e);
+        // Perform HID health check when window regains focus
+        try
+        {
+            InterceptionInputService.Instance.PerformHealthCheck();
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("MainWindow", $"HID health check on activation failed: {ex.Message}");
+        }
     }
 
     private void SyncWindowChromeButtons()

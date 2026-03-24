@@ -1,10 +1,20 @@
 <UserControl x:Class="Redball.UI.Views.TypeThingSectionView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lottie="clr-namespace:LottieSharp;assembly=LottieSharp">
     <StackPanel>
-        <TextBlock Text="TypeThing" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-        <TextBlock Text="TypeThing types clipboard contents as keystrokes. Useful for pasting text into remote sessions, VMs, or secure environments where clipboard sharing is disabled." 
-                   TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+        <Grid Margin="0,0,0,16">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="TypeThing" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <TextBlock Text="TypeThing types clipboard contents as keystrokes." 
+                           TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+            </StackPanel>
+            <lottie:LottieAnimationView x:Name="TypeThingLottie" Width="64" Height="48" 
+                                       FileName="Assets/Animations/typething_launch.json" 
+                                       AutoPlay="{Binding IsTypeThingActive}" 
+                                       RepeatCount="-1" 
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
+        </Grid>
         
         <Border Style="{DynamicResource CardStyle}">
             <StackPanel>

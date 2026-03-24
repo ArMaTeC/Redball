@@ -194,6 +194,39 @@ Access via the **Pomodoro** section in the main window navigation.
 
 ---
 
+## Calendar Integration
+
+**Setting:** `CalendarIntegrationEnabled` | **Service:** `CalendarIntegrationService`
+
+Automatically activates keep-awake during meetings and deactivates during breaks.
+
+1. **Local File:** Reads from `%LocalAppData%\Redball\calendar.json`
+2. **Auto-activation:** When a meeting starts, Redball activates keep-awake
+3. **Auto-deactivation:** When the meeting ends, Redball pauses
+4. **Compatibility:** Users can export their calendar to JSON via a companion script
+
+Checked every 60 seconds.
+
+---
+
+## User Data Export (GDPR)
+
+**Service:** `DataExportService`
+
+Provides a complete bundle of all user data stored by the application. Accessible via **Diagnostics** section or **Settings → Export Diagnostics**.
+
+Includes:
+
+- Full JSON configuration
+- Local analytics and tracking data
+- Session state and status history
+- Current and rotated log files
+- System metadata (version, OS, machine name)
+
+The export is bundled into a single ZIP archive.
+
+---
+
 ## Priority & Interaction
 
 When multiple smart features are enabled simultaneously, they operate independently. The duration timer checks them at these intervals:
