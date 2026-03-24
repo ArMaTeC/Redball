@@ -41,6 +41,27 @@ public class MainViewModel : ViewModelBase
         }
     }
 
+    private void EmergencyHidRelease()
+    {
+        Logger.Warning("MainViewModel", "Emergency HID release command invoked from tray");
+
+        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
+        {
+            mainWindow.EmergencyReleaseHid("Tray menu", true);
+            return;
+        }
+
+        var fallbackMainWindow = Application.Current.MainWindow as MainWindow;
+        if (fallbackMainWindow != null)
+        {
+            fallbackMainWindow.EmergencyReleaseHid("Tray menu fallback", true);
+            return;
+        }
+
+        InterceptionInputService.Instance.ReleaseResources("Tray emergency release (no window reference)");
+        NotificationService.Instance.ShowWarning("HID Emergency Release", "HID resources released from tray action.");
+    }
+
     public bool UseHeartbeat
     {
         get => _keepAwake.UseHeartbeat;
@@ -85,6 +106,7 @@ public class MainViewModel : ViewModelBase
         OpenAboutCommand = new RelayCommand(() => ShowAbout());
         ShowWindowCommand = new RelayCommand(ShowWindow);
         ShowQuickSettingsCommand = new RelayCommand(ShowQuickSettings);
+        EmergencyHidReleaseCommand = new RelayCommand(EmergencyHidRelease);
         ShowMiniWidgetCommand = new RelayCommand(ShowMiniWidget);
         ResetMiniWidgetPositionCommand = new RelayCommand(ResetMiniWidgetPosition);
         CheckForUpdatesCommand = new RelayCommand(CheckForUpdates);
@@ -168,6 +190,7 @@ public class MainViewModel : ViewModelBase
     public ICommand OpenAboutCommand { get; }
     public ICommand ShowWindowCommand { get; }
     public ICommand ShowQuickSettingsCommand { get; }
+    public ICommand EmergencyHidReleaseCommand { get; }
     public ICommand ShowMiniWidgetCommand { get; }
     public ICommand ResetMiniWidgetPositionCommand { get; }
     public ICommand CheckForUpdatesCommand { get; }

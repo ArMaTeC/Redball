@@ -1,11 +1,11 @@
 # Configuration
 
-Settings are stored in `%LocalAppData%\Redball\UserData\Redball.json`. A default file is created on first run. You can change all settings from the main window's navigation sections or by editing the JSON file directly.
+Settings are persisted primarily in registry `HKCU\Software\Redball\UserData` (value `ConfigPayload`) with a local file copy at `%LocalAppData%\Redball\UserData\Redball.json`. You can change settings from the main window's navigation sections or by editing/importing JSON.
 
 ## Configuration File Location
 
-- **Default:** `%LocalAppData%\Redball\UserData\Redball.json`
-- **Custom:** Use `-config "C:\path\to\Redball.json"` command-line argument
+- **Primary store:** `HKCU\Software\Redball\UserData`
+- **File copy:** `%LocalAppData%\Redball\UserData\Redball.json`
 
 Config is migrated automatically from legacy locations (install dir, old LocalAppData root, roaming AppData) on first run.
 
@@ -127,7 +127,7 @@ Export and import settings from the main window:
 2. Click **Export Diagnostics** to export a diagnostics report
 3. Use `ConfigService.Instance.Export("backup.json")` / `Import("backup.json")` programmatically
 
-Or use the tray menu → **Settings...** to access all settings with immediate apply.
+Or use the tray menu → **Settings...** to access all settings with immediate auto-apply.
 
 ## Installer Registry Defaults
 

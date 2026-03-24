@@ -32,7 +32,7 @@ The Redball maintainers act as Data Controller for:
 
 You act as Data Controller for:
 
-- All configuration data stored in your local `Redball.json`
+- All configuration data stored in your local profile (`HKCU\Software\Redball\UserData` and `%LocalAppData%\Redball\UserData\Redball.json`)
 - All analytics data stored locally in `analytics.json`
 - All log files generated on your machine
 
@@ -51,13 +51,14 @@ By default, Redball operates entirely locally:
 | Analytics (opt-in) | Feature usage counts | Local machine | Consent |
 | Session state | Application state | Local machine | Legitimate interest (user experience) |
 
-### 3.2 Optional Cloud Processing
+### 3.2 External Services (User-Initiated)
 
-Only if you explicitly enable cloud analytics:
+Redball does not include cloud telemetry ingestion. External processing occurs only for update checks/downloads:
 
 | Activity | Data Processed | Recipient | Legal Basis |
 | --- | --- | --- | --- |
-| Usage analytics | Anonymized feature counts | Configured analytics endpoint | Consent |
+| Update metadata check | Release metadata request + standard HTTP headers | GitHub API | Legitimate interest (software maintenance) |
+| Update package download | MSI download request + standard HTTP headers | GitHub Releases | Legitimate interest (software maintenance) |
 
 ---
 
@@ -69,7 +70,7 @@ Under GDPR and similar regulations, you have the following rights:
 
 You can access all your data at any time:
 
-- Configuration: `Redball.json`
+- Configuration: `HKCU\Software\Redball\UserData` and `%LocalAppData%\Redball\UserData\Redball.json`
 - Logs: `Redball.log`
 - Analytics: `analytics.json`
 
@@ -82,8 +83,12 @@ You can modify any data by editing the JSON files or through the Settings UI.
 To delete all your data:
 
 ```powershell
-# Remove all Redball data
-Remove-Item "$env:LocalAppData\Redball" -Recurse -Force
+# Remove local Redball data files (current user)
+Remove-Item "$env:LocalAppData\Redball\UserData" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item "$env:AppData\Redball" -Recurse -Force -ErrorAction SilentlyContinue
+
+# Remove registry-backed config payload (current user)
+Remove-Item "HKCU:\Software\Redball\UserData" -Recurse -Force -ErrorAction SilentlyContinue
 ```
 
 ### 4.4 Right to Data Portability
@@ -105,7 +110,7 @@ Redball implements the following technical and organizational measures:
 - **Local-only storage** by default
 - **No cloud transmission** without explicit opt-in
 - **Standard file system permissions** (Windows ACLs apply)
-- **No network listeners** (except optional update checks)
+- **No public network listeners** (optional local Web API is loopback-only when enabled)
 
 ### 5.2 Organizational Measures
 
@@ -138,12 +143,10 @@ Full list of dependencies is available in the SBOM (Software Bill of Materials).
 
 ## 8. International Data Transfers
 
-By default, no data leaves your machine. If you optionally enable:
+By default, no personal user content leaves your machine. External transfer is limited to update operations:
 
-- **Update checking**: Data goes to GitHub's API (US-based)
-- **Cloud analytics** (if configured): Data goes to your specified endpoint
-
-Both are subject to your explicit opt-in.
+- **Update checking**: Requests to GitHub API (US-based)
+- **Update download**: MSI retrieval from GitHub Releases
 
 ---
 

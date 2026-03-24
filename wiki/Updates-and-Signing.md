@@ -2,7 +2,7 @@
 
 ## Auto-Updater
 
-Redball includes a built-in update system that checks GitHub Releases for newer versions. Updates can be checked automatically in the background or manually.
+Redball includes a built-in update system that checks GitHub Releases for newer versions. Updates can be checked automatically in the background or manually from the UI.
 
 ### Update Channels
 
@@ -28,14 +28,14 @@ When `AutoUpdateCheckEnabled` is `true` (default), Redball checks for updates ev
 1. Open the tray menu → **About...**
 2. Click **Check for Updates**
 3. If an update is available, a changelog dialog appears with release notes
-4. Click **Download** to download and install the update
+4. Click **Download & Update** to download and install the update
 
 ### Update Process
 
 1. `UpdateService.CheckForUpdateAsync()` queries the GitHub API
-2. If a newer version exists, shows the `UpdateAvailableWindow` with changelog
-3. User clicks Download → `UpdateProgressWindow` shows download progress
-4. If `VerifyUpdateSignature` is enabled, verifies the digital signature
+2. If a newer version exists, update details are shown in the update UI
+3. User clicks download/update and progress is shown
+4. If `VerifyUpdateSignature` is enabled, signature verification is performed before install
 5. MSI installer is downloaded and launched
 
 ### Configuration

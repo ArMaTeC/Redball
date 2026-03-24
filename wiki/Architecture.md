@@ -35,7 +35,7 @@ Redball/
 │   │   ├── CrashRecoveryService.cs  # Crash flag detection
 │   │   ├── NotificationService.cs   # Tray/toast notifications
 │   │   ├── LocalizationService.cs   # i18n (en, es, fr, de, bl)
-│   │   ├── ConfigService.cs         # JSON config load/save/export/import
+│   │   ├── ConfigService.cs         # Registry-first config load/save/export/import
 │   │   ├── HotkeyService.cs         # Global hotkey registration
 │   │   ├── UpdateService.cs         # GitHub release auto-updater
 │   │   ├── HealthCheckService.cs    # App self-monitoring
@@ -83,7 +83,7 @@ All services are instantiated as singletons and coordinated by `App.xaml.cs` and
 App.xaml.cs (entry point)
   ├── SingletonService        — Mutex check (first thing)
   ├── CrashRecoveryService    — Crash flag check
-  ├── ConfigService           — Load Redball.json from UserData
+  ├── ConfigService           — Load config from registry + UserData file copy
   ├── ThemeManager            — Apply saved theme (14 themes)
   ├── KeepAwakeService        — Initialize + SetActive + StartMonitoring
   │     ├── HeartbeatTimer    — SetThreadExecutionState + F13–F16 (every Ns)
@@ -113,7 +113,7 @@ App.xaml.cs (entry point)
 3. SingletonService.TryAcquire() — exit if another instance running
 4. CrashRecoveryService.CheckAndRecover() — detect previous crash
 5. CrashRecoveryService.SetCrashFlag() — mark this session
-6. ConfigService.Load() — load Redball.json
+6. ConfigService.Load() — load config (registry-first)
 7. ConfigService.Validate() — check config ranges
 8. ThemeManager.Initialize() — apply saved theme
 9. KeepAwakeService.Initialize() — create timers, configure monitors
@@ -171,7 +171,7 @@ Runtime state lives in `KeepAwakeService` (singleton):
 - **Auto-pause flags:** `AutoPausedBattery`, `AutoPausedNetwork`, `AutoPausedIdle`, `AutoPausedSchedule`
 - **Events:** `ActiveStateChanged`, `TimedAwakeExpired`, `HeartbeatTick`
 
-`MainViewModel` subscribes to `ActiveStateChanged` to update the UI. Config is stored in `ConfigService.Config` (strongly-typed `RedballConfig` class) and persisted to `Redball.json`.
+`MainViewModel` subscribes to `ActiveStateChanged` to update the UI. Config is stored in `ConfigService.Config` (strongly-typed `RedballConfig` class) and persisted to `HKCU\Software\Redball\UserData` with a file copy in `%LocalAppData%\Redball\UserData\Redball.json`.
 
 When settings are saved, `KeepAwakeService.ReloadConfig()` is called to sync monitor enable/disable flags and thresholds.
 

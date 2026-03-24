@@ -4,8 +4,8 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 2.0.x   | :white_check_mark: |
-| < 2.0   | :x:                |
+| 3.x     | :white_check_mark: |
+| < 3.0   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -32,7 +32,7 @@ We take security seriously. If you discover a security vulnerability in Redball,
 
 ### Code Signing
 
-- Redball supports Authenticode code signing via `Set-AuthenticodeSignature`
+- Redball release artifacts are Authenticode signed in CI/CD
 - MSI installers are signed via [SignPath](https://signpath.io) in CI/CD
 - Update downloads can optionally verify digital signatures (`VerifyUpdateSignature` config)
 
@@ -44,7 +44,7 @@ We take security seriously. If you discover a security vulnerability in Redball,
 
 ### Data Handling
 
-- All configuration is stored locally in `Redball.json` (no cloud sync)
+- Configuration is stored locally in registry `HKCU\Software\Redball\UserData` with file copy at `%LocalAppData%\Redball\UserData\Redball.json`
 - Log files are stored locally with configurable rotation
 - No credentials or sensitive data are stored in configuration
 - Telemetry is opt-in and logged locally only (never transmitted)
@@ -58,16 +58,15 @@ We take security seriously. If you discover a security vulnerability in Redball,
 
 1. **Verify downloads** — Always download from official [GitHub Releases](https://github.com/ArMaTeC/Redball/releases)
 2. **Enable signature verification** — Set `VerifyUpdateSignature` to `true` in config
-3. **Review execution policy** — Use `RemoteSigned` or `AllSigned` execution policy
-4. **Keep updated** — Use the built-in auto-updater or check for updates regularly
-5. **Review config permissions** — Ensure `Redball.json` is only writable by your user account
+3. **Keep updated** — Use the built-in auto-updater or check for updates regularly
+4. **Review config permissions** — Ensure your user profile data under `%LocalAppData%\Redball\UserData` is writable only by your account
 
 ## Threat Model
 
 | Threat | Mitigation |
 | ------ | ---------- |
-| Tampered configuration file | Config integrity hash verification |
+| Tampered configuration file | Validation and self-healing normalization on load |
 | Malicious update injection | HTTPS-only downloads, optional signature verification |
 | Credential exposure in logs | Sensitive data redacted from log output |
 | Unauthorized instance control | Named mutex singleton with session isolation |
-| DLL injection via Add-Type | Inline C# compiled at runtime, no external DLLs loaded |
+| Input hook misuse | Defensive Interception hook initialization and deterministic cleanup |

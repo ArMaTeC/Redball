@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Effective Date:** March 2026
-**Application:** Redball v2.0+
+**Application:** Redball v3.x (WPF)
 
 ## Overview
 
@@ -13,7 +13,7 @@ Redball is a local-only desktop application. It does not collect, transmit, or s
 
 | Data | Location | Purpose |
 | ---- | -------- | ------- |
-| Configuration | `Redball.json` | User preferences and settings |
+| Configuration | Registry `HKCU\Software\Redball\UserData` (primary) and `%LocalAppData%\Redball\UserData\Redball.json` (local copy) | User preferences and settings |
 | Session state | `Redball.state.json` | Resume after restart |
 | Log file | `Redball.log` | Troubleshooting and diagnostics |
 | Crash flag | `Redball.crash.flag` | Crash recovery detection |
@@ -33,10 +33,10 @@ Redball makes the following outbound network requests **only when explicitly tri
 
 | Request | Destination | Trigger |
 | ------- | ----------- | ------- |
-| Update check | `api.github.com` | User clicks "Check for Updates" or uses `-CheckUpdate` |
-| Update download | `github.com` (Releases) | User clicks "Download & Update" or uses `-Update` |
+| Update check | `api.github.com` | User clicks "Check for Updates" or enables automatic update checks |
+| Update download | `github.com` (Releases) | User clicks "Download & Update" |
 
-No automatic or background network requests are made unless the user explicitly initiates them.
+If automatic update checks are enabled, background checks occur at the configured interval.
 
 ## Telemetry
 
@@ -66,7 +66,7 @@ Since all data is stored locally on your machine, you have full control:
 
 - **Access**: Open any `.json` or `.log` file in a text editor
 - **Delete**: Remove any data file at any time
-- **Portability**: Copy your `Redball.json` to another machine
+- **Portability**: Export/import config as JSON or copy `%LocalAppData%\Redball\UserData\Redball.json`
 - **Opt-out**: Disable telemetry and performance metrics in settings
 
 ## Changes to This Policy

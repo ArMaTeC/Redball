@@ -8,7 +8,7 @@ Welcome to the Redball wiki — the complete documentation for every feature, fu
 
 - [Home](Home) — You are here
 - [Getting Started](Getting-Started) — Installation, prerequisites, and first run
-- [Configuration](Configuration) — All JSON settings explained
+- [Configuration](Configuration) — Full settings reference and persistence behavior
 - [Tray Menu & Keyboard Shortcuts](Tray-Menu-and-Shortcuts) — UI interaction guide
 - [Settings GUI](Settings-GUI) — Main window navigation and all settings sections
 - [TypeThing — Clipboard Typer](TypeThing) — Full documentation for the clipboard typing feature
@@ -25,7 +25,7 @@ Welcome to the Redball wiki — the complete documentation for every feature, fu
 
 | Topic | Description |
 | ----- | ----------- |
-| [Redball.json](https://github.com/ArMaTeC/Redball/blob/main/Redball.json) | Configuration file |
+| [Configuration](Configuration) | Registry + local config storage reference |
 | [CHANGELOG.md](https://github.com/ArMaTeC/Redball/blob/main/docs/CHANGELOG.md) | Version history |
 | [LICENSE](https://github.com/ArMaTeC/Redball/blob/main/LICENSE) | MIT License |
 

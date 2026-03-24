@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Installer Artifacts & Packaging**: Standardized release artifact naming and installer asset selection logic to prefer installer-focused outputs where applicable.
   - _Comment_: Predictable naming helps automation and reduces manual artifact selection mistakes.
+- **Documentation/Wiki Sync**: Updated core documentation and wiki pages to match current v3 WPF runtime behavior and build pipeline.
+  - _Comment_: This removes stale references and keeps operator/user guidance aligned with shipped behavior.
 - **MSI Launch Flow**: Refined MSI launch and post-install behavior, including VBScript launcher integration and launch control adjustments.
   - _Comment_: Improves post-install UX and reduces launch edge cases after setup completes.
 - **Build/Release Pipeline**: Updated build and release scripts to support force-rebuild scenarios, optional no-restart driver install paths, and clearer process/retry handling.
@@ -40,6 +42,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - _Comment_: This streamlines settings interaction and reduces friction in common configuration flows.
 - **Mini Widget Preset Revert Logic**: Manual edits to preset-managed mini widget controls now automatically switch the preset back to `Custom`.
   - _Comment_: Prevents stale preset labels when users intentionally diverge from preset defaults.
+
+### Documentation (Unreleased)
+
+- **Config Persistence Docs**: Updated docs/wiki references from file-only config to registry-first persistence (`HKCU\Software\Redball\UserData`) with `%LocalAppData%\Redball\UserData\Redball.json` file copy.
+  - _Comment_: Matches the current durability implementation and avoids misleading reset/export guidance.
+- **Settings UX Docs**: Updated settings guidance to reflect auto-apply behavior instead of legacy explicit apply-button flow.
+  - _Comment_: Prevents user confusion when following settings instructions in the current UI.
+- **Startup & CLI Docs**: Replaced outdated startup argument guidance with current maintenance arguments (`--install-driver`, `--install-driver-no-restart`).
+  - _Comment_: Keeps launch/runtime docs accurate for support and troubleshooting.
+- **Build/Release Docs**: Added current `scripts/build.ps1` behavior details, including default HID test app publish output under `dist/hid-test-app`.
+  - _Comment_: Improves release reproducibility and artifact discoverability.
+- **Security/Privacy/DPA Docs**: Updated supported versions, data storage locations, and update network behavior to current build.
+  - _Comment_: Aligns policy/operations docs with implemented runtime behavior.
 
 ### Fixed (Unreleased)
 

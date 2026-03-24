@@ -149,6 +149,11 @@
                             <TextBlock Text="&#xE8D2;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
+                    <MenuItem Header="Emergency HID Release" Command="{Binding EmergencyHidReleaseCommand}">
+                        <MenuItem.Icon>
+                            <TextBlock Text="&#xEA39;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
                     <Separator/>
 
                     <MenuItem Header="Open Logs" Command="{Binding OpenLogsCommand}">
@@ -846,13 +851,15 @@
                                                 <ComboBoxItem Content="Standard (SendInput)" Tag="SendInput"/>
                                                 <ComboBoxItem Content="Driver-Level (HID)" Tag="HID"/>
                                             </ComboBox>
+                                            <CheckBox x:Name="MainTypeThingHidSafeModeCheck" Content="HID Safe Mode (force SendInput only)" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Emergency safety mode: disables HID typing and forces SendInput-only until turned off."/>
                                             <Button x:Name="MainInstallHidDriverBtn" Content="Install HID Driver (No-Restart Attempt)" Style="{DynamicResource ModernButton}" Margin="0,0,0,12" Click="MainInstallHidDriverBtn_Click" Visibility="Collapsed"/>
                                             <Button x:Name="MainResetHidStackBtn" Content="Reset HID Stack" Style="{DynamicResource ModernButton}" Margin="0,0,0,8" Click="MainResetHidStackBtn_Click"/>
+                                            <Button x:Name="MainEmergencyReleaseHidBtn" Content="Emergency Release Keyboard (HID)" Style="{DynamicResource ModernButton}" Margin="0,0,0,8" Click="MainEmergencyReleaseHidBtn_Click"/>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                                                 <Border x:Name="MainHidStatusIndicator" Width="12" Height="12" CornerRadius="6" Background="Gray" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <TextBlock x:Name="MainHidStatusText" Text="HID status: Unknown" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center"/>
                                             </StackPanel>
-                                            <TextBlock x:Name="MainHidDetailsText" Text="Last refresh: Never • Last error: None" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
+                                            <TextBlock x:Name="MainHidDetailsText" Text="Last refresh: Never • Next refresh: Now • Last error: None" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
                                             <Button x:Name="MainCopyHidDiagnosticsBtn" Content="Copy HID Diagnostics" Style="{DynamicResource ModernButton}" Margin="0,0,0,12" Click="MainCopyHidDiagnosticsBtn_Click"/>
                                             <TextBlock Text="Advanced Settings" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,8"/>
                                             <TextBlock Text="Minimum Delay (ms)" FontWeight="Medium" Margin="0,8,0,4"/>

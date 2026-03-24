@@ -36,7 +36,7 @@ The settings are organized into dedicated sections accessible via the left navig
 | Pause threshold (%) | Slider (5–50) | `BatteryThreshold` | Battery % below which to auto-pause |
 | Network-aware mode | CheckBox | `NetworkAware` | Auto-pause when network disconnects |
 | Idle detection | CheckBox | `IdleDetection` | Auto-pause after user inactivity |
-| Idle threshold (minutes) | Slider (5–120) | `IdleThresholdMinutes` | Minutes of inactivity before auto-pause |
+| Idle threshold (minutes) | Slider (5–120) | `IdleThreshold` | Minutes of inactivity before auto-pause |
 | Presentation mode detection | CheckBox | `PresentationModeDetection` | Auto-activate for PowerPoint/Teams |
 | Scheduled operation | CheckBox | `ScheduleEnabled` | Enable daily scheduled activation |
 
@@ -81,11 +81,11 @@ Quick action buttons at the bottom of the General tab:
 - **Open Logs** — Opens the log folder in File Explorer
 - **Export Diagnostics** — Creates a diagnostics export for troubleshooting
 - **Start TypeThing** — Launches the TypeThing typing workflow
-- **Apply Settings** — Saves and applies all current settings immediately
+- **Settings auto-apply** — Changes are saved and applied automatically as controls change
 
 ### Saving
 
-Clicking **Apply Settings** saves all changes to `Redball.json`. Settings are applied immediately to the running instance.
+Settings save automatically to registry-backed config (`HKCU\Software\Redball\UserData`) with a local copy in `%LocalAppData%\Redball\UserData\Redball.json`. Changes are applied immediately to the running instance.
 
 If TypeThing hotkeys were changed, the old hotkeys are unregistered and new ones are registered automatically.
 

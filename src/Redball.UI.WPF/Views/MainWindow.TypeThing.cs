@@ -354,6 +354,7 @@ public partial class MainWindow
             {
                 Logger.Error("MainWindow", "TypeThing error", ex);
                 _analytics.TrackFeature("typething.failed_exception");
+                CleanupTypeThingHidSession("TypeThing exception");
                 MarkTypeThingOperationFinished();
             }
         });
@@ -368,6 +369,12 @@ public partial class MainWindow
 
         // Determine input mode: HID (driver-level) or SendInput (default)
         _useHidInput = false;
+        if (config.TypeThingHidSafeMode)
+        {
+            InterceptionInputService.Instance.ReleaseResources("HID Safe Mode active");
+            Logger.Warning("MainWindow", "TypeThing: HID Safe Mode is active, forcing SendInput mode");
+        }
+        else
         if (Enum.TryParse<TypeThingInputMode>(config.TypeThingInputMode, true, out var inputMode) &&
             inputMode == TypeThingInputMode.HID)
         {
@@ -399,6 +406,7 @@ public partial class MainWindow
             {
                 _typeThingTimer?.Stop();
                 _typeThingTimer = null;
+                CleanupTypeThingHidSession("TypeThing stopped by user");
                 Logger.Info("MainWindow", "TypeThing: Typing stopped by user");
                 _analytics.TrackFeature("typething.stopped");
                 NotificationService.Instance.ShowInfo("TypeThing", "Typing stopped.");
@@ -409,6 +417,7 @@ public partial class MainWindow
             {
                 _typeThingTimer?.Stop();
                 _typeThingTimer = null;
+                CleanupTypeThingHidSession("TypeThing complete");
                 MarkTypeThingOperationFinished();
                 Logger.Info("MainWindow", "TypeThing: Typing complete");
                 _analytics.TrackFeature("typething.completed");
@@ -478,10 +487,32 @@ public partial class MainWindow
             _typeThingCountdownTimer = null;
             _typeThingTimer?.Stop();
             _typeThingTimer = null;
+            CleanupTypeThingHidSession("StopTypeThing requested");
             MarkTypeThingOperationFinished();
             _analytics.TrackFeature("typething.stop_requested");
             NotificationService.Instance.ShowInfo("TypeThing", "TypeThing stopped.");
         });
+    }
+
+    private void CleanupTypeThingHidSession(string reason)
+    {
+        if (!_useHidInput)
+        {
+            return;
+        }
+
+        try
+        {
+            InterceptionInputService.Instance.ReleaseResources(reason);
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("MainWindow", $"CleanupTypeThingHidSession failed: {ex.Message}");
+        }
+        finally
+        {
+            _useHidInput = false;
+        }
     }
 
     public void ReloadHotkeys()
@@ -573,6 +604,13 @@ public partial class MainWindow
                 });
             }
 
+            // Emergency HID release hotkey: Ctrl+Shift+Esc
+            _hotkeyService.RegisterHotkey(102, HotkeyService.MOD_CONTROL | HotkeyService.MOD_SHIFT, 0x1B /* VK_ESCAPE */, () =>
+            {
+                Logger.Warning("MainWindow", "Hotkey: Ctrl+Shift+Esc - Emergency HID release requested");
+                EmergencyReleaseHid("Hotkey Ctrl+Shift+Esc", true);
+            });
+
             Logger.Info("MainWindow", "Global hotkeys registered successfully");
         }
         catch (Exception ex)
@@ -587,6 +625,29 @@ public partial class MainWindow
         _isExiting = true;
         Logger.Info("MainWindow", "Shutting down application");
         Application.Current.Shutdown();
+    }
+
+    public void EmergencyReleaseHid(string source, bool showNotification)
+    {
+        try
+        {
+            StopTypeThing();
+            InterceptionInputService.Instance.ReleaseResources($"Emergency release ({source})");
+            _useHidInput = false;
+
+            if (showNotification)
+            {
+                NotificationService.Instance.ShowWarning("HID Emergency Release", "HID resources released. Physical keyboard control should be restored.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Emergency HID release failed", ex);
+            if (showNotification)
+            {
+                NotificationService.Instance.ShowError("HID Emergency Release", "Failed to release HID resources. Check logs for details.");
+            }
+        }
     }
 
     #region P/Invoke SendInput helpers

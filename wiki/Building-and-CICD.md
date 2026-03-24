@@ -10,6 +10,9 @@ The MSI is built with [WiX Toolset v4](https://wixtoolset.org/).
 # Full deploy pipeline (MSI via WiX, with code signing)
 .\installer\Deploy-Redball.ps1
 
+# Recommended local build pipeline
+.\scripts\build.ps1
+
 # Build MSI only
 .\installer\Build-MSI.ps1 -Version "3.0.0"
 
@@ -41,6 +44,8 @@ For release builds (when MSI is enabled), `scripts/build.ps1` commits and pushes
 2. Builds the WPF application via `dotnet publish`
 3. Builds an MSI via WiX
 4. Signs both artifacts with a code-signing certificate (creates a self-signed cert if none exists)
+
+`scripts/build.ps1` also publishes the HID test app by default to `dist/hid-test-app` (use `-SkipHidTestApp` to opt out).
 
 ### Installer Features
 
@@ -107,6 +112,7 @@ Build artifacts are placed in the `dist/` directory:
 | ---- | ----------- |
 | `Redball.UI.WPF.exe` | Self-contained WPF executable |
 | `Redball-{version}.msi` | WiX MSI installer |
+| `hid-test-app/Redball.E2E.Tests.exe` | Published E2E HID validation utility |
 
 ---
 

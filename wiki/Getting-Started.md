@@ -31,34 +31,24 @@ If you have the self-contained EXE from the repository or a custom build:
 # Right-click the tray icon to access all features
 ```
 
-### Option C — Command Line Arguments
+### Option C — Maintenance Arguments (Advanced)
 
-```powershell
-# Start minimized to tray
-.\Redball.UI.WPF.exe -minimized
-
-# Start with specific config path
-.\Redball.UI.WPF.exe -config "C:\Tools\Redball.json"
-
-# Show help
-.\Redball.UI.WPF.exe -help
-```
+Current command-line arguments are maintenance-focused:
 
 | Argument | Description |
 | -------- | ----------- |
-| `-minimized` | Start minimized to system tray |
-| `-config <path>` | Specify a custom config file path |
-| `-help` | Show help information |
+| `--install-driver` | Runs elevated Interception driver installation flow |
+| `--install-driver-no-restart` | Runs elevated no-restart driver installation flow |
 
 ## First Run
 
 On first run, Redball will:
 
-1. Create a default `Redball.json` configuration file in `%LocalAppData%\Redball\UserData`
+1. Create or load your configuration from `HKCU\Software\Redball\UserData` (with file copy in `%LocalAppData%\Redball\UserData\Redball.json`)
 2. Check for singleton instance (only one Redball can run at a time)
 3. Check for crash recovery from a previous abnormal termination
 4. Display a bright red 3D ball icon in your system tray
-5. Begin keeping your system awake immediately
+5. Restore previous session state if available, otherwise start active keep-awake mode
 6. Initialize TypeThing clipboard typer with default hotkeys (Ctrl+Shift+V / Ctrl+Shift+X)
 
 The main window opens with a modern custom chrome design featuring:

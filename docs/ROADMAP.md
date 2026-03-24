@@ -5,7 +5,7 @@
 - **v1.0** - Initial PowerShell implementation
 - **v2.0** - WPF UI with basic themes
 - **v2.1** - Auto-updater, settings GUI, TypeThing
-- **v3.0** - Current: 12 themes, smart monitoring, analytics, MSI installer
+- **v3.0** - Current: 14 themes, smart monitoring, mini widget presets, analytics, MSI installer
 
 ## Current Version: 3.0.x
 

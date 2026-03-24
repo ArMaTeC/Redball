@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-03-24T09:47:35Z",
+  "version": "2.1.229",
+  "files": [
+    {
+      "size": 8484,
+      "hash": "25C1C28CAA213E2E63A9D85A6A1A033572A396BB8925F17AC615CF1DB07E8AFC",
+      "name": "Redball.UI.WPF.deps.json"
+    },
+    {
+      "size": 1519104,
+      "hash": "D9E89997B8F3306EC5132362170170962FDE663D4F2DBEB7523EDC9FC515D47E",
+      "name": "Redball.UI.WPF.dll"
+    },
+    {
+      "size": 363008,
+      "hash": "94A9A31219ACADBB54B323AEB393F0418F53F031D856E8881592A434F583B64A",
+      "name": "Redball.UI.WPF.exe"
+    },
+    {
+      "size": 515,
+      "hash": "89AD1EA5C9C20B6B266547EF27C0AE3840CAB5642D3C2AEDF06B7026245671DD",
+      "name": "Redball.UI.WPF.runtimeconfig.json"
+    },
+    {
+      "size": 210491,
+      "hash": "1115214EB7C70C7DEC87A60FD25C8CAA261701E5D21310025ECA8CF6958D4F37",
+      "name": "Assets\\redball.ico"
+    },
+    {
+      "size": 117392,
+      "hash": "A2AB2E94556733B0BB8A56C7F79E8EA0A363F984C49A0AE757E329A273A45774",
+      "name": "bin\\CommunityToolkit.Mvvm.dll"
+    },
+    {
+      "size": 103424,
+      "hash": "2059222C4AE5D0291FCE13BD296ADCC448D79B6FAE27746AEDF347608ED3090C",
+      "name": "bin\\Hardcodet.NotifyIcon.Wpf.dll"
+    },
+    {
+      "size": 519168,
+      "hash": "4583DEFC5F2A547A51671FF997BE7393F807108CED8B4678B3B45C5762777C41",
+      "name": "bin\\InputInterceptor.dll"
+    },
+    {
+      "size": 63768,
+      "hash": "67FA4325000DB017DC0C35829B416F024F042D24EFB868BCF17A895EE6500A93",
+      "name": "bin\\Microsoft.Extensions.DependencyInjection.Abstractions.dll"
+    },
+    {
+      "size": 92952,
+      "hash": "158761CE778E799949F3A3060C461B1055BB35F1F5A65EFF0E42397849F09ECD",
+      "name": "bin\\Microsoft.Extensions.DependencyInjection.dll"
+    },
+    {
+      "size": 146864,
+      "hash": "ACF2664D35F432AB9EA003040E5154AE8BB40A8F07D3EEBEE7093E97F44A96EA",
+      "name": "bin\\Microsoft.Xaml.Behaviors.dll"
+    },
+    {
+      "size": 311984,
+      "hash": "B2D6E7E991DC9EF154B29F4966F04FD8ED4EBB2C1D1242EA1D5F3E90F8AE5143",
+      "name": "bin\\System.Management.dll"
+    },
+    {
+      "size": 685216,
+      "hash": "D156C5349BCE411159AFFAA1369EE2BBAC3D4CBA7793BCEDAF9C85F9C9FB5839",
+      "name": "bin\\System.Speech.dll"
+    },
+    {
+      "size": 0,
+      "hash": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "name": "logs\\.keep"
+    }
+  ]
+}

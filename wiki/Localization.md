@@ -18,7 +18,7 @@ Redball supports multiple languages through a built-in internationalization (i18
 2. **External overrides** can be placed in `locales.json` alongside the application
 3. On startup, `LocalizationService` loads embedded locales first, then merges external overrides (external takes precedence)
 4. The active locale is determined by:
-   - The `Locale` setting in `Redball.json` (if set)
+   - The `Locale` setting in current config (`HKCU\Software\Redball\UserData` / `%LocalAppData%\Redball\UserData\Redball.json`)
    - Falls back to `en` if the configured locale isn't available
 
 ## LocalizationService API
@@ -63,11 +63,11 @@ Partial translations are supported — any missing keys fall back to English.
 
 1. Open the main window → **Settings** section
 2. Change the **Language** dropdown
-3. Click **Apply Settings**
+3. Changes are auto-applied immediately
 
 ### Via Configuration File
 
-Edit `Redball.json`:
+Edit/export a config JSON payload (or import one through the app):
 
 ```json
 {

@@ -224,10 +224,10 @@ public class InterceptionInputService : IDisposable
             }
 
             Thread.Sleep(500);
-            var ready = Initialize();
-            Logger.Info("InterceptionInputService", ready
-                ? "Driver activated without reboot"
-                : "Driver installed but not ready after no-restart attempt (reboot may be required)");
+            IsDriverInstalled = InputInterceptor.CheckDriverInstalled();
+            Logger.Info("InterceptionInputService", IsDriverInstalled
+                ? "Driver installed successfully. HID initialization is deferred until an active typing session."
+                : "Driver install command completed but driver is still not detected.");
 
             return true;
         }
@@ -371,7 +371,7 @@ public class InterceptionInputService : IDisposable
         bool shouldRefresh;
         lock (_lock)
         {
-            shouldRefresh = _initialized || IsDriverInstalled;
+            shouldRefresh = _initialized;
             if (!shouldRefresh) return;
 
             var nowUtc = DateTime.UtcNow;

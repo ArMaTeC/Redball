@@ -107,7 +107,12 @@ public partial class MainWindow
 
         MainEnableTypeThingCheck.IsChecked = config.TypeThingEnabled;
         MainUseLowLevelHotkeyCheck.IsChecked = config.UseLowLevelHotkey;
+        MainTypeThingHidSafeModeCheck.IsChecked = config.TypeThingHidSafeMode;
         MainTypeThingInputModeCombo.SelectedIndex = config.TypeThingInputMode?.Equals("HID", StringComparison.OrdinalIgnoreCase) == true ? 1 : 0;
+        if (config.TypeThingHidSafeMode)
+        {
+            MainTypeThingInputModeCombo.SelectedIndex = 0;
+        }
         RefreshHidDriverInstallVisibility();
         UpdateHidStatusText();
         EnsureHidStatusAutoRefresh();
@@ -275,7 +280,20 @@ public partial class MainWindow
 
             config.TypeThingEnabled = MainEnableTypeThingCheck.IsChecked ?? true;
             config.UseLowLevelHotkey = MainUseLowLevelHotkeyCheck.IsChecked ?? false;
+            config.TypeThingHidSafeMode = MainTypeThingHidSafeModeCheck.IsChecked ?? false;
             config.TypeThingInputMode = MainTypeThingInputModeCombo.SelectedIndex == 1 ? "HID" : "SendInput";
+
+            if (config.TypeThingHidSafeMode)
+            {
+                config.TypeThingInputMode = "SendInput";
+                if (MainTypeThingInputModeCombo.SelectedIndex != 0)
+                {
+                    MainTypeThingInputModeCombo.SelectedIndex = 0;
+                }
+
+                InterceptionInputService.Instance.ReleaseResources("HID Safe Mode enabled");
+            }
+
             RefreshHidDriverInstallVisibility();
             config.TypeThingStartHotkey = MainStartHotkeyBox.Text;
             config.TypeThingStopHotkey = MainStopHotkeyBox.Text;
@@ -612,6 +630,15 @@ public partial class MainWindow
             UpdateMainStartWithWindowsStatusText();
         }
 
+        if (ReferenceEquals(sender, MainTypeThingHidSafeModeCheck) && MainTypeThingHidSafeModeCheck.IsChecked == true)
+        {
+            MainTypeThingInputModeCombo.SelectedIndex = 0;
+            InterceptionInputService.Instance.ReleaseResources("HID Safe Mode enabled from settings");
+            NotificationService.Instance.ShowWarning("HID Safe Mode", "HID input disabled. TypeThing will use SendInput only.");
+            RefreshHidDriverInstallVisibility();
+            UpdateHidStatusText();
+        }
+
         MarkMiniWidgetPresetAsCustomFromManualChange(sender);
 
         AutoApplySettings();
@@ -630,6 +657,12 @@ public partial class MainWindow
     {
         if (ReferenceEquals(sender, MainTypeThingInputModeCombo))
         {
+            if (MainTypeThingHidSafeModeCheck.IsChecked == true && MainTypeThingInputModeCombo.SelectedIndex == 1)
+            {
+                MainTypeThingInputModeCombo.SelectedIndex = 0;
+                NotificationService.Instance.ShowWarning("HID Safe Mode", "Disable HID Safe Mode before selecting HID input.");
+            }
+
             RefreshHidDriverInstallVisibility();
             UpdateHidStatusText();
         }
@@ -988,7 +1021,12 @@ public partial class MainWindow
 
     private void RefreshHidDriverInstallVisibility()
     {
-        if (MainTypeThingInputModeCombo.SelectedIndex == 1 && !InterceptionInputService.Instance.IsReady)
+        var hidSafeModeEnabled = MainTypeThingHidSafeModeCheck?.IsChecked == true;
+        var hidSelected = MainTypeThingInputModeCombo.SelectedIndex == 1 && !hidSafeModeEnabled;
+
+        MainTypeThingInputModeCombo.IsEnabled = !hidSafeModeEnabled;
+
+        if (hidSelected && !InterceptionInputService.Instance.IsReady)
         {
             MainInstallHidDriverBtn.Visibility = Visibility.Visible;
         }
@@ -999,7 +1037,7 @@ public partial class MainWindow
 
         if (MainResetHidStackBtn != null)
         {
-            MainResetHidStackBtn.Visibility = MainTypeThingInputModeCombo.SelectedIndex == 1
+            MainResetHidStackBtn.Visibility = hidSelected
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }
@@ -1013,14 +1051,21 @@ public partial class MainWindow
 
         if (MainCopyHidDiagnosticsBtn != null)
         {
-            MainCopyHidDiagnosticsBtn.Visibility = MainTypeThingInputModeCombo.SelectedIndex == 1
+            MainCopyHidDiagnosticsBtn.Visibility = hidSelected
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        if (MainEmergencyReleaseHidBtn != null)
+        {
+            MainEmergencyReleaseHidBtn.Visibility = hidSelected
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }
 
         if (MainHidStatusIndicator != null)
         {
-            MainHidStatusIndicator.Visibility = MainTypeThingInputModeCombo.SelectedIndex == 1
+            MainHidStatusIndicator.Visibility = hidSelected
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }
@@ -1033,6 +1078,20 @@ public partial class MainWindow
         if (MainTypeThingInputModeCombo.SelectedIndex != 1)
         {
             MainHidStatusText.Text = "HID status: Not in use (SendInput mode)";
+            return;
+        }
+
+        if (MainTypeThingHidSafeModeCheck?.IsChecked == true)
+        {
+            MainHidStatusText.Text = "HID status: Disabled by HID Safe Mode";
+            if (MainHidDetailsText != null)
+            {
+                MainHidDetailsText.Text = "HID Safe Mode is ON. TypeThing is locked to SendInput for safety.";
+            }
+            if (MainHidStatusIndicator != null)
+            {
+                MainHidStatusIndicator.Background = System.Windows.Media.Brushes.Gray;
+            }
             return;
         }
 
@@ -1080,16 +1139,7 @@ public partial class MainWindow
     {
         if (InterceptionInputService.Instance.InstallDriverNoRestart())
         {
-            var ready = InterceptionInputService.Instance.IsReady || InterceptionInputService.Instance.Initialize();
-            if (ready)
-            {
-                NotificationService.Instance.ShowInfo("Driver Installed", "HID driver installed and activated without reboot.");
-                MainInstallHidDriverBtn.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                NotificationService.Instance.ShowWarning("Driver Installed", "Driver installed, but activation may still require a restart.");
-            }
+            NotificationService.Instance.ShowInfo("Driver Installed", "HID driver installed. It will initialize only during active TypeThing typing.");
 
             RefreshHidDriverInstallVisibility();
             UpdateHidStatusText();
@@ -1127,6 +1177,13 @@ public partial class MainWindow
             NotificationService.Instance.ShowError("HID Reset", "Failed to reset HID stack. Check logs for details.");
             UpdateHidStatusText();
         }
+    }
+
+    private void MainEmergencyReleaseHidBtn_Click(object sender, RoutedEventArgs e)
+    {
+        EmergencyReleaseHid("Settings emergency button", true);
+        RefreshHidDriverInstallVisibility();
+        UpdateHidStatusText();
     }
 
     private void MainCopyHidDiagnosticsBtn_Click(object sender, RoutedEventArgs e)

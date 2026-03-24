@@ -81,7 +81,9 @@ Use the decision trees below to quickly diagnose common issues. Start at the top
 **→ What to do:**
   1. Re-enable your desired features in Settings.
   2. Check Diagnostics → Log for crash-related entries.
-  3. If crashes persist, delete `%LocalAppData%\Redball\UserData\Redball.json` to reset to defaults.
+  3. If crashes persist, reset config stores:
+     - Delete `%LocalAppData%\Redball\UserData\Redball.json`
+     - Remove `HKCU\Software\Redball\UserData`
 
 ---
 

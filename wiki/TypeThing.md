@@ -32,7 +32,7 @@ TypeThing is a built-in feature of Redball that simulates human-like typing of c
 
 ## Configuration
 
-All TypeThing settings are stored in `Redball.json`:
+TypeThing settings are persisted in the main Redball config (registry `HKCU\Software\Redball\UserData` with local copy `%LocalAppData%\Redball\UserData\Redball.json`):
 
 | Setting | Type | Default | Description |
 | ------- | ---- | ------- | ----------- |

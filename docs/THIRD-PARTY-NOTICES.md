@@ -10,12 +10,12 @@ This file contains the licenses and notices for third-party software used by Red
 - **License:** Microsoft Software License Terms (included with Windows)
 - **Usage:** Keep-awake power state management, simulated keyboard input, global hotkey registration
 
-### .NET Framework / .NET Runtime
+### .NET 8 Runtime
 
 - **Source:** Microsoft
 - **License:** MIT License
 - **URL:** <https://github.com/dotnet/runtime/blob/main/LICENSE.TXT>
-- **Usage:** System.Windows.Forms, System.Drawing (GDI+), System.Runtime.InteropServices
+- **Usage:** WPF runtime, base class libraries, and platform interop support
 
 ### Windows Runtime (WinRT)
 
@@ -32,13 +32,6 @@ This file contains the licenses and notices for third-party software used by Red
 - **URL:** <https://wixtoolset.org/>
 - **Usage:** MSI installer generation
 
-### ps2exe
-
-- **Source:** Markus Scholtes
-- **License:** MIT License
-- **URL:** <https://github.com/MScholtes/PS2EXE>
-- **Usage:** Optional EXE compilation from PowerShell script
-
 ### SignPath
 
 - **Source:** SignPath GmbH
@@ -48,12 +41,12 @@ This file contains the licenses and notices for third-party software used by Red
 
 ## Test Dependencies
 
-### Pester
+### MSTest
 
-- **Source:** Pester Team
-- **License:** Apache License 2.0
-- **URL:** <https://github.com/pester/Pester>
-- **Usage:** PowerShell unit testing framework
+- **Source:** Microsoft
+- **License:** MIT License
+- **URL:** <https://github.com/microsoft/testfx>
+- **Usage:** Unit testing framework for `tests/` and related .NET test projects
 
 ### PSScriptAnalyzer
 
