@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- Centralized Versioning -->
-    <Version>2.1.236</Version>
+    <Version>2.1.237</Version>
     <Authors>ArMaTeC</Authors>
     <Company>ArMaTeC</Company>
     <Product>Redball</Product>
@@ -11,6 +11,7 @@
     <AssemblyVersion>$(Version).0</AssemblyVersion>
     <FileVersion>$(Version).0</FileVersion>
     <Platforms>x64;AnyCPU</Platforms>
-    <OutputPath>..\..\bin\$(Configuration)\</OutputPath> <!-- Shared build path structure -->
+    <BaseOutputPath>$(MSBuildThisFileDirectory)bin\</BaseOutputPath>
+    <OutputPath>$(BaseOutputPath)$(Configuration)\</OutputPath> <!-- Shared build path structure -->
   </PropertyGroup>
 </Project>
