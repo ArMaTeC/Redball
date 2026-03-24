@@ -1,0 +1,21 @@
+{
+  "FirstSeen": "2026-03-24T05:44:23.6393546Z",
+  "LastUpdated": "2026-03-24T05:44:54.4929462Z",
+  "TotalSessions": 0,
+  "TotalSessionDuration": "00:00:00",
+  "SessionStartTime": null,
+  "SessionHistory": {},
+  "Features": {
+    "update.auto_check": {
+      "UsageCount": 1,
+      "LastUsed": "2026-03-24T05:44:54.4929405Z",
+      "DailyUsage": {
+        "2026-03-24": 1
+      },
+      "Contexts": {}
+    }
+  },
+  "Funnels": {},
+  "Retention": {},
+  "NpsResponses": []
+}

@@ -122,6 +122,13 @@ public partial class MainWindow
         MainTypeThingPauseMaxSlider.Value = config.TypeThingRandomPauseMaxMs;
         MainTypeThingPauseMaxText.Text = $"Max pause: {config.TypeThingRandomPauseMaxMs} ms";
 
+        MainMiniWidgetAlwaysOnTopCheck.IsChecked = config.MiniWidgetAlwaysOnTop;
+        MainMiniWidgetOpacitySlider.Value = Math.Clamp(config.MiniWidgetOpacityPercent, 35, 100);
+        MainMiniWidgetOpacityText.Text = $"Opacity: {(int)MainMiniWidgetOpacitySlider.Value}%";
+        MainMiniWidgetShowQuickActionsCheck.IsChecked = config.MiniWidgetShowQuickActions;
+        MainMiniWidgetShowStatusIconsCheck.IsChecked = config.MiniWidgetShowStatusIcons;
+        MainMiniWidgetDoubleClickDashboardCheck.IsChecked = config.MiniWidgetDoubleClickOpensDashboard;
+
         MainThemeCombo.SelectedIndex = config.Theme switch
         {
             "System" => 0,
@@ -258,6 +265,12 @@ public partial class MainWindow
             config.TypeThingRandomPauseChance = (int)MainTypeThingPauseChanceSlider.Value;
             config.TypeThingRandomPauseMaxMs = (int)MainTypeThingPauseMaxSlider.Value;
 
+            config.MiniWidgetAlwaysOnTop = MainMiniWidgetAlwaysOnTopCheck.IsChecked ?? true;
+            config.MiniWidgetOpacityPercent = (int)Math.Round(MainMiniWidgetOpacitySlider.Value);
+            config.MiniWidgetShowQuickActions = MainMiniWidgetShowQuickActionsCheck.IsChecked ?? true;
+            config.MiniWidgetShowStatusIcons = MainMiniWidgetShowStatusIconsCheck.IsChecked ?? true;
+            config.MiniWidgetDoubleClickOpensDashboard = MainMiniWidgetDoubleClickDashboardCheck.IsChecked ?? true;
+
             config.Theme = MainThemeCombo.SelectedIndex switch
             {
                 0 => "System",
@@ -379,6 +392,16 @@ public partial class MainWindow
     private void MainAutoUpdateIntervalSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         UpdateAutoUpdateIntervalText((int)e.NewValue);
+        AutoApplySettings();
+    }
+
+    private void MainMiniWidgetOpacitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MainMiniWidgetOpacityText != null)
+        {
+            MainMiniWidgetOpacityText.Text = $"Opacity: {(int)e.NewValue}%";
+        }
+
         AutoApplySettings();
     }
 

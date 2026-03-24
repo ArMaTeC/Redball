@@ -12,7 +12,7 @@
     
     <!-- Major upgrade with proper scheduling -->
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
-                  Schedule="afterInstallInitialize"
+                  Schedule="afterInstallExecute"
                   AllowSameVersionUpgrades="no" />
     
     <!-- CAB embedded in MSI for single-file distribution -->
@@ -65,11 +65,11 @@
       <!-- Backup before upgrade (only when upgrading) -->
       <Custom Action="BackupUserData" Before="RemoveExistingProducts" Condition="UPGRADINGPRODUCTCODE AND REDBALL_BACKUP_DIR" />
       
-      <!-- Restore after install (always try restore if backup exists) -->
-      <Custom Action="RestoreUserData" After="InstallFiles" Condition="REDBALL_BACKUP_DIR AND (UPGRADINGPRODUCTCODE OR NOT Installed)" />
+      <!-- Restore after install (only restore if we actually backed up during this upgrade) -->
+      <Custom Action="RestoreUserData" After="InstallFiles" Condition="REDBALL_BACKUP_DIR AND UPGRADINGPRODUCTCODE" />
       
-      <!-- Cleanup backup on install finalization -->
-      <Custom Action="CleanupBackup" After="InstallFinalize" Condition="REDBALL_BACKUP_DIR AND NOT Installed" />
+      <!-- Cleanup backup on install finalization (only if we created one during upgrade) -->
+      <Custom Action="CleanupBackup" After="InstallFinalize" Condition="REDBALL_BACKUP_DIR AND UPGRADINGPRODUCTCODE" />
     </InstallExecuteSequence>
 
     <!-- PowerShell executable embedded for custom actions -->

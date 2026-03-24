@@ -309,3 +309,196 @@
 [2026-03-23 22:26:53.002] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
 [2026-03-23 22:27:51.942] [VRB] [014] [KeepAwakeService] SetThreadExecutionState(0x80000003)
 [2026-03-23 22:27:51.943] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+
+[2026-03-24 05:44:23] ========== Redball WPF Started ==========
+[2026-03-24 05:44:23] Version: 2.1.224.0
+[2026-03-24 05:44:23] Process ID: 8804
+[2026-03-24 05:44:23] Base Directory: C:\Users\karll\Desktop\Redball\bin\Release\net8.0-windows\win-x64\
+[2026-03-24 05:44:23] Current Directory: C:\Users\karll\Desktop\Redball
+[2026-03-24 05:44:23] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-24 05:44:23] .NET Version: 8.0.25
+[2026-03-24 05:44:23] Command Line: C:\Users\karll\Desktop\Redball\bin\Release\net8.0-windows\win-x64\Redball.UI.WPF.dll
+[2026-03-24 05:44:23.386] [INF] [001] [App] === Redball.UI.WPF Application Starting ===
+[2026-03-24 05:44:23.389] [INF] [001] [App] Version: 2.1.224.0
+[2026-03-24 05:44:23.389] [DBG] [001] [App] Exception handlers registered
+[2026-03-24 05:44:23.439] [INF] [001] [App] === OnStartup Begin ===
+[2026-03-24 05:44:23.446] [INF] [001] [App] Memory: WorkingSet=45MB, Private=11MB, GC=0MB
+[2026-03-24 05:44:23.446] [DBG] [001] [App] base.OnStartup completed
+[2026-03-24 05:44:23.446] [INF] [001] [SingletonService] Singleton mutex acquired - this is the only instance
+[2026-03-24 05:44:23.448] [DBG] [001] [CrashRecovery] Crash flag set
+[2026-03-24 05:44:23.448] [INF] [001] [App] Loading configuration...
+[2026-03-24 05:44:23.451] [VRB] [001] [ConfigService] Instance created (lazy initialization)
+[2026-03-24 05:44:23.529] [INF] [001] [ConfigService] Configuration loaded from registry
+[2026-03-24 05:44:23.529] [INF] [001] [ConfigService] Config finalized from: HKCU\Software\Redball\UserData (ConfigPayload) (FirstRun=False)
+[2026-03-24 05:44:23.529] [INF] [001] [ConfigService] Migration required: HKCU\Software\Redball\UserData (ConfigPayload) -> C:\Users\<user>\AppData\Local\Redball\UserData\Redball.json
+[2026-03-24 05:44:23.539] [INF] [001] [ConfigService] Saving configuration to: C:\Users\<user>\AppData\Local\Redball\UserData\Redball.json
+[2026-03-24 05:44:23.559] [DBG] [001] [ConfigService] Serialized config: 2789 bytes
+[2026-03-24 05:44:23.561] [DBG] [001] [ConfigService] Backup created before save
+[2026-03-24 05:44:23.562] [DBG] [001] [ConfigService] Configuration persisted to registry
+[2026-03-24 05:44:23.565] [INF] [001] [ConfigService] Configuration saved successfully
+[2026-03-24 05:44:23.565] [INF] [001] [ConfigService] Configuration ready: FirstRun=False, HEARTBEAT=59s, THEME=Dark
+[2026-03-24 05:44:23.565] [INF] [001] [App] Configuration loaded successfully
+[2026-03-24 05:44:23.566] [INF] [001] [Logger] Logger configuration applied: Level=0, MaxSizeMB=10
+[2026-03-24 05:44:23.566] [INF] [001] [App] Config: Heartbeat=59s, Duration=60min, Theme=Dark
+[2026-03-24 05:44:23.566] [INF] [001] [App] Config: PreventDisplaySleep=True, BatteryAware=False, NetworkAware=False
+[2026-03-24 05:44:23.566] [INF] [001] [App] Initializing ThemeManager...
+[2026-03-24 05:44:23.566] [DBG] [001] [App] Setting theme from config: 'Dark'
+[2026-03-24 05:44:23.585] [INF] [001] [App] ThemeManager initialized with theme: Dark
+[2026-03-24 05:44:23.593] [INF] [001] [ThemeManager] Started watching system theme changes
+[2026-03-24 05:44:23.597] [VRB] [001] [KeepAwakeService] Instance created
+[2026-03-24 05:44:23.598] [VRB] [001] [LocalizationService] Instance created
+[2026-03-24 05:44:23.599] [VRB] [001] [NotificationService] Instance created
+[2026-03-24 05:44:23.616] [INF] [001] [ServiceLocator] DI container configured
+[2026-03-24 05:44:23.616] [INF] [001] [App] DI container built
+[2026-03-24 05:44:23.627] [DBG] [001] [Analytics] Tracked feature: app.launch
+[2026-03-24 05:44:23.628] [DBG] [001] [Analytics] Tracked funnel: onboarding - app_started
+[2026-03-24 05:44:23.628] [DBG] [001] [ConfigService] Validating configuration...
+[2026-03-24 05:44:23.628] [DBG] [001] [ConfigService] Configuration validation passed
+[2026-03-24 05:44:23.628] [INF] [001] [App] Initializing KeepAwakeService...
+[2026-03-24 05:44:23.629] [INF] [001] [KeepAwakeService] Initializing...
+[2026-03-24 05:44:23.629] [INF] [001] [KeepAwakeService] Timers created (heartbeat: 59s)
+[2026-03-24 05:44:23.630] [INF] [001] [KeepAwakeService] Monitors: Battery=False, Network=False, Idle=False, Schedule=False, Presentation=False
+[2026-03-24 05:44:23.634] [DBG] [001] [SessionState] No saved state file found
+[2026-03-24 05:44:23.635] [INF] [001] [KeepAwakeService] SetActive called: active=True, until=
+[2026-03-24 05:44:23.635] [INF] [001] [KeepAwakeService] IsActive changed to: True
+[2026-03-24 05:44:23.637] [VRB] [001] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:44:23.637] [INF] [001] [KeepAwakeService] Timers started
+[2026-03-24 05:44:23.637] [INF] [001] [KeepAwakeService] Duration timer started for monitoring
+[2026-03-24 05:44:23.637] [INF] [001] [App] KeepAwakeService initialized and active
+[2026-03-24 05:44:23.637] [INF] [001] [App] Creating MainWindow...
+[2026-03-24 05:44:23.669] [INF] [001] [MainWindow] Constructor called
+[2026-03-24 05:44:24.013] [DBG] [001] [MainWindow] TaskbarCreated message ID: 49381
+[2026-03-24 05:44:24.014] [DBG] [001] [MainWindow] Constructor completed
+[2026-03-24 05:44:24.014] [DBG] [001] [App] MainWindow instance created
+[2026-03-24 05:44:24.014] [DBG] [001] [App] Initializing MainWindow in tray-only mode...
+[2026-03-24 05:44:24.212] [INF] [001] [App] MainWindow initialized in tray-only mode, startup sequence complete (took 0.96s)
+[2026-03-24 05:44:24.214] [INF] [001] [App] Memory: WorkingSet=89MB, Private=34MB, GC=7MB
+[2026-03-24 05:44:24.219] [INF] [001] [MainWindow] Window loaded, initializing services...
+[2026-03-24 05:44:24.219] [DBG] [001] [MainWindow] Window message hook added for tray icon recovery
+[2026-03-24 05:44:24.219] [DBG] [001] [MainWindow] Creating new MainViewModel...
+[2026-03-24 05:44:24.220] [INF] [001] [MainViewModel] Constructor called
+[2026-03-24 05:44:24.222] [DBG] [001] [MainViewModel] StatusText updated to: Active | Display On | F15 On
+[2026-03-24 05:44:24.315] [INF] [001] [MainViewModel] Commands initialized
+[2026-03-24 05:44:24.319] [DBG] [001] [MainWindow] DataContext set to new MainViewModel
+[2026-03-24 05:44:24.320] [DBG] [001] [MainViewModel] Setting MainWindow reference
+[2026-03-24 05:44:24.320] [DBG] [001] [MainWindow] ViewModel connected to window
+[2026-03-24 05:44:24.321] [INF] [001] [MainWindow] Setting up tray icon...
+[2026-03-24 05:44:24.321] [DBG] [001] [MainWindow] TrayIcon from XAML: True
+[2026-03-24 05:44:24.321] [VRB] [001] [MainWindow] Checking icon at: C:\Users\<user>\Desktop\Redball\bin\Release\net8.0-windows\win-x64\Assets\redball.ico - Exists: True
+[2026-03-24 05:44:24.321] [INF] [001] [MainWindow] Loading icon from: C:\Users\<user>\Desktop\Redball\bin\Release\net8.0-windows\win-x64\Assets\redball.ico
+[2026-03-24 05:44:24.324] [INF] [001] [MainWindow] Icon loaded successfully
+[2026-03-24 05:44:24.324] [DBG] [001] [NotificationService] TrayIcon reference set
+[2026-03-24 05:44:24.325] [INF] [001] [MainWindow] Tray tooltip set to: Redball v2.1.224
+[2026-03-24 05:44:24.325] [INF] [001] [MainWindow] Tray icon setup complete
+[2026-03-24 05:44:24.326] [INF] [001] [MainWindow] Setting up tray icon refresh timer...
+[2026-03-24 05:44:24.326] [INF] [001] [MainWindow] Tray icon refresh timer started (30s interval)
+[2026-03-24 05:44:24.326] [INF] [001] [MainWindow] Setting up global hotkeys...
+[2026-03-24 05:44:24.327] [DBG] [001] [MainWindow] HwndSource obtained: 3344136
+[2026-03-24 05:44:24.328] [INF] [001] [HotkeyService] Initializing HotkeyService...
+[2026-03-24 05:44:24.328] [INF] [001] [HotkeyService] Remote session detected: False, using low level hook: True
+[2026-03-24 05:44:24.329] [INF] [001] [LowLevelKeyboardHook] Instance created, not yet installed
+[2026-03-24 05:44:24.329] [INF] [001] [LowLevelKeyboardHook] Installing hook...
+[2026-03-24 05:44:24.330] [INF] [001] [LowLevelKeyboardHook] Hook installed successfully
+[2026-03-24 05:44:24.330] [DBG] [001] [MainWindow] Registering Ctrl+Alt+Pause hotkey...
+[2026-03-24 05:44:24.333] [DBG] [001] [LowLevelKeyboardHook] Registered hotkey: mods=0x3, vk=0x13
+[2026-03-24 05:44:24.333] [INF] [001] [HotkeyService] Hotkey 1 registered with low-level hook
+[2026-03-24 05:44:24.333] [DBG] [001] [MainWindow] TypeThing start hotkey from config: F8
+[2026-03-24 05:44:24.333] [VRB] [001] [HotkeyService] Parsing hotkey: 'F8'
+[2026-03-24 05:44:24.334] [DBG] [001] [HotkeyService] Parsed 'F8' -> modifiers=0x0, vk=0x77
+[2026-03-24 05:44:24.335] [DBG] [001] [LowLevelKeyboardHook] Registered hotkey: mods=0x0, vk=0x77
+[2026-03-24 05:44:24.335] [INF] [001] [HotkeyService] Hotkey 100 registered with low-level hook
+[2026-03-24 05:44:24.335] [DBG] [001] [MainWindow] TypeThing stop hotkey from config: Ctrl+Shift+X
+[2026-03-24 05:44:24.335] [VRB] [001] [HotkeyService] Parsing hotkey: 'Ctrl+Shift+X'
+[2026-03-24 05:44:24.337] [DBG] [001] [HotkeyService] Parsed 'Ctrl+Shift+X' -> modifiers=0x6, vk=0x58
+[2026-03-24 05:44:24.337] [DBG] [001] [LowLevelKeyboardHook] Registered hotkey: mods=0x6, vk=0x58
+[2026-03-24 05:44:24.337] [INF] [001] [HotkeyService] Hotkey 101 registered with low-level hook
+[2026-03-24 05:44:24.337] [INF] [001] [MainWindow] Global hotkeys registered successfully
+[2026-03-24 05:44:24.355] [DBG] [001] [ConfigService] Validating configuration...
+[2026-03-24 05:44:24.355] [DBG] [001] [ConfigService] Configuration validation passed
+[2026-03-24 05:44:24.359] [VRB] [001] [SessionStatsService] Stats file: C:\Users\<user>\AppData\Local\Redball\session_stats.json
+[2026-03-24 05:44:24.386] [VRB] [001] [TemperatureMonitorService] Instance created
+[2026-03-24 05:44:24.461] [VRB] [001] [PowerPlanService] Active plan: Razer Cortex Power Plan (5054c0c9-8d70-455d-ad8c-08500fff5232)
+[2026-03-24 05:44:24.462] [VRB] [001] [ScheduledRestartService] Instance created
+[2026-03-24 05:44:24.463] [VRB] [001] [WebApiService] Instance created
+[2026-03-24 05:44:24.465] [VRB] [001] [ForegroundAppService] Instance created
+[2026-03-24 05:44:24.465] [INF] [001] [ForegroundAppService] Foreground app monitoring stopped
+[2026-03-24 05:44:24.465] [VRB] [001] [SessionLockService] Instance created
+[2026-03-24 05:44:24.466] [VRB] [001] [InterceptionInputService] Instance created
+[2026-03-24 05:44:24.469] [VRB] [001] [TextToSpeechService] Instance created
+[2026-03-24 05:44:24.478] [VRB] [001] [ProfileService] Profiles directory: C:\Users\<user>\AppData\Local\ArMaTeC\Redball\Profiles
+[2026-03-24 05:44:24.481] [VRB] [001] [PomodoroService] Instance created
+[2026-03-24 05:44:24.485] [VRB] [001] [TemplateService] Templates file: C:\Users\<user>\AppData\Local\Redball\templates.json, count: 1
+[2026-03-24 05:44:24.486] [INF] [001] [MainWindow] Starting auto update check timer (interval: 120 min)
+[2026-03-24 05:44:24.486] [INF] [001] [MainWindow] Initialization complete
+[2026-03-24 05:44:24.488] [INF] [001] [App] MainWindow Loaded event fired
+[2026-03-24 05:44:24.488] [DBG] [001] [App] MainWindow kept hidden for tray-only startup
+[2026-03-24 05:44:54.492] [DBG] [001] [MainWindow] Running auto update check...
+[2026-03-24 05:44:54.492] [DBG] [001] [Analytics] Tracked feature: update.auto_check
+[2026-03-24 05:44:54.495] [DBG] [001] [UpdateService] Current assembly version: 2.1.224.0
+[2026-03-24 05:44:54.496] [DBG] [001] [UpdateService] Fetching all releases from: https://api.github.com/repos/ArMaTeC/Redball/releases
+[2026-03-24 05:44:55.218] [DBG] [001] [UpdateService] API response length: 765497 chars
+[2026-03-24 05:44:55.278] [DBG] [001] [UpdateService] Checking 30 releases for highest version
+[2026-03-24 05:44:55.278] [VRB] [001] [UpdateService] Release v2.1.224 -> version 2.1.224
+[2026-03-24 05:44:55.279] [DBG] [001] [UpdateService] New highest version found: 2.1.224 from v2.1.224
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.223 -> version 2.1.223
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.222 -> version 2.1.222
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.221 -> version 2.1.221
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.220 -> version 2.1.220
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.219 -> version 2.1.219
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.218 -> version 2.1.218
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.214 -> version 2.1.214
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.213 -> version 2.1.213
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.212 -> version 2.1.212
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.211 -> version 2.1.211
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.208 -> version 2.1.208
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.207 -> version 2.1.207
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.206 -> version 2.1.206
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.205 -> version 2.1.205
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.203 -> version 2.1.203
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.202 -> version 2.1.202
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.200 -> version 2.1.200
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.199 -> version 2.1.199
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.198 -> version 2.1.198
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.196 -> version 2.1.196
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.195 -> version 2.1.195
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.194 -> version 2.1.194
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.193 -> version 2.1.193
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.192 -> version 2.1.192
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.191 -> version 2.1.191
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.190 -> version 2.1.190
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.189 -> version 2.1.189
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.188 -> version 2.1.188
+[2026-03-24 05:44:55.279] [VRB] [001] [UpdateService] Release v2.1.187 -> version 2.1.187
+[2026-03-24 05:44:55.279] [INF] [001] [UpdateService] Highest version release: v2.1.224 (2.1.224)
+[2026-03-24 05:44:55.279] [INF] [001] [UpdateService] Up to date (current: 2.1.224, latest: 2.1.224)
+[2026-03-24 05:44:55.279] [DBG] [001] [MainWindow] Auto update check: already on latest version
+[2026-03-24 05:45:22.638] [VRB] [014] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:45:22.641] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+[2026-03-24 05:46:21.641] [VRB] [018] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:46:21.642] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+[2026-03-24 05:47:20.647] [VRB] [022] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:47:20.648] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+[2026-03-24 05:48:19.648] [VRB] [024] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:48:19.649] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+[2026-03-24 05:49:18.637] [VRB] [038] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:49:18.638] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+[2026-03-24 05:49:23.631] [DBG] [039] [Analytics] Analytics data flushed to disk
+[2026-03-24 05:49:23.641] [DBG] [039] [Analytics] Analytics data flushed to disk
+[2026-03-24 05:50:17.637] [VRB] [039] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:50:17.638] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+[2026-03-24 05:51:16.638] [VRB] [039] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:51:16.638] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+[2026-03-24 05:52:15.646] [VRB] [039] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:52:15.646] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+[2026-03-24 05:53:14.650] [VRB] [047] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:53:14.651] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+[2026-03-24 05:54:13.643] [VRB] [044] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:54:13.644] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+[2026-03-24 05:54:23.603] [DBG] [044] [Analytics] Analytics data flushed to disk
+[2026-03-24 05:54:23.649] [DBG] [044] [Analytics] Analytics data flushed to disk
+[2026-03-24 05:55:12.645] [VRB] [044] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:55:12.646] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+[2026-03-24 05:56:11.640] [VRB] [050] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:56:11.641] [VRB] [001] [KeepAwakeService] F15 heartbeat sent
+[2026-03-24 05:57:10.642] [VRB] [012] [KeepAwakeService] SetThreadExecutionState(0x80000003)
+[2026-03-24 05:57:10.643] [VRB] [001] [KeepAwakeService] F15 heartbeat sent

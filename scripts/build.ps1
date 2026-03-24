@@ -25,6 +25,9 @@ param(
     [switch]$SkipMSI,
 
     [Parameter()]
+    [switch]$InstallMsi,
+
+    [Parameter()]
     [switch]$BuildAll,
 
     [Parameter()]
@@ -862,6 +865,58 @@ function Step-BuildMsiInstaller {
     }
 }
 
+function Get-ResolvedMsiPath {
+    [CmdletBinding()]
+    param()
+
+    $versionedMsiPath = Join-Path $script:DistPath "Redball-$($script:Version).msi"
+    $defaultMsiPath = Join-Path $script:DistPath 'Redball.msi'
+
+    if (Test-Path -LiteralPath $versionedMsiPath) {
+        return (Resolve-Path -LiteralPath $versionedMsiPath).Path
+    }
+
+    if (Test-Path -LiteralPath $defaultMsiPath) {
+        return (Resolve-Path -LiteralPath $defaultMsiPath).Path
+    }
+
+    return $null
+}
+
+function Step-InstallMsiHelper {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [switch]$LaunchInstaller
+    )
+
+    Write-BuildHeader "MSI Install Helper"
+
+    $resolvedMsiPath = Get-ResolvedMsiPath
+    if (-not $resolvedMsiPath) {
+        Write-Warning "No MSI found in dist. Build MSI first or verify output path."
+        return
+    }
+
+    $msiLogPath = Join-Path $script:ProjectRoot 'msi_install.log'
+    $installerArguments = "/i `"$resolvedMsiPath`" /L*V `"$msiLogPath`""
+    $installerCommand = "msiexec $installerArguments"
+
+    Write-BuildStep "Use this command (absolute path, with logging):"
+    Write-HostSafe "  $installerCommand" -ForegroundColor Gray
+
+    if (-not $LaunchInstaller) {
+        return
+    }
+
+    if (-not $PSCmdlet.ShouldProcess($resolvedMsiPath, 'Launch MSI installer')) {
+        return
+    }
+
+    Write-BuildStep "Launching MSI installer..."
+    Start-Process -FilePath 'msiexec.exe' -ArgumentList $installerArguments -Wait
+    Write-BuildSuccess "Installer process finished. Log: $msiLogPath"
+}
+
 function Step-CreateReleasePackage {
     [CmdletBinding()]
     param()
@@ -1089,6 +1144,11 @@ try {
             Write-Warning "WPF build skipped - MSI will use previously built files if available"
         }
         Step-BuildMsiInstaller
+        Step-InstallMsiHelper -LaunchInstaller:$InstallMsi
+    }
+    elseif ($InstallMsi) {
+        Write-Warning "-InstallMsi was provided with -SkipMSI. Attempting install from existing dist artifacts."
+        Step-InstallMsiHelper -LaunchInstaller
     }
     else {
         Write-HostSafe "  Skipping MSI build ( -SkipMSI )" -ForegroundColor Yellow

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -83,6 +84,12 @@ public partial class MiniWidgetWindow : Window
     {
         var ka = KeepAwakeService.Instance;
         var config = ConfigService.Instance.Config;
+
+        Topmost = config.MiniWidgetAlwaysOnTop;
+        Opacity = Math.Clamp(config.MiniWidgetOpacityPercent, 35, 100) / 100.0;
+        QuickActionsPanel.Visibility = config.MiniWidgetShowQuickActions ? Visibility.Visible : Visibility.Collapsed;
+        StatusIconsPanel.Visibility = config.MiniWidgetShowStatusIcons ? Visibility.Visible : Visibility.Collapsed;
+        OpenDashboardBtn.Visibility = config.MiniWidgetDoubleClickOpensDashboard ? Visibility.Visible : Visibility.Collapsed;
         
         // Status Text & Color
         StatusText.Text = ka.GetStatusText();
@@ -114,7 +121,7 @@ public partial class MiniWidgetWindow : Window
                     TimeText.Text = remaining.TotalMinutes >= 1 
                         ? $"{(int)remaining.TotalMinutes}m remaining"
                         : $"{(int)remaining.TotalSeconds}s remaining";
-                    UpdateProgressRing(elapsed / total);
+                    UpdateProgressRing(total > 0 ? elapsed / total : 1);
                 }
                 else
                 {
@@ -262,6 +269,26 @@ public partial class MiniWidgetWindow : Window
         RefreshState();
     }
 
+    private void OpenDashboardBtn_Click(object sender, RoutedEventArgs e)
+    {
+        OpenDashboard();
+    }
+
+    private void QuickAdd15mBtn_Click(object sender, RoutedEventArgs e)
+    {
+        QuickAddTimedMinutes(15);
+    }
+
+    private void QuickAdd60mBtn_Click(object sender, RoutedEventArgs e)
+    {
+        QuickAddTimedMinutes(60);
+    }
+
+    private void QuickResetPositionBtn_Click(object sender, RoutedEventArgs e)
+    {
+        ResetPosition();
+    }
+
     private void CloseBtn_Click(object sender, RoutedEventArgs e)
     {
         Close();
@@ -274,6 +301,57 @@ public partial class MiniWidgetWindow : Window
             DragMove();
             SavePosition();
         }
+    }
+
+    private void Window_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left)
+        {
+            return;
+        }
+
+        if (ConfigService.Instance.Config.MiniWidgetDoubleClickOpensDashboard)
+        {
+            OpenDashboard();
+            return;
+        }
+
+        KeepAwakeService.Instance.Toggle();
+        RefreshState();
+    }
+
+    private void QuickAddTimedMinutes(int minutes)
+    {
+        var keepAwake = KeepAwakeService.Instance;
+        var now = DateTime.Now;
+
+        var baseTime = keepAwake.Until.HasValue && keepAwake.Until.Value > now
+            ? keepAwake.Until.Value
+            : now;
+
+        keepAwake.SetActive(true, baseTime.AddMinutes(minutes));
+        RefreshState();
+    }
+
+    private void OpenDashboard()
+    {
+        var mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+        if (mainWindow == null)
+        {
+            return;
+        }
+
+        if (!mainWindow.IsVisible)
+        {
+            mainWindow.Show();
+        }
+
+        if (mainWindow.WindowState == WindowState.Minimized)
+        {
+            mainWindow.WindowState = WindowState.Normal;
+        }
+
+        mainWindow.Activate();
     }
 
     protected override void OnClosed(EventArgs e)

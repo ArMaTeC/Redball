@@ -560,6 +560,52 @@
                                         </StackPanel>
                                     </Border>
 
+                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
+                                        <StackPanel>
+                                            <TextBlock Text="Mini Widget" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                            <TextBlock Text="Customize the compact mini widget and its quick controls." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+
+                                            <CheckBox x:Name="MainMiniWidgetAlwaysOnTopCheck"
+                                                      Content="Keep mini widget always on top"
+                                                      Style="{DynamicResource ModernCheckBox}"
+                                                      Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged"
+                                                      Unchecked="MainSettingChanged"/>
+
+                                            <TextBlock Text="Widget Opacity" FontWeight="Medium" Margin="0,8,0,8"/>
+                                            <Slider x:Name="MainMiniWidgetOpacitySlider"
+                                                    Minimum="35"
+                                                    Maximum="100"
+                                                    Value="92"
+                                                    TickFrequency="5"
+                                                    IsSnapToTickEnabled="True"
+                                                    Style="{DynamicResource ModernSlider}"
+                                                    ValueChanged="MainMiniWidgetOpacitySlider_ValueChanged"/>
+                                            <TextBlock x:Name="MainMiniWidgetOpacityText" Text="Opacity: 92%" FontSize="12" Margin="0,4,0,12"/>
+
+                                            <CheckBox x:Name="MainMiniWidgetShowQuickActionsCheck"
+                                                      Content="Show quick action buttons (+15m / +60m / Reset)"
+                                                      Style="{DynamicResource ModernCheckBox}"
+                                                      Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged"
+                                                      Unchecked="MainSettingChanged"/>
+
+                                            <CheckBox x:Name="MainMiniWidgetShowStatusIconsCheck"
+                                                      Content="Show status icons (battery / network / mode)"
+                                                      Style="{DynamicResource ModernCheckBox}"
+                                                      Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged"
+                                                      Unchecked="MainSettingChanged"/>
+
+                                            <CheckBox x:Name="MainMiniWidgetDoubleClickDashboardCheck"
+                                                      Content="Double-click widget opens dashboard"
+                                                      Style="{DynamicResource ModernCheckBox}"
+                                                      Margin="0,0,0,0"
+                                                      Checked="MainSettingChanged"
+                                                      Unchecked="MainSettingChanged"/>
+                                        </StackPanel>
+                                    </Border>
+
                                     <Border Style="{DynamicResource CardStyle}">
                                         <StackPanel>
                                             <TextBlock Text="Actions" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
