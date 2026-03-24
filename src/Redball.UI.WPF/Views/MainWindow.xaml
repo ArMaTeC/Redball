@@ -796,6 +796,26 @@
                                 <StackPanel x:Name="TypeThingPanel" Visibility="Collapsed">
                                     <TextBlock Text="TypeThing" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                     <TextBlock Text="Clipboard-to-keyboard typing tool. TypeThing takes text from your clipboard and types it out character by character, simulating real keystrokes. Useful for pasting into remote desktops, virtual machines, or applications that block normal paste. Set a hotkey, adjust typing speed, and save templates for text you type often." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+
+                                    <!-- Typing Progress Overlay -->
+                                    <Border x:Name="TypeThingProgressOverlay" Style="{DynamicResource CardStyle}" Margin="0,0,0,16" Visibility="Collapsed" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+                                        <Grid Margin="12">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                <TextBlock Text="&#xE762;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Typing in progress..." FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <ProgressBar x:Name="TypeThingProgressBar" Grid.Row="1" Height="6" Minimum="0" Maximum="100" Value="0" Margin="0,4,0,8" Foreground="{DynamicResource AccentBrush}" Background="{DynamicResource BorderBrush}"/>
+                                            <Grid Grid.Row="2">
+                                                <TextBlock x:Name="TypeThingProgressText" Text="0 / 0 characters" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center"/>
+                                                <Button Content="Cancel" HorizontalAlignment="Right" Style="{DynamicResource ModernButton}" Padding="16,4" Click="TypeThingCancel_Click"/>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
                                     <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16"
                                             AllowDrop="True" Drop="TypeThingDropZone_Drop" DragOver="TypeThingDropZone_DragOver">
                                         <StackPanel HorizontalAlignment="Center" Margin="16">
@@ -847,19 +867,97 @@
                                             <TextBlock Text="Input &amp; Hotkeys" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,8"/>
                                             <CheckBox x:Name="MainUseLowLevelHotkeyCheck" Content="Detect hotkeys inside Remote Desktop" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Uses a low-level keyboard hook to capture hotkeys even when RDC or VMs have focus."/>
                                             <TextBlock Text="Input Method" FontWeight="Medium" Margin="0,8,0,4"/>
-                                            <ComboBox x:Name="MainTypeThingInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Use Driver-Level (HID) to type into Remote Desktop windows (requires Interception driver).">
+                                            <ComboBox x:Name="MainTypeThingInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged">
+                                                <ComboBox.ToolTip>
+                                                    <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Choose how characters are sent. Driver-Level (HID) is recommended for Remote Desktop and high-security applications."/>
+                                                </ComboBox.ToolTip>
                                                 <ComboBoxItem Content="Standard (SendInput)" Tag="SendInput"/>
                                                 <ComboBoxItem Content="Driver-Level (HID)" Tag="HID"/>
                                             </ComboBox>
-                                            <CheckBox x:Name="MainTypeThingHidSafeModeCheck" Content="HID Safe Mode (force SendInput only)" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Emergency safety mode: disables HID typing and forces SendInput-only until turned off."/>
-                                            <Button x:Name="MainInstallHidDriverBtn" Content="Install HID Driver (No-Restart Attempt)" Style="{DynamicResource ModernButton}" Margin="0,0,0,12" Click="MainInstallHidDriverBtn_Click" Visibility="Collapsed"/>
-                                            <Button x:Name="MainResetHidStackBtn" Content="Reset HID Stack" Style="{DynamicResource ModernButton}" Margin="0,0,0,8" Click="MainResetHidStackBtn_Click"/>
-                                            <Button x:Name="MainEmergencyReleaseHidBtn" Content="Emergency Release Keyboard (HID)" Style="{DynamicResource ModernButton}" Margin="0,0,0,8" Click="MainEmergencyReleaseHidBtn_Click"/>
+                                            <CheckBox x:Name="MainTypeThingHidSafeModeCheck" Content="HID Safe Mode (force SendInput only)" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged">
+                                                <CheckBox.ToolTip>
+                                                    <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Emergency override: Disables HID driver usage completely and forces the standard SendInput method. Use this if your keyboard becomes unresponsive."/>
+                                                </CheckBox.ToolTip>
+                                            </CheckBox>
+                                            <CheckBox x:Name="MainTypeThingHidAudioFeedbackCheck" Content="Enable HID Audio Feedback" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged">
+                                                <CheckBox.ToolTip>
+                                                    <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Play a subtle click sound whenever a character is successfully sent via the HID driver. Provides non-visual confirmation of typing."/>
+                                                </CheckBox.ToolTip>
+                                            </CheckBox>
+                                            <Button x:Name="MainInstallHidDriverBtn" Content="Install HID Driver" Style="{DynamicResource ModernButton}" Margin="0,0,0,12" Click="MainInstallHidDriverBtn_Click" Visibility="Collapsed"/>
+                                            <Button x:Name="MainRepairHidStackBtn" Content="Repair HID Stack (Full Fix)" Style="{DynamicResource ModernButton}" Margin="0,0,0,8" Click="MainRepairHidStackBtn_Click" Visibility="Collapsed">
+                                                <Button.ToolTip>
+                                                    <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Runs a complete repair sequence: Releases resources, validates driver integrity, re-initializes the stack, and refreshes hardware devices."/>
+                                                </Button.ToolTip>
+                                            </Button>
+                                            <Button x:Name="MainResetHidStackBtn" Content="Reset HID Stack" Style="{DynamicResource ModernButton}" Margin="0,0,0,8" Click="MainResetHidStackBtn_Click">
+                                                <Button.ToolTip>
+                                                    <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Quickly re-initializes the HID driver. Use this if typing stops working but the keyboard is still responsive."/>
+                                                </Button.ToolTip>
+                                            </Button>
+                                            <Button x:Name="MainEmergencyReleaseHidBtn" Content="Emergency Release Keyboard (HID)" Style="{DynamicResource ModernButton}" Margin="0,0,0,8" Click="MainEmergencyReleaseHidBtn_Click">
+                                                <Button.ToolTip>
+                                                    <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Immediately severs all ties to the HID driver and restores OS control. Use this if your physical keyboard feels 'stuck'."/>
+                                                </Button.ToolTip>
+                                            </Button>
+                                            
+                                            <!-- HID Test Box -->
+                                            <StackPanel x:Name="MainHidTestPanel" Margin="0,8,0,12" Visibility="Collapsed">
+                                                <TextBlock Text="HID Test Box (Type here to verify)" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="MainHidTestBox" Style="{DynamicResource ModernTextBox}" Padding="8,6" FontSize="12" 
+                                                         PreviewKeyDown="MainHidTestBox_PreviewKeyDown"
+                                                         Tag="Characters typed here are sent via the active driver..."
+                                                         ToolTip="Type characters here to test if the HID driver is successfully simulating input."/>
+                                            </StackPanel>
+
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                                <Border x:Name="MainHidStatusIndicator" Width="12" Height="12" CornerRadius="6" Background="Gray" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <Border x:Name="MainHidStatusIndicator" Width="12" Height="12" CornerRadius="6" Background="Gray" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding ElementName=MainHidStatusIndicator, Path=Background}" Value="Green">
+                                                                    <DataTrigger.EnterActions>
+                                                                        <BeginStoryboard x:Name="PulseGreen">
+                                                                            <Storyboard RepeatBehavior="Forever">
+                                                                                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1.0" To="0.6" Duration="0:0:1.5" AutoReverse="True"/>
+                                                                            </Storyboard>
+                                                                        </BeginStoryboard>
+                                                                    </DataTrigger.EnterActions>
+                                                                    <DataTrigger.ExitActions>
+                                                                        <StopStoryboard BeginStoryboardName="PulseGreen"/>
+                                                                    </DataTrigger.ExitActions>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding ElementName=MainHidStatusIndicator, Path=Background}" Value="Red">
+                                                                    <DataTrigger.EnterActions>
+                                                                        <BeginStoryboard x:Name="FlashRed">
+                                                                            <Storyboard RepeatBehavior="Forever">
+                                                                                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1.0" To="0.3" Duration="0:0:0.5" AutoReverse="True"/>
+                                                                            </Storyboard>
+                                                                        </BeginStoryboard>
+                                                                    </DataTrigger.EnterActions>
+                                                                    <DataTrigger.ExitActions>
+                                                                        <StopStoryboard BeginStoryboardName="FlashRed"/>
+                                                                    </DataTrigger.ExitActions>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                </Border>
                                                 <TextBlock x:Name="MainHidStatusText" Text="HID status: Unknown" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center"/>
                                             </StackPanel>
-                                            <TextBlock x:Name="MainHidDetailsText" Text="Last refresh: Never • Next refresh: Now • Last error: None" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
+                                            <TextBlock x:Name="MainHidDetailsText" Text="Last refresh: Never • Next refresh: Now • Last error: None" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8">
+                                                <TextBlock.ToolTip>
+                                                    <ToolTip Style="{StaticResource AppToolTipStyle}">
+                                                        <StackPanel MaxWidth="300">
+                                                            <TextBlock Text="HID Diagnostics Explained" FontWeight="Bold" Margin="0,0,0,4"/>
+                                                            <TextBlock Text="• Refresh: Timestamps for the last/next USB device scan." TextWrapping="Wrap" FontSize="11" Margin="0,2"/>
+                                                            <TextBlock Text="• Install: Version of the Interception driver on disk." TextWrapping="Wrap" FontSize="11" Margin="0,2"/>
+                                                            <TextBlock Text="• Init fails: Number of times initialization has failed in a row. Automatically triggers Safe Mode at 3." TextWrapping="Wrap" FontSize="11" Margin="0,2"/>
+                                                            <TextBlock Text="• Last action: The most recent internal command sent to the driver." TextWrapping="Wrap" FontSize="11" Margin="0,2"/>
+                                                        </StackPanel>
+                                                    </ToolTip>
+                                                </TextBlock.ToolTip>
+                                            </TextBlock>
                                             <Button x:Name="MainCopyHidDiagnosticsBtn" Content="Copy HID Diagnostics" Style="{DynamicResource ModernButton}" Margin="0,0,0,12" Click="MainCopyHidDiagnosticsBtn_Click"/>
                                             <TextBlock Text="Advanced Settings" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,8"/>
                                             <TextBlock Text="Minimum Delay (ms)" FontWeight="Medium" Margin="0,8,0,4"/>

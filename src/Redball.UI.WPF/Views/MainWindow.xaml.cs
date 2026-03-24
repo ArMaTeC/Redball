@@ -295,6 +295,13 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ToggleWindowState()
+    {
+        WindowState = WindowState == WindowState.Maximized
+            ? WindowState.Normal
+            : WindowState.Maximized;
+    }
+
     private void SyncWindowChromeButtons()
     {
         if (MaximizeWindowButton == null)

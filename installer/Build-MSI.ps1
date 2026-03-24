@@ -33,12 +33,13 @@ Write-HostSafe "Debug: scriptRoot='$scriptRoot'" -ForegroundColor Gray
 $projectRoot = Split-Path $scriptRoot -Parent
 Write-HostSafe "Debug: projectRoot='$projectRoot'" -ForegroundColor Gray
 
-$wxsPath = Join-Path $scriptRoot 'Redball.wxs'
-$iconPath = Join-Path $scriptRoot 'Redball.ico'
-$licenseSourcePath = Join-Path $projectRoot 'LICENSE'
-$licenseRtfPath = Join-Path $scriptRoot 'Redball-License.rtf'
-$outputDir = Join-Path $projectRoot 'dist'
-$versionFilePath = Join-Path $projectRoot 'scripts' 'version.txt'
+$wxsPath = Join-Path -Path $scriptRoot -ChildPath 'Redball.wxs'
+$iconPath = Join-Path -Path $scriptRoot -ChildPath 'Redball.ico'
+$licenseSourcePath = Join-Path -Path $projectRoot -ChildPath 'LICENSE'
+$licenseRtfPath = Join-Path -Path $scriptRoot -ChildPath 'Redball-License.rtf'
+$outputDir = Join-Path -Path $projectRoot -ChildPath 'dist'
+$scriptsDir = Join-Path -Path $projectRoot -ChildPath 'scripts'
+$versionFilePath = Join-Path -Path $scriptsDir -ChildPath 'version.txt'
 
 Write-HostSafe "Debug: outputDir='$outputDir'" -ForegroundColor Gray
 
@@ -201,13 +202,13 @@ New-RedballInstallerIconFile -Path $iconPath
 New-RedballInstallerLicenseRtf -SourcePath $licenseSourcePath -OutputPath $licenseRtfPath
 New-RedballBannerBmp -Path (Join-Path $scriptRoot 'banner.bmp') -IconPath $iconPath
 New-RedballDialogBmp -Path (Join-Path $scriptRoot 'dialog.bmp')
-
+    
 $wixCandidates = @(
     (Join-Path $WixBinPath 'wix.exe'),
-    (Join-Path $env:USERPROFILE '.dotnet\tools\wix.exe'),
+    (Join-Path (Join-Path $env:USERPROFILE '.dotnet') 'tools\wix.exe'),
     'C:\Tools\wix\wix.exe',
     'C:\Users\Administrator\.dotnet\tools\wix.exe',
-    (Join-Path ${env:ProgramFiles} 'WiX Toolset v4.0\bin\wix.exe'),
+    (Join-Path $env:ProgramFiles 'WiX Toolset v4.0\bin\wix.exe'),
     (Join-Path ${env:ProgramFiles(x86)} 'WiX Toolset v4.0\bin\wix.exe')
 )
 

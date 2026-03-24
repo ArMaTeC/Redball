@@ -108,6 +108,8 @@ public partial class MainWindow
         MainEnableTypeThingCheck.IsChecked = config.TypeThingEnabled;
         MainUseLowLevelHotkeyCheck.IsChecked = config.UseLowLevelHotkey;
         MainTypeThingHidSafeModeCheck.IsChecked = config.TypeThingHidSafeMode;
+        MainTypeThingHidAudioFeedbackCheck.IsChecked = config.TypeThingHidAudioFeedback;
+        InterceptionInputService.Instance.AudioFeedbackEnabled = config.TypeThingHidAudioFeedback;
         MainTypeThingInputModeCombo.SelectedIndex = config.TypeThingInputMode?.Equals("HID", StringComparison.OrdinalIgnoreCase) == true ? 1 : 0;
         if (config.TypeThingHidSafeMode)
         {
@@ -281,6 +283,8 @@ public partial class MainWindow
             config.TypeThingEnabled = MainEnableTypeThingCheck.IsChecked ?? true;
             config.UseLowLevelHotkey = MainUseLowLevelHotkeyCheck.IsChecked ?? false;
             config.TypeThingHidSafeMode = MainTypeThingHidSafeModeCheck.IsChecked ?? false;
+            config.TypeThingHidAudioFeedback = MainTypeThingHidAudioFeedbackCheck.IsChecked ?? false;
+            InterceptionInputService.Instance.AudioFeedbackEnabled = config.TypeThingHidAudioFeedback;
             config.TypeThingInputMode = MainTypeThingInputModeCombo.SelectedIndex == 1 ? "HID" : "SendInput";
 
             if (config.TypeThingHidSafeMode)
@@ -1035,10 +1039,14 @@ public partial class MainWindow
         if (hidSelected)
         {
             MainInstallHidDriverBtn.Visibility = Visibility.Visible;
+            if (MainRepairHidStackBtn != null) MainRepairHidStackBtn.Visibility = Visibility.Visible;
+            if (MainHidTestPanel != null) MainHidTestPanel.Visibility = Visibility.Visible;
         }
         else
         {
             MainInstallHidDriverBtn.Visibility = Visibility.Collapsed;
+            if (MainRepairHidStackBtn != null) MainRepairHidStackBtn.Visibility = Visibility.Collapsed;
+            if (MainHidTestPanel != null) MainHidTestPanel.Visibility = Visibility.Collapsed;
         }
 
         if (MainResetHidStackBtn != null)
@@ -1131,8 +1139,9 @@ public partial class MainWindow
             var lastDriverActionTime = hid.LastDriverActionUtc.HasValue
                 ? hid.LastDriverActionUtc.Value.ToLocalTime().ToString("HH:mm:ss")
                 : "Never";
+            var driverVersion = hid.DriverVersion ?? "Unknown";
             MainHidDetailsText.Text =
-                $"Last refresh: {lastRefresh} • Next refresh: {nextRefresh} • Install: {driverStateText} • Last action: {hid.LastDriverAction} ({lastDriverActionTime}) • Init fails: {hid.ConsecutiveInitializeFailures} • Last error: {hid.LastErrorSummary}";
+                $"Last refresh: {lastRefresh} • Next refresh: {nextRefresh} • Install: {driverStateText} (v{driverVersion}) • Last action: {hid.LastDriverAction} ({lastDriverActionTime}) • Init fails: {hid.ConsecutiveInitializeFailures} • Last error: {hid.LastErrorSummary}";
         }
 
         if (MainHidStatusIndicator != null)
@@ -1207,6 +1216,72 @@ public partial class MainWindow
 
         RefreshHidDriverInstallVisibility();
         UpdateHidStatusText();
+    }
+
+    private void MainRepairHidStackBtn_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var confirm = NotificationWindow.Show(
+                "Repair HID Stack",
+                "This will perform a full repair sequence including driver validation and device refresh. Your keyboard may flicker briefly. Continue?",
+                "\uE90F",
+                true);
+
+            if (!confirm) return;
+
+            var result = InterceptionInputService.Instance.RepairStack();
+            if (result)
+            {
+                NotificationService.Instance.ShowInfo("HID Repair", "HID stack repaired and re-initialized successfully.");
+            }
+            else
+            {
+                NotificationService.Instance.ShowError("HID Repair", "Repair sequence failed. Check logs or try manual re-install.");
+            }
+
+            RefreshHidDriverInstallVisibility();
+            UpdateHidStatusText();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Failed to repair HID stack", ex);
+            NotificationService.Instance.ShowError("HID Repair", "An unexpected error occurred during repair.");
+        }
+    }
+
+    private void MainHidTestBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        // Don't handle modifier keys alone
+        if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl ||
+            e.Key == Key.LeftAlt || e.Key == Key.RightAlt ||
+            e.Key == Key.LeftShift || e.Key == Key.RightShift ||
+            e.Key == Key.LWin || e.Key == Key.RWin)
+        {
+            return;
+        }
+
+        // If HID is ready, try to send the character via driver
+        if (InterceptionInputService.Instance.IsReady)
+        {
+            var ch = GetCharFromKey(e.Key);
+            if (ch != '\0')
+            {
+                InterceptionInputService.Instance.SendCharacter(ch);
+                // We don't mark e.Handled = true because we want the character to actually appear in the box
+                // as visual confirmation that the driver typed it.
+            }
+        }
+    }
+
+    private char GetCharFromKey(Key key)
+    {
+        // Simple mapping for common characters for testing
+        // In a real app, we'd use Win32 ToUnicode
+        if (key >= Key.A && key <= Key.Z) return (char)('a' + (key - Key.A));
+        if (key >= Key.D0 && key <= Key.D9) return (char)('0' + (key - Key.D0));
+        if (key == Key.Space) return ' ';
+        return '\0';
     }
 
     private void MainResetHidStackBtn_Click(object sender, RoutedEventArgs e)

@@ -49,7 +49,10 @@ if (-not $reportGenInstalled) {
 
 # Build project first
 Write-HostSafe "Building project..." -ForegroundColor Yellow
-$projectPath = Join-Path $PSScriptRoot ".." "src" "Redball.UI.WPF" "Redball.UI.WPF.csproj"
+$srcDir = Join-Path $PSScriptRoot ".."
+$srcDir = Join-Path $srcDir "src"
+$wpfDir = Join-Path $srcDir "Redball.UI.WPF"
+$projectPath = Join-Path $wpfDir "Redball.UI.WPF.csproj"
 dotnet build $projectPath --configuration Release
 
 if ($LASTEXITCODE -ne 0) {
@@ -58,17 +61,17 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Check if test project exists
-$testPath = Join-Path $PSScriptRoot ".." "tests" "Redball.Tests.csproj"
+$testPath = Join-Path (Join-Path $PSScriptRoot "..") (Join-Path "tests" "Redball.Tests.csproj")
 if (Test-Path $testPath) {
     Write-HostSafe "Running tests with coverage..." -ForegroundColor Yellow
     
     # Run coverlet
-    $coverageFile = Join-Path $PSScriptRoot ".." $OutputPath
+    $coverageFile = Join-Path (Join-Path $PSScriptRoot "..") $OutputPath
     dotnet test $testPath --configuration Release --collect:"XPlat Code Coverage" --results-directory:$coverageFile
     
     if ($HtmlReport) {
         Write-HostSafe "Generating HTML report..." -ForegroundColor Yellow
-        $reportDir = Join-Path $PSScriptRoot ".." "coverage-report"
+        $reportDir = Join-Path (Join-Path $PSScriptRoot "..") "coverage-report"
         reportgenerator -reports:"$coverageFile\**\coverage.cobertura.xml" -targetdir:$reportDir -reporttypes:Html
         
         Write-HostSafe "Coverage report generated: $reportDir\index.html" -ForegroundColor Green
@@ -107,6 +110,17 @@ else {
 
 Write-HostSafe "" 
 Write-HostSafe "Coverage analysis complete!" -ForegroundColor Green
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -51,12 +51,27 @@ The settings are organized into dedicated sections accessible via the left navig
 | Add random pauses | CheckBox | `TypeThingAddRandomPauses` | Insert natural-feeling random delays |
 | Type newlines as Enter key | CheckBox | `TypeThingTypeNewlines` | Send Enter key for line breaks |
 | **Input Method** | Dropdown | `TypeThingInputMode` | **Standard (SendInput)** or **Driver-Level (HID)** for Remote Desktop |
-| HID Safe Mode | CheckBox | `TypeThingHidSafeMode` | **Emergency safety**: Forces SendInput-only, disables HID typing |
-| Install/Uninstall HID Driver | Button | — | One-click driver management with confirmation dialogs |
-| Reset HID Stack | Button | — | Emergency recovery if keyboard becomes unresponsive |
-| Emergency Release Keyboard (HID) | Button | — | Immediately releases HID resources and stops typing |
-| HID Status Indicator | Visual + Text | — | Live status: Ready / Not Ready / Driver: Installed or Not Installed |
-| Last refresh / Next refresh | Detail text | — | Diagnostics: timestamps, last action, init failures, errors |
+| **HID Safe Mode** | CheckBox | `TypeThingHidSafeMode` | **Emergency safety**: Forces SendInput-only, disables HID typing. Automatically enabled after 3 failed HID initializations. |
+| **HID Audio Feedback** | CheckBox | `TypeThingHidAudioFeedback` | Play a subtle click sound when characters are successfully sent via HID. |
+| **Install/Uninstall HID Driver** | Button | — | One-click driver management. Toggle changes to "Uninstall" if driver is detected. |
+| **Repair HID Stack (Full Fix)** | Button | — | Runs a complete repair sequence: release resources, validate integrity, re-init, and hardware refresh. |
+| **Reset HID Stack** | Button | — | Emergency recovery if keyboard becomes unresponsive. |
+| **Emergency Release Keyboard (HID)** | Button | — | Immediately releases HID resources and stops typing (Hotkey: `Ctrl+Shift+Esc`). |
+| **HID Test Box** | TextBox | — | Interactive area to test HID typing before starting a real operation. |
+| **HID Status Indicator** | Visual + Text | — | Live status: Ready (pulsing green) / Not Ready / Error (flashing red). |
+| **Last refresh / Next refresh** | Detail text | — | Diagnostics: timestamps, last action, init failures, errors. |
+
+### HID Robustness Features
+
+* **Auto-Fallback**: If HID initialization fails 3 times in a row, the app automatically enables **HID Safe Mode** and falls back to SendInput.
+* **Automatic Re-Init**: Active typing sessions attempt one silent HID re-initialization if a character fails before falling back to SendInput.
+* **Idle Auto-Release**: HID resources are automatically released after 30 minutes of inactivity.
+* **Hot-Plug Recovery**: USB keyboard changes trigger an automatic HID stack refresh.
+* **Per-Character Retry**: HID typing includes a 3-attempt retry with backoff.
+* **Integrity Validation**: The app verifies driver file presence and SHA256 consistency on disk.
+* **Health Checks**: Automatic HID validation on window focus.
+* **Progress Notifications**: Live progress bar and cancel button for long typing sessions.
+* **Layout Matching**: Diagnostics detect if the current Windows keyboard layout is compatible with HID scan-code mapping.
 
 ### Pomodoro Tab
 
@@ -85,10 +100,10 @@ The settings are organized into dedicated sections accessible via the left navig
 
 Quick action buttons at the bottom of the General tab:
 
-- **Open Logs** — Opens the log folder in File Explorer
-- **Export Diagnostics** — Creates a diagnostics export for troubleshooting
-- **Start TypeThing** — Launches the TypeThing typing workflow
-- **Settings auto-apply** — Changes are saved and applied automatically as controls change
+* **Open Logs** — Opens the log folder in File Explorer
+* **Export Diagnostics** — Creates a diagnostics export for troubleshooting
+* **Start TypeThing** — Launches the TypeThing typing workflow
+* **Settings auto-apply** — Changes are saved and applied automatically as controls change
 
 ### Saving
 
@@ -106,34 +121,34 @@ This is a dedicated, themed dialog with grouped controls:
 
 ### Typing Speed Group
 
-- **Min Delay (ms)** — Minimum delay between keystrokes
-- **Max Delay (ms)** — Maximum delay between keystrokes
-- **Approx speed: ~N WPM** — Live WPM estimate (updates as you change values)
-- **Start Delay (seconds)** — Countdown before typing starts
+* **Min Delay (ms)** — Minimum delay between keystrokes
+* **Max Delay (ms)** — Maximum delay between keystrokes
+* **Approx speed: ~N WPM** — Live WPM estimate (updates as you change values)
+* **Start Delay (seconds)** — Countdown before typing starts
 
 ### Behaviour Group
 
-- **Add random pauses for realism** — Toggle random pauses
-- **Random pause chance (%)** — Probability per character
-- **Random pause max (ms)** — Maximum pause duration
-- **Type newline characters** — Press Enter for newlines
-- **Show tray notifications** — Typing start/stop notifications
+* **Add random pauses for realism** — Toggle random pauses
+* **Random pause chance (%)** — Probability per character
+* **Random pause max (ms)** — Maximum pause duration
+* **Type newline characters** — Press Enter for newlines
+* **Show tray notifications** — Typing start/stop notifications
 
 ### Hotkeys Group
 
-- **Start typing** — Click the field and press your desired key combination
-- **Stop typing** — Click the field and press your desired key combination
-- Hint text explains how to set hotkeys
+* **Start typing** — Click the field and press your desired key combination
+* **Stop typing** — Click the field and press your desired key combination
+* Hint text explains how to set hotkeys
 
 ### Appearance Group
 
-- **Theme** — Dropdown with live preview (light/dark/hacker)
+* **Theme** — Dropdown with live preview (light/dark/hacker)
 
 ### Buttons
 
-- **OK** — Save and apply (validates min < max delay)
-- **Cancel** — Discard changes
-- **Reset** — Restore all TypeThing settings to defaults
+* **OK** — Save and apply (validates min < max delay)
+* **Cancel** — Discard changes
+* **Reset** — Restore all TypeThing settings to defaults
 
 ### Theme System
 
@@ -155,10 +170,10 @@ The main Redball window features a modern custom chrome design:
 
 ### Title Bar
 
-- **App Icon** — Red "R" logo in a rounded corner border
-- **Title** — "Redball" with subtitle "Desktop Control Center"
-- **Window Controls** — Minimize (—), Maximize (□), Close (✕) with hover effects
-- **Draggable** — Click and drag anywhere on the title bar to move the window
+* **App Icon** — Red "R" logo in a rounded corner border
+* **Title** — "Redball" with subtitle "Desktop Control Center"
+* **Window Controls** — Minimize (—), Maximize (□), Close (✕) with hover effects
+* **Draggable** — Click and drag anywhere on the title bar to move the window
 
 ### Navigation Panel
 
@@ -191,13 +206,13 @@ Open via **About...** in the tray menu (or press **A**).
 
 Displays:
 
-- Application name and version
-- Description
-- Latest release version (after clicking "Check for Updates")
-- Update status message (up-to-date / update available)
-- Release notes (if update available)
-- **Check for Updates** button
-- **Download Update** button (opens GitHub release page)
-- **Close** button
+* Application name and version
+* Description
+* Latest release version (after clicking "Check for Updates")
+* Update status message (up-to-date / update available)
+* Release notes (if update available)
+* **Check for Updates** button
+* **Download Update** button (opens GitHub release page)
+* **Close** button
 
 The dialog uses a dark theme (background #1E1E1E) with the Redball name in red (#E63C3C).

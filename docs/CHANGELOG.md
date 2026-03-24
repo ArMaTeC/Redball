@@ -9,16 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added (Unreleased)
 
+- **Self-Contained MSI Installer v2.0**: Completely redesigned MSI installer that is now fully self-contained with no external script dependencies.
+  - Native C# custom action DLL (`Redball.Installer.CustomActions.dll`) for all installer operations.
+  - Self-contained backup/restore of user data during upgrades (no PowerShell required).
+  - Native process management for stopping running Redball instances before install/upgrade.
+  - Built-in logging system that tracks all installer actions to temp log file.
+  - Clean uninstall that properly removes user data when requested.
+  - Removed all PowerShell custom actions and external script dependencies.
+  - _Comment_: The MSI is now the "one true source" for all install/upgrade/uninstall operations.
 - **Release Automation**: Added end-to-end release automation in `scripts/build.ps1` for version bumping, artifact packaging, optional release commit/push, and MSI-focused build flows.
   - _Comment_: This reduces manual release overhead and improves repeatability for shipping builds.
-- **HID Test App Build Step**: Added `Step-BuildHidTestApp` publishing for `tests-e2e/Redball.E2E.Tests.csproj` to `dist/hid-test-app`, with `-SkipHidTestApp` opt-out support.
-  - _Comment_: Keeping this enabled by default makes driver/input regressions easier to catch before release.
 - **Update Controls in UI**: Added explicit "Check for Updates" entry points in tray/menu and quick settings, with update-check behavior exposed through a public async path.
   - _Comment_: Improves discoverability and gives users a direct way to validate update availability.
 - **Config Durability Layer**: Added `UserData` persistence path (`%LocalAppData%\Redball\UserData`) plus migration/recovery logic so settings survive MSI upgrades.
   - _Comment_: This addresses upgrade-related data loss and keeps user preferences stable between versions.
 - **TypeThing HID Input Mode**: Added HID-driver-backed typing mode and hardware scan-code handling for better keyboard layout compatibility.
-  - _Comment_: This improves input reliability for non-US layouts and hardware-specific key mappings.
+- **HID Robustness & Safety**: Implemented a comprehensive HID safety stack including:
+  - **Smart Install/Uninstall**: One-click driver management with explicit install state detection and elevated toggle button.
+  - **HID Safe Mode**: Emergency override that forces SendInput and prevents HID initialization if failures occur.
+  - **Auto-Fallback**: Automatic activation of Safe Mode after 3 consecutive HID initialization failures.
+  - **Deterministic Cleanup**: Guaranteed HID resource release on app shutdown and window closure to prevent keyboard lockups.
+  - **Emergency Release**: Dedicated hotkey (`Ctrl+Shift+Esc`) and tray menu item to immediately release HID control.
+  - **Live Health Diagnostics**: Circular health indicator with animations (pulsing green for ready, flashing red for error) and real-time status details.
+  - **Hot-Plug Recovery**: Automatic HID stack refresh when USB keyboard devices are added or removed.
+  - **Idle Auto-Release**: Automatic release of HID resources after 30 minutes of inactivity.
+  - **Per-Character Retry**: Three-attempt retry logic with backoff for failed HID character sends.
+  - **Automatic Re-Init**: Active typing sessions attempt one silent HID re-initialization if a character fails before falling back to SendInput.
+  - **Health Checks**: Automatic HID capability validation every time the application window is focused.
+  - **Typing Progress**: Live UI overlay with progress bar and cancel button for active typing operations.
+  - **HID Test Box**: Interactive testing area in Settings to verify driver functionality before use.
+  - **Repair HID Stack**: One-click full fix sequence that validates integrity and refreshes the driver/device stack.
+  - **Audio Feedback**: Optional subtle click sounds for successful HID sends providing non-visual confirmation.
+  - **Driver Integrity Validation**: SHA256-based verification of driver files on disk to detect corruption.
+  - **Layout Compatibility**: Diagnostic detection of non-standard keyboard layouts for improved input mapping.
+  - **Windows Compatibility**: Integrated OS version checks to ensure HID driver compatibility.
+- **Enhanced Build Pipeline**: Updated `build.ps1` with detailed HID feature summaries and improved dependency handling for LottieSharp and Xaml.Behaviors.
 - **Localization Expansion**: Added broader language support in the WPF app (including the synchronized `bl` locale option).
 - **Mini Widget Presets**: Added Focus/Meeting/Battery Safe preset support with one-click apply actions in main settings and quick settings popup.
   - _Comment_: Adds fast, goal-based widget setup for common workflows.
@@ -51,13 +76,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - _Comment_: Prevents user confusion when following settings instructions in the current UI.
 - **Startup & CLI Docs**: Replaced outdated startup argument guidance with current maintenance arguments (`--install-driver`, `--install-driver-no-restart`).
   - _Comment_: Keeps launch/runtime docs accurate for support and troubleshooting.
-- **Build/Release Docs**: Added current `scripts/build.ps1` behavior details, including default HID test app publish output under `dist/hid-test-app`.
+- **Build/Release Docs**: Added current `scripts/build.ps1` behavior details.
   - _Comment_: Improves release reproducibility and artifact discoverability.
 - **Security/Privacy/DPA Docs**: Updated supported versions, data storage locations, and update network behavior to current build.
   - _Comment_: Aligns policy/operations docs with implemented runtime behavior.
 
 ### Fixed (Unreleased)
 
+- **Missing Animation Assets**: Restored Lottie animation JSON files (`ram_usage.json`, `engine_toggle.json`, `typething_launch.json`, `pomodoro_timer.json`) to `Assets/Animations` and ensured they are included in the build output. Fixes `XamlParseException` / `DirectoryNotFoundException` on app startup.
 - **Settings Reset Regression**: Prevented startup UI event handlers from overwriting loaded settings by ensuring initialization gating is active during control wiring.
   - _Comment_: Fixes a high-impact regression where defaults could silently overwrite saved user settings.
 - **Config Loss During Upgrades**: Fixed MSI-upgrade-related settings loss by separating user data from installer-managed directories and adding migration from legacy locations.

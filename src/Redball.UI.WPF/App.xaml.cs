@@ -22,6 +22,9 @@ public partial class App : Application
 
     public App()
     {
+        // Set current directory to base directory to ensure relative asset paths work correctly
+        Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
         // Initialize logger FIRST before anything else
         Services.Logger.Initialize();
         Services.Logger.Info("App", "=== Redball.UI.WPF Application Starting ===");
@@ -107,11 +110,17 @@ public partial class App : Application
         // Prevent default crash dialog for known recoverable exceptions
         if (e.Exception is System.Windows.Markup.XamlParseException xamlEx)
         {
-            Services.Logger.Error("App", $"XAML parse error (recoverable): {xamlEx.Message}");
-            // Could show a message box here with the error
+            Services.Logger.Fatal("App", $"XAML parse error: {xamlEx.Message}", xamlEx);
+            
+            bool isTest = Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--smoke-test" || arg == "--test-mode");
+            if (isTest)
+            {
+                Services.Logger.Fatal("App", "Fatal XAML error during test mode - exiting with code 1");
+                Environment.Exit(1);
+            }
         }
         
-        e.Handled = true; // Prevent crash, but log it
+        e.Handled = true; // Prevent crash dialog, but log it
     }
 
     protected override void OnStartup(StartupEventArgs e)
@@ -145,6 +154,21 @@ public partial class App : Application
             return;
         }
 
+        // Handle smoke test for build verification
+        if (e.Args.Length > 0 && Array.Exists(e.Args, arg => arg == "--smoke-test"))
+        {
+            Services.Logger.Info("App", "Running in smoke-test mode for build verification");
+            // We'll let the rest of the startup run to verify XAML/DI/Config, 
+            // then we'll exit after the MainWindow would have been created.
+        }
+
+        // Handle test mode for E2E tests
+        bool isTestMode = e.Args.Length > 0 && Array.Exists(e.Args, arg => arg == "--test-mode");
+        if (isTestMode)
+        {
+            Services.Logger.Info("App", "Running in test-mode for E2E tests");
+        }
+
         Services.Logger.LogMemoryStats("App");
         
         try
@@ -155,7 +179,7 @@ public partial class App : Application
 
             // Singleton check - prevent multiple instances
             _singleton = new Services.SingletonService();
-            if (!_singleton.TryAcquire())
+            if (!isTestMode && !_singleton.TryAcquire())
             {
                 Services.Logger.Warning("App", "Another instance is already running. Exiting.");
                 Shutdown();
@@ -223,7 +247,7 @@ public partial class App : Application
             }
 
             // Show onboarding for first-time users
-            if (cfg.FirstRun)
+            if (cfg.FirstRun && !isTestMode)
             {
                 Services.Logger.Info("App", "First run detected - showing onboarding window");
                 analytics.TrackFeature("onboarding.shown");
@@ -270,11 +294,29 @@ public partial class App : Application
             {
                 _mainWindow = new Views.MainWindow();
                 Services.Logger.Debug("App", "MainWindow instance created");
+                
+                if (isTestMode)
+                {
+                    _mainWindow.Title += " (Test Mode)";
+                }
             }
             catch (Exception mwEx)
             {
                 Services.Logger.Fatal("App", "Failed to create MainWindow", mwEx);
                 throw;
+            }
+
+            // Handle smoke test exit
+            if (e.Args.Length > 0 && Array.Exists(e.Args, arg => arg == "--smoke-test"))
+            {
+                Services.Logger.Info("App", "Smoke test successful - exiting with code 0");
+                _startupStopwatch.Stop();
+                Services.Logger.Info("App", $"Startup sequence verified in {_startupStopwatch.Elapsed.TotalSeconds:F2}s");
+                
+                // Cleanup and exit
+                Services.Logger.Shutdown();
+                Environment.Exit(0);
+                return;
             }
             
             // Ensure window is loaded before moving off-screen
@@ -284,12 +326,26 @@ public partial class App : Application
             // Subscribe to application events
             _mainWindow.Closed += OnMainWindowClosed;
             
-            // Initialize the main window in hidden tray-only mode
-            Services.Logger.Debug("App", "Initializing MainWindow in tray-only mode...");
-            _mainWindow.WindowState = WindowState.Minimized;
-            _mainWindow.ShowInTaskbar = false;
-            _mainWindow.Show();
-            _mainWindow.Hide();
+            // Initialize the main window
+            Services.Logger.Debug("App", "Initializing MainWindow...");
+            
+            if (isTestMode)
+            {
+                // In test mode, we want the window to be visible and findable by automation
+                _mainWindow.WindowState = WindowState.Normal;
+                _mainWindow.ShowInTaskbar = true;
+                _mainWindow.Show();
+                Services.Logger.Info("App", "MainWindow shown directly for test-mode");
+            }
+            else
+            {
+                // Tray-only mode for normal startup
+                _mainWindow.WindowState = WindowState.Minimized;
+                _mainWindow.ShowInTaskbar = false;
+                _mainWindow.Show();
+                _mainWindow.Hide();
+                Services.Logger.Debug("App", "MainWindow initialized in tray-only mode");
+            }
 
             if (cfg.MiniWidgetOpenOnStartup)
             {

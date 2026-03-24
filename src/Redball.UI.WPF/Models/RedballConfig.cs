@@ -51,6 +51,7 @@ public class RedballConfig
     public bool TypeThingNotifications { get; set; } = true;
     public string TypeThingInputMode { get; set; } = "SendInput";
     public bool TypeThingHidSafeMode { get; set; }
+    public bool TypeThingHidAudioFeedback { get; set; }
     public bool VerboseLogging { get; set; }
     public bool MinimizeToTray { get; set; }
     public bool ShowNotifications { get; set; } = true;

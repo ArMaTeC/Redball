@@ -414,6 +414,7 @@ public partial class MainWindow
             {
                 _typeThingTimer?.Stop();
                 _typeThingTimer = null;
+                HideTypeThingProgress();
                 CleanupTypeThingHidSession("TypeThing stopped by user");
                 Logger.Info("MainWindow", "TypeThing: Typing stopped by user");
                 _analytics.TrackFeature("typething.stopped");
@@ -425,6 +426,7 @@ public partial class MainWindow
             {
                 _typeThingTimer?.Stop();
                 _typeThingTimer = null;
+                HideTypeThingProgress();
                 CleanupTypeThingHidSession("TypeThing complete");
                 MarkTypeThingOperationFinished();
                 Logger.Info("MainWindow", "TypeThing: Typing complete");
@@ -432,6 +434,9 @@ public partial class MainWindow
                 NotificationService.Instance.ShowInfo("TypeThing", $"Done! Typed {text.Length} characters.");
                 return;
             }
+
+            // Update progress UI
+            UpdateTypeThingProgress(index, text.Length);
 
             var ch = text[index];
             if (ch == '\r')
@@ -467,7 +472,20 @@ public partial class MainWindow
                 {
                     if (!InterceptionInputService.Instance.SendCharacterWithRetry(ch))
                     {
-                        Logger.Warning("MainWindow", $"TypeThing: HID SendCharacterWithRetry failed for '{ch}', falling back to SendInput");
+                        Logger.Warning("MainWindow", $"TypeThing: HID SendCharacterWithRetry failed for '{ch}', attempting one silent re-init");
+                        
+                        // Attempt one silent re-initialization
+                        InterceptionInputService.Instance.ReleaseResources("Silent re-init on failure");
+                        if (InterceptionInputService.Instance.Initialize())
+                        {
+                            Logger.Info("MainWindow", "TypeThing: HID silent re-init successful, retrying character");
+                            if (InterceptionInputService.Instance.SendCharacterWithRetry(ch))
+                            {
+                                goto character_sent;
+                            }
+                        }
+
+                        Logger.Warning("MainWindow", $"TypeThing: HID re-init failed or send still failed, falling back to SendInput");
                         SendCharacter(ch);
                     }
                 }
@@ -475,8 +493,10 @@ public partial class MainWindow
                 {
                     SendCharacter(ch);
                 }
+
+                character_sent:
+                index++;
             }
-            index++;
 
             // Show progress notification every 100 characters
             if (index % 100 == 0 && index < text.Length)
@@ -495,7 +515,55 @@ public partial class MainWindow
                 _typeThingTimer.Interval = TimeSpan.FromMilliseconds(_random.Next(minDelay, maxDelay + 1));
             }
         };
+        // Show progress UI for long strings
+        if (text.Length > 50)
+        {
+            ShowTypeThingProgress(text.Length);
+        }
+
         _typeThingTimer.Start();
+    }
+
+    private void ShowTypeThingProgress(int totalChars)
+    {
+        if (TypeThingProgressOverlay != null)
+        {
+            TypeThingProgressOverlay.Visibility = Visibility.Visible;
+        }
+        if (TypeThingProgressBar != null)
+        {
+            TypeThingProgressBar.Maximum = totalChars;
+            TypeThingProgressBar.Value = 0;
+        }
+        if (TypeThingProgressText != null)
+        {
+            TypeThingProgressText.Text = $"0 / {totalChars} characters";
+        }
+    }
+
+    private void UpdateTypeThingProgress(int current, int total)
+    {
+        if (TypeThingProgressBar != null)
+        {
+            TypeThingProgressBar.Value = current;
+        }
+        if (TypeThingProgressText != null)
+        {
+            TypeThingProgressText.Text = $"{current} / {total} characters";
+        }
+    }
+
+    private void HideTypeThingProgress()
+    {
+        if (TypeThingProgressOverlay != null)
+        {
+            TypeThingProgressOverlay.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void TypeThingCancel_Click(object sender, RoutedEventArgs e)
+    {
+        StopTypeThing();
     }
 
     public void StopTypeThing()
@@ -513,6 +581,7 @@ public partial class MainWindow
             _typeThingCountdownTimer = null;
             _typeThingTimer?.Stop();
             _typeThingTimer = null;
+            HideTypeThingProgress();
             CleanupTypeThingHidSession("StopTypeThing requested");
             MarkTypeThingOperationFinished();
             _analytics.TrackFeature("typething.stop_requested");

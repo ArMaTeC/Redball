@@ -45,7 +45,7 @@ For release builds (when MSI is enabled), `scripts/build.ps1` commits and pushes
 3. Builds an MSI via WiX
 4. Signs both artifacts with a code-signing certificate (creates a self-signed cert if none exists)
 
-`scripts/build.ps1` also publishes the HID test app by default to `dist/hid-test-app` (use `-SkipHidTestApp` to opt out).
+`scripts/build.ps1` also builds the WPF application and generates the MSI installer.
 
 ### Installer Features
 
@@ -112,7 +112,6 @@ Build artifacts are placed in the `dist/` directory:
 | ---- | ----------- |
 | `Redball.UI.WPF.exe` | Self-contained WPF executable |
 | `Redball-{version}.msi` | WiX MSI installer |
-| `hid-test-app/Redball.E2E.Tests.exe` | Published E2E HID validation utility |
 
 ---
 

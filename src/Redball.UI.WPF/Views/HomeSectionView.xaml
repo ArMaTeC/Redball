@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:lottie="clr-namespace:LottieSharp;assembly=LottieSharp"
+             xmlns:lottie="clr-namespace:LottieSharp.WPF;assembly=LottieSharp"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="0,0,0,24">

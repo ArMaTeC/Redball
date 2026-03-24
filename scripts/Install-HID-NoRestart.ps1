@@ -18,7 +18,8 @@ if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Adm
 }
 
 Write-Step "Checking for Interception Driver resources..."
-$DriverDir = Join-Path $PSScriptRoot "..\resources\drivers\interception"
+$DriverDir = Join-Path (Join-Path $PSScriptRoot "..") "resources"
+$DriverDir = Join-Path (Join-Path $DriverDir "drivers") "interception"
 $InstallExe = Join-Path $DriverDir "install-interception.exe"
 
 if (-not (Test-Path $InstallExe)) {
@@ -59,6 +60,17 @@ foreach ($Line in $KbdDevices) {
 
 Write-Step "Installation Complete!"
 Write-Output "If the HID mode still reports 'Driver Not Installed' in Redball, a full restart is still required."
+
+
+
+
+
+
+
+
+
+
+
 
 
 

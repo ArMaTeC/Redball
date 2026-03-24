@@ -95,18 +95,18 @@ public static class ThemeManager
         IsFollowingSystemTheme = false; // Explicit theme set; stop auto-following
 
         // Load shared control styles once (was previously in App.xaml statically)
-        if (!_controlsLoaded)
+        if (!_controlsLoaded && Application.Current != null)
         {
-            var controlsDict = new ResourceDictionary
-            {
-                Source = new Uri("pack://application:,,,/Themes/Controls.xaml")
-            };
-            Application.Current.Resources.MergedDictionaries.Add(controlsDict);
+            // Core shared UI dictionaries
+            Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("pack://application:,,,/Redball.UI.WPF;component/Themes/Controls.xaml") });
+            Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("pack://application:,,,/Redball.UI.WPF;component/Themes/Animations.xaml") });
+            Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("pack://application:,,,/Redball.UI.WPF;component/Themes/AcrylicEffects.xaml") });
+            Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("pack://application:,,,/Redball.UI.WPF;component/Themes/MainWindowStyles.xaml") });
             _controlsLoaded = true;
         }
 
         // Remove current theme if exists
-        if (_currentTheme != null)
+        if (_currentTheme != null && Application.Current != null)
         {
             Application.Current.Resources.MergedDictionaries.Remove(_currentTheme);
         }
@@ -117,7 +117,10 @@ public static class ThemeManager
             : new Uri("pack://application:,,,/Themes/DarkTheme.xaml");
 
         _currentTheme = new ResourceDictionary { Source = baseUri };
-        Application.Current.Resources.MergedDictionaries.Add(_currentTheme);
+        if (Application.Current != null)
+        {
+            Application.Current.Resources.MergedDictionaries.Add(_currentTheme);
+        }
 
         // Apply variant-specific color overrides
         ApplyThemeVariant(theme);
@@ -135,6 +138,7 @@ public static class ThemeManager
 
     private static void ApplyThemeVariant(Theme theme)
     {
+        if (Application.Current == null) return;
         var res = Application.Current.Resources;
 
         switch (theme)

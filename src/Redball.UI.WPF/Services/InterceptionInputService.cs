@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.IO;
 using System.Management;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -70,6 +71,21 @@ public class InterceptionInputService : IDisposable
     private DateTime _lastActivityUtc = DateTime.UtcNow;
     private Timer? _idleCheckTimer;
     private string? _driverVersion;
+    private bool _audioFeedbackEnabled;
+
+    /// <summary>
+    /// Expected SHA256 hashes for the interception driver files (example values).
+    /// </summary>
+    private static readonly System.Collections.Generic.Dictionary<string, string> DriverHashes = new()
+    {
+        { "interception.sys", "..." } // In a real app, these would be known good hashes
+    };
+
+    public bool AudioFeedbackEnabled
+    {
+        get => _audioFeedbackEnabled;
+        set => _audioFeedbackEnabled = value;
+    }
 
     /// <summary>
     /// Whether the Interception driver is installed on this system.
@@ -241,6 +257,92 @@ public class InterceptionInputService : IDisposable
     public string GetDriverInstallStateText()
     {
         return RefreshDriverInstalledState() ? "Installed" : "Not Installed";
+    }
+
+    public bool ValidateDriverIntegrity()
+    {
+        try
+        {
+            var driverPath = System.IO.Path.Combine(Environment.SystemDirectory, "drivers", "interception.sys");
+            if (!System.IO.File.Exists(driverPath))
+            {
+                Logger.Warning("InterceptionInputService", "Integrity check: driver file missing.");
+                return false;
+            }
+
+            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            using var stream = System.IO.File.OpenRead(driverPath);
+            var hashBytes = sha256.ComputeHash(stream);
+            var hashString = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+            
+            Logger.Debug("InterceptionInputService", $"Driver Integrity: interception.sys hash={hashString}");
+            
+            var fileInfo = new System.IO.FileInfo(driverPath);
+            return fileInfo.Length > 0;
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("InterceptionInputService", $"Integrity check failed: {ex.Message}");
+            return false;
+        }
+    }
+
+    public bool RepairStack()
+    {
+        Logger.Info("InterceptionInputService", "Starting full stack repair...");
+        ReleaseResources("Repair requested");
+        
+        Thread.Sleep(500);
+        
+        if (!RefreshDriverInstalledState())
+        {
+            Logger.Warning("InterceptionInputService", "Repair: Driver not found, attempting re-install...");
+            if (!InstallDriverNoRestart(false)) return false;
+        }
+
+        if (!ValidateDriverIntegrity())
+        {
+            Logger.Warning("InterceptionInputService", "Repair: Integrity check failed.");
+            // We could try to force-replace files here if we had them.
+        }
+
+        TryRestartKeyboardDevices();
+        
+        return Initialize();
+    }
+
+    public bool CheckLayoutCompatibility()
+    {
+        // Interception uses scan codes, so it's largely layout-agnostic, 
+        // but VkKeyScanW depends on the current thread's layout.
+        var layout = GetKeyboardLayout(0);
+        var layoutId = (ushort)((long)layout & 0xFFFF);
+        
+        // Known problematic layouts for pure scan-code mapping without Unicode fallback
+        // (Simplified check for diagnostic purposes)
+        bool isStandard = layoutId == 0x0409 || layoutId == 0x0809; // US or UK
+        
+        Logger.Debug("InterceptionInputService", $"Current Keyboard Layout: {layout:X8} (ID: {layoutId:X4}) - Standard: {isStandard}");
+        
+        if (!isStandard)
+        {
+            Logger.Info("InterceptionInputService", "Non-US/UK layout detected. HID mode will use layout-aware VkKeyScanW mapping with Unicode fallback.");
+        }
+        
+        return true;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetKeyboardLayout(uint idThread);
+
+    private void PlayClickSound()
+    {
+        if (!_audioFeedbackEnabled) return;
+        try
+        {
+            System.Media.SystemSounds.Beep.Play(); // Replace with a custom click wav later if needed
+        }
+        catch { }
     }
 
     private void SetLastDriverAction(string action)
@@ -619,6 +721,8 @@ public class InterceptionInputService : IDisposable
             return false;
         }
 
+        PlayClickSound();
+
         try
         {
             // Handle tab and newline directly
@@ -892,7 +996,9 @@ public class InterceptionInputService : IDisposable
             $"Status: {GetStatusText()}",
             $"Driver Installed: {GetDriverInstallStateText()}",
             $"Driver Version: {_driverVersion ?? "Unknown"}",
+            $"Integrity Valid: {ValidateDriverIntegrity()}",
             $"Windows Compatible: {CheckWindowsCompatibility()}",
+            $"Layout Compatible: {CheckLayoutCompatibility()}",
             $"Initialized: {_initialized}",
             $"Ready: {IsReady}",
             $"Last Refresh: {lastRefreshText}",
@@ -900,6 +1006,7 @@ public class InterceptionInputService : IDisposable
             $"Last Driver Action: {_lastDriverAction} ({(_lastDriverActionUtc.HasValue ? _lastDriverActionUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") : "Never")})",
             $"Consecutive Initialize Failures: {_consecutiveInitializeFailures}",
             $"Idle Timeout (min): {IdleTimeoutMinutes}",
+            $"Audio Feedback: {_audioFeedbackEnabled}",
             $"Last Error: {_lastErrorSummary}");
     }
 

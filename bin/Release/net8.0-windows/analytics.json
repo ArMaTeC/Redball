@@ -1,0 +1,14 @@
+{
+  "FirstSeen": "2026-03-24T17:58:28.5677026Z",
+  "LastUpdated": "0001-01-01T00:00:00",
+  "TotalSessions": 4,
+  "TotalSessionDuration": "00:00:00.0016275",
+  "SessionStartTime": null,
+  "SessionHistory": {
+    "2026-03-24": 4
+  },
+  "Features": {},
+  "Funnels": {},
+  "Retention": {},
+  "NpsResponses": []
+}

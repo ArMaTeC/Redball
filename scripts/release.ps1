@@ -1,4 +1,4 @@
-﻿#Requires -Version 7
+﻿#Requires -Version 5.1
 
 <#
 .SYNOPSIS
@@ -68,7 +68,8 @@ $script:stashedChanges = $false
 # Resolve project root safely
 $currentScriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path $MyInvocation.MyCommand.Path -Parent }
 if (-not $currentScriptRoot) { $currentScriptRoot = (Get-Item .).FullName }
-$script:ProjectRoot = Resolve-Path (Join-Path $currentScriptRoot "..")
+$parentDir = Split-Path $currentScriptRoot -Parent
+$script:ProjectRoot = Resolve-Path $parentDir
 
 if (-not $DistDir) {
     $script:DistDir = Join-Path $script:ProjectRoot "dist"
@@ -174,7 +175,9 @@ function Get-ProjectVersion {
         return $script:Version
     }
 
-    $CsprojPath = Join-Path $ProjectRoot "src\Redball.UI.WPF\Redball.UI.WPF.csproj"
+    $srcDir = Join-Path $ProjectRoot "src"
+    $wpfDir = Join-Path $srcDir "Redball.UI.WPF"
+    $CsprojPath = Join-Path $wpfDir "Redball.UI.WPF.csproj"
     if (-not (Test-Path $CsprojPath)) {
         throw "Project file not found: $CsprojPath"
     }
@@ -341,7 +344,7 @@ try {
     # ── 5. Fetch latest remote state ──
     Write-Info "Fetching latest from remote..."
     if (-not $DryRun) {
-        git fetch --tags --prune origin 2>$null
+        git fetch --tags --prune origin --quiet
         Write-Success "Remote state synced"
     }
 
@@ -386,7 +389,7 @@ try {
         Write-Warn "$unpushed unpushed commit(s) detected."
         Write-Info "Pushing commits to origin/$currentBranch..."
         if (-not $DryRun) {
-            git push origin $currentBranch 2>$null
+            git push origin $currentBranch --quiet
             if ($LASTEXITCODE -eq 0) {
                 Write-Success "Pushed $unpushed commit(s) to origin/$currentBranch"
             }
@@ -413,7 +416,7 @@ try {
     elseif ($tagLocal -and -not $tagRemote) {
         Write-Warn "Tag $Tag exists locally but not on remote. Pushing..."
         if (-not $DryRun) {
-            git push origin $Tag 2>$null
+            git push origin $Tag
             if ($LASTEXITCODE -eq 0) {
                 Write-Success "Pushed tag $Tag to origin"
             }
@@ -428,7 +431,7 @@ try {
     elseif (-not $tagLocal -and $tagRemote) {
         Write-Warn "Tag $Tag exists on remote but not locally. Fetching..."
         if (-not $DryRun) {
-            git fetch origin tag $Tag 2>$null
+            git fetch origin tag $Tag --quiet
             Write-Success "Fetched tag $Tag from origin"
         }
         else {
@@ -438,13 +441,13 @@ try {
     else {
         Write-Warn "Tag $Tag does not exist anywhere. Creating..."
         if (-not $DryRun) {
-            git tag -a $Tag -m "Release $Tag" 2>$null
+            git tag -a $Tag -m "Release $Tag"
             if ($LASTEXITCODE -ne 0) {
                 throw "Failed to create tag $Tag locally."
             }
             Write-Success "Created tag $Tag locally"
 
-            git push origin $Tag 2>$null
+            git push origin $Tag
             if ($LASTEXITCODE -ne 0) {
                 throw "Failed to push tag $Tag to origin."
             }
@@ -493,9 +496,13 @@ try {
     # Create a generic Redball.msi copy to satisfy old updater's priority #0
     $genericMsi = Join-Path $DistDir "Redball.msi"
     if (Test-Path $msiVersioned) {
-        Copy-Item -Path $msiVersioned -Destination $genericMsi -Force
-        $uploadFiles += $genericMsi
-        Write-Success "Created generic MSI for legacy updaters: $genericMsi"
+        if ($msiVersioned -ne $genericMsi) {
+            Copy-Item -Path $msiVersioned -Destination $genericMsi -Force
+            if ($uploadFiles -notcontains $genericMsi) {
+                $uploadFiles += $genericMsi
+            }
+            Write-Success "Created generic MSI for legacy updaters: $genericMsi"
+        }
     }
 
     # Add all modular files from wpf-publish for differential updates
@@ -546,8 +553,14 @@ try {
     }
     else {
         # Check if release already exists
-        $null = (& gh release view $Tag 2>&1)
-        $releaseExists = ($LASTEXITCODE -eq 0)
+        $releaseExists = $false
+        try {
+            & gh release view $Tag --json tagName > $null 2>&1
+            $releaseExists = ($LASTEXITCODE -eq 0)
+        }
+        catch {
+            $releaseExists = $false
+        }
 
         if ($releaseExists) {
             Write-Warn "Release $Tag already exists. Updating artifacts (--clobber)..."
@@ -620,6 +633,17 @@ finally {
 }
 
 # End Main Script
+
+
+
+
+
+
+
+
+
+
+
 
 
 

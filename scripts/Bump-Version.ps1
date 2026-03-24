@@ -49,7 +49,9 @@ function Write-HostSafe {
 }
 
 $projectRoot = Split-Path $PSScriptRoot -Parent
-$wpfProjectPath = Join-Path $projectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
+$srcDir = Join-Path $projectRoot 'src'
+$wpfDir = Join-Path $srcDir 'Redball.UI.WPF'
+$wpfProjectPath = Join-Path $wpfDir 'Redball.UI.WPF.csproj'
 $propsPath = Join-Path $projectRoot 'Directory.Build.props'
 $versionFilePath = Join-Path $PSScriptRoot 'version.txt'
 
@@ -125,6 +127,17 @@ if ($Commit -or $Push) {
 }
 
 Write-HostSafe "Done!" -ForegroundColor Green
+
+
+
+
+
+
+
+
+
+
+
 
 
 

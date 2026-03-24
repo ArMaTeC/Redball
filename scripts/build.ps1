@@ -19,9 +19,6 @@ param(
     [switch]$SkipWPF,
 
     [Parameter()]
-    [switch]$SkipHidTestApp,
-
-    [Parameter()]
     [switch]$SkipMSI,
 
     [Parameter()]
@@ -29,6 +26,9 @@ param(
 
     [Parameter()]
     [switch]$BuildAll,
+
+    [Parameter()]
+    [switch]$SkipVerify,
 
     [Parameter()]
     [string]$OutputPath = './dist',
@@ -73,50 +73,6 @@ $ErrorActionPreference = 'Stop'
 # Resolve paths safely
 $currentScriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path $MyInvocation.MyCommand.Path -Parent }
 
-function Step-BuildHidTestApp {
-    [CmdletBinding(SupportsShouldProcess)]
-    param()
-
-    Write-BuildHeader "Building HID Test Application"
-
-    $hidTestProjectPath = Join-Path $script:ProjectRoot 'tests-e2e' 'Redball.E2E.Tests.csproj'
-    if (-not (Test-Path $hidTestProjectPath)) {
-        Write-Warning "HID test project not found: $hidTestProjectPath"
-        return
-    }
-
-    $hidTestOutDir = Join-Path $script:DistPath 'hid-test-app'
-    if (-not $PSCmdlet.ShouldProcess("HID Test App v$Version", 'Build')) {
-        return
-    }
-
-    if (Test-Path $hidTestOutDir) {
-        Remove-Item -Path $hidTestOutDir -Recurse -Force -ErrorAction SilentlyContinue
-    }
-    New-Item -ItemType Directory -Path $hidTestOutDir -Force | Out-Null
-
-    Write-BuildStep "Publishing HID test executable..."
-    dotnet publish $hidTestProjectPath `
-        --configuration $Configuration `
-        --output $hidTestOutDir `
-        --self-contained false `
-        --runtime win-x64
-
-    if ($LASTEXITCODE -ne 0) {
-        throw "HID test application publish failed"
-    }
-
-    $hidExePath = Join-Path $hidTestOutDir 'Redball.E2E.Tests.exe'
-    if (Test-Path $hidExePath) {
-        $hidExe = Get-Item $hidExePath
-        Write-BuildSuccess "HID test executable ready: $($hidExe.FullName) ($([math]::Round($hidExe.Length / 1MB, 2)) MB)"
-    }
-    else {
-        Write-Warning "HID test publish completed, but executable was not found at expected path: $hidExePath"
-    }
-}
-if (-not $currentScriptRoot) { $currentScriptRoot = (Get-Item .).FullName }
-
 $script:ProjectRoot = Split-Path $currentScriptRoot -Parent
 if (-not $script:ProjectRoot) { $script:ProjectRoot = (Get-Item .).FullName }
 
@@ -130,7 +86,9 @@ if (-not $Version) {
     }
     else {
         # Try to read from WPF project
-        $wpfProjectPath = Join-Path $script:ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
+        $srcDir = Join-Path $script:ProjectRoot 'src'
+        $wpfDir = Join-Path $srcDir 'Redball.UI.WPF'
+        $wpfProjectPath = Join-Path $wpfDir 'Redball.UI.WPF.csproj'
         if (Test-Path $wpfProjectPath) {
             $versionMatch = Get-Content $wpfProjectPath | Select-String -Pattern '<Version>([0-9]+\.[0-9]+\.[0-9]+)</Version>'
             if ($versionMatch) {
@@ -380,7 +338,8 @@ function Step-RunTest {
     param()
     Write-BuildHeader "Running Tests"
     
-    $testPath = Join-Path $ProjectRoot 'tests' 'Redball.Tests.csproj'
+    $testProjDir = Join-Path $ProjectRoot 'tests'
+    $testPath = Join-Path $testProjDir 'Redball.Tests.csproj'
     if (-not (Test-Path $testPath)) {
         Write-Warning "Test project not found: $testPath"
         return
@@ -421,7 +380,9 @@ function Step-BumpVersion {
     Write-BuildHeader "Bumping Version ($BumpComponent)"
     
     $propsPath = Join-Path $ProjectRoot 'Directory.Build.props'
-    $wpfProjectPath = Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
+    $srcDir = Join-Path $ProjectRoot 'src'
+    $wpfDir = Join-Path $srcDir 'Redball.UI.WPF'
+    $wpfProjectPath = Join-Path $wpfDir 'Redball.UI.WPF.csproj'
     $versionFilePath = Join-Path $PSScriptRoot 'version.txt'
     
     $targetPath = $propsPath
@@ -495,7 +456,9 @@ function Step-CommitVersionBump {
     Write-BuildHeader "Committing Version Bump"
     
     $propsPath = Join-Path $ProjectRoot 'Directory.Build.props'
-    $wpfProjectPath = Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
+    $srcDir = Join-Path $ProjectRoot 'src'
+    $wpfDir = Join-Path $srcDir 'Redball.UI.WPF'
+    $wpfProjectPath = Join-Path $wpfDir 'Redball.UI.WPF.csproj'
     $versionFilePath = Join-Path $PSScriptRoot 'version.txt'
     
     $targetPath = if (Test-Path $propsPath) { $propsPath } else { $wpfProjectPath }
@@ -664,7 +627,9 @@ function Step-BuildWpfApp {
     Write-BuildHeader "Building WPF Application"
     
     $solutionPath = Join-Path $script:ProjectRoot 'Redball.v3.sln'
-    $projectPath = Join-Path $script:ProjectRoot 'src' 'Redball.UI.WPF' 'Redball.UI.WPF.csproj'
+    $srcDir = Join-Path $script:ProjectRoot 'src'
+    $wpfDir = Join-Path $srcDir 'Redball.UI.WPF'
+    $projectPath = Join-Path $wpfDir 'Redball.UI.WPF.csproj'
     $publishDir = Join-Path $script:DistPath 'wpf-publish'
     
     if (-not (Test-Path $projectPath)) {
@@ -677,13 +642,13 @@ function Step-BuildWpfApp {
     }
     
     # Stop Redball processes running from the project folder early to prevent locks
-    $runningProcesses = Get-Process -Name 'Redball.UI.WPF', 'Redball' -ErrorAction SilentlyContinue
+    $runningProcesses = Get-Process -Name 'Redball.UI.WPF', 'Redball', 'MSBuild', 'dotnet' -ErrorAction SilentlyContinue
     if ($runningProcesses) {
         $projectProcesses = $runningProcesses | Where-Object {
             try { $_.Path -and $_.Path.StartsWith($ProjectRoot, [System.StringComparison]::OrdinalIgnoreCase) } catch { $false }
         }
         if ($projectProcesses) {
-            Write-BuildStep "Stopping Redball processes from project folder to prevent file locks..."
+            Write-BuildStep "Stopping project-related processes to prevent file locks..."
             $projectProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 2
             Write-BuildSuccess "Project processes stopped"
@@ -691,8 +656,12 @@ function Step-BuildWpfApp {
     }
 
     # Detect and resolve file locks before building
-    $objDir = Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'obj' $Configuration 'net8.0-windows' 'win-x64'
-    $dllPath = Join-Path $objDir 'Redball.UI.WPF.dll'
+    $srcDir = Join-Path $ProjectRoot 'src'
+    $wpfDir = Join-Path $srcDir 'Redball.UI.WPF'
+    $objDir = Join-Path $wpfDir 'obj'
+    $netDir = Join-Path $objDir 'net8.0-windows'
+    $winDir = Join-Path $netDir 'win-x64'
+    $dllPath = Join-Path $winDir 'Redball.UI.WPF.dll'
     
     if (Test-Path $dllPath) {
         try {
@@ -787,14 +756,23 @@ function Step-BuildWpfApp {
     # Create logs folder placeholder
     $logsDir = Join-Path $publishDir "logs"
     if (-not (Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir -Force | Out-Null }
-    New-Item -ItemType File -Path (Join-Path $logsDir ".keep") -Force | Out-Null
+    $logsKeepFile = Join-Path $logsDir ".keep"
+    New-Item -ItemType File -Path $logsKeepFile -Force | Out-Null
 
     # Generate Update Manifest
     Write-BuildStep "Generating Update Manifest..."
     $pubFiles = Get-ChildItem -Path $publishDir -File -Recurse
     $manifestFiles = @()
     foreach ($file in $pubFiles) {
-        $relativePath = [System.IO.Path]::GetRelativePath($publishDir, $file.FullName)
+        # PowerShell 5.1 compatible relative path
+        $fullPath = $file.FullName
+        if ($fullPath.StartsWith($publishDir)) {
+            $relativePath = $fullPath.Substring($publishDir.Length).TrimStart('\').TrimStart('/')
+        }
+        else {
+            $relativePath = $file.Name
+        }
+
         if ([string]::IsNullOrWhiteSpace($relativePath) -or $relativePath.StartsWith("..")) { continue }
         if ($relativePath -eq "manifest.json") { continue }
         $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash
@@ -815,14 +793,16 @@ function Step-BuildWpfApp {
     $manifest | ConvertTo-Json -Depth 10 | Set-Content $manifestPath -Encoding UTF8
     Write-BuildSuccess "Publish completed and manifest generated in $publishDir"
     
-    # Copy Assets folder to publish directory for MSI packaging
-    $assetsSource = Join-Path (Split-Path $projectPath -Parent) 'Assets'
+    $srcDir = Join-Path $ProjectRoot 'src'
+    $wpfDir = Join-Path $srcDir 'Redball.UI.WPF'
+    $assetsSource = Join-Path $wpfDir 'Assets'
     $assetsDest = Join-Path $publishDir 'Assets'
     if (Test-Path $assetsSource) {
         if (-not (Test-Path $assetsDest)) {
             New-Item -ItemType Directory -Path $assetsDest -Force | Out-Null
         }
-        Copy-Item -Path (Join-Path $assetsSource '*') -Destination $assetsDest -Recurse -Force
+        $assetsSourceWildcard = Join-Path $assetsSource '*'
+        Copy-Item -Path $assetsSourceWildcard -Destination $assetsDest -Recurse -Force
         Write-BuildSuccess "Copied Assets to publish directory"
     }
     
@@ -832,6 +812,83 @@ function Step-BuildWpfApp {
         $fileInfo = Get-Item $exePath
         Write-HostSafe "  Executable: $($fileInfo.Name) ($([math]::Round($fileInfo.Length / 1MB, 2)) MB)" -ForegroundColor Gray
     }
+
+    # Verify build before proceeding to MSI
+    if (-not $SkipVerify) {
+        Step-VerifyBuild -PublishDir $publishDir
+    }
+}
+
+function Step-VerifyBuild {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$PublishDir
+    )
+
+    Write-BuildHeader "Verifying Build Integrity"
+
+    $exePath = Join-Path $PublishDir 'Redball.UI.WPF.exe'
+    if (-not (Test-Path $exePath)) {
+        throw "Verification failed: Executable not found at $exePath"
+    }
+
+    Write-BuildStep "Launching executable for smoke test..."
+    
+    # We want to catch XamlParseException and other early startup crashes.
+    # The app logs to a file in the 'logs' subfolder of its base directory.
+    $logDir = Join-Path $PublishDir 'logs'
+    $logFile = Join-Path $logDir 'Redball.UI.log'
+
+    # Ensure log directory exists so we can check for the log file
+    if (-not (Test-Path $logDir)) {
+        New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+    }
+
+    # Clear old log if exists
+    if (Test-Path $logFile) {
+        Remove-Item $logFile -Force
+    }
+
+    # Start the process. We use a timeout to let it initialize.
+    # We pass a dummy argument to potentially trigger specific behavior or just run normally.
+    $process = Start-Process -FilePath $exePath -ArgumentList "--smoke-test" -PassThru -WindowStyle Hidden
+    
+    Write-BuildStep "Waiting for initialization (5s)..."
+    Start-Sleep -Seconds 5
+
+    # Check if process is still running or exited with error
+    if ($process.HasExited) {
+        $exitCode = $process.ExitCode
+        if ($exitCode -ne 0) {
+            throw "Executable crashed on startup with exit code $exitCode. Check logs for details."
+        }
+    }
+
+    # Stop the process
+    try {
+        Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+    }
+    catch {
+        Write-Verbose "Process already terminated or access denied for PID $($process.Id)"
+    }
+
+    # Check log file for FATAL or ERR entries that indicate XAML parse issues
+    if (Test-Path $logFile) {
+        $logContent = Get-Content $logFile -Raw
+        if ($logContent -match "\[FTL\]" -or $logContent -match "\[ERR\].*XAML parse error") {
+            Write-BuildError "Verification failed: Fatal errors detected in application log."
+            Write-HostSafe "--- LOG START ---" -ForegroundColor Gray
+            Write-HostSafe $logContent -ForegroundColor Gray
+            Write-HostSafe "--- LOG END ---" -ForegroundColor Gray
+            throw "Build verification failed due to runtime errors. Fix assets/XAML and try again."
+        }
+    }
+    else {
+        Write-Warning "No log file found at $logFile. Verification might be inconclusive."
+    }
+
+    Write-BuildSuccess "Build verification passed: Executable launched and initialized without fatal errors."
 }
 
 function Step-BuildMsiInstaller {
@@ -839,7 +896,8 @@ function Step-BuildMsiInstaller {
     param()
     Write-BuildHeader "Building MSI Installer"
     
-    $msiScript = Join-Path $script:ProjectRoot 'installer' 'Build-MSI.ps1'
+    $msiInstallerDir = Join-Path $script:ProjectRoot 'installer'
+    $msiScript = Join-Path $msiInstallerDir 'Build-MSI-v2.ps1'
     if (-not (Test-Path $msiScript)) {
         Write-Warning "MSI build script not found: $msiScript"
         return
@@ -931,7 +989,8 @@ function Step-CreateReleasePackage {
     $msiInfo = Get-Item $msiPath
     Write-BuildSuccess "Release MSI ready: $($msiInfo.Name) ($([math]::Round($msiInfo.Length / 1MB, 2)) MB)"
     Write-HostSafe "  Location: $msiPath" -ForegroundColor Gray
-    Write-HostSafe "  Contains: WPF Application + Core Files + Configuration" -ForegroundColor Gray
+    Write-HostSafe "  Contains: WPF Application, Core Services, Configuration, HID Driver Support" -ForegroundColor Gray
+    Write-HostSafe "  HID Features: Driver Lifecycle Management, Safe Mode, Robustness Retries" -ForegroundColor Gray
 }
 
 function Step-CleanupDist {
@@ -1001,17 +1060,24 @@ function Step-CleanBuild {
     $oldProgressPreference = $ProgressPreference
     $ProgressPreference = 'SilentlyContinue'
 
+    $srcDir = Join-Path $ProjectRoot 'src'
+    $wpfDir = Join-Path $srcDir 'Redball.UI.WPF'
+    $testDir = Join-Path $ProjectRoot 'tests'
+    $testIntDir = Join-Path $ProjectRoot 'tests-integration'
+    $testE2EDir = Join-Path $ProjectRoot 'tests-e2e'
+    $testUiDir = Join-Path $ProjectRoot 'tests-ui-automation'
+
     $pathsToClean = @(
-        (Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'obj'),
-        (Join-Path $ProjectRoot 'src' 'Redball.UI.WPF' 'bin'),
-        (Join-Path $ProjectRoot 'tests' 'obj'),
-        (Join-Path $ProjectRoot 'tests' 'bin'),
-        (Join-Path $ProjectRoot 'tests-integration' 'obj'),
-        (Join-Path $ProjectRoot 'tests-integration' 'bin'),
-        (Join-Path $ProjectRoot 'tests-e2e' 'obj'),
-        (Join-Path $ProjectRoot 'tests-e2e' 'bin'),
-        (Join-Path $ProjectRoot 'tests-ui-automation' 'obj'),
-        (Join-Path $ProjectRoot 'tests-ui-automation' 'bin'),
+        (Join-Path $wpfDir 'obj'),
+        (Join-Path $wpfDir 'bin'),
+        (Join-Path $testDir 'obj'),
+        (Join-Path $testDir 'bin'),
+        (Join-Path $testIntDir 'obj'),
+        (Join-Path $testIntDir 'bin'),
+        (Join-Path $testE2EDir 'obj'),
+        (Join-Path $testE2EDir 'bin'),
+        (Join-Path $testUiDir 'obj'),
+        (Join-Path $testUiDir 'bin'),
         $DistPath
     )
 
@@ -1075,6 +1141,9 @@ try {
  |_|  \_\___|\__,_|_.__/ \__,_|_|_| |____/ \__,_|_|_|\__,_|
 '@
     Write-HostSafe "  Building Redball v$Version ($Configuration)`n" -ForegroundColor Cyan
+    Write-HostSafe "  Features: Keep-Awake Engine, TypeThing (Standard/HID), Pomodoro, Mini-Widget" -ForegroundColor Gray
+    Write-HostSafe "  HID Stack: Live Health, Smart Install/Uninstall, Safe Mode, Auto-Fallback, Idle-Release, Repair Stack" -ForegroundColor Gray
+    Write-HostSafe "  Safety: Emergency Release (Ctrl+Shift+Esc), Health Checks, Retry Logic, Integrity Validation`n" -ForegroundColor Gray
     
     # Clean build if requested (default on, use -NoClean to skip)
     if (-not $NoClean) {
@@ -1128,14 +1197,6 @@ try {
     }
     else {
         Write-HostSafe "  Skipping WPF build ( -SkipWPF )" -ForegroundColor Yellow
-    }
-
-    # HID Test App Build (publishes runnable exe to dist\hid-test-app)
-    if (-not $SkipHidTestApp) {
-        Step-BuildHidTestApp
-    }
-    else {
-        Write-HostSafe "  Skipping HID test app build ( -SkipHidTestApp )" -ForegroundColor Yellow
     }
 
     # MSI Build (requires WPF files)
