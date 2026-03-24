@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Hardcodet.Wpf.TaskbarNotification;
+using Redball.UI.Interop;
 using Redball.UI.Services;
 
 namespace Redball.UI.Views;
