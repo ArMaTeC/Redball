@@ -96,6 +96,7 @@ public partial class MiniWidgetWindow : Window
         OpenDashboardBtn.Visibility = config.MiniWidgetDoubleClickOpensDashboard ? Visibility.Visible : Visibility.Collapsed;
         LockPositionBtn.Content = config.MiniWidgetLockPosition ? "\uE72F" : "\uE72E";
         LockPositionBtn.ToolTip = config.MiniWidgetLockPosition ? "Unlock widget position" : "Lock widget position";
+        UpdatePresetBadge(config.MiniWidgetPreset);
 
         var customQuickMinutes = Math.Clamp(config.MiniWidgetCustomQuickMinutes, 1, 720);
         QuickAddCustomBtn.Content = $"+{customQuickMinutes}m";
@@ -309,8 +310,42 @@ public partial class MiniWidgetWindow : Window
     {
         var config = ConfigService.Instance.Config;
         config.MiniWidgetLockPosition = !config.MiniWidgetLockPosition;
+        config.MiniWidgetPreset = MiniWidgetPresetService.Custom;
         ConfigService.Instance.Save();
         RefreshState();
+    }
+
+    private void UpdatePresetBadge(string? preset)
+    {
+        var normalizedPreset = MiniWidgetPresetService.NormalizePreset(preset);
+
+        switch (normalizedPreset)
+        {
+            case MiniWidgetPresetService.Focus:
+                PresetBadgeText.Text = "FOCUS";
+                PresetBadgeBorder.Background = new SolidColorBrush(Color.FromArgb(0x40, 0x0D, 0x6E, 0xFD));
+                PresetBadgeBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(0x99, 0x4D, 0x94, 0xFF));
+                PresetBadgeText.Foreground = new SolidColorBrush(Color.FromRgb(0xDB, 0xE9, 0xFF));
+                break;
+            case MiniWidgetPresetService.Meeting:
+                PresetBadgeText.Text = "MEETING";
+                PresetBadgeBorder.Background = new SolidColorBrush(Color.FromArgb(0x40, 0xFF, 0xA7, 0x00));
+                PresetBadgeBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(0x99, 0xFF, 0xC2, 0x4A));
+                PresetBadgeText.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0xF0, 0xCC));
+                break;
+            case MiniWidgetPresetService.BatterySafe:
+                PresetBadgeText.Text = "BATTERY";
+                PresetBadgeBorder.Background = new SolidColorBrush(Color.FromArgb(0x40, 0x2E, 0xB8, 0x72));
+                PresetBadgeBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(0x99, 0x66, 0xD6, 0x9E));
+                PresetBadgeText.Foreground = new SolidColorBrush(Color.FromRgb(0xDA, 0xF8, 0xE8));
+                break;
+            default:
+                PresetBadgeText.Text = "CUSTOM";
+                PresetBadgeBorder.Background = new SolidColorBrush(Color.FromArgb(0x30, 0x41, 0x4B, 0x5A));
+                PresetBadgeBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(0x80, 0x6B, 0x72, 0x80));
+                PresetBadgeText.Foreground = (SolidColorBrush)FindResource("ForegroundSecondaryBrush");
+                break;
+        }
     }
 
     private void OpenDashboardBtn_Click(object sender, RoutedEventArgs e)

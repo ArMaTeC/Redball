@@ -567,6 +567,24 @@
                                             <TextBlock Text="Mini Widget" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
                                             <TextBlock Text="Customize the compact mini widget and its quick controls." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,10" TextWrapping="Wrap"/>
 
+                                            <TextBlock Text="Widget Preset" FontWeight="Medium" Margin="0,0,0,8"/>
+                                            <DockPanel Margin="0,0,0,10">
+                                                <Button Content="Apply Preset"
+                                                        Width="96"
+                                                        Click="MainMiniWidgetApplyPresetButton_Click"
+                                                        Style="{DynamicResource ModernButton}"
+                                                        DockPanel.Dock="Right"
+                                                        Margin="8,0,0,0"/>
+                                                <ComboBox x:Name="MainMiniWidgetPresetCombo"
+                                                          Style="{DynamicResource ModernComboBox}"
+                                                          SelectedIndex="0">
+                                                    <ComboBoxItem Content="Custom"/>
+                                                    <ComboBoxItem Content="Focus"/>
+                                                    <ComboBoxItem Content="Meeting"/>
+                                                    <ComboBoxItem Content="Battery Safe"/>
+                                                </ComboBox>
+                                            </DockPanel>
+
                                             <CheckBox x:Name="MainMiniWidgetAlwaysOnTopCheck"
                                                       Content="Keep mini widget always on top"
                                                       Style="{DynamicResource ModernCheckBox}"
@@ -601,6 +619,13 @@
 
                                             <CheckBox x:Name="MainMiniWidgetDoubleClickDashboardCheck"
                                                       Content="Double-click widget opens dashboard"
+                                                      Style="{DynamicResource ModernCheckBox}"
+                                                      Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged"
+                                                      Unchecked="MainSettingChanged"/>
+
+                                            <CheckBox x:Name="MainMiniWidgetOpenOnStartupCheck"
+                                                      Content="Open mini widget automatically at startup"
                                                       Style="{DynamicResource ModernCheckBox}"
                                                       Margin="0,0,0,8"
                                                       Checked="MainSettingChanged"
@@ -822,6 +847,13 @@
                                                 <ComboBoxItem Content="Driver-Level (HID)" Tag="HID"/>
                                             </ComboBox>
                                             <Button x:Name="MainInstallHidDriverBtn" Content="Install HID Driver (No-Restart Attempt)" Style="{DynamicResource ModernButton}" Margin="0,0,0,12" Click="MainInstallHidDriverBtn_Click" Visibility="Collapsed"/>
+                                            <Button x:Name="MainResetHidStackBtn" Content="Reset HID Stack" Style="{DynamicResource ModernButton}" Margin="0,0,0,8" Click="MainResetHidStackBtn_Click"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                <Border x:Name="MainHidStatusIndicator" Width="12" Height="12" CornerRadius="6" Background="Gray" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="MainHidStatusText" Text="HID status: Unknown" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="MainHidDetailsText" Text="Last refresh: Never • Last error: None" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
+                                            <Button x:Name="MainCopyHidDiagnosticsBtn" Content="Copy HID Diagnostics" Style="{DynamicResource ModernButton}" Margin="0,0,0,12" Click="MainCopyHidDiagnosticsBtn_Click"/>
                                             <TextBlock Text="Advanced Settings" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,8"/>
                                             <TextBlock Text="Minimum Delay (ms)" FontWeight="Medium" Margin="0,8,0,4"/>
                                             <Slider x:Name="MainTypeThingMinDelaySlider" Minimum="10" Maximum="200" Value="30" TickFrequency="5" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypeThingMinDelaySlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Minimum milliseconds between keystrokes (must be less than max)."/>

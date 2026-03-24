@@ -513,6 +513,25 @@ public class ConfigService : IConfigService
             Logger.Warning("ConfigService", $"Validation: MaxLogSizeMB ({Config.MaxLogSizeMB}) out of range");
         }
 
+        if (Config.MiniWidgetOpacityPercent < 35 || Config.MiniWidgetOpacityPercent > 100)
+        {
+            errors.Add("MiniWidgetOpacityPercent must be between 35 and 100");
+            Logger.Warning("ConfigService", $"Validation: MiniWidgetOpacityPercent ({Config.MiniWidgetOpacityPercent}) out of range");
+        }
+
+        if (Config.MiniWidgetCustomQuickMinutes < 1 || Config.MiniWidgetCustomQuickMinutes > 720)
+        {
+            errors.Add("MiniWidgetCustomQuickMinutes must be between 1 and 720");
+            Logger.Warning("ConfigService", $"Validation: MiniWidgetCustomQuickMinutes ({Config.MiniWidgetCustomQuickMinutes}) out of range");
+        }
+
+        var normalizedPreset = MiniWidgetPresetService.NormalizePreset(Config.MiniWidgetPreset);
+        if (!string.Equals(normalizedPreset, Config.MiniWidgetPreset, StringComparison.Ordinal))
+        {
+            errors.Add("MiniWidgetPreset must be one of: Custom, Focus, Meeting, BatterySafe");
+            Logger.Warning("ConfigService", $"Validation: MiniWidgetPreset ({Config.MiniWidgetPreset}) is invalid");
+        }
+
         if (errors.Count == 0)
         {
             Logger.Debug("ConfigService", "Configuration validation passed");
@@ -714,6 +733,19 @@ public class ConfigService : IConfigService
         // Web API port
         if (Config.WebApiPort < 1024 || Config.WebApiPort > 65535)
         { Config.WebApiPort = d.WebApiPort; healed++; }
+
+        if (Config.MiniWidgetOpacityPercent < 35 || Config.MiniWidgetOpacityPercent > 100)
+        { Config.MiniWidgetOpacityPercent = d.MiniWidgetOpacityPercent; healed++; }
+
+        if (Config.MiniWidgetCustomQuickMinutes < 1 || Config.MiniWidgetCustomQuickMinutes > 720)
+        { Config.MiniWidgetCustomQuickMinutes = d.MiniWidgetCustomQuickMinutes; healed++; }
+
+        var normalizedPreset = MiniWidgetPresetService.NormalizePreset(Config.MiniWidgetPreset);
+        if (!string.Equals(Config.MiniWidgetPreset, normalizedPreset, StringComparison.Ordinal))
+        {
+            Config.MiniWidgetPreset = normalizedPreset;
+            healed++;
+        }
 
         // String properties — fill nulls/empties with defaults
         if (string.IsNullOrWhiteSpace(Config.LogPath))

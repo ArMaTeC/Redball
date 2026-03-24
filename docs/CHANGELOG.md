@@ -10,192 +10,320 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added (Unreleased)
 
 - **Release Automation**: Added end-to-end release automation in `scripts/build.ps1` for version bumping, artifact packaging, optional release commit/push, and MSI-focused build flows.
+  - _Comment_: This reduces manual release overhead and improves repeatability for shipping builds.
 - **HID Test App Build Step**: Added `Step-BuildHidTestApp` publishing for `tests-e2e/Redball.E2E.Tests.csproj` to `dist/hid-test-app`, with `-SkipHidTestApp` opt-out support.
+  - _Comment_: Keeping this enabled by default makes driver/input regressions easier to catch before release.
 - **Update Controls in UI**: Added explicit "Check for Updates" entry points in tray/menu and quick settings, with update-check behavior exposed through a public async path.
+  - _Comment_: Improves discoverability and gives users a direct way to validate update availability.
 - **Config Durability Layer**: Added `UserData` persistence path (`%LocalAppData%\Redball\UserData`) plus migration/recovery logic so settings survive MSI upgrades.
+  - _Comment_: This addresses upgrade-related data loss and keeps user preferences stable between versions.
 - **TypeThing HID Input Mode**: Added HID-driver-backed typing mode and hardware scan-code handling for better keyboard layout compatibility.
+  - _Comment_: This improves input reliability for non-US layouts and hardware-specific key mappings.
 - **Localization Expansion**: Added broader language support in the WPF app (including the synchronized `bl` locale option).
+- **Mini Widget Presets**: Added Focus/Meeting/Battery Safe preset support with one-click apply actions in main settings and quick settings popup.
+  - _Comment_: Adds fast, goal-based widget setup for common workflows.
+- **Mini Widget Preset Badge**: Added an always-visible preset indicator badge directly inside the mini widget header.
+  - _Comment_: Keeps the active widget mode obvious without opening settings.
 
 ### Changed (Unreleased)
 
 - **Installer Artifacts & Packaging**: Standardized release artifact naming and installer asset selection logic to prefer installer-focused outputs where applicable.
+  - _Comment_: Predictable naming helps automation and reduces manual artifact selection mistakes.
 - **MSI Launch Flow**: Refined MSI launch and post-install behavior, including VBScript launcher integration and launch control adjustments.
+  - _Comment_: Improves post-install UX and reduces launch edge cases after setup completes.
 - **Build/Release Pipeline**: Updated build and release scripts to support force-rebuild scenarios, optional no-restart driver install paths, and clearer process/retry handling.
+  - _Comment_: These changes make CI and local release execution more resilient to transient failures.
 - **Config/Update Defaults**: Added normalization for legacy update repository settings and improved startup/default-config save behavior.
+  - _Comment_: Backward compatibility is improved for users carrying older config values.
 - **UI/UX Iterations**: Improved theme brush initialization/transparency behavior, expanded TypeThing/schedule settings surfaces, and removed redundant apply-step interactions through auto-apply.
+- **Mini Widget Configuration Flow**: Extended mini widget settings to persist a named preset (`Custom`, `Focus`, `Meeting`, `BatterySafe`) alongside individual widget options.
+  - _Comment_: This streamlines settings interaction and reduces friction in common configuration flows.
+- **Mini Widget Preset Revert Logic**: Manual edits to preset-managed mini widget controls now automatically switch the preset back to `Custom`.
+  - _Comment_: Prevents stale preset labels when users intentionally diverge from preset defaults.
 
 ### Fixed (Unreleased)
 
 - **Settings Reset Regression**: Prevented startup UI event handlers from overwriting loaded settings by ensuring initialization gating is active during control wiring.
+  - _Comment_: Fixes a high-impact regression where defaults could silently overwrite saved user settings.
 - **Config Loss During Upgrades**: Fixed MSI-upgrade-related settings loss by separating user data from installer-managed directories and adding migration from legacy locations.
+  - _Comment_: User configuration now persists across major/minor installer upgrades as expected.
 - **Input Interception Safety**: Fixed keyboard hook filter initialization to avoid intercepting physical keyboard input and added defensive hook cleanup on failed initialization.
+  - _Comment_: Prevents keyboard lockup risk and improves safe recovery on hook initialization failures.
 - **Tray/Window Lifecycle Stability**: Fixed duplicate subscriptions and resource leaks in tray icon/window lifecycle paths, including safer icon handle disposal and central cleanup.
+  - _Comment_: Lowers long-session instability risk and avoids resource leakage in tray-first usage.
 - **RDP/Hotkey Reliability**: Improved hotkey behavior in remote session scenarios.
+  - _Comment_: Helps keep shortcuts consistent for users running Redball over remote desktop.
 - **VirusTotal Artifact Filtering**: Fixed artifact name matching used in VirusTotal-related workflow filtering.
+  - _Comment_: Ensures security scanning workflows target the intended release artifacts.
+- **Mini Widget Preset Validation**: Added config validation and self-healing normalization for invalid mini widget preset values.
+  - _Comment_: Prevents invalid preset values from breaking widget behavior after imports or manual edits.
 
 ### CI (Unreleased)
 
 - **Workflow Modernization**: Updated GitHub Actions dependencies (`actions/checkout`, `setup-dotnet`, `cache`, `stale`, and `upload-pages-artifact`) to current major versions.
+  - _Comment_: Keeps CI dependencies current and lowers maintenance/security risk from outdated actions.
 - **Node Compatibility**: Added Node.js 24 opt-in coverage and fixed Node deprecation fallout across workflows.
+  - _Comment_: Prevents future breakage from platform deprecations in GitHub-hosted runners.
 - **Version Source Consistency**: Updated CI version extraction to read from the WPF project metadata instead of the legacy PowerShell path.
+  - _Comment_: Establishes a single version source of truth for modern WPF release pipelines.
 - **Pipeline Cleanup**: Removed legacy Pester-focused workflow steps and aligned CI with the WPF-first build/test pipeline.
+  - _Comment_: Reduces noise in CI and keeps automation aligned with the current product architecture.
 
 ## [3.0.0] - 2026-03-13
 
 ### Changed (3.0.0)
 
 - **Pure WPF Architecture**: Migrated all functionality from PowerShell script to native C# WPF application. The WPF exe is now fully self-contained with no PowerShell dependency.
+  - _Comment_: This marks the platform transition from script-driven runtime to a compiled desktop application model.
 - **Removed IPC Layer**: Eliminated named pipe communication between WPF UI and PowerShell backend. All state management now happens directly in C#.
+  - _Comment_: Removing cross-process messaging simplifies state flow and reduces synchronization failure points.
 - **Direct Win32 API**: Keep-awake engine uses `SetThreadExecutionState` and `SendInput` (F15 heartbeat) via P/Invoke in `NativeMethods.cs`.
+  - _Comment_: Native calls provide tighter control and lower overhead for core keep-awake behavior.
 
 ### Added (3.0.0)
 
 - **KeepAwakeService**: Core keep-awake engine with `SetThreadExecutionState`, F15 heartbeat via `SendInput`, timed sessions, and auto-pause/resume tracking.
+  - _Comment_: Centralizing this logic enables consistent keep-awake behavior across UI and automation paths.
 - **BatteryMonitorService**: WMI-based battery monitoring with configurable threshold and 60-second cache.
+  - _Comment_: Cached reads reduce polling overhead while still supporting low-battery safeguards.
 - **NetworkMonitorService**: Network connectivity monitoring via `System.Net.NetworkInformation`.
+  - _Comment_: Connectivity state is now first-class for network-aware behavior and future policy rules.
 - **IdleDetectionService**: User idle detection via `GetLastInputInfo` P/Invoke.
+  - _Comment_: Enables idle-aware automation without relying on coarse timer-only assumptions.
 - **ScheduleService**: Time/day-based scheduled activation and deactivation.
+  - _Comment_: Adds predictable automation windows for users with fixed working routines.
 - **PresentationModeService**: Auto-detect PowerPoint, Teams screen sharing, and Windows presentation mode.
+  - _Comment_: Reduces interruption risk during meetings and presentation scenarios.
 - **SessionStateService**: Save/restore session state (`Redball.state.json`) across application restarts.
+  - _Comment_: Improves continuity so sessions survive app restarts and crash-recovery flows.
 - **StartupService**: Windows startup registration via Registry Run key.
+  - _Comment_: Provides native startup integration without requiring user-managed shortcuts.
 - **SingletonService**: Named mutex (`Global\Redball_Singleton_Mutex`) to prevent multiple instances.
+  - _Comment_: Prevents duplicate app instances from conflicting over hotkeys, tray state, and config writes.
 - **CrashRecoveryService**: Crash flag file detection with safe-defaults recovery.
+  - _Comment_: Improves resilience by detecting unclean exits and restoring a safe launch state.
 - **NotificationService**: Centralized tray balloon notifications with configurable notification mode filtering.
+  - _Comment_: Unifies user messaging and enables per-mode noise control.
 - **LocalizationService**: Built-in locales (en, es, fr, de, bl) with external `locales.json` override support.
+  - _Comment_: Supports both bundled translations and external locale overrides for customization.
 - **TelemetryService**: Opt-in local telemetry event logging.
+  - _Comment_: Adds diagnostics visibility while keeping telemetry user-controlled.
 - **NativeMethods.cs**: Centralized P/Invoke declarations for kernel32 and user32.
+  - _Comment_: Consolidating interop declarations improves maintainability and reduces duplication.
 - **Config Export/Import**: `ConfigService.Export()` and `ConfigService.Import()` for settings backup and restore.
+  - _Comment_: Makes configuration portability and recovery easier for support and power users.
 - **ReloadConfig**: `KeepAwakeService.ReloadConfig()` called after settings save so monitors pick up changes immediately.
+  - _Comment_: Avoids stale runtime behavior after settings updates.
 
 ### Removed (3.0.0)
 
 - **IpcClientService.cs**: Named pipe client for PowerShell communication (no longer needed).
+  - _Comment_: This became obsolete after consolidating behavior into the native WPF process.
 - **System.IO.Pipes dependency**: Removed from project file.
+  - _Comment_: Dependency removal reflects the IPC layer deprecation and reduces package surface area.
 - **PowerShell backend dependency**: The WPF application no longer requires `Redball.ps1` to be running.
+  - _Comment_: Users now run a single app process instead of coordinating separate frontend/backend runtimes.
 
 ## [2.1.1] - 2026-03-11
 
 ### Security (2.1.1)
 
 - **TLS 1.2+ Enforcement**: All HTTPS requests now enforce TLS 1.2/1.3 to prevent protocol downgrade attacks
+  - _Comment_: This hardens update/network paths against legacy TLS downgrade risks.
 - **Update Repo Validation**: `Get-RedballLatestRelease` validates repo owner/name against injection patterns and warns on non-default repos
+  - _Comment_: Validation narrows the trusted update source and reduces misconfiguration risk.
 - **Renamed -Encrypt to -Obfuscate**: `Export-RedballSettings`/`Import-RedballSettings` parameters renamed to avoid misleading users about Base64 security
+  - _Comment_: The naming now accurately reflects behavior and avoids implying cryptographic protection.
 
 ### Fixed (2.1.1)
 
 - **TypeThing Retry Timer Closure Bug**: Timer retry variables now use `$script:` scope so they persist across tick events
+  - _Comment_: Scope correction prevents retry state from resetting unexpectedly between timer callbacks.
 - **Locale Detection**: Replaced broken `$env:LANG` with `(Get-Culture).TwoLetterISOLanguageName` for reliable system locale detection
+  - _Comment_: Locale detection now uses a Windows-consistent API for dependable language selection.
 - **Empty Catch Blocks**: All silent `catch {}` blocks now log to DEBUG/WARN level for diagnosability
+  - _Comment_: Error visibility is improved without changing user-facing behavior.
 - **Form Disposal**: `Show-RedballSettings` now disposes the form in a `finally` block to prevent GDI leaks on error
+  - _Comment_: Ensures UI resources are released even on failure paths.
 - **Temp File Cleanup**: `Install-RedballUpdate` removes the downloaded temp file after installation
+  - _Comment_: Prevents leftover installer files from accumulating in temporary storage.
 - **Path Consistency**: Replaced all `$PSScriptRoot` references in function bodies with `$script:AppRoot`
+  - _Comment_: Standardized path resolution reduces context-dependent file lookup issues.
 - **Idle Detection Text**: Menu item and settings label now reflect actual threshold instead of hardcoded "30min"
+  - _Comment_: UI text now correctly reflects configured runtime behavior.
 
 ### Removed (2.1.1)
 
 - **Duplicate Settings Dialog**: Removed dead `Show-RedballSettingsDialog` function (superseded by `Show-RedballSettings`)
+  - _Comment_: Eliminates unused UI path and reduces maintenance burden.
 
 ### Improved (2.1.1)
 
 - **Update Rate Limiting**: `Get-RedballLatestRelease` caches results for 5 minutes to prevent GitHub API rate limiting
+  - _Comment_: Cuts unnecessary outbound requests and avoids API throttling.
 - **Battery Query Throttling**: `Get-BatteryStatus` cache TTL increased from 30s to 60s to reduce CIM overhead
+  - _Comment_: Reduces repeated system query load during long-running sessions.
 - **Presentation Mode Throttling**: `Test-PresentationMode` caches results for 10 seconds to avoid expensive process scans every tick
+  - _Comment_: Keeps presentation detection responsive while lowering scan frequency.
 - **Log Rotation Throttling**: Log file size check now runs every 50 writes instead of every write
+  - _Comment_: Decreases file I/O overhead in high-frequency logging paths.
 - **Add-Type Gating**: `Test-HighContrastMode` and `Enable-HighDPI` skip C# compilation when types already loaded
+  - _Comment_: Avoids repeated compilation work in repeated initialization paths.
 - **ES Constants Scoping**: `ES_CONTINUOUS`, `ES_SYSTEM_REQUIRED`, `ES_DISPLAY_REQUIRED` use `$script:` prefix
+  - _Comment_: Explicit scoping prevents accidental shadowing and improves script predictability.
 - **Named Hotkey Constants**: Replaced magic numbers `100`/`101` with `$script:HOTKEY_ID_TYPETHING_START`/`STOP`
+  - _Comment_: Named constants improve readability and reduce hotkey ID misuse.
 - **Large Clipboard Threshold**: Configurable via `TypeThingLargeClipboardThreshold` instead of hardcoded `10000`
+  - _Comment_: Users can tune behavior for different clipboard sizes and workflows.
 - **Runspace Hex Comment**: Documented `0x80000003` ES flags in keep-awake runspace
+  - _Comment_: Adds technical clarity for maintainers touching execution-state logic.
 - **TypeThing Disabled Status**: Menu shows "Status: Disabled" when TypeThing is off
+  - _Comment_: Improves state visibility directly from the tray/menu surface.
 - **Locale Sync**: Added 'bl' (hacker) locale to both `locales.json` and settings dropdown
+  - _Comment_: Keeps locale source data and UI selection list aligned.
 - **Renamed Telemetry**: `Send-RedballTelemetry` → `Write-RedballTelemetryEvent` to clarify local-only logging
+  - _Comment_: Function intent is clearer and better aligned with PowerShell verb conventions.
 - **Test Safety Comment**: Documented `Invoke-Expression` usage in test file AST loader
+  - _Comment_: Clarifies why dynamic invocation appears in tests and reduces false-positive security concerns.
 - **State/Config Duplication**: Documented the dual-store pattern for future refactoring
+  - _Comment_: Improves onboarding context for future cleanup work in persistence architecture.
 
 ## [2.1.0] - 2026-03-11
 
 ### Added (2.1.0)
 
 - **Config Validation**: `Test-RedballConfigSchema` validates and sanitizes all config values against expected types, ranges, and formats on startup
+  - _Comment_: Establishes strong input hygiene early in app startup.
 - **First-Run Onboarding**: Welcome toast notification on first launch with guidance for new users
+  - _Comment_: Improves discoverability and reduces first-use confusion.
 - **Crash Reporting**: Detailed crash reports with stack traces written to `Redball.crash.log` for both PowerShell and WinForms exceptions
+  - _Comment_: Better crash diagnostics shortens issue triage time.
 - **Feature Usage Analytics**: Opt-in per-session feature usage counters logged at shutdown (local only, never transmitted)
+  - _Comment_: Helps guide product decisions while preserving privacy boundaries.
 - **User Error Helper**: `Show-RedballError` centralizes user-friendly error display via toast notifications
+  - _Comment_: Standardized error UX improves consistency and clarity.
 - **Copyright Headers**: Added copyright and license headers to all source files
+  - _Comment_: Improves legal clarity across distributed source artifacts.
 - **ROADMAP.md**: Formal product roadmap with milestones, user personas, competitive analysis, and value proposition
+  - _Comment_: Gives contributors and users clearer strategic context.
 - **SECURITY.md**: Security policy with vulnerability reporting process, threat model, and security features documentation
+  - _Comment_: Establishes a clear path for responsible disclosure and security practices.
 - **PRIVACY.md**: Privacy policy documenting local-only data handling, network requests, and user rights
+  - _Comment_: Increases transparency on data usage and storage behavior.
 - **CODE_OF_CONDUCT.md**: Contributor Covenant code of conduct for community standards
+  - _Comment_: Sets collaboration expectations for community health.
 - **THIRD-PARTY-NOTICES.md**: Complete third-party license attribution for all dependencies
+  - _Comment_: Improves compliance and attribution hygiene.
 - **PS7 CI Matrix**: CI pipeline now tests on both PowerShell 5.1 and PowerShell 7
+  - _Comment_: Broadens compatibility verification across common PowerShell environments.
 - **Code Coverage Reporting**: CI pipeline reports code coverage percentage with threshold warnings
+  - _Comment_: Improves visibility into test quality over time.
 
 ### Fixed (2.1.0)
 
 - **TypeThing SendInput Bug**: Fixed PowerShell nested value type copy issue where `$input.ki.wVk = value` silently modified a copy instead of the original struct — this was the root cause of typing producing no output
+  - _Comment_: This resolves a core functional bug where simulated typing appeared to run but produced no characters.
 - **INPUT Struct Alignment**: Fixed 64-bit struct layout (`FieldOffset` 4→8, size 28→40) for correct SendInput marshaling on 64-bit Windows
+  - _Comment_: Correct layout is critical for reliable Win32 interop on x64 systems.
 - **Hotkey Debug Logging**: Added Win32 error codes and parsed VK values to hotkey registration failure messages
+  - _Comment_: Enhances diagnosability for environment-specific hotkey failures.
 
 ### Security (2.1.0)
 
 - **Input Sanitization**: All string config values are stripped of control characters on load
+  - _Comment_: Reduces risk from malformed or maliciously crafted config content.
 - **Range Validation**: All numeric config values are clamped to safe ranges
+  - _Comment_: Prevents out-of-bound values from destabilizing runtime behavior.
 - **Enum Validation**: UpdateChannel and TypeThingTheme values validated against allowed sets
+  - _Comment_: Blocks invalid enum states from propagating into business logic.
 - **Schedule Format Validation**: ScheduleStartTime/ScheduleStopTime validated against HH:mm format
+  - _Comment_: Avoids schedule parsing errors and ambiguous time input.
 
 ## [2.0.0] - 2024-03-09
 
 ### Added (2.0.0)
 
 - **Branding**: "Redball" with new red ball icon
+  - _Comment_: Establishes the product identity used across UI and release assets.
 - **3D Icon**: Custom-drawn 3D red sphere with specular highlight and shadow effects
+  - _Comment_: Improves visual distinctiveness in tray and desktop contexts.
 - **Color States**: Three distinct icon states:
+  - _Comment_: State-specific iconography improves at-a-glance status recognition.
   - Active: Bright red ball (crimson/tomato gradient)
   - Timed: Orange/red ball (dark orange gradient)
   - Paused: Dark red/gray ball (muted colors)
 - **Configuration File Support**: JSON-based configuration with `Redball.json`
+  - _Comment_: Introduces persistent settings management for repeatable behavior.
 - **Structured Logging**: `Write-RedballLog` function with log rotation at 10MB
+  - _Comment_: Enables maintainable diagnostics without unbounded log growth.
 - **Pester Tests**: Comprehensive test suite covering 40+ test cases
+  - _Comment_: Provides foundational regression coverage for core script behavior.
 - **Graceful Shutdown**: Pipeline stop exception handling for Ctrl+C/terminal close
+  - _Comment_: Improves reliability during forced or user-initiated termination.
 - **Error Handling**: `PipelineStoppedException` catches throughout all functions
+  - _Comment_: Prevents noisy termination errors from propagating to end users.
 - **Memory Management**: Proper disposal of GDI+ objects and previous icons
+  - _Comment_: Reduces risk of handle leaks during long-running tray sessions.
 - **Parameter Validation**: `[ValidateRange(1, 720)]` for timer duration
+  - _Comment_: Prevents invalid runtime parameters before execution begins.
 - **Help Documentation**: Full PowerShell help with `.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER`, `.EXAMPLE`
+  - _Comment_: Improves self-service onboarding and script discoverability.
 - **Trap Handler**: Global trap for `PipelineStoppedException` with graceful exit
+  - _Comment_: Adds a final safety net for pipeline interruption scenarios.
 
 ### Changed (2.0.0)
 
 - **Icon System**: Replaced coffee cup design with 3D red ball
+  - _Comment_: Aligns visuals with the Redball branding refresh.
 - **Function Names**: Renamed `Update-Ui` to `Update-RedballUI`
+  - _Comment_: Makes naming more explicit and product-specific.
 - **Log Files**: Changed from `Redball.log` to `Redball.log`
+  - _Comment_: Normalizes naming consistency across docs and script output paths.
 - **Config Files**: Changed from `Redball.json` to `Redball.json`
+  - _Comment_: Keeps configuration naming aligned with product naming.
 - **UI Text**: Updated all references from "Redball" to "Redball"
+  - _Comment_: Removes mixed branding terminology in user-facing text.
 - **Tray Tooltip**: Now shows `[REDBALL] Redball`
+  - _Comment_: Improves tray tooltip clarity and app identification.
 
 ### Fixed (2.0.0)
 
 - **Pipeline Stop Error**: No more "pipeline stopped" exception on external termination
+  - _Comment_: Eliminates a common noisy error during normal shutdown paths.
 - **$PSScriptRoot Empty**: Added fallback to current directory when `$PSScriptRoot` is empty
+  - _Comment_: Improves execution reliability in non-standard launch contexts.
 - **Memory Leaks**: Proper disposal of `PreviousIcon` prevents GDI+ handle leaks
+  - _Comment_: Prevents gradual resource exhaustion in long-lived sessions.
 - **UInt32 Overflow**: Fixed constant definitions to prevent signed integer overflow
+  - _Comment_: Avoids subtle constant-related runtime defects.
 - **DateTime Nullability**: Used `[Nullable[datetime]]` for proper null handling
+  - _Comment_: Improves correctness for optional time-based state values.
 
 ### Security (2.0.0)
 
 - **Execution Policy**: Requires `-Version 5.1` and administrative privileges
+  - _Comment_: Enforces baseline runtime prerequisites for predictable behavior.
 - **Error Suppression**: Sensitive error details only logged, not displayed to user
+  - _Comment_: Reduces inadvertent disclosure of sensitive runtime details.
 
 ## [1.0.0] - 2024-03-01
 
 ### Added (1.0.0)
 
 - Initial release as "Redball"
+  - _Comment_: Establishes the first publicly tracked baseline.
 - System tray icon with basic functionality
+  - _Comment_: Introduces persistent background control via tray UX.
 - Keep-awake state using `SetThreadExecutionState` API
+  - _Comment_: Provides the core anti-sleep capability.
 - F15 heartbeat keypress
+  - _Comment_: Adds periodic synthetic input for environments requiring activity signals.
 - Duration timer (15, 30, 60, 120 minutes)
+  - _Comment_: Enables bounded sessions instead of only manual toggling.
 - Prevent display sleep toggle
+  - _Comment_: Gives users explicit control over monitor sleep behavior.
 - Basic context menu with pause/resume
+  - _Comment_: Delivers the primary interaction model for the initial release.
 
 ## GitHub Tag History
 

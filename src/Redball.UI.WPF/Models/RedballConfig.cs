@@ -117,11 +117,13 @@ public class RedballConfig
     public bool MiniWidgetShowStatusIcons { get; set; } = true;
     public bool MiniWidgetShowQuickActions { get; set; } = true;
     public bool MiniWidgetDoubleClickOpensDashboard { get; set; } = true;
+    public bool MiniWidgetOpenOnStartup { get; set; }
     public bool MiniWidgetLockPosition { get; set; }
     public bool MiniWidgetSnapToScreenEdges { get; set; } = true;
     public bool MiniWidgetEnableKeyboardShortcuts { get; set; } = true;
     public int MiniWidgetCustomQuickMinutes { get; set; } = 30;
     public bool MiniWidgetConfirmCloseWhenActive { get; set; } = true;
+    public string MiniWidgetPreset { get; set; } = "Custom";
 
     // Config encryption (DPAPI, current-user scope)
     public bool EncryptConfig { get; set; }

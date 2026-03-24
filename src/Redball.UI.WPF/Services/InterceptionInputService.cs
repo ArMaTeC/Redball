@@ -30,8 +30,12 @@ public class InterceptionInputService : IDisposable
     private ManagementEventWatcher? _deviceArrivalWatcher;
     private ManagementEventWatcher? _deviceRemovalWatcher;
     private Timer? _deviceRefreshDebounceTimer;
+    private DateTime? _lastRefreshUtc;
+    private DateTime _nextAllowedRefreshUtc = DateTime.MinValue;
+    private string _lastErrorSummary = "None";
 
     private const int DeviceRefreshDebounceMs = 1200;
+    private const int RefreshCooldownMs = 2500;
 
     /// <summary>
     /// Whether the Interception driver is installed on this system.
@@ -43,6 +47,9 @@ public class InterceptionInputService : IDisposable
     /// </summary>
     public bool IsReady => _initialized && _keyboardHook != null && _keyboardHook.CanSimulateInput;
     public bool IsInitialized => _initialized;
+    public DateTime? LastRefreshUtc => _lastRefreshUtc;
+    public DateTime? NextAllowedRefreshUtc => _nextAllowedRefreshUtc == DateTime.MinValue ? null : _nextAllowedRefreshUtc;
+    public string LastErrorSummary => _lastErrorSummary;
 
     // --- P/Invoke for layout-aware character→key mapping ---
 
@@ -109,6 +116,7 @@ public class InterceptionInputService : IDisposable
                 if (!IsDriverInstalled)
                 {
                     Logger.Warning("InterceptionInputService", "Interception driver not installed. HID input mode unavailable.");
+                    _lastErrorSummary = "Driver not installed";
                     return false;
                 }
 
@@ -116,6 +124,7 @@ public class InterceptionInputService : IDisposable
                 if (!InputInterceptor.Initialize())
                 {
                     Logger.Error("InterceptionInputService", "Failed to initialize InputInterceptor DLL");
+                    _lastErrorSummary = "InputInterceptor initialization failed";
                     return false;
                 }
 
@@ -129,11 +138,14 @@ public class InterceptionInputService : IDisposable
                     _keyboardHook = null;
                     InputInterceptor.Dispose();
                     _initialized = false;
+                    _lastErrorSummary = "Keyboard hook cannot simulate input";
                     return false;
                 }
 
                 _initialized = true;
                 EnsureUsbDeviceWatchers();
+                _lastRefreshUtc = DateTime.UtcNow;
+                _lastErrorSummary = "None";
 
                 Logger.Info("InterceptionInputService", $"Initialized successfully. CanSimulateInput: {_keyboardHook.CanSimulateInput}");
                 return IsReady;
@@ -154,6 +166,7 @@ public class InterceptionInputService : IDisposable
                 }
 
                 _initialized = false;
+                _lastErrorSummary = ex.Message;
                 return false;
             }
         }
@@ -361,6 +374,16 @@ public class InterceptionInputService : IDisposable
             shouldRefresh = _initialized || IsDriverInstalled;
             if (!shouldRefresh) return;
 
+            var nowUtc = DateTime.UtcNow;
+            if (_nextAllowedRefreshUtc != DateTime.MinValue && nowUtc < _nextAllowedRefreshUtc)
+            {
+                _lastErrorSummary = "Refresh throttled (cooldown active)";
+                Logger.Debug("InterceptionInputService", $"USB refresh skipped due to cooldown. Next allowed at {_nextAllowedRefreshUtc:O}");
+                return;
+            }
+
+            _nextAllowedRefreshUtc = nowUtc.AddMilliseconds(RefreshCooldownMs);
+
             try
             {
                 _keyboardHook?.Dispose();
@@ -375,6 +398,11 @@ public class InterceptionInputService : IDisposable
         }
 
         var ready = Initialize();
+        _lastRefreshUtc = DateTime.UtcNow;
+        if (!ready)
+        {
+            _lastErrorSummary = "Not ready after USB refresh";
+        }
         Logger.Info("InterceptionInputService", ready
             ? "HID interception refreshed after USB device change"
             : "USB device changed, but HID interception is not ready after refresh");
@@ -684,6 +712,23 @@ public class InterceptionInputService : IDisposable
         return "Ready (HID keyboard active)";
     }
 
+    public string GetDiagnosticsText()
+    {
+        var lastRefreshText = _lastRefreshUtc.HasValue
+            ? _lastRefreshUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+            : "Never";
+
+        return string.Join(Environment.NewLine,
+            "HID Diagnostics",
+            $"Status: {GetStatusText()}",
+            $"Driver Installed: {IsDriverInstalled}",
+            $"Initialized: {_initialized}",
+            $"Ready: {IsReady}",
+            $"Last Refresh: {lastRefreshText}",
+            $"Next Allowed Refresh: {(_nextAllowedRefreshUtc == DateTime.MinValue ? "Now" : _nextAllowedRefreshUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"))}",
+            $"Last Error: {_lastErrorSummary}");
+    }
+
     /// <summary>
     /// Maps Win32 virtual key codes to Interception KeyCode values.
     /// Covers alphanumeric, F-keys, navigation, numpad, and all punctuation/symbol keys
@@ -848,6 +893,7 @@ public class InterceptionInputService : IDisposable
             StopUsbDeviceWatchers();
 
             _initialized = false;
+            _lastRefreshUtc = DateTime.UtcNow;
             Logger.Info("InterceptionInputService", "Interception resources released");
         }
     }

@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Redball.UI.Services;
 
 namespace Redball.UI.Views;
@@ -15,6 +16,7 @@ public partial class MainWindow
 {
     private readonly Stack<string> _settingsUndoStack = new(20);
     private bool _suppressVerifySignaturePrompt;
+    private DispatcherTimer? _hidStatusRefreshTimer;
 
     private void LoadEmbeddedSettings()
     {
@@ -107,6 +109,8 @@ public partial class MainWindow
         MainUseLowLevelHotkeyCheck.IsChecked = config.UseLowLevelHotkey;
         MainTypeThingInputModeCombo.SelectedIndex = config.TypeThingInputMode?.Equals("HID", StringComparison.OrdinalIgnoreCase) == true ? 1 : 0;
         RefreshHidDriverInstallVisibility();
+        UpdateHidStatusText();
+        EnsureHidStatusAutoRefresh();
         MainStartHotkeyBox.Text = config.TypeThingStartHotkey;
         MainStopHotkeyBox.Text = config.TypeThingStopHotkey;
         MainTypingSpeedSlider.Value = config.TypeThingMaxDelayMs;
@@ -131,12 +135,14 @@ public partial class MainWindow
         MainMiniWidgetShowQuickActionsCheck.IsChecked = config.MiniWidgetShowQuickActions;
         MainMiniWidgetShowStatusIconsCheck.IsChecked = config.MiniWidgetShowStatusIcons;
         MainMiniWidgetDoubleClickDashboardCheck.IsChecked = config.MiniWidgetDoubleClickOpensDashboard;
+        MainMiniWidgetOpenOnStartupCheck.IsChecked = config.MiniWidgetOpenOnStartup;
         MainMiniWidgetLockPositionCheck.IsChecked = config.MiniWidgetLockPosition;
         MainMiniWidgetSnapToEdgesCheck.IsChecked = config.MiniWidgetSnapToScreenEdges;
         MainMiniWidgetKeyboardShortcutsCheck.IsChecked = config.MiniWidgetEnableKeyboardShortcuts;
         MainMiniWidgetCustomQuickMinutesSlider.Value = Math.Clamp(config.MiniWidgetCustomQuickMinutes, 1, 180);
         MainMiniWidgetCustomQuickMinutesText.Text = $"Custom quick action: +{(int)MainMiniWidgetCustomQuickMinutesSlider.Value}m";
         MainMiniWidgetConfirmCloseWhenActiveCheck.IsChecked = config.MiniWidgetConfirmCloseWhenActive;
+        SetMiniWidgetPresetSelection(config.MiniWidgetPreset);
 
         MainThemeCombo.SelectedIndex = config.Theme switch
         {
@@ -290,11 +296,13 @@ public partial class MainWindow
             config.MiniWidgetShowQuickActions = MainMiniWidgetShowQuickActionsCheck.IsChecked ?? true;
             config.MiniWidgetShowStatusIcons = MainMiniWidgetShowStatusIconsCheck.IsChecked ?? true;
             config.MiniWidgetDoubleClickOpensDashboard = MainMiniWidgetDoubleClickDashboardCheck.IsChecked ?? true;
+            config.MiniWidgetOpenOnStartup = MainMiniWidgetOpenOnStartupCheck.IsChecked ?? false;
             config.MiniWidgetLockPosition = MainMiniWidgetLockPositionCheck.IsChecked ?? false;
             config.MiniWidgetSnapToScreenEdges = MainMiniWidgetSnapToEdgesCheck.IsChecked ?? true;
             config.MiniWidgetEnableKeyboardShortcuts = MainMiniWidgetKeyboardShortcutsCheck.IsChecked ?? true;
             config.MiniWidgetCustomQuickMinutes = (int)Math.Round(MainMiniWidgetCustomQuickMinutesSlider.Value);
             config.MiniWidgetConfirmCloseWhenActive = MainMiniWidgetConfirmCloseWhenActiveCheck.IsChecked ?? true;
+            config.MiniWidgetPreset = GetSelectedMiniWidgetPreset();
 
             config.Theme = MainThemeCombo.SelectedIndex switch
             {
@@ -342,11 +350,104 @@ public partial class MainWindow
         }
     }
 
+    private void EnsureHidStatusAutoRefresh()
+    {
+        if (_hidStatusRefreshTimer != null) return;
+
+        _hidStatusRefreshTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(2)
+        };
+        _hidStatusRefreshTimer.Tick += (_, _) => UpdateHidStatusText();
+        _hidStatusRefreshTimer.Start();
+
+        Unloaded -= MainWindow_UnloadedStopHidStatusRefresh;
+        Unloaded += MainWindow_UnloadedStopHidStatusRefresh;
+    }
+
+    private void MainWindow_UnloadedStopHidStatusRefresh(object sender, RoutedEventArgs e)
+    {
+        if (_hidStatusRefreshTimer == null) return;
+
+        _hidStatusRefreshTimer.Stop();
+        _hidStatusRefreshTimer = null;
+        Unloaded -= MainWindow_UnloadedStopHidStatusRefresh;
+    }
+
     private void MainShowNotificationsCheck_Checked(object sender, RoutedEventArgs e)
     {
         MainNotificationModeLabel.Visibility = Visibility.Visible;
         MainNotificationModeCombo.Visibility = Visibility.Visible;
         AutoApplySettings();
+    }
+
+    private string GetSelectedMiniWidgetPreset()
+    {
+        return MainMiniWidgetPresetCombo?.SelectedIndex switch
+        {
+            1 => MiniWidgetPresetService.Focus,
+            2 => MiniWidgetPresetService.Meeting,
+            3 => MiniWidgetPresetService.BatterySafe,
+            _ => MiniWidgetPresetService.Custom
+        };
+    }
+
+    private void SetMiniWidgetPresetSelection(string? preset)
+    {
+        if (MainMiniWidgetPresetCombo == null)
+        {
+            return;
+        }
+
+        MainMiniWidgetPresetCombo.SelectedIndex = MiniWidgetPresetService.NormalizePreset(preset) switch
+        {
+            MiniWidgetPresetService.Focus => 1,
+            MiniWidgetPresetService.Meeting => 2,
+            MiniWidgetPresetService.BatterySafe => 3,
+            _ => 0
+        };
+    }
+
+    private void ApplyMiniWidgetControlsFromPreset(string preset)
+    {
+        var presetConfig = new RedballConfig();
+        MiniWidgetPresetService.ApplyPreset(presetConfig, preset);
+
+        MainMiniWidgetAlwaysOnTopCheck.IsChecked = presetConfig.MiniWidgetAlwaysOnTop;
+        MainMiniWidgetOpacitySlider.Value = presetConfig.MiniWidgetOpacityPercent;
+        MainMiniWidgetShowQuickActionsCheck.IsChecked = presetConfig.MiniWidgetShowQuickActions;
+        MainMiniWidgetShowStatusIconsCheck.IsChecked = presetConfig.MiniWidgetShowStatusIcons;
+        MainMiniWidgetDoubleClickDashboardCheck.IsChecked = presetConfig.MiniWidgetDoubleClickOpensDashboard;
+        MainMiniWidgetOpenOnStartupCheck.IsChecked = presetConfig.MiniWidgetOpenOnStartup;
+        MainMiniWidgetLockPositionCheck.IsChecked = presetConfig.MiniWidgetLockPosition;
+        MainMiniWidgetSnapToEdgesCheck.IsChecked = presetConfig.MiniWidgetSnapToScreenEdges;
+        MainMiniWidgetKeyboardShortcutsCheck.IsChecked = presetConfig.MiniWidgetEnableKeyboardShortcuts;
+        MainMiniWidgetCustomQuickMinutesSlider.Value = Math.Clamp(presetConfig.MiniWidgetCustomQuickMinutes, 1, 180);
+        MainMiniWidgetConfirmCloseWhenActiveCheck.IsChecked = presetConfig.MiniWidgetConfirmCloseWhenActive;
+    }
+
+    private void MainMiniWidgetApplyPresetButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isLoadingSettings)
+        {
+            return;
+        }
+
+        var preset = GetSelectedMiniWidgetPreset();
+
+        _isLoadingSettings = true;
+        try
+        {
+            ApplyMiniWidgetControlsFromPreset(preset);
+            SetMiniWidgetPresetSelection(preset);
+        }
+        finally
+        {
+            _isLoadingSettings = false;
+        }
+
+        AutoApplySettings();
+        NotificationService.Instance.ShowInfo("Mini Widget", $"Applied '{preset}' preset.");
     }
 
     private void MainMiniWidgetCustomQuickMinutesSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -356,6 +457,7 @@ public partial class MainWindow
             MainMiniWidgetCustomQuickMinutesText.Text = $"Custom quick action: +{(int)e.NewValue}m";
         }
 
+        MarkMiniWidgetPresetAsCustomFromManualChange(sender);
         AutoApplySettings();
     }
 
@@ -437,7 +539,38 @@ public partial class MainWindow
             MainMiniWidgetOpacityText.Text = $"Opacity: {(int)e.NewValue}%";
         }
 
+        MarkMiniWidgetPresetAsCustomFromManualChange(sender);
         AutoApplySettings();
+    }
+
+    private bool IsMiniWidgetPresetManagedControl(object sender)
+    {
+        return ReferenceEquals(sender, MainMiniWidgetAlwaysOnTopCheck)
+            || ReferenceEquals(sender, MainMiniWidgetShowQuickActionsCheck)
+            || ReferenceEquals(sender, MainMiniWidgetShowStatusIconsCheck)
+            || ReferenceEquals(sender, MainMiniWidgetDoubleClickDashboardCheck)
+            || ReferenceEquals(sender, MainMiniWidgetOpenOnStartupCheck)
+            || ReferenceEquals(sender, MainMiniWidgetLockPositionCheck)
+            || ReferenceEquals(sender, MainMiniWidgetSnapToEdgesCheck)
+            || ReferenceEquals(sender, MainMiniWidgetKeyboardShortcutsCheck)
+            || ReferenceEquals(sender, MainMiniWidgetConfirmCloseWhenActiveCheck)
+            || ReferenceEquals(sender, MainMiniWidgetOpacitySlider)
+            || ReferenceEquals(sender, MainMiniWidgetCustomQuickMinutesSlider);
+    }
+
+    private void MarkMiniWidgetPresetAsCustomFromManualChange(object sender)
+    {
+        if (_isLoadingSettings || !IsMiniWidgetPresetManagedControl(sender))
+        {
+            return;
+        }
+
+        if (GetSelectedMiniWidgetPreset() == MiniWidgetPresetService.Custom)
+        {
+            return;
+        }
+
+        SetMiniWidgetPresetSelection(MiniWidgetPresetService.Custom);
     }
 
     private void UpdateAutoUpdateIntervalText(int minutes)
@@ -478,6 +611,9 @@ public partial class MainWindow
         {
             UpdateMainStartWithWindowsStatusText();
         }
+
+        MarkMiniWidgetPresetAsCustomFromManualChange(sender);
+
         AutoApplySettings();
     }
 
@@ -492,6 +628,11 @@ public partial class MainWindow
 
     private void MainComboSettingChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (ReferenceEquals(sender, MainTypeThingInputModeCombo))
+        {
+            RefreshHidDriverInstallVisibility();
+            UpdateHidStatusText();
+        }
         AutoApplySettings();
     }
 
@@ -855,6 +996,84 @@ public partial class MainWindow
         {
             MainInstallHidDriverBtn.Visibility = Visibility.Collapsed;
         }
+
+        if (MainResetHidStackBtn != null)
+        {
+            MainResetHidStackBtn.Visibility = MainTypeThingInputModeCombo.SelectedIndex == 1
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        if (MainHidDetailsText != null)
+        {
+            MainHidDetailsText.Visibility = MainTypeThingInputModeCombo.SelectedIndex == 1
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        if (MainCopyHidDiagnosticsBtn != null)
+        {
+            MainCopyHidDiagnosticsBtn.Visibility = MainTypeThingInputModeCombo.SelectedIndex == 1
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        if (MainHidStatusIndicator != null)
+        {
+            MainHidStatusIndicator.Visibility = MainTypeThingInputModeCombo.SelectedIndex == 1
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+    }
+
+    private void UpdateHidStatusText()
+    {
+        if (MainHidStatusText == null) return;
+
+        if (MainTypeThingInputModeCombo.SelectedIndex != 1)
+        {
+            MainHidStatusText.Text = "HID status: Not in use (SendInput mode)";
+            return;
+        }
+
+        var hid = InterceptionInputService.Instance;
+        MainHidStatusText.Text = hid.GetStatusText() switch
+        {
+            "Ready (HID keyboard active)" => "HID status: Ready (active device attached)",
+            "Initialized but not ready (no device captured)" => "HID status: Initialized, waiting for keyboard capture",
+            "Driver not installed" => "HID status: Driver not installed",
+            _ => $"HID status: {hid.GetStatusText()}"
+        };
+
+        if (MainHidDetailsText != null)
+        {
+            var lastRefresh = hid.LastRefreshUtc.HasValue
+                ? hid.LastRefreshUtc.Value.ToLocalTime().ToString("HH:mm:ss")
+                : "Never";
+            var nextRefresh = hid.NextAllowedRefreshUtc.HasValue
+                ? hid.NextAllowedRefreshUtc.Value.ToLocalTime().ToString("HH:mm:ss")
+                : "Now";
+            MainHidDetailsText.Text = $"Last refresh: {lastRefresh} • Next refresh: {nextRefresh} • Last error: {hid.LastErrorSummary}";
+        }
+
+        if (MainHidStatusIndicator != null)
+        {
+            MainHidStatusIndicator.Background = GetHidStatusBrush(hid);
+        }
+    }
+
+    private System.Windows.Media.Brush GetHidStatusBrush(InterceptionInputService hid)
+    {
+        if (MainTypeThingInputModeCombo.SelectedIndex != 1)
+            return System.Windows.Media.Brushes.Gray;
+
+        return hid.GetStatusText() switch
+        {
+            "Ready (HID keyboard active)" => System.Windows.Media.Brushes.Green,
+            "Initialized but not ready (no device captured)" => System.Windows.Media.Brushes.Gold,
+            "Driver not installed" => System.Windows.Media.Brushes.Red,
+            _ => System.Windows.Media.Brushes.OrangeRed
+        };
     }
 
     private void MainInstallHidDriverBtn_Click(object sender, RoutedEventArgs e)
@@ -871,10 +1090,57 @@ public partial class MainWindow
             {
                 NotificationService.Instance.ShowWarning("Driver Installed", "Driver installed, but activation may still require a restart.");
             }
+
+            RefreshHidDriverInstallVisibility();
+            UpdateHidStatusText();
         }
         else
         {
             NotificationService.Instance.ShowError("Install Failed", "Failed to install driver. Please allow UAC elevation and try again.");
+            UpdateHidStatusText();
+        }
+    }
+
+    private void MainResetHidStackBtn_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var hid = InterceptionInputService.Instance;
+            hid.ReleaseResources("MainWindow.ResetHidStack");
+            var ready = hid.Initialize();
+
+            if (ready)
+            {
+                NotificationService.Instance.ShowInfo("HID Reset", "HID stack reset successfully and is ready.");
+            }
+            else
+            {
+                NotificationService.Instance.ShowWarning("HID Reset", "HID stack reset, but driver is not ready yet. Replug keyboard or retry.");
+            }
+
+            RefreshHidDriverInstallVisibility();
+            UpdateHidStatusText();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Failed to reset HID stack", ex);
+            NotificationService.Instance.ShowError("HID Reset", "Failed to reset HID stack. Check logs for details.");
+            UpdateHidStatusText();
+        }
+    }
+
+    private void MainCopyHidDiagnosticsBtn_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var diagnostics = InterceptionInputService.Instance.GetDiagnosticsText();
+            Clipboard.SetText(diagnostics);
+            NotificationService.Instance.ShowInfo("HID Diagnostics", "HID diagnostics copied to clipboard.");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Failed to copy HID diagnostics", ex);
+            NotificationService.Instance.ShowError("HID Diagnostics", "Could not copy HID diagnostics.");
         }
     }
 }

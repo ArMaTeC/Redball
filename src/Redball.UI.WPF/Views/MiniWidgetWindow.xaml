@@ -80,6 +80,19 @@
             <!-- Title and Active Timer -->
             <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="Redball" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource ForegroundBrush}"/>
+                <Border x:Name="PresetBadgeBorder"
+                        Margin="6,0,0,0"
+                        Padding="5,1"
+                        CornerRadius="7"
+                        Background="#30414B5A"
+                        BorderBrush="#806B7280"
+                        BorderThickness="1">
+                    <TextBlock x:Name="PresetBadgeText"
+                               Text="CUSTOM"
+                               FontSize="8.5"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                </Border>
                 <TextBlock x:Name="TimeText" Margin="6,0,0,0" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Bottom"/>
             </StackPanel>
 

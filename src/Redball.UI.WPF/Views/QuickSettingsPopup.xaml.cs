@@ -103,6 +103,21 @@ public partial class QuickSettingsPopup : UserControl
         ExtendSessionByMinutes(customMinutes);
     }
 
+    private void PresetFocus_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyMiniWidgetPreset(MiniWidgetPresetService.Focus);
+    }
+
+    private void PresetMeeting_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyMiniWidgetPreset(MiniWidgetPresetService.Meeting);
+    }
+
+    private void PresetBatterySafe_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyMiniWidgetPreset(MiniWidgetPresetService.BatterySafe);
+    }
+
     private void Exit_Click(object sender, RoutedEventArgs e)
     {
         var keepAwakeActive = KeepAwakeService.Instance.IsActive;
@@ -192,5 +207,12 @@ public partial class QuickSettingsPopup : UserControl
 
         keepAwake.SetActive(true, baseTime.AddMinutes(Math.Clamp(minutes, 1, 720)));
         RefreshState();
+    }
+
+    private void ApplyMiniWidgetPreset(string preset)
+    {
+        PersistQuickSetting(cfg => MiniWidgetPresetService.ApplyPreset(cfg, preset), "mini widget preset");
+        RefreshState();
+        NotificationService.Instance.ShowInfo("Mini Widget", $"Applied '{preset}' preset.");
     }
 }

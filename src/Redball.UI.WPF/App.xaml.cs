@@ -281,6 +281,19 @@ public partial class App : Application
             _mainWindow.ShowInTaskbar = false;
             _mainWindow.Show();
             _mainWindow.Hide();
+
+            if (cfg.MiniWidgetOpenOnStartup)
+            {
+                _mainWindow.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (_mainWindow.DataContext is ViewModels.MainViewModel vm)
+                    {
+                        vm.ShowMiniWidgetCommand.Execute(null);
+                        Services.Logger.Info("App", "Mini widget opened on startup from config");
+                    }
+                }), System.Windows.Threading.DispatcherPriority.Background);
+            }
+
             ShutdownMode = ShutdownMode.OnMainWindowClose;
             _startupStopwatch.Stop();
             StartupDuration = _startupStopwatch.Elapsed;
