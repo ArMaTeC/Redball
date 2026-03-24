@@ -9,7 +9,9 @@
         Topmost="True"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
+        Focusable="True"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        KeyDown="Window_KeyDown"
         MouseDoubleClick="Window_MouseDoubleClick">
     <Window.Resources>
         <!-- Heartbeat pulse animation -->
@@ -102,6 +104,13 @@
                         Width="24" Height="24" Cursor="Hand"
                         Click="OpenDashboardBtn_Click"
                         ToolTip="Open dashboard"/>
+                <Button x:Name="LockPositionBtn" Margin="4,0,0,0"
+                        Content="&#xE72E;" FontFamily="Segoe Fluent Icons" FontSize="12"
+                        Background="Transparent" BorderThickness="0"
+                        Foreground="{DynamicResource ForegroundSecondaryBrush}"
+                        Width="24" Height="24" Cursor="Hand"
+                        Click="LockPositionBtn_Click"
+                        ToolTip="Lock/unlock widget position"/>
                 <Button Click="CloseBtn_Click" Margin="4,0,0,0"
                         Content="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="12"
                         Background="Transparent" BorderThickness="0"
@@ -126,6 +135,14 @@
                         Padding="8,2"
                         Margin="0,0,6,0"
                         ToolTip="Start or extend timed session by 60 minutes"/>
+                <Button x:Name="QuickAddCustomBtn"
+                        Content="+30m"
+                        Click="QuickAddCustomBtn_Click"
+                        Style="{DynamicResource ModernButton}"
+                        FontSize="10"
+                        Padding="8,2"
+                        Margin="0,0,6,0"
+                        ToolTip="Start or extend timed session by your custom amount"/>
                 <Button Content="Reset"
                         Click="QuickResetPositionBtn_Click"
                         Style="{DynamicResource ModernButton}"

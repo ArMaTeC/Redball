@@ -349,6 +349,8 @@ public partial class App : Application
             ThemeManager.StopWatchingSystemTheme();
             Services.KeepAwakeService.Instance.Dispose();
             Services.Logger.Debug("App", "KeepAwakeService disposed");
+            Services.InterceptionInputService.Instance.ReleaseResources("App.OnExit");
+            Services.Logger.Debug("App", "InterceptionInputService resources released");
 
             // Clear crash flag on clean exit
             Services.CrashRecoveryService.ClearCrashFlag();

@@ -14,6 +14,7 @@ namespace Redball.UI.Views;
 public partial class MainWindow
 {
     private readonly Stack<string> _settingsUndoStack = new(20);
+    private bool _suppressVerifySignaturePrompt;
 
     private void LoadEmbeddedSettings()
     {
@@ -21,6 +22,8 @@ public partial class MainWindow
         var config = ConfigService.Instance.Config;
 
         MainMinimizeToTrayCheck.IsChecked = config.MinimizeToTray;
+        MainStartWithWindowsCheck.IsChecked = StartupService.IsInstalledAtStartup();
+        UpdateMainStartWithWindowsStatusText();
         MainShowNotificationsCheck.IsChecked = config.ShowNotifications;
         MainSoundNotificationsCheck.IsChecked = config.SoundNotifications;
         MainNotificationModeCombo.SelectedIndex = (int)config.NotificationMode;
@@ -128,6 +131,12 @@ public partial class MainWindow
         MainMiniWidgetShowQuickActionsCheck.IsChecked = config.MiniWidgetShowQuickActions;
         MainMiniWidgetShowStatusIconsCheck.IsChecked = config.MiniWidgetShowStatusIcons;
         MainMiniWidgetDoubleClickDashboardCheck.IsChecked = config.MiniWidgetDoubleClickOpensDashboard;
+        MainMiniWidgetLockPositionCheck.IsChecked = config.MiniWidgetLockPosition;
+        MainMiniWidgetSnapToEdgesCheck.IsChecked = config.MiniWidgetSnapToScreenEdges;
+        MainMiniWidgetKeyboardShortcutsCheck.IsChecked = config.MiniWidgetEnableKeyboardShortcuts;
+        MainMiniWidgetCustomQuickMinutesSlider.Value = Math.Clamp(config.MiniWidgetCustomQuickMinutes, 1, 180);
+        MainMiniWidgetCustomQuickMinutesText.Text = $"Custom quick action: +{(int)MainMiniWidgetCustomQuickMinutesSlider.Value}m";
+        MainMiniWidgetConfirmCloseWhenActiveCheck.IsChecked = config.MiniWidgetConfirmCloseWhenActive;
 
         MainThemeCombo.SelectedIndex = config.Theme switch
         {
@@ -183,6 +192,17 @@ public partial class MainWindow
 
             var config = ConfigService.Instance.Config;
             config.MinimizeToTray = MainMinimizeToTrayCheck.IsChecked ?? false;
+            var startWithWindows = MainStartWithWindowsCheck.IsChecked ?? false;
+            var startupInstalled = StartupService.IsInstalledAtStartup();
+            if (startWithWindows && !startupInstalled)
+            {
+                StartupService.Install();
+            }
+            else if (!startWithWindows && startupInstalled)
+            {
+                StartupService.Uninstall();
+            }
+            UpdateMainStartWithWindowsStatusText();
             config.ShowNotifications = MainShowNotificationsCheck.IsChecked ?? true;
             config.SoundNotifications = MainSoundNotificationsCheck.IsChecked ?? false;
             config.NotificationMode = (NotificationMode)MainNotificationModeCombo.SelectedIndex;
@@ -270,6 +290,11 @@ public partial class MainWindow
             config.MiniWidgetShowQuickActions = MainMiniWidgetShowQuickActionsCheck.IsChecked ?? true;
             config.MiniWidgetShowStatusIcons = MainMiniWidgetShowStatusIconsCheck.IsChecked ?? true;
             config.MiniWidgetDoubleClickOpensDashboard = MainMiniWidgetDoubleClickDashboardCheck.IsChecked ?? true;
+            config.MiniWidgetLockPosition = MainMiniWidgetLockPositionCheck.IsChecked ?? false;
+            config.MiniWidgetSnapToScreenEdges = MainMiniWidgetSnapToEdgesCheck.IsChecked ?? true;
+            config.MiniWidgetEnableKeyboardShortcuts = MainMiniWidgetKeyboardShortcutsCheck.IsChecked ?? true;
+            config.MiniWidgetCustomQuickMinutes = (int)Math.Round(MainMiniWidgetCustomQuickMinutesSlider.Value);
+            config.MiniWidgetConfirmCloseWhenActive = MainMiniWidgetConfirmCloseWhenActiveCheck.IsChecked ?? true;
 
             config.Theme = MainThemeCombo.SelectedIndex switch
             {
@@ -321,6 +346,16 @@ public partial class MainWindow
     {
         MainNotificationModeLabel.Visibility = Visibility.Visible;
         MainNotificationModeCombo.Visibility = Visibility.Visible;
+        AutoApplySettings();
+    }
+
+    private void MainMiniWidgetCustomQuickMinutesSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MainMiniWidgetCustomQuickMinutesText != null)
+        {
+            MainMiniWidgetCustomQuickMinutesText.Text = $"Custom quick action: +{(int)e.NewValue}m";
+        }
+
         AutoApplySettings();
     }
 
@@ -418,7 +453,41 @@ public partial class MainWindow
 
     private void MainSettingChanged(object sender, RoutedEventArgs e)
     {
+        if (ReferenceEquals(sender, MainVerifyUpdateSignatureCheck)
+            && !_isLoadingSettings
+            && !_suppressVerifySignaturePrompt
+            && MainVerifyUpdateSignatureCheck.IsChecked != true
+            && ConfigService.Instance.Config.VerifyUpdateSignature)
+        {
+            var confirmDisable = NotificationWindow.Show(
+                "Security Warning",
+                "Disabling update signature verification reduces security and can allow untrusted updates. Continue?",
+                "\uE7BA",
+                true);
+
+            if (!confirmDisable)
+            {
+                _suppressVerifySignaturePrompt = true;
+                MainVerifyUpdateSignatureCheck.IsChecked = true;
+                _suppressVerifySignaturePrompt = false;
+                return;
+            }
+        }
+
+        if (ReferenceEquals(sender, MainStartWithWindowsCheck))
+        {
+            UpdateMainStartWithWindowsStatusText();
+        }
         AutoApplySettings();
+    }
+
+    private void UpdateMainStartWithWindowsStatusText()
+    {
+        if (MainStartWithWindowsStatusText == null) return;
+        var installed = StartupService.IsInstalledAtStartup();
+        MainStartWithWindowsStatusText.Text = installed
+            ? "Startup status: Enabled"
+            : "Startup status: Disabled";
     }
 
     private void MainComboSettingChanged(object sender, SelectionChangedEventArgs e)

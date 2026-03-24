@@ -24,20 +24,36 @@ public class SecurityService
                 return false;
             }
 
-            var certificate = new X509Certificate2(filePath);
-            var cert2 = new X509Certificate2(certificate);
-            
-            // Check if the certificate is valid
-            if (cert2.Verify())
+            X509Certificate? signerCertificate;
+            try
+            {
+                signerCertificate = X509Certificate.CreateFromSignedFile(filePath);
+            }
+            catch (CryptographicException ex)
+            {
+                Logger.Warning("SecurityService", $"No Authenticode signature found on file: {Path.GetFileName(filePath)} ({ex.Message})");
+                return false;
+            }
+
+            using var cert = new X509Certificate2(signerCertificate);
+            using var chain = new X509Chain();
+            chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+            chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
+            chain.ChainPolicy.VerificationFlags = X509VerificationFlags.NoFlag;
+
+            var certIsTimeValid = cert.NotBefore <= DateTime.UtcNow && cert.NotAfter >= DateTime.UtcNow;
+            var chainValid = chain.Build(cert);
+
+            if (chainValid && certIsTimeValid)
             {
                 Logger.Info("SecurityService", $"Authenticode signature verified for: {Path.GetFileName(filePath)}");
-                Logger.Debug("SecurityService", $"Certificate subject: {cert2.Subject}");
-                Logger.Debug("SecurityService", $"Certificate issuer: {cert2.Issuer}");
-                Logger.Debug("SecurityService", $"Valid from: {cert2.NotBefore:g} to {cert2.NotAfter:g}");
+                Logger.Debug("SecurityService", $"Certificate subject: {cert.Subject}");
+                Logger.Debug("SecurityService", $"Certificate issuer: {cert.Issuer}");
+                Logger.Debug("SecurityService", $"Valid from: {cert.NotBefore:g} to {cert.NotAfter:g}");
                 return true;
             }
-            
-            Logger.Warning("SecurityService", $"Authenticode signature verification failed for: {filePath}");
+
+            Logger.Warning("SecurityService", $"Authenticode signature verification failed for: {Path.GetFileName(filePath)} (chainValid={chainValid}, certIsTimeValid={certIsTimeValid})");
             return false;
         }
         catch (CryptographicException ex)

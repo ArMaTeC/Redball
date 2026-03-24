@@ -11,6 +11,10 @@ namespace Redball.UI.Views;
 
 public partial class MiniWidgetWindow : Window
 {
+    private const double ScreenEdgeSnapDistance = 16;
+    private const double DefaultWidgetWidth = 232;
+    private const double DefaultWidgetHeight = 118;
+
     private readonly DispatcherTimer _refreshTimer;
     private readonly EventHandler<bool> _activeStateChangedHandler;
     private readonly EventHandler _heartbeatHandler;
@@ -90,6 +94,12 @@ public partial class MiniWidgetWindow : Window
         QuickActionsPanel.Visibility = config.MiniWidgetShowQuickActions ? Visibility.Visible : Visibility.Collapsed;
         StatusIconsPanel.Visibility = config.MiniWidgetShowStatusIcons ? Visibility.Visible : Visibility.Collapsed;
         OpenDashboardBtn.Visibility = config.MiniWidgetDoubleClickOpensDashboard ? Visibility.Visible : Visibility.Collapsed;
+        LockPositionBtn.Content = config.MiniWidgetLockPosition ? "\uE72F" : "\uE72E";
+        LockPositionBtn.ToolTip = config.MiniWidgetLockPosition ? "Unlock widget position" : "Lock widget position";
+
+        var customQuickMinutes = Math.Clamp(config.MiniWidgetCustomQuickMinutes, 1, 720);
+        QuickAddCustomBtn.Content = $"+{customQuickMinutes}m";
+        QuickAddCustomBtn.ToolTip = $"Start or extend timed session by {customQuickMinutes} minutes";
         
         // Status Text & Color
         StatusText.Text = ka.GetStatusText();
@@ -225,20 +235,46 @@ public partial class MiniWidgetWindow : Window
     {
         WindowStartupLocation = WindowStartupLocation.Manual;
         var workArea = SystemParameters.WorkArea;
-        Left = workArea.Right - Width - 16;
-        Top = workArea.Bottom - Height - 16;
+        Left = workArea.Right - GetWidgetWidth() - ScreenEdgeSnapDistance;
+        Top = workArea.Bottom - GetWidgetHeight() - ScreenEdgeSnapDistance;
     }
 
-    private static bool IsPositionOnScreen(double left, double top)
+    private bool IsPositionOnScreen(double left, double top)
     {
         const double margin = 40;
+        var width = GetWidgetWidth();
+        var height = GetWidgetHeight();
         var virtualLeft = SystemParameters.VirtualScreenLeft - margin;
         var virtualTop = SystemParameters.VirtualScreenTop - margin;
         var virtualRight = SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth + margin;
         var virtualBottom = SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight + margin;
 
-        return left + 220 > virtualLeft && left < virtualRight &&
-               top + 90 > virtualTop && top < virtualBottom;
+        return left + width > virtualLeft && left < virtualRight &&
+               top + height > virtualTop && top < virtualBottom;
+    }
+
+    private double GetWidgetWidth() => Width > 0 ? Width : DefaultWidgetWidth;
+
+    private double GetWidgetHeight() => Height > 0 ? Height : DefaultWidgetHeight;
+
+    private void SnapToWorkArea()
+    {
+        var workArea = SystemParameters.WorkArea;
+        var width = GetWidgetWidth();
+        var height = GetWidgetHeight();
+
+        Left = Math.Clamp(Left, workArea.Left, workArea.Right - width);
+        Top = Math.Clamp(Top, workArea.Top, workArea.Bottom - height);
+
+        if (Math.Abs(Left - workArea.Left) <= ScreenEdgeSnapDistance)
+            Left = workArea.Left;
+        else if (Math.Abs((workArea.Right - width) - Left) <= ScreenEdgeSnapDistance)
+            Left = workArea.Right - width;
+
+        if (Math.Abs(Top - workArea.Top) <= ScreenEdgeSnapDistance)
+            Top = workArea.Top;
+        else if (Math.Abs((workArea.Bottom - height) - Top) <= ScreenEdgeSnapDistance)
+            Top = workArea.Bottom - height;
     }
 
     private void SavePosition()
@@ -269,6 +305,14 @@ public partial class MiniWidgetWindow : Window
         RefreshState();
     }
 
+    private void LockPositionBtn_Click(object sender, RoutedEventArgs e)
+    {
+        var config = ConfigService.Instance.Config;
+        config.MiniWidgetLockPosition = !config.MiniWidgetLockPosition;
+        ConfigService.Instance.Save();
+        RefreshState();
+    }
+
     private void OpenDashboardBtn_Click(object sender, RoutedEventArgs e)
     {
         OpenDashboard();
@@ -284,6 +328,12 @@ public partial class MiniWidgetWindow : Window
         QuickAddTimedMinutes(60);
     }
 
+    private void QuickAddCustomBtn_Click(object sender, RoutedEventArgs e)
+    {
+        var minutes = Math.Clamp(ConfigService.Instance.Config.MiniWidgetCustomQuickMinutes, 1, 720);
+        QuickAddTimedMinutes(minutes);
+    }
+
     private void QuickResetPositionBtn_Click(object sender, RoutedEventArgs e)
     {
         ResetPosition();
@@ -291,6 +341,11 @@ public partial class MiniWidgetWindow : Window
 
     private void CloseBtn_Click(object sender, RoutedEventArgs e)
     {
+        if (!ShouldAllowClose())
+        {
+            return;
+        }
+
         Close();
     }
 
@@ -298,8 +353,65 @@ public partial class MiniWidgetWindow : Window
     {
         if (e.ChangedButton == MouseButton.Left)
         {
+            Focus();
+
+            if (ConfigService.Instance.Config.MiniWidgetLockPosition)
+            {
+                return;
+            }
+
             DragMove();
+
+            if (ConfigService.Instance.Config.MiniWidgetSnapToScreenEdges)
+            {
+                SnapToWorkArea();
+            }
+
             SavePosition();
+        }
+    }
+
+    private void Window_KeyDown(object sender, KeyEventArgs e)
+    {
+        var config = ConfigService.Instance.Config;
+        if (!config.MiniWidgetEnableKeyboardShortcuts)
+        {
+            return;
+        }
+
+        switch (e.Key)
+        {
+            case Key.Space:
+                KeepAwakeService.Instance.Toggle();
+                RefreshState();
+                e.Handled = true;
+                break;
+            case Key.D:
+                OpenDashboard();
+                e.Handled = true;
+                break;
+            case Key.D1:
+            case Key.NumPad1:
+                QuickAddTimedMinutes(15);
+                e.Handled = true;
+                break;
+            case Key.D2:
+            case Key.NumPad2:
+                QuickAddTimedMinutes(60);
+                e.Handled = true;
+                break;
+            case Key.OemPlus:
+            case Key.Add:
+                QuickAddTimedMinutes(Math.Clamp(config.MiniWidgetCustomQuickMinutes, 1, 720));
+                e.Handled = true;
+                break;
+            case Key.Escape:
+                if (ShouldAllowClose())
+                {
+                    Close();
+                }
+                e.Handled = true;
+                break;
         }
     }
 
@@ -352,6 +464,21 @@ public partial class MiniWidgetWindow : Window
         }
 
         mainWindow.Activate();
+    }
+
+    private bool ShouldAllowClose()
+    {
+        var config = ConfigService.Instance.Config;
+        if (!config.MiniWidgetConfirmCloseWhenActive || !KeepAwakeService.Instance.IsActive)
+        {
+            return true;
+        }
+
+        return NotificationWindow.Show(
+            "Close Mini Widget",
+            "Keep-awake is active. Close the mini widget anyway?",
+            "\uE7BA",
+            true);
     }
 
     protected override void OnClosed(EventArgs e)

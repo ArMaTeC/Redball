@@ -126,6 +126,8 @@ public partial class SettingsWindow : Window
 
         // General settings
         if (MinimizeToTrayCheck != null) MinimizeToTrayCheck.IsChecked = cfg.MinimizeToTray;
+        if (StartWithWindowsCheck != null) StartWithWindowsCheck.IsChecked = StartupService.IsInstalledAtStartup();
+        UpdateStartWithWindowsStatusText();
         if (ShowNotificationsCheck != null) ShowNotificationsCheck.IsChecked = cfg.ShowNotifications;
         if (NotificationModeCombo != null) NotificationModeCombo.SelectedIndex = (int)cfg.NotificationMode;
         if (VerboseLoggingCheck != null) VerboseLoggingCheck.IsChecked = cfg.VerboseLogging;
@@ -190,7 +192,49 @@ public partial class SettingsWindow : Window
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
+        var wasVerifyUpdateSignatureEnabled = ConfigService.Instance.Config.VerifyUpdateSignature;
+        var wasEncryptConfigEnabled = ConfigService.Instance.Config.EncryptConfig;
         SaveUIToConfig();
+        if (wasVerifyUpdateSignatureEnabled && !ConfigService.Instance.Config.VerifyUpdateSignature)
+        {
+            var confirmDisable = NotificationWindow.Show(
+                "Security Warning",
+                "Disabling update signature verification reduces security and can allow untrusted updates. Continue?",
+                "\uE7BA",
+                true);
+
+            if (!confirmDisable)
+            {
+                if (VerifyUpdateSignatureCheck != null)
+                {
+                    VerifyUpdateSignatureCheck.IsChecked = true;
+                }
+                ConfigService.Instance.Config.VerifyUpdateSignature = true;
+                _isDirty = true;
+                return;
+            }
+        }
+
+        if (wasEncryptConfigEnabled && !ConfigService.Instance.Config.EncryptConfig)
+        {
+            var confirmDisableEncryption = NotificationWindow.Show(
+                "Privacy Warning",
+                "Disabling config encryption stores your settings in plain text. Continue?",
+                "\uE7BA",
+                true);
+
+            if (!confirmDisableEncryption)
+            {
+                if (EncryptConfigCheck != null)
+                {
+                    EncryptConfigCheck.IsChecked = true;
+                }
+                ConfigService.Instance.Config.EncryptConfig = true;
+                _isDirty = true;
+                return;
+            }
+        }
+
         var svc = ConfigService.Instance;
         var errors = svc.Validate();
         if (errors.Count > 0)
@@ -201,11 +245,21 @@ public partial class SettingsWindow : Window
         }
         if (svc.Save())
         {
+            var shouldStartWithWindows = StartWithWindowsCheck?.IsChecked ?? false;
+            var startupChangedOk = shouldStartWithWindows
+                ? StartupService.Install()
+                : StartupService.Uninstall();
+
             _analytics.TrackFeature("settings.saved");
             _analytics.TrackFunnel("settings", "saved");
             Logger.ApplyConfig(svc.Config);
             // Reload keep-awake engine with updated config
             KeepAwakeService.Instance.ReloadConfig();
+            if (!startupChangedOk)
+            {
+                NotificationWindow.Show("Startup Setting", "Could not update Start with Windows setting.", "\uE783");
+            }
+            UpdateStartWithWindowsStatusText();
             _isDirty = false;
             Close();
         }
@@ -493,6 +547,21 @@ public partial class SettingsWindow : Window
         if (NotificationModeLabel != null) NotificationModeLabel.Visibility = Visibility.Collapsed;
         if (NotificationModeCombo != null) NotificationModeCombo.Visibility = Visibility.Collapsed;
         _isDirty = true;
+    }
+
+    private void StartWithWindowsCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateStartWithWindowsStatusText();
+        _isDirty = true;
+    }
+
+    private void UpdateStartWithWindowsStatusText()
+    {
+        if (StartWithWindowsStatusText == null) return;
+        var installed = StartupService.IsInstalledAtStartup();
+        StartWithWindowsStatusText.Text = installed
+            ? "Startup status: Enabled"
+            : "Startup status: Disabled";
     }
 
     private void ExportAllDataButton_Click(object sender, RoutedEventArgs e)

@@ -540,6 +540,8 @@
                                                 <TextBlock Text="Theme preview" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center" Margin="4,0,0,0"/>
                                             </StackPanel>
                                             <CheckBox x:Name="MainMinimizeToTrayCheck" Content="Minimize to tray on start" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Start Redball minimized so it lives in the tray instead of opening on screen."/>
+                                            <CheckBox x:Name="MainStartWithWindowsCheck" Content="Start with Windows" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Automatically launch Redball when you sign in to Windows."/>
+                                            <TextBlock x:Name="MainStartWithWindowsStatusText" Text="Startup status: Disabled" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,8"/>
                                             <CheckBox x:Name="MainShowNotificationsCheck" Content="Show notifications" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainShowNotificationsCheck_Checked" Unchecked="MainShowNotificationsCheck_Unchecked" ToolTipService.ShowDuration="12000" ToolTip="Enable or disable toast notifications from Redball."/>
                                             <CheckBox x:Name="MainSoundNotificationsCheck" Content="Play sound with notifications" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Play a system sound alongside visual notifications."/>
                                             <TextBlock x:Name="MainNotificationModeLabel" Text="Notification Mode" FontWeight="Medium" Margin="0,8,0,8"/>
@@ -599,6 +601,45 @@
 
                                             <CheckBox x:Name="MainMiniWidgetDoubleClickDashboardCheck"
                                                       Content="Double-click widget opens dashboard"
+                                                      Style="{DynamicResource ModernCheckBox}"
+                                                      Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged"
+                                                      Unchecked="MainSettingChanged"/>
+
+                                            <CheckBox x:Name="MainMiniWidgetLockPositionCheck"
+                                                      Content="Lock widget position"
+                                                      Style="{DynamicResource ModernCheckBox}"
+                                                      Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged"
+                                                      Unchecked="MainSettingChanged"/>
+
+                                            <CheckBox x:Name="MainMiniWidgetSnapToEdgesCheck"
+                                                      Content="Snap widget to screen edges after drag"
+                                                      Style="{DynamicResource ModernCheckBox}"
+                                                      Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged"
+                                                      Unchecked="MainSettingChanged"/>
+
+                                            <CheckBox x:Name="MainMiniWidgetKeyboardShortcutsCheck"
+                                                      Content="Enable widget keyboard shortcuts"
+                                                      Style="{DynamicResource ModernCheckBox}"
+                                                      Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged"
+                                                      Unchecked="MainSettingChanged"/>
+
+                                            <TextBlock Text="Custom Quick Add Minutes" FontWeight="Medium" Margin="0,8,0,8"/>
+                                            <Slider x:Name="MainMiniWidgetCustomQuickMinutesSlider"
+                                                    Minimum="1"
+                                                    Maximum="180"
+                                                    Value="30"
+                                                    TickFrequency="1"
+                                                    IsSnapToTickEnabled="True"
+                                                    Style="{DynamicResource ModernSlider}"
+                                                    ValueChanged="MainMiniWidgetCustomQuickMinutesSlider_ValueChanged"/>
+                                            <TextBlock x:Name="MainMiniWidgetCustomQuickMinutesText" Text="Custom quick action: +30m" FontSize="12" Margin="0,4,0,12"/>
+
+                                            <CheckBox x:Name="MainMiniWidgetConfirmCloseWhenActiveCheck"
+                                                      Content="Ask before closing widget while keep-awake is active"
                                                       Style="{DynamicResource ModernCheckBox}"
                                                       Margin="0,0,0,0"
                                                       Checked="MainSettingChanged"

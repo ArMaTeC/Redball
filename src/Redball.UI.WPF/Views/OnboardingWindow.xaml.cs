@@ -30,7 +30,7 @@ public partial class OnboardingWindow : Window
         
         PreventDisplaySleepCheck.IsChecked = config.PreventDisplaySleep;
         UseHeartbeatCheck.IsChecked = config.UseHeartbeatKeypress;
-        StartWithWindowsCheck.IsChecked = false;
+        StartWithWindowsCheck.IsChecked = StartupService.IsInstalledAtStartup();
         BatteryAwareCheck.IsChecked = config.BatteryAware;
         NetworkAwareCheck.IsChecked = config.NetworkAware;
         ShowOnStartupCheck.IsChecked = false;
@@ -86,8 +86,11 @@ public partial class OnboardingWindow : Window
         // We'll explicitly set it to false on completion in GetStartedButton_Click.
         config.Theme = GetSelectedTheme();
 
-        if (StartWithWindowsCheck.IsChecked == true)
+        var shouldStartWithWindows = StartWithWindowsCheck.IsChecked == true;
+        if (shouldStartWithWindows)
             StartupService.Install();
+        else
+            StartupService.Uninstall();
 
         ThemeManager.SetTheme(ThemeManager.ThemeFromString(config.Theme));
         ConfigService.Instance.Save();

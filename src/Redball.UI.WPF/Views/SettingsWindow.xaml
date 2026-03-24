@@ -113,6 +113,11 @@
 
                             <CheckBox x:Name="MinimizeToTrayCheck" Content="Minimize to tray on start" Margin="0,16,0,8"
                                      Style="{DynamicResource ModernCheckBox}"/>
+                            <CheckBox x:Name="StartWithWindowsCheck" Content="Start with Windows" Margin="0,0,0,8"
+                                     Style="{DynamicResource ModernCheckBox}" Checked="StartWithWindowsCheck_Changed" Unchecked="StartWithWindowsCheck_Changed"/>
+                            <TextBlock x:Name="StartWithWindowsStatusText" Text="Startup status: Disabled"
+                                      FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"
+                                      Margin="24,0,0,8"/>
                             <CheckBox x:Name="ShowNotificationsCheck" Content="Show notifications" IsChecked="True"
                                      Style="{DynamicResource ModernCheckBox}" Checked="ShowNotificationsCheck_Checked" Unchecked="ShowNotificationsCheck_Unchecked"/>
 

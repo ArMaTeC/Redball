@@ -22,10 +22,18 @@
             <Button x:Name="ToggleHeartbeatBtn" Content="Heartbeat: On"
                     Style="{DynamicResource ModernButton}" Margin="0,0,0,10" Click="ToggleHeartbeat_Click"/>
 
+            <TextBlock Text="Quick Session" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <WrapPanel Margin="0,0,0,10">
+                <Button Content="+15m" Style="{DynamicResource ModernButton}" Margin="0,0,6,6" Click="Quick15m_Click"/>
+                <Button Content="+60m" Style="{DynamicResource ModernButton}" Margin="0,0,6,6" Click="Quick60m_Click"/>
+                <Button x:Name="QuickCustomBtn" Content="+30m" Style="{DynamicResource ModernButton}" Margin="0,0,0,6" Click="QuickCustom_Click"/>
+            </WrapPanel>
+
             <Separator Background="{DynamicResource BorderBrush}" Margin="0,0,0,10"/>
 
             <!-- Actions -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Widget" Style="{DynamicResource ModernButton}" Margin="0,0,6,0" Click="OpenWidget_Click"/>
                 <Button Content="Updates" Style="{DynamicResource ModernButton}" Margin="0,0,6,0" Click="CheckForUpdates_Click"/>
                 <Button Content="Settings" Style="{DynamicResource ModernButton}" Margin="0,0,6,0" Click="OpenSettings_Click"/>
                 <Button Content="Exit" Style="{DynamicResource ModernButton}" Click="Exit_Click"/>

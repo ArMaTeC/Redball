@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -26,6 +27,11 @@ public class InterceptionInputService : IDisposable
     private bool _initialized;
     private bool _disposed;
     private readonly object _lock = new();
+    private ManagementEventWatcher? _deviceArrivalWatcher;
+    private ManagementEventWatcher? _deviceRemovalWatcher;
+    private Timer? _deviceRefreshDebounceTimer;
+
+    private const int DeviceRefreshDebounceMs = 1200;
 
     /// <summary>
     /// Whether the Interception driver is installed on this system.
@@ -36,6 +42,7 @@ public class InterceptionInputService : IDisposable
     /// Whether the service is initialized and ready to send keystrokes.
     /// </summary>
     public bool IsReady => _initialized && _keyboardHook != null && _keyboardHook.CanSimulateInput;
+    public bool IsInitialized => _initialized;
 
     // --- P/Invoke for layout-aware character→key mapping ---
 
@@ -126,6 +133,7 @@ public class InterceptionInputService : IDisposable
                 }
 
                 _initialized = true;
+                EnsureUsbDeviceWatchers();
 
                 Logger.Info("InterceptionInputService", $"Initialized successfully. CanSimulateInput: {_keyboardHook.CanSimulateInput}");
                 return IsReady;
@@ -280,6 +288,96 @@ public class InterceptionInputService : IDisposable
         var stderr = process.StandardError.ReadToEnd();
         process.WaitForExit();
         return (process.ExitCode, stdout, stderr);
+    }
+
+    private void EnsureUsbDeviceWatchers()
+    {
+        if (_disposed) return;
+        if (_deviceArrivalWatcher != null || _deviceRemovalWatcher != null) return;
+
+        try
+        {
+            _deviceArrivalWatcher = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_DeviceChangeEvent WHERE EventType = 2"));
+            _deviceArrivalWatcher.EventArrived += OnUsbDeviceChange;
+            _deviceArrivalWatcher.Start();
+
+            _deviceRemovalWatcher = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_DeviceChangeEvent WHERE EventType = 3"));
+            _deviceRemovalWatcher.EventArrived += OnUsbDeviceChange;
+            _deviceRemovalWatcher.Start();
+
+            Logger.Info("InterceptionInputService", "USB device-change watcher started");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("InterceptionInputService", $"Failed to start USB device watcher: {ex.Message}");
+            StopUsbDeviceWatchers();
+        }
+    }
+
+    private void StopUsbDeviceWatchers()
+    {
+        try
+        {
+            if (_deviceArrivalWatcher != null)
+            {
+                _deviceArrivalWatcher.EventArrived -= OnUsbDeviceChange;
+                _deviceArrivalWatcher.Stop();
+                _deviceArrivalWatcher.Dispose();
+                _deviceArrivalWatcher = null;
+            }
+
+            if (_deviceRemovalWatcher != null)
+            {
+                _deviceRemovalWatcher.EventArrived -= OnUsbDeviceChange;
+                _deviceRemovalWatcher.Stop();
+                _deviceRemovalWatcher.Dispose();
+                _deviceRemovalWatcher = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("InterceptionInputService", $"StopUsbDeviceWatchers error: {ex.Message}");
+        }
+    }
+
+    private void OnUsbDeviceChange(object sender, EventArrivedEventArgs e)
+    {
+        if (_disposed) return;
+
+        lock (_lock)
+        {
+            _deviceRefreshDebounceTimer ??= new Timer(_ => RefreshAfterUsbDeviceChange(), null, Timeout.Infinite, Timeout.Infinite);
+            _deviceRefreshDebounceTimer.Change(DeviceRefreshDebounceMs, Timeout.Infinite);
+        }
+    }
+
+    private void RefreshAfterUsbDeviceChange()
+    {
+        if (_disposed) return;
+
+        bool shouldRefresh;
+        lock (_lock)
+        {
+            shouldRefresh = _initialized || IsDriverInstalled;
+            if (!shouldRefresh) return;
+
+            try
+            {
+                _keyboardHook?.Dispose();
+                _keyboardHook = null;
+                InputInterceptor.Dispose();
+                _initialized = false;
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug("InterceptionInputService", $"Pre-refresh cleanup error: {ex.Message}");
+            }
+        }
+
+        var ready = Initialize();
+        Logger.Info("InterceptionInputService", ready
+            ? "HID interception refreshed after USB device change"
+            : "USB device changed, but HID interception is not ready after refresh");
     }
 
     /// <summary>
@@ -722,22 +820,35 @@ public class InterceptionInputService : IDisposable
 
         Logger.Info("InterceptionInputService", "Disposing...");
 
-        try
-        {
-            _keyboardHook?.Dispose();
-            _keyboardHook = null;
+        ReleaseResources("Dispose");
 
-            if (_initialized)
+        Logger.Info("InterceptionInputService", "Disposed");
+    }
+
+    public void ReleaseResources(string reason = "Manual release")
+    {
+        lock (_lock)
+        {
+            Logger.Info("InterceptionInputService", $"Releasing interception resources ({reason})...");
+
+            try
             {
+                _keyboardHook?.Dispose();
+                _keyboardHook = null;
+
                 InputInterceptor.Dispose();
             }
-        }
-        catch (Exception ex)
-        {
-            Logger.Debug("InterceptionInputService", $"Dispose error: {ex.Message}");
-        }
+            catch (Exception ex)
+            {
+                Logger.Debug("InterceptionInputService", $"ReleaseResources error: {ex.Message}");
+            }
 
-        _initialized = false;
-        Logger.Info("InterceptionInputService", "Disposed");
+            _deviceRefreshDebounceTimer?.Dispose();
+            _deviceRefreshDebounceTimer = null;
+            StopUsbDeviceWatchers();
+
+            _initialized = false;
+            Logger.Info("InterceptionInputService", "Interception resources released");
+        }
     }
 }
