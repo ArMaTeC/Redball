@@ -154,6 +154,22 @@ public partial class App : Application
             return;
         }
 
+        // Handle internal driver logic test (diagnostics)
+        if (e.Args.Length > 0 && e.Args[0] == "--test-driver-fallbacks")
+        {
+            Services.Logger.Info("App", "Running internal driver fallout test...");
+            // Test uninstallation with cleanup
+            var uninstallOk = Services.InterceptionInputService.Instance.UninstallDriver(false);
+            Services.Logger.Info("App", $"Internal test: Uninstall result (with cleanup fallback) = {uninstallOk}");
+            
+            // Test installation with visible window fallback (will only trigger if first install fails)
+            var installOk = Services.InterceptionInputService.Instance.InstallDriver(false);
+            Services.Logger.Info("App", $"Internal test: Install result = {installOk}");
+            
+            Environment.Exit(uninstallOk && installOk ? 0 : 1);
+            return;
+        }
+
         // Handle smoke test for build verification
         if (e.Args.Length > 0 && Array.Exists(e.Args, arg => arg == "--smoke-test"))
         {

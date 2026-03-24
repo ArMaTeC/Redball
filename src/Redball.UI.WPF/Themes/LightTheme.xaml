@@ -33,11 +33,15 @@
     <!-- Border colors -->
     <SolidColorBrush x:Key="BorderBrush" Color="#70DEE2E6"/>
     <SolidColorBrush x:Key="BorderLightBrush" Color="#90E9ECEF"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#20000000"/>
 
 
     <!-- Panel Backgrounds -->
     <SolidColorBrush x:Key="WindowBackground" Color="#FFFAFAFA"/>
     <SolidColorBrush x:Key="PanelBackground" Color="#B0F0F0F0"/>
+
+    <!-- Visual Effects -->
+    <DropShadowEffect x:Key="ShadowEffect" BlurRadius="15" ShadowDepth="0" Color="#44000000" Opacity="0.4"/>
 
 
 </ResourceDictionary>

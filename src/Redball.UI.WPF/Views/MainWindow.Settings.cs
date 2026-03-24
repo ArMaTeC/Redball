@@ -1140,8 +1140,9 @@ public partial class MainWindow
                 ? hid.LastDriverActionUtc.Value.ToLocalTime().ToString("HH:mm:ss")
                 : "Never";
             var driverVersion = hid.DriverVersion ?? "Unknown";
+            var rebootText = hid.IsRebootRequired ? " [REBOOT REQUIRED]" : "";
             MainHidDetailsText.Text =
-                $"Last refresh: {lastRefresh} • Next refresh: {nextRefresh} • Install: {driverStateText} (v{driverVersion}) • Last action: {hid.LastDriverAction} ({lastDriverActionTime}) • Init fails: {hid.ConsecutiveInitializeFailures} • Last error: {hid.LastErrorSummary}";
+                $"Last refresh: {lastRefresh} • Next refresh: {nextRefresh} • Install: {driverStateText} (v{driverVersion}){rebootText} • Last action: {hid.LastDriverAction} ({lastDriverActionTime}) • Init fails: {hid.ConsecutiveInitializeFailures} • Last error: {hid.LastErrorSummary}";
         }
 
         if (MainHidStatusIndicator != null)

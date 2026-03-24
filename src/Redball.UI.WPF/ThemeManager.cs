@@ -11,7 +11,6 @@ namespace Redball.UI;
 public static class ThemeManager
 {
     private static ResourceDictionary? _currentTheme;
-    private static bool _controlsLoaded;
     private static bool _isWatchingSystemTheme;
 
     public static Theme CurrentTheme { get; private set; } = Theme.Dark;
@@ -94,17 +93,6 @@ public static class ThemeManager
         CurrentTheme = theme;
         IsFollowingSystemTheme = false; // Explicit theme set; stop auto-following
 
-        // Load shared control styles once (was previously in App.xaml statically)
-        if (!_controlsLoaded && Application.Current != null)
-        {
-            // Core shared UI dictionaries
-            Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("pack://application:,,,/Redball.UI.WPF;component/Themes/Controls.xaml") });
-            Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("pack://application:,,,/Redball.UI.WPF;component/Themes/Animations.xaml") });
-            Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("pack://application:,,,/Redball.UI.WPF;component/Themes/AcrylicEffects.xaml") });
-            Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("pack://application:,,,/Redball.UI.WPF;component/Themes/MainWindowStyles.xaml") });
-            _controlsLoaded = true;
-        }
-
         // Remove current theme if exists
         if (_currentTheme != null && Application.Current != null)
         {
@@ -113,12 +101,12 @@ public static class ThemeManager
 
         // Load base theme (Dark or Light)
         var baseUri = IsLightVariant(theme)
-            ? new Uri("pack://application:,,,/Themes/LightTheme.xaml")
-            : new Uri("pack://application:,,,/Themes/DarkTheme.xaml");
+            ? new Uri("pack://application:,,,/Redball.UI.WPF;component/Themes/LightTheme.xaml")
+            : new Uri("pack://application:,,,/Redball.UI.WPF;component/Themes/DarkTheme.xaml");
 
-        _currentTheme = new ResourceDictionary { Source = baseUri };
         if (Application.Current != null)
         {
+            _currentTheme = new ResourceDictionary { Source = baseUri };
             Application.Current.Resources.MergedDictionaries.Add(_currentTheme);
         }
 

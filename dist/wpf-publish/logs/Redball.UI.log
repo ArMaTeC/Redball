@@ -1,0 +1,43 @@
+
+[2026-03-24 21:27:02] ========== Redball WPF Started ==========
+[2026-03-24 21:27:02] Version: 2.1.244.0
+[2026-03-24 21:27:02] Process ID: 16532
+[2026-03-24 21:27:02] Base Directory: C:\Users\karll\Desktop\Redball\dist\wpf-publish\
+[2026-03-24 21:27:02] Current Directory: C:\Users\karll\Desktop\Redball\dist\wpf-publish
+[2026-03-24 21:27:02] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-24 21:27:02] .NET Version: 8.0.25
+[2026-03-24 21:27:02] Command Line: C:\Users\karll\Desktop\Redball\dist\wpf-publish\Redball.UI.WPF.dll --smoke-test
+[2026-03-24 21:27:02.382] [INF] [001] [App] === Redball.UI.WPF Application Starting ===
+[2026-03-24 21:27:02.387] [INF] [001] [App] Version: 2.1.244.0
+[2026-03-24 21:27:02.387] [DBG] [001] [App] Exception handlers registered
+[2026-03-24 21:27:02.512] [INF] [001] [App] === OnStartup Begin ===
+[2026-03-24 21:27:02.512] [INF] [001] [App] Running in smoke-test mode for build verification
+[2026-03-24 21:27:02.518] [INF] [001] [App] Memory: WorkingSet=49MB, Private=12MB, GC=0MB
+[2026-03-24 21:27:02.518] [DBG] [001] [App] base.OnStartup completed
+[2026-03-24 21:27:02.519] [INF] [001] [SingletonService] Singleton mutex acquired - this is the only instance
+[2026-03-24 21:27:02.521] [WRN] [001] [CrashRecovery] Previous abnormal termination detected. Resetting to safe defaults.
+[2026-03-24 21:27:02.521] [DBG] [001] [CrashRecovery] Crash flag set
+[2026-03-24 21:27:02.521] [WRN] [001] [App] Recovered from previous crash - using safe defaults
+[2026-03-24 21:27:02.522] [DBG] [001] [CrashRecovery] Crash flag set
+[2026-03-24 21:27:02.522] [INF] [001] [App] Loading configuration...
+[2026-03-24 21:27:02.525] [VRB] [001] [ConfigService] Instance created (lazy initialization)
+[2026-03-24 21:27:02.657] [INF] [001] [ConfigService] Configuration loaded from registry
+[2026-03-24 21:27:02.657] [INF] [001] [ConfigService] Config finalized from: HKCU\Software\Redball\UserData (ConfigPayload) (FirstRun=True)
+[2026-03-24 21:27:02.657] [INF] [001] [ConfigService] Migration required: HKCU\Software\Redball\UserData (ConfigPayload) -> C:\Users\<user>\AppData\Local\Redball\UserData\Redball.json
+[2026-03-24 21:27:02.672] [INF] [001] [ConfigService] Saving configuration to: C:\Users\<user>\AppData\Local\Redball\UserData\Redball.json
+[2026-03-24 21:27:02.707] [DBG] [001] [ConfigService] Serialized config: 3303 bytes
+[2026-03-24 21:27:02.710] [DBG] [001] [ConfigService] Backup created before save
+[2026-03-24 21:27:02.728] [DBG] [001] [ConfigService] Serialized signed config: 3303 bytes
+[2026-03-24 21:27:02.728] [DBG] [001] [ConfigService] Configuration persisted to registry
+[2026-03-24 21:27:02.736] [INF] [001] [ConfigService] Configuration saved successfully
+[2026-03-24 21:27:02.736] [INF] [001] [ConfigService] Configuration ready: FirstRun=True, HEARTBEAT=59s, THEME=Dark
+[2026-03-24 21:27:02.736] [INF] [001] [App] Configuration loaded successfully
+[2026-03-24 21:27:02.738] [INF] [001] [Logger] Logger configuration applied: Level=2, MaxSizeMB=10
+[2026-03-24 21:27:02.738] [INF] [001] [App] Config: Heartbeat=59s, Duration=60min, Theme=Dark
+[2026-03-24 21:27:02.738] [INF] [001] [App] Config: PreventDisplaySleep=True, BatteryAware=False, NetworkAware=False
+[2026-03-24 21:27:02.738] [INF] [001] [App] Initializing ThemeManager...
+[2026-03-24 21:27:02.744] [INF] [001] [App] ThemeManager initialized with theme: Dark
+[2026-03-24 21:27:02.758] [INF] [001] [ThemeManager] Started watching system theme changes
+[2026-03-24 21:27:02.782] [INF] [001] [ServiceLocator] DI container configured
+[2026-03-24 21:27:02.782] [INF] [001] [App] DI container built
+[2026-03-24 21:27:02.798] [INF] [001] [App] First run detected - showing onboarding window

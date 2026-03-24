@@ -37,6 +37,7 @@ public class InterceptionInputService : IDisposable
     private DateTime? _lastDriverActionUtc;
     private string _lastDriverAction = "None";
     private int _consecutiveInitializeFailures;
+    private bool _isRebootRequired;
 
     /// <summary>
     /// Maximum time to wait for a key send operation before considering it failed (ms).
@@ -104,6 +105,7 @@ public class InterceptionInputService : IDisposable
     public string LastDriverAction => _lastDriverAction;
     public int ConsecutiveInitializeFailures => _consecutiveInitializeFailures;
     public string? DriverVersion => _driverVersion;
+    public bool IsRebootRequired => _isRebootRequired;
 
     // --- P/Invoke for layout-aware character→key mapping ---
 
@@ -184,18 +186,46 @@ public class InterceptionInputService : IDisposable
                 }
             }
 
+
             var startInfo = new ProcessStartInfo
             {
                 FileName = tempExe,
                 Arguments = "/uninstall",
-                UseShellExecute = true,
+                UseShellExecute = !InputInterceptor.CheckAdministratorRights(), // Runas will be handled by the outer method if needed
                 CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden
+                WindowStyle = ProcessWindowStyle.Hidden,
+                RedirectStandardOutput = InputInterceptor.CheckAdministratorRights(),
+                RedirectStandardError = InputInterceptor.CheckAdministratorRights()
             };
 
-            using var uninstallProcess = Process.Start(startInfo);
-            uninstallProcess?.WaitForExit();
-            var exitCode = uninstallProcess?.ExitCode ?? -1;
+            int status = -1;
+            string stdout = string.Empty;
+            string stderr = string.Empty;
+
+            try
+            {
+                using var uninstallProcess = Process.Start(startInfo);
+                if (uninstallProcess != null)
+                {
+                    if (startInfo.RedirectStandardOutput)
+                    {
+                        stdout = uninstallProcess.StandardOutput.ReadToEnd();
+                        stderr = uninstallProcess.StandardError.ReadToEnd();
+                    }
+                    uninstallProcess.WaitForExit();
+                    status = uninstallProcess.ExitCode;
+                    if (status == 1) _isRebootRequired = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("InterceptionInputService", "Process.Start for uninstall failed", ex);
+            }
+
+            if (System.IO.File.Exists(tempExe))
+            {
+                try { System.IO.File.Delete(tempExe); } catch { }
+            }
 
             Thread.Sleep(500);
             TryRestartKeyboardDevices();
@@ -203,13 +233,27 @@ public class InterceptionInputService : IDisposable
             var uninstalled = !IsDriverInstalled;
             SetLastDriverAction(uninstalled ? "Driver uninstall completed" : "Driver uninstall attempted (still installed)");
 
-            if (!uninstalled && exitCode != 0)
+            if (!uninstalled && status != 0 && status != 1)
             {
-                Logger.Warning("InterceptionInputService", $"Driver uninstall failed (exitCode={exitCode})");
-                return false;
+                Logger.Warning("InterceptionInputService", $"Driver uninstall failed (exitCode={status}, out={stdout.Trim()}, err={stderr.Trim()})");
+                
+                // FALLBACK: Manual cleanup if standard uninstaller fails
+                if (InputInterceptor.CheckAdministratorRights())
+                {
+                    Logger.Info("InterceptionInputService", "Attempting manual uninstallation fallback...");
+                    if (ManualUninstallCleanup())
+                    {
+                        uninstalled = true;
+                        IsDriverInstalled = false;
+                        SetLastDriverAction("Driver uninstall completed via manual cleanup fallback");
+                    }
+                }
+                
+                if (!uninstalled) return false;
             }
 
-            Logger.Info("InterceptionInputService", $"Driver uninstall result: {uninstalled} (exitCode={exitCode})");
+            if (status == 1) _isRebootRequired = true;
+            Logger.Info("InterceptionInputService", $"Driver uninstall result: {uninstalled} (exitCode={status}, driverDetected={IsDriverInstalled})");
             return uninstalled;
         }
         catch (Exception ex)
@@ -944,28 +988,74 @@ public class InterceptionInputService : IDisposable
             {
                 FileName = tempExe,
                 Arguments = "/install",
-                UseShellExecute = true,
+                UseShellExecute = !InputInterceptor.CheckAdministratorRights(),
                 CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden
+                WindowStyle = ProcessWindowStyle.Hidden,
+                RedirectStandardOutput = InputInterceptor.CheckAdministratorRights(),
+                RedirectStandardError = InputInterceptor.CheckAdministratorRights()
             };
 
-            using var driverProcess = Process.Start(startInfo);
-            driverProcess?.WaitForExit();
-            var exitCode = driverProcess?.ExitCode ?? -1;
-            var result = exitCode == 0;
+            int status = -1;
+            string stdout = string.Empty;
+            string stderr = string.Empty;
+
+            try
+            {
+                using var driverProcess = Process.Start(startInfo);
+                if (driverProcess != null)
+                {
+                    if (startInfo.RedirectStandardOutput)
+                    {
+                        stdout = driverProcess.StandardOutput.ReadToEnd();
+                        stderr = driverProcess.StandardError.ReadToEnd();
+                    }
+                    driverProcess.WaitForExit();
+                    status = driverProcess.ExitCode;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("InterceptionInputService", "Process.Start for install failed", ex);
+            }
+
+            if (System.IO.File.Exists(tempExe))
+            {
+                try { System.IO.File.Delete(tempExe); } catch { }
+            }
+
+            if (status == 1) _isRebootRequired = true;
 
             var installedAfterRun = InputInterceptor.CheckDriverInstalled();
             IsDriverInstalled = installedAfterRun;
             SetLastDriverAction(installedAfterRun ? "Driver install completed" : "Driver install attempted (not detected)");
 
-            if (!result && installedAfterRun)
+            bool success = installedAfterRun || status == 0 || status == 1;
+
+            if (!success)
             {
-                Logger.Warning("InterceptionInputService", $"Driver installer exit code was {exitCode}, but driver is installed. Continuing as success.");
-                return true;
+                Logger.Warning("InterceptionInputService", $"Driver installation failed (exitCode={status}, out={stdout.Trim()}, err={stderr.Trim()})");
+                
+                // FALLBACK: Try running with a visible window if the silent install failed
+                if (InputInterceptor.CheckAdministratorRights())
+                {
+                    Logger.Info("InterceptionInputService", "Silent install failed, prompting user for manual installation via visible window fallback...");
+                    try
+                    {
+                        var manualOk = RunInstallerVisible(tempExe, "/install");
+                        if (manualOk)
+                        {
+                            installedAfterRun = InputInterceptor.CheckDriverInstalled();
+                            IsDriverInstalled = installedAfterRun;
+                            success = installedAfterRun;
+                            if (success) SetLastDriverAction("Driver install completed via visible window fallback");
+                        }
+                    }
+                    catch { }
+                }
             }
 
-            Logger.Info("InterceptionInputService", $"Driver installation result: {result} (exitCode={exitCode}, installedAfterRun={installedAfterRun})");
-            return result;
+            Logger.Info("InterceptionInputService", $"Driver installation final result: {success} (exitCode={status}, installedAfterRun={installedAfterRun})");
+            return success;
         }
         catch (Exception ex)
         {
@@ -1137,6 +1227,83 @@ public class InterceptionInputService : IDisposable
             0xE2 => KeyCode.Backslash,       // VK_OEM_102 (extra key on 102-key European keyboards: \| on UK, <> on DE)
             _ => null
         };
+    }
+
+    private bool ManualUninstallCleanup()
+    {
+        try
+        {
+            Logger.Info("InterceptionInputService", "Manual cleanup: removing 'interception' from UpperFilters...");
+            RemoveFromUpperFilters("{4d36e96b-e325-11ce-bfc1-08002be10318}", "interception"); // Keyboard
+            RemoveFromUpperFilters("{4d36e96f-e325-11ce-bfc1-08002be10318}", "interception"); // Mouse
+
+            Logger.Info("InterceptionInputService", "Manual cleanup: deleting 'interception' service...");
+            RunProcess("sc.exe", "delete interception");
+
+            var driverPath = Path.Combine(Environment.SystemDirectory, "drivers", "interception.sys");
+            if (File.Exists(driverPath))
+            {
+                try
+                {
+                    Logger.Info("InterceptionInputService", "Manual cleanup: deleting driver file...");
+                    File.Delete(driverPath);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning("InterceptionInputService", $"Failed to delete driver file manually: {ex.Message}");
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("InterceptionInputService", "Manual cleanup fallback failed", ex);
+            return false;
+        }
+    }
+
+    private bool RunInstallerVisible(string exePath, string args)
+    {
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = exePath,
+                Arguments = args,
+                UseShellExecute = true,
+                CreateNoWindow = false,
+                WindowStyle = ProcessWindowStyle.Normal
+            };
+            using var proc = Process.Start(psi);
+            proc?.WaitForExit();
+            return proc?.ExitCode == 0 || proc?.ExitCode == 1;
+        }
+        catch { return false; }
+    }
+
+    private void RemoveFromUpperFilters(string classGuid, string filter)
+    {
+        try
+        {
+            var keyPath = $@"SYSTEM\CurrentControlSet\Control\Class\{classGuid}";
+            using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(keyPath, true);
+            if (key == null) return;
+
+            var filters = key.GetValue("UpperFilters") as string[];
+            if (filters == null) return;
+
+            var newList = new List<string>(filters);
+            if (newList.Remove(filter) || newList.Remove(filter + "\0"))
+            {
+                key.SetValue("UpperFilters", newList.ToArray(), Microsoft.Win32.RegistryValueKind.MultiString);
+                Logger.Info("InterceptionInputService", $"Successfully removed {filter} from {classGuid}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("InterceptionInputService", $"RemoveFromUpperFilters failed for {classGuid}: {ex.Message}");
+        }
     }
 
     private void StartIdleCheckTimer()
