@@ -268,7 +268,18 @@ public class ConfigService : IConfigService
                 {
                     Logger.Warning("ConfigService", "CONFIG TAMPERED! Signature mismatch detected.");
                     NotificationService.Instance.ShowWarning("Security Alert", "Your configuration file was modified outside of Redball and failed integrity verification.");
-                    // Fallback to recovery if tampered? For now we just log it.
+                    
+                    // Report to TamperPolicyService (sec-4)
+                    var proceed = TamperPolicyService.Instance.HandleTamperEvent(
+                        TamperEventType.ConfigFileTampered,
+                        filePath,
+                        "Configuration file integrity signature mismatch - possible tampering detected");
+                    
+                    if (!proceed)
+                    {
+                        Logger.Error("ConfigService", "Config tampering detected and policy set to Block - refusing to load config");
+                        return null;
+                    }
                 }
             }
             
@@ -813,6 +824,14 @@ public class ConfigService : IConfigService
 
     private void NormalizeConfig()
     {
+        // Auto-enable encryption for security (sec-1)
+        if (!Config.EncryptConfig)
+        {
+            Logger.Info("ConfigService", "Auto-enabling config encryption for security (DPAPI)");
+            Config.EncryptConfig = true;
+            IsDirty = true;
+        }
+
         if (string.Equals(Config.UpdateRepoOwner, "karl-lawrence", StringComparison.OrdinalIgnoreCase) &&
             string.Equals(Config.UpdateRepoName, "Redball", StringComparison.OrdinalIgnoreCase))
         {

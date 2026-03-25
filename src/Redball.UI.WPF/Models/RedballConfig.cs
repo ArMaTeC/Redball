@@ -65,6 +65,7 @@ public class RedballConfig
     public bool ConfirmOnExit { get; set; } = true;
     public bool FirstRun { get; set; } = true;
     public string Theme { get; set; } = "Dark";
+    public DriverSelection TypeThingDriverSelection { get; set; } = DriverSelection.Auto;
 
     // Pomodoro
     public bool PomodoroEnabled { get; set; }
@@ -129,8 +130,11 @@ public class RedballConfig
     public bool MiniWidgetConfirmCloseWhenActive { get; set; } = true;
     public string MiniWidgetPreset { get; set; } = "Custom";
 
-    // Config encryption (DPAPI, current-user scope)
-    public bool EncryptConfig { get; set; }
+    // Config encryption (DPAPI, current-user scope) - defaults to true for security
+    public bool EncryptConfig { get; set; } = true;
+
+    // Update trust chain validation (sec-3)
+    public bool StrictUpdateTrustMode { get; set; } = false;
 
     // Integrity signature (SHA256 of the JSON without this property)
     public string? ConfigSignature { get; set; }

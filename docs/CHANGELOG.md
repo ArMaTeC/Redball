@@ -48,7 +48,115 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mini Widget Presets**: Added Focus/Meeting/Battery Safe preset support with one-click apply actions in main settings and quick settings popup.
   - _Comment_: Adds fast, goal-based widget setup for common workflows.
 - **Mini Widget Preset Badge**: Added an always-visible preset indicator badge directly inside the mini widget header.
-  - _Comment_: Keeps the active widget mode obvious without opening settings.
+- **Secure Secret Management (ISecretProvider)**: Implemented OS-protected secure secret storage infrastructure:
+  - `ISecretProvider` interface for pluggable secret storage backends.
+  - `WindowsCredentialSecretProvider` using Windows Credential Manager APIs (CredWrite/CredRead/CredEnumerate).
+  - `SecretManagerService` singleton for high-level secret operations with health monitoring.
+  - `SecretManagementWindow` UI for managing API keys and credentials securely.
+  - `SecretEditorDialog` for adding/editing secrets with masked input.
+  - CloudAnalyticsService migrated to use secure secret storage instead of plain-text config.
+  - New "Security" navigation section in main dashboard with secret status and provider health.
+  - Secrets are never stored in configuration files - only in OS-protected credential store.
+  - _Comment_: Completes sec-2 from improve_me.txt - replaces static API key handling with OS-protected secure storage.
+- **Default DPAPI Encryption (sec-1)**: Configuration files now encrypted by default using Windows DPAPI:
+  - `EncryptConfig` property now defaults to `true` for new installations.
+  - Auto-migration: existing unencrypted configs are automatically encrypted on next save.
+  - UI checkbox in Settings to control encryption (enabled by default).
+  - Config files use "RBENC:" header to identify encrypted files.
+  - Only the current Windows user can decrypt and read the configuration.
+  - Registry storage also supports encrypted payloads.
+  - _Comment_: Completes sec-1 from improve_me.txt - default-encrypts sensitive local state.
+- **Update Package Trust Chain (sec-3)**: Implemented comprehensive update package trust validation:
+  - `SecurityService.ValidateUpdatePackage()` - validates Authenticode signature, certificate chain, pinned publisher thumbprints, and manifest hashes.
+  - Trusted publisher thumbprint pinning with runtime extensibility for enterprise deployments.
+  - `TrustValidationResult` class with detailed success/warning/failure reporting.
+  - Integration into `UpdateService.DownloadAndInstallAsync()` for installer validation.
+  - `StrictUpdateTrustMode` config setting to enforce stricter validation policies.
+  - Manifest hash verification against signed update manifests.
+  - Blocks installation if Authenticode signature is invalid or manifest hash mismatches.
+  - _Comment_: Completes sec-3 from improve_me.txt - enforces update package trust chain with Authenticode + manifest signature + pinned publisher.
+- **Tamper Policy Levels (sec-4)**: Implemented configurable tamper detection and response system:
+  - `TamperPolicyService` singleton for managing tamper detection policies and responses.
+  - Three policy levels: `Warn` (log only), `Quarantine` (disable feature), `Block` (prevent operation).
+  - `TamperEvent` and `TamperEventType` for tracking security incidents.
+  - Per-event-type policy configuration (ConfigTamperPolicy, UpdateSignaturePolicy, CertificatePinPolicy, IntegrityPolicy).
+  - User-safe recovery flow with `ResolveTamperEvent()` and `AttemptAutoRecovery()` methods.
+  - Integration with ConfigService for config file tampering detection.
+  - Integration with trust validation for certificate pinning failures.
+  - UI in Security panel showing tamper event count and policy status.
+  - "View Events" button to see tamper history and resolution status.
+  - _Comment_: Completes sec-4 from improve_me.txt - tamper policy levels with user-safe recovery flow.
+- **Threat Model Document (sec-5)**: Implemented per-release threat model documentation system:
+  - `ThreatModelService` singleton with built-in threat inventory for Redball.
+  - 12 identified threats mapped to STRIDE categories (Spoofing, Tampering, Repudiation, Information Disclosure, DoS, Elevation of Privilege).
+  - Risk levels: Critical, High, Medium, Low, Informational.
+  - Each threat includes: ID, title, description, category, risk, mitigation, test reference, verification status.
+  - `ThreatModelSummary` for statistics (total, mitigated, unmitigated, by risk level).
+  - `GenerateMarkdownDocument()` produces comprehensive markdown threat model document.
+  - Export to JSON for programmatic access.
+  - UI in Security panel showing threat count, mitigation status, and risk summary.
+  - "Export" button to save threat model as Markdown or JSON.
+  - Auto-maps implemented security features to threats (sec-1 through sec-4).
+  - _Comment_: Completes sec-5 from improve_me.txt - threat model document per release with mitigations/tests mapping.
+- **Security CI Gates (sec-6)**: Implemented automated security validation gates for CI/CD pipeline:
+  - `SecurityCIGatesService` singleton for running comprehensive security validation.
+  - `SecurityGateResult` with pass/fail status, errors, warnings, and timing.
+  - Six gate types: Dependency Audit, Secret Scanning, Signing Verification, SBOM Generation, Threat Model Validation, Configuration Validation.
+  - **Dependency Audit**: Scans NuGet packages against known vulnerability database.
+  - **Secret Scanning**: Pattern-based detection of hardcoded secrets (API keys, tokens, passwords, private keys).
+  - **Signing Verification**: Validates Authenticode signatures on all release binaries.
+  - **SBOM Generation**: Generates SPDX-compliant Software Bill of Materials.
+  - **Threat Model Validation**: Ensures all critical/high-risk threats are mitigated.
+  - **Configuration Validation**: Checks security settings are properly enabled.
+  - False positive detection for secret scanning (placeholders, examples, variable names).
+  - Comprehensive JSON report generation with all gate results.
+  - UI in Security panel to run gates on-demand with visual status indicators.
+  - "Run Gates" button with real-time progress and detailed results.
+  - _Comment_: Completes sec-6 from improve_me.txt - security CI gates with dependency audit, secret scanning, signing verification, and SBOM generation.
+- **Service-Based Input Injection (Driver Replacement)**: Replaced kernel driver with Windows Service architecture for input injection, eliminating driver signing requirements.
+  - New `Redball.Service` Windows Service for session-aware input injection via named pipes.
+  - `Redball.SessionHelper` companion process for RDP session input injection using `CreateProcessAsUser`.
+  - IPC client library (`InputServiceClient`) for WPF UI to service communication.
+  - Service installer/uninstaller scripts (`Install-Service.ps1`, `Uninstall-Service.ps1`).
+  - Build script updated to publish service and helper as single-file executables.
+  - No EV certificate or driver signing required - runs as Windows Service with standard user permissions.
+  - _Comment_: Maintains RDP console input capability without kernel complexity or attestation signing.
+- **Offline Outbox + Reconciliation (improve_me.txt sec-A)**: Implemented durable local-first sync infrastructure for reliable offline operation:
+  - `SyncEvent` model with idempotency keys, aggregate versioning, and retry tracking.
+  - `IOutboxStore` interface with SQLite-backed durable queue (`SqliteOutboxStore`).
+  - `OutboxDispatcherService` background processor with exponential backoff + jitter for retries.
+  - Circuit breaker pattern for API health degradation.
+  - Sync health dashboard UI (`SyncHealthPage`) showing queue depth, oldest pending age, dead letter count.
+  - `IdempotencyKeyGenerator` for exactly-once delivery semantics.
+  - `HttpSyncApi` reference implementation with idempotency header support.
+  - Automatic purge of completed events after retention period.
+  - _Comment_: Completes improve_me.txt item A - enables reliable sync under intermittent connectivity.
+- **Production Crash Telemetry (improve_me.txt sec-C)**: Implemented privacy-safe crash reporting for fleet-level reliability insights:
+  - `CrashEnvelope` model with app version, OS version, exception type, stack fingerprint (hashed, no PII).
+  - `CrashFingerprint` generator that normalizes stack traces for consistent grouping.
+  - `CrashTelemetryService` with local storage, queued upload, and PII scrubbing (machine names hashed).
+  - Automatic upload on next startup with retry logic.
+  - Diagnostics bundle exporter for support (crash history + metadata ZIP).
+  - User consent UI (`CrashTelemetryPage`) with opt-in requirement.
+  - 30-day retention with automatic purge of old reports.
+  - _Comment_: Completes improve_me.txt item C - enables production-grade reliability monitoring without compromising privacy.
+- **Command Palette (improve_me.txt sec-D)**: Implemented progressive disclosure UX with searchable command surface:
+  - `CommandPaletteWindow` activated via `Ctrl+K` for instant access to actions and settings.
+  - `SettingDefinition` model with `VisibilityTier` (Basic/Advanced/Experimental) for progressive disclosure.
+  - `CommandPaletteIndex` with 15+ searchable commands including navigation, actions, diagnostics.
+  - Real-time search with scoring (exact match > prefix > contains > keywords).
+  - Category filtering and keyboard navigation (Up/Down/Enter/Esc).
+  - Settings metadata model supporting command IDs for direct setting jumps.
+  - _Comment_: Completes improve_me.txt item D - reduces complexity while preserving power-user depth.
+- **Performance SLO + Adaptive Scheduler (improve_me.txt sec-E)**: Implemented startup instrumentation and adaptive monitoring:
+  - `StartupTimingService` with span recording (config load, service init, theme apply, tray ready).
+  - SLO targets: Cold start < 1.5s (95% pass rate), Warm start < 0.8s (99% pass rate).
+  - `SloStatistics` with pass rates, averages, and P95 latencies.
+  - Regression detection comparing current startup to 7-day baseline.
+  - `AdaptiveIntervalPolicy` for dynamic monitor frequency based on battery/CPU/user-idle state.
+  - `SharedScheduler` for coalescing monitor ticks and reducing timer churn.
+  - SLO dashboard UI (`SloDashboardPage`) with health indicators and export capability.
+  - _Comment_: Completes improve_me.txt item E - guarantees predictable startup and long-session efficiency.
 
 ### Changed (Unreleased)
 
@@ -72,6 +180,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Config Persistence Docs**: Updated docs/wiki references from file-only config to registry-first persistence (`HKCU\Software\Redball\UserData`) with `%LocalAppData%\Redball\UserData\Redball.json` file copy.
   - _Comment_: Matches the current durability implementation and avoids misleading reset/export guidance.
+- **Strategic Assessment Artifact**: Added `improve_me.txt` with an architecture/product scorecard, 10/10 requirement checklist, and implementation roadmap/snippets for priority improvements.
+  - _Comment_: Captures actionable product and technical direction in a single planning reference for upcoming iterations.
 - **Settings UX Docs**: Updated settings guidance to reflect auto-apply behavior instead of legacy explicit apply-button flow.
   - _Comment_: Prevents user confusion when following settings instructions in the current UI.
 - **Startup & CLI Docs**: Replaced outdated startup argument guidance with current maintenance arguments (`--install-driver`, `--install-driver-no-restart`).

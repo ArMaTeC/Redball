@@ -1,0 +1,99 @@
+<Page x:Class="Redball.UI.WPF.Views.Pages.SyncHealthPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      mc:Ignorable="d"
+      d:DesignHeight="600" d:DesignWidth="800"
+      Loaded="Page_Loaded" Unloaded="Page_Unloaded"
+      Title="Sync Health">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="Sync Health Dashboard" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+
+        <!-- Overall Status -->
+        <Border x:Name="HealthStatusPanel" Grid.Row="1" Background="LightGreen" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="HealthStatusIcon" Text="&#xE8FB;" FontFamily="Segoe MDL2 Assets" FontSize="24" Margin="0,0,10,0"/>
+                <TextBlock x:Name="HealthStatusText" Text="Healthy" FontSize="16" FontWeight="Semibold"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Stats Grid -->
+        <UniformGrid Grid.Row="2" Columns="4" Margin="0,0,0,20">
+            <!-- Queue Depth -->
+            <Border Background="WhiteSmoke" CornerRadius="8" Padding="15" Margin="5">
+                <StackPanel>
+                    <TextBlock Text="Pending Queue" FontSize="12" Foreground="Gray"/>
+                    <TextBlock x:Name="QueueDepthText" Text="0" FontSize="28" FontWeight="Bold"/>
+                    <ProgressBar x:Name="QueueDepthBar" Height="4" Maximum="100" Value="0" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- In Flight -->
+            <Border Background="WhiteSmoke" CornerRadius="8" Padding="15" Margin="5">
+                <StackPanel>
+                    <TextBlock Text="In Flight" FontSize="12" Foreground="Gray"/>
+                    <TextBlock x:Name="InFlightText" Text="0" FontSize="28" FontWeight="Bold"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Completed -->
+            <Border Background="WhiteSmoke" CornerRadius="8" Padding="15" Margin="5">
+                <StackPanel>
+                    <TextBlock Text="Completed" FontSize="12" Foreground="Gray"/>
+                    <TextBlock x:Name="CompletedText" Text="0" FontSize="28" FontWeight="Bold" Foreground="Green"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Dead Letter -->
+            <Border Background="WhiteSmoke" CornerRadius="8" Padding="15" Margin="5">
+                <StackPanel>
+                    <TextBlock Text="Dead Letter" FontSize="12" Foreground="Gray"/>
+                    <TextBlock x:Name="DeadLetterText" Text="0" FontSize="28" FontWeight="Bold" Foreground="Red"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- Additional Details -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Margin="5">
+                <TextBlock Text="Oldest Pending Item" FontWeight="Semibold" Margin="0,0,0,5"/>
+                <TextBlock x:Name="OldestPendingText" Text="—" FontSize="14"/>
+
+                <TextBlock Text="Last Successful Sync" FontWeight="Semibold" Margin="0,15,0,5"/>
+                <TextBlock x:Name="LastSuccessText" Text="Never" FontSize="14"/>
+
+                <TextBlock Text="Average Retries" FontWeight="Semibold" Margin="0,15,0,5"/>
+                <TextBlock x:Name="AvgRetriesText" Text="0.0" FontSize="14"/>
+            </StackPanel>
+
+            <!-- Action Buttons -->
+            <StackPanel Grid.Column="1" Margin="5">
+                <Button x:Name="ForceSyncButton" Content="Force Sync Now" Click="ForceSyncButton_Click"
+                        Padding="15,10" Margin="0,0,0,10" HorizontalAlignment="Left"/>
+
+                <Button x:Name="ViewDeadLetterButton" Content="View Dead Letter Events"
+                        Click="ViewDeadLetterButton_Click"
+                        Padding="15,10" Margin="0,0,0,10" HorizontalAlignment="Left"/>
+
+                <Button x:Name="PurgeCompletedButton" Content="Purge Old Completed Events"
+                        Click="PurgeCompletedButton_Click"
+                        Padding="15,10" Margin="0,0,0,10" HorizontalAlignment="Left"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>

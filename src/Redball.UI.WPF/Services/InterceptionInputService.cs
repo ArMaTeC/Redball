@@ -79,8 +79,12 @@ public class InterceptionInputService : IDisposable
     /// </summary>
     private static readonly System.Collections.Generic.Dictionary<string, string> DriverHashes = new()
     {
-        { "interception.sys", "..." } // In a real app, these would be known good hashes
+        { "interception.sys", "..." }, // In a real app, these would be known good hashes
+        { "Redball.KMDF.sys", "..." }
     };
+
+    private const string LegacyServiceName = "interception";
+    private const string RedballKmdfServiceName = "Redball.KMDF";
 
     public bool AudioFeedbackEnabled
     {
@@ -106,6 +110,7 @@ public class InterceptionInputService : IDisposable
     public int ConsecutiveInitializeFailures => _consecutiveInitializeFailures;
     public string? DriverVersion => _driverVersion;
     public bool IsRebootRequired => _isRebootRequired;
+    public DriverSelection InstalledDriverType { get; private set; } = DriverSelection.None;
 
     // --- P/Invoke for layout-aware character→key mapping ---
 
@@ -135,15 +140,9 @@ public class InterceptionInputService : IDisposable
     {
         try
         {
-            ReleaseResources("Driver uninstall requested");
-
             if (!InputInterceptor.CheckAdministratorRights())
             {
-                if (!elevateIfNeeded)
-                {
-                    Logger.Warning("InterceptionInputService", "Admin rights required to uninstall driver, but elevateIfNeeded is false.");
-                    return false;
-                }
+                if (!elevateIfNeeded) return false;
 
                 Logger.Info("InterceptionInputService", "Attempting to elevate for driver uninstall");
                 var processInfo = new ProcessStartInfo
@@ -167,101 +166,35 @@ public class InterceptionInputService : IDisposable
                 }
             }
 
-            var tempExe = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "install-interception.exe");
-            var asm = System.Reflection.Assembly.GetExecutingAssembly();
-            var names = asm.GetManifestResourceNames();
-            var targetName = System.Linq.Enumerable.FirstOrDefault(names, n => n.EndsWith("install-interception.exe") || n.EndsWith("install_interception.exe"));
-
-            if (targetName == null)
-            {
-                Logger.Error("InterceptionInputService", "Could not find install-interception.exe embedded resource for uninstall. Available resources: " + string.Join(", ", names));
-                return false;
-            }
-
-            using (var stream = asm.GetManifestResourceStream(targetName))
-            {
-                using (var fileStream = new System.IO.FileStream(tempExe, System.IO.FileMode.Create, System.IO.FileAccess.Write))
-                {
-                    stream!.CopyTo(fileStream);
-                }
-            }
-
-
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = tempExe,
-                Arguments = "/uninstall",
-                UseShellExecute = !InputInterceptor.CheckAdministratorRights(), // Runas will be handled by the outer method if needed
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                RedirectStandardOutput = InputInterceptor.CheckAdministratorRights(),
-                RedirectStandardError = InputInterceptor.CheckAdministratorRights()
-            };
-
-            int status = -1;
-            string stdout = string.Empty;
-            string stderr = string.Empty;
-
-            try
-            {
-                using var uninstallProcess = Process.Start(startInfo);
-                if (uninstallProcess != null)
-                {
-                    if (startInfo.RedirectStandardOutput)
-                    {
-                        stdout = uninstallProcess.StandardOutput.ReadToEnd();
-                        stderr = uninstallProcess.StandardError.ReadToEnd();
-                    }
-                    uninstallProcess.WaitForExit();
-                    status = uninstallProcess.ExitCode;
-                    if (status == 1) _isRebootRequired = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("InterceptionInputService", "Process.Start for uninstall failed", ex);
-            }
-
-            if (System.IO.File.Exists(tempExe))
-            {
-                try { System.IO.File.Delete(tempExe); } catch { }
-            }
-
-            Thread.Sleep(500);
-            TryRestartKeyboardDevices();
-            IsDriverInstalled = InputInterceptor.CheckDriverInstalled();
-            var uninstalled = !IsDriverInstalled;
-            SetLastDriverAction(uninstalled ? "Driver uninstall completed" : "Driver uninstall attempted (still installed)");
-
-            if (!uninstalled && status != 0 && status != 1)
-            {
-                Logger.Warning("InterceptionInputService", $"Driver uninstall failed (exitCode={status}, out={stdout.Trim()}, err={stderr.Trim()})");
-                
-                // FALLBACK: Manual cleanup if standard uninstaller fails or if we're still detecting the driver
-                if (InputInterceptor.CheckAdministratorRights())
-                {
-                    Logger.Info("InterceptionInputService", "Attempting manual uninstallation fallback to ensure clean state...");
-                    if (ManualUninstallCleanup())
-                    {
-                        Thread.Sleep(500);
-                        TryRestartKeyboardDevices(); // MUST restart after filter removal
-                        
-                        uninstalled = !InputInterceptor.CheckDriverInstalled();
-                        IsDriverInstalled = !uninstalled;
-                        SetLastDriverAction(uninstalled ? "Driver uninstall completed via manual cleanup fallback" : "Manual cleanup attempted (reboot still likely required)");
-                    }
-                }
-                
-                if (!uninstalled) return false;
-            }
-
-            if (status == 1) _isRebootRequired = true;
-            Logger.Info("InterceptionInputService", $"Driver uninstall result: {uninstalled} (exitCode={status}, driverDetected={IsDriverInstalled})");
-            return uninstalled;
+            Logger.Info("InterceptionInputService", "Uninstalling all Redball HID drivers...");
+            return ManualUninstallCleanup();
         }
         catch (Exception ex)
         {
-            Logger.Error("InterceptionInputService", "Driver uninstall failed", ex);
+            Logger.Error("InterceptionInputService", "Driver uninstallation failed", ex);
+            return false;
+        }
+    }
+
+    public bool InstallDriverNoRestart(DriverSelection selection = DriverSelection.Auto, bool elevateIfNeeded = true)
+    {
+        try
+        {
+            if (selection == DriverSelection.Auto)
+            {
+                selection = Interop.NativeMethods.IsTestModeEnabled() ? DriverSelection.RedballKMDF : DriverSelection.Interception;
+            }
+
+            if (!InstallDriver(selection, elevateIfNeeded)) return false;
+            
+            Logger.Info("InterceptionInputService", $"Driver {selection} installed. Attempting no-restart activation...");
+            TryRestartKeyboardDevices();
+            
+            return RefreshDriverInstalledState();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("InterceptionInputService", "No-restart driver installation failed", ex);
             return false;
         }
     }
@@ -291,45 +224,57 @@ public class InterceptionInputService : IDisposable
     {
         try
         {
-            var driverPath = Path.Combine(Environment.SystemDirectory, "drivers", "interception.sys");
-            var fileExists = File.Exists(driverPath);
-            
-            // Check for service in registry
-            bool serviceExists = false;
+            // Check for service in registry (legacy or custom)
+            bool legacyService = false;
+            bool customService = false;
             try
             {
-                using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\interception", false);
-                serviceExists = key != null;
+                using var legacyKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey($@"SYSTEM\CurrentControlSet\Services\{LegacyServiceName}", false);
+                legacyService = legacyKey != null;
+                using var customKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey($@"SYSTEM\CurrentControlSet\Services\{RedballKmdfServiceName}", false);
+                customService = customKey != null;
             }
             catch { }
 
             // Check if it's in UpperFilters
-            bool inUpperFilters = false;
+            bool legacyInFilters = false;
+            bool customInFilters = false;
             try
             {
                 using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Class\{4d36e96b-e325-11ce-bfc1-08002be10318}", false);
                 var filters = key?.GetValue("UpperFilters") as string[];
-                inUpperFilters = filters != null && (Array.IndexOf(filters, "interception") >= 0 || Array.IndexOf(filters, "keyboard") >= 0);
+                if (filters != null)
+                {
+                    legacyInFilters = Array.IndexOf(filters, LegacyServiceName) >= 0;
+                    customInFilters = Array.IndexOf(filters, RedballKmdfServiceName) >= 0;
+                }
             }
             catch { }
 
-            // Driver is TRULY installed only if service and file exist.
-            // UpperFilters is the "ready" state, but service entry is the "installed" state.
-            IsDriverInstalled = serviceExists && fileExists;
+            var legacyFileExists = File.Exists(Path.Combine(Environment.SystemDirectory, "drivers", "interception.sys"));
+            var customFileExists = File.Exists(Path.Combine(Environment.SystemDirectory, "drivers", "Redball.KMDF.sys"));
             
-            if (serviceExists && !fileExists)
+            if (customService && customFileExists && customInFilters)
+                InstalledDriverType = DriverSelection.RedballKMDF;
+            else if (legacyService && legacyFileExists && legacyInFilters)
+                InstalledDriverType = DriverSelection.Interception;
+            else if (customService || legacyService)
+                InstalledDriverType = (customService && customFileExists) ? DriverSelection.RedballKMDF : DriverSelection.Interception;
+            else
+                InstalledDriverType = DriverSelection.None;
+
+            IsDriverInstalled = InstalledDriverType != DriverSelection.None;
+
+            if (IsDriverInstalled && (!legacyInFilters && !customInFilters))
             {
-                Logger.Warning("InterceptionInputService", "Driver service exists but file is MISSING at " + driverPath);
-            }
-            
-            if (!inUpperFilters && IsDriverInstalled)
-            {
-                Logger.Info("InterceptionInputService", "Driver is installed but NOT active in UpperFilters (reboot/restart required).");
+                Logger.Info("InterceptionInputService", $"Driver {InstalledDriverType} is installed but NOT active in UpperFilters (reboot/restart required).");
             }
         }
         catch (Exception ex)
         {
             Logger.Debug("InterceptionInputService", $"RefreshDriverInstalledState failed: {ex.Message}");
+            IsDriverInstalled = false;
+            InstalledDriverType = DriverSelection.None;
         }
 
         return IsDriverInstalled;
@@ -378,7 +323,7 @@ public class InterceptionInputService : IDisposable
         if (!RefreshDriverInstalledState())
         {
             Logger.Warning("InterceptionInputService", "Repair: Driver not found, attempting re-install...");
-            if (!InstallDriverNoRestart(false)) return false;
+            if (!InstallDriverNoRestart(DriverSelection.Auto, false)) return false;
         }
 
         if (!ValidateDriverIntegrity())
@@ -446,8 +391,8 @@ public class InterceptionInputService : IDisposable
             try
             {
                 // Check driver installation via registry
-                IsDriverInstalled = InputInterceptor.CheckDriverInstalled();
-                Logger.Info("InterceptionInputService", $"Driver installed: {IsDriverInstalled}");
+                RefreshDriverInstalledState();
+                Logger.Info("InterceptionInputService", $"Driver installed: {IsDriverInstalled} ({InstalledDriverType})");
 
                 if (!IsDriverInstalled)
                 {
@@ -520,86 +465,7 @@ public class InterceptionInputService : IDisposable
         }
     }
 
-    /// <summary>
-    /// Installs the Interception driver and attempts to activate it without requiring reboot
-    /// by restarting keyboard devices. Falls back gracefully if activation cannot be completed.
-    /// </summary>
-    /// <returns>True if installation completed. Activation status can be checked via IsReady.</returns>
-    public bool InstallDriverNoRestart(bool elevateIfNeeded = true)
-    {
-        try
-        {
-            if (!InputInterceptor.CheckAdministratorRights())
-            {
-                if (!elevateIfNeeded)
-                {
-                    Logger.Warning("InterceptionInputService", "Admin rights required to install driver (no-restart), but elevateIfNeeded is false.");
-                    return false;
-                }
 
-                Logger.Info("InterceptionInputService", "Attempting to elevate for no-restart driver installation");
-                var processInfo = new ProcessStartInfo
-                {
-                    FileName = Process.GetCurrentProcess().MainModule?.FileName ?? "Redball.UI.WPF.exe",
-                    Arguments = "--install-driver-no-restart",
-                    UseShellExecute = true,
-                    Verb = "runas"
-                };
-
-                try
-                {
-                    using var process = Process.Start(processInfo);
-                    process?.WaitForExit();
-                    return process?.ExitCode == 0;
-                }
-                catch (System.ComponentModel.Win32Exception)
-                {
-                    Logger.Warning("InterceptionInputService", "User cancelled UAC elevation for no-restart install");
-                    return false;
-                }
-            }
-
-            var installOk = InstallDriver(false);
-            if (!installOk)
-            {
-                return false;
-            }
-
-            var alreadyWorking = RefreshDriverInstalledState() && InputInterceptor.Initialize();
-            if (alreadyWorking)
-            {
-                Logger.Info("InterceptionInputService", "HID Driver is already detected and working. Skipping dangerous device restart.");
-                return true;
-            }
-
-            Logger.Info("InterceptionInputService", "Driver installed but not working. Restarting keyboard devices to activate filter...");
-            var restartedAny = TryRestartKeyboardDevices();
-            if (!restartedAny)
-            {
-                Logger.Warning("InterceptionInputService", "No keyboard devices were restarted. A manual reboot is required.");
-            }
-            else
-            {
-                Logger.Info("InterceptionInputService", "Keyboard devices restarted. Attempting immediate initialization to claim context...");
-                // Claim context immediately to prevent driver from blocking if it's in a sensitive state
-                Initialize(); 
-            }
-
-            Thread.Sleep(500);
-            IsDriverInstalled = InputInterceptor.CheckDriverInstalled();
-            SetLastDriverAction(IsDriverInstalled ? "Driver install completed (no-restart path)" : "Driver install attempted (not detected)");
-            Logger.Info("InterceptionInputService", IsDriverInstalled
-                ? "Driver installed successfully. HID initialization is deferred until an active typing session."
-                : "Driver install command completed but driver is still not detected.");
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("InterceptionInputService", "No-restart driver installation failed", ex);
-            return false;
-        }
-    }
 
     private bool TryRestartKeyboardDevices()
     {
@@ -993,35 +859,36 @@ public class InterceptionInputService : IDisposable
 
     /// <summary>
     /// Attempts to install the Interception driver. Requires admin privileges.
-    /// A reboot is required after installation.
-    /// </summary>
     /// <returns>True if installation was initiated successfully.</returns>
-    public bool InstallDriver(bool elevateIfNeeded = true)
+    public bool InstallDriver(DriverSelection selection = DriverSelection.Auto, bool elevateIfNeeded = true)
     {
         try
         {
-            var alreadyInstalled = InputInterceptor.CheckDriverInstalled();
-            IsDriverInstalled = alreadyInstalled;
-            if (alreadyInstalled)
+            if (selection == DriverSelection.Auto)
             {
-                Logger.Info("InterceptionInputService", "Driver already installed");
-                SetLastDriverAction("Driver install skipped (already installed)");
+                selection = Interop.NativeMethods.IsTestModeEnabled() ? DriverSelection.RedballKMDF : DriverSelection.Interception;
+                Logger.Info("InterceptionInputService", $"Auto-selected driver: {selection} (TestMode: {Interop.NativeMethods.IsTestModeEnabled()})");
+            }
+
+            if (selection == DriverSelection.None) return false;
+
+            RefreshDriverInstalledState();
+            if (IsDriverInstalled && InstalledDriverType == selection)
+            {
+                Logger.Info("InterceptionInputService", $"Driver {selection} already installed");
+                SetLastDriverAction($"Driver install skipped ({selection} already installed)");
                 return true;
             }
 
             if (!InputInterceptor.CheckAdministratorRights())
             {
-                if (!elevateIfNeeded)
-                {
-                    Logger.Warning("InterceptionInputService", "Admin rights required to install driver, but elevateIfNeeded is false.");
-                    return false;
-                }
+                if (!elevateIfNeeded) return false;
 
-                Logger.Info("InterceptionInputService", "Attempting to elevate for driver installation");
+                Logger.Info("InterceptionInputService", $"Attempting to elevate for {selection} driver installation");
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = Process.GetCurrentProcess().MainModule?.FileName ?? "Redball.UI.WPF.exe",
-                    Arguments = "--install-driver",
+                    Arguments = $"--install-driver {selection}",
                     UseShellExecute = true,
                     Verb = "runas"
                 };
@@ -1039,102 +906,139 @@ public class InterceptionInputService : IDisposable
                 }
             }
 
-            var tempExe = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "install-interception.exe");
-            var asm = System.Reflection.Assembly.GetExecutingAssembly();
-            var names = asm.GetManifestResourceNames();
-            var targetName = System.Linq.Enumerable.FirstOrDefault(names, n => n.EndsWith("install-interception.exe") || n.EndsWith("install_interception.exe"));
-            
-            if (targetName == null)
+            bool success = false;
+            if (selection == DriverSelection.Interception)
             {
-                Logger.Error("InterceptionInputService", "Could not find install-interception.exe embedded resource. Available resources: " + string.Join(", ", names));
-                return false;
+                success = InstallLegacyInterception();
+            }
+            else if (selection == DriverSelection.RedballKMDF)
+            {
+                success = InstallRedballKmdf();
             }
 
-            using (var stream = asm.GetManifestResourceStream(targetName))
+            if (success)
             {
-                using (var fileStream = new System.IO.FileStream(tempExe, System.IO.FileMode.Create, System.IO.FileAccess.Write))
+                RefreshDriverInstalledState();
+                if (InstalledDriverType == selection)
                 {
-                    stream!.CopyTo(fileStream);
+                    SetLastDriverAction($"{selection} install completed");
+                }
+                else
+                {
+                    success = false;
+                    Logger.Warning("InterceptionInputService", $"{selection} install command reported success but driver not detected as active.");
                 }
             }
 
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = tempExe,
-                Arguments = "/install",
-                UseShellExecute = !InputInterceptor.CheckAdministratorRights(),
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                RedirectStandardOutput = InputInterceptor.CheckAdministratorRights(),
-                RedirectStandardError = InputInterceptor.CheckAdministratorRights()
-            };
-
-            int status = -1;
-            string stdout = string.Empty;
-            string stderr = string.Empty;
-
-            try
-            {
-                using var driverProcess = Process.Start(startInfo);
-                if (driverProcess != null)
-                {
-                    if (startInfo.RedirectStandardOutput)
-                    {
-                        stdout = driverProcess.StandardOutput.ReadToEnd();
-                        stderr = driverProcess.StandardError.ReadToEnd();
-                    }
-                    driverProcess.WaitForExit();
-                    status = driverProcess.ExitCode;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("InterceptionInputService", "Process.Start for install failed", ex);
-            }
-
-            if (System.IO.File.Exists(tempExe))
-            {
-                try { System.IO.File.Delete(tempExe); } catch { }
-            }
-
-            if (status == 1) _isRebootRequired = true;
-
-            var installedAfterRun = InputInterceptor.CheckDriverInstalled();
-            IsDriverInstalled = installedAfterRun;
-            SetLastDriverAction(installedAfterRun ? "Driver install completed" : "Driver install attempted (not detected)");
-
-            bool success = installedAfterRun || status == 0 || status == 1;
-
-            if (!success)
-            {
-                Logger.Warning("InterceptionInputService", $"Driver installation failed (exitCode={status}, out={stdout.Trim()}, err={stderr.Trim()})");
-                
-                // FALLBACK: Try running with a visible window if the silent install failed
-                if (InputInterceptor.CheckAdministratorRights())
-                {
-                    Logger.Info("InterceptionInputService", "Silent install failed, prompting user for manual installation via visible window fallback...");
-                    try
-                    {
-                        var manualOk = RunInstallerVisible(tempExe, "/install");
-                        if (manualOk)
-                        {
-                            installedAfterRun = InputInterceptor.CheckDriverInstalled();
-                            IsDriverInstalled = installedAfterRun;
-                            success = installedAfterRun;
-                            if (success) SetLastDriverAction("Driver install completed via visible window fallback");
-                        }
-                    }
-                    catch { }
-                }
-            }
-
-            Logger.Info("InterceptionInputService", $"Driver installation final result: {success} (exitCode={status}, installedAfterRun={installedAfterRun})");
             return success;
         }
         catch (Exception ex)
         {
             Logger.Error("InterceptionInputService", "Driver installation failed", ex);
             return false;
+        }
+    }
+
+    private bool InstallLegacyInterception()
+    {
+        Logger.Info("InterceptionInputService", "Installing Legacy Interception driver...");
+        var tempExe = Path.Combine(Path.GetTempPath(), "install-interception.exe");
+        try
+        {
+            if (!ExtractResource("install-interception.exe", tempExe)) return false;
+
+            var result = RunProcess(tempExe, "/install");
+            if (result.ExitCode == 1) _isRebootRequired = true;
+            
+            return result.ExitCode == 0 || result.ExitCode == 1;
+        }
+        finally
+        {
+            try { if (File.Exists(tempExe)) File.Delete(tempExe); } catch { }
+        }
+    }
+
+    private bool InstallRedballKmdf()
+    {
+        Logger.Info("InterceptionInputService", "Installing Redball KMDF driver...");
+        var driverPath = Path.Combine(Environment.SystemDirectory, "drivers", "Redball.KMDF.sys");
+        var tempSys = Path.Combine(Path.GetTempPath(), "Redball.KMDF.sys");
+
+        try
+        {
+            if (!ExtractResource("Redball.KMDF.sys", tempSys)) return false;
+
+            // 1. Copy driver file
+            try { File.Copy(tempSys, driverPath, true); }
+            catch (Exception ex) { Logger.Error("InterceptionInputService", "Failed to copy driver file", ex); return false; }
+
+            // 2. Create Service
+            RunProcess("sc.exe", $"create {RedballKmdfServiceName} binPath= \"system32\\drivers\\Redball.KMDF.sys\" type= kernel start= auto");
+            
+            // 3. Add to UpperFilters
+            AddToUpperFilters("{4d36e96b-e325-11ce-bfc1-08002be10318}", RedballKmdfServiceName); // Keyboard
+            AddToUpperFilters("{4d36e96f-e325-11ce-bfc1-08002be10318}", RedballKmdfServiceName); // Mouse
+
+            // 4. Start Service
+            var startResult = RunProcess("sc.exe", $"start {RedballKmdfServiceName}");
+            
+            _isRebootRequired = true; // Manual install almost always needs reboot/restart
+            return true;
+        }
+        finally
+        {
+            try { if (File.Exists(tempSys)) File.Delete(tempSys); } catch { }
+        }
+    }
+
+    private bool ExtractResource(string resourceName, string targetPath)
+    {
+        try
+        {
+            var asm = System.Reflection.Assembly.GetExecutingAssembly();
+            var names = asm.GetManifestResourceNames();
+            var fullName = System.Linq.Enumerable.FirstOrDefault(names, n => n.EndsWith(resourceName, StringComparison.OrdinalIgnoreCase));
+            
+            if (fullName == null)
+            {
+                Logger.Error("InterceptionInputService", $"Resource {resourceName} not found in assembly.");
+                return false;
+            }
+
+            using var stream = asm.GetManifestResourceStream(fullName);
+            if (stream == null) return false;
+            using var fileStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write);
+            stream.CopyTo(fileStream);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("InterceptionInputService", $"Failed to extract resource {resourceName}", ex);
+            return false;
+        }
+    }
+
+    private void AddToUpperFilters(string classGuid, string serviceName)
+    {
+        try
+        {
+            var keyPath = $@"SYSTEM\CurrentControlSet\Control\Class\{classGuid}";
+            using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(keyPath, true);
+            if (key == null) return;
+
+            var filters = key.GetValue("UpperFilters") as string[];
+            var newList = filters != null ? new List<string>(filters) : new List<string>();
+            
+            if (!newList.Contains(serviceName))
+            {
+                newList.Add(serviceName);
+                key.SetValue("UpperFilters", newList.ToArray(), Microsoft.Win32.RegistryValueKind.MultiString);
+                Logger.Info("InterceptionInputService", $"Added {serviceName} to {classGuid} UpperFilters");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("InterceptionInputService", $"AddToUpperFilters failed for {classGuid}: {ex.Message}");
         }
     }
 
@@ -1158,7 +1062,7 @@ public class InterceptionInputService : IDisposable
         return string.Join(Environment.NewLine,
             "HID Diagnostics",
             $"Status: {GetStatusText()}",
-            $"Driver Installed: {GetDriverInstallStateText()}",
+            $"Driver Installed: {GetDriverInstallStateText()} ({InstalledDriverType})",
             $"Driver Version: {_driverVersion ?? "Unknown"}",
             $"Integrity Valid: {ValidateDriverIntegrity()}",
             $"Windows Compatible: {CheckWindowsCompatibility()}",
@@ -1318,32 +1222,39 @@ public class InterceptionInputService : IDisposable
             RemoveFromUpperFilters("{4d36e96f-e325-11ce-bfc1-08002be10318}", "interception");
 
             // 3. Stop and Delete Service
-            Logger.Info("InterceptionInputService", "Stopping and deleting driver service...");
-            RunProcess("sc.exe", "stop interception");
+            Logger.Info("InterceptionInputService", "Stopping and deleting driver services (Legacy & KMDF)...");
+            RunProcess("sc.exe", $"stop {LegacyServiceName}");
+            RunProcess("sc.exe", $"stop {RedballKmdfServiceName}");
             Thread.Sleep(200);
-            RunProcess("sc.exe", "delete interception");
+            RunProcess("sc.exe", $"delete {LegacyServiceName}");
+            RunProcess("sc.exe", $"delete {RedballKmdfServiceName}");
 
-            // 4. Force Delete Driver File
-            var driverPath = Path.Combine(Environment.SystemDirectory, "drivers", "interception.sys");
-            if (File.Exists(driverPath))
+            // 4. Force Delete Driver Files
+            var legacyDriverPath = Path.Combine(Environment.SystemDirectory, "drivers", "interception.sys");
+            var customDriverPath = Path.Combine(Environment.SystemDirectory, "drivers", "Redball.KMDF.sys");
+
+            foreach (var path in new[] { legacyDriverPath, customDriverPath })
             {
-                try
+                if (File.Exists(path))
                 {
-                    Logger.Info("InterceptionInputService", "Deleting driver file from System32...");
-                    File.Delete(driverPath);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Warning("InterceptionInputService", $"File.Delete failed for interception.sys: {ex.Message}");
-                    // Fallback to cmd del /f
-                    RunProcess("cmd.exe", $"/c del /f \"{driverPath}\"");
+                    try
+                    {
+                        Logger.Info("InterceptionInputService", $"Deleting driver file: {Path.GetFileName(path)}");
+                        File.Delete(path);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning("InterceptionInputService", $"File.Delete failed for {Path.GetFileName(path)}: {ex.Message}");
+                        RunProcess("cmd.exe", $"/c del /f \"{path}\"");
+                    }
                 }
             }
 
             // 5. Final Registry Clean (Check for service key leftovers)
             try
             {
-                Microsoft.Win32.Registry.LocalMachine.DeleteSubKeyTree(@"SYSTEM\CurrentControlSet\Services\interception", false);
+                Microsoft.Win32.Registry.LocalMachine.DeleteSubKeyTree($@"SYSTEM\CurrentControlSet\Services\{LegacyServiceName}", false);
+                Microsoft.Win32.Registry.LocalMachine.DeleteSubKeyTree($@"SYSTEM\CurrentControlSet\Services\{RedballKmdfServiceName}", false);
             }
             catch { }
 
@@ -1390,7 +1301,7 @@ public class InterceptionInputService : IDisposable
             var newList = new List<string>(filters);
             
             // Remove multiple common filter names (standard and common typos/legacy)
-            var targets = new[] { "interception", "keyboard", "mouinterception" };
+            var targets = new[] { LegacyServiceName, RedballKmdfServiceName, "keyboard", "mouinterception", "Redball.Driver" };
             bool changed = false;
             
             foreach (var target in targets)

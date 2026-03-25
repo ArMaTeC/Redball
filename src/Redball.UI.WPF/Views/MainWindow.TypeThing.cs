@@ -361,45 +361,75 @@ public partial class MainWindow
     }
 
     private bool _useHidInput;
+    private bool _useServiceInput;
+    private TypeThingInputMode _activeInputMode = TypeThingInputMode.SendInput;
 
     private void TypeText(string text)
     {
         var isRdp = IsRemoteSession();
         var config = ConfigService.Instance.Config;
 
-        // Determine input mode: HID (driver-level) or SendInput (default)
+        // Determine input mode: HID (driver-level), Service, or SendInput (default)
         _useHidInput = false;
+        _useServiceInput = false;
+        _activeInputMode = TypeThingInputMode.SendInput;
+        
         if (config.TypeThingHidSafeMode)
         {
             InterceptionInputService.Instance.ReleaseResources("HID Safe Mode active");
+            ServiceInputProvider.Instance.ReleaseResources("HID Safe Mode active");
             Logger.Warning("MainWindow", "TypeThing: HID Safe Mode is active, forcing SendInput mode");
         }
-        else
-        if (Enum.TryParse<TypeThingInputMode>(config.TypeThingInputMode, true, out var inputMode) &&
-            inputMode == TypeThingInputMode.HID)
+        else if (Enum.TryParse<TypeThingInputMode>(config.TypeThingInputMode, true, out var inputMode))
         {
-            var interception = InterceptionInputService.Instance;
-            if (interception.IsReady || interception.Initialize())
+            _activeInputMode = inputMode;
+            
+            if (inputMode == TypeThingInputMode.HID)
             {
-                _useHidInput = true;
-                Logger.Info("MainWindow", "TypeThing: Using HID driver-level input (Interception)");
-            }
-            else
-            {
-                Logger.Warning("MainWindow", "TypeThing: HID mode requested but driver not available, falling back to SendInput");
-                NotificationService.Instance.ShowWarning("TypeThing", $"HID not available ({interception.LastErrorSummary}). Falling back to SendInput mode.");
-
-                if (interception.ConsecutiveInitializeFailures >= 3)
+                var interception = InterceptionInputService.Instance;
+                if (interception.IsReady || interception.Initialize())
                 {
-                    config.TypeThingHidSafeMode = true;
-                    config.TypeThingInputMode = "SendInput";
-                    ConfigService.Instance.Save();
-                    NotificationService.Instance.ShowWarning("HID Safe Mode", "Enabled automatically after repeated HID initialization failures. You can re-enable HID later in Settings.");
+                    _useHidInput = true;
+                    Logger.Info("MainWindow", "TypeThing: Using HID driver-level input (Interception)");
+                }
+                else
+                {
+                    Logger.Warning("MainWindow", "TypeThing: HID mode requested but driver not available, falling back to SendInput");
+                    NotificationService.Instance.ShowWarning("TypeThing", $"HID not available ({interception.LastErrorSummary}). Falling back to SendInput mode.");
+
+                    if (interception.ConsecutiveInitializeFailures >= 3)
+                    {
+                        config.TypeThingHidSafeMode = true;
+                        config.TypeThingInputMode = "SendInput";
+                        ConfigService.Instance.Save();
+                        NotificationService.Instance.ShowWarning("HID Safe Mode", "Enabled automatically after repeated HID initialization failures. You can re-enable HID later in Settings.");
+                    }
+                }
+            }
+            else if (inputMode == TypeThingInputMode.Service)
+            {
+                var serviceProvider = ServiceInputProvider.Instance;
+                if (serviceProvider.IsReady || serviceProvider.Initialize())
+                {
+                    _useServiceInput = true;
+                    Logger.Info("MainWindow", "TypeThing: Using Windows Service-based input");
+                }
+                else
+                {
+                    Logger.Warning("MainWindow", $"TypeThing: Service mode requested but not available ({serviceProvider.LastErrorSummary}), falling back to SendInput");
+                    NotificationService.Instance.ShowWarning("TypeThing", $"Service input not available ({serviceProvider.LastErrorSummary}). Falling back to SendInput mode.");
+                    
+                    if (serviceProvider.ConsecutiveFailures >= 3)
+                    {
+                        config.TypeThingInputMode = "SendInput";
+                        ConfigService.Instance.Save();
+                        NotificationService.Instance.ShowWarning("Service Input", "Switched to SendInput after repeated service initialization failures. Install the service to use this feature.");
+                    }
                 }
             }
         }
 
-        Logger.Info("MainWindow", $"TypeThing: Begin typing {text.Length} chars (RDP: {isRdp}, HID: {_useHidInput})");
+        Logger.Info("MainWindow", $"TypeThing: Begin typing {text.Length} chars (RDP: {isRdp}, Mode: {_activeInputMode}, HID: {_useHidInput}, Service: {_useServiceInput})");
         var index = 0;
         var minDelay = Math.Max(1, config.TypeThingMinDelayMs);
         var maxDelay = Math.Max(minDelay, config.TypeThingMaxDelayMs);
@@ -467,7 +497,7 @@ public partial class MainWindow
             }
             else
             {
-                // Use retry logic for HID to improve reliability
+                // Use retry logic for HID/Service to improve reliability
                 if (_useHidInput)
                 {
                     if (!InterceptionInputService.Instance.SendCharacterWithRetry(ch))
@@ -486,6 +516,27 @@ public partial class MainWindow
                         }
 
                         Logger.Warning("MainWindow", $"TypeThing: HID re-init failed or send still failed, falling back to SendInput");
+                        SendCharacter(ch);
+                    }
+                }
+                else if (_useServiceInput)
+                {
+                    if (!ServiceInputProvider.Instance.SendCharacterWithRetry(ch))
+                    {
+                        Logger.Warning("MainWindow", $"TypeThing: Service SendCharacterWithRetry failed for '{ch}', attempting one silent re-init");
+                        
+                        // Attempt one silent re-initialization
+                        ServiceInputProvider.Instance.ReleaseResources("Silent re-init on failure");
+                        if (ServiceInputProvider.Instance.Initialize())
+                        {
+                            Logger.Info("MainWindow", "TypeThing: Service silent re-init successful, retrying character");
+                            if (ServiceInputProvider.Instance.SendCharacterWithRetry(ch))
+                            {
+                                goto character_sent;
+                            }
+                        }
+
+                        Logger.Warning("MainWindow", $"TypeThing: Service re-init failed or send still failed, falling back to SendInput");
                         SendCharacter(ch);
                     }
                 }
@@ -591,14 +642,21 @@ public partial class MainWindow
 
     private void CleanupTypeThingHidSession(string reason)
     {
-        if (!_useHidInput)
+        if (!_useHidInput && !_useServiceInput)
         {
             return;
         }
 
         try
         {
-            InterceptionInputService.Instance.ReleaseResources(reason);
+            if (_useHidInput)
+            {
+                InterceptionInputService.Instance.ReleaseResources(reason);
+            }
+            if (_useServiceInput)
+            {
+                ServiceInputProvider.Instance.ReleaseResources(reason);
+            }
         }
         catch (Exception ex)
         {
@@ -607,6 +665,8 @@ public partial class MainWindow
         finally
         {
             _useHidInput = false;
+            _useServiceInput = false;
+            _activeInputMode = TypeThingInputMode.SendInput;
         }
     }
 
@@ -728,11 +788,14 @@ public partial class MainWindow
         {
             StopTypeThing();
             InterceptionInputService.Instance.ReleaseResources($"Emergency release ({source})");
+            ServiceInputProvider.Instance.ReleaseResources($"Emergency release ({source})");
             _useHidInput = false;
+            _useServiceInput = false;
+            _activeInputMode = TypeThingInputMode.SendInput;
 
             if (showNotification)
             {
-                NotificationService.Instance.ShowWarning("HID Emergency Release", "HID resources released. Physical keyboard control should be restored.");
+                NotificationService.Instance.ShowWarning("HID Emergency Release", "HID and Service resources released. Physical keyboard control should be restored.");
             }
         }
         catch (Exception ex)
@@ -834,12 +897,18 @@ public partial class MainWindow
 
     private void SendKeyPress(ushort vk)
     {
-        // Route through Interception driver if HID mode is active
+        // Route through appropriate provider based on active mode
         if (_useHidInput)
         {
             if (InterceptionInputService.Instance.SendVirtualKey(vk))
                 return;
             Logger.Debug("MainWindow", $"TypeThing: HID SendVirtualKey failed for VK 0x{vk:X4}, falling back to SendInput");
+        }
+        else if (_useServiceInput)
+        {
+            if (ServiceInputProvider.Instance.SendVirtualKey(vk))
+                return;
+            Logger.Debug("MainWindow", $"TypeThing: Service SendVirtualKey failed for VK 0x{vk:X4}, falling back to SendInput");
         }
 
         // Send using wVk (virtual key code) for control keys like Enter/Tab.
@@ -861,12 +930,18 @@ public partial class MainWindow
 
     private void SendCharacter(char ch)
     {
-        // Route through Interception driver if HID mode is active
+        // Route through appropriate provider based on active mode
         if (_useHidInput)
         {
             if (InterceptionInputService.Instance.SendCharacter(ch))
                 return;
             Logger.Debug("MainWindow", $"TypeThing: HID SendCharacter failed for '{ch}', falling back to SendInput");
+        }
+        else if (_useServiceInput)
+        {
+            if (ServiceInputProvider.Instance.SendCharacter(ch))
+                return;
+            Logger.Debug("MainWindow", $"TypeThing: Service SendCharacter failed for '{ch}', falling back to SendInput");
         }
 
         // Try hardware scan code approach — works with VMware, fullscreen/maximized apps

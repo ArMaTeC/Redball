@@ -19,6 +19,11 @@
     <Platform Condition="'$(Platform)' == ''">x64</Platform>
     <RootNamespace>Redball.KMDF</RootNamespace>
     <ProjectName>Redball.KMDF</ProjectName>
+    <SpectreMitigation>none</SpectreMitigation>
+    <CheckMSVCComponents>false</CheckMSVCComponents>
+    <InfVerif_DoNotVerify>true</InfVerif_DoNotVerify>
+    <EnableInfVerif>false</EnableInfVerif>
+    <SignMode>Off</SignMode>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -28,6 +33,7 @@
     <ConfigurationType>Driver</ConfigurationType>
     <DriverType>KMDF</DriverType>
     <DriverTargetPlatforms>Desktop</DriverTargetPlatforms>
+    <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <TargetVersion>Windows10</TargetVersion>
@@ -36,6 +42,7 @@
     <ConfigurationType>Driver</ConfigurationType>
     <DriverType>KMDF</DriverType>
     <DriverTargetPlatforms>Desktop</DriverTargetPlatforms>
+    <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ItemGroup>

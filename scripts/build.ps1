@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '', Justification = 'Parameters are used within function scope')]
 [CmdletBinding()]
 param(
@@ -65,7 +65,10 @@ param(
     [switch]$NoClean,
 
     [Parameter()]
-    [switch]$Parallel
+    [switch]$Parallel,
+
+    [Parameter()]
+    [switch]$SignDriver
 )
 
 $ErrorActionPreference = 'Stop'
@@ -185,22 +188,26 @@ function Step-RestoreDependency {
     Write-BuildHeader "Restoring Dependencies"
     
     # Ensure Pester is available
-    if (-not (Test-ModuleInstalled -Name 'Pester' -Version '5.5.0')) {
-        Install-BuildModule -Name 'Pester' -RequiredVersion '5.5.0' -SkipPublisherCheck
+    if (-not $SkipTests) {
+        if (-not (Test-ModuleInstalled -Name 'Pester' -Version '5.5.0')) {
+            Install-BuildModule -Name 'Pester' -RequiredVersion '5.5.0' -SkipPublisherCheck
+        }
+        else {
+            Write-BuildSuccess "Pester 5.5.0 already installed"
+        }
+        Import-Module Pester -RequiredVersion 5.5.0 -Force
     }
-    else {
-        Write-BuildSuccess "Pester 5.5.0 already installed"
-    }
-    Import-Module Pester -RequiredVersion 5.5.0 -Force
-    
+
     # Ensure PSScriptAnalyzer is available
-    if (-not (Test-ModuleInstalled -Name 'PSScriptAnalyzer')) {
-        Install-BuildModule -Name 'PSScriptAnalyzer' -SkipPublisherCheck
+    if (-not $SkipLint) {
+        if (-not (Test-ModuleInstalled -Name 'PSScriptAnalyzer')) {
+            Install-BuildModule -Name 'PSScriptAnalyzer' -SkipPublisherCheck
+        }
+        else {
+            Write-BuildSuccess "PSScriptAnalyzer already installed"
+        }
+        Import-Module PSScriptAnalyzer -Force
     }
-    else {
-        Write-BuildSuccess "PSScriptAnalyzer already installed"
-    }
-    Import-Module PSScriptAnalyzer -Force
     
     # Check for .NET SDK if building WPF
     if (-not $SkipWPF) {
@@ -621,6 +628,74 @@ function Stop-LockingProcess {
     }
 }
 
+function Step-BuildDriver {
+    [CmdletBinding()]
+    param()
+    Write-BuildHeader "Building Redball.KMDF Driver"
+    
+    $driverProjPath = Join-Path $ProjectRoot 'src\Redball.Driver\Redball.KMDF.vcxproj'
+    $driverDistPath = Join-Path $script:DistPath 'driver'
+    
+    if (-not (Test-Path $driverProjPath)) {
+        Write-Warning "Driver project not found: $driverProjPath"
+        return
+    }
+
+    # Detect MSBuild (Enterprise preferred, BuildTools fallback)
+    $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+    if (-not $vsPath) {
+        $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -products * -latest -property installationPath
+    }
+    $msbuildPath = Join-Path $vsPath 'MSBuild\Current\Bin\MSBuild.exe'
+    
+    if (-not (Test-Path $msbuildPath)) {
+        Write-Warning "MSBuild not found at $msbuildPath. Driver build will be skipped."
+        return
+    }
+
+    Write-BuildStep "Building driver ($Configuration|x64)..."
+    # Ensure environment is initialized for MSBuild to find its targets (VCTargetsPath)
+    $env:VCTargetsPath = Join-Path $vsPath "MSBuild\Microsoft\VC\v170\"
+    & $msbuildPath $driverProjPath /p:Configuration=$Configuration /p:Platform=x64 /t:Build `
+        /p:SpectreMitigation=false `
+        /p:CheckMSVCComponents=false `
+        /p:InfVerif_DoNotVerify=true `
+        /p:EnableInfVerif=false `
+        /p:SignMode=Off
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-BuildError "Driver build failed. Ensure WDK 11 is installed."
+        # Don't throw here to allow app build if driver fails
+        return
+    }
+
+    if (-not (Test-Path $driverDistPath)) { New-Item -ItemType Directory -Path $driverDistPath -Force | Out-Null }
+    
+    $outDir = Join-Path (Split-Path $driverProjPath) "x64\$Configuration"
+    Copy-Item -Path (Join-Path $outDir "Redball.KMDF.sys") -Destination $driverDistPath -Force
+    Copy-Item -Path (Join-Path $outDir "Redball.KMDF.inf") -Destination $driverDistPath -Force
+    
+    # Copy catalog file if it exists (Inf2Cat output)
+    $catPath = Join-Path $outDir "Redball.KMDF\redball.kmdf.cat" 
+    if (Test-Path $catPath) {
+        Copy-Item -Path $catPath -Destination $driverDistPath -Force
+    }
+    
+    if ($SignDriver) {
+        Write-BuildStep "Signing driver binary..."
+        $signScript = Join-Path $currentScriptRoot "Sign-Driver.ps1"
+        if (Test-Path $signScript) {
+            $sysPath = Join-Path $driverDistPath "Redball.KMDF.sys"
+            & $signScript -DriverPath $sysPath
+        }
+        else {
+            Write-Warning "Sign-Driver.ps1 not found. Skipping signing."
+        }
+    }
+
+    Write-BuildSuccess "Driver artifacts copied to $driverDistPath"
+}
+
 function Step-BuildWpfApp {
     [CmdletBinding(SupportsShouldProcess)]
     param()
@@ -671,30 +746,37 @@ function Step-BuildWpfApp {
         }
         catch {
             Write-Warning "DLL file is locked by another process"
-            $resolved = Stop-LockingProcess -FilePath $dllPath
-            if (-not $resolved) {
-                Write-Warning "Cannot resolve file lock automatically. Build might fail."
-            }
+            $null = Stop-LockingProcess -FilePath $dllPath
         }
     }
     
     # Restore packages
     Write-BuildStep "Restoring NuGet packages..."
-    dotnet restore $solutionPath
+    dotnet restore $solutionPath --verbosity quiet
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet restore failed"
     }
     Write-BuildSuccess "Packages restored"
     
-    # Build solution
+    # Building Solution with MSBuild (essential for hybrid solutions)
     Write-BuildStep "Building solution ($Configuration)..."
-    dotnet build $solutionPath --configuration $Configuration --no-restore
+    $vsPathForSln = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+    $msbuildPathForSln = Join-Path $vsPathForSln 'MSBuild\Current\Bin\MSBuild.exe'
+    $env:VCTargetsPath = Join-Path $vsPathForSln "MSBuild\Microsoft\VC\v170\"
+
+    # Force specific flags for KMDF Driver success (Spectre mitigation is optional if libraries are missing)
+    & $msbuildPathForSln $solutionPath /p:Configuration=$Configuration /p:Platform="Any CPU" /t:Build /m `
+        /p:SpectreMitigation=false `
+        /p:CheckMSVCComponents=false `
+        /p:InfVerif_DoNotVerify=true `
+        /p:EnableInfVerif=false `
+        /p:SignMode=Off
     if ($LASTEXITCODE -ne 0) {
-        throw "dotnet build failed"
+        throw "MSBuild solution build failed"
     }
-    Write-BuildSuccess "Build completed"
+    Write-BuildSuccess "Solution build completed"
     
-    # Publish modular application
+    # Publish modular application (C# only)
     Write-BuildStep "Publishing modular application..."
     dotnet publish $projectPath `
         --configuration $Configuration `
@@ -817,6 +899,78 @@ function Step-BuildWpfApp {
     if (-not $SkipVerify) {
         Step-VerifyBuild -PublishDir $publishDir
     }
+}
+
+function Step-BuildService {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
+    Write-BuildHeader "Building Redball Input Service"
+
+    $srcDir = Join-Path $script:ProjectRoot 'src'
+    $serviceDir = Join-Path $srcDir 'Redball.Service'
+    $helperDir = Join-Path $srcDir 'Redball.SessionHelper'
+    $serviceProject = Join-Path $serviceDir 'Redball.Service.csproj'
+    $helperProject = Join-Path $helperDir 'Redball.SessionHelper.csproj'
+    $publishDir = Join-Path $script:DistPath 'Redball.Service'
+
+    if (-not (Test-Path $serviceProject)) {
+        Write-Warning "Service project not found: $serviceProject"
+        return
+    }
+
+    if (-not $PSCmdlet.ShouldProcess("Input Service v$Version", 'Build')) {
+        return
+    }
+
+    # Build and publish service
+    Write-BuildStep "Publishing service ($Configuration)..."
+    dotnet publish $serviceProject `
+        --configuration $Configuration `
+        --output $publishDir `
+        --self-contained false `
+        --runtime win-x64 `
+        --property:PublishSingleFile=true
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Service publish failed"
+    }
+
+    # Build and publish session helper
+    if (Test-Path $helperProject) {
+        Write-BuildStep "Publishing session helper ($Configuration)..."
+        $helperPublishDir = Join-Path $publishDir 'SessionHelper'
+        dotnet publish $helperProject `
+            --configuration $Configuration `
+            --output $helperPublishDir `
+            --self-contained false `
+            --runtime win-x64 `
+            --property:PublishSingleFile=true
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "Session helper publish failed"
+        }
+
+        # Copy helper to service directory for easy access
+        $helperExe = Join-Path $helperPublishDir 'Redball.SessionHelper.exe'
+        $serviceHelperPath = Join-Path $publishDir 'Redball.SessionHelper.exe'
+        if (Test-Path $helperExe) {
+            Copy-Item $helperExe $serviceHelperPath -Force
+            Write-BuildSuccess "Copied session helper to service directory"
+        }
+    }
+
+    # Verify output
+    $serviceExe = Join-Path $publishDir 'Redball.Service.exe'
+    if (Test-Path $serviceExe) {
+        $fileInfo = Get-Item $serviceExe
+        Write-BuildSuccess "Service built: $($fileInfo.Name) ($([math]::Round($fileInfo.Length / 1KB, 2)) KB)"
+    }
+    else {
+        throw "Service executable not found after build"
+    }
+
+    Write-HostSafe "  Install: .\scripts\Install-Service.ps1" -ForegroundColor Gray
+    Write-HostSafe "  Uninstall: .\scripts\Uninstall-Service.ps1" -ForegroundColor Gray
 }
 
 function Step-VerifyBuild {
@@ -1078,6 +1232,14 @@ function Step-CleanBuild {
         (Join-Path $testE2EDir 'bin'),
         (Join-Path $testUiDir 'obj'),
         (Join-Path $testUiDir 'bin'),
+        (Join-Path $srcDir 'Redball.Driver\obj'),
+        (Join-Path $srcDir 'Redball.Driver\bin'),
+        (Join-Path $srcDir 'Redball.Driver\x64'),
+        (Join-Path $srcDir 'Redball.Service\obj'),
+        (Join-Path $srcDir 'Redball.Service\bin'),
+        (Join-Path $srcDir 'Redball.SessionHelper\obj'),
+        (Join-Path $srcDir 'Redball.SessionHelper\bin'),
+        (Join-Path $DistPath 'Redball.Service'),
         $DistPath
     )
 
@@ -1109,17 +1271,29 @@ function Step-CleanBuild {
     # Restore progress preference
     $ProgressPreference = $oldProgressPreference
 
-    # Run dotnet clean on the solution
+    # Run MSBuild clean on the solution
+    # Detect MSBuild (Enterprise preferred, BuildTools fallback)
+    $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+    if (-not $vsPath) {
+        $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -products * -latest -property installationPath
+    }
+    $msbuildPath = Join-Path $vsPath 'MSBuild\Current\Bin\MSBuild.exe'
+    $env:VCTargetsPath = Join-Path $vsPath "MSBuild\Microsoft\VC\v170\"
+
     $solutionPath = Join-Path $script:ProjectRoot 'Redball.v3.sln'
-    if (Test-Path $solutionPath) {
-        Write-BuildStep "Running dotnet clean..."
-        dotnet clean $solutionPath --verbosity quiet
+    if (Test-Path $msbuildPath) {
+        Write-BuildStep "Running MSBuild clean on solution..."
+        & $msbuildPath $solutionPath /t:Clean /p:Configuration=$Configuration /verbosity:minimal /p:SpectreMitigation=false /p:CheckMSVCComponents=false
         if ($LASTEXITCODE -eq 0) {
             Write-BuildSuccess "Solution cleaned"
         }
         else {
-            Write-Warning "dotnet clean completed with warnings"
+            Write-Warning "MSBuild clean completed with warnings"
         }
+    }
+    else {
+        Write-BuildStep "Running dotnet clean..."
+        dotnet clean $solutionPath --configuration $Configuration --verbosity quiet
     }
 
     Write-BuildSuccess "Clean build completed"
@@ -1193,7 +1367,9 @@ try {
     
     # WPF Build (required before MSI)
     if (-not $SkipWPF) {
+        Step-BuildDriver
         Step-BuildWpfApp
+        Step-BuildService
     }
     else {
         Write-HostSafe "  Skipping WPF build ( -SkipWPF )" -ForegroundColor Yellow

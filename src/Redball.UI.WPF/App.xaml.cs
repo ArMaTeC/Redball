@@ -127,8 +127,12 @@ public partial class App : Application
         // Handle driver installation elevation
         if (e.Args.Length > 0 && e.Args[0] == "--install-driver")
         {
-            Services.Logger.Info("App", "Running in elevated driver installation mode");
-            var success = Services.InterceptionInputService.Instance.InstallDriver(false);
+            var selection = Services.DriverSelection.Auto;
+            if (e.Args.Length > 1 && Enum.TryParse<Services.DriverSelection>(e.Args[1], true, out var sel))
+                selection = sel;
+
+            Services.Logger.Info("App", $"Running in elevated driver installation mode ({selection})");
+            var success = Services.InterceptionInputService.Instance.InstallDriver(selection, false);
             Environment.Exit(success ? 0 : 1);
             return;
         }
@@ -137,7 +141,7 @@ public partial class App : Application
         if (e.Args.Length > 0 && e.Args[0] == "--install-driver-no-restart")
         {
             Services.Logger.Info("App", "Running in elevated no-restart driver installation mode");
-            var success = Services.InterceptionInputService.Instance.InstallDriverNoRestart(false);
+            var success = Services.InterceptionInputService.Instance.InstallDriverNoRestart(Services.DriverSelection.Auto, false);
             Environment.Exit(success ? 0 : 1);
             return;
         }
@@ -160,7 +164,7 @@ public partial class App : Application
             Services.Logger.Info("App", $"Internal test: Uninstall result (with cleanup fallback) = {uninstallOk}");
             
             // Test installation with visible window fallback (will only trigger if first install fails)
-            var installOk = Services.InterceptionInputService.Instance.InstallDriver(false);
+            var installOk = Services.InterceptionInputService.Instance.InstallDriver(Services.DriverSelection.Auto, false);
             Services.Logger.Info("App", $"Internal test: Install result = {installOk}");
             
             Environment.Exit(uninstallOk && installOk ? 0 : 1);

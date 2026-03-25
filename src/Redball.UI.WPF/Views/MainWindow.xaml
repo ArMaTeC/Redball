@@ -238,6 +238,7 @@
                         <RadioButton x:Name="TypeThingNavButton" Content="TypeThing" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Configure TypeThing hotkeys, speed, and typing behavior."/>
                         <RadioButton x:Name="PomodoroNavButton" Content="Pomodoro" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Pomodoro focus timer with configurable intervals."/>
                         <RadioButton x:Name="UpdatesNavButton" Content="Updates" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Manage update channels and check for new releases."/>
+                        <RadioButton x:Name="SecurityNavButton" Content="Security" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Manage secure secrets, API keys, and security settings."/>
                     </StackPanel>
                 </Border>
 
@@ -486,6 +487,7 @@
                                             <CheckBox x:Name="MainProcessIsolationCheck" Content="Enable process isolation" Style="{DynamicResource ModernCheckBox}" Margin="0,8,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Run Redball in an isolated process for enhanced stability."/>
                                             <CheckBox x:Name="MainVerboseLoggingCheck" Content="Enable verbose logging" Style="{DynamicResource ModernCheckBox}" Margin="0,8,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Record extra diagnostic details in the log files."/>
                                             <CheckBox x:Name="MainConfirmOnExitCheck" Content="Confirm before exit" Style="{DynamicResource ModernCheckBox}" Margin="0,8,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Show a confirmation dialog when exiting Redball while keep-awake is active."/>
+                                            <CheckBox x:Name="MainEncryptConfigCheck" Content="Encrypt configuration file (DPAPI)" Style="{DynamicResource ModernCheckBox}" Margin="0,8,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Encrypt the configuration file using Windows DPAPI. Only the current Windows user can read the config."/>
                                             <TextBlock Text="Max Log Size (MB)" FontWeight="Medium" Margin="0,8,0,8"/>
                                             <Slider x:Name="MainMaxLogSizeSlider" Minimum="1" Maximum="100" Value="10" TickFrequency="5" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainMaxLogSizeSlider_ValueChanged" ToolTipService.ShowDuration="12000" ToolTip="Set the maximum size allowed for the Redball log file before rotation or trimming."/>
                                             <TextBlock x:Name="MainMaxLogSizeText" Text="Max log size: 10 MB" FontSize="12" Margin="0,4,0,0"/>
@@ -968,6 +970,104 @@
                                             </StackPanel>
                                         </Border>
                                     </UniformGrid>
+                                </StackPanel>
+
+                                <StackPanel x:Name="SecurityPanel" Visibility="Collapsed">
+                                    <TextBlock Text="Security" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Manage secure secrets, API keys, and security settings. Secrets are stored in the Windows Credential Manager and never saved to plain-text configuration files." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+                                    
+                                    <UniformGrid Columns="2" Margin="0,0,0,16">
+                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
+                                            <StackPanel>
+                                                <TextBlock Text="Secure Secret Storage" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                <TextBlock Text="Store API keys and credentials securely in the Windows Credential Manager." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,12"/>
+                                                <Button Content="Manage Secrets" Style="{DynamicResource PrimaryButton}" Click="SecurityManageSecrets_Click" ToolTipService.ShowDuration="12000" ToolTip="Open the secure secret management window to add, edit, or delete stored secrets."/>
+                                                <TextBlock x:Name="SecuritySecretsStatusText" Text="No secrets configured" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,8,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Text="Cloud Analytics" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                <TextBlock Text="Secure cloud analytics configuration using protected API credentials." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,12"/>
+                                                <Button Content="Test Connection" Style="{DynamicResource ModernButton}" Click="SecurityTestAnalytics_Click" ToolTipService.ShowDuration="12000" ToolTip="Test the secure connection to the cloud analytics endpoint."/>
+                                                <TextBlock x:Name="SecurityAnalyticsStatusText" Text="Not configured" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,8,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </UniformGrid>
+
+                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
+                                        <StackPanel>
+                                            <TextBlock Text="Security Health" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                                    <TextBlock Text="Secret Provider" FontWeight="Medium" Margin="0,0,0,4"/>
+                                                    <TextBlock x:Name="SecurityProviderText" Text="Windows Credential Manager" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                                    <TextBlock Text="Provider Status" FontWeight="Medium" Margin="0,0,0,4"/>
+                                                    <TextBlock x:Name="SecurityProviderStatusText" Text="Available" FontSize="12" Foreground="Green"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
+                                        <StackPanel>
+                                            <TextBlock Text="Tamper Detection" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                            <TextBlock Text="Security events and tamper detection status." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,12"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock x:Name="SecurityTamperCountText" Text="No tamper events detected" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                    <TextBlock x:Name="SecurityTamperPolicyText" Text="Policy: Warn/Quarantine/Block" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Content="View Events" Style="{DynamicResource ModernButton}" Click="SecurityViewTamperEvents_Click" ToolTipService.ShowDuration="12000" ToolTip="View tamper detection history and resolution options."/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
+                                        <StackPanel>
+                                            <TextBlock Text="Threat Model" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                            <TextBlock Text="Security threat inventory with mitigations and test mapping." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,12"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock x:Name="SecurityThreatCountText" Text="Loading threat model..." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                    <TextBlock x:Name="SecurityThreatStatusText" Text="" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Content="Export" Style="{DynamicResource ModernButton}" Click="SecurityExportThreatModel_Click" ToolTipService.ShowDuration="12000" ToolTip="Export the threat model document to a file."/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
+                                        <StackPanel>
+                                            <TextBlock Text="CI Security Gates" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                            <TextBlock Text="Automated security validation gates for CI/CD pipeline." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,12"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock x:Name="SecurityCIGatesStatusText" Text="Ready to validate" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                    <TextBlock x:Name="SecurityCIGatesDetailsText" Text="Dependency audit | Secret scan | Signing | SBOM" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Content="Run Gates" Style="{DynamicResource ModernButton}" Click="SecurityRunCIGates_Click" ToolTipService.ShowDuration="12000" ToolTip="Run all security CI gates and generate validation report."/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
                                 </StackPanel>
                             </StackPanel>
                         </ScrollViewer>

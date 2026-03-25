@@ -160,7 +160,8 @@ public partial class MainWindow
             SmartFeaturesPanel == null ||
             TypeThingPanel == null ||
             PomodoroPanel == null ||
-            UpdatesPanel == null)
+            UpdatesPanel == null ||
+            SecurityPanel == null)
         {
             return;
         }
@@ -181,7 +182,8 @@ public partial class MainWindow
             ("SmartFeatures", SmartFeaturesPanel),
             ("TypeThing", TypeThingPanel),
             ("Pomodoro", PomodoroPanel),
-            ("Updates", UpdatesPanel)
+            ("Updates", UpdatesPanel),
+            ("Security", SecurityPanel)
         };
 
         // Get the target panel to show
@@ -259,6 +261,7 @@ public partial class MainWindow
         if (TypeThingNavButton != null && section == "TypeThing" && TypeThingNavButton.IsChecked != true) TypeThingNavButton.IsChecked = true;
         if (PomodoroNavButton != null && section == "Pomodoro" && PomodoroNavButton.IsChecked != true) PomodoroNavButton.IsChecked = true;
         if (UpdatesNavButton != null && section == "Updates" && UpdatesNavButton.IsChecked != true) UpdatesNavButton.IsChecked = true;
+        if (SecurityNavButton != null && section == "Security" && SecurityNavButton.IsChecked != true) SecurityNavButton.IsChecked = true;
     }
 
     private void NavButton_Checked(object sender, RoutedEventArgs e)
@@ -272,7 +275,8 @@ public partial class MainWindow
             SmartFeaturesNavButton == null ||
             TypeThingNavButton == null ||
             PomodoroNavButton == null ||
-            UpdatesNavButton == null)
+            UpdatesNavButton == null ||
+            SecurityNavButton == null)
         {
             return;
         }
@@ -286,7 +290,8 @@ public partial class MainWindow
         if (SmartFeaturesNavButton.IsChecked == true) { ShowSection("SmartFeatures"); return; }
         if (TypeThingNavButton.IsChecked == true) { ShowSection("TypeThing"); return; }
         if (PomodoroNavButton.IsChecked == true) { ShowSection("Pomodoro"); return; }
-        if (UpdatesNavButton.IsChecked == true) { ShowSection("Updates"); }
+        if (UpdatesNavButton.IsChecked == true) { ShowSection("Updates"); return; }
+        if (SecurityNavButton.IsChecked == true) { ShowSection("Security"); }
     }
 
     private void AnalyticsExportCsv_Click(object sender, RoutedEventArgs e)
@@ -345,6 +350,7 @@ public partial class MainWindow
     private void ShowSmartFeaturesButton_Click(object sender, RoutedEventArgs e) => ShowSmartFeatures();
     private void ShowTypeThingButton_Click(object sender, RoutedEventArgs e) => ShowTypeThing();
     private void ShowUpdatesButton_Click(object sender, RoutedEventArgs e) => ShowUpdates();
+    private void ShowSecurityButton_Click(object sender, RoutedEventArgs e) => ShowSecurity();
 
     public void ShowMainWindow()
     {
@@ -527,6 +533,170 @@ public partial class MainWindow
         });
     }
 
+    public void ShowSecurity()
+    {
+        Logger.Info("MainWindow", "ShowSecurity called");
+        _analytics.TrackFeature("security.opened");
+        Dispatcher.Invoke(() =>
+        {
+            ShowInTaskbar = true;
+            if (!IsVisible) Show();
+            WindowState = WindowState.Normal;
+            LoadEmbeddedSettings();
+            ShowSection("Security");
+            UpdateSecurityStatus();
+            Activate();
+            Focus();
+        });
+    }
+
+    private async void UpdateSecurityStatus()
+    {
+        try
+        {
+            var secrets = await SecretManagerService.Instance.ListSecretsAsync();
+            SecuritySecretsStatusText.Text = secrets.Length == 0 
+                ? "No secrets configured" 
+                : $"{secrets.Length} secret(s) stored";
+            
+            var health = SecretManagerService.Instance.GetHealth();
+            SecurityProviderStatusText.Text = health.PrimaryAvailable ? "Available" : "Unavailable";
+            SecurityProviderStatusText.Foreground = health.PrimaryAvailable 
+                ? System.Windows.Media.Brushes.Green 
+                : System.Windows.Media.Brushes.Red;
+            
+            var endpointExists = await SecretManagerService.Instance.SecretExistsAsync(
+                SecretManagerService.KnownSecrets.CloudAnalyticsEndpoint);
+            SecurityAnalyticsStatusText.Text = endpointExists ? "Configured" : "Not configured";
+
+            // Update tamper detection status
+            var tamperCount = TamperPolicyService.Instance.GetUnresolvedCount();
+            if (tamperCount == 0)
+            {
+                SecurityTamperCountText.Text = "No active tamper events";
+                SecurityTamperCountText.Foreground = System.Windows.Media.Brushes.Green;
+            }
+            else
+            {
+                SecurityTamperCountText.Text = $"{tamperCount} tamper event(s) detected";
+                SecurityTamperCountText.Foreground = System.Windows.Media.Brushes.Orange;
+            }
+            
+            var policies = $"Config: {TamperPolicyService.Instance.ConfigTamperPolicy}, " +
+                          $"Updates: {TamperPolicyService.Instance.UpdateSignaturePolicy}, " +
+                          $"Cert: {TamperPolicyService.Instance.CertificatePinPolicy}";
+            SecurityTamperPolicyText.Text = policies;
+
+            // Update threat model status
+            var threatSummary = ThreatModelService.Instance.GetSummary();
+            SecurityThreatCountText.Text = $"{threatSummary.TotalThreats} threats ({threatSummary.MitigatedCount} mitigated)";
+            
+            if (threatSummary.UnmitigatedCount == 0)
+            {
+                SecurityThreatStatusText.Text = "All threats mitigated ✓";
+                SecurityThreatStatusText.Foreground = System.Windows.Media.Brushes.Green;
+            }
+            else
+            {
+                var riskText = threatSummary.CriticalRiskCount > 0 ? $"{threatSummary.CriticalRiskCount} critical" :
+                              threatSummary.HighRiskCount > 0 ? $"{threatSummary.HighRiskCount} high risk" :
+                              $"{threatSummary.UnmitigatedCount} pending";
+                SecurityThreatStatusText.Text = $"{riskText} unmitigated";
+                SecurityThreatStatusText.Foreground = threatSummary.CriticalRiskCount > 0 ? System.Windows.Media.Brushes.Red :
+                                                     threatSummary.HighRiskCount > 0 ? System.Windows.Media.Brushes.Orange :
+                                                     System.Windows.Media.Brushes.Yellow;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Failed to update security status", ex);
+        }
+    }
+
+    private void SecurityExportThreatModel_Click(object sender, RoutedEventArgs e)
+    {
+        _analytics.TrackFeature("security.export_threat_model");
+        
+        try
+        {
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Markdown files (*.md)|*.md|JSON files (*.json)|*.json|All files (*.*)|*.*",
+                FileName = $"Redball_ThreatModel_{DateTime.Now:yyyyMMdd}.md",
+                Title = "Export Threat Model Document"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                var ext = System.IO.Path.GetExtension(dialog.FileName).ToLowerInvariant();
+                bool success = ext == ".json" 
+                    ? ThreatModelService.Instance.ExportToJson(dialog.FileName)
+                    : ThreatModelService.Instance.SaveMarkdownDocument(dialog.FileName);
+
+                if (success)
+                {
+                    NotificationWindow.Show("Export Complete", $"Threat model exported to:\n{dialog.FileName}", "\uE73E");
+                }
+                else
+                {
+                    NotificationWindow.Show("Export Failed", "Could not export threat model document.", "\uE783");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Failed to export threat model", ex);
+            NotificationWindow.Show("Export Failed", $"Error: {ex.Message}", "\uE783");
+        }
+    }
+
+    private void SecurityViewTamperEvents_Click(object sender, RoutedEventArgs e)
+    {
+        _analytics.TrackFeature("security.view_tamper_events");
+        
+        var events = TamperPolicyService.Instance.GetTamperEvents(true);
+        if (events.Count == 0)
+        {
+            NotificationWindow.Show("Tamper Detection", "No tamper events have been recorded.");
+            return;
+        }
+
+        var message = string.Join("\n\n", events.Select(ev => 
+            $"[{ev.DetectedAt:yyyy-MM-dd HH:mm}] {ev.Type}\n" +
+            $"Status: {(ev.IsResolved ? "Resolved" : "Active")}\n" +
+            $"{(ev.IsResolved ? $"Resolved: {ev.ResolutionAction}" : ev.Description)}"));
+
+        NotificationWindow.Show("Tamper Events", message.Length > 500 ? message[..500] + "..." : message);
+    }
+
+    private void SecurityManageSecrets_Click(object sender, RoutedEventArgs e)
+    {
+        _analytics.TrackFeature("security.manage_secrets");
+        var window = new SecretManagementWindow { Owner = this };
+        window.ShowDialog();
+        _ = UpdateSecurityStatus();
+    }
+
+    private async void SecurityTestAnalytics_Click(object sender, RoutedEventArgs e)
+    {
+        _analytics.TrackFeature("security.test_analytics");
+        try
+        {
+            var endpoint = await SecretManagerService.Instance.GetSecretAsync(
+                SecretManagerService.KnownSecrets.CloudAnalyticsEndpoint);
+            if (string.IsNullOrEmpty(endpoint))
+            {
+                NotificationWindow.Show("Not Configured", "Cloud analytics endpoint is not configured in secure storage.", "\uE783");
+                return;
+            }
+            NotificationWindow.Show("Configuration Found", $"Endpoint: {endpoint}", "\uE73E");
+        }
+        catch (Exception ex)
+        {
+            NotificationWindow.Show("Error", $"Failed to test connection: {ex.Message}", "\uE783");
+        }
+    }
+
     public void OpenLogs()
     {
         Logger.Info("MainWindow", "OpenLogs called");
@@ -550,5 +720,134 @@ public partial class MainWindow
             Logger.Error("MainWindow", "Failed to open logs", ex);
             NotificationService.Instance.ShowError("Redball", "Could not open logs.");
         }
+    }
+
+    private async void SecurityRunCIGates_Click(object sender, RoutedEventArgs e)
+    {
+        _analytics.TrackFeature("security.run_ci_gates");
+        
+        try
+        {
+            SecurityCIGatesStatusText.Text = "Running...";
+            SecurityCIGatesStatusText.Foreground = System.Windows.Media.Brushes.Yellow;
+            
+            var sourceDir = AppContext.BaseDirectory;
+            var results = await SecurityCIGatesService.Instance.RunAllGatesAsync(sourceDir);
+            
+            var passed = results.Count(r => r.Passed);
+            var failed = results.Count(r => !r.Passed);
+            var errors = results.Sum(r => r.Errors.Count);
+            
+            if (failed == 0)
+            {
+                SecurityCIGatesStatusText.Text = $"All gates passed ({passed}/{results.Count})";
+                SecurityCIGatesStatusText.Foreground = System.Windows.Media.Brushes.Green;
+                NotificationWindow.Show("CI Gates Complete", $"All {results.Count} security gates passed successfully!");
+            }
+            else
+            {
+                SecurityCIGatesStatusText.Text = $"{failed} gates failed, {errors} errors";
+                SecurityCIGatesStatusText.Foreground = System.Windows.Media.Brushes.Red;
+                NotificationWindow.Show("CI Gates Failed", $"{failed} gates failed with {errors} errors. Check logs for details.");
+            }
+            
+            SecurityCIGatesDetailsText.Text = string.Join(" | ", results.Select(r => 
+                $"{r.GateName}: {(r.Passed ? "✓" : "✗")}"));
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Failed to run CI gates", ex);
+            SecurityCIGatesStatusText.Text = "Error - see logs";
+            SecurityCIGatesStatusText.Foreground = System.Windows.Media.Brushes.Red;
+            NotificationWindow.Show("CI Gates Error", $"Error running gates: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Navigates to a specific section from the command palette.
+    /// </summary>
+    public void NavigateToSection(string sectionName)
+    {
+        Logger.Info("MainWindow", $"NavigateToSection called: {sectionName}");
+        _analytics.TrackFeature($"navigate.{sectionName.ToLowerInvariant()}");
+
+        Dispatcher.Invoke(() =>
+        {
+            ShowInTaskbar = true;
+            if (!IsVisible) Show();
+            WindowState = WindowState.Normal;
+            Activate();
+
+            switch (sectionName)
+            {
+                case "Dashboard":
+                case "Home":
+                    ShowSection("Home");
+                    if (HomeNavButton != null) HomeNavButton.IsChecked = true;
+                    break;
+
+                case "Settings":
+                    ShowSettings();
+                    break;
+
+                case "MiniWidgetSettings":
+                    ShowSettings();
+                    // Could scroll to mini widget section if needed
+                    break;
+
+                case "Analytics":
+                    ShowAnalytics();
+                    break;
+
+                case "Metrics":
+                    ShowMetrics();
+                    break;
+
+                case "Diagnostics":
+                    ShowDiagnostics();
+                    break;
+
+                case "Behavior":
+                    ShowBehavior();
+                    break;
+
+                case "SmartFeatures":
+                    ShowSmartFeatures();
+                    break;
+
+                case "TypeThing":
+                    ShowTypeThing();
+                    break;
+
+                case "Pomodoro":
+                    ShowPomodoro();
+                    break;
+
+                case "Updates":
+                    ShowUpdates();
+                    break;
+
+                case "Security":
+                    ShowSecurity();
+                    break;
+
+                case "SyncHealth":
+                    ShowDiagnostics();
+                    // Could navigate to specific sync health tab if implemented
+                    break;
+
+                case "CrashTelemetry":
+                    ShowDiagnostics();
+                    // Could navigate to specific telemetry tab if implemented
+                    break;
+
+                default:
+                    Logger.Warning("MainWindow", $"Unknown section: {sectionName}");
+                    ShowSection("Home");
+                    break;
+            }
+
+            Focus();
+        });
     }
 }

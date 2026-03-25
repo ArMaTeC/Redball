@@ -266,5 +266,220 @@ public class SecurityService
         var computed = ComputeStringHash(json + salt);
         return string.Equals(computed, storedSignature, StringComparison.OrdinalIgnoreCase);
     }
+
+    #region Update Package Trust Chain (sec-3)
+
+    /// <summary>
+    /// Trusted publisher certificate thumbprints (SHA256).
+    /// These are the only certificates allowed to sign Redball updates.
+    /// </summary>
+    private static readonly HashSet<string> TrustedPublisherThumbprints = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // ArMaTeC signing certificate thumbprint - update this with your actual certificate thumbprint
+        "PLACEHOLDER_THUMBPRINT_ARMAtec",
+        // Allow additional known-good certificates here
+    };
+
+    /// <summary>
+    /// Validates the complete trust chain for an update package.
+    /// Checks: Authenticode signature, certificate chain validity, pinned publisher thumbprint, optional manifest signature.
+    /// </summary>
+    /// <param name="filePath">Path to the update file (MSI/EXE)</param>
+    /// <param name="expectedManifestHash">Optional expected SHA256 hash from signed manifest</param>
+    /// <returns>Trust validation result with detailed status</returns>
+    public static TrustValidationResult ValidateUpdatePackage(string filePath, string? expectedManifestHash = null)
+    {
+        var result = new TrustValidationResult { FilePath = filePath };
+
+        try
+        {
+            if (!File.Exists(filePath))
+            {
+                result.AddFailure("File not found");
+                return result;
+            }
+
+            // Step 1: Authenticode signature verification
+            result.AuthenticodeValid = VerifyAuthenticodeSignature(filePath);
+            if (!result.AuthenticodeValid)
+            {
+                result.AddFailure("Authenticode signature invalid or missing");
+                return result;
+            }
+            result.AddSuccess("Authenticode signature verified");
+
+            // Step 2: Get certificate details for publisher pinning
+            try
+            {
+                var signerCertificate = X509Certificate.CreateFromSignedFile(filePath);
+                using var cert = new X509Certificate2(signerCertificate);
+                
+                result.CertificateSubject = cert.Subject;
+                result.CertificateIssuer = cert.Issuer;
+                result.Thumbprint = cert.Thumbprint;
+                result.NotBefore = cert.NotBefore;
+                result.NotAfter = cert.NotAfter;
+
+                // Step 3: Pinned publisher validation
+                if (!string.IsNullOrEmpty(cert.Thumbprint))
+                {
+                    result.PublisherPinned = TrustedPublisherThumbprints.Contains(cert.Thumbprint);
+                    if (result.PublisherPinned)
+                    {
+                        result.AddSuccess("Publisher thumbprint matches trusted certificate");
+                    }
+                    else
+                    {
+                        result.AddWarning($"Publisher thumbprint not in trusted list: {cert.Thumbprint}");
+                        
+                        // Report to TamperPolicyService for certificate pinning failure (sec-4)
+                        var proceed = TamperPolicyService.Instance.HandleTamperEvent(
+                            TamperEventType.CertificateNotPinned,
+                            filePath,
+                            $"Update signed by unknown publisher (thumbprint: {cert.Thumbprint}). Certificate not in trusted list.");
+                        
+                        if (!proceed)
+                        {
+                            result.AddFailure("Certificate pinning policy blocked this update");
+                            result.IsTrusted = false;
+                            return result;
+                        }
+                    }
+                }
+                else
+                {
+                    result.AddWarning("Could not extract certificate thumbprint");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddFailure($"Certificate validation error: {ex.Message}");
+                return result;
+            }
+
+            // Step 4: Manifest hash validation (if provided)
+            if (!string.IsNullOrEmpty(expectedManifestHash))
+            {
+                var actualHash = ComputeFileHash(filePath);
+                result.ManifestHashValid = string.Equals(actualHash, expectedManifestHash, StringComparison.OrdinalIgnoreCase);
+                
+                if (result.ManifestHashValid)
+                {
+                    result.AddSuccess("Manifest hash matches (file integrity verified)");
+                }
+                else
+                {
+                    result.AddFailure($"Manifest hash mismatch! Expected: {expectedManifestHash}, Got: {actualHash}");
+                    result.IsTrusted = false;
+                    return result;
+                }
+            }
+            else
+            {
+                result.AddWarning("No manifest hash provided for verification");
+            }
+
+            // Final trust decision
+            // Must have valid Authenticode + valid chain + (pinned publisher OR manifest hash match)
+            result.IsTrusted = result.AuthenticodeValid && 
+                              (result.PublisherPinned || result.ManifestHashValid);
+
+            if (result.IsTrusted)
+            {
+                Logger.Info("SecurityService", $"Update package TRUSTED: {Path.GetFileName(filePath)}");
+            }
+            else
+            {
+                Logger.Warning("SecurityService", $"Update package NOT TRUSTED: {Path.GetFileName(filePath)}");
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            result.AddFailure($"Validation error: {ex.Message}");
+            Logger.Error("SecurityService", $"Trust validation failed for {filePath}", ex);
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// Adds a trusted publisher thumbprint at runtime.
+    /// This can be used for enterprise deployments with custom certificates.
+    /// </summary>
+    public static void AddTrustedPublisherThumbprint(string thumbprint)
+    {
+        if (string.IsNullOrWhiteSpace(thumbprint)) return;
+        
+        var cleaned = thumbprint.Replace(":", "").Replace("-", "").Trim();
+        if (cleaned.Length == 40) // SHA1 length, we expect SHA256 (64 chars) but accept both
+        {
+            TrustedPublisherThumbprints.Add(cleaned);
+            Logger.Info("SecurityService", $"Added trusted publisher thumbprint (SHA1): {cleaned}");
+        }
+        else if (cleaned.Length == 64) // SHA256 length
+        {
+            TrustedPublisherThumbprints.Add(cleaned);
+            Logger.Info("SecurityService", $"Added trusted publisher thumbprint (SHA256): {cleaned}");
+        }
+        else
+        {
+            Logger.Warning("SecurityService", $"Invalid thumbprint length: {cleaned.Length} characters");
+        }
+    }
+
+    /// <summary>
+    /// Clears all trusted publisher thumbprints. Use with caution.
+    /// </summary>
+    public static void ClearTrustedPublishers()
+    {
+        TrustedPublisherThumbprints.Clear();
+        Logger.Warning("SecurityService", "All trusted publisher thumbprints cleared");
+    }
+
+    /// <summary>
+    /// Gets the current list of trusted publisher thumbprints (for diagnostics).
+    /// </summary>
+    public static IReadOnlyCollection<string> GetTrustedPublisherThumbprints()
+    {
+        return TrustedPublisherThumbprints.ToList().AsReadOnly();
+    }
+
+    #endregion
 }
+
+#region Trust Validation Result Classes
+
+/// <summary>
+/// Result of update package trust validation.
+/// </summary>
+public class TrustValidationResult
+{
+    public string FilePath { get; set; } = "";
+    public bool IsTrusted { get; set; }
+    public bool AuthenticodeValid { get; set; }
+    public bool PublisherPinned { get; set; }
+    public bool ManifestHashValid { get; set; }
+    
+    public string? CertificateSubject { get; set; }
+    public string? CertificateIssuer { get; set; }
+    public string? Thumbprint { get; set; }
+    public DateTime NotBefore { get; set; }
+    public DateTime NotAfter { get; set; }
+    
+    public List<string> Successes { get; } = new();
+    public List<string> Warnings { get; } = new();
+    public List<string> Failures { get; } = new();
+    
+    public void AddSuccess(string message) => Successes.Add(message);
+    public void AddWarning(string message) => Warnings.Add(message);
+    public void AddFailure(string message) => Failures.Add(message);
+    
+    public string Summary => string.Join("; ", 
+        Successes.Count > 0 ? $"{Successes.Count} passed" : null,
+        Warnings.Count > 0 ? $"{Warnings.Count} warnings" : null,
+        Failures.Count > 0 ? $"{Failures.Count} failed" : null);
+}
+
+#endregion
 

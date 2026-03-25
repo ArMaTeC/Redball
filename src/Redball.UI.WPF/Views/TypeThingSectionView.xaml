@@ -19,6 +19,15 @@
         <Border Style="{DynamicResource CardStyle}">
             <StackPanel>
                 <CheckBox x:Name="TypeThingEnabledCheck" Content="Enable TypeThing" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"/>
+                
+                <TextBlock Text="HID Driver Selection" FontWeight="Medium" Margin="0,8,0,4"/>
+                <ComboBox ItemsSource="{Binding DriverSelectionOptions}" 
+                          SelectedItem="{Binding TypeThingDriverSelection}" 
+                          Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8"/>
+                
+                <Button Content="Install / Repair Driver" 
+                        Command="{Binding InstallDriverCommand}"
+                        Style="{DynamicResource ModernButton}" Margin="0,0,0,12"/>
                 <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,8,0,8"/>
                 <TextBox x:Name="TypeThingStartHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"/>
                 <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,8,0,8"/>

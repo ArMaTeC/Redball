@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Redball.UI.Services;
@@ -9,39 +10,94 @@ namespace Redball.UI.Services;
 /// <summary>
 /// Cloud analytics service for opt-in remote analytics collection.
 /// Data is only transmitted when user explicitly opts in.
+/// API keys are retrieved securely from the SecretManagerService, never stored in config.
 /// </summary>
-public class CloudAnalyticsService
+public class CloudAnalyticsService : IDisposable
 {
     private static readonly HttpClient _httpClient = new();
+    private readonly SecretManagerService _secretManager;
     private readonly bool _enabled;
-    private readonly string _endpointUrl;
-    private readonly string _apiKey;
+    private bool _disposed;
 
-    public CloudAnalyticsService(bool enabled, string endpointUrl = "", string apiKey = "")
+    /// <summary>
+    /// Creates a new CloudAnalyticsService.
+    /// </summary>
+    /// <param name="enabled">Whether cloud analytics is enabled by user preference.</param>
+    /// <param name="secretManager">Secret manager for retrieving API credentials securely.</param>
+    public CloudAnalyticsService(bool enabled, SecretManagerService secretManager)
     {
-        _enabled = enabled && !string.IsNullOrEmpty(endpointUrl);
-        _endpointUrl = endpointUrl;
-        _apiKey = apiKey;
-        
+        _enabled = enabled;
+        _secretManager = secretManager ?? throw new ArgumentNullException(nameof(secretManager));
+
         if (_enabled)
         {
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "Redball-Analytics/1.0");
+            Logger.Info("CloudAnalytics", $"Cloud analytics service initialized (enabled={enabled})");
+        }
+        else
+        {
+            Logger.Debug("CloudAnalytics", "Cloud analytics service initialized (disabled)");
+        }
+    }
+
+    /// <summary>
+    /// Configures the HTTP client with the current API credentials from secure storage.
+    /// </summary>
+    private async Task<bool> ConfigureCredentialsAsync(CancellationToken ct)
+    {
+        try
+        {
+            // Retrieve endpoint and API key from secure storage
+            var endpoint = await _secretManager.GetSecretAsync(
+                SecretManagerService.KnownSecrets.CloudAnalyticsEndpoint, ct);
+            var apiKey = await _secretManager.GetSecretAsync(
+                SecretManagerService.KnownSecrets.CloudAnalyticsApiKey, ct);
+
+            if (string.IsNullOrEmpty(endpoint))
+            {
+                Logger.Warning("CloudAnalytics", "Analytics endpoint not configured in secure storage");
+                return false;
+            }
+
+            // Update endpoint
+            _httpClient.BaseAddress = new Uri(endpoint.TrimEnd('/'));
+
+            // Update or remove API key header
+            if (_httpClient.DefaultRequestHeaders.Contains("X-API-Key"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("X-API-Key");
+            }
+
             if (!string.IsNullOrEmpty(apiKey))
             {
                 _httpClient.DefaultRequestHeaders.Add("X-API-Key", apiKey);
             }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("CloudAnalytics", "Failed to configure credentials from secure storage", ex);
+            return false;
         }
     }
 
     /// <summary>
     /// Sends anonymized usage data to cloud analytics endpoint.
     /// </summary>
-    public async Task<bool> SendAnalyticsAsync(AnalyticsSummary localData)
+    public async Task<bool> SendAnalyticsAsync(AnalyticsSummary localData, CancellationToken ct = default)
     {
         if (!_enabled) return false;
 
         try
         {
+            // Configure credentials from secure storage
+            if (!await ConfigureCredentialsAsync(ct))
+            {
+                Logger.Warning("CloudAnalytics", "Cannot send analytics - credentials not available");
+                return false;
+            }
+
             // Create anonymized payload
             var payload = new
             {
@@ -61,7 +117,7 @@ public class CloudAnalyticsService
             });
 
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync(_endpointUrl, content);
+            var response = await _httpClient.PostAsync("/analytics", content, ct);
 
             if (response.IsSuccessStatusCode)
             {
@@ -73,6 +129,11 @@ public class CloudAnalyticsService
                 Logger.Warning("CloudAnalytics", $"Failed to send analytics: {response.StatusCode}");
                 return false;
             }
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.Debug("CloudAnalytics", "Analytics send was cancelled");
+            return false;
         }
         catch (Exception ex)
         {
@@ -118,9 +179,82 @@ public class CloudAnalyticsService
         {
             Logger.Error("CloudAnalytics", "Error performing cohort analysis", ex);
         }
-        
+
         return analysis;
     }
+
+    /// <summary>
+    /// Checks whether cloud analytics can be enabled (credentials are configured).
+    /// </summary>
+    public async Task<bool> CanEnableAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var endpoint = await _secretManager.GetSecretAsync(
+                SecretManagerService.KnownSecrets.CloudAnalyticsEndpoint, ct);
+            return !string.IsNullOrEmpty(endpoint);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Gets the current configuration status for diagnostics.
+    /// </summary>
+    public async Task<CloudAnalyticsConfigStatus> GetConfigStatusAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var endpointExists = await _secretManager.SecretExistsAsync(
+                SecretManagerService.KnownSecrets.CloudAnalyticsEndpoint, ct);
+            var apiKeyExists = await _secretManager.SecretExistsAsync(
+                SecretManagerService.KnownSecrets.CloudAnalyticsApiKey, ct);
+
+            return new CloudAnalyticsConfigStatus
+            {
+                IsEnabled = _enabled,
+                EndpointConfigured = endpointExists,
+                ApiKeyConfigured = apiKeyExists,
+                CanSend = _enabled && endpointExists,
+                Timestamp = DateTime.UtcNow
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("CloudAnalytics", "Failed to get config status", ex);
+            return new CloudAnalyticsConfigStatus
+            {
+                IsEnabled = _enabled,
+                EndpointConfigured = false,
+                ApiKeyConfigured = false,
+                CanSend = false,
+                Timestamp = DateTime.UtcNow
+            };
+        }
+    }
+
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            _disposed = true;
+            Logger.Debug("CloudAnalytics", "Disposed");
+        }
+    }
+}
+
+/// <summary>
+/// Cloud analytics configuration status for diagnostics.
+/// </summary>
+public class CloudAnalyticsConfigStatus
+{
+    public bool IsEnabled { get; set; }
+    public bool EndpointConfigured { get; set; }
+    public bool ApiKeyConfigured { get; set; }
+    public bool CanSend { get; set; }
+    public DateTime Timestamp { get; set; }
 }
 
 /// <summary>

@@ -25,6 +25,21 @@ public class MainViewModel : ViewModelBase
     private readonly DispatcherTimer _statusBarTimer;
     private readonly BatteryMonitorService _batteryMonitor = new();
     private CommandPaletteViewModel? _palette;
+    
+    public DriverSelection TypeThingDriverSelection
+    {
+        get => ConfigService.Instance.Config.TypeThingDriverSelection;
+        set
+        {
+            if (ConfigService.Instance.Config.TypeThingDriverSelection == value) return;
+            ConfigService.Instance.Config.TypeThingDriverSelection = value;
+            OnPropertyChanged();
+            ConfigService.Instance.Save();
+            Logger.Info("MainViewModel", $"Driver selection changed to {value}");
+        }
+    }
+
+    public System.Collections.Generic.IEnumerable<DriverSelection> DriverSelectionOptions => System.Enum.GetValues<DriverSelection>();
 
     public bool PreventDisplaySleep
     {
@@ -111,6 +126,7 @@ public class MainViewModel : ViewModelBase
         ShowMiniWidgetCommand = new RelayCommand(ShowMiniWidget);
         ResetMiniWidgetPositionCommand = new RelayCommand(ResetMiniWidgetPosition);
         CheckForUpdatesCommand = new RelayCommand(CheckForUpdates);
+        InstallDriverCommand = new RelayCommand(async () => await InstallDriverAsync());
 
         // Sync initial state
         _isActive = _keepAwake.IsActive;
@@ -233,6 +249,7 @@ public class MainViewModel : ViewModelBase
     public ICommand ExitCommand { get; }
     
     public ICommand TypeThingCommand { get; }
+    public ICommand InstallDriverCommand { get; }
     public ICommand ToggleDisplaySleepCommand { get; }
     public ICommand ToggleHeartbeatCommand { get; }
     public ICommand OpenAnalyticsCommand { get; }
@@ -613,4 +630,19 @@ public class MainViewModel : ViewModelBase
         }
     }
 
+    private async System.Threading.Tasks.Task InstallDriverAsync()
+    {
+        Logger.Info("MainViewModel", "Install driver command invoked");
+        var result = await System.Threading.Tasks.Task.Run(() => 
+            InterceptionInputService.Instance.InstallDriver(TypeThingDriverSelection));
+        
+        if (result)
+        {
+            NotificationService.Instance.ShowInfo("Driver Installation", "Installation complete. Please restart your computer to apply the driver changes.");
+        }
+        else
+        {
+            NotificationService.Instance.ShowError("Driver Installation", "Installation failed. Ensure the application is running as Administrator.");
+        }
+    }
 }

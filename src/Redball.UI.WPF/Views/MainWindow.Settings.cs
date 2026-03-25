@@ -31,6 +31,7 @@ public partial class MainWindow
         MainNotificationModeCombo.SelectedIndex = (int)config.NotificationMode;
         MainVerboseLoggingCheck.IsChecked = config.VerboseLogging;
         MainConfirmOnExitCheck.IsChecked = config.ConfirmOnExit;
+        MainEncryptConfigCheck.IsChecked = config.EncryptConfig;
         MainEnableTelemetryCheck.IsChecked = config.EnableTelemetry;
         MainEnablePerformanceMetricsCheck.IsChecked = config.EnablePerformanceMetrics;
         MainProcessIsolationCheck.IsChecked = config.ProcessIsolation;
@@ -221,6 +222,7 @@ public partial class MainWindow
             config.NotificationMode = (NotificationMode)MainNotificationModeCombo.SelectedIndex;
             config.VerboseLogging = MainVerboseLoggingCheck.IsChecked ?? false;
             config.ConfirmOnExit = MainConfirmOnExitCheck.IsChecked ?? true;
+            config.EncryptConfig = MainEncryptConfigCheck.IsChecked ?? true;
             config.EnableTelemetry = MainEnableTelemetryCheck.IsChecked ?? false;
             config.EnablePerformanceMetrics = MainEnablePerformanceMetricsCheck.IsChecked ?? false;
             config.ProcessIsolation = MainProcessIsolationCheck.IsChecked ?? false;

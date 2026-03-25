@@ -297,6 +297,50 @@ public class UpdateService : IUpdateService
             if (!await DownloadFileAsync(updateInfo.DownloadUrl, downloadPath, progress, cancellationToken))
                 return false;
 
+            // --- SECURITY: Trust Chain Validation (sec-3) ---
+            if (_verifySignature)
+            {
+                Logger.Info("UpdateService", "Performing trust chain validation on installer...");
+                progress?.Report(new UpdateDownloadProgress
+                {
+                    Percentage = 99,
+                    StatusText = "Verifying package trust chain..."
+                });
+
+                var trustResult = SecurityService.ValidateUpdatePackage(downloadPath, updateInfo.ManifestHash);
+                
+                if (!trustResult.IsTrusted)
+                {
+                    Logger.Error("UpdateService", $"SECURITY ALERT: Update package failed trust validation! {trustResult.Summary}");
+                    Logger.Error("UpdateService", $"Failures: {string.Join(", ", trustResult.Failures)}");
+                    
+                    // Log warnings but don't necessarily block - depends on strict mode
+                    foreach (var warning in trustResult.Warnings)
+                    {
+                        Logger.Warning("UpdateService", $"Trust validation warning: {warning}");
+                    }
+
+                    // If Authenticode is invalid or manifest hash doesn't match, always block
+                    if (!trustResult.AuthenticodeValid || 
+                        (!string.IsNullOrEmpty(updateInfo.ManifestHash) && !trustResult.ManifestHashValid))
+                    {
+                        Logger.Error("UpdateService", "Update blocked due to failed trust validation");
+                        return false;
+                    }
+                }
+                else
+                {
+                    Logger.Info("UpdateService", $"Update package trust validated: {trustResult.Summary}");
+                    if (!string.IsNullOrEmpty(trustResult.Thumbprint))
+                    {
+                        Logger.Debug("UpdateService", $"Certificate thumbprint: {trustResult.Thumbprint}");
+                    }
+                }
+
+                // Store trust result in updateInfo for UI display
+                updateInfo.TrustValidation = trustResult;
+            }
+
             if (updateInfo.FileName.EndsWith(".msi", StringComparison.OrdinalIgnoreCase) ||
                 updateInfo.FileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
             {
@@ -882,6 +926,16 @@ public class UpdateInfo
 
     public List<FileUpdateInfo>? FilesToUpdate { get; set; }
     public string VersionDisplay => $"v{LatestVersion.Major}.{LatestVersion.Minor}.{LatestVersion.Build}";
+    
+    /// <summary>
+    /// Expected SHA256 hash from signed manifest for integrity verification (sec-3).
+    /// </summary>
+    public string? ManifestHash { get; set; }
+    
+    /// <summary>
+    /// Trust validation result after download (sec-3).
+    /// </summary>
+    public TrustValidationResult? TrustValidation { get; set; }
 }
 
 public class UpdateManifest

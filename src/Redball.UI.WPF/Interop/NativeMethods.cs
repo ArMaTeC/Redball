@@ -133,4 +133,58 @@ internal static class NativeMethods
         DWMSBT_TRANSIENTWINDOW = 3, // Acrylic
         DWMSBT_TABBEDWINDOW = 4 // Mica Alt
     }
+
+    // --- Code Integrity / Test Signing (ntdll.dll) ---
+    
+    [DllImport("ntdll.dll")]
+    private static extern int NtQuerySystemInformation(
+        int SystemInformationClass,
+        IntPtr SystemInformation,
+        int SystemInformationLength,
+        out int ReturnLength);
+
+    private const int SystemCodeIntegrityInformation = 103;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SYSTEM_CODEINTEGRITY_INFORMATION
+    {
+        public uint Length;
+        public uint CodeIntegrityOptions;
+    }
+
+    private const uint CODEINTEGRITY_OPTION_TESTSIGNING = 0x00000002;
+
+    /// <summary>
+    /// Checks if Windows Test Signing (Test Mode) is enabled.
+    /// This allows unverified custom drivers like Redball.KMDF to load.
+    /// </summary>
+    public static bool IsTestModeEnabled()
+    {
+        try
+        {
+            var info = new SYSTEM_CODEINTEGRITY_INFORMATION
+            {
+                Length = (uint)Marshal.SizeOf(typeof(SYSTEM_CODEINTEGRITY_INFORMATION))
+            };
+
+            var ptr = Marshal.AllocHGlobal((int)info.Length);
+            try
+            {
+                Marshal.StructureToPtr(info, ptr, false);
+                var result = NtQuerySystemInformation(SystemCodeIntegrityInformation, ptr, (int)info.Length, out _);
+                if (result == 0) // STATUS_SUCCESS
+                {
+                    info = Marshal.PtrToStructure<SYSTEM_CODEINTEGRITY_INFORMATION>(ptr);
+                    return (info.CodeIntegrityOptions & CODEINTEGRITY_OPTION_TESTSIGNING) != 0;
+                }
+            }
+            finally { Marshal.FreeHGlobal(ptr); }
+
+            // Fallback to registry if ntdll fails or is restricted
+            using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control");
+            var options = key?.GetValue("SystemStartOptions") as string;
+            return options?.Contains("TESTSIGNING", StringComparison.OrdinalIgnoreCase) ?? false;
+        }
+        catch { return false; }
+    }
 }

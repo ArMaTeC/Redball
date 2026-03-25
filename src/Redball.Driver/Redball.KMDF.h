@@ -37,14 +37,21 @@ typedef struct _INTERCEPTION_MOUSE_STROKE
     unsigned int information;
 } INTERCEPTION_MOUSE_STROKE, *PINTERCEPTION_MOUSE_STROKE;
 
-typedef struct _DEVICE_CONTEXT {
+// typedef VOID (*PSERVICE_CALLBACK_ROUTINE)(PDEVICE_OBJECT, PVOID, PVOID, PULONG);
+
+// Driver Context
+typedef struct _REDBALL_DEVICE_CONTEXT {
     WDFDEVICE WdfDevice;
-    WDFQUEUE  NotificationQueue;
+    WDFQUEUE  ControlQueue;        // For IOCTLs
+    WDFQUEUE  StrokeQueue;         // For intercepted strokes
     USHORT    KeyboardFilter;
     USHORT    MouseFilter;
-} DEVICE_CONTEXT, *PDEVICE_CONTEXT;
+    
+    // Hooking data
+    CONNECT_DATA UpperConnectData;
+} REDBALL_DEVICE_CONTEXT, *PREDBALL_DEVICE_CONTEXT;
 
-WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DEVICE_CONTEXT, GetDeviceContext)
+WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(REDBALL_DEVICE_CONTEXT, GetRedballContext)
 
 // Prototypes
 NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);

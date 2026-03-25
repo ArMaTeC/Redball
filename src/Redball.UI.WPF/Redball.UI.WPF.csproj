@@ -63,6 +63,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\install-interception.exe" />
+    <EmbeddedResource Include="..\Redball.Driver\x64\Release\Redball.KMDF.sys" Link="Resources\Redball.KMDF.sys" />
   </ItemGroup>
 
   <!-- App.xaml must be listed as ApplicationDefinition since we disabled the default -->

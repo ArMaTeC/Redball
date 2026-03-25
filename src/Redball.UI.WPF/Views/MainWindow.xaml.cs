@@ -268,16 +268,20 @@ public partial class MainWindow : Window
     {
         base.OnKeyDown(e);
 
-        // Global Command Palette Shortcut: Ctrl + Shift + P
+        // Global Command Palette Shortcuts
         if (e.Key == Key.P && 
             (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && 
             (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
         {
-            if (_viewModel?.Palette != null)
-            {
-                _viewModel.Palette.IsVisible = !_viewModel.Palette.IsVisible;
-                Logger.Info("MainWindow", $"Command Palette visibility toggled to: {_viewModel.Palette.IsVisible}");
-            }
+            ShowCommandPalette();
+            e.Handled = true;
+        }
+        // Ctrl+K shortcut for Command Palette
+        else if (e.Key == Key.K && 
+            (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            ShowCommandPalette();
+            e.Handled = true;
         }
     }
 
@@ -300,6 +304,20 @@ public partial class MainWindow : Window
         WindowState = WindowState == WindowState.Maximized
             ? WindowState.Normal
             : WindowState.Maximized;
+    }
+
+    private void ShowCommandPalette()
+    {
+        try
+        {
+            _analytics.TrackFeature("command_palette.opened");
+            var palette = new Views.CommandPaletteWindow();
+            palette.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Failed to show command palette", ex);
+        }
     }
 
     private void SyncWindowChromeButtons()
