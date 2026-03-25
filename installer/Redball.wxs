@@ -135,7 +135,7 @@
         <Directory Id="AssetsFolder" Name="Assets">
           <Directory Id="AnimationsFolder" Name="Animations" />
         </Directory>
-        <Directory Id="DllFolder" Name="bin" />
+        <Directory Id="DllFolder" Name="dll" />
         <Directory Id="LogsFolder" Name="logs" />
       </Directory>
     </StandardDirectory>
@@ -236,7 +236,7 @@
     </ComponentGroup>
 
     <ComponentGroup Id="DllComponents" Directory="DllFolder">
-        <Files Include="..\dist\wpf-publish\bin\*.dll" />
+        <Files Include="..\dist\wpf-publish\dll\*.dll" Directory="DllFolder" />
     </ComponentGroup>
 
     <ComponentGroup Id="LogsComponents" Directory="LogsFolder">

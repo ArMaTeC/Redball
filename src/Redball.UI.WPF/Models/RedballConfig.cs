@@ -20,6 +20,8 @@ public class RedballConfig
     public bool BatteryAware { get; set; }
     public int BatteryThreshold { get; set; } = 20;
     public bool NetworkAware { get; set; }
+    public bool MeetingAware { get; set; } = true;
+    public bool GamingModeEnabled { get; set; } = true;
     public bool IdleDetection { get; set; }
     public bool AutoExitOnComplete { get; set; }
     public bool ScheduleEnabled { get; set; }

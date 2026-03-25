@@ -1,11 +1,11 @@
 {
   "FirstSeen": "2026-03-24T17:58:28.5677026Z",
   "LastUpdated": "0001-01-01T00:00:00",
-  "TotalSessions": 8,
-  "TotalSessionDuration": "00:00:00.0029994",
+  "TotalSessions": 11,
+  "TotalSessionDuration": "00:00:00.0039617",
   "SessionStartTime": null,
   "SessionHistory": {
-    "2026-03-24": 8
+    "2026-03-24": 11
   },
   "Features": {},
   "Funnels": {},

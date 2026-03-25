@@ -15,20 +15,20 @@ public static class Program
 {
     /// <summary>
     /// Application entry point. Registers assembly resolution handlers before
-    /// starting the WPF application to ensure DLLs in the 'bin' subfolder are found.
+    /// starting the WPF application to ensure DLLs in the 'dll' subfolder are found.
     /// </summary>
     [STAThread]
     public static void Main()
     {
         // Register assembly resolver BEFORE any WPF / dependency types are loaded
         var appBaseDir = AppContext.BaseDirectory;
-        var binDir = Path.Combine(appBaseDir, "bin");
+        var dllDir = Path.Combine(appBaseDir, "dll");
 
         // .NET Core/8 primary mechanism: AssemblyLoadContext.Default.Resolving
         AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
         {
-            // Try to find the assembly in the bin subfolder
-            var candidatePath = Path.Combine(binDir, assemblyName.Name + ".dll");
+            // Try to find the assembly in the dll subfolder
+            var candidatePath = Path.Combine(dllDir, assemblyName.Name + ".dll");
             if (File.Exists(candidatePath))
             {
                 return context.LoadFromAssemblyPath(candidatePath);
@@ -40,7 +40,7 @@ public static class Program
         AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
         {
             var assemblyName = new AssemblyName(args.Name);
-            var candidatePath = Path.Combine(binDir, assemblyName.Name + ".dll");
+            var candidatePath = Path.Combine(dllDir, assemblyName.Name + ".dll");
             if (File.Exists(candidatePath))
             {
                 return Assembly.LoadFrom(candidatePath);
@@ -51,7 +51,7 @@ public static class Program
         // Also handle native DLL resolution (e.g. InputInterceptor)
         NativeLibrary.SetDllImportResolver(typeof(Program).Assembly, (libraryName, assembly, searchPath) =>
         {
-            var nativePath = Path.Combine(binDir, libraryName);
+            var nativePath = Path.Combine(dllDir, libraryName);
             if (!nativePath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
             {
                 nativePath += ".dll";

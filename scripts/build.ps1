@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '', Justification = 'Parameters are used within function scope')]
 [CmdletBinding()]
 param(
@@ -709,13 +709,13 @@ function Step-BuildWpfApp {
         throw "dotnet publish failed"
     }
     # Finalize Publish Directory
-    Write-BuildStep "Finalizing modular publish assets (moving DLLs to bin/)..."
+    Write-BuildStep "Finalizing modular publish assets (moving DLLs to dll/)..."
     Start-Sleep -Seconds 1 # Give OS time to release locks
     
-    $binDir = Join-Path $publishDir "bin"
-    if (-not (Test-Path $binDir)) { New-Item -ItemType Directory -Path $binDir -Force | Out-Null }
+    $dllDir = Join-Path $publishDir "dll"
+    if (-not (Test-Path $dllDir)) { New-Item -ItemType Directory -Path $dllDir -Force | Out-Null }
     
-    # Move DLLs to bin folder (excluding the main executable's primary assembly)
+    # Move DLLs to dll folder (excluding the main executable's primary assembly)
     $dllsToMove = Get-ChildItem -Path $publishDir -Filter "*.dll" | Where-Object { $_.Name -ne "Redball.UI.WPF.dll" }
     
     if ($null -ne $dllsToMove -and $dllsToMove.Count -gt 0) {
@@ -723,7 +723,7 @@ function Step-BuildWpfApp {
             $moved = $false
             for ($attempt = 1; $attempt -le 3; $attempt++) {
                 try {
-                    Move-Item -Path $file.FullName -Destination $binDir -Force -ErrorAction Stop
+                    Move-Item -Path $file.FullName -Destination $dllDir -Force -ErrorAction Stop
                     $moved = $true
                     break
                 }
@@ -740,14 +740,14 @@ function Step-BuildWpfApp {
                 throw "Could not move file $($file.Name) after multiple attempts. File is likely locked."
             }
         }
-        Write-BuildSuccess "Successfully moved dependencies to $binDir"
+        Write-BuildSuccess "Successfully moved dependencies to $dllDir"
     }
 
-    # Note: Assembly resolution from bin/ is handled by Program.cs at runtime
+    # Note: Assembly resolution from dll/ is handled by Program.cs at runtime
     # via AssemblyLoadContext.Default.Resolving - no runtimeconfig patching needed
-
+    
     # Unblock InputInterceptor.dll (prevents Windows security blocks)
-    $interceptorFile = Join-Path $binDir "InputInterceptor.dll"
+    $interceptorFile = Join-Path $dllDir "InputInterceptor.dll"
     if (Test-Path $interceptorFile) {
         Write-HostSafe "  Unblocking InputInterceptor.dll..." -ForegroundColor Gray
         Unblock-File -Path $interceptorFile -ErrorAction SilentlyContinue

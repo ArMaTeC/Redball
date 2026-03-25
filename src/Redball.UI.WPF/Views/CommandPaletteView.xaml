@@ -10,10 +10,30 @@
     <Grid Background="#40000000" MouseDown="Overlay_MouseDown">
         <Border Width="500" VerticalAlignment="Top" Margin="0,100,0,0"
                 Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
+                BorderThickness="2"
+                CornerRadius="12"
                 Effect="{DynamicResource ShadowEffect}">
+            <Border.BorderBrush>
+                <LinearGradientBrush x:Name="PaletteBorderBrush" StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="{DynamicResource AccentColor}" Offset="0"/>
+                    <GradientStop Color="#33FFFFFF" Offset="0.5"/>
+                    <GradientStop Color="{DynamicResource AccentColor}" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.BorderBrush>
+            <Border.Triggers>
+                <EventTrigger RoutedEvent="Loaded">
+                    <BeginStoryboard>
+                        <Storyboard RepeatBehavior="Forever">
+                            <PointAnimation Storyboard.TargetName="PaletteBorderBrush" 
+                                            Storyboard.TargetProperty="StartPoint"
+                                            From="0,0" To="1,1" Duration="0:0:3" AutoReverse="True"/>
+                            <PointAnimation Storyboard.TargetName="PaletteBorderBrush" 
+                                            Storyboard.TargetProperty="EndPoint"
+                                            From="1,1" To="0,0" Duration="0:0:3" AutoReverse="True"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Border.Triggers>
             <Grid Margin="12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

@@ -9,12 +9,18 @@ namespace Redball.UI.Services;
 /// </summary>
 public class BatteryMonitorService
 {
+    private static readonly Lazy<BatteryMonitorService> _instance = new(() => new BatteryMonitorService());
+    public static BatteryMonitorService Instance => _instance.Value;
+
     private DateTime? _lastCheck;
     private BatteryStatus? _cachedStatus;
     private static readonly TimeSpan CacheExpiry = TimeSpan.FromSeconds(60);
     private int _consecutiveWmiFailures;
     private const int MaxWmiFailures = 3;
     private bool _wmiDisabled;
+
+    public bool IsOnBattery => GetStatus().IsOnBattery;
+    public int BatteryPercent => GetStatus().ChargePercent;
 
     public bool IsEnabled { get; set; }
     public int Threshold { get; set; } = 20;

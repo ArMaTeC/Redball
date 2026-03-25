@@ -417,7 +417,7 @@ public class ConfigService : IConfigService
             // We clear the signature, serialize, hash it, update the signature, then serialize again for the real file.
             Config.ConfigSignature = null;
             var unsignedJson = JsonSerializer.Serialize(Config, WriteOptions);
-            Config.ConfigSignature = SecurityService.ComputeStringHash(unsignedJson);
+            Config.ConfigSignature = SecurityService.ComputeStringHash(unsignedJson + SecurityService.GetMachineSalt());
             
             var finalJson = JsonSerializer.Serialize(Config, WriteOptions);
             Logger.Debug("ConfigService", $"Serialized signed config: {finalJson.Length} bytes");

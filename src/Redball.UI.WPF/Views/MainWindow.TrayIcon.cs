@@ -19,6 +19,9 @@ public partial class MainWindow
     private Icon? _originalTrayIcon;
     private Icon? _generatedTrayIcon;
     private bool _isRecreatingTrayIcon;
+    private DispatcherTimer? _animationTimer;
+    private int _animationFrame = 0;
+    private const int AnimationMaxFrames = 10;
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool DestroyIcon(IntPtr hIcon);
@@ -122,8 +125,6 @@ public partial class MainWindow
             {
                 try
                 {
-                    UpdateTrayIconCountdown();
-
                     // Check if tray icon needs refreshing
                     if (_trayIcon == null || !_isTrayIconInitialized)
                     {
@@ -158,11 +159,34 @@ public partial class MainWindow
 
             _trayIconRefreshTimer.Start();
             Logger.Info("MainWindow", "Tray icon refresh timer started (30s interval)");
+
+            SetupAnimationTimer();
         }
         catch (Exception ex)
         {
             Logger.Error("MainWindow", "Failed to setup tray icon refresh timer", ex);
         }
+    }
+
+    private void SetupAnimationTimer()
+    {
+        _animationTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(200) // 5 FPS for smooth pulsing
+        };
+        _animationTimer.Tick += (s, e) =>
+        {
+            if (KeepAwakeService.Instance.IsActive)
+            {
+                _animationFrame = (_animationFrame + 1) % AnimationMaxFrames;
+                UpdateTrayIconState(true);
+            }
+            else
+            {
+                _animationFrame = 0;
+            }
+        };
+        _animationTimer.Start();
     }
 
     private void SetupTrayIcon()
@@ -255,6 +279,11 @@ public partial class MainWindow
         {
             UpdateTrayIconState(isActive);
             UpdateTrayIconCountdown();
+            
+            // Show sleek HUD feedback for hotkey/UI changes
+            var status = isActive ? "ACTIVATED" : "PAUSED";
+            var icon = isActive ? "🚀" : "⏸️";
+            HUDWindow.ShowStatus("Keep-Awake", status, icon);
         });
     }
 
@@ -267,23 +296,44 @@ public partial class MainWindow
 
         if (isActive)
         {
+            // Calculate pulse alpha based on frame (breathe effect)
+            int intensity = (int)(180 + 75 * Math.Sin(Math.PI * _animationFrame / (AnimationMaxFrames / 2.0)));
+            
             var until = KeepAwakeService.Instance.Until;
-            if (until.HasValue)
+            
+            // Check higher priority states
+            if (GamingModeService.Instance.IsGaming)
+            {
+                _trayIcon.ToolTipText = $"Redball {versionStr} — Gaming Mode Active (Optimized)";
+                SetGeneratedTrayIcon(GenerateColorizedIcon(_originalTrayIcon, System.Drawing.Color.MediumPurple, intensity)); // Purple ball
+            }
+            else if (MeetingDetectionService.Instance.IsMeetingActive)
+            {
+                _trayIcon.ToolTipText = $"Redball {versionStr} — Meeting Mode Active";
+                SetGeneratedTrayIcon(GenerateColorizedIcon(_originalTrayIcon, System.Drawing.Color.DodgerBlue, intensity)); // Blue ball
+            }
+            else if (BatteryMonitorService.Instance.IsOnBattery && BatteryMonitorService.Instance.BatteryPercent < 25)
+            {
+                _trayIcon.ToolTipText = $"Redball {versionStr} — Active (Battery Low: {BatteryMonitorService.Instance.BatteryPercent}%)";
+                SetGeneratedTrayIcon(GenerateColorizedIcon(_originalTrayIcon, System.Drawing.Color.Red, intensity)); // Red ball pulse
+            }
+            else if (until.HasValue)
             {
                 var minsLeft = Math.Max(0, (int)(until.Value - DateTime.Now).TotalMinutes);
-                _trayIcon.ToolTipText = $"Redball {versionStr} — Timed: {minsLeft} min left";
-                SetGeneratedTrayIcon(GenerateStateIcon(_originalTrayIcon, System.Drawing.Color.FromArgb(253, 126, 20))); // Orange for timed
+                _trayIcon.ToolTipText = $"Redball {versionStr} — Timed Session ({minsLeft} min left)";
+                var text = minsLeft > 99 ? "99+" : minsLeft.ToString();
+                SetGeneratedTrayIcon(GenerateCountdownIcon(_originalTrayIcon, text, System.Drawing.Color.FromArgb(intensity, 255, 140, 0))); // Orange countdown
             }
             else
             {
                 _trayIcon.ToolTipText = $"Redball {versionStr} — Active";
-                SetGeneratedTrayIcon(GenerateStateIcon(_originalTrayIcon, System.Drawing.Color.FromArgb(76, 175, 80))); // Green for active
+                SetGeneratedTrayIcon(GenerateColorizedIcon(_originalTrayIcon, System.Drawing.Color.LimeGreen, intensity)); // Green ball
             }
         }
         else
         {
             _trayIcon.ToolTipText = $"Redball {versionStr} — Paused";
-            SetGeneratedTrayIcon(GenerateStateIcon(_originalTrayIcon, System.Drawing.Color.FromArgb(108, 117, 125))); // Gray for paused
+            SetGeneratedTrayIcon(GenerateColorizedIcon(_originalTrayIcon, System.Drawing.Color.Gray, 120)); // Dimmed Gray
         }
     }
 
@@ -339,6 +389,47 @@ public partial class MainWindow
         }
     }
 
+    private static Icon GenerateColorizedIcon(Icon baseIcon, System.Drawing.Color targetColor, int alpha)
+    {
+        try
+        {
+            using var bmp = new Bitmap(16, 16);
+            using var g = Graphics.FromImage(bmp);
+            
+            // ColorMatrix to tint the icon
+            float r = targetColor.R / 255f;
+            float gVal = targetColor.G / 255f;
+            float b = targetColor.B / 255f;
+            float a = alpha / 255f;
+
+            var cm = new System.Drawing.Imaging.ColorMatrix(new float[][]
+            {
+                new float[] {r, 0, 0, 0, 0},
+                new float[] {0, gVal, 0, 0, 0},
+                new float[] {0, 0, b, 0, 0},
+                new float[] {0, 0, 0, a, 0},
+                new float[] {0, 0, 0, 0, 1}
+            });
+
+            using var ia = new System.Drawing.Imaging.ImageAttributes();
+            ia.SetColorMatrix(cm);
+
+            using var baseBmp = baseIcon.ToBitmap();
+            g.DrawImage(baseBmp, new System.Drawing.Rectangle(0, 0, 16, 16), 0, 0, baseBmp.Width, baseBmp.Height, System.Drawing.GraphicsUnit.Pixel, ia);
+
+            var handle = bmp.GetHicon();
+            using var tempIcon = System.Drawing.Icon.FromHandle(handle);
+            var clonedIcon = (Icon)tempIcon.Clone();
+            DestroyIcon(handle);
+            return clonedIcon;
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("MainWindow", $"Failed to colorize icon: {ex.Message}");
+            return baseIcon;
+        }
+    }
+
     private static Icon GenerateStateIcon(Icon baseIcon, System.Drawing.Color dotColor)
     {
         try
@@ -371,23 +462,10 @@ public partial class MainWindow
 
     private void UpdateTrayIconCountdown()
     {
-        if (_trayIcon == null || _originalTrayIcon == null) return;
-
-        var until = KeepAwakeService.Instance.Until;
-        if (until.HasValue && KeepAwakeService.Instance.IsActive)
-        {
-            var minsLeft = Math.Max(0, (int)(until.Value - DateTime.Now).TotalMinutes);
-            var text = minsLeft > 99 ? "99+" : minsLeft.ToString();
-            SetGeneratedTrayIcon(GenerateCountdownIcon(_originalTrayIcon, text));
-        }
-        else
-        {
-            // Restore original icon when no timed session
-            RestoreOriginalTrayIcon();
-        }
+        UpdateTrayIconState(KeepAwakeService.Instance.IsActive);
     }
 
-    private static Icon GenerateCountdownIcon(Icon baseIcon, string text)
+    private static Icon GenerateCountdownIcon(Icon baseIcon, string text, System.Drawing.Color bgColor)
     {
         try
         {
@@ -396,12 +474,12 @@ public partial class MainWindow
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            // Draw original icon as background
+            // Draw original icon slightly dimmed
             using var baseBmp = baseIcon.ToBitmap();
             g.DrawImage(baseBmp, 0, 0, 16, 16);
 
-            // Draw semi-transparent background for text
-            using var bgBrush = new SolidBrush(System.Drawing.Color.FromArgb(200, 0, 0, 0));
+            // Draw semi-transparent background for text using state color
+            using var bgBrush = new SolidBrush(System.Drawing.Color.FromArgb(bgColor.A, bgColor.R, bgColor.G, bgColor.B));
             g.FillRectangle(bgBrush, 0, 7, 16, 9);
 
             // Draw countdown text

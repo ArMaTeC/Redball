@@ -236,13 +236,34 @@ public class SecurityService
     }
 
     /// <summary>
-    /// Verifies if a configuration file has been tampered with.
+    /// Computes a machine-specific salt based on the machine name and hardware info.
+    /// This prevents configuration files from being easily moved between devices.
+    /// </summary>
+    public static string GetMachineSalt()
+    {
+        try
+        {
+            var machineName = Environment.MachineName;
+            var userName = Environment.UserName;
+            // Combine with a static project-specific salt
+            var rawSalt = $"{machineName}:{userName}:Redball:4d6167696353616c74";
+            return ComputeStringHash(rawSalt);
+        }
+        catch
+        {
+            return "RedballDefaultSalt";
+        }
+    }
+
+    /// <summary>
+    /// Verifies if a configuration file has been tampered with, including machine-affinity check.
     /// </summary>
     public static bool VerifyConfigIntegrity(string json, string? storedSignature)
     {
         if (string.IsNullOrEmpty(storedSignature)) return true; // Legacy support or first run
 
-        var computed = ComputeStringHash(json);
+        var salt = GetMachineSalt();
+        var computed = ComputeStringHash(json + salt);
         return string.Equals(computed, storedSignature, StringComparison.OrdinalIgnoreCase);
     }
 }

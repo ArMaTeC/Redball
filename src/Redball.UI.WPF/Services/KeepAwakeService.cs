@@ -45,6 +45,8 @@ public class KeepAwakeService : IKeepAwakeService
     private readonly IdleDetectionService _idleDetection = new();
     private readonly ScheduleService _schedule = new();
     private readonly PresentationModeService _presentationMode = new();
+    private readonly MeetingDetectionService _meetingDetection = MeetingDetectionService.Instance;
+    private readonly GamingModeService _gamingMode = GamingModeService.Instance;
 
     public event EventHandler<bool>? ActiveStateChanged;
     public event EventHandler? TimedAwakeExpired;
@@ -145,6 +147,16 @@ public class KeepAwakeService : IKeepAwakeService
         _schedule.StopTime = config.ScheduleStopTime;
         _schedule.Days = config.ScheduleDays;
         _presentationMode.IsEnabled = config.PresentationModeDetection;
+        // Meeting detection is enabled by default if MeetingAware is true
+        _meetingDetection.MeetingStateChanged += OnMeetingStateChanged;
+        // Gaming mode state change handler
+        _gamingMode.GamingStateChanged += OnGamingStateChanged;
+        
+        // Initial check for gaming mode
+        if (config.GamingModeEnabled)
+        {
+            _gamingMode.CheckAndUpdate();
+        }
 
         // Heartbeat timer - calls SetThreadExecutionState + optional F15
         var heartbeatInterval = Math.Max(10, config.HeartbeatSeconds);
@@ -454,16 +466,29 @@ public class KeepAwakeService : IKeepAwakeService
             // Run idle detection every second (cheap P/Invoke call)
             _idleDetection.CheckAndUpdate(this);
 
-            // Run expensive monitors every 10 seconds
-            if (_monitorTickCount % 10 == 0)
+            // Run expensive monitors every 10 seconds (standard) or 60 seconds (gaming)
+            var monitorInterval = _gamingMode.IsGaming ? 60 : 10;
+            if (_monitorTickCount % monitorInterval == 0)
             {
                 _batteryMonitor.CheckAndUpdate(this);
                 _networkMonitor.CheckAndUpdate(this);
                 _presentationMode.CheckAndUpdate(this);
+                
+                if (ConfigService.Instance.Config.MeetingAware)
+                {
+                    _meetingDetection.CheckAndUpdate();
+                }
+
+                // Check for full-screen game
+                if (ConfigService.Instance.Config.GamingModeEnabled)
+                {
+                    _gamingMode.CheckAndUpdate();
+                }
             }
 
-            // Run schedule check every 30 seconds
-            if (_monitorTickCount % 30 == 0)
+            // Run schedule check every 30 seconds (standard) or 120 seconds (gaming)
+            var scheduleInterval = _gamingMode.IsGaming ? 120 : 30;
+            if (_monitorTickCount % scheduleInterval == 0)
             {
                 _schedule.CheckAndUpdate(this);
             }
@@ -471,6 +496,43 @@ public class KeepAwakeService : IKeepAwakeService
         catch (Exception ex)
         {
             Logger.Debug("KeepAwakeService", $"Duration tick error: {ex.Message}");
+        }
+    }
+
+    private void OnMeetingStateChanged(object? sender, bool isMeeting)
+    {
+        if (!ConfigService.Instance.Config.MeetingAware) return;
+
+        if (isMeeting)
+        {
+            if (!IsActive)
+            {
+                Logger.Info("KeepAwakeService", "Meeting detected, auto-activating keep-awake");
+                SetActive(true);
+            }
+        }
+        else
+        {
+            // Optional: de-activate if we auto-activated? 
+            // For now let's stay active as it's safer
+        }
+    }
+
+    private void OnGamingStateChanged(object? sender, bool isGaming)
+    {
+        if (!ConfigService.Instance.Config.GamingModeEnabled) return;
+
+        if (isGaming)
+        {
+            if (!IsActive)
+            {
+                Logger.Info("KeepAwakeService", "Game detected, auto-activating keep-awake and scaling polling...");
+                SetActive(true);
+            }
+        }
+        else
+        {
+            // Optional: return to normal state?
         }
     }
 
