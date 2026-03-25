@@ -293,15 +293,38 @@ public class InterceptionInputService : IDisposable
         {
             var driverPath = Path.Combine(Environment.SystemDirectory, "drivers", "interception.sys");
             var fileExists = File.Exists(driverPath);
-            var registryDetected = InputInterceptor.CheckDriverInstalled();
             
-            // Driver is only TRULY installed if BOTH registry and file exist
-            IsDriverInstalled = registryDetected && fileExists;
-            
-            if (registryDetected && !fileExists)
+            // Check for service in registry
+            bool serviceExists = false;
+            try
             {
-                Logger.Warning("InterceptionInputService", "Driver registry detected but file is MISSING. Fixing state...");
-                IsDriverInstalled = false; // State is broken
+                using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\interception", false);
+                serviceExists = key != null;
+            }
+            catch { }
+
+            // Check if it's in UpperFilters
+            bool inUpperFilters = false;
+            try
+            {
+                using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Class\{4d36e96b-e325-11ce-bfc1-08002be10318}", false);
+                var filters = key?.GetValue("UpperFilters") as string[];
+                inUpperFilters = filters != null && (Array.IndexOf(filters, "interception") >= 0 || Array.IndexOf(filters, "keyboard") >= 0);
+            }
+            catch { }
+
+            // Driver is TRULY installed only if service and file exist.
+            // UpperFilters is the "ready" state, but service entry is the "installed" state.
+            IsDriverInstalled = serviceExists && fileExists;
+            
+            if (serviceExists && !fileExists)
+            {
+                Logger.Warning("InterceptionInputService", "Driver service exists but file is MISSING at " + driverPath);
+            }
+            
+            if (!inUpperFilters && IsDriverInstalled)
+            {
+                Logger.Info("InterceptionInputService", "Driver is installed but NOT active in UpperFilters (reboot/restart required).");
             }
         }
         catch (Exception ex)
@@ -1353,7 +1376,7 @@ public class InterceptionInputService : IDisposable
         catch { return false; }
     }
 
-    private void RemoveFromUpperFilters(string classGuid, string filter)
+    private void RemoveFromUpperFilters(string classGuid, string filterStub)
     {
         try
         {
@@ -1365,21 +1388,36 @@ public class InterceptionInputService : IDisposable
             if (filters == null) return;
 
             var newList = new List<string>(filters);
-            if (newList.Remove(filter) || newList.Remove(filter + "\0"))
+            
+            // Remove multiple common filter names (standard and common typos/legacy)
+            var targets = new[] { "interception", "keyboard", "mouinterception" };
+            bool changed = false;
+            
+            foreach (var target in targets)
             {
-                key.SetValue("UpperFilters", newList.ToArray(), Microsoft.Win32.RegistryValueKind.MultiString);
-                Logger.Info("InterceptionInputService", $"Successfully removed {filter} from {classGuid}");
-                
-                // Extra safety: double check if it's really gone
-                var verified = key.GetValue("UpperFilters") as string[];
-                if (verified != null && Array.IndexOf(verified, filter) >= 0)
+                if (newList.Remove(target) || newList.Remove(target + "\0"))
                 {
-                    Logger.Warning("InterceptionInputService", $"Manual removal from {classGuid} FAILED to persist!");
+                    changed = true;
+                    Logger.Info("InterceptionInputService", $"Removing {target} from {classGuid}");
                 }
             }
-            else
+
+            if (changed)
             {
-                Logger.Verbose("InterceptionInputService", $"{filter} was not found in UpperFilters for {classGuid}");
+                key.SetValue("UpperFilters", newList.ToArray(), Microsoft.Win32.RegistryValueKind.MultiString);
+                Logger.Info("InterceptionInputService", $"Filters updated for {classGuid}. Re-verifying...");
+                
+                var verified = key.GetValue("UpperFilters") as string[];
+                if (verified != null)
+                {
+                    foreach (var target in targets)
+                    {
+                        if (Array.IndexOf(verified, target) >= 0)
+                        {
+                            Logger.Warning("InterceptionInputService", $"Failed to fully remove {target} from {classGuid}!");
+                        }
+                    }
+                }
             }
         }
         catch (Exception ex)

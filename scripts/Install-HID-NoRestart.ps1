@@ -38,10 +38,10 @@ Start-Process -FilePath $InstallExe -ArgumentList "/install" -Wait -NoNewWindow
 Write-Step "Verifying Registry filters..."
 $FilterKey = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e96b-e325-11ce-bfc1-08002be10318}"
 $UpperFilters = Get-ItemProperty -Path $FilterKey -Name "UpperFilters"
-if ($UpperFilters.UpperFilters -notcontains "keyboard") {
-    Write-Output "Manually adding keyboard filter to registry..."
+if ($UpperFilters.UpperFilters -notcontains "interception") {
+    Write-Output "Manually adding 'interception' filter to registry..."
     $CurrentFilters = $UpperFilters.UpperFilters
-    Set-ItemProperty -Path $FilterKey -Name "UpperFilters" -Value ($CurrentFilters + "keyboard")
+    Set-ItemProperty -Path $FilterKey -Name "UpperFilters" -Value ($CurrentFilters + "interception")
 }
 
 Write-Step "Attempting to reload Keyboard stack without restart..."
@@ -60,3 +60,6 @@ foreach ($Line in $KbdDevices) {
 
 Write-Step "Installation Complete!"
 Write-Output "If the HID mode still reports 'Driver Not Installed' in Redball, a full restart is still required."
+
+
+
