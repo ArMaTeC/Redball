@@ -1,0 +1,42 @@
+
+[2026-03-24 21:20:57] ========== Redball WPF Started ==========
+[2026-03-24 21:20:57] Version: 2.1.243.0
+[2026-03-24 21:20:57] Process ID: 276
+[2026-03-24 21:20:57] Base Directory: C:\Users\karll\Desktop\Redball\bin\net8.0-windows\win-x64\
+[2026-03-24 21:20:57] Current Directory: C:\Users\karll\Desktop\Redball\bin\net8.0-windows\win-x64
+[2026-03-24 21:20:57] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-24 21:20:57] .NET Version: 8.0.25
+[2026-03-24 21:20:57] Command Line: C:\Users\karll\Desktop\Redball\bin\net8.0-windows\win-x64\Redball.UI.WPF.dll --test-driver-fallbacks
+[2026-03-24 21:20:57.671] [INF] [001] [App] === Redball.UI.WPF Application Starting ===
+[2026-03-24 21:20:57.674] [INF] [001] [App] Version: 2.1.243.0
+[2026-03-24 21:20:57.674] [DBG] [001] [App] Exception handlers registered
+[2026-03-24 21:20:57.800] [INF] [001] [App] === OnStartup Begin ===
+[2026-03-24 21:20:57.800] [INF] [001] [App] Running internal driver fallout test...
+[2026-03-24 21:20:57.801] [VRB] [001] [InterceptionInputService] Instance created
+[2026-03-24 21:20:57.806] [INF] [001] [InterceptionInputService] Releasing interception resources (Driver uninstall requested)...
+[2026-03-24 21:20:57.809] [INF] [001] [InterceptionInputService] Interception resources released
+[2026-03-24 21:20:57.815] [WRN] [001] [InterceptionInputService] Admin rights required to uninstall driver, but elevateIfNeeded is false.
+[2026-03-24 21:20:57.815] [INF] [001] [App] Internal test: Uninstall result (with cleanup fallback) = False
+[2026-03-24 21:20:57.817] [WRN] [001] [InterceptionInputService] Admin rights required to install driver, but elevateIfNeeded is false.
+[2026-03-24 21:20:57.817] [INF] [001] [App] Internal test: Install result = False
+
+[2026-03-24 21:24:38] ========== Redball WPF Started ==========
+[2026-03-24 21:24:38] Version: 2.1.243.0
+[2026-03-24 21:24:38] Process ID: 14764
+[2026-03-24 21:24:38] Base Directory: C:\Users\karll\Desktop\Redball\bin\net8.0-windows\win-x64\
+[2026-03-24 21:24:38] Current Directory: C:\Users\karll\Desktop\Redball\bin\net8.0-windows\win-x64
+[2026-03-24 21:24:38] OS: Microsoft Windows NT 10.0.26100.0
+[2026-03-24 21:24:38] .NET Version: 8.0.25
+[2026-03-24 21:24:38] Command Line: C:\Users\karll\Desktop\Redball\bin\net8.0-windows\win-x64\Redball.UI.WPF.dll --test-driver-fallbacks
+[2026-03-24 21:24:39.001] [INF] [001] [App] === Redball.UI.WPF Application Starting ===
+[2026-03-24 21:24:39.004] [INF] [001] [App] Version: 2.1.243.0
+[2026-03-24 21:24:39.005] [DBG] [001] [App] Exception handlers registered
+[2026-03-24 21:24:39.094] [INF] [001] [App] === OnStartup Begin ===
+[2026-03-24 21:24:39.094] [INF] [001] [App] Running internal driver fallout test...
+[2026-03-24 21:24:39.095] [VRB] [001] [InterceptionInputService] Instance created
+[2026-03-24 21:24:39.100] [INF] [001] [InterceptionInputService] Releasing interception resources (Driver uninstall requested)...
+[2026-03-24 21:24:39.104] [INF] [001] [InterceptionInputService] Interception resources released
+[2026-03-24 21:24:39.108] [WRN] [001] [InterceptionInputService] Admin rights required to uninstall driver, but elevateIfNeeded is false.
+[2026-03-24 21:24:39.108] [INF] [001] [App] Internal test: Uninstall result (with cleanup fallback) = False
+[2026-03-24 21:24:39.110] [WRN] [001] [InterceptionInputService] Admin rights required to install driver, but elevateIfNeeded is false.
+[2026-03-24 21:24:39.110] [INF] [001] [App] Internal test: Install result = False

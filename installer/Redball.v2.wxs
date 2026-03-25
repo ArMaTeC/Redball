@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  
+  <Package Name="Redball"
+           Manufacturer="ArMaTeC"
+           Version="$(var.ProductVersion)"
+           UpgradeCode="A7A9B089-9D1D-4F8A-86DB-6FE89B6F99B0"
+           Scope="perUser"
+           Compressed="yes"
+           InstallerVersion="200">
+    
+    <!-- Suppress UI validation errors for standard WiX dialogs -->
+    <Property Id="MsiUIValidation" Value="0" />
+    <Property Id="MsiUIShowProgressDialogs" Value="1" />
+    
+    <!-- Major upgrade handling -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                  Schedule="afterInstallInitialize"
+                  AllowSameVersionUpgrades="no"
+                  MigrateFeatures="yes" />
+    
+    <!-- CAB embedded in MSI -->
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+    
+    <!-- ARP metadata -->
+    <Property Id="ARPCOMMENTS" Value="Keep-awake utility for Windows with modern WPF UI" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/ArMaTeC/Redball" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/ArMaTeC/Redball/releases" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/ArMaTeC/Redball/issues" />
+    <Property Id="ARPNOREPAIR" Value="0" />
+    <Property Id="ARPSIZE" Value="30000" />
+    
+    <!-- Per-user install by default -->
+    <Property Id="ALLUSERS" Value="2" />
+    <Property Id="MSIINSTALLPERUSER" Value="1" />
+    
+    <!-- User data paths -->
+    <Property Id="REDBALL_USERDATA_DIR" Secure="yes" />
+    <SetProperty Id="REDBALL_USERDATA_DIR" 
+                 Value="[LocalAppDataFolder]Redball\UserData" 
+                 After="CostFinalize" 
+                 Sequence="first" />
+    
+    <!-- Launch checkbox -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Redball" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <SetProperty Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" 
+                 Value="0" 
+                 After="CostFinalize" 
+                 Condition="REMOVE" />
+    
+    <!-- Install sequences -->
+    <InstallExecuteSequence>
+      <Custom Action="InitializeLogging" After="CostFinalize" />
+      <Custom Action="StopRunningProcesses" After="InitializeLogging" Condition="NOT REMOVE" />
+      <Custom Action="BackupUserData" Before="RemoveExistingProducts" Condition="UPGRADINGPRODUCTCODE" />
+      <Custom Action="RestoreUserData" After="InstallFinalize" Condition="NOT REMOVE" />
+      <Custom Action="CleanupUserData" After="RemoveFiles" Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+      <Custom Action="FinalizeLogging" After="RestoreUserData" Condition="NOT REMOVE" />
+    </InstallExecuteSequence>
+    
+    <InstallUISequence>
+      <!-- UI only sequence -->
+    </InstallUISequence>
+    
+    <!-- === STANDARD UI === -->
+    <UI>
+      <ui:WixUI Id="WixUI_Minimal" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+    </UI>
+
+    <!-- === BINARIES === -->
+    <Binary Id="RedballInstallerCA" SourceFile="$(var.CA_PATH)" />
+
+    <!-- === CUSTOM ACTIONS === -->
+    <CustomAction Id="InitializeLogging" BinaryRef="RedballInstallerCA" DllEntry="InitializeLogging" Execute="immediate" Return="ignore" />
+    <CustomAction Id="StopRunningProcesses" BinaryRef="RedballInstallerCA" DllEntry="StopRunningProcesses" Execute="immediate" Return="ignore" />
+    <CustomAction Id="BackupUserData" BinaryRef="RedballInstallerCA" DllEntry="BackupUserData" Execute="immediate" Return="ignore" />
+    <CustomAction Id="RestoreUserData" BinaryRef="RedballInstallerCA" DllEntry="RestoreUserData" Execute="immediate" Return="ignore" />
+    <CustomAction Id="CleanupUserData" BinaryRef="RedballInstallerCA" DllEntry="CleanupUserData" Execute="immediate" Return="ignore" />
+    <CustomAction Id="FinalizeLogging" BinaryRef="RedballInstallerCA" DllEntry="FinalizeLogging" Execute="immediate" Return="ignore" />
+    
+    <!-- Launch Redball CA using direct FileRef -->
+    <CustomAction Id="LaunchApplication" FileRef="WPFExecutable" ExeCommand="" Execute="immediate" Return="asyncNoWait" />
+    
+    <!-- === DIRECTORY STRUCTURE === -->
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="INSTALLFOLDER" Name="Redball">
+        <Directory Id="AssetsFolder" Name="Assets">
+          <Directory Id="AnimationsFolder" Name="Animations" />
+        </Directory>
+        <Directory Id="DllFolder" Name="dll" />
+        <Directory Id="LogsFolder" Name="logs" />
+        <Directory Id="InteropFolder" Name="interop" />
+      </Directory>
+    </StandardDirectory>
+    
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="RedballMenuFolder" Name="Redball" />
+    </StandardDirectory>
+    
+    <StandardDirectory Id="DesktopFolder" />
+    <StandardDirectory Id="StartupFolder" />
+    
+    <!-- === FEATURE TREE === -->
+    <Feature Id="MainFeature" Title="Redball Core" Description="Core Redball application with system tray utility, themes, and TypeThing functionality" Level="1" AllowAdvertise="no" Display="expand">
+      <ComponentGroupRef Id="CoreComponents" />
+      <ComponentGroupRef Id="WPFComponents" />
+      <ComponentGroupRef Id="AssetsComponents" />
+      <ComponentGroupRef Id="DllComponents" />
+      <ComponentGroupRef Id="LogsComponents" />
+      <ComponentGroupRef Id="ShortcutComponents" />
+      <ComponentGroupRef Id="FileAssociationComponents" />
+      
+      <Feature Id="DesktopShortcutFeature" Title="Desktop Shortcut" Description="Add shortcut to Desktop" Level="1000" AllowAdvertise="no">
+        <ComponentGroupRef Id="DesktopShortcutComponents" />
+      </Feature>
+    </Feature>
+    
+    <Feature Id="StartupFeature" Title="Start with Windows" Description="Launch Redball automatically when Windows starts" Level="2" AllowAdvertise="no">
+      <ComponentGroupRef Id="StartupShortcutComponents" />
+    </Feature>
+    
+    <Feature Id="ConfigFeature" Title="Default Behavior Options" Description="Configure default Redball behavior at install time" Level="1" AllowAdvertise="no" Display="expand">
+      <Feature Id="CfgStartMinimized" Title="Start Minimized to Tray" Description="Start Redball minimized to system tray" Level="2" AllowAdvertise="no">
+        <ComponentGroupRef Id="CfgMinimizedComponents" />
+      </Feature>
+      <Feature Id="CfgBatteryAware" Title="Battery-Aware Mode" Description="Pause when running on battery power" Level="2" AllowAdvertise="no">
+        <ComponentGroupRef Id="CfgBatteryAwareComponents" />
+      </Feature>
+      <Feature Id="CfgNetworkAware" Title="Network-Aware Mode" Description="Pause when no network connection detected" Level="2" AllowAdvertise="no">
+        <ComponentGroupRef Id="CfgNetworkAwareComponents" />
+      </Feature>
+      <Feature Id="CfgIdleDetection" Title="Idle Detection" Description="Pause when user is idle" Level="2" AllowAdvertise="no">
+        <ComponentGroupRef Id="CfgIdleDetectionComponents" />
+      </Feature>
+    </Feature>
+    
+    <Feature Id="HidFeature" Title="HID Driver Support" Description="Install and configure HID input driver for advanced TypeThing functionality" Level="2" AllowAdvertise="no">
+      <ComponentGroupRef Id="HidComponents" />
+    </Feature>
+    
+  </Package>
+
+  <!-- === FRAGMENTS === -->
+  <Fragment>
+    <!-- Core application components -->
+    <ComponentGroup Id="CoreComponents" Directory="INSTALLFOLDER">
+      <Component Id="ReadmeComponent" Guid="CFA8E35A-0DF4-4D9F-8669-7865E96AFB95">
+        <File Id="ReadmeFile" Source="..\README.md" KeyPath="yes" />
+      </Component>
+      
+      <Component Id="LocalesComponent" Guid="E1B2C3D4-5F6A-7B8C-9D0E-1F2A3B4C5D6E">
+        <File Id="LocalesFile" Source="..\locales.json" KeyPath="yes" />
+      </Component>
+      
+      <Component Id="LicenseComponent" Guid="A2B3C4D5-6E7F-8A9B-0C1D-2E3F4A5B6C7D">
+        <File Id="LicenseFile" Source="..\LICENSE" KeyPath="yes" />
+      </Component>
+      
+      <Component Id="ThirdPartyComponent" Guid="F3A4B5C6-7D8E-9F0A-1B2C-3D4E5F6A7B8C">
+        <File Id="ThirdPartyFile" Source="..\docs\THIRD-PARTY-NOTICES.md" KeyPath="yes" />
+      </Component>
+      
+      <Component Id="InstalledMarkerComponent" Guid="4B9B1F2A-5B5E-4C3A-95D7-6DBE8468D8E1">
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball" Name="InstallPath" Type="string" Value="[INSTALLFOLDER]Redball.UI.WPF.exe" />
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball" Name="InstallVersion" Type="string" Value="[ProductVersion]" />
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball" Name="InstallDate" Type="string" Value="[Date]" />
+      </Component>
+    </ComponentGroup>
+    
+    <!-- WPF Application files -->
+    <ComponentGroup Id="WPFComponents" Directory="INSTALLFOLDER">
+      <Component Id="WPFExeComponent" Guid="C8D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F">
+        <File Id="WPFExecutable" Source="..\dist\wpf-publish\Redball.UI.WPF.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="WPFDllComponent" Guid="B7C8D9E0-1F2A-3B4C-5D6E-7F8A9B0C1D2E">
+        <File Id="WPFMainDll" Source="..\dist\wpf-publish\Redball.UI.WPF.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="WPFRuntimeConfigComponent" Guid="D9E6F7A8-9B0C-1D2E-3F4A-5B6C7D8E9F0A">
+        <File Id="WPFRuntimeConfig" Source="..\dist\wpf-publish\Redball.UI.WPF.runtimeconfig.json" KeyPath="yes" />
+      </Component>
+      <Component Id="WPFDepsComponent" Guid="E0F1A2B3-C4D5-6E7F-8A9B-0C1D2E3F4A5B">
+        <File Id="WPFDeps" Source="..\dist\wpf-publish\Redball.UI.WPF.deps.json" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <!-- DLL Components from dll folder -->
+    <ComponentGroup Id="DllComponents" Directory="DllFolder">
+      <Files Include="..\dist\wpf-publish\dll\*.dll" Directory="DllFolder" />
+    </ComponentGroup>
+    
+    <!-- Logs folder placeholder -->
+    <ComponentGroup Id="LogsComponents" Directory="LogsFolder">
+      <Component Id="LogsKeepComponent" Guid="A3B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D8">
+        <CreateFolder />
+        <RemoveFolder Id="RemoveLogsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\Components" Name="LogsFolder" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <!-- Assets Components -->
+    <ComponentGroup Id="AssetsComponents">
+      <Component Id="WPFAssetsComponent" Guid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890" Directory="AssetsFolder">
+        <File Id="RedballIconAsset" Source="..\dist\wpf-publish\Assets\redball.ico" KeyPath="yes" />
+      </Component>
+      <Files Include="..\dist\wpf-publish\Assets\Animations\*.json" Directory="AnimationsFolder" />
+    </ComponentGroup>
+    
+    <!-- Start Menu Shortcut -->
+    <ComponentGroup Id="ShortcutComponents" Directory="RedballMenuFolder">
+      <Component Id="StartMenuShortcutComponent" Guid="5F6DDFD1-E6C7-4DC7-8E40-3FBC1F0FEAF8">
+        <Shortcut Id="StartMenuShortcut2"
+                  Name="Redball"
+                  Description="Launch Redball keep-awake utility"
+                  Target="[INSTALLFOLDER]Redball.UI.WPF.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="RedballIcon" />
+        <RemoveFolder Id="RemoveMenuFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\Shortcuts" Name="StartMenu" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+      <Component Id="StartMenuUninstallComponent" Guid="9A8B7C6D-5E4F-3A2B-1C0D-9E8F7A6B5C4D">
+        <Shortcut Id="UninstallShortcut"
+                  Name="Uninstall Redball"
+                  Description="Remove Redball from your computer"
+                  Target="[SystemFolder]msiexec.exe"
+                  Arguments="/x [ProductCode]"
+                  Icon="RedballIcon" />
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\Shortcuts" Name="Uninstall" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <!-- Desktop Shortcut -->
+    <ComponentGroup Id="DesktopShortcutComponents" Directory="DesktopFolder">
+      <Component Id="DesktopShortcutComponent" Guid="91F1505B-3B86-4D0F-953B-C2FB0F4A9A53">
+        <Shortcut Id="DesktopShortcut"
+                  Name="Redball"
+                  Description="Launch Redball keep-awake utility"
+                  Target="[INSTALLFOLDER]Redball.UI.WPF.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="RedballIcon" />
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\Shortcuts" Name="Desktop" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <!-- Startup Shortcut -->
+    <ComponentGroup Id="StartupShortcutComponents" Directory="StartupFolder">
+      <Component Id="StartupShortcutComponent" Guid="B9E89FA1-62EA-4761-93E2-3A8A0A701B5C">
+        <Shortcut Id="StartupShortcut"
+                  Name="Redball"
+                  Description="Start Redball when Windows signs in"
+                  Target="[INSTALLFOLDER]Redball.UI.WPF.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Arguments="--minimized"
+                  Icon="RedballIcon" />
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\Shortcuts" Name="Startup" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <!-- File Association -->
+    <ComponentGroup Id="FileAssociationComponents" Directory="INSTALLFOLDER">
+      <Component Id="FileAssociationComponent" Guid="2EBA1ED6-E31D-4B64-B67C-75C12C8A8B88">
+        <RegistryKey Root="HKCU" Key="Software\Classes\.redball">
+          <RegistryValue Type="string" Value="Redball.Config" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\Redball.Config">
+          <RegistryValue Type="string" Value="Redball Configuration File" />
+          <RegistryValue Type="string" Name="FriendlyTypeName" Value="Redball Configuration" />
+          <RegistryKey Key="DefaultIcon">
+            <RegistryValue Type="string" Value="[INSTALLFOLDER]Redball.UI.WPF.exe,0" />
+          </RegistryKey>
+          <RegistryKey Key="shell\open\command">
+            <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]Redball.UI.WPF.exe&quot; -ConfigPath &quot;%1&quot;" />
+          </RegistryKey>
+        </RegistryKey>
+      </Component>
+    </ComponentGroup>
+    
+    <!-- Config Options Registry Components -->
+    <ComponentGroup Id="CfgMinimizedComponents" Directory="INSTALLFOLDER">
+      <Component Id="CfgMinimizedComponent" Guid="5A41D031-69A2-40BE-B2A6-38AE3D04D62D">
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\Defaults" Name="StartMinimized" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <ComponentGroup Id="CfgBatteryAwareComponents" Directory="INSTALLFOLDER">
+      <Component Id="CfgBatteryAwareComponent" Guid="CD37D16F-F652-4FD9-B541-B89F3076848A">
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\Defaults" Name="BatteryAware" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <ComponentGroup Id="CfgNetworkAwareComponents" Directory="INSTALLFOLDER">
+      <Component Id="CfgNetworkAwareComponent" Guid="C53D69CF-9370-4A4E-94B4-19662BCA5F17">
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\Defaults" Name="NetworkAware" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <ComponentGroup Id="CfgIdleDetectionComponents" Directory="INSTALLFOLDER">
+      <Component Id="CfgIdleDetectionComponent" Guid="90CC4352-C1F4-48D1-B60A-99729AF5EA7A">
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\Defaults" Name="IdleDetection" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <!-- HID Driver Components -->
+    <ComponentGroup Id="HidComponents" Directory="InteropFolder">
+      <Component Id="HidDriverComponent" Guid="4C9A5F7E-6E8F-4B77-9A2F-3F1D5C2A9E11">
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\HID" Name="DriverInstalled" Type="integer" Value="1" KeyPath="yes" />
+        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\HID" Name="InstallAttempted" Type="integer" Value="0" />
+      </Component>
+    </ComponentGroup>
+    
+    <!-- Icon -->
+    <Icon Id="RedballIcon" SourceFile="Redball.ico" />
+    <Property Id="ARPPRODUCTICON" Value="RedballIcon" />
+    
+    <!-- UI Graphics -->
+    <WixVariable Id="WixUILicenseRtf" Value="Redball-License.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp" />
+    <WixVariable Id="WixUIExclamationIco" Value="redball.ico" />
+    <WixVariable Id="WixUIInfoIco" Value="redball.ico" />
+    <WixVariable Id="WixUINewIco" Value="redball.ico" />
+    <WixVariable Id="WixUIUpIco" Value="redball.ico" />
+    
+  </Fragment>
+  
+  <!-- === LOCALIZATION VIA WIXVARIABLES === -->
+  <Fragment>
+    <WixVariable Id="ProgressDlgDescriptionInstalling" Value="Please wait while Redball is being installed on your computer." />
+    <WixVariable Id="ProgressDlgDescriptionRemoving" Value="Please wait while Redball is being removed from your computer." />
+    <WixVariable Id="ProgressDlgDescriptionRepairing" Value="Please wait while Redball is being repaired." />
+  </Fragment>
+  
+</Wix>

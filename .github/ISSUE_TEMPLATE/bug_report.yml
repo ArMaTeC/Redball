@@ -1,0 +1,82 @@
+---
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please provide as much detail as possible.
+        
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: What happened?
+    validations:
+      required: true
+      
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this?
+      placeholder: |
+        1. Open Redball
+        2. Click on ...
+        3. Observe ...
+    validations:
+      required: true
+      
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should have happened?
+    validations:
+      required: true
+      
+  - type: input
+    id: version
+    attributes:
+      label: Redball Version
+      placeholder: "e.g., 2.1.22"
+    validations:
+      required: true
+      
+  - type: input
+    id: windows
+    attributes:
+      label: Windows Version
+      placeholder: "e.g., Windows 11 23H2"
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Installation Method
+      options:
+        - MSI Installer
+        - Direct EXE download
+        - Built from source
+        - Other
+    validations:
+      required: true
+      
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log Output
+      description: If relevant, paste log content from Redball.log
+      render: shell
+      
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      options:
+        - label: I have searched existing issues
+        - label: I can reproduce this consistently
+        - label: This happens with default settings

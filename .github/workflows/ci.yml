@@ -1,0 +1,378 @@
+name: Redball CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '*.ps1'
+      - '*.json'
+      - '.github/workflows/**'
+      - 'tests/**'
+      - 'src/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '*.ps1'
+      - '*.json'
+      - 'tests/**'
+      - 'src/**'
+
+env:
+  # Opt into Node.js 24 to suppress deprecation warnings until actions are updated
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  lint:
+    name: Lint PowerShell
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Setup PowerShell
+      shell: pwsh
+      run: |
+        $PSVersionTable
+
+    - name: Install PSScriptAnalyzer
+      shell: pwsh
+      run: |
+        Install-Module -Name PSScriptAnalyzer -Force -SkipPublisherCheck
+
+    - name: Run PSScriptAnalyzer
+      shell: pwsh
+      run: |
+        $scripts = Get-ChildItem -Path ./scripts,./installer -Filter '*.ps1' -Recurse -File
+        $allResults = @()
+        foreach ($script in $scripts) {
+          $results = Invoke-ScriptAnalyzer -Path $script.FullName -Severity Warning,Error
+          if ($results) {
+            $allResults += $results
+            Write-Host "`n=== $($script.Name) ===" -ForegroundColor Cyan
+            $results | Format-Table -AutoSize
+          }
+        }
+        if ($allResults | Where-Object { $_.Severity -eq 'Error' }) {
+          throw "PSScriptAnalyzer found errors!"
+        }
+        Write-Host "`nPSScriptAnalyzer completed - $($scripts.Count) files scanned"
+
+    - name: Validate JSON Files
+      shell: pwsh
+      run: |
+        Get-ChildItem . -Filter "*.json" | ForEach-Object {
+          try {
+            $null = Get-Content $_.FullName -Raw | ConvertFrom-Json
+            Write-Host "✓ $($_.Name) is valid JSON"
+          }
+          catch {
+            throw "Invalid JSON in $($_.Name): $_"
+          }
+        }
+
+  security:
+    name: Security Scan
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Run Security Scan
+      shell: pwsh
+      run: |
+        # Check for common security issues
+        $issues = @()
+        $psFiles = Get-ChildItem -Path . -Filter "*.ps1" -Recurse -File
+        Write-Host "Scanning $($psFiles.Count) PS1 files..."
+
+        # Check for hardcoded credentials (only in main script, not tests/build infra)
+        $mainFiles = $psFiles | Where-Object { $_.Name -notmatch 'Tests\.ps1$|build\.ps1$' }
+        $content = $mainFiles |
+          Select-String -Pattern '(?i)\b(password|secret|apikey|api_key|token)\s*=\s*["\x27][^"\x27]+["\x27]' |
+          Where-Object { $_ -notmatch 'example|placeholder|changeme|TimestampServer|Hotkey|ShortcutKey' }
+
+        if ($content) {
+          $issues += "Potential hardcoded credentials found"
+          $content | ForEach-Object { Write-Warning $_ }
+        }
+
+        # Check for Invoke-Expression usage (excluded test and build files)
+        $invokeExpr = $mainFiles |
+          Select-String -Pattern 'Invoke-Expression|iex\s' |
+          Where-Object { $_.Line -notmatch '^\s*#' }
+
+        if ($invokeExpr) {
+          $issues += "Invoke-Expression usage found - review for security"
+          $invokeExpr | ForEach-Object { Write-Warning $_ }
+        }
+
+        if ($issues.Count -gt 0) {
+          throw "Security issues found: $($issues -join ', ')"
+        }
+
+        Write-Host "✓ Security scan passed"
+
+  dotnet-test:
+    name: Run .NET Tests
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v5
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore packages
+      shell: pwsh
+      run: dotnet restore tests/Redball.Tests.csproj
+
+    - name: Build tests
+      shell: pwsh
+      run: dotnet build tests/Redball.Tests.csproj --configuration Release --no-restore
+
+    - name: Run tests
+      shell: pwsh
+      run: |
+        dotnet test tests/Redball.Tests.csproj `
+          --configuration Release `
+          --no-build `
+          --logger "trx;LogFileName=dotnet-test-results.trx" `
+          --collect:"XPlat Code Coverage"
+
+    - name: Upload .NET test results
+      uses: actions/upload-artifact@v5
+      if: always()
+      with:
+        name: dotnet-test-results
+        path: tests/TestResults/
+
+    - name: Check NuGet vulnerabilities
+      shell: pwsh
+      run: |
+        Write-Host "Checking for vulnerable NuGet packages..."
+        $output = dotnet list src/Redball.UI.WPF/Redball.UI.WPF.csproj package --vulnerable 2>&1
+        Write-Host $output
+        if ($output -match 'has the following vulnerable packages') {
+          Write-Warning "Vulnerable NuGet packages detected — review and update."
+        } else {
+          Write-Host "✓ No known vulnerable packages found"
+        }
+
+  build-wpf:
+    name: Build WPF Application
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v5
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Check version consistency
+      shell: pwsh
+      run: |
+        $propsFile = Get-Content Directory.Build.props -Raw
+        $propsVersion = ($propsFile | Select-String '<Version>([\d.]+)</Version>').Matches.Groups[1].Value
+        $versionTxt = (Get-Content scripts/version.txt -Raw).Trim()
+        Write-Host "Build.props Version : $propsVersion"
+        Write-Host "version.txt    : $versionTxt"
+        if ($propsVersion -ne $versionTxt) {
+          throw "Version mismatch! Directory.Build.props=$propsVersion vs version.txt=$versionTxt"
+        }
+        Write-Host "✓ Versions are in sync"
+
+    - name: Restore packages
+      shell: pwsh
+      run: dotnet restore src/Redball.UI.WPF/Redball.UI.WPF.csproj
+
+    - name: Build (warnings as errors)
+      shell: pwsh
+      run: dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj --configuration Release --no-restore -warnaserror
+
+    - name: Publish single-file
+      shell: pwsh
+      run: |
+        dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj `
+          --configuration Release `
+          --output ./dist/wpf-publish `
+          --self-contained true `
+          --runtime win-x64 `
+          -p:PublishSingleFile=true `
+          -p:PublishTrimmed=false
+
+    - name: Track artifact sizes
+      shell: pwsh
+      run: |
+        $exePath = "./dist/wpf-publish/Redball.UI.WPF.exe"
+        if (-not (Test-Path $exePath)) {
+          Write-Warning "EXE not found at $exePath — skipping size tracking"
+          exit 0
+        }
+
+        $exeSizeMB = [math]::Round((Get-Item $exePath).Length / 1MB, 2)
+        Write-Host "EXE size: $exeSizeMB MB"
+
+        # Load baseline if it exists
+        $baselinePath = ".github/artifact-size-baseline.json"
+        $threshold = 10  # percent
+        $warning = $false
+
+        if (Test-Path $baselinePath) {
+          $baseline = Get-Content $baselinePath -Raw | ConvertFrom-Json
+          $baselineExeMB = $baseline.ExeSizeMB
+          if ($baselineExeMB -gt 0) {
+            $deltaPercent = [math]::Round((($exeSizeMB - $baselineExeMB) / $baselineExeMB) * 100, 1)
+            Write-Host "Baseline EXE: $baselineExeMB MB | Delta: $deltaPercent%"
+            if ($deltaPercent -gt $threshold) {
+              Write-Warning "⚠ EXE size increased by $deltaPercent% (threshold: $threshold%)"
+              $warning = $true
+            } else {
+              Write-Host "✓ EXE size within $threshold% threshold"
+            }
+          }
+        } else {
+          Write-Host "No baseline found — recording current size as baseline"
+        }
+
+        # Write current sizes as new baseline
+        @{ ExeSizeMB = $exeSizeMB; RecordedAt = (Get-Date -Format "o") } |
+          ConvertTo-Json | Set-Content $baselinePath
+
+        # Write to job summary
+        $icon = if ($warning) { "⚠️" } else { "✅" }
+        @"
+        ### $icon Artifact Size Report
+        | Artifact | Size |
+        |----------|------|
+        | Redball.UI.WPF.exe | **$exeSizeMB MB** |
+        "@ >> $env:GITHUB_STEP_SUMMARY
+
+    - name: Upload WPF artifact
+      uses: actions/upload-artifact@v5
+      with:
+        name: Redball-WPF-Exe
+        path: ./dist/wpf-publish/Redball.UI.WPF.exe
+
+  mutation-test:
+    name: Mutation Testing (Stryker)
+    runs-on: windows-latest
+    # Run only on scheduled runs or manual workflow_dispatch - not on every PR
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    continue-on-error: true  # Non-blocking: informational only
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v5
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore packages
+      shell: pwsh
+      run: dotnet restore tests/Redball.Tests.csproj
+
+    - name: Install Stryker
+      shell: pwsh
+      run: |
+        dotnet tool install --global dotnet-stryker --version 4.0.0
+        dotnet-stryker --version
+
+    - name: Run Mutation Tests
+      shell: pwsh
+      run: |
+        Push-Location tests
+        # Run Stryker with threshold checks (won't fail CI, just report)
+        dotnet stryker --break-at 40 --mutation-level "Standard"
+        Pop-Location
+
+    - name: Upload Mutation Report
+      uses: actions/upload-artifact@v5
+      if: always()
+      with:
+        name: mutation-report
+        path: tests/StrykerOutput/*/reports/
+
+  release:
+    name: Create Release Package
+    needs: [lint, security, dotnet-test, build-wpf]
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Download WPF artifact
+      uses: actions/download-artifact@v5
+      with:
+        name: Redball-WPF-Exe
+        path: ./dist/wpf-publish
+
+    - name: Create Release Archive
+      shell: pwsh
+      run: |
+        # Get version from WPF project file
+        $csprojContent = Get-Content ./src/Redball.UI.WPF/Redball.UI.WPF.csproj -Raw
+        $versionMatch = $csprojContent | Select-String -Pattern '<Version>([\d.]+)</Version>'
+        if ($versionMatch) {
+          $version = $versionMatch.Matches.Groups[1].Value
+        } else {
+          $version = "2.1.25"  # fallback
+        }
+        $releaseName = "Redball-v$version"
+
+        # Create release directory
+        New-Item -ItemType Directory -Path "./$releaseName" -Force
+
+        # Copy WPF exe (primary artifact)
+        Copy-Item ./dist/wpf-publish/Redball.UI.WPF.exe "./$releaseName/"
+        Copy-Item ./Redball.json "./$releaseName/"
+        Copy-Item ./locales.json "./$releaseName/"
+        Copy-Item ./README.md "./$releaseName/"
+        Copy-Item ./LICENSE "./$releaseName/"
+        Copy-Item ./docs/CHANGELOG.md "./$releaseName/"
+
+        # Create zip
+        Compress-Archive -Path "./$releaseName" -DestinationPath "./$releaseName.zip" -Force
+
+        Write-Host "Created release: $releaseName.zip"
+
+    - name: Upload Release Artifact
+      uses: actions/upload-artifact@v5
+      with:
+        name: Redball-Release
+        path: ./Redball-v*.zip

@@ -1,0 +1,190 @@
+<Window x:Class="Redball.UI.Views.InteractiveTutorial"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Redball Tutorial" 
+        Height="500" 
+        Width="700"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackground}">
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header with Progress -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource AccentColor}" 
+                Height="80"
+                Padding="25,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <TextBlock Grid.Row="0" 
+                           Text="🎓 Interactive Tutorial" 
+                           FontSize="22" 
+                           FontWeight="SemiBold"
+                           Foreground="White"
+                           VerticalAlignment="Center"/>
+                
+                <!-- Progress Bar -->
+                <Grid Grid.Row="1" Margin="0,5,0,10">
+                    <ProgressBar x:Name="TutorialProgress" 
+                                 Value="0" 
+                                 Maximum="5"
+                                 Height="4"
+                                 Background="#30FFFFFF"
+                                 Foreground="White"/>
+                </Grid>
+            </Grid>
+        </Border>
+        
+        <!-- Tutorial Content -->
+        <Grid Grid.Row="1" Margin="30,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="250"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Left: Step Content -->
+            <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                <TextBlock x:Name="StepNumber" 
+                           Text="Step 1 of 5" 
+                           FontSize="12" 
+                           Opacity="0.6"
+                           Margin="0,0,0,5"/>
+                
+                <TextBlock x:Name="StepTitle" 
+                           Text="Welcome to Redball!" 
+                           FontSize="20" 
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,15"/>
+                
+                <TextBlock x:Name="StepDescription" 
+                           Text="Redball keeps your Windows PC awake when you need it. Let's learn the basics in just 5 quick steps."
+                           FontSize="14"
+                           TextWrapping="Wrap"
+                           LineHeight="22"
+                           Margin="0,0,0,20"/>
+                
+                <!-- Interactive Demo Area -->
+                <Border x:Name="DemoArea" 
+                        Style="{DynamicResource CardStyle}"
+                        Height="150"
+                        Background="{DynamicResource SurfaceBrush}">
+                    <Grid x:Name="DemoContent">
+                        <!-- Demo content changes per step -->
+                        <TextBlock x:Name="DemoText" 
+                                   Text="Click 'Next' to begin" 
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontSize="16"
+                                   Opacity="0.7"/>
+                    </Grid>
+                </Border>
+                
+                <!-- Try It Button -->
+                <Button x:Name="TryItButton"
+                        Content="Try It Now" 
+                        Click="TryItButton_Click"
+                        Margin="0,15,0,0"
+                        Padding="20,10"
+                        HorizontalAlignment="Left"
+                        Visibility="Collapsed"/>
+            </StackPanel>
+            
+            <!-- Right: Visual Guide -->
+            <Border Grid.Column="1" Style="{DynamicResource CardStyle}">
+                <StackPanel x:Name="VisualGuide">
+                    <TextBlock Text="Quick Reference" 
+                               FontSize="14" 
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,15"/>
+                    
+                    <StackPanel x:Name="TipList">
+                        <Border Background="{DynamicResource SurfaceBrush}" 
+                                CornerRadius="4" 
+                                Padding="10,8" 
+                                Margin="0,0,0,8">
+                            <TextBlock Text="🔴 Tray icon = Status indicator" 
+                                       FontSize="12"/>
+                        </Border>
+                        <Border Background="{DynamicResource SurfaceBrush}" 
+                                CornerRadius="4" 
+                                Padding="10,8" 
+                                Margin="0,0,0,8">
+                            <TextBlock Text="Space = Quick toggle" 
+                                       FontSize="12"/>
+                        </Border>
+                        <Border Background="{DynamicResource SurfaceBrush}" 
+                                CornerRadius="4" 
+                                Padding="10,8" 
+                                Margin="0,0,0,8">
+                            <TextBlock Text="Right-click = Full menu" 
+                                       FontSize="12"/>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+        
+        <!-- Footer Navigation -->
+        <Border Grid.Row="2" 
+                Background="{DynamicResource PanelBackground}" 
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="25,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <Button Grid.Column="0" 
+                        x:Name="SkipButton"
+                        Content="Skip Tutorial" 
+                        Click="SkipButton_Click"
+                        Padding="15,8"
+                        Opacity="0.7"/>
+                
+                <StackPanel Grid.Column="1" 
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Center">
+                    <Ellipse x:Name="Dot1" Width="8" Height="8" Fill="{DynamicResource AccentColor}" Margin="3"/>
+                    <Ellipse x:Name="Dot2" Width="8" Height="8" Fill="{DynamicResource BorderBrush}" Margin="3"/>
+                    <Ellipse x:Name="Dot3" Width="8" Height="8" Fill="{DynamicResource BorderBrush}" Margin="3"/>
+                    <Ellipse x:Name="Dot4" Width="8" Height="8" Fill="{DynamicResource BorderBrush}" Margin="3"/>
+                    <Ellipse x:Name="Dot5" Width="8" Height="8" Fill="{DynamicResource BorderBrush}" Margin="3"/>
+                </StackPanel>
+                
+                <Button Grid.Column="2" 
+                        x:Name="PreviousButton"
+                        Content="← Previous" 
+                        Click="PreviousButton_Click"
+                        Margin="0,0,10,0"
+                        Padding="20,8"
+                        IsEnabled="False"/>
+                
+                <Button Grid.Column="3" 
+                        x:Name="NextButton"
+                        Content="Next →" 
+                        Click="NextButton_Click"
+                        Padding="25,8"
+                        Background="{DynamicResource AccentColor}"
+                        Foreground="White"
+                        FontWeight="SemiBold"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

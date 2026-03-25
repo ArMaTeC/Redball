@@ -1,0 +1,25 @@
+{
+  "version": "2",
+  "artifactConfigurations": [
+    {
+      "name": "Redball-MSI",
+      "signing": {
+        "msi": {
+          "include": [
+            "Redball.msi"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Redball-EXE",
+      "signing": {
+        "pe": {
+          "include": [
+            "Redball.exe"
+          ]
+        }
+      }
+    }
+  ]
+}

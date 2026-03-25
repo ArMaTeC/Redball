@@ -1,0 +1,227 @@
+<Window x:Class="Redball.UI.Views.OnboardingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Welcome to Redball" 
+        Height="520" 
+        Width="640"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Style="{DynamicResource ModernWindow}"
+        Background="{DynamicResource BackgroundBrush}"
+        Foreground="{DynamicResource ForegroundBrush}">
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource AccentBrush}" 
+                Height="80"
+                Padding="20,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <Image Grid.Column="0" 
+                       Source="/Assets/redball.ico" 
+                       Width="48" 
+                       Height="48"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                
+                <StackPanel Grid.Column="1" Margin="15,0,0,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="HeaderTitle" Text="Welcome to Redball" 
+                               FontSize="24" 
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource AccentForegroundBrush}"/>
+                    <TextBlock x:Name="HeaderSubtitle" Text="Keep your Windows PC awake — intelligently" 
+                               FontSize="14"
+                               Opacity="0.9"
+                               Foreground="{DynamicResource AccentForegroundBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        
+        <!-- Progress Indicator -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,8">
+            <Ellipse x:Name="Dot1" Width="8" Height="8" Fill="{DynamicResource AccentForegroundBrush}" Margin="3,0"/>
+            <Ellipse x:Name="Dot2" Width="8" Height="8" Fill="{DynamicResource AccentForegroundBrush}" Opacity="0.4" Margin="3,0"/>
+            <Ellipse x:Name="Dot3" Width="8" Height="8" Fill="{DynamicResource AccentForegroundBrush}" Opacity="0.4" Margin="3,0"/>
+            <Ellipse x:Name="Dot4" Width="8" Height="8" Fill="{DynamicResource AccentForegroundBrush}" Opacity="0.4" Margin="3,0"/>
+        </StackPanel>
+
+        <!-- Content Area - Steps as overlapping grids -->
+        <Grid Grid.Row="1" Margin="30,20">
+
+            <!-- Step 1: Welcome -->
+            <StackPanel x:Name="Step1Panel" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="Welcome!" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                <TextBlock Text="Redball prevents your computer from sleeping while you work." FontSize="15" HorizontalAlignment="Center" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,20" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="420"/>
+                <TextBlock Text="Let's get you set up in a few quick steps." FontSize="13" HorizontalAlignment="Center" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+            </StackPanel>
+
+            <!-- Step 2: Features -->
+            <ScrollViewer x:Name="Step2Panel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                <TextBlock Text="Key Features" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15"/>
+                <Border Style="{DynamicResource CardStyle}" Margin="0,5">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="&#xE7F4;" FontFamily="Segoe Fluent Icons" FontSize="22" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" Margin="0,0,12,0"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="System Tray Icon" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
+                            <TextBlock Text="Look for the red ball in your system tray. Left-click for quick controls, right-click for full menu." Opacity="0.7" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Style="{DynamicResource CardStyle}" Margin="0,5">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="&#xE823;" FontFamily="Segoe Fluent Icons" FontSize="22" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" Margin="0,0,12,0"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Timed Sessions" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
+                            <TextBlock Text="Set a duration or keep awake until a specific time. The tray icon shows a countdown." Opacity="0.7" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Style="{DynamicResource CardStyle}" Margin="0,5">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="&#xEA80;" FontFamily="Segoe Fluent Icons" FontSize="22" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" Margin="0,0,12,0"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Smart Features" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
+                            <TextBlock Text="Battery-aware, network-aware, idle detection, and scheduled operation." Opacity="0.7" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Style="{DynamicResource CardStyle}" Margin="0,5">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="&#xE765;" FontFamily="Segoe Fluent Icons" FontSize="22" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" Margin="0,0,12,0"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="TypeThing" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
+                            <TextBlock Text="Paste clipboard text as realistic keystrokes. Great for remote desktops." Opacity="0.7" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Step 3: Settings -->
+            <Grid x:Name="Step3Panel" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                    <TextBlock Text="Configure Your Preferences" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15"/>
+                    <TextBlock Text="These settings can be changed anytime from the main window." Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,15" TextWrapping="Wrap"/>
+                    <CheckBox x:Name="PreventDisplaySleepCheck" Content="Keep display awake" IsChecked="True" Margin="0,5" Checked="OnSettingChanged" Unchecked="OnSettingChanged" Style="{DynamicResource ModernCheckBox}"/>
+                    <CheckBox x:Name="UseHeartbeatCheck" Content="F15 heartbeat" IsChecked="True" Margin="0,5" Checked="OnSettingChanged" Unchecked="OnSettingChanged" Style="{DynamicResource ModernCheckBox}"/>
+                    <CheckBox x:Name="StartWithWindowsCheck" Content="Start with Windows" IsChecked="False" Margin="0,5" Checked="OnSettingChanged" Unchecked="OnSettingChanged" Style="{DynamicResource ModernCheckBox}"/>
+                    <CheckBox x:Name="BatteryAwareCheck" Content="Battery-aware mode" IsChecked="False" Margin="0,5" Checked="OnSettingChanged" Unchecked="OnSettingChanged" Style="{DynamicResource ModernCheckBox}"/>
+                    <CheckBox x:Name="NetworkAwareCheck" Content="Network-aware mode" IsChecked="False" Margin="0,5" Checked="OnSettingChanged" Unchecked="OnSettingChanged" Style="{DynamicResource ModernCheckBox}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="Theme" FontWeight="Medium" Margin="0,0,0,8"/>
+                    <ComboBox x:Name="ThemeCombo" SelectedIndex="0" Style="{DynamicResource ModernComboBox}" SelectionChanged="ThemeCombo_SelectionChanged">
+                        <ComboBoxItem Content="System Default"/>
+                        <ComboBoxItem Content="Dark Mode"/>
+                        <ComboBoxItem Content="Light Mode"/>
+                        <ComboBoxItem Content="Midnight Blue"/>
+                        <ComboBoxItem Content="Forest Green"/>
+                        <ComboBoxItem Content="Ocean Blue"/>
+                        <ComboBoxItem Content="Sunset Orange"/>
+                        <ComboBoxItem Content="Royal Purple"/>
+                        <ComboBoxItem Content="Slate Gray"/>
+                        <ComboBoxItem Content="Rose Gold"/>
+                        <ComboBoxItem Content="Cyberpunk"/>
+                        <ComboBoxItem Content="Coffee"/>
+                        <ComboBoxItem Content="Arctic Frost"/>
+                    </ComboBox>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Border Width="24" Height="16" CornerRadius="3" Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,3,0"/>
+                        <Border Width="24" Height="16" CornerRadius="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,3,0"/>
+                        <Border Width="24" Height="16" CornerRadius="3" Background="{DynamicResource AccentBrush}" Margin="0,0,3,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <!-- Step 4: Done -->
+            <StackPanel x:Name="Step4Panel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" FontSize="48" HorizontalAlignment="Center" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,16"/>
+                <TextBlock Text="You're all set!" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                <TextBlock Text="Redball is now running in your system tray." FontSize="14" HorizontalAlignment="Center" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,20"/>
+                <TextBlock Text="Left-click the tray icon for quick controls, or right-click for the full menu." FontSize="12" HorizontalAlignment="Center" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" MaxWidth="400" TextAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+        
+        <!-- Footer -->
+        <Border Grid.Row="2" 
+                Background="{DynamicResource PanelBackground}" 
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="20,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <CheckBox Grid.Column="0" 
+                          x:Name="ShowOnStartupCheck"
+                          Content="Show this on startup"
+                          IsChecked="False"
+                          Checked="OnSettingChanged" Unchecked="OnSettingChanged"
+                          Style="{DynamicResource ModernCheckBox}"/>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock>
+                        <Hyperlink NavigateUri="https://github.com/ArMaTeC/Redball/wiki" 
+                                   RequestNavigate="Hyperlink_RequestNavigate">
+                            View Documentation
+                        </Hyperlink>
+                    </TextBlock>
+                </StackPanel>
+
+                <Button Grid.Column="2"
+                        x:Name="BackButton"
+                        Content="Back"
+                        Click="BackButton_Click"
+                        Padding="16,8"
+                        Margin="0,0,8,0"
+                        Visibility="Collapsed"
+                        Style="{DynamicResource ModernButton}"/>
+                
+                <Button Grid.Column="3" 
+                        x:Name="GetStartedButton"
+                        Content="Next" 
+                        Click="GetStartedButton_Click"
+                        Padding="20,8"
+                        Style="{DynamicResource PrimaryButton}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,148 @@
+name: Security Scan & SBOM
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run weekly on Sundays
+    - cron: '0 0 * * 0'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore src/Redball.UI.WPF/Redball.UI.WPF.csproj
+
+    - name: Run NuGet Audit
+      run: |
+        dotnet list src/Redball.UI.WPF/Redball.UI.WPF.csproj package --vulnerable --include-transitive 2>&1 | Tee-Object -FilePath nuget-audit.log
+        if (Select-String -Path nuget-audit.log -Pattern "has the following vulnerable packages") {
+          Write-Error "Vulnerable packages found!"
+          exit 1
+        }
+
+    - name: Upload audit results
+      uses: actions/upload-artifact@v5
+      if: always()
+      with:
+        name: nuget-audit-results
+        path: nuget-audit.log
+
+  sbom-generation:
+    name: Generate SBOM
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Install SBOM tool
+      run: |
+        $releaseUrl = "https://github.com/microsoft/sbom-tool/releases/download/v2.2.7/sbom-tool-win-x64.exe"
+        $sbomToolPath = "$env:LOCALAPPDATA\sbom-tool.exe"
+        Invoke-WebRequest -Uri $releaseUrl -OutFile $sbomToolPath
+        Add-Content $env:GITHUB_PATH $sbomToolPath
+        Write-Host "SBOM tool installed to: $sbomToolPath"
+
+    - name: Restore and Build
+      run: |
+        dotnet restore src/Redball.UI.WPF/Redball.UI.WPF.csproj
+        dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj --no-restore
+
+    - name: Generate SBOM
+      run: |
+        $sbomPath = "sbom"
+        New-Item -ItemType Directory -Force -Path $sbomPath
+        $sbomTool = "$env:LOCALAPPDATA\sbom-tool.exe"
+        & $sbomTool generate -b $sbomPath -bc src/Redball.UI.WPF -pn Redball -pv $env:GITHUB_REF_NAME -ps ArMaTeC -nsb https://github.com/ArMaTeC/Redball -m "$sbomPath/_manifest/spdx_2.2"
+
+    - name: Upload SBOM
+      uses: actions/upload-artifact@v5
+      with:
+        name: sbom-spdx
+        path: sbom/_manifest/spdx_2.2/manifest.spdx.json
+
+    - name: Attach SBOM to Release
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: sbom/_manifest/spdx_2.2/manifest.spdx.json
+
+  codeql-analysis:
+    name: CodeQL Security Analysis
+    runs-on: windows-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v4
+      with:
+        languages: csharp
+        queries: security-extended,security-and-quality
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v4
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v4
+      with:
+        category: "/language:csharp"
+
+  secret-scan:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Run GitLeaks
+      uses: zricethezav/gitleaks-action@v2
+      with:
+        config-path: .gitleaks.toml
+
+  sign-check:
+    name: Verify Code Signing
+    runs-on: windows-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    steps:
+    - name: Download Release Assets
+      uses: robinraju/release-downloader@v1
+      with:
+        tag: ${{ github.ref_name }}
+        fileName: "Redball.msi"
+
+    - name: Verify Signature
+      run: |
+        $signature = Get-AuthenticodeSignature -FilePath "Redball.msi"
+        if ($signature.Status -ne "Valid") {
+          Write-Error "Signature invalid: $($signature.Status)"
+          exit 1
+        }
+        Write-Host "✓ Code signature valid: $($signature.SignerCertificate.Subject)"

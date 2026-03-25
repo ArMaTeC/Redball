@@ -1,0 +1,141 @@
+<Window x:Class="Redball.UI.Views.CookieNotice"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Privacy Notice" 
+        Height="450" 
+        Width="550"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackground}">
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource AccentColor}" 
+                Height="60"
+                Padding="20,0">
+            <TextBlock Text="🍪 Privacy &amp; Data Notice" 
+                       FontSize="20" 
+                       FontWeight="SemiBold"
+                       Foreground="White"
+                       VerticalAlignment="Center"/>
+        </Border>
+        
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" Margin="25,20">
+            <StackPanel>
+                <TextBlock Text="Your privacy is important to us." 
+                           FontSize="16" 
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,15"/>
+                
+                <TextBlock TextWrapping="Wrap" 
+                           LineHeight="22"
+                           Margin="0,0,0,15">
+                    Redball is a local-first desktop application. By default, all your data stays on your computer. We do not use cookies or tracking in the traditional web sense.
+                </TextBlock>
+                
+                <TextBlock Text="What we store locally:" 
+                           FontSize="14" 
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,10"/>
+                
+                <Border Style="{DynamicResource CardStyle}" Margin="0,5">
+                    <StackPanel>
+                        <CheckBox Content="✓ Configuration preferences (themes, settings)" 
+                                  IsChecked="True" IsEnabled="False"/>
+                        <CheckBox Content="✓ Session state (to resume after restart)" 
+                                  IsChecked="True" IsEnabled="False" Margin="0,5"/>
+                        <CheckBox Content="✓ Optional usage analytics (if you opt in)" 
+                                  IsChecked="True" IsEnabled="False"/>
+                    </StackPanel>
+                </Border>
+                
+                <TextBlock Text="What we do NOT do:" 
+                           FontSize="14" 
+                           FontWeight="SemiBold"
+                           Margin="0,15,0,10"/>
+                
+                <Border Style="{DynamicResource CardStyle}" Margin="0,5">
+                    <StackPanel>
+                        <TextBlock Text="✗ No web cookies or browser storage" Margin="0,3"/>
+                        <TextBlock Text="✗ No personal data collection" Margin="0,3"/>
+                        <TextBlock Text="✗ No tracking or profiling" Margin="0,3"/>
+                        <TextBlock Text="✗ No data sold to third parties" Margin="0,3"/>
+                        <TextBlock Text="✗ No ads or ad tracking" Margin="0,3"/>
+                    </StackPanel>
+                </Border>
+                
+                <TextBlock Text="Optional features (your choice):" 
+                           FontSize="14" 
+                           FontWeight="SemiBold"
+                           Margin="0,15,0,10"/>
+                
+                <StackPanel>
+                    <CheckBox x:Name="TelemetryCheck" 
+                              Content="Enable usage analytics (stored locally)"
+                              Margin="0,3"/>
+                    <CheckBox x:Name="UpdateCheck" 
+                              Content="Check for updates (contacts GitHub API)"
+                              IsChecked="True"
+                              Margin="0,3"/>
+                    <CheckBox x:Name="CloudAnalyticsCheck" 
+                              Content="Share anonymized usage (requires endpoint config)"
+                              Margin="0,3"/>
+                </StackPanel>
+                
+                <TextBlock Margin="0,15,0,0">
+                    <Hyperlink NavigateUri="https://github.com/ArMaTeC/Redball/blob/main/docs/PRIVACY.md" 
+                               RequestNavigate="PrivacyLink_Click">
+                        Read full Privacy Policy
+                    </Hyperlink>
+                </TextBlock>
+            </StackPanel>
+        </ScrollViewer>
+        
+        <!-- Footer -->
+        <Border Grid.Row="2" 
+                Background="{DynamicResource PanelBackground}" 
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="20,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <CheckBox Grid.Column="0" 
+                          x:Name="DontShowAgainCheck"
+                          Content="Don't show again"
+                          VerticalAlignment="Center"/>
+                
+                <TextBlock Grid.Column="1" 
+                           Text="You can change these settings anytime" 
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Opacity="0.6"/>
+                
+                <Button Grid.Column="2" 
+                        x:Name="AcceptButton"
+                        Content="I Understand" 
+                        Click="AcceptButton_Click"
+                        Padding="25,10"
+                        Background="{DynamicResource AccentColor}"
+                        Foreground="White"
+                        FontWeight="SemiBold"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

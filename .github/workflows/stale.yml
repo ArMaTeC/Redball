@@ -1,0 +1,54 @@
+name: Mark stale issues and pull requests
+
+on:
+  schedule:
+    - cron: '0 1 * * *'  # Run daily at 1 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  # Opt into Node.js 24 to suppress deprecation warnings until actions are updated
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/stale@v10
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+        # Issue configuration
+        stale-issue-message: |
+          This issue has been automatically marked as stale because it has not had recent activity. It will be closed in 7 days if no further activity occurs.
+          
+          If this issue is still relevant, please comment to keep it open or update with any new information.
+        close-issue-message: |
+          This issue has been closed due to inactivity. If you believe this is still relevant, please open a new issue with updated details.
+        stale-issue-label: 'stale'
+        exempt-issue-labels: 'bug,security,help wanted,good first issue'
+        days-before-issue-stale: 60
+        days-before-issue-close: 7
+
+        # PR configuration
+        stale-pr-message: |
+          This pull request has been automatically marked as stale because it has not had recent activity. It will be closed in 14 days if no further activity occurs.
+          
+          If you're still working on this, please comment to keep it open.
+        close-pr-message: |
+          This pull request has been closed due to inactivity. If you'd like to continue, please open a new PR or ask a maintainer to reopen this one.
+        stale-pr-label: 'stale'
+        exempt-pr-labels: 'work-in-progress,awaiting-review'
+        days-before-pr-stale: 30
+        days-before-pr-close: 14
+
+        # General options
+        remove-stale-when-updated: true
+        remove-issue-stale-when-updated: true
+        remove-pr-stale-when-updated: true
+        delete-branch: false
+        operations-per-run: 30

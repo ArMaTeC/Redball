@@ -1,0 +1,159 @@
+<UserControl x:Class="Redball.UI.Views.HomeSectionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:lottie="clr-namespace:LottieSharp.WPF;assembly=LottieSharp"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,0,24">
+            <!-- Header Section -->
+            <Grid Margin="0,0,0,24">
+                <Border CornerRadius="16" Height="140">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="{DynamicResource AccentColor}" Offset="0"/>
+                            <GradientStop Color="{DynamicResource AccentDarkColor}" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid Margin="24">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Welcome back to Redball" FontSize="14" Foreground="{DynamicResource AccentForegroundSecondaryBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Text="Dashboard Overview" FontSize="28" Foreground="{DynamicResource AccentForegroundBrush}" FontWeight="Bold" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        
+                        <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="{DynamicResource AccentSurfaceBrush}" CornerRadius="12" Padding="16,10">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE930;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentForegroundBrush}" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="18"/>
+                                <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource AccentForegroundBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Quick Stats Section -->
+            <UniformGrid Columns="3" Margin="0,0,0,24">
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="MEM USAGE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ForegroundSecondaryBrush}" Opacity="0.7"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <lottie:LottieAnimationView Width="24" Height="24" FileName="Assets/Animations/ram_usage.json" AutoPlay="True" RepeatCount="-1" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock Text="{Binding MemoryUsageText}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="8,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="BATTERY" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ForegroundSecondaryBrush}" Opacity="0.7"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBlock Text="&#xEBAA;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock Text="{Binding BatteryText}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="8,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="UPTIME" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ForegroundSecondaryBrush}" Opacity="0.7"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBlock Text="&#xE916;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock Text="{Binding UptimeText}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Main Actions -->
+            <TextBlock Text="Quick Actions" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16"/>
+            <UniformGrid Columns="2" Margin="0,0,0,24">
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="0,0,8,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
+                            <lottie:LottieAnimationView Width="32" Height="32" FileName="Assets/Animations/engine_toggle.json" AutoPlay="True" RepeatCount="-1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <TextBlock Text="Keep-Awake Engine" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="Toggle the global keep-awake state." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+                            <Button Content="Toggle Active" Command="{Binding ToggleActiveCommand}" Style="{DynamicResource AnimatedPrimaryButton}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="8,0,0,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
+                            <lottie:LottieAnimationView Width="32" Height="32" FileName="Assets/Animations/typething_launch.json" AutoPlay="True" RepeatCount="-1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <TextBlock Text="Start TypeThing" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="Paste clipboard text as character-by-character typing." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+                            <Button Content="Launch Now" Command="{Binding OpenTypeThingCommand}" Style="{DynamicResource AnimatedModernButton}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="0,8,8,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
+                            <lottie:LottieAnimationView Width="32" Height="32" FileName="Assets/Animations/pomodoro_timer.json" AutoPlay="True" RepeatCount="-1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <TextBlock Text="Pomodoro Timer" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="Start a focus session to boost your productivity." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+                            <Button Content="Open Timer" Command="{Binding OpenPomodoroCommand}" Style="{DynamicResource AnimatedModernButton}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="8,8,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
+                            <TextBlock Text="&#xE8A5;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <TextBlock Text="System Logs" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="Review application logs and diagnostic information." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+                            <Button Content="View Logs" Command="{Binding OpenLogsCommand}" Style="{DynamicResource AnimatedModernButton}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </UniformGrid>
+
+            <!-- Secondary Links -->
+            <Border Style="{DynamicResource AnimatedCardStyle}" Margin="0,0,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Configuration &amp; Personalization" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="Customize how Redball works, manage profiles, and check for updates." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Settings" Command="{Binding OpenSettingsCommand}" Style="{DynamicResource AnimatedModernButton}" Margin="0,0,8,0"/>
+                        <Button Content="Check Updates" Command="{Binding CheckForUpdatesCommand}" Style="{DynamicResource AnimatedModernButton}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

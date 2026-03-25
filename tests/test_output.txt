@@ -1,0 +1,19 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Redball.UI.WPF -> C:\Users\karll\Desktop\Redball\bin\net8.0-windows\win-x64\Redball.UI.WPF.dll
+  Redball.Tests -> C:\Users\karll\Desktop\bin\net8.0-windows\Redball.Tests.dll
+Test run for C:\Users\karll\Desktop\bin\net8.0-windows\Redball.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+  Failed ConfigService_Load_InvalidJson_RecoverGracefully [24 ms]
+  Error Message:
+   Assert.IsTrue failed. Load should recover gracefully from invalid JSON
+  Stack Trace:
+     at Redball.Tests.ConfigServiceTests.ConfigService_Load_InvalidJson_RecoverGracefully() in C:\Users\karll\Desktop\Redball\tests\ConfigServiceTests.cs:line 264
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+
+Failed!  - Failed:     1, Passed:    26, Skipped:     0, Total:    27, Duration: 575 ms - Redball.Tests.dll (net8.0)

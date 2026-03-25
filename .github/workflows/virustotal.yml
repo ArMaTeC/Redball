@@ -1,0 +1,378 @@
+name: VirusTotal Scan
+
+on:
+  workflow_run:
+    workflows: ['Build & Sign Release']
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      artifact_name:
+        description: 'Artifact name to scan (e.g., Redball-v2.1.25)'
+        required: true
+        default: ''
+      run_id:
+        description: 'Workflow run ID to download artifacts from (optional)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
+  # Opt into Node.js 24 to suppress deprecation warnings until actions are updated
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  scan:
+    name: Scan Artifacts with VirusTotal
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Download artifacts from triggering workflow
+      if: github.event_name == 'workflow_run'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        mkdir -p ./artifacts
+        run_id="${{ github.event.workflow_run.id }}"
+        echo "Downloading artifacts from run $run_id"
+        
+        # List artifacts from the triggering workflow - look for redball-msi artifact
+        artifacts=$(gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts --jq '.artifacts[] | select(.name == "redball-msi") | .id')
+        
+        for artifact_id in $artifacts; do
+          name=$(gh api repos/${{ github.repository }}/actions/artifacts/$artifact_id --jq '.name')
+          echo "Downloading artifact: $name (ID: $artifact_id)"
+          gh api repos/${{ github.repository }}/actions/artifacts/$artifact_id/zip > "./artifacts/$name.zip"
+          unzip -q "./artifacts/$name.zip" -d "./artifacts/$name" || true
+        done
+        
+        ls -la ./artifacts/
+
+    - name: Download artifacts via manual input
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_id != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        mkdir -p ./artifacts
+        run_id="${{ github.event.inputs.run_id }}"
+        echo "Downloading artifacts from run $run_id"
+        
+        # List artifacts from the specified workflow run - look for redball-msi artifact
+        artifacts=$(gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts --jq '.artifacts[] | select(.name == "redball-msi") | .id')
+        
+        for artifact_id in $artifacts; do
+          name=$(gh api repos/${{ github.repository }}/actions/artifacts/$artifact_id --jq '.name')
+          echo "Downloading artifact: $name (ID: $artifact_id)"
+          gh api repos/${{ github.repository }}/actions/artifacts/$artifact_id/zip > "./artifacts/$name.zip"
+          unzip -q "./artifacts/$name.zip" -d "./artifacts/$name" || true
+        done
+        
+        ls -la ./artifacts/
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        pip install requests
+
+    - name: Find and scan artifacts
+      id: scan
+      shell: python
+      run: |
+        import os
+        import sys
+        import hashlib
+        import requests
+        import json
+        import time
+        from pathlib import Path
+
+        API_KEY = os.environ.get('VIRUSTOTAL_API_KEY')
+        if not API_KEY:
+            print('::error::VIRUSTOTAL_API_KEY secret is not set')
+            sys.exit(1)
+
+        HEADERS = {
+            'x-apikey': API_KEY,
+            'accept': 'application/json'
+        }
+
+        UPLOAD_URL = 'https://www.virustotal.com/api/v3/files'
+        ANALYSIS_URL = 'https://www.virustotal.com/api/v3/analyses/{}'
+        FILE_REPORT_URL = 'https://www.virustotal.com/api/v3/files/{}'
+
+        def get_file_hash(filepath):
+            sha256 = hashlib.sha256()
+            with open(filepath, 'rb') as f:
+                for chunk in iter(lambda: f.read(8192), b''):
+                    sha256.update(chunk)
+            return sha256.hexdigest()
+
+        def check_existing_report(file_hash):
+            """Check if file has already been analyzed."""
+            try:
+                response = requests.get(
+                    FILE_REPORT_URL.format(file_hash),
+                    headers=HEADERS,
+                    timeout=30
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('data', {}).get('attributes', {}).get('last_analysis_results'):
+                        return data['data']
+                return None
+            except Exception as e:
+                print(f'::warning::Error checking existing report: {e}')
+                return None
+
+        def upload_file(filepath):
+            """Upload file to VirusTotal."""
+            filename = os.path.basename(filepath)
+            print(f'Uploading {filename}...')
+            
+            try:
+                with open(filepath, 'rb') as f:
+                    files = {'file': (filename, f)}
+                    response = requests.post(
+                        UPLOAD_URL,
+                        headers={'x-apikey': API_KEY},
+                        files=files,
+                        timeout=120
+                    )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    analysis_id = data['data']['id']
+                    print(f'::debug::Upload successful, analysis ID: {analysis_id}')
+                    return analysis_id
+                elif response.status_code == 401:
+                    print(f'::error::Invalid VirusTotal API key')
+                    return None
+                elif response.status_code == 429:
+                    print(f'::warning::Rate limited by VirusTotal API')
+                    return None
+                else:
+                    print(f'::error::Upload failed: {response.status_code} - {response.text}')
+                    return None
+            except Exception as e:
+                print(f'::error::Exception during upload: {e}')
+                return None
+
+        def wait_for_analysis(analysis_id, max_wait=300):
+            """Wait for analysis to complete."""
+            start_time = time.time()
+            while time.time() - start_time < max_wait:
+                try:
+                    response = requests.get(
+                        ANALYSIS_URL.format(analysis_id),
+                        headers=HEADERS,
+                        timeout=30
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        status = data['data']['attributes']['status']
+                        
+                        if status == 'completed':
+                            return data['data']
+                        elif status == 'queued' or status == 'in-progress':
+                            print(f'Analysis {analysis_id} status: {status}...')
+                            time.sleep(15)
+                        else:
+                            print(f'::warning::Unknown analysis status: {status}')
+                            return None
+                    else:
+                        print(f'::warning::Failed to get analysis status: {response.status_code}')
+                        time.sleep(15)
+                except Exception as e:
+                    print(f'::warning::Exception checking analysis status: {e}')
+                    time.sleep(15)
+            
+            print(f'::warning::Timeout waiting for analysis after {max_wait}s')
+            return None
+
+        def format_results(results, filepath):
+            """Format scan results for summary."""
+            attrs = results.get('attributes', {})
+            stats = attrs.get('last_analysis_stats', {})
+            
+            harmless = stats.get('harmless', 0)
+            malicious = stats.get('malicious', 0)
+            suspicious = stats.get('suspicious', 0)
+            undetected = stats.get('undetected', 0)
+            total = harmless + malicious + suspicious + undetected
+            
+            permalink = attrs.get('permalink', f'https://www.virustotal.com/gui/file/{attrs.get("sha256", "")}')
+            
+            return {
+                'filename': os.path.basename(filepath),
+                'sha256': attrs.get('sha256', 'N/A'),
+                'harmless': harmless,
+                'malicious': malicious,
+                'suspicious': suspicious,
+                'undetected': undetected,
+                'total': total,
+                'permalink': permalink,
+                'detection_ratio': f'{malicious + suspicious}/{total}' if total > 0 else 'N/A'
+            }
+
+        def main():
+            artifacts_dir = Path('./artifacts')
+            if not artifacts_dir.exists():
+                print('::warning::No artifacts directory found')
+                return 0
+
+            # Find all EXE and MSI files
+            files_to_scan = []
+            for pattern in ['**/*.exe', '**/*.msi', '**/*.zip']:
+                files_to_scan.extend(artifacts_dir.glob(pattern))
+
+            if not files_to_scan:
+                print('::warning::No EXE, MSI, or ZIP artifacts found to scan')
+                return 0
+
+            print(f'Found {len(files_to_scan)} artifact(s) to scan')
+            
+            scan_results = []
+            all_clean = True
+
+            for filepath in files_to_scan:
+                print(f'\n--- Scanning: {filepath.name} ---')
+                
+                file_hash = get_file_hash(str(filepath))
+                print(f'SHA256: {file_hash}')
+
+                # Check for existing report first
+                existing = check_existing_report(file_hash)
+                if existing:
+                    print(f'::notice::Using existing VirusTotal report for {filepath.name}')
+                    results = format_results(existing, str(filepath))
+                else:
+                    # Upload and wait for analysis
+                    analysis_id = upload_file(str(filepath))
+                    if not analysis_id:
+                        print(f'::error::Failed to upload {filepath.name}')
+                        all_clean = False
+                        continue
+
+                    print(f'Waiting for analysis to complete...')
+                    analysis_data = wait_for_analysis(analysis_id)
+                    if not analysis_data:
+                        print(f'::warning::Analysis did not complete for {filepath.name}')
+                        all_clean = False
+                        continue
+
+                    results = format_results(analysis_data, str(filepath))
+
+                scan_results.append(results)
+
+                # Print result summary
+                status_icon = '✅' if results['malicious'] == 0 and results['suspicious'] == 0 else '⚠️'
+                if results['malicious'] > 0 or results['suspicious'] > 0:
+                    all_clean = False
+
+                print(f'{status_icon} {results["filename"]}: {results["detection_ratio"]} detections')
+                print(f'   Permalink: {results["permalink"]}')
+
+            # Write GitHub step summary
+            summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
+            if summary_file:
+                with open(summary_file, 'a') as f:
+                    f.write('## VirusTotal Scan Results\\n\\n')
+                    f.write('| Artifact | SHA256 | Detections | Status | Link |\\n')
+                    f.write('|----------|--------|------------|--------|------|\\n')
+                    
+                    for r in scan_results:
+                        status = '✅ Clean' if r['malicious'] == 0 and r['suspicious'] == 0 else '⚠️ Detected'
+                        f.write(f'| {r["filename"]} | `{r["sha256"][:16]}...` | {r["detection_ratio"]} | {status} | [View]({r["permalink"]}) |\\n')
+                    
+                    f.write('\\n')
+                    if all_clean:
+                        f.write('**✅ All artifacts passed VirusTotal scan with no detections.**\\n')
+                    else:
+                        f.write('**⚠️ Some artifacts had detections. Review the detailed results above.**\\n')
+
+            # Set output for other steps
+            output_file = os.environ.get('GITHUB_OUTPUT')
+            if output_file:
+                with open(output_file, 'a') as f:
+                    f.write(f'results={json.dumps(scan_results)}\\n')
+                    f.write(f'all_clean={str(all_clean).lower()}\\n')
+
+            return 0 if all_clean else 1
+
+        exit(main())
+
+    - name: Comment on commit/PR
+      if: always() && github.event_name == 'workflow_run'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const allClean = '${{ steps.scan.outputs.all_clean }}' === 'true';
+          const results = JSON.parse('${{ steps.scan.outputs.results || '[]' }}');
+          
+          if (results.length === 0) {
+            console.log('No scan results to report');
+            return;
+          }
+          
+          let body = '## 🔐 VirusTotal Scan Results\n\n';
+          body += '| Artifact | Detections | Status | Link |\n';
+          body += '|----------|------------|--------|------|\n';
+          
+          for (const r of results) {
+            const status = r.malicious === 0 && r.suspicious === 0 ? '✅ Clean' : '⚠️ Detected';
+            body += `| ${r.filename} | ${r.detection_ratio} | ${status} | [View](${r.permalink}) |\n`;
+          }
+          
+          body += '\n';
+          if (allClean) {
+            body += '**✅ All artifacts passed VirusTotal scan with no detections.**\n';
+          } else {
+            body += '**⚠️ Some artifacts had detections. Manual review recommended.**\n';
+          }
+          
+          // Comment on the triggering workflow's head commit
+          const sha = context.payload.workflow_run.head_sha;
+          
+          await github.rest.repos.createCommitComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            commit_sha: sha,
+            body: body
+          });
+
+  notify:
+    name: Notify on Failure
+    needs: scan
+    runs-on: ubuntu-latest
+    if: failure()
+
+    steps:
+    - name: Send failure notification
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const body = '## ❌ VirusTotal Scan Failed\n\nThe VirusTotal scanning workflow failed. Please check the workflow logs for details.';
+          
+          const sha = context.payload.workflow_run?.head_sha || context.sha;
+          
+          await github.rest.repos.createCommitComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            commit_sha: sha,
+            body: body
+          });

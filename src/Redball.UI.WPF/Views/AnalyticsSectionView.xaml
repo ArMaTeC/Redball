@@ -1,0 +1,49 @@
+<UserControl x:Class="Redball.UI.Views.AnalyticsSectionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+        <TextBlock Text="Analytics" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <TextBlock Text="Track how you use Redball over time. View session counts, total usage hours, and which features you use most. You can also export your data as CSV or JSON for your own records." 
+                   TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+        
+        <UniformGrid Columns="3" Margin="0,0,0,16">
+            <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
+                <StackPanel>
+                    <TextBlock Text="Total Sessions" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                    <TextBlock x:Name="AnalyticsSessionsText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{DynamicResource CardStyle}" Margin="8,0,8,8">
+                <StackPanel>
+                    <TextBlock Text="Usage Time" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                    <TextBlock x:Name="AnalyticsUsageText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="Tracked Events" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                    <TextBlock x:Name="AnalyticsEventsText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="Top Product Areas" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                <TextBlock x:Name="AnalyticsTopAreasText" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <Border Style="{DynamicResource CardStyle}">
+            <StackPanel>
+                <TextBlock Text="Session Trend" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                <TextBlock x:Name="AnalyticsTrendText" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+        
+        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+            <Button Content="Export CSV" Style="{DynamicResource ModernButton}" Margin="0,0,8,0" Click="AnalyticsExportCsv_Click" ToolTip="Export analytics data as a CSV file for spreadsheet import"/>
+            <Button Content="Export JSON" Style="{DynamicResource ModernButton}" Margin="0,0,8,0" Click="AnalyticsExportJson_Click" ToolTip="Export analytics data as JSON"/>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

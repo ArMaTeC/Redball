@@ -1,0 +1,392 @@
+name: Build & Sign Release
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'installer/**'
+      - '.github/workflows/release.yml'
+      - '*.json'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 2.1.25)'
+        required: false
+        default: ''
+      force_build:
+        description: 'Force build even if tag exists'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+  id-token: write
+  actions: read
+
+env:
+  # Opt into Node.js 24 to suppress deprecation warnings until actions are updated
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  tag:
+    name: Auto-Tag Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tag.outputs.VERSION }}
+      tag: ${{ steps.tag.outputs.TAG }}
+      created: ${{ steps.tag.outputs.CREATED }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.REDBALL_GITHUB_TOKEN }}
+
+    - name: Extract version and create tag
+      id: tag
+      shell: bash
+      run: |
+        # Use input version if provided (manual trigger), otherwise extract from csproj
+        INPUT_VERSION="${{ github.event.inputs.version }}"
+        FORCE_BUILD="${{ github.event.inputs.force_build }}"
+        if [ -n "$INPUT_VERSION" ]; then
+          VERSION="$INPUT_VERSION"
+        else
+          # Extract version from WPF project file
+          VERSION=$(grep -oP '<Version>\K[\d.]+' src/Redball.UI.WPF/Redball.UI.WPF.csproj || echo "2.1.25")
+        fi
+        
+        echo "Using version: $VERSION"
+        TAG="v${VERSION}"
+        echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+        echo "Extracted version: $VERSION"
+        echo "Tag will be: $TAG"
+
+        # Check if this tag already exists
+        if git rev-parse "$TAG" >/dev/null 2>&1; then
+          echo "Tag $TAG already exists"
+          if [ "$FORCE_BUILD" == "true" ]; then
+            echo "Force build enabled - will rebuild existing tag"
+            echo "CREATED=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skipping build - use force_build=true to rebuild"
+            echo "CREATED=false" >> "$GITHUB_OUTPUT"
+          fi
+        else
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+          echo "Created and pushed tag: $TAG"
+          echo "CREATED=true" >> "$GITHUB_OUTPUT"
+        fi
+
+  build:
+    name: Build Installer
+    needs: tag
+    # Run if: (1) new tag was created, OR (2) manual run with force_build=true, OR (3) manual run with version input
+    if: |
+      always() && 
+      (needs.tag.outputs.created == 'true' || 
+       github.event.inputs.force_build == 'true' ||
+       (github.event_name == 'workflow_dispatch' && github.event.inputs.version != ''))
+    runs-on: windows-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Install WiX Toolset
+      shell: pwsh
+      run: |
+        dotnet tool install --global wix --version 4.0.5
+        $wixDir = Join-Path $env:USERPROFILE '.dotnet\tools'
+        echo "$wixDir" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        $wix = Join-Path $wixDir 'wix.exe'
+        & $wix extension add -g WixToolset.UI.wixext/4.0.5
+        & $wix extension add -g WixToolset.Netfx.wixext/4.0.5
+        & $wix extension add -g WixToolset.Bal.wixext/4.0.5
+        & $wix --version
+
+    - name: Verify WiX
+      run: wix --version
+
+    - name: Publish WPF Application
+      shell: pwsh
+      run: |
+        dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj --configuration Release -o dist/wpf-publish
+        Write-Host "Published WPF app to dist/wpf-publish"
+        Get-ChildItem dist/wpf-publish/Redball.UI.WPF.exe | Select-Object Name, @{N='SizeMB';E={[math]::Round($_.Length/1MB,1)}}
+
+    - name: Sign EXE
+      continue-on-error: true
+      shell: pwsh
+      env:
+        CODE_SIGNING_CERT: ${{ secrets.CODE_SIGNING_CERT }}
+        CODE_SIGNING_PASSWORD: ${{ secrets.CODE_SIGNING_PASSWORD }}
+      run: |
+        $exePath = "dist/wpf-publish/Redball.UI.WPF.exe"
+        $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" -Recurse | Sort-Object FullName -Descending | Select-Object -First 1
+        if (-not $signtool) {
+          Write-Warning "signtool.exe not found - skipping EXE signing"
+          exit 0
+        }
+        Write-Host "Using signtool: $($signtool.FullName)"
+
+        if ($env:CODE_SIGNING_CERT) {
+          # Decode certificate from secret
+          $certBytes = [Convert]::FromBase64String($env:CODE_SIGNING_CERT)
+          $certPath = "$env:RUNNER_TEMP\code-signing.pfx"
+          [IO.File]::WriteAllBytes($certPath, $certBytes)
+          Write-Host "Signing EXE with production certificate..."
+          & $signtool.FullName sign /f $certPath /p $env:CODE_SIGNING_PASSWORD /tr http://timestamp.digicert.com /td sha256 /fd sha256 $exePath
+          if ($LASTEXITCODE -ne 0) { Write-Warning "EXE signing failed (exit $LASTEXITCODE)" }
+          else { Write-Host "EXE signed successfully" }
+          Remove-Item $certPath -Force
+        } else {
+          # Create self-signed cert for development builds
+          Write-Host "No CODE_SIGNING_CERT secret found - creating self-signed certificate..."
+          $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=Redball Development, O=ArMaTeC" -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(1)
+          $certPath = "$env:RUNNER_TEMP\dev-signing.pfx"
+          $pwd = ConvertTo-SecureString -String "RedballDev2024" -Force -AsPlainText
+          Export-PfxCertificate -Cert $cert -FilePath $certPath -Password $pwd | Out-Null
+          & $signtool.FullName sign /f $certPath /p "RedballDev2024" /tr http://timestamp.digicert.com /td sha256 /fd sha256 $exePath
+          if ($LASTEXITCODE -ne 0) { Write-Warning "EXE signing failed (exit $LASTEXITCODE)" }
+          else { Write-Host "EXE signed with development certificate" }
+          Remove-Item $certPath -Force
+          Remove-Item "Cert:\CurrentUser\My\$($cert.Thumbprint)" -Force
+        }
+        # Verify signature (may fail for self-signed certs - that's expected)
+        $verifyResult = & $signtool.FullName verify /pa $exePath 2>&1
+        $verifyResult | Write-Host
+        if ($LASTEXITCODE -ne 0) { Write-Host "Note: Signature verification requires trusted cert chain" }
+
+    - name: Debug info
+      shell: bash
+      run: |
+        echo "Version: ${{ needs.tag.outputs.version }}"
+        echo "PWD: $(pwd)"
+        ls -la installer/
+        ls -la dist/wpf-publish/ || echo 'wpf-publish not found'
+        mkdir -p dist
+
+    - name: Build MSI
+      shell: bash
+      run: |
+        set +e
+        VERSION="${{ needs.tag.outputs.version }}"
+        cd installer
+        echo "=== Building MSI v${VERSION} ==="
+        wix.exe build Redball.wxs -o "../dist/Redball-${VERSION}.msi" -ext WixToolset.UI.wixext -ext WixToolset.Netfx.wixext -d "ProductVersion=${VERSION}" > ../dist/wix.log 2>&1
+        WIX_RC=$?
+        cd ..
+        echo "=== WiX exit code: ${WIX_RC} ==="
+        echo "### WiX Build Log (exit ${WIX_RC})" >> "$GITHUB_STEP_SUMMARY"
+        echo '```' >> "$GITHUB_STEP_SUMMARY"
+        cat dist/wix.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "(no log file)" >> "$GITHUB_STEP_SUMMARY"
+        echo '```' >> "$GITHUB_STEP_SUMMARY"
+        cat dist/wix.log 2>/dev/null
+        ls -la dist/
+        echo "### dist contents" >> "$GITHUB_STEP_SUMMARY"
+        ls -la dist/ >> "$GITHUB_STEP_SUMMARY"
+        if [ ! -f "dist/Redball-${VERSION}.msi" ]; then
+          echo "ERROR: MSI not produced (WiX exit ${WIX_RC})"
+          exit 1
+        fi
+        cp "dist/Redball-${VERSION}.msi" "dist/Redball.msi"
+        echo "OK: MSI produced ($(wc -c < dist/Redball.msi) bytes)"
+
+    - name: Build Bundle EXE
+      shell: bash
+      run: |
+        set +e
+        VERSION="${{ needs.tag.outputs.version }}"
+        cd installer
+        echo "=== Building Bundle EXE v${VERSION} ==="
+        wix.exe build Bundle.wxs -o "../dist/Redball-Setup-${VERSION}.exe" -ext WixToolset.Bal.wixext -ext WixToolset.Netfx.wixext -d "ProductVersion=${VERSION}" -d "RedballMsiPath=../dist/Redball-${VERSION}.msi" > ../dist/bundle.log 2>&1
+        BUNDLE_RC=$?
+        cd ..
+        echo "=== Bundle exit code: ${BUNDLE_RC} ==="
+        echo "### Bundle Build Log (exit ${BUNDLE_RC})" >> "$GITHUB_STEP_SUMMARY"
+        echo '```' >> "$GITHUB_STEP_SUMMARY"
+        cat dist/bundle.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "(no log file)" >> "$GITHUB_STEP_SUMMARY"
+        echo '```' >> "$GITHUB_STEP_SUMMARY"
+        cat dist/bundle.log 2>/dev/null
+        ls -la dist/
+        echo "### dist contents after bundle" >> "$GITHUB_STEP_SUMMARY"
+        ls -la dist/ >> "$GITHUB_STEP_SUMMARY"
+        if [ ! -f "dist/Redball-Setup-${VERSION}.exe" ]; then
+          echo "WARNING: Bundle not produced (exit ${BUNDLE_RC}) - continuing with MSI only"
+        else
+          cp "dist/Redball-Setup-${VERSION}.exe" "dist/Redball-Setup.exe"
+          echo "OK: Bundle produced ($(wc -c < dist/Redball-Setup.exe) bytes)"
+        fi
+
+    - name: Sign MSI
+      continue-on-error: true
+      shell: pwsh
+      env:
+        CODE_SIGNING_CERT: ${{ secrets.CODE_SIGNING_CERT }}
+        CODE_SIGNING_PASSWORD: ${{ secrets.CODE_SIGNING_PASSWORD }}
+      run: |
+        $version = "${{ needs.tag.outputs.version }}"
+        $msiPath = "dist/Redball.msi"
+        if (-not (Test-Path $msiPath)) {
+          Write-Warning "MSI not found at $msiPath - skipping signing"
+          exit 0
+        }
+        $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" -Recurse | Sort-Object FullName -Descending | Select-Object -First 1
+        if (-not $signtool) {
+          Write-Warning "signtool.exe not found - skipping MSI signing"
+          exit 0
+        }
+
+        if ($env:CODE_SIGNING_CERT) {
+          $certBytes = [Convert]::FromBase64String($env:CODE_SIGNING_CERT)
+          $certPath = "$env:RUNNER_TEMP\code-signing.pfx"
+          [IO.File]::WriteAllBytes($certPath, $certBytes)
+          Write-Host "Signing MSI with production certificate..."
+          & $signtool.FullName sign /f $certPath /p $env:CODE_SIGNING_PASSWORD /tr http://timestamp.digicert.com /td sha256 /fd sha256 /d "Redball v$version" $msiPath
+          if ($LASTEXITCODE -ne 0) { Write-Warning "MSI signing failed (exit $LASTEXITCODE)" }
+          else { Write-Host "MSI signed successfully" }
+          Remove-Item $certPath -Force
+        } else {
+          Write-Host "No CODE_SIGNING_CERT secret - creating self-signed certificate for MSI..."
+          $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=Redball Development, O=ArMaTeC" -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(1)
+          $certPath = "$env:RUNNER_TEMP\dev-signing.pfx"
+          $pwd = ConvertTo-SecureString -String "RedballDev2024" -Force -AsPlainText
+          Export-PfxCertificate -Cert $cert -FilePath $certPath -Password $pwd | Out-Null
+          & $signtool.FullName sign /f $certPath /p "RedballDev2024" /tr http://timestamp.digicert.com /td sha256 /fd sha256 /d "Redball v$version" $msiPath
+          if ($LASTEXITCODE -ne 0) { Write-Warning "MSI signing failed (exit $LASTEXITCODE)" }
+          else { Write-Host "MSI signed with development certificate" }
+          Remove-Item $certPath -Force
+          Remove-Item "Cert:\CurrentUser\My\$($cert.Thumbprint)" -Force
+        }
+        $verifyResult = & $signtool.FullName verify /pa $msiPath 2>&1
+        $verifyResult | Write-Host
+        if ($LASTEXITCODE -ne 0) { Write-Host "Note: Signature verification requires trusted cert chain" }
+
+    - name: Upload MSI and Bundle
+      id: upload
+      uses: actions/upload-artifact@v5
+      with:
+        name: redball-msi
+        path: |
+          ./dist/Redball.msi
+          ./dist/Redball-Setup.exe
+          ./dist/Redball-*-Setup.exe
+        retention-days: 7
+        if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    needs: [tag, build]
+    runs-on: ubuntu-latest
+    if: needs.tag.outputs.created == 'true' && needs.build.result == 'success'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Download MSI
+      uses: actions/download-artifact@v5
+      with:
+        name: redball-msi
+        path: ./release
+
+    - name: Verify MSI exists
+      shell: bash
+      run: |
+        ls -la ./release/
+        if [ ! -f "./release/Redball.msi" ]; then
+          echo "ERROR: Redball.msi not found"
+          exit 1
+        fi
+        # Verify bundle files exist
+        if [ ! -f "./release/Redball-Setup.exe" ]; then
+          echo "ERROR: Redball-Setup.exe not found"
+          exit 1
+        fi
+        echo "MSI ready for release"
+        echo "Bundle ready for release"
+
+    - name: Generate release notes
+      id: notes
+      shell: bash
+      run: |
+        VERSION="${{ needs.tag.outputs.version }}"
+        TAG="${{ needs.tag.outputs.tag }}"
+        NOTES_FILE="release_notes.md"
+
+        # --- 1. Extract CHANGELOG.md section for this version ---
+        CHANGELOG=""
+        if [ -f docs/CHANGELOG.md ]; then
+          # Grab lines between ## [VERSION] and the next ## header
+          CHANGELOG=$(awk -v ver="$VERSION" '
+            /^## \[/ { if (found) exit; if (index($0, ver)) found=1; next }
+            found { print }
+          ' docs/CHANGELOG.md)
+        fi
+
+        # --- 2. Categorised git log since previous tag ---
+        PREV_TAG=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | head -1)
+        RANGE="${PREV_TAG:+${PREV_TAG}..HEAD}"
+        RANGE="${RANGE:-HEAD}"
+
+        FEATURES=$(git log "$RANGE" --pretty=format:"- %s" --grep="feat" -i 2>/dev/null || true)
+        FIXES=$(git log "$RANGE" --pretty=format:"- %s" --grep="fix" -i 2>/dev/null || true)
+        OTHER=$(git log "$RANGE" --pretty=format:"- %s" --invert-grep --grep="feat" --grep="fix" -i 2>/dev/null | head -20 || true)
+
+        # --- 3. Assemble release notes ---
+        {
+          echo "# Redball $TAG"
+          echo ""
+          if [ -n "$CHANGELOG" ]; then
+            echo "## What's New"
+            echo "$CHANGELOG"
+            echo ""
+          fi
+          if [ -n "$FEATURES" ]; then
+            echo "## Features"
+            echo "$FEATURES"
+            echo ""
+          fi
+          if [ -n "$FIXES" ]; then
+            echo "## Bug Fixes"
+            echo "$FIXES"
+            echo ""
+          fi
+          if [ -n "$OTHER" ]; then
+            echo "## Other Changes"
+            echo "$OTHER"
+            echo ""
+          fi
+          echo "---"
+          echo "*Full changelog: https://github.com/${{ github.repository }}/compare/${PREV_TAG:-initial}...$TAG*"
+        } > "$NOTES_FILE"
+
+        echo "Generated release notes:"
+        cat "$NOTES_FILE"
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ needs.tag.outputs.tag }}
+        body_path: release_notes.md
+        files: |
+          ./release/Redball.msi
+          ./release/Redball-Setup.exe
+          ./release/Redball-Setup-${{ needs.tag.outputs.version }}.exe
+        generate_release_notes: false
+        draft: false
+        prerelease: false
