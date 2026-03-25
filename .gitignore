@@ -2,14 +2,23 @@
 Redball.crash.flag
 Redball.crash.log
 Redball.log
+*.log
+logs/
 Redball.state.json
 .redball-initialized
 typingthing.txt
 
 # Build outputs
-#dist/
-src/Redball.UI.WPF/obj/
-src/Redball.UI.WPF/bin/
+# Use root-relative / to block only the top-level dist, or just dist/ to block all
+dist/
+bin/
+obj/
+src/*/bin/
+src/*/obj/
+tests/*/bin/
+tests/*/obj/
+installer/*/bin/
+installer/*/obj/
 
 # .NET / WPF
 *.user

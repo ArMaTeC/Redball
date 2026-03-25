@@ -62,10 +62,7 @@ public partial class App : Application
             var installOk = Services.InterceptionInputService.Instance.InstallDriverNoRestart();
             if (installOk)
             {
-                var ready = Services.InterceptionInputService.Instance.IsReady || Services.InterceptionInputService.Instance.Initialize();
-                Services.Logger.Info("App", ready
-                    ? "Installer-triggered HID install completed and driver is ready"
-                    : "Installer-triggered HID install completed; driver not ready yet (restart may still be required)");
+                Services.Logger.Info("App", "Installer-triggered HID install completed. Driver ready for lazy initialization.");
             }
             else
             {

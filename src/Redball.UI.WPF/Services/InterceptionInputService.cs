@@ -57,7 +57,7 @@ public class InterceptionInputService : IDisposable
     /// <summary>
     /// Idle timeout before auto-releasing HID resources (minutes).
     /// </summary>
-    private const int IdleTimeoutMinutes = 30;
+    private const int IdleTimeoutMinutes = 2; // Reduced from 30 for safety
 
     /// <summary>
     /// Debounce delay for USB device refresh (ms).
@@ -237,15 +237,18 @@ public class InterceptionInputService : IDisposable
             {
                 Logger.Warning("InterceptionInputService", $"Driver uninstall failed (exitCode={status}, out={stdout.Trim()}, err={stderr.Trim()})");
                 
-                // FALLBACK: Manual cleanup if standard uninstaller fails
+                // FALLBACK: Manual cleanup if standard uninstaller fails or if we're still detecting the driver
                 if (InputInterceptor.CheckAdministratorRights())
                 {
-                    Logger.Info("InterceptionInputService", "Attempting manual uninstallation fallback...");
+                    Logger.Info("InterceptionInputService", "Attempting manual uninstallation fallback to ensure clean state...");
                     if (ManualUninstallCleanup())
                     {
-                        uninstalled = true;
-                        IsDriverInstalled = false;
-                        SetLastDriverAction("Driver uninstall completed via manual cleanup fallback");
+                        Thread.Sleep(500);
+                        TryRestartKeyboardDevices(); // MUST restart after filter removal
+                        
+                        uninstalled = !InputInterceptor.CheckDriverInstalled();
+                        IsDriverInstalled = !uninstalled;
+                        SetLastDriverAction(uninstalled ? "Driver uninstall completed via manual cleanup fallback" : "Manual cleanup attempted (reboot still likely required)");
                     }
                 }
                 
@@ -288,7 +291,18 @@ public class InterceptionInputService : IDisposable
     {
         try
         {
-            IsDriverInstalled = InputInterceptor.CheckDriverInstalled();
+            var driverPath = Path.Combine(Environment.SystemDirectory, "drivers", "interception.sys");
+            var fileExists = File.Exists(driverPath);
+            var registryDetected = InputInterceptor.CheckDriverInstalled();
+            
+            // Driver is only TRULY installed if BOTH registry and file exist
+            IsDriverInstalled = registryDetected && fileExists;
+            
+            if (registryDetected && !fileExists)
+            {
+                Logger.Warning("InterceptionInputService", "Driver registry detected but file is MISSING. Fixing state...");
+                IsDriverInstalled = false; // State is broken
+            }
         }
         catch (Exception ex)
         {
@@ -528,10 +542,24 @@ public class InterceptionInputService : IDisposable
                 return false;
             }
 
+            var alreadyWorking = RefreshDriverInstalledState() && InputInterceptor.Initialize();
+            if (alreadyWorking)
+            {
+                Logger.Info("InterceptionInputService", "HID Driver is already detected and working. Skipping dangerous device restart.");
+                return true;
+            }
+
+            Logger.Info("InterceptionInputService", "Driver installed but not working. Restarting keyboard devices to activate filter...");
             var restartedAny = TryRestartKeyboardDevices();
             if (!restartedAny)
             {
-                Logger.Warning("InterceptionInputService", "No keyboard devices were restarted. Reboot may still be required.");
+                Logger.Warning("InterceptionInputService", "No keyboard devices were restarted. A manual reboot is required.");
+            }
+            else
+            {
+                Logger.Info("InterceptionInputService", "Keyboard devices restarted. Attempting immediate initialization to claim context...");
+                // Claim context immediately to prevent driver from blocking if it's in a sensitive state
+                Initialize(); 
             }
 
             Thread.Sleep(500);
@@ -729,9 +757,20 @@ public class InterceptionInputService : IDisposable
     public bool SendKeyPress(KeyCode keyCode, int releaseDelayMs = 10)
     {
         UpdateActivityTimestamp();
+        
+        // Lazy-init on first use
+        if (!_initialized)
+        {
+            if (!Initialize()) 
+            {
+                Logger.Warning("InterceptionInputService", $"Failed to lazy-init for SendKeyPress {keyCode}");
+                return false;
+            }
+        }
+
         if (!IsReady)
         {
-            Logger.Debug("InterceptionInputService", "SendKeyPress called but service not ready");
+            Logger.Debug("InterceptionInputService", "SendKeyPress called but service not ready after init");
             return false;
         }
 
@@ -759,9 +798,21 @@ public class InterceptionInputService : IDisposable
     /// <returns>True if the character was sent successfully.</returns>
     public bool SendCharacter(char ch)
     {
+        UpdateActivityTimestamp();
+        
+        // Lazy-init on first use
+        if (!_initialized)
+        {
+            if (!Initialize()) 
+            {
+                Logger.Warning("InterceptionInputService", $"Failed to lazy-init for SendCharacter '{ch}'");
+                return false;
+            }
+        }
+
         if (!IsReady)
         {
-            Logger.Debug("InterceptionInputService", "SendCharacter called but service not ready");
+            Logger.Debug("InterceptionInputService", "SendCharacter called but service not ready after init");
             return false;
         }
 
@@ -1233,32 +1284,52 @@ public class InterceptionInputService : IDisposable
     {
         try
         {
-            Logger.Info("InterceptionInputService", "Manual cleanup: removing 'interception' from UpperFilters...");
-            RemoveFromUpperFilters("{4d36e96b-e325-11ce-bfc1-08002be10318}", "interception"); // Keyboard
-            RemoveFromUpperFilters("{4d36e96f-e325-11ce-bfc1-08002be10318}", "interception"); // Mouse
+            Logger.Info("InterceptionInputService", "STARTING NUCLEAR MANUAL CLEANUP...");
+            
+            // 1. Unhook and Release
+            ReleaseResources("Nuclear Cleanup");
 
-            Logger.Info("InterceptionInputService", "Manual cleanup: deleting 'interception' service...");
+            // 2. Remove from Registry (Keyboard & Mouse)
+            Logger.Info("InterceptionInputService", "Removing 'interception' from UpperFilters registry keys...");
+            RemoveFromUpperFilters("{4d36e96b-e325-11ce-bfc1-08002be10318}", "interception");
+            RemoveFromUpperFilters("{4d36e96f-e325-11ce-bfc1-08002be10318}", "interception");
+
+            // 3. Stop and Delete Service
+            Logger.Info("InterceptionInputService", "Stopping and deleting driver service...");
+            RunProcess("sc.exe", "stop interception");
+            Thread.Sleep(200);
             RunProcess("sc.exe", "delete interception");
 
+            // 4. Force Delete Driver File
             var driverPath = Path.Combine(Environment.SystemDirectory, "drivers", "interception.sys");
             if (File.Exists(driverPath))
             {
                 try
                 {
-                    Logger.Info("InterceptionInputService", "Manual cleanup: deleting driver file...");
+                    Logger.Info("InterceptionInputService", "Deleting driver file from System32...");
                     File.Delete(driverPath);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Warning("InterceptionInputService", $"Failed to delete driver file manually: {ex.Message}");
+                    Logger.Warning("InterceptionInputService", $"File.Delete failed for interception.sys: {ex.Message}");
+                    // Fallback to cmd del /f
+                    RunProcess("cmd.exe", $"/c del /f \"{driverPath}\"");
                 }
             }
 
+            // 5. Final Registry Clean (Check for service key leftovers)
+            try
+            {
+                Microsoft.Win32.Registry.LocalMachine.DeleteSubKeyTree(@"SYSTEM\CurrentControlSet\Services\interception", false);
+            }
+            catch { }
+
+            Logger.Info("InterceptionInputService", "NUCLEAR CLEANUP COMPLETED. Keyboard devices should be restarted now.");
             return true;
         }
         catch (Exception ex)
         {
-            Logger.Error("InterceptionInputService", "Manual cleanup fallback failed", ex);
+            Logger.Error("InterceptionInputService", "Nuclear cleanup failed spectacularly", ex);
             return false;
         }
     }
@@ -1298,6 +1369,17 @@ public class InterceptionInputService : IDisposable
             {
                 key.SetValue("UpperFilters", newList.ToArray(), Microsoft.Win32.RegistryValueKind.MultiString);
                 Logger.Info("InterceptionInputService", $"Successfully removed {filter} from {classGuid}");
+                
+                // Extra safety: double check if it's really gone
+                var verified = key.GetValue("UpperFilters") as string[];
+                if (verified != null && Array.IndexOf(verified, filter) >= 0)
+                {
+                    Logger.Warning("InterceptionInputService", $"Manual removal from {classGuid} FAILED to persist!");
+                }
+            }
+            else
+            {
+                Logger.Verbose("InterceptionInputService", $"{filter} was not found in UpperFilters for {classGuid}");
             }
         }
         catch (Exception ex)

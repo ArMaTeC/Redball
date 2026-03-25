@@ -498,8 +498,8 @@ public partial class MainWindow
                 index++;
             }
 
-            // Show progress notification every 100 characters
-            if (index % 100 == 0 && index < text.Length)
+            // Show progress notification every 100 characters — but only the first one to avoid spam
+            if (index == 100 && text.Length > 100)
             {
                 NotificationService.Instance.ShowInfo("TypeThing", $"Typing progress: {index}/{text.Length} characters...");
             }

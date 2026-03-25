@@ -1186,6 +1186,7 @@ public partial class MainWindow
             if (hid.InstallDriverNoRestart())
             {
                 NotificationService.Instance.ShowInfo("Driver Installed", "HID driver installed. It will initialize only during active TypeThing typing.");
+                ReloadHotkeys(); // Refresh hotkeys to ensure they work with the new stack
             }
             else
             {
@@ -1208,6 +1209,7 @@ public partial class MainWindow
             if (hid.UninstallDriver())
             {
                 NotificationService.Instance.ShowInfo("Driver Uninstalled", "HID driver uninstalled successfully.");
+                ReloadHotkeys(); // Refresh hotkeys to restore normal hooks
             }
             else
             {
