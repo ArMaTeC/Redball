@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using Redball.Core.Sync;
+using Redball.UI.Services;
 
 /// <summary>
 /// Sync health dashboard showing outbox queue status and reconciliation state.

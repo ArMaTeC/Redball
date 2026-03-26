@@ -106,6 +106,8 @@ public partial class MainWindow : Window
             InitializePomodoro();
             RefreshTemplateCombo();
             StartAutoUpdateCheck();
+            InitializeResourceBudgetMonitoring();
+            InitializeMemoryPressureMonitoring();
             Logger.Info("MainWindow", "Initialization complete");
 
             // Apply window entrance animation
@@ -311,12 +313,55 @@ public partial class MainWindow : Window
         try
         {
             _analytics.TrackFeature("command_palette.opened");
-            var palette = new Views.CommandPaletteWindow();
+            var palette = new Redball.UI.WPF.Views.CommandPaletteWindow();
             palette.ShowDialog();
         }
         catch (Exception ex)
         {
             Logger.Error("MainWindow", "Failed to show command palette", ex);
+        }
+    }
+
+    private void InitializeMemoryPressureMonitoring()
+    {
+        try
+        {
+            // Start memory pressure monitoring every 10 seconds
+            MemoryPressureService.Instance.StartMonitoring(TimeSpan.FromSeconds(10));
+
+            // Subscribe to pressure change events
+            MemoryPressureService.Instance.PressureChanged += OnMemoryPressureChanged;
+
+            Logger.Info("MainWindow", "Memory pressure monitoring started");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("MainWindow", $"Failed to start memory pressure monitoring: {ex.Message}");
+        }
+    }
+
+    private void OnMemoryPressureChanged(object? sender, MemoryPressureEventArgs e)
+    {
+        Logger.Info("MainWindow", $"Memory pressure event: {e.Level} - {MemoryPressureService.Instance.GetSummary()}");
+
+        // Log degradations that were applied
+        if (e.RecommendedActions.Count > 0)
+        {
+            Logger.Warning("MainWindow", $"Memory degradations applied: {string.Join(", ", e.RecommendedActions)}");
+        }
+    }
+
+    private void InitializeResourceBudgetMonitoring()
+    {
+        try
+        {
+            // Start resource budget monitoring every 30 seconds
+            ResourceBudgetService.Instance.StartMonitoring(TimeSpan.FromSeconds(30));
+            Logger.Info("MainWindow", "Resource budget monitoring started");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("MainWindow", $"Failed to start resource budget monitoring: {ex.Message}");
         }
     }
 

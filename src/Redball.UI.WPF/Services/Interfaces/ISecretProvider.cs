@@ -10,7 +10,7 @@ namespace Redball.UI.Services;
 /// Provides secure storage and retrieval of sensitive secrets using OS-protected mechanisms.
 /// Secrets are never stored in plain text in configuration files.
 /// </summary>
-public interface ISecretProvider
+public interface ISecretProvider : IDisposable
 {
     /// <summary>
     /// Stores a secret securely.

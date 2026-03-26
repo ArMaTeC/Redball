@@ -550,6 +550,25 @@ public partial class MainWindow
         });
     }
 
+    public void ShowSloDashboard()
+    {
+        Logger.Info("MainWindow", "ShowSloDashboard called");
+        _analytics.TrackFeature("slo_dashboard.opened");
+        Dispatcher.Invoke(() =>
+        {
+            ShowInTaskbar = true;
+            if (!IsVisible) Show();
+            WindowState = WindowState.Normal;
+            
+            // Navigate to the SLO dashboard page
+            // var sloPage = new Redball.UI.WPF.Views.Pages.SloDashboardPage();
+            // ContentFrame?.Navigate(sloPage);
+            
+            Activate();
+            Focus();
+        });
+    }
+
     private async void UpdateSecurityStatus()
     {
         try
@@ -674,7 +693,7 @@ public partial class MainWindow
         _analytics.TrackFeature("security.manage_secrets");
         var window = new SecretManagementWindow { Owner = this };
         window.ShowDialog();
-        _ = UpdateSecurityStatus();
+        UpdateSecurityStatus();
     }
 
     private async void SecurityTestAnalytics_Click(object sender, RoutedEventArgs e)
@@ -829,6 +848,10 @@ public partial class MainWindow
 
                 case "Security":
                     ShowSecurity();
+                    break;
+
+                case "SloDashboard":
+                    ShowSloDashboard();
                     break;
 
                 case "SyncHealth":

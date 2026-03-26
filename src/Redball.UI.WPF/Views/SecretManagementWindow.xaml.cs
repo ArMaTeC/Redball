@@ -137,7 +137,7 @@ public partial class SecretManagementWindow : Window
     {
         try
         {
-            var status = await SecretManagerService.Instance.GetHealth();
+            var status = SecretManagerService.Instance.GetHealth();
             MessageBox.Show(
                 $"Primary Provider: {status.PrimaryProvider}\n" +
                 $"Primary Available: {status.PrimaryAvailable}\n" +

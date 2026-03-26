@@ -2,6 +2,7 @@ namespace Redball.Core.Performance;
 
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 /// <summary>
 /// Adaptive monitoring interval policy that adjusts frequency based on system state.
@@ -17,6 +18,24 @@ public sealed class AdaptiveIntervalPolicy
 
     private DateTime _lastCpuCheck = DateTime.MinValue;
     private float _lastCpuLoad;
+
+    // P/Invoke for power status
+    [DllImport("kernel32.dll")]
+    private static extern bool GetSystemPowerStatus(out SYSTEM_POWER_STATUS lpSystemPowerStatus);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SYSTEM_POWER_STATUS
+    {
+        public byte ACLineStatus;
+        public byte BatteryFlag;
+        public byte BatteryLifePercent;
+        public byte Reserved1;
+        public int BatteryLifeTime;
+        public int BatteryFullLifeTime;
+    }
+
+    private const byte AC_LINE_OFFLINE = 0;
+    private const byte AC_LINE_ONLINE = 1;
 
     public AdaptiveIntervalPolicy(
         TimeSpan? defaultInterval = null,
@@ -101,8 +120,11 @@ public sealed class AdaptiveIntervalPolicy
     {
         try
         {
-            return System.Windows.Forms.SystemInformation.PowerStatus.PowerLineStatus ==
-                   System.Windows.Forms.PowerLineStatus.Offline;
+            if (GetSystemPowerStatus(out var status))
+            {
+                return status.ACLineStatus == AC_LINE_OFFLINE;
+            }
+            return false;
         }
         catch
         {

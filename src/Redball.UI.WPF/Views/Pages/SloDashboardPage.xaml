@@ -83,11 +83,57 @@
             </StackPanel>
         </Grid>
 
+        <!-- Resource Budgets Section -->
+        <Border Grid.Row="3" Background="WhiteSmoke" CornerRadius="8" Padding="15" Margin="0,300,0,60">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Resource Budgets" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                    <TextBlock x:Name="BudgetStatusText" Text="Checking..." FontSize="12" Foreground="Gray"/>
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="2" MaxHeight="200" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="ServiceBudgetsPanel"/>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Memory Pressure Section -->
+        <Border Grid.Row="3" Background="WhiteSmoke" CornerRadius="8" Padding="15" Margin="0,520,0,60">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Memory Pressure" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                    <TextBlock x:Name="MemoryPressureText" Text="Checking..." FontSize="12" Foreground="Gray"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal">
+                    <TextBlock x:Name="MemoryUsedText" Text="Used: --" FontSize="11" Foreground="Gray" Margin="0,0,15,0"/>
+                    <TextBlock x:Name="MemoryAvailableText" Text="Available: --" FontSize="11" Foreground="Gray" Margin="0,0,15,0"/>
+                    <TextBlock x:Name="WorkingSetText" Text="App: --" FontSize="11" Foreground="Gray"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
         <!-- Actions -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="5">
             <Button x:Name="ViewHistoryButton" Content="View History" Click="ViewHistoryButton_Click"
                     Padding="15,10" Margin="0,0,10,0"/>
             <Button x:Name="ExportReportButton" Content="Export Report" Click="ExportReportButton_Click"
+                    Padding="15,10" Margin="0,0,10,0"/>
+            <Button x:Name="RunPerfTestsButton" Content="Run Tests" Click="RunPerfTestsButton_Click"
                     Padding="15,10"/>
         </StackPanel>
     </Grid>

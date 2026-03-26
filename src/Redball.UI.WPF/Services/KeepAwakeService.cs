@@ -339,6 +339,24 @@ public class KeepAwakeService : IKeepAwakeService
         Logger.Info("KeepAwakeService", "Duration timer started for monitoring");
     }
 
+    /// <summary>
+    /// Pauses the monitoring timer while keeping state.
+    /// </summary>
+    public void PauseMonitoring()
+    {
+        _durationTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+        Logger.Info("KeepAwakeService", "Monitoring paused");
+    }
+
+    /// <summary>
+    /// Resumes the monitoring timer.
+    /// </summary>
+    public void ResumeMonitoring()
+    {
+        _durationTimer?.Change(1000, 1000);
+        Logger.Info("KeepAwakeService", "Monitoring resumed");
+    }
+
     // --- Private Methods ---
 
     private void ApplyExecutionState(bool enable)

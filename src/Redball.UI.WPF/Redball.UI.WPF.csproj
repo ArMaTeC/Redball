@@ -40,6 +40,7 @@
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="System.Speech" Version="8.0.0" />
     <PackageReference Include="InputInterceptor" Version="2.2.1" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.1" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
@@ -64,6 +65,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\install-interception.exe" />
     <EmbeddedResource Include="..\Redball.Driver\x64\Release\Redball.KMDF.sys" Link="Resources\Redball.KMDF.sys" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Redball.Core\Redball.Core.csproj" />
   </ItemGroup>
 
   <!-- App.xaml must be listed as ApplicationDefinition since we disabled the default -->

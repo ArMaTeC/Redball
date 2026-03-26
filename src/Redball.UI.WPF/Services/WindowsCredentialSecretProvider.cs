@@ -52,7 +52,7 @@ public sealed class WindowsCredentialSecretProvider : ISecretProvider, IDisposab
                     TargetName = Marshal.StringToCoTaskMemUni(targetName),
                     CredentialBlob = Marshal.AllocCoTaskMem(byteArray.Length),
                     CredentialBlobSize = byteArray.Length,
-                    Persist = CRED_PERSIST.LOCAL_MACHINE,
+                    Persist = (uint)CRED_PERSIST.LOCAL_MACHINE,
                     UserName = Marshal.StringToCoTaskMemUni(Environment.UserName)
                 };
 
@@ -119,7 +119,7 @@ public sealed class WindowsCredentialSecretProvider : ISecretProvider, IDisposab
                     }
 
                     var byteArray = new byte[credential.CredentialBlobSize];
-                    Marshal.Copy(credential.CredentialBlob, byteArray, 0, credential.CredentialBlobSize);
+                    Marshal.Copy(credential.CredentialBlob, byteArray, 0, (int)credential.CredentialBlobSize);
                     var value = Encoding.UTF8.GetString(byteArray);
 
                     Logger.Debug("WindowsCredentialSecretProvider", $"Retrieved secret for key: {key}");

@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// HTTP-based implementation of ISyncApi for sending events to a remote API.

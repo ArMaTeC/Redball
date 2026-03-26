@@ -187,4 +187,9 @@ internal static class NativeMethods
         }
         catch { return false; }
     }
+
+    // --- Memory Management (psapi.dll) ---
+
+    [DllImport("psapi.dll")]
+    internal static extern bool EmptyWorkingSet(IntPtr hProcess);
 }

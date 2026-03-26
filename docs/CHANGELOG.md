@@ -157,6 +157,313 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `SharedScheduler` for coalescing monitor ticks and reducing timer churn.
   - SLO dashboard UI (`SloDashboardPage`) with health indicators and export capability.
   - _Comment_: Completes improve_me.txt item E - guarantees predictable startup and long-session efficiency.
+- **Resource Budgets (perf-2)**: Implemented per-service CPU/RAM budgets and periodic conformance checks:
+  - `ResourceBudgetService` singleton for monitoring resource usage against defined budgets.
+  - `ServiceResourceBudget` with configurable CPU %, RAM MB limits, critical flags, and exceed actions.
+  - Default budgets for 10 core services (KeepAwake, HID, Analytics, Update, Config, etc.).
+  - `BudgetConformanceReport` with service usage statistics and violation tracking.
+  - Periodic monitoring every 30 seconds with 24-hour history retention.
+  - Visual budget status in SLO Dashboard with per-service CPU/RAM indicators.
+  - Critical service violations trigger enhanced logging.
+  - _Comment_: Completes perf-2 from improve_me.txt - enables proactive resource management and prevents runaway service consumption.
+- **Memory Pressure Handler (perf-5)**: Implemented memory monitoring with graceful feature degradation:
+  - `MemoryPressureService` with 4 pressure levels (Normal/Moderate/High/Critical).
+  - Thresholds based on % memory used (75%/85%/93%) and absolute MB available (2GB/1GB/512MB).
+  - 6 degradation actions: Reduce animations, disable effects, reduce polling, clear caches, disable features, prompt user.
+  - Automatic GC and working set trimming at critical pressure.
+  - Integration with `AdaptiveIntervalPolicy` for emergency polling reduction.
+  - Real-time memory status in SLO Dashboard with color-coded pressure levels.
+  - Event-driven architecture for pressure changes and degradation recommendations.
+  - _Comment_: Completes perf-5 from improve_me.txt - ensures app remains responsive under memory pressure.
+- **Continuous Performance Test Suite (perf-6)**: Implemented automated performance testing framework:
+  - `PerformanceTestService` with 5 test types: Startup, Soak, MemoryLeak, CpuUtilization, Responsiveness.
+  - Startup tests every 5 minutes measuring runtime health (memory growth, CPU usage, GC collections).
+  - Soak tests over 1+ hours monitoring stability and variance.
+  - Leak detection with forced GC cycles and trend analysis over 30+ minutes.
+  - Baseline capture at service start for comparison metrics.
+  - Automatic pass/fail determination with configurable thresholds.
+  - Test results storage with 100-result retention per test type.
+  - JSON export for CI/CD integration and historical analysis.
+  - "Run Tests" button in SLO Dashboard for manual test execution.
+  - Event-driven completion notifications for real-time monitoring.
+  - _Comment_: Completes perf-6 from improve_me.txt - enables continuous performance validation and regression detection.
+- **Product Strategy Framework (strat-1, strat-5)**: Implemented user personas and north-star metric:
+  - `ProductStrategyService` singleton for managing personas and strategic metrics.
+  - Primary Persona 1: Enterprise IT Administrator (35% of user base).
+    - Goals: Deploy policies at scale, minimize support tickets, maintain compliance.
+    - Success metrics: >95% policy compliance, <4hr MTTR, 30% ticket reduction YoY.
+  - Primary Persona 2: Power Remote Worker (45% of user base).
+    - Goals: Maintain focus, prevent sleep during calls, automate intelligently.
+    - Success metrics: >80% focus completion, <2% sleep interruption, >5hr daily usage.
+  - Secondary Persona: Casual User (20% of user base) with simplified needs.
+  - North Star Metric: "Daily Productive Time Protected" (target: 4.5 hours average).
+  - Input metrics: Session duration, sleep prevention triggers, intelligent activation rate.
+  - `StrategySummary` with retention/activation/conversion KPIs.
+  - _Comment_: Completes strat-1 and strat-5 from improve_me.txt - establishes clear user understanding and measurable success criteria.
+- **Task Funnel Analytics (ux-1, ux-6)**: Implemented end-to-end task funnels for top 5 jobs:
+  - `TaskFunnelService` for defining and tracking 5 critical user journeys.
+  - Job 1: Deploy Power Policy at Scale (Enterprise Admin) - Target: 5 minutes.
+    - Steps: Open Settings → Navigate Policies → Configure Rules → Export Config → Deploy.
+  - Job 2: Start Focused Work Session (Remote Worker) - Target: 30 seconds.
+    - Steps: Activate → Configure Duration → Enable Pomodoro → Minimize to Tray.
+  - Job 3: Troubleshoot Sleep Issue (Enterprise Admin) - Target: 3 minutes.
+    - Steps: Open Diagnostics → View Logs → Check History → Identify Issue → Apply Fix.
+  - Job 4: Type Content with TypeThing (Remote Worker) - Target: 45 seconds.
+    - Steps: Open TypeThing → Paste Content → Configure Speed → Start Typing → Focus Target.
+  - Job 5: Monitor Productivity Impact (Both Personas) - Target: 2 minutes.
+    - Steps: Open Analytics → Select Timeframe → View Metrics → Export Report → Share.
+  - Per-step timing with P95 tracking and drop-off analysis.
+  - Completion rate monitoring with automatic failure detection.
+  - Top 3 drop-off points with reasons for each funnel.
+  - `FunnelPerformanceSummary` with health scoring per journey.
+  - JSON export for UX research and optimization.
+  - _Comment_: Completes ux-1 and ux-6 from improve_me.txt - enables data-driven UX optimization with clear targets.
+- **Staged Rollout Channels (dist-1)**: Implemented canary/beta/stable/enterprise distribution:
+  - `RolloutService` with 4 channels: Canary (5%), Beta (15%), Stable (80%), Enterprise (controlled).
+  - 8 cohorts with percentage allocation and independent rollback criteria.
+  - Automatic user channel assignment via hash-based distribution.
+  - Canary: Internal testing, crash threshold 2%, error threshold 5%.
+  - Beta: Early adopters split into A/B cohorts, crash threshold 3%.
+  - Stable: 3-phase rollout (10% → 50% → full) with manual gates.
+  - Enterprise: Pilot (10%) → Full (90%) with IT admin control.
+  - Auto-rollback triggers: Crash rate >5%, error rate >10%, success <95%.
+  - Manual rollback capability with reason tracking.
+  - `RolloutStatus` with health monitoring and progress tracking.
+  - Event-driven architecture for status changes and rollbacks.
+  - _Comment_: Completes dist-1 from improve_me.txt - enables safe, gradual releases with automated safety.
+- **End-to-End Update Observability (dist-2)**: Implemented comprehensive update telemetry:
+  - `UpdateObservabilityService` tracking 14 update lifecycle stages.
+  - Stages: Check → Available → Download Start/Progress/Complete → Verification → Install Start/Progress/Complete → Restart Requested/Complete → Rollback Start/Complete → Failed.
+  - `UpdateSession` with event timeline and per-stage duration tracking.
+  - Download progress tracking (bytes transferred, total size, % complete).
+  - Install progress tracking (% complete).
+  - Verification result logging (signature, hash validation).
+  - Automatic success/failure/rollback detection.
+  - `UpdateMetrics` with averages: download time, install time, total time.
+  - Success rate, rollback rate, stage failure breakdown.
+  - Common failure reason analysis (top 5).
+  - `UpdateProgress` with real-time total progress calculation.
+  - JSON export for CI/CD integration and incident analysis.
+  - Telemetry integration for automatic analytics submission.
+  - _Comment_: Completes dist-2 from improve_me.txt - provides complete visibility into update success/failure patterns.
+- **Latency Masking Pattern (ux-4)**: Implemented standard latency masking for async operations:
+  - `LatencyMaskingService` with 300ms minimum display (prevents flicker for fast ops).
+  - 3-second extended wait threshold with progress indication.
+  - Skeleton screen support for data loading placeholders.
+  - Optimistic UI updates with automatic confirmation/rollback.
+  - Debounce and throttle helpers for input handling.
+  - Loading state events for UI binding.
+  - Progress percentage tracking with cancellation support.
+  - Extension methods for easy Task wrapping.
+  - _Comment_: Completes ux-4 from improve_me.txt - consistent loading UX across all async operations.
+- **Offline Mode User Controls (offline-6)**: Implemented user-facing offline controls:
+  - `OfflineControlService` with manual and auto-offline modes.
+  - Force resync with batch processing and progress tracking.
+  - Conflict review UI with local/server/merge resolution options.
+  - Sync rollback to previous checkpoint dates.
+  - Offline stats: pending items, resolved conflicts, last sync time.
+  - Configurable retention (default 30 days) and max outbox size.
+  - Conflict history tracking with resolution audit trail.
+  - Visual offline mode indicator with optional notifications.
+  - _Comment_: Completes offline-6 from improve_me.txt - full user control over offline/sync behavior.
+- **Windows Shell Integration (os-1)**: Implemented complete shell integration matrix:
+  - `WindowsShellIntegrationService` with App User Model ID support.
+  - Startup task: Registry Run key registration with enable/disable.
+  - Jump list: 3 tasks (Activate, Settings, TypeThing) with icons.
+  - URI protocol: `redball://` scheme handler with routing.
+  - Toast activator: COM server registration for notification activation.
+  - Integration status reporting (startup, jump list, protocol, notifications).
+  - URI activation routing (activate, settings, typething, pomodoro commands).
+  - Full registration/unregistration for install/uninstall.
+  - Shell integration health check with `IsFullyIntegrated` status.
+  - _Comment_: Completes os-1 from improve_me.txt - native Windows shell integration across all touchpoints.
+- **Release Checklist Gates (dist-4)**: Implemented mandatory release gates:
+  - `ReleaseGatesService` with 10 standard gates (7 required, 3 optional).
+  - Required gates: Signing, Upgrade Test, Uninstall Test, Migration Test, Security Scan, Dependency Audit, Performance Test.
+  - Optional gates: Localization, Documentation, Telemetry Validation.
+  - Per-gate checklists with detailed verification steps.
+  - Gate waivers with approver tracking and justification.
+  - Automatic execution with status tracking and duration metrics.
+  - Artifact validation with SHA-256 checksum generation.
+  - Performance gate integration with automated test execution.
+  - Checklist export to JSON for audit and compliance.
+  - CanRelease determination based on required gate status.
+  - _Comment_: Completes dist-4 from improve_me.txt - ensures release quality through automated gating.
+- **Interruption Policy (ux-5)**: Implemented non-blocking interruption management:
+  - `InterruptionPolicyService` with 5 interruption types (Modal, Toast, Banner, Silent, Deferred).
+  - User activity state tracking (Idle, Active, Focused, Inactive).
+  - Automatic interruption type selection based on activity (Focused → Silent/Toast, Active → Toast/Banner).
+  - Deferred interruption queue for low-priority messages during active sessions.
+  - Optimistic updates with confirmation/rollback support.
+  - Request/Approve/Deny workflow for controlled interruptions.
+  - Event-driven architecture for interruption lifecycle.
+  - _Comment_: Completes ux-5 from improve_me.txt - prevents disruptive blocking dialogs during active work.
+- **Accessibility Baseline (ui-4)**: Implemented WCAG AA compliance framework:
+  - `AccessibilityService` with element registration and automation property management.
+  - Contrast ratio auditing for WCAG AA (4.5:1) and AAA (7:1) compliance.
+  - Keyboard navigation audit with focusable element verification.
+  - Screen reader label validation (AutomationProperties.Name requirement).
+  - System accessibility setting detection (high contrast, reduced motion, text scale).
+  - Focus ring styling with high contrast colors.
+  - Accessibility compliance summary with element counts and issue tracking.
+  - Target compliance level configuration (A/AA/AAA).
+  - _Comment_: Completes ui-4 from improve_me.txt - ensures accessibility for users with disabilities.
+- **Versioned Data Model (offline-2)**: Implemented data versioning with migration contracts:
+  - `VersionedDataModelService` with semantic versioning (Major.Minor.Patch).
+  - `VersionedEntity` base class with version, timestamps, and checksum.
+  - Migration chain execution (1.0.0 → 1.1.0 with example).
+  - Backward compatibility checking (Major must match, Minor >= source).
+  - `IDataMigration` interface for custom transformations.
+  - Automatic migration to current version on load.
+  - Checksum validation for data integrity.
+  - _Comment_: Completes offline-2 from improve_me.txt - enables schema evolution without data loss.
+- **Conflict Resolution (offline-3)**: Implemented deterministic conflict resolution:
+  - `ConflictResolverService` with 4 strategies: LWW, FWW, Merge, Manual.
+  - Last-Write-Wins with timestamp comparison.
+  - First-Write-Wins for append-only scenarios.
+  - Semantic merge for complex objects with property-level resolution.
+  - Per-entity-type default strategy configuration.
+  - `ConflictResolution<T>` result with winner tracking and merge output.
+  - Manual resolution fallback for unresolvable conflicts.
+  - _Comment_: Completes offline-3 from improve_me.txt - predictable sync conflict handling.
+- **Reconciliation Engine (offline-5)**: Implemented data reconciliation with replay:
+  - `ReconciliationService` with checkpoint-based verification.
+  - SHA-256 checksum computation for data snapshots.
+  - Event log for partial replay capability.
+  - Checkpoint creation with integrity verification.
+  - Full reconciliation with valid/invalid event classification.
+  - Partial replay from specific event ID.
+  - Progress tracking for long-running reconciliation.
+  - 10-checkpoint retention policy.
+  - _Comment_: Completes offline-5 from improve_me.txt - enables data recovery and verification.
+- **Enterprise Policy Support (os-2)**: Implemented Group Policy integration:
+  - `EnterprisePolicyService` with GP and Registry policy support.
+  - Policy precedence: Group Policy > Registry > User Settings > Default.
+  - HKLM (machine) and HKCU (user) GP registry key support.
+  - Policy enforcement detection (IsPolicyManaged, IsPolicyEnforced).
+  - `PolicySummary` with managed settings inventory.
+  - Automatic policy refresh capability.
+  - `GetPolicyValue<T>()` with type conversion.
+  - Enterprise policy configuration report.
+  - _Comment_: Completes os-2 from improve_me.txt - enables IT admin control over settings.
+- **Reliability Contracts (os-3)**: Implemented session transition handling:
+  - `ReliabilityContractService` with pre/post transition contracts.
+  - Session lock/unlock with service pause/resume.
+  - RDP connect/disconnect with state preservation.
+  - Explorer shell restart with icon re-registration.
+  - Fast user switch away/back handling.
+  - Windows SystemEvents integration for automatic detection.
+  - Contract timeout handling (30s default).
+  - Recovery checkpoint creation for critical transitions.
+  - `SessionStateChanged` events for UI adaptation.
+  - _Comment_: Completes os-3 from improve_me.txt - ensures stability during OS transitions.
+- **Hotkey Conflict Detection (os-4)**: Implemented conflict detection and remapping:
+  - `HotkeyConflictDetectionService` with system/app conflict detection.
+  - Reserved shortcut database (Ctrl+C, Alt+F4, etc.).
+  - Common application conflict detection (VS Code, Slack, Browsers).
+  - Conflict severity classification (blocking/warning).
+  - `RemappingSuggestion` with conflict scoring algorithm.
+  - Automatic alternative generation (Shift modifier, Alt variants).
+  - Conflict report summary with actionable insights.
+  - `CanUseAllHotkeys` status for UI indication.
+  - User-guided remapping with apply capability.
+  - _Comment_: Completes os-4 from improve_me.txt - prevents hotkey collision issues.
+- **Quarterly Value Map (strat-2)**: Implemented feature-to-KPI linkage tracking:
+  - `ValueMapService` with quarterly feature-to-KPI mapping.
+  - 6 default KPIs: Day 7/30 retention, activation rate, feature discovery, trial conversion, upgrade rate.
+  - `ValueMapEntry` with expected/actual impact tracking and owners.
+  - Quarterly report generation with delivery rates and impact achievement.
+  - Retention/Activation/Conversion KPI categorization.
+  - JSON export for quarterly reviews.
+  - _Comment_: Completes strat-2 from improve_me.txt - maintains strategic alignment between features and business outcomes.
+- **Feature Tiering (strat-3)**: Implemented Core/Pro/Experimental tier system:
+  - `FeatureTieringService` with 3-tier classification (Core/Pro/Experimental).
+  - Kill criteria per feature: max bugs, min adoption, max tickets, sunset date.
+  - Automatic telemetry evaluation against kill criteria.
+  - Feature marking for removal with justification.
+  - Per-tier availability checks (`GetAvailableFeatures`).
+  - Tier summary with features-at-risk tracking.
+  - Configuration export for feature flag systems.
+  - _Comment_: Completes strat-3 from improve_me.txt - enables data-driven feature lifecycle management.
+- **TCO Model (strat-4)**: Implemented serverless cost modeling:
+  - `TCOModelService` with per-user and total cost tracking.
+  - Azure Functions, Cosmos DB, Blob Storage, App Insights cost components.
+  - Variable vs fixed cost categorization.
+  - TCO thresholds per tier (Free/Pro/Enterprise).
+  - Breakeven analysis for user count vs price.
+  - Growth projection over time with cost curves.
+  - Cost breakdown by category (infrastructure/license/support).
+  - _Comment_: Completes strat-4 from improve_me.txt - provides cost visibility for pricing decisions.
+- **PRD Strategy Gates (strat-6)**: Implemented product requirements gating:
+  - `PRDStrategyGateService` with 7 standard strategy gates.
+  - Required gates: Persona Alignment, KPI Linkage, North Star Alignment, Technical Feasibility, Security Review, Value Map Integration.
+  - Optional gate: UX Design Review.
+  - Per-gate checklist items for thorough review.
+  - Gate approval with approver tracking and notes.
+  - PRD approval status with completion tracking.
+  - PRD template generation with placeholder content.
+  - Export to JSON for documentation.
+  - _Comment_: Completes strat-6 from improve_me.txt - ensures strategic rigor in product requirements.
+- **Design System (ui-1)**: Implemented tokenized design system:
+  - `DesignSystemService` with 5 token categories: spacing, typography, colors, elevation, motion.
+  - 7 spacing tokens (4px-64px, 8px base grid).
+  - Typography scale (h1-h4, body, caption, button) with font weights and line heights.
+  - 5 elevation levels (none, low, medium, high, highest) with shadow specs.
+  - 4 motion specs (fast 150ms, normal 300ms, slow 500ms, emphasis with cubic-bezier).
+  - 2 color palettes (default light, dark) with full Material Design color roles.
+  - Token export to JSON for design tool integration.
+  - _Comment_: Completes ui-1 from improve_me.txt - enables consistent, scalable UI design.
+- **Visual Hierarchy Audit (ui-2)**: Implemented panel hierarchy enforcement:
+  - `VisualHierarchyAuditService` with Z-Index, font size, spacing, contrast checking.
+  - Z-Index ordering validation (Background < Content < Controls < Overlay < Modal).
+  - Font size hierarchy verification (minimum 2pt difference between levels).
+  - Spacing consistency check (limit to 2-3 margin patterns).
+  - Contrast hierarchy validation (WCAG AA 4.5:1 requirement).
+  - Touch target size validation (minimum 44x44 pixels).
+  - Per-panel audit with error/warning/info severity.
+  - Audit history tracking and compliance rate calculation.
+  - _Comment_: Completes ui-2 from improve_me.txt - ensures consistent visual hierarchy across all panels.
+- **Adaptive Layouts (ui-3)**: Implemented DPI-aware responsive layouts:
+  - `AdaptiveLayoutService` supporting 100%-300% DPI range.
+  - Multi-monitor detection with per-monitor DPI awareness.
+  - Layout configurations for 6 DPI breakpoints (100/125/150/200/250/300%).
+  - Adaptive grid columns (3→2→1 as DPI increases).
+  - Font scaling (1.0x to 2.0x) with layout breakpoints.
+  - Snapshot testing at multiple DPI levels.
+  - PNG export for visual regression testing.
+  - Layout validation with clipping detection.
+  - Snapshot summary with pass rates by DPI.
+  - _Comment_: Completes ui-3 from improve_me.txt - ensures usability across all display configurations.
+- **Iconography Unification (ui-5)**: Implemented unified icon system:
+  - `IconographyService` with tray/main/widget variants for all icons.
+  - 5 icon definitions (active, timed, paused, warning, error) with 3 context variants each.
+  - Status semantics mapping (keepawake states, battery, typething) with colors and tooltips.
+  - Sound cue association for status changes.
+  - Icon audit summary with coverage percentages per context.
+  - Missing variant detection for completion tracking.
+  - `ResolvedStatus` with icon path, color, tooltip, animation flag.
+  - _Comment_: Completes ui-5 from improve_me.txt - consistent iconography and status semantics across all UI contexts.
+- **Theme QA Matrix (ui-6)**: Implemented 14-theme control readability testing:
+  - `ThemeQAMatrixService` with 14 themes: 3 light, 3 dark, 2 high contrast, 6 specialty.
+  - 12 control types tested (Button, TextBox, ComboBox, CheckBox, RadioButton, Slider, ToggleSwitch, ListBox, Menu, TreeView, DataGrid, TabControl).
+  - WCAG AA contrast validation (4.5:1 for text, 1.5:1 for borders, 3:1 for focus).
+  - Per-theme/per-control test results with issue tracking.
+  - Pass rate calculation by theme and overall.
+  - Problematic combination identification.
+  - Safe theme recommendations per control.
+  - 168 total test combinations (14 themes × 12 controls).
+  - _Comment_: Completes ui-6 from improve_me.txt - ensures control readability across all themes.
+- **Reproducible Builds (dist-5)**: Implemented build provenance and attestation:
+  - `ReproducibleBuildService` with SHA-256 artifact hashing.
+  - Build provenance tracking (build ID, timestamp, machine, builder, source commit/branch).
+  - Clean build detection via git status check.
+  - Artifact attestation with signed hashes (RSA-SHA256).
+  - Reproducibility testing by comparing build artifacts.
+  - Artifact mismatch detection with detailed reporting.
+  - SBOM (Software Bill of Materials) export in CycloneDX format.
+  - Provenance export to JSON for supply chain verification.
+  - Reproducibility summary with rates and attestation counts.
+  - _Comment_: Completes dist-5 from improve_me.txt - enables supply chain security and build verification.
 
 ### Changed (Unreleased)
 

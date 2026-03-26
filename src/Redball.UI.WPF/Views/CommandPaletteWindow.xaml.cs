@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Redball.UI.Services;
 using Redball.UI.WPF.Models;
 using Redball.UI.WPF.Services;
 

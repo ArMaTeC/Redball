@@ -217,7 +217,7 @@ public sealed class SqliteOutboxStore : IOutboxStore, IDisposable
         updateCmd.Parameters.AddWithValue("@NextAttemptUtc", updated.NextAttemptUtc.ToString("O"));
         updateCmd.Parameters.AddWithValue("@Status", (int)updated.Status);
         updateCmd.Parameters.AddWithValue("@LastError", (object?)updated.LastError ?? DBNull.Value);
-        updateCmd.Parameters.AddWithValue("@LastAttemptUtc", updated.LastAttemptUtc?.ToString("O") ?? DBNull.Value);
+        updateCmd.Parameters.AddWithValue("@LastAttemptUtc", updated.LastAttemptUtc.HasValue ? updated.LastAttemptUtc.Value.ToString("O") : DBNull.Value);
         updateCmd.Parameters.AddWithValue("@EventId", eventId.ToString());
 
         await updateCmd.ExecuteNonQueryAsync(ct);

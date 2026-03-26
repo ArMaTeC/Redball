@@ -236,6 +236,17 @@ public sealed class CommandPaletteIndex
         // Diagnostics
         RegisterCommand(new PaletteCommand
         {
+            Id = "diag.slo",
+            Title = "SLO Dashboard",
+            Subtitle = "View performance SLOs and resource budgets",
+            Category = "Diagnostics",
+            IconGlyph = "\uE9D2", // Speed
+            NavigateTo = "SloDashboard",
+            Keywords = new[] { "performance", "slo", "startup", "budget", "metrics" }
+        });
+
+        RegisterCommand(new PaletteCommand
+        {
             Id = "diag.synchealth",
             Title = "Sync Health",
             Subtitle = "View sync queue status and health",

@@ -14,6 +14,9 @@ namespace Redball.UI.Services;
 public class AnalyticsService : IAnalyticsService
 {
     private bool _disposed;
+    private static readonly Lazy<AnalyticsService> _instance = new(() => new AnalyticsService(true));
+    public static AnalyticsService Instance => _instance.Value;
+    
     private static readonly string AnalyticsFile = Path.Combine(
         AppContext.BaseDirectory, "analytics.json");
     private const int TrendWindowDays = 7;

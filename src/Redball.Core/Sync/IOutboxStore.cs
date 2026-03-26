@@ -3,7 +3,7 @@ namespace Redball.Core.Sync;
 /// <summary>
 /// Persistent store for sync events with durable queuing semantics.
 /// </summary>
-public interface IOutboxStore
+public interface IOutboxStore : IDisposable
 {
     /// <summary>
     /// Enqueues a new sync event for later delivery.
