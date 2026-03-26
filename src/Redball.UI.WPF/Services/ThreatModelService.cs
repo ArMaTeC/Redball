@@ -94,19 +94,6 @@ public class ThreatModelService
         // Add threats based on the security improvements we've implemented
         AddThreat(new ThreatModelEntry
         {
-            Id = "SEC-001",
-            Title = "API Keys Stored in Plain Text",
-            Description = "API keys and credentials stored in plain text configuration files could be exposed to other users or malware.",
-            Category = ThreatCategory.InformationDisclosure,
-            Risk = RiskLevel.High,
-            Mitigation = "Implemented ISecretProvider pattern with Windows Credential Manager backend. All API keys now stored in OS-protected credential store.",
-            TestReference = "SecretManagerServiceTests.ValidateCredentialStorage",
-            IsMitigated = true,
-            VerifiedBy = "Security Review sec-2"
-        });
-
-        AddThreat(new ThreatModelEntry
-        {
             Id = "SEC-002",
             Title = "Configuration File Tampering",
             Description = "Malicious software or users could modify the application's configuration file to change behavior or extract sensitive settings.",
@@ -122,45 +109,6 @@ public class ThreatModelService
         {
             Id = "SEC-003",
             Title = "Malicious Update Installation",
-            Description = "Attacker could distribute malicious update packages that get installed by the auto-updater.",
-            Category = ThreatCategory.ElevationOfPrivilege,
-            Risk = RiskLevel.Critical,
-            Mitigation = "Trust chain validation: Authenticode signature verification, certificate pinning to trusted publishers, manifest hash verification. TamperPolicyService blocks/quarantines based on policy.",
-            TestReference = "SecurityServiceTests.ValidateUpdatePackageTrust, UpdateServiceTests.VerifySignatureValidation",
-            IsMitigated = true,
-            VerifiedBy = "Security Review sec-3, sec-4"
-        });
-
-        AddThreat(new ThreatModelEntry
-        {
-            Id = "SEC-004",
-            Title = "Untrusted Publisher Certificate",
-            Description = "Update signed by unknown or untrusted certificate authority could be accepted.",
-            Category = ThreatCategory.Spoofing,
-            Risk = RiskLevel.High,
-            Mitigation = "Certificate thumbprint pinning with runtime extensibility. TamperPolicyService handles CertificateNotPinned events with Warn/Quarantine/Block policies.",
-            TestReference = "SecurityServiceTests.CertificatePinningValidation",
-            IsMitigated = true,
-            VerifiedBy = "Security Review sec-3, sec-4"
-        });
-
-        AddThreat(new ThreatModelEntry
-        {
-            Id = "SEC-005",
-            Title = "Secret Store Corruption",
-            Description = "Windows Credential Manager entries could be corrupted or deleted, causing service disruption.",
-            Category = ThreatCategory.DenialOfService,
-            Risk = RiskLevel.Medium,
-            Mitigation = "SecretManagerService with fallback provider support. Health monitoring and graceful degradation when primary store unavailable.",
-            TestReference = "SecretManagerServiceTests.FallbackProviderTest",
-            IsMitigated = true,
-            VerifiedBy = "Security Review sec-2"
-        });
-
-        AddThreat(new ThreatModelEntry
-        {
-            Id = "SEC-006",
-            Title = "Update Download Interception",
             Description = "Man-in-the-middle attack could intercept update download and serve malicious payload.",
             Category = ThreatCategory.Tampering,
             Risk = RiskLevel.High,
@@ -174,43 +122,7 @@ public class ThreatModelService
         {
             Id = "SEC-007",
             Title = "Insider Threat - Privileged User",
-            Description = "Privileged user with admin access could tamper with application files or configuration.",
-            Category = ThreatCategory.ElevationOfPrivilege,
-            Risk = RiskLevel.Medium,
-            Mitigation = "DPAPI encryption binds config to user identity. TamperPolicyService detects and logs config modifications. Audit trail through tamper event history.",
-            TestReference = "TamperPolicyServiceTests.AuditTrailValidation",
-            IsMitigated = true,
-            VerifiedBy = "Security Review sec-1, sec-4"
-        });
-
-        AddThreat(new ThreatModelEntry
-        {
-            Id = "SEC-008",
-            Title = "Crash Dump Information Disclosure",
-            Description = "Crash dumps might contain sensitive information like secrets or API keys.",
-            Category = ThreatCategory.InformationDisclosure,
-            Risk = RiskLevel.Medium,
-            Mitigation = "Secrets stored in Windows Credential Manager (never in memory long-term). Minidumps exclude heap data. No secrets in crash logs.",
-            TestReference = "SecurityServiceTests.VerifyNoSecretsInDumps",
-            IsMitigated = true,
-            VerifiedBy = "Security Review sec-2"
-        });
-
-        AddThreat(new ThreatModelEntry
-        {
-            Id = "SEC-009",
-            Title = "Registry Tampering",
             Description = "Registry-based config storage could be modified by malicious software.",
-            Category = ThreatCategory.Tampering,
-            Risk = RiskLevel.Medium,
-            Mitigation = "Same DPAPI encryption applies to registry storage. Integrity signatures validated on load. TamperPolicyService integration.",
-            TestReference = "ConfigServiceTests.RegistryIntegrityValidation",
-            IsMitigated = true,
-            VerifiedBy = "Security Review sec-1, sec-4"
-        });
-
-        AddThreat(new ThreatModelEntry
-        {
             Id = "SEC-010",
             Title = "Downgrade Attack",
             Description = "Attacker might try to force installation of older, vulnerable version.",
@@ -220,33 +132,6 @@ public class ThreatModelService
             TestReference = "UpdateServiceTests.VersionValidation",
             IsMitigated = true,
             VerifiedBy = "Security Review sec-3"
-        });
-
-        // Known unmitigated or partially mitigated threats
-        AddThreat(new ThreatModelEntry
-        {
-            Id = "SEC-011",
-            Title = "Physical Access to Unlocked Machine",
-            Description = "Attacker with physical access to unlocked machine could access secrets or modify config.",
-            Category = ThreatCategory.InformationDisclosure,
-            Risk = RiskLevel.High,
-            Mitigation = "DPAPI encryption requires user login. Session lock detection can pause sensitive operations. Partial mitigation only - OS-level security required.",
-            TestReference = "SessionLockServiceTests.LockDetection",
-            IsMitigated = false,
-            VerifiedBy = "Security Review - Partial"
-        });
-
-        AddThreat(new ThreatModelEntry
-        {
-            Id = "SEC-012",
-            Title = "Memory Dump Analysis",
-            Description = "Sophisticated attacker could analyze process memory to extract transient secrets.",
-            Category = ThreatCategory.InformationDisclosure,
-            Risk = RiskLevel.Medium,
-            Mitigation = "Secrets retrieved on-demand from Credential Manager, not cached in memory. Short-lived secret handles. Defense in depth only - OS-level process protection required.",
-            TestReference = "Memory profiling analysis",
-            IsMitigated = false,
-            VerifiedBy = "Security Review - Future enhancement"
         });
 
         Logger.Info("ThreatModelService", $"Initialized with {_threats.Count} threats for version {TargetReleaseVersion}");

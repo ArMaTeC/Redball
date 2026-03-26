@@ -5,10 +5,16 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+
+                <!-- Design-time / fallback brushes so XAML parser and designer resolve keys -->
+                <ResourceDictionary Source="/Themes/ThemeDefaults.xaml"/>
+
+                <!-- Existing style/animation dictionaries -->
                 <ResourceDictionary Source="/Themes/Controls.xaml"/>
                 <ResourceDictionary Source="/Themes/Animations.xaml"/>
                 <ResourceDictionary Source="/Themes/MainWindowStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <converters:SliderValueToWidthConverter x:Key="SliderValueToWidthConverter"/>
         </ResourceDictionary>
