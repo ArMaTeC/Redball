@@ -12,7 +12,9 @@ public enum DriverSelection
     /// <summary>Redball KMDF filter driver (requires test signing).</summary>
     RedballKMDF = 2,
     /// <summary>Auto-select based on system state (Recommended).</summary>
-    Auto = 3
+    Auto = 3,
+    /// <summary>Windows Service-based input (no driver signing required).</summary>
+    Service = 4
 }
 
 /// <summary>

@@ -20,7 +20,7 @@
             <StackPanel>
                 <CheckBox x:Name="TypeThingEnabledCheck" Content="Enable TypeThing" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"/>
                 
-                <TextBlock Text="HID Driver Selection" FontWeight="Medium" Margin="0,8,0,4"/>
+                <TextBlock Text="Input Method Selection" FontWeight="Medium" Margin="0,8,0,4"/>
                 <ComboBox ItemsSource="{Binding DriverSelectionOptions}" 
                           SelectedItem="{Binding TypeThingDriverSelection}" 
                           Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8"/>
