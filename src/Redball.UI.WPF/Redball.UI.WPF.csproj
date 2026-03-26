@@ -62,10 +62,12 @@
     </Content>
   </ItemGroup>
 
+  <!-- Driver dependency - requires driver to be built separately with Windows Driver Kit
   <ItemGroup>
     <EmbeddedResource Include="Resources\install-interception.exe" />
     <EmbeddedResource Include="..\Redball.Driver\x64\Release\Redball.KMDF.sys" Link="Resources\Redball.KMDF.sys" />
   </ItemGroup>
+  -->
 
   <ItemGroup>
     <ProjectReference Include="..\Redball.Core\Redball.Core.csproj" />

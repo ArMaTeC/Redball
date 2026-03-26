@@ -51,7 +51,7 @@ public sealed class WindowsCredentialSecretProvider : ISecretProvider, IDisposab
                     Type = CRED_TYPE.GENERIC,
                     TargetName = Marshal.StringToCoTaskMemUni(targetName),
                     CredentialBlob = Marshal.AllocCoTaskMem(byteArray.Length),
-                    CredentialBlobSize = byteArray.Length,
+                    CredentialBlobSize = (uint)byteArray.Length,
                     Persist = (uint)CRED_PERSIST.LOCAL_MACHINE,
                     UserName = Marshal.StringToCoTaskMemUni(Environment.UserName)
                 };

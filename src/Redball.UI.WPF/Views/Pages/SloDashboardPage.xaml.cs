@@ -261,7 +261,7 @@ public partial class SloDashboardPage : Page
 
     private void ViewHistoryButton_Click(object sender, RoutedEventArgs e)
     {
-        var history = StartupTimingService.Instance.GetHistory();
+        var history = StartupTimingService.Instance.GetHistory().ToList();
         var dialog = new StartupHistoryDialog(history);
         dialog.ShowDialog();
     }

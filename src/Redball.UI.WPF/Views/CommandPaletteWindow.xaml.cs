@@ -173,7 +173,7 @@ public partial class CommandPaletteWindow : Window
         // In a real implementation:
         // Application.Current.MainWindow would be MainWindow
         // which has navigation methods
-        if (Application.Current.MainWindow is MainWindow mainWindow)
+        if (Application.Current.MainWindow is Redball.UI.Views.MainWindow mainWindow)
         {
             mainWindow.NavigateToSection(pageName);
         }

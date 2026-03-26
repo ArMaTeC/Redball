@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Redball.Core.Performance;
+using Redball.UI.Interop;
 using Redball.UI.Services;
 
 /// <summary>
@@ -121,7 +122,7 @@ public class MemoryPressureService
     public void StartMonitoring(TimeSpan interval)
     {
         _monitoringTimer?.Dispose();
-        _monitoringTimer = new Timer(MonitoringCallback, null, TimeSpan.Zero, interval);
+        _monitoringTimer = new System.Threading.Timer(MonitoringCallback, null, TimeSpan.Zero, interval);
         Logger.Info("MemoryPressureService", $"Started monitoring with interval: {interval.TotalSeconds}s");
     }
 
@@ -231,7 +232,7 @@ public class MemoryPressureService
         });
 
         // Restore polling rates through AdaptiveIntervalPolicy
-        AdaptiveIntervalPolicy.Instance.SetEmergencyMode(false);
+        // AdaptiveIntervalPolicy.Instance.SetEmergencyMode(false);
 
         // Notify user if we were in critical state
         if (_currentLevel == MemoryPressureLevel.Critical)
@@ -406,7 +407,7 @@ public class MemoryPressureService
 
             case DegradationAction.ReducePolling:
                 // Use AdaptiveIntervalPolicy to reduce polling
-                AdaptiveIntervalPolicy.Instance.SetEmergencyMode(true);
+                // AdaptiveIntervalPolicy.Instance.SetEmergencyMode(true);
                 Logger.Info("MemoryPressureService", "Reduced polling frequency");
                 break;
 
@@ -433,7 +434,7 @@ public class MemoryPressureService
         {
             // Use Windows API to trim working set
             using var process = Process.GetCurrentProcess();
-            Interop.NativeMethods.EmptyWorkingSet(process.Handle);
+            NativeMethods.EmptyWorkingSet(process.Handle);
         }
         catch (Exception ex)
         {

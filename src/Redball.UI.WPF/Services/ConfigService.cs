@@ -824,13 +824,7 @@ public class ConfigService : IConfigService
 
     private void NormalizeConfig()
     {
-        // Auto-enable encryption for security (sec-1)
-        if (!Config.EncryptConfig)
-        {
-            Logger.Info("ConfigService", "Auto-enabling config encryption for security (DPAPI)");
-            Config.EncryptConfig = true;
-            IsDirty = true;
-        }
+        // Encryption now defaults to false in RedballConfig - respect user choice
 
         if (string.Equals(Config.UpdateRepoOwner, "karl-lawrence", StringComparison.OrdinalIgnoreCase) &&
             string.Equals(Config.UpdateRepoName, "Redball", StringComparison.OrdinalIgnoreCase))

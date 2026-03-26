@@ -89,7 +89,7 @@ public partial class CrashTelemetryPage : Page
     {
         try
         {
-            var crashes = CrashTelemetryService.Instance.GetLocalCrashes(20);
+            var crashes = CrashTelemetryService.Instance.GetLocalCrashes(20).ToList();
             var dialog = new CrashReportsDialog(crashes);
             dialog.ShowDialog();
         }

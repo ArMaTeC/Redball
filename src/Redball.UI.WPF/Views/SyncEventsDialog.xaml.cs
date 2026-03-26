@@ -11,10 +11,14 @@ using Redball.Core.Sync;
 /// </summary>
 public partial class SyncEventsDialog : Window
 {
-    public SyncEventsDialog(List<SyncEvent> events)
+    public SyncEventsDialog(List<SyncEvent> events, string? title = null)
     {
         InitializeComponent();
         DataContext = events;
+        if (!string.IsNullOrEmpty(title))
+        {
+            Title = title;
+        }
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)

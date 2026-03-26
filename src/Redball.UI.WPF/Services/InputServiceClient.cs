@@ -161,7 +161,13 @@ public class InputServiceClient : IDisposable
                 _writer?.WriteLine(json);
             }
 
-            var responseJson = await _reader?.ReadLineAsync(cancellationToken)!;
+            var reader = _reader;
+            if (reader == null)
+            {
+                return new IpcResponse { Success = false, Error = "Not connected" };
+            }
+            
+            var responseJson = await reader.ReadLineAsync(cancellationToken);
             if (responseJson == null)
             {
                 return new IpcResponse { Success = false, Error = "No response from service" };

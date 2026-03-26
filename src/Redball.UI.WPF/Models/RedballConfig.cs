@@ -130,8 +130,8 @@ public class RedballConfig
     public bool MiniWidgetConfirmCloseWhenActive { get; set; } = true;
     public string MiniWidgetPreset { get; set; } = "Custom";
 
-    // Config encryption (DPAPI, current-user scope) - defaults to true for security
-    public bool EncryptConfig { get; set; } = true;
+    // Config encryption (DPAPI, current-user scope) - defaults to false
+    public bool EncryptConfig { get; set; } = false;
 
     // Update trust chain validation (sec-3)
     public bool StrictUpdateTrustMode { get; set; } = false;

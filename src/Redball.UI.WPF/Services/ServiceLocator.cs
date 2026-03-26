@@ -47,6 +47,12 @@ public static class ServiceLocator
         => Provider.GetService<T>();
 
     /// <summary>
+    /// Gets the outbox store service, or null if not registered.
+    /// </summary>
+    public static Redball.Core.Sync.IOutboxStore? OutboxStore
+        => Get<Redball.Core.Sync.IOutboxStore>();
+
+    /// <summary>
     /// Configures all application services in the DI container.
     /// </summary>
     public static IServiceProvider BuildServiceProvider(RedballConfig config)
