@@ -604,9 +604,7 @@ public class SecurityCIGatesService
             "FIXME",
             "config.GetValue",
             "Environment.GetEnvironmentVariable",
-            "_secretProvider",
-            "ISecretProvider",
-            "SecretManagerService"
+            "_secretProvider"
         };
 
         var lowerLine = line.ToLowerInvariant();
