@@ -26,6 +26,7 @@ installer/*/obj/
 .vs/
 .vscode/
 .idea/
+.antigravity/
 
 # Publish outputs
 publish/
