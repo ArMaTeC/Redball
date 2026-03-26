@@ -589,6 +589,74 @@
                                         </StackPanel>
                                     </Border>
                                     
+                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
+                                        <StackPanel>
+                                            <TextBlock Text="Templates" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                            <TextBlock Text="Save and reuse frequently typed content." 
+                                                       TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,12"/>
+                                            
+                                            <!-- Template Selection and Preview -->
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <ComboBox x:Name="TemplateCombo" Grid.Column="0" 
+                                                         Style="{DynamicResource ModernComboBox}" 
+                                                         Margin="0,0,8,0"
+                                                         SelectionChanged="TemplateCombo_SelectionChanged"/>
+                                                
+                                                <Button Grid.Column="1" Content="Type" 
+                                                       Style="{DynamicResource ModernButton}" 
+                                                       Margin="0,0,4,0"
+                                                       Click="TemplateType_Click"/>
+                                                
+                                                <Button Grid.Column="2" Content="Save Current" 
+                                                       Style="{DynamicResource ModernButton}" 
+                                                       Margin="0,0,4,0"
+                                                       Click="TemplateSave_Click"/>
+                                                
+                                                <Button Grid.Column="3" Content="Delete" 
+                                                       Style="{DynamicResource ModernButton}" 
+                                                       Click="TemplateDelete_Click"/>
+                                            </Grid>
+                                            
+                                            <!-- Template Preview Area -->
+                                            <Border Background="{DynamicResource SurfaceBrush}" 
+                                                   CornerRadius="4" 
+                                                   Margin="0,12,0,0"
+                                                   Padding="8"
+                                                   BorderBrush="{DynamicResource BorderBrush}"
+                                                   BorderThickness="1">
+                                                <StackPanel>
+                                                    <TextBlock Text="Template Preview" 
+                                                              FontWeight="Medium" 
+                                                              FontSize="12"
+                                                              Foreground="{DynamicResource ForegroundSecondaryBrush}"
+                                                              Margin="0,0,0,4"/>
+                                                    <ScrollViewer MaxHeight="100" 
+                                                                 VerticalScrollBarVisibility="Auto">
+                                                        <TextBlock x:Name="TemplatePreviewText" 
+                                                                  Text="Select a template to preview its content..."
+                                                                  FontFamily="Consolas"
+                                                                  FontSize="11"
+                                                                  TextWrapping="Wrap"
+                                                                  Foreground="{DynamicResource ForegroundBrush}"/>
+                                                    </ScrollViewer>
+                                                    <TextBlock x:Name="TemplatePreviewStats" 
+                                                              Text=""
+                                                              FontSize="10"
+                                                              Foreground="{DynamicResource ForegroundSecondaryBrush}"
+                                                              Margin="0,4,0,0"
+                                                              HorizontalAlignment="Right"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                    
                                     <Border Style="{DynamicResource CardStyle}">
                                         <TextBlock Text="TypeThing settings content placeholder" FontSize="14"/>
                                     </Border>
