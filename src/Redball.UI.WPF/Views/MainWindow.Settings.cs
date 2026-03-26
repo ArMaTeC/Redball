@@ -1028,69 +1028,73 @@ public partial class MainWindow
     private void RefreshHidDriverInstallVisibility()
     {
         var hidSafeModeEnabled = MainTypeThingHidSafeModeCheck?.IsChecked == true;
-        var hidSelected = MainTypeThingInputModeCombo.SelectedIndex == 1 && !hidSafeModeEnabled;
+        var inputMode = MainTypeThingInputModeCombo.SelectedIndex;
+        var hidSelected = inputMode == 1 && !hidSafeModeEnabled; // HID mode (index 1)
+        var serviceSelected = inputMode == 2 && !hidSafeModeEnabled; // Service mode (index 2)
         var hid = InterceptionInputService.Instance;
         var driverInstalled = hid.RefreshDriverInstalledState();
+        var serviceInstalled = ServiceInputProvider.Instance.RefreshServiceInstalledState();
 
         MainTypeThingInputModeCombo.IsEnabled = !hidSafeModeEnabled;
 
-        MainInstallHidDriverBtn.Content = driverInstalled
-            ? "Uninstall HID Driver"
-            : "Install HID Driver (No-Restart Attempt)";
-
-        if (hidSelected)
+        // Update button text and visibility based on selected mode
+        if (serviceSelected)
         {
+            MainInstallHidDriverBtn.Content = serviceInstalled
+                ? "Uninstall Input Service"
+                : "Install Input Service";
+            MainInstallHidDriverBtn.Visibility = Visibility.Visible;
+            // Hide HID-specific controls when Service is selected
+            if (MainRepairHidStackBtn != null) MainRepairHidStackBtn.Visibility = Visibility.Collapsed;
+            if (MainHidTestPanel != null) MainHidTestPanel.Visibility = Visibility.Collapsed;
+            if (MainResetHidStackBtn != null) MainResetHidStackBtn.Visibility = Visibility.Collapsed;
+            if (MainCopyHidDiagnosticsBtn != null) MainCopyHidDiagnosticsBtn.Visibility = Visibility.Collapsed;
+            if (MainEmergencyReleaseHidBtn != null) MainEmergencyReleaseHidBtn.Visibility = Visibility.Collapsed;
+            if (MainHidStatusIndicator != null) MainHidStatusIndicator.Visibility = Visibility.Collapsed;
+            if (MainHidDetailsText != null) MainHidDetailsText.Visibility = Visibility.Collapsed;
+            
+            MainInstallHidDriverBtn.ToolTip = serviceInstalled
+                ? "Uninstall the Redball Input Service."
+                : "Install the Redball Input Service (no driver signature required).";
+        }
+        else if (hidSelected)
+        {
+            MainInstallHidDriverBtn.Content = driverInstalled
+                ? "Uninstall HID Driver"
+                : "Install HID Driver (No-Restart Attempt)";
             MainInstallHidDriverBtn.Visibility = Visibility.Visible;
             if (MainRepairHidStackBtn != null) MainRepairHidStackBtn.Visibility = Visibility.Visible;
             if (MainHidTestPanel != null) MainHidTestPanel.Visibility = Visibility.Visible;
+            if (MainResetHidStackBtn != null)
+            {
+                MainResetHidStackBtn.Visibility = Visibility.Visible;
+                MainResetHidStackBtn.IsEnabled = driverInstalled;
+            }
+            if (MainCopyHidDiagnosticsBtn != null) MainCopyHidDiagnosticsBtn.Visibility = Visibility.Visible;
+            if (MainEmergencyReleaseHidBtn != null)
+            {
+                MainEmergencyReleaseHidBtn.Visibility = Visibility.Visible;
+                MainEmergencyReleaseHidBtn.IsEnabled = true;
+            }
+            if (MainHidStatusIndicator != null) MainHidStatusIndicator.Visibility = Visibility.Visible;
+            if (MainHidDetailsText != null) MainHidDetailsText.Visibility = Visibility.Visible;
+            
+            MainInstallHidDriverBtn.ToolTip = driverInstalled
+                ? "Uninstall the Interception HID driver from this machine."
+                : "Install the Interception HID driver without requiring a restart when possible.";
         }
         else
         {
+            // SendInput mode (index 0)
             MainInstallHidDriverBtn.Visibility = Visibility.Collapsed;
             if (MainRepairHidStackBtn != null) MainRepairHidStackBtn.Visibility = Visibility.Collapsed;
             if (MainHidTestPanel != null) MainHidTestPanel.Visibility = Visibility.Collapsed;
+            if (MainResetHidStackBtn != null) MainResetHidStackBtn.Visibility = Visibility.Collapsed;
+            if (MainCopyHidDiagnosticsBtn != null) MainCopyHidDiagnosticsBtn.Visibility = Visibility.Collapsed;
+            if (MainEmergencyReleaseHidBtn != null) MainEmergencyReleaseHidBtn.Visibility = Visibility.Collapsed;
+            if (MainHidStatusIndicator != null) MainHidStatusIndicator.Visibility = Visibility.Collapsed;
+            if (MainHidDetailsText != null) MainHidDetailsText.Visibility = Visibility.Collapsed;
         }
-
-        if (MainResetHidStackBtn != null)
-        {
-            MainResetHidStackBtn.Visibility = hidSelected
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-            MainResetHidStackBtn.IsEnabled = driverInstalled;
-        }
-
-        if (MainHidDetailsText != null)
-        {
-            MainHidDetailsText.Visibility = MainTypeThingInputModeCombo.SelectedIndex == 1
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-        }
-
-        if (MainCopyHidDiagnosticsBtn != null)
-        {
-            MainCopyHidDiagnosticsBtn.Visibility = hidSelected
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-        }
-
-        if (MainEmergencyReleaseHidBtn != null)
-        {
-            MainEmergencyReleaseHidBtn.Visibility = hidSelected
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-            MainEmergencyReleaseHidBtn.IsEnabled = true;
-        }
-
-        if (MainHidStatusIndicator != null)
-        {
-            MainHidStatusIndicator.Visibility = hidSelected
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-        }
-
-        MainInstallHidDriverBtn.ToolTip = driverInstalled
-            ? "Uninstall the Interception HID driver from this machine."
-            : "Install the Interception HID driver without requiring a restart when possible.";
     }
 
     private void UpdateHidStatusText()
@@ -1169,6 +1173,16 @@ public partial class MainWindow
 
     private void MainInstallHidDriverBtn_Click(object sender, RoutedEventArgs e)
     {
+        var inputMode = MainTypeThingInputModeCombo.SelectedIndex;
+        var serviceSelected = inputMode == 2; // Service mode (index 2)
+
+        if (serviceSelected)
+        {
+            HandleServiceInstallUninstall();
+            return;
+        }
+
+        // HID Driver mode
         var hid = InterceptionInputService.Instance;
         var driverInstalled = hid.RefreshDriverInstalledState();
 
@@ -1221,6 +1235,163 @@ public partial class MainWindow
 
         RefreshHidDriverInstallVisibility();
         UpdateHidStatusText();
+    }
+
+    private void HandleServiceInstallUninstall()
+    {
+        var serviceInstalled = ServiceInputProvider.Instance.RefreshServiceInstalledState();
+
+        if (!serviceInstalled)
+        {
+            var confirmInstall = NotificationWindow.Show(
+                "Install Input Service",
+                "Install the Redball Input Service now? This doesn't require driver signing and works over RDP. Admin approval may be required.",
+                "\uE7BA",
+                true);
+
+            if (!confirmInstall)
+            {
+                return;
+            }
+
+            // Use the MainViewModel to install the service
+            if (Application.Current.MainWindow?.DataContext is MainViewModel vm)
+            {
+                _ = Task.Run(async () =>
+                {
+                    // Trigger the service installation via the command
+                    await vm.InstallServiceAsync();
+                });
+            }
+            else
+            {
+                // Fallback: install directly
+                if (InstallServiceDirect())
+                {
+                    NotificationService.Instance.ShowInfo("Service Installed", "Redball Input Service installed successfully. No restart required.");
+                }
+                else
+                {
+                    NotificationService.Instance.ShowError("Install Failed", "Failed to install Redball Input Service. Ensure the application is running as Administrator.");
+                }
+            }
+        }
+        else
+        {
+            var confirmUninstall = NotificationWindow.Show(
+                "Uninstall Input Service",
+                "This will uninstall the Redball Input Service and disable service-based typing until reinstalled. Continue?",
+                "\uE74D",
+                true);
+
+            if (!confirmUninstall)
+            {
+                return;
+            }
+
+            if (UninstallServiceDirect())
+            {
+                NotificationService.Instance.ShowInfo("Service Uninstalled", "Redball Input Service uninstalled successfully.");
+            }
+            else
+            {
+                NotificationService.Instance.ShowError("Uninstall Failed", "Failed to uninstall Redball Input Service. Ensure the application is running as Administrator.");
+            }
+        }
+
+        RefreshHidDriverInstallVisibility();
+    }
+
+    private static bool InstallServiceDirect()
+    {
+        try
+        {
+            // Check admin rights
+            if (!Interop.NativeMethods.IsUserAnAdmin())
+            {
+                Logger.Warning("MainWindow", "Service installation requires admin rights");
+                return false;
+            }
+
+            var servicePath = System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.Input.Service.exe");
+            if (!System.IO.File.Exists(servicePath))
+            {
+                Logger.Error("MainWindow", $"Service executable not found: {servicePath}");
+                return false;
+            }
+
+            var createResult = RunProcess("sc.exe", $"create RedballInputService binPath= \"{servicePath}\" start= auto");
+            if (createResult.ExitCode != 0)
+            {
+                Logger.Error("MainWindow", $"Failed to create service: {createResult.StdErr}");
+                return false;
+            }
+
+            var startResult = RunProcess("sc.exe", "start RedballInputService");
+            if (startResult.ExitCode != 0)
+            {
+                Logger.Warning("MainWindow", $"Service created but failed to start: {startResult.StdErr}");
+            }
+
+            Logger.Info("MainWindow", "Redball Input Service installed successfully");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Service installation failed", ex);
+            return false;
+        }
+    }
+
+    private static bool UninstallServiceDirect()
+    {
+        try
+        {
+            // Check admin rights
+            if (!Interop.NativeMethods.IsUserAnAdmin())
+            {
+                Logger.Warning("MainWindow", "Service uninstallation requires admin rights");
+                return false;
+            }
+
+            // Stop the service first
+            RunProcess("sc.exe", "stop RedballInputService");
+
+            // Delete the service
+            var deleteResult = RunProcess("sc.exe", "delete RedballInputService");
+            if (deleteResult.ExitCode != 0)
+            {
+                Logger.Error("MainWindow", $"Failed to delete service: {deleteResult.StdErr}");
+                return false;
+            }
+
+            Logger.Info("MainWindow", "Redball Input Service uninstalled successfully");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Service uninstallation failed", ex);
+            return false;
+        }
+    }
+
+    private static (int ExitCode, string StdOut, string StdErr) RunProcess(string fileName, string arguments)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+
+        using var process = System.Diagnostics.Process.Start(psi)!;
+        var stdout = process.StandardOutput.ReadToEnd();
+        var stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        return (process.ExitCode, stdout, stderr);
     }
 
     private void MainRepairHidStackBtn_Click(object sender, RoutedEventArgs e)
