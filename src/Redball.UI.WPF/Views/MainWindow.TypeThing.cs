@@ -172,9 +172,79 @@ public partial class MainWindow
     private void RefreshTemplateCombo()
     {
         if (TemplateCombo == null) return;
+        var selected = TemplateCombo.SelectedItem;
         TemplateCombo.Items.Clear();
         foreach (var name in TemplateService.Instance.GetTemplateNames())
             TemplateCombo.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = name });
+        
+        // Try to restore selection or clear preview if no templates
+        if (selected != null && TemplateCombo.Items.Count > 0)
+        {
+            foreach (System.Windows.Controls.ComboBoxItem item in TemplateCombo.Items)
+            {
+                if (item.Content?.ToString() == selected.ToString())
+                {
+                    TemplateCombo.SelectedItem = item;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            UpdateTemplatePreview(null);
+        }
+    }
+
+    private void TemplateCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (TemplateCombo?.SelectedItem is System.Windows.Controls.ComboBoxItem item && item.Content is string name)
+        {
+            UpdateTemplatePreview(name);
+        }
+        else
+        {
+            UpdateTemplatePreview(null);
+        }
+    }
+
+    private void UpdateTemplatePreview(string? templateName)
+    {
+        if (TemplatePreviewText == null) return;
+        
+        if (string.IsNullOrEmpty(templateName))
+        {
+            TemplatePreviewText.Text = "Select a template to preview its content...";
+            if (TemplatePreviewStats != null)
+                TemplatePreviewStats.Text = "";
+            return;
+        }
+
+        var content = TemplateService.Instance.GetTemplate(templateName);
+        if (string.IsNullOrEmpty(content))
+        {
+            TemplatePreviewText.Text = "(empty template)";
+            if (TemplatePreviewStats != null)
+                TemplatePreviewStats.Text = "0 characters";
+        }
+        else
+        {
+            // Show first 500 chars with ellipsis if longer
+            const int maxPreviewLength = 500;
+            if (content.Length > maxPreviewLength)
+            {
+                TemplatePreviewText.Text = content[..maxPreviewLength] + "\n... (truncated for preview)";
+            }
+            else
+            {
+                TemplatePreviewText.Text = content;
+            }
+            
+            if (TemplatePreviewStats != null)
+            {
+                var lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Length;
+                TemplatePreviewStats.Text = $"{content.Length} characters | {lines} lines";
+            }
+        }
     }
 
     private void TemplateType_Click(object sender, RoutedEventArgs e)
