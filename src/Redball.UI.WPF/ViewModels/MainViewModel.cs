@@ -632,11 +632,27 @@ public class MainViewModel : ViewModelBase
 
     private async System.Threading.Tasks.Task InstallDriverAsync()
     {
-        Logger.Info("MainViewModel", "Install driver command invoked");
-        var result = await System.Threading.Tasks.Task.Run(() => 
+        Logger.Info("MainViewModel", $"Install driver command invoked with selection: {TypeThingDriverSelection}");
+        
+        if (TypeThingDriverSelection == DriverSelection.Service)
+        {
+            // Service mode - install Windows Service instead of HID driver
+            var result = await InstallServiceAsync();
+            if (result)
+            {
+                NotificationService.Instance.ShowInfo("Service Installation", "Redball Input Service installed successfully. No restart required.");
+            }
+            else
+            {
+                NotificationService.Instance.ShowError("Service Installation", "Failed to install Redball Input Service. Ensure the application is running as Administrator.");
+            }
+            return;
+        }
+        
+        var driverResult = await System.Threading.Tasks.Task.Run(() => 
             InterceptionInputService.Instance.InstallDriver(TypeThingDriverSelection));
         
-        if (result)
+        if (driverResult)
         {
             NotificationService.Instance.ShowInfo("Driver Installation", "Installation complete. Please restart your computer to apply the driver changes.");
         }
@@ -644,5 +660,82 @@ public class MainViewModel : ViewModelBase
         {
             NotificationService.Instance.ShowError("Driver Installation", "Installation failed. Ensure the application is running as Administrator.");
         }
+    }
+
+    private async System.Threading.Tasks.Task<bool> InstallServiceAsync()
+    {
+        return await System.Threading.Tasks.Task.Run(() =>
+        {
+            try
+            {
+                // Check admin rights
+                if (!Interop.NativeMethods.IsUserAnAdmin())
+                {
+                    Logger.Warning("MainViewModel", "Service installation requires admin rights");
+                    return false;
+                }
+
+                // Check if service already exists
+                try
+                {
+                    using var sc = new System.ServiceProcess.ServiceController("RedballInputService");
+                    Logger.Info("MainViewModel", "Redball Input Service already installed");
+                    return true;
+                }
+                catch
+                {
+                    // Service doesn't exist, proceed with installation
+                }
+
+                // Install the service using sc.exe
+                var servicePath = System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.Input.Service.exe");
+                if (!System.IO.File.Exists(servicePath))
+                {
+                    Logger.Error("MainViewModel", $"Service executable not found: {servicePath}");
+                    return false;
+                }
+
+                var createResult = RunProcess("sc.exe", $"create RedballInputService binPath= \"{servicePath}\" start= auto");
+                if (createResult.ExitCode != 0)
+                {
+                    Logger.Error("MainViewModel", $"Failed to create service: {createResult.StdErr}");
+                    return false;
+                }
+
+                var startResult = RunProcess("sc.exe", "start RedballInputService");
+                if (startResult.ExitCode != 0)
+                {
+                    Logger.Warning("MainViewModel", $"Service created but failed to start: {startResult.StdErr}");
+                    // Don't fail - service is installed but needs manual start
+                }
+
+                Logger.Info("MainViewModel", "Redball Input Service installed successfully");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MainViewModel", "Service installation failed", ex);
+                return false;
+            }
+        });
+    }
+
+    private static (int ExitCode, string StdOut, string StdErr) RunProcess(string fileName, string arguments)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+
+        using var process = System.Diagnostics.Process.Start(psi)!;
+        var stdout = process.StandardOutput.ReadToEnd();
+        var stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        return (process.ExitCode, stdout, stderr);
     }
 }
