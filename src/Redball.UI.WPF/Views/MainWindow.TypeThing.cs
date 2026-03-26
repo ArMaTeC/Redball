@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -10,11 +11,74 @@ using Redball.UI.Services;
 namespace Redball.UI.Views;
 
 /// <summary>
+/// Clipboard history item with blur/reveal support
+/// </summary>
+public class ClipboardHistoryItem : INotifyPropertyChanged
+{
+    private bool _isRevealed;
+    private DispatcherTimer? _revealTimer;
+
+    public string Preview { get; set; } = "";
+    public string FullText { get; set; } = "";
+    public DateTime Time { get; set; }
+
+    public string DisplayText => $"[{Time:HH:mm}] {Preview}";
+
+    public string BlurredText
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(Preview)) return "[empty]";
+            var visibleChars = Math.Min(3, Preview.Length);
+            var hiddenLength = Preview.Length - visibleChars;
+            return $"[{Time:HH:mm}] {Preview[..visibleChars]}{new string('*', Math.Min(hiddenLength, 20))}...";
+        }
+    }
+
+    public bool IsRevealed
+    {
+        get => _isRevealed;
+        set
+        {
+            if (_isRevealed != value)
+            {
+                _isRevealed = value;
+                OnPropertyChanged(nameof(IsRevealed));
+            }
+        }
+    }
+
+    public void RevealFor(int seconds)
+    {
+        _revealTimer?.Stop();
+        IsRevealed = true;
+
+        _revealTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(seconds) };
+        _revealTimer.Tick += (s, e) =>
+        {
+            _revealTimer.Stop();
+            IsRevealed = false;
+        };
+        _revealTimer.Start();
+    }
+
+    public void Hide()
+    {
+        _revealTimer?.Stop();
+        IsRevealed = false;
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(string propertyName)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+}
+
+/// <summary>
 /// Partial class: TypeThing paste-as-typing logic, hotkey management, and P/Invoke helpers.
 /// </summary>
 public partial class MainWindow
 {
-    private readonly List<(string Preview, string FullText, DateTime Time)> _typeThingHistory = new();
+    private readonly List<ClipboardHistoryItem> _typeThingHistory = new();
     private const int MaxTypeThingHistory = 10;
     private bool _typeThingBusyNotificationShown;
 
@@ -44,7 +108,13 @@ public partial class MainWindow
     private void AddToTypeThingHistory(string text)
     {
         var preview = text.Length > 80 ? text[..80].Replace("\r", "").Replace("\n", " ") + "..." : text.Replace("\r", "").Replace("\n", " ");
-        _typeThingHistory.Insert(0, (preview, text, DateTime.Now));
+        var item = new ClipboardHistoryItem
+        {
+            Preview = preview,
+            FullText = text,
+            Time = DateTime.Now
+        };
+        _typeThingHistory.Insert(0, item);
         if (_typeThingHistory.Count > MaxTypeThingHistory)
             _typeThingHistory.RemoveAt(_typeThingHistory.Count - 1);
         RefreshTypeThingHistoryUI();
@@ -56,21 +126,46 @@ public partial class MainWindow
         TypeThingHistoryList.Items.Clear();
         foreach (var entry in _typeThingHistory)
         {
-            TypeThingHistoryList.Items.Add(new System.Windows.Controls.ListBoxItem
-            {
-                Content = $"[{entry.Time:HH:mm}] {entry.Preview}",
-                Tag = entry.FullText,
-                ToolTip = $"{entry.FullText.Length} characters"
-            });
+            TypeThingHistoryList.Items.Add(entry);
+        }
+    }
+
+    private void TypeThingHistoryReveal_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.Button btn && btn.Tag is ClipboardHistoryItem item)
+        {
+            var duration = (int)(ClipboardRevealDurationSlider?.Value ?? 10);
+            item.RevealFor(duration);
+            _analytics.TrackFeature("typething.history_reveal");
         }
     }
 
     private void TypeThingHistoryRetype_Click(object sender, RoutedEventArgs e)
     {
-        if (TypeThingHistoryList.SelectedItem is System.Windows.Controls.ListBoxItem item && item.Tag is string text)
+        if (sender is System.Windows.Controls.Button btn && btn.Tag is ClipboardHistoryItem item)
         {
-            StartTypeThingFromText(text);
+            StartTypeThingFromText(item.FullText);
             _analytics.TrackFeature("typething.history_retype");
+        }
+    }
+
+    private void TypeThingHistoryClear_Click(object sender, RoutedEventArgs e)
+    {
+        // Hide all revealed items first
+        foreach (var item in _typeThingHistory)
+        {
+            item.Hide();
+        }
+        _typeThingHistory.Clear();
+        RefreshTypeThingHistoryUI();
+        _analytics.TrackFeature("typething.history_clear");
+    }
+
+    private void ClipboardRevealDurationSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (ClipboardRevealDurationText != null)
+        {
+            ClipboardRevealDurationText.Text = $"Reveal for: {(int)e.NewValue} seconds";
         }
     }
 
