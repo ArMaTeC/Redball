@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Principal;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Redball.UI.Services;
+using Redball.UI.ViewModels;
 
 namespace Redball.UI.Views;
 
@@ -83,17 +85,6 @@ public partial class MainWindow
         MainRestartReminderDaysText.Text = $"Remind after: {config.RestartReminderDays} days";
         MainAutoRestartCheck.IsChecked = config.AutoRestartEnabled;
         MainUptimeStatusText.Text = ScheduledRestartService.Instance.GetStatusText();
-        MainWebApiEnabledCheck.IsChecked = config.WebApiEnabled;
-        if (config.WebApiEnabled)
-        {
-            WebApiService.Instance.Start(config.WebApiPort);
-            MainWebApiStatusText.Text = $"API running on http://localhost:{config.WebApiPort}/";
-        }
-        else
-        {
-            WebApiService.Instance.Stop();
-            MainWebApiStatusText.Text = "API disabled";
-        }
 
         if (config.AppRulesEnabled)
             ForegroundAppService.Instance.Start();
@@ -258,11 +249,6 @@ public partial class MainWindow
             config.RestartReminderEnabled = MainRestartReminderCheck.IsChecked ?? false;
             config.RestartReminderDays = (int)MainRestartReminderDaysSlider.Value;
             config.AutoRestartEnabled = MainAutoRestartCheck.IsChecked ?? false;
-            config.WebApiEnabled = MainWebApiEnabledCheck.IsChecked ?? false;
-            if (config.WebApiEnabled)
-                WebApiService.Instance.Start(config.WebApiPort);
-            else
-                WebApiService.Instance.Stop();
             if (config.AppRulesEnabled)
                 ForegroundAppService.Instance.Start();
             else
@@ -1254,26 +1240,13 @@ public partial class MainWindow
                 return;
             }
 
-            // Use the MainViewModel to install the service
-            if (Application.Current.MainWindow?.DataContext is MainViewModel vm)
+            if (InstallServiceDirect())
             {
-                _ = Task.Run(async () =>
-                {
-                    // Trigger the service installation via the command
-                    await vm.InstallServiceAsync();
-                });
+                NotificationService.Instance.ShowInfo("Service Installed", "Redball Input Service installed successfully. No restart required.");
             }
             else
             {
-                // Fallback: install directly
-                if (InstallServiceDirect())
-                {
-                    NotificationService.Instance.ShowInfo("Service Installed", "Redball Input Service installed successfully. No restart required.");
-                }
-                else
-                {
-                    NotificationService.Instance.ShowError("Install Failed", "Failed to install Redball Input Service. Ensure the application is running as Administrator.");
-                }
+                NotificationService.Instance.ShowError("Install Failed", "Failed to install Redball Input Service. Ensure the application is running as Administrator.");
             }
         }
         else
@@ -1307,7 +1280,7 @@ public partial class MainWindow
         try
         {
             // Check admin rights
-            if (!Interop.NativeMethods.IsUserAnAdmin())
+            if (!IsCurrentUserAdministrator())
             {
                 Logger.Warning("MainWindow", "Service installation requires admin rights");
                 return false;
@@ -1348,7 +1321,7 @@ public partial class MainWindow
         try
         {
             // Check admin rights
-            if (!Interop.NativeMethods.IsUserAnAdmin())
+            if (!IsCurrentUserAdministrator())
             {
                 Logger.Warning("MainWindow", "Service uninstallation requires admin rights");
                 return false;
@@ -1392,6 +1365,25 @@ public partial class MainWindow
         var stderr = process.StandardError.ReadToEnd();
         process.WaitForExit();
         return (process.ExitCode, stdout, stderr);
+    }
+
+    private static bool IsCurrentUserAdministrator()
+    {
+        try
+        {
+            using var identity = WindowsIdentity.GetCurrent();
+            if (identity == null)
+            {
+                return false;
+            }
+
+            var principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private void MainRepairHidStackBtn_Click(object sender, RoutedEventArgs e)

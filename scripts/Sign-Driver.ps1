@@ -9,10 +9,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Write-Step { param($msg) Write-Host "  → $msg" -ForegroundColor Yellow }
-function Write-Success { param($msg) Write-Host "  ✓ $msg" -ForegroundColor Green }
+function Write-Step { param($msg) Write-Information "  → $msg" -InformationAction Continue }
+function Write-Success { param($msg) Write-Information "  ✓ $msg" -InformationAction Continue }
 
-Write-Host "`n=== Driver Signing Tool (Test Mode) ===" -ForegroundColor Cyan
+Write-Information "`n=== Driver Signing Tool (Test Mode) ===" -InformationAction Continue
 
 # 1. Locate Signtool (WDK/SDK)
 $sdkPath = Join-Path "${env:ProgramFiles(x86)}" "Windows Kits\10\bin"
@@ -28,7 +28,8 @@ if (-not $cert) {
     Write-Step "Creating new self-signed certificate: $CertificateName"
     $cert = New-SelfSignedCertificate -Type CodeSigning -Subject "CN=$CertificateName" -KeyExportPolicy Exportable -KeySpec Signature
     Write-Success "Certificate created"
-} else {
+}
+else {
     Write-Success "Using existing certificate: $CertificateName"
 }
 
@@ -47,7 +48,8 @@ $filesToSign = @($DriverPath)
 $catPath = [System.IO.Path]::ChangeExtension($DriverPath, "cat")
 if (Test-Path $catPath) {
     $filesToSign += $catPath
-} else {
+}
+else {
     # Check for same filename but with .cat in the same dir
     $potentialCat = Join-Path (Split-Path $DriverPath) "*.cat"
     $filesToSign += Get-ChildItem $potentialCat | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue
@@ -60,12 +62,15 @@ foreach ($file in $filesToSign | Select-Object -Unique) {
 
 if ($LASTEXITCODE -eq 0) {
     Write-Success "Driver signed successfully!"
-    Write-Host "`nIMPORTANT: Remember to enable Test Signing mode if you haven't already:" -ForegroundColor Yellow
-    Write-Host "  bcdedit /set testsigning on" -ForegroundColor Yellow
-    Write-Host "  (Requires Reboot)`n" -ForegroundColor Yellow
-} else {
+    Write-Information "`nIMPORTANT: Remember to enable Test Signing mode if you haven't already:" -InformationAction Continue
+    Write-Information "  bcdedit /set testsigning on" -InformationAction Continue
+    Write-Information "  (Requires Reboot)`n" -InformationAction Continue
+}
+else {
     Write-Error "Signing failed."
 }
+
+
 
 
 

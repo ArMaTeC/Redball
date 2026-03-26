@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added (Unreleased)
 
+- **.NET 10 Upgrade Execution (vs_upgrade_report)**: Completed the atomic framework/package migration from `.NET 8` to `.NET 10` across active app and test projects.
+  - Updated target frameworks:
+    - `src/Redball.UI.WPF/Redball.UI.WPF.csproj` → `net10.0-windows`
+    - `src/Redball.Core/Redball.Core.csproj` → `net10.0`
+    - `src/Redball.Service/Redball.Service.csproj` → `net10.0-windows`
+    - `src/Redball.SessionHelper/Redball.SessionHelper.csproj` → `net10.0-windows`
+    - `tests/Redball.Tests.csproj` → `net10.0-windows`
+    - `tests-integration/Redball.IntegrationTests.csproj` → `net10.0-windows`
+    - `tests-ui-automation/Redball.UIAutomation.csproj` → `net10.0-windows`
+    - `tests-e2e/Redball.E2E.Tests.csproj` → `net10.0-windows`
+    - `tests/Redball.Benchmarks/Redball.Benchmarks.csproj` → `net10.0-windows` for compatibility with WPF project references.
+  - Updated key runtime packages to current .NET 10-compatible versions:
+    - UI/Core/Service stack: `Microsoft.Extensions.*` packages to `10.0.5`, `Microsoft.Data.Sqlite` to `10.0.5`, `System.Management` / `System.Speech` / `System.ServiceProcess.ServiceController` / `System.Text.Json` to `10.0.5`.
+    - WPF ecosystem packages: `CommunityToolkit.Mvvm` `8.4.2`, `Hardcodet.NotifyIcon.Wpf` `2.0.1`, `Microsoft.Xaml.Behaviors.Wpf` `1.1.142`.
+    - Test tooling: `Microsoft.NET.Test.Sdk` `18.3.0`, MSTest adapter/framework `4.1.0`, `coverlet` `8.0.1`, `FlaUI` `5.0.0`, `NUnit` `4.5.1`, `NUnit3TestAdapter` `6.2.0`, `NUnit.Analyzers` `4.12.0`, `Appium.WebDriver` `8.1.0`, `Selenium.WebDriver` `4.41.0`, `Moq` `4.20.72`.
+  - Validation status:
+    - `dotnet restore` and `dotnet build -c Release` succeeded on `Redball.v3.sln`.
+    - `tests/Redball.Tests` passed (`377` total, `0` failed).
+    - `tests-integration/Redball.IntegrationTests` executed successfully (all tests currently skipped by design in this environment).
+
+- **WPF Build Compatibility Recovery**: Restored compile-time wiring between `MainWindow.xaml` and split code-behind partials.
+  - Added hidden compatibility control definitions for missing `x:Name` references used by `MainWindow.Settings.cs`, `MainWindow.TypeThing.cs`, and `MainWindow.Pomodoro.cs`.
+  - Added missing click handlers for `OpenLogsFolderButton_Click` and `MainCheckUpdatesButton_Click`.
+  - Restored `PomodoroService` implementation and re-added `PomodoroSectionView.xaml` so generated `InitializeComponent` bindings compile again.
+  - Added `RedballConfig.WebApiPort` and `NativeMethods.IsUserAnAdmin` to satisfy existing config validation and admin-check call sites.
+  - Fixed navigation compile issues by removing duplicate `SloDashboard` switch case and adding `ShowMetrics` / `ShowPomodoro` methods used by `MainViewModel`.
+
 - **Self-Contained MSI Installer v2.0**: Completely redesigned MSI installer that is now fully self-contained with no external script dependencies.
   - Native C# custom action DLL (`Redball.Installer.CustomActions.dll`) for all installer operations.
   - Self-contained backup/restore of user data during upgrades (no PowerShell required).

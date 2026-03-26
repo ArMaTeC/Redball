@@ -232,13 +232,12 @@
                     <StackPanel>
                         <RadioButton x:Name="HomeNavButton" Content="Home" IsChecked="True" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Overview of the main Redball sections and shortcuts."/>
                         <RadioButton x:Name="AnalyticsNavButton" Content="Analytics" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="View session counts, usage patterns, and tracked activity."/>
-                        <RadioButton x:Name="MetricsNavButton" Content="Product Metrics" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Inspect feature adoption and product usage metrics."/>
+                        <RadioButton x:Name="SloDashboardNavButton" Content="SLO Dashboard" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="View service level objective metrics and performance indicators."/>
                         <RadioButton x:Name="DiagnosticsNavButton" Content="Diagnostics" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Review runtime state, logging paths, and app health."/>
                         <RadioButton x:Name="SettingsNavButton" Content="Settings" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="General application settings such as theme, notifications, and logging."/>
                         <RadioButton x:Name="BehaviorNavButton" Content="Behavior" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Control display sleep prevention, heartbeat key, and default run duration."/>
                         <RadioButton x:Name="SmartFeaturesNavButton" Content="Smart Features" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Tune battery, network, idle, presentation, and scheduled behavior."/>
                         <RadioButton x:Name="TypeThingNavButton" Content="TypeThing" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Configure TypeThing hotkeys, speed, and typing behavior."/>
-                        <RadioButton x:Name="PomodoroNavButton" Content="Pomodoro" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Pomodoro focus timer with configurable intervals."/>
                         <RadioButton x:Name="UpdatesNavButton" Content="Updates" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Manage update channels and check for new releases."/>
                     </StackPanel>
                 </Border>
@@ -292,53 +291,15 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <StackPanel x:Name="MetricsPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Product Metrics" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="A deeper look at feature adoption and engagement. See which Redball features are being used, how often settings are saved, and overall product health at a glance." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
-                                    <UniformGrid Columns="2" Margin="0,0,0,16">
-                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Feature Adoption" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                                <TextBlock x:Name="MetricsAdoptionText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                        </Border>
-                                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Retention" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                                <TextBlock x:Name="MetricsRetentionText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </UniformGrid>
-
-                                    <UniformGrid Columns="2" Margin="0,0,0,12">
-                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                                            <StackPanel>
-                                                <TextBlock Text="TypeThing" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                                <TextBlock x:Name="MetricsTypeThingText" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </Border>
-                                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Settings Saves" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                                <TextBlock x:Name="MetricsSettingsText" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </UniformGrid>
-
-                                    <UniformGrid Columns="2">
-                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Updates" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                                <TextBlock x:Name="MetricsUpdatesText" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </Border>
-                                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Onboarding" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                                <TextBlock x:Name="MetricsOnboardingText" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </UniformGrid>
+                                <StackPanel x:Name="SloDashboardPanel" Visibility="Collapsed">
+                                    <TextBlock Text="SLO Dashboard" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Service Level Objective metrics and performance indicators." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+                                    <Border Style="{DynamicResource CardStyle}">
+                                        <StackPanel>
+                                            <TextBlock Text="SLO Metrics" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                            <TextBlock x:Name="SloMetricsText" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"/>
+                                        </StackPanel>
+                                    </Border>
                                 </StackPanel>
 
                                 <StackPanel x:Name="DiagnosticsPanel" Visibility="Collapsed">
@@ -435,13 +396,6 @@
                                                 <Button Grid.Column="3" Content="Delete" Style="{DynamicResource ModernButton}" Margin="8,0,0,0" Click="ProfileDelete_Click" ToolTip="Delete the selected profile"/>
                                             </Grid>
                                             <TextBlock x:Name="ProfileActiveText" Text="" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                        </StackPanel>
-                                    </Border>
-                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
-                                        <StackPanel>
-                                            <TextBlock Text="Local Web API" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                            <CheckBox x:Name="MainWebApiEnabledCheck" Content="Enable local web API" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTip="Expose a local HTTP API on localhost for remote control from scripts or companion apps."/>
-                                            <TextBlock x:Name="MainWebApiStatusText" Text="" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                                         </StackPanel>
                                     </Border>
                                     <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
@@ -662,14 +616,6 @@
                                     </Border>
                                 </StackPanel>
 
-                                <StackPanel x:Name="PomodoroPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Pomodoro" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Pomodoro focus timer with configurable intervals." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
-                                    <Border Style="{DynamicResource CardStyle}">
-                                        <TextBlock Text="Pomodoro settings content placeholder" FontSize="14"/>
-                                    </Border>
-                                </StackPanel>
-
                                 <StackPanel x:Name="UpdatesPanel" Visibility="Collapsed">
                                     <TextBlock Text="Updates" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                     <TextBlock Text="Manage update channels and check for new releases." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
@@ -679,6 +625,160 @@
                                             <CheckBox x:Name="MainAutoUpdateCheck" Content="Check for updates automatically" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
                                             <TextBlock x:Name="MainUpdateChannelText" Text="Channel: " FontSize="12" Margin="0,0,0,8"/>
                                             <Button Content="Check Now" Style="{DynamicResource ModernButton}" Click="MainCheckUpdatesButton_Click"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel x:Name="CompatibilityControlsPanel" Visibility="Collapsed">
+                                    <CheckBox x:Name="MainVerboseLoggingCheck"/>
+                                    <CheckBox x:Name="MainConfirmOnExitCheck"/>
+                                    <CheckBox x:Name="MainEncryptConfigCheck"/>
+                                    <CheckBox x:Name="MainEnableTelemetryCheck"/>
+                                    <CheckBox x:Name="MainEnablePerformanceMetricsCheck"/>
+                                    <CheckBox x:Name="MainProcessIsolationCheck"/>
+                                    <Slider x:Name="MainMaxLogSizeSlider" Minimum="1" Maximum="1024"/>
+                                    <TextBlock x:Name="MainMaxLogSizeText"/>
+                                    <CheckBox x:Name="MainPreventDisplaySleepCheck"/>
+                                    <ComboBox x:Name="MainHeartbeatInputModeCombo">
+                                        <ComboBoxItem Content="Disabled"/>
+                                        <ComboBoxItem Content="F13"/>
+                                        <ComboBoxItem Content="F14"/>
+                                        <ComboBoxItem Content="F15"/>
+                                        <ComboBoxItem Content="F16"/>
+                                    </ComboBox>
+                                    <Slider x:Name="MainDurationSlider" Minimum="1" Maximum="1440"/>
+                                    <TextBox x:Name="MainDurationCustomBox"/>
+                                    <CheckBox x:Name="MainAutoExitOnCompleteCheck"/>
+
+                                    <CheckBox x:Name="MainBatteryAwareCheck"/>
+                                    <Slider x:Name="MainBatteryThresholdSlider" Minimum="1" Maximum="100"/>
+                                    <TextBlock x:Name="MainBatteryThresholdText"/>
+                                    <CheckBox x:Name="MainNetworkAwareCheck"/>
+                                    <CheckBox x:Name="MainIdleDetectionCheck"/>
+                                    <Slider x:Name="MainIdleThresholdSlider" Minimum="1" Maximum="240"/>
+                                    <TextBlock x:Name="MainIdleThresholdText"/>
+                                    <CheckBox x:Name="MainPresentationModeCheck"/>
+                                    <CheckBox x:Name="MainScheduledOperationCheck"/>
+                                    <StackPanel x:Name="MainScheduleDetailsPanel">
+                                        <TextBox x:Name="MainScheduleStartTimeBox"/>
+                                        <TextBox x:Name="MainScheduleStopTimeBox"/>
+                                        <CheckBox x:Name="MainScheduleMonCheck"/>
+                                        <CheckBox x:Name="MainScheduleTueCheck"/>
+                                        <CheckBox x:Name="MainScheduleWedCheck"/>
+                                        <CheckBox x:Name="MainScheduleThuCheck"/>
+                                        <CheckBox x:Name="MainScheduleFriCheck"/>
+                                        <CheckBox x:Name="MainScheduleSatCheck"/>
+                                        <CheckBox x:Name="MainScheduleSunCheck"/>
+                                    </StackPanel>
+                                    <CheckBox x:Name="MainPauseOnScreenLockCheck"/>
+                                    <CheckBox x:Name="MainVpnAutoKeepAwakeCheck"/>
+                                    <CheckBox x:Name="MainAppRulesEnabledCheck"/>
+                                    <TextBox x:Name="MainKeepAwakeAppsBox"/>
+                                    <TextBox x:Name="MainPauseAppsBox"/>
+                                    <CheckBox x:Name="MainPowerPlanAutoSwitchCheck"/>
+                                    <TextBlock x:Name="MainPowerPlanText"/>
+                                    <CheckBox x:Name="MainWifiProfileSwitchCheck"/>
+                                    <TextBox x:Name="MainWifiProfileMappingsBox"/>
+                                    <CheckBox x:Name="MainRestartReminderCheck"/>
+                                    <Slider x:Name="MainRestartReminderDaysSlider" Minimum="1" Maximum="365"/>
+                                    <TextBlock x:Name="MainRestartReminderDaysText"/>
+                                    <CheckBox x:Name="MainAutoRestartCheck"/>
+                                    <TextBlock x:Name="MainUptimeStatusText"/>
+
+                                    <CheckBox x:Name="MainEnableTypeThingCheck"/>
+                                    <CheckBox x:Name="MainUseLowLevelHotkeyCheck"/>
+                                    <CheckBox x:Name="MainTypeThingHidSafeModeCheck"/>
+                                    <CheckBox x:Name="MainTypeThingHidAudioFeedbackCheck"/>
+                                    <ComboBox x:Name="MainTypeThingInputModeCombo">
+                                        <ComboBoxItem Content="SendInput"/>
+                                        <ComboBoxItem Content="HID"/>
+                                        <ComboBoxItem Content="Service"/>
+                                    </ComboBox>
+                                    <TextBox x:Name="MainStartHotkeyBox"/>
+                                    <TextBox x:Name="MainStopHotkeyBox"/>
+                                    <Slider x:Name="MainTypingSpeedSlider" Minimum="1" Maximum="500"/>
+                                    <TextBlock x:Name="MainTypingSpeedText"/>
+                                    <CheckBox x:Name="MainAddRandomPausesCheck"/>
+                                    <CheckBox x:Name="MainTypeNewlinesCheck"/>
+                                    <CheckBox x:Name="MainTypeThingNotificationsCheck"/>
+                                    <CheckBox x:Name="MainTypeThingTtsCheck"/>
+                                    <Slider x:Name="MainTypeThingMinDelaySlider" Minimum="1" Maximum="500"/>
+                                    <TextBlock x:Name="MainTypeThingMinDelayText"/>
+                                    <Slider x:Name="MainTypeThingStartDelaySlider" Minimum="1" Maximum="30"/>
+                                    <TextBlock x:Name="MainTypeThingStartDelayText"/>
+                                    <Slider x:Name="MainTypeThingPauseChanceSlider" Minimum="0" Maximum="100"/>
+                                    <TextBlock x:Name="MainTypeThingPauseChanceText"/>
+                                    <Slider x:Name="MainTypeThingPauseMaxSlider" Minimum="0" Maximum="5000"/>
+                                    <TextBlock x:Name="MainTypeThingPauseMaxText"/>
+
+                                    <CheckBox x:Name="MainMiniWidgetAlwaysOnTopCheck"/>
+                                    <Slider x:Name="MainMiniWidgetOpacitySlider" Minimum="35" Maximum="100"/>
+                                    <TextBlock x:Name="MainMiniWidgetOpacityText"/>
+                                    <CheckBox x:Name="MainMiniWidgetShowQuickActionsCheck"/>
+                                    <CheckBox x:Name="MainMiniWidgetShowStatusIconsCheck"/>
+                                    <CheckBox x:Name="MainMiniWidgetDoubleClickDashboardCheck"/>
+                                    <CheckBox x:Name="MainMiniWidgetOpenOnStartupCheck"/>
+                                    <CheckBox x:Name="MainMiniWidgetLockPositionCheck"/>
+                                    <CheckBox x:Name="MainMiniWidgetSnapToEdgesCheck"/>
+                                    <CheckBox x:Name="MainMiniWidgetKeyboardShortcutsCheck"/>
+                                    <Slider x:Name="MainMiniWidgetCustomQuickMinutesSlider" Minimum="1" Maximum="180"/>
+                                    <TextBlock x:Name="MainMiniWidgetCustomQuickMinutesText"/>
+                                    <CheckBox x:Name="MainMiniWidgetConfirmCloseWhenActiveCheck"/>
+                                    <ComboBox x:Name="MainMiniWidgetPresetCombo">
+                                        <ComboBoxItem Content="Custom"/>
+                                        <ComboBoxItem Content="Focus"/>
+                                        <ComboBoxItem Content="Meeting"/>
+                                        <ComboBoxItem Content="Battery Safe"/>
+                                    </ComboBox>
+
+                                    <ComboBox x:Name="MainUpdateChannelCombo">
+                                        <ComboBoxItem Content="Stable"/>
+                                        <ComboBoxItem Content="Beta"/>
+                                        <ComboBoxItem Content="Disabled"/>
+                                    </ComboBox>
+                                    <CheckBox x:Name="MainVerifyUpdateSignatureCheck"/>
+                                    <CheckBox x:Name="MainAutoUpdateCheckEnabledCheck"/>
+                                    <Slider x:Name="MainAutoUpdateIntervalSlider" Minimum="30" Maximum="1440"/>
+                                    <TextBlock x:Name="MainAutoUpdateIntervalText"/>
+                                    <TextBlock x:Name="MainCurrentVersionText"/>
+
+                                    <TextBox x:Name="ProcessWatcherTargetBox"/>
+                                    <TextBlock x:Name="ProcessWatcherStatusText"/>
+
+                                    <TextBox x:Name="MainKeepAwakeUntilBox"/>
+                                    <TextBlock x:Name="MainKeepAwakeUntilStatus"/>
+
+                                    <Button x:Name="PomodoroStartBtn" Click="PomodoroStart_Click"/>
+                                    <Button x:Name="PomodoroStopBtn" Click="PomodoroStop_Click"/>
+                                    <Button x:Name="PomodoroSkipBtn" Click="PomodoroSkip_Click"/>
+                                    <TextBlock x:Name="PomodoroPhaseText"/>
+                                    <TextBlock x:Name="PomodoroTimerText"/>
+                                    <TextBlock x:Name="PomodoroSessionsText"/>
+                                    <Slider x:Name="PomodoroFocusSlider" Minimum="1" Maximum="180" ValueChanged="PomodoroSlider_ValueChanged"/>
+                                    <TextBlock x:Name="PomodoroFocusText"/>
+                                    <Slider x:Name="PomodoroBreakSlider" Minimum="1" Maximum="60" ValueChanged="PomodoroSlider_ValueChanged"/>
+                                    <TextBlock x:Name="PomodoroBreakText"/>
+                                    <Slider x:Name="PomodoroLongBreakSlider" Minimum="1" Maximum="120" ValueChanged="PomodoroSlider_ValueChanged"/>
+                                    <TextBlock x:Name="PomodoroLongBreakText"/>
+                                    <Slider x:Name="PomodoroLongBreakIntervalSlider" Minimum="1" Maximum="12" ValueChanged="PomodoroSlider_ValueChanged"/>
+                                    <TextBlock x:Name="PomodoroLongBreakIntervalText"/>
+                                    <CheckBox x:Name="PomodoroAutoStartCheck" Checked="PomodoroSettingChanged" Unchecked="PomodoroSettingChanged"/>
+                                    <CheckBox x:Name="PomodoroKeepAwakeBreakCheck" Checked="PomodoroSettingChanged" Unchecked="PomodoroSettingChanged"/>
+
+                                    <Button x:Name="MainInstallHidDriverBtn" Click="MainInstallHidDriverBtn_Click"/>
+                                    <Button x:Name="MainRepairHidStackBtn" Click="MainRepairHidStackBtn_Click"/>
+                                    <Button x:Name="MainResetHidStackBtn" Click="MainResetHidStackBtn_Click"/>
+                                    <Button x:Name="MainCopyHidDiagnosticsBtn" Click="MainCopyHidDiagnosticsBtn_Click"/>
+                                    <Button x:Name="MainEmergencyReleaseHidBtn" Click="MainEmergencyReleaseHidBtn_Click"/>
+                                    <StackPanel x:Name="MainHidTestPanel"/>
+                                    <Border x:Name="MainHidStatusIndicator"/>
+                                    <TextBlock x:Name="MainHidStatusText"/>
+                                    <TextBlock x:Name="MainHidDetailsText"/>
+
+                                    <Border x:Name="TypeThingProgressOverlay" Visibility="Collapsed">
+                                        <StackPanel>
+                                            <ProgressBar x:Name="TypeThingProgressBar" Minimum="0" Maximum="100" Value="0"/>
+                                            <TextBlock x:Name="TypeThingProgressText"/>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>

@@ -13,12 +13,12 @@ param(
 $ServiceName = "RedballInputService"
 $DisplayName = "Redball Input Service"
 
-Write-Host "Installing Redball Input Service..." -ForegroundColor Cyan
+Write-Information "Installing Redball Input Service..." -InformationAction Continue
 
 # Validate paths
 if (-not (Test-Path $ServicePath)) {
     Write-Error "Service executable not found: $ServicePath"
-    Write-Host "Build the service first with: .\scripts\build.ps1" -ForegroundColor Yellow
+    Write-Warning "Build the service first with: .\scripts\build.ps1"
     exit 1
 }
 
@@ -28,17 +28,17 @@ $serviceDir = Split-Path $ServicePath -Parent
 # Check if service already exists
 $existingService = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
 if ($existingService) {
-    Write-Host "Service already exists. Stopping and removing..." -ForegroundColor Yellow
+    Write-Warning "Service already exists. Stopping and removing..."
 
     if ($existingService.Status -ne 'Stopped') {
         Stop-Service -Name $ServiceName -Force
-        Write-Host "Waiting for service to stop..." -NoNewline
+        Write-Information "Waiting for service to stop..." -NoNewline -InformationAction Continue
         do {
             Start-Sleep -Milliseconds 500
             $existingService = Get-Service -Name $ServiceName
-            Write-Host "." -NoNewline
+            Write-Information "." -NoNewline -InformationAction Continue
         } while ($existingService.Status -ne 'Stopped')
-        Write-Host ""
+        Write-Information "" -InformationAction Continue
     }
 
     & sc.exe delete $ServiceName | Out-Null
@@ -49,13 +49,13 @@ if ($existingService) {
 if ($HelperPath -and (Test-Path $HelperPath)) {
     $targetHelper = Join-Path $serviceDir "Redball.SessionHelper.exe"
     if ($HelperPath -ne $targetHelper) {
-        Write-Host "Copying session helper to service directory..."
+        Write-Information "Copying session helper to service directory..." -InformationAction Continue
         Copy-Item $HelperPath $targetHelper -Force
     }
 }
 
 # Install the service
-Write-Host "Creating service: $ServiceName"
+Write-Information "Creating service: $ServiceName" -InformationAction Continue
 $quotedPath = '"{0}"' -f $ServicePath
 & sc.exe create $ServiceName binPath= $quotedPath start= auto DisplayName= "$DisplayName" | Out-Null
 
@@ -71,27 +71,29 @@ if ($LASTEXITCODE -ne 0) {
 & sc.exe failure $ServiceName reset= 60 actions= restart/0/restart/0/run/0 | Out-Null
 
 # Start the service
-Write-Host "Starting service..."
+Write-Information "Starting service..." -InformationAction Continue
 Start-Service -Name $ServiceName
 
 # Verify
 $service = Get-Service -Name $ServiceName
 if ($service.Status -eq 'Running') {
-    Write-Host "Service installed and running successfully!" -ForegroundColor Green
-    Write-Host "  Service Name: $ServiceName"
-    Write-Host "  Path: $ServicePath"
-    Write-Host "  Status: $($service.Status)"
+    Write-Information "Service installed and running successfully!" -InformationAction Continue
+    Write-Information "  Service Name: $ServiceName" -InformationAction Continue
+    Write-Information "  Path: $ServicePath" -InformationAction Continue
+    Write-Information "  Status: $($service.Status)" -InformationAction Continue
 }
 else {
     Write-Warning "Service installed but not running. Status: $($service.Status)"
-    Write-Host "Check Event Viewer > Windows Logs > Application for details."
+    Write-Warning "Check Event Viewer > Windows Logs > Application for details."
 }
 
-Write-Host ""
-Write-Host "To manage the service:" -ForegroundColor Cyan
-Write-Host "  Start:  Start-Service $ServiceName"
-Write-Host "  Stop:   Stop-Service $ServiceName"
-Write-Host "  Remove: .\scripts\Uninstall-Service.ps1"
+Write-Information "" -InformationAction Continue
+Write-Information "To manage the service:" -InformationAction Continue
+Write-Information "  Start:  Start-Service $ServiceName" -InformationAction Continue
+Write-Information "  Stop:   Stop-Service $ServiceName" -InformationAction Continue
+Write-Information "  Remove: .\scripts\Uninstall-Service.ps1" -InformationAction Continue
+
+
 
 
 

@@ -40,13 +40,6 @@ public partial class MainWindow
                 : string.Join(Environment.NewLine, topAreas.Select(area => $"{area.Name}: {area.Count} events"));
             AnalyticsTrendText.Text = $"Recent 7 days: {summary.RecentSessions} sessions | Prior 7 days: {summary.PriorSessions} | Trend: {summary.SessionTrendPercent:+0.0;-0.0;0.0}%";
 
-            MetricsAdoptionText.Text = $"{summary.FeatureAdoptionRate:F0}%";
-            MetricsRetentionText.Text = $"7d {summary.RetentionDay7:F0}% | 30d {summary.RetentionDay30:F0}%";
-            MetricsTypeThingText.Text = $"Success rate: {summary.TypeThingSuccessRate:F0}%{Environment.NewLine}Completed: {summary.TypeThingCompletions} / {summary.TypeThingAttempts}";
-            MetricsSettingsText.Text = $"Save success: {summary.SettingsSaveSuccessRate:F0}%{Environment.NewLine}Saved: {summary.SettingsSaves} / {summary.SettingsSaveAttempts}";
-            MetricsUpdatesText.Text = $"Update success: {summary.UpdateSuccessRate:F0}%{Environment.NewLine}Succeeded: {summary.UpdateSuccesses} / {summary.UpdateAttempts}";
-            MetricsOnboardingText.Text = $"Completion rate: {summary.OnboardingCompletionRate:F0}%{Environment.NewLine}Completed: {summary.OnboardingCompletions} / {summary.OnboardingStarts}";
-
             DiagnosticsConfigText.Text = $"Config Path: {ConfigService.Instance.ConfigPath}{Environment.NewLine}Validation: {(validationErrors.Count == 0 ? "OK" : $"{validationErrors.Count} issue(s)")}{Environment.NewLine}Update Channel: {config.UpdateChannel}";
             DiagnosticsRuntimeText.Text = $"Keep Awake: {keepAwake.GetStatusText()}{Environment.NewLine}Heartbeat Seconds: {config.HeartbeatSeconds}{Environment.NewLine}Battery Aware: {config.BatteryAware} | Network Aware: {config.NetworkAware}";
             DiagnosticsLoggingText.Text = $"Log File: {logPath}{Environment.NewLine}Directory: {Logger.GetLogDirectory()}{Environment.NewLine}Level: {Logger.CurrentLogLevel}";
@@ -70,7 +63,6 @@ public partial class MainWindow
             Logger.Error("MainWindow", "Failed to load embedded dashboard content", ex);
             AnalyticsTopAreasText.Text = "Unable to load analytics summary.";
             AnalyticsTrendText.Text = "Unable to load session trend.";
-            MetricsTypeThingText.Text = "Unable to load product metrics.";
             DiagnosticsRecentLogText.Text = "Unable to load diagnostics.";
         }
     }
@@ -153,13 +145,12 @@ public partial class MainWindow
     {
         if (HomePanel == null ||
             AnalyticsPanel == null ||
-            MetricsPanel == null ||
+            SloDashboardPanel == null ||
             DiagnosticsPanel == null ||
             SettingsPanel == null ||
             BehaviorPanel == null ||
             SmartFeaturesPanel == null ||
             TypeThingPanel == null ||
-            PomodoroPanel == null ||
             UpdatesPanel == null)
         {
             return;
@@ -174,13 +165,12 @@ public partial class MainWindow
         {
             ("Home", HomePanel),
             ("Analytics", AnalyticsPanel),
-            ("Metrics", MetricsPanel),
+            ("SloDashboard", SloDashboardPanel),
             ("Diagnostics", DiagnosticsPanel),
             ("Settings", SettingsPanel),
             ("Behavior", BehaviorPanel),
             ("SmartFeatures", SmartFeaturesPanel),
             ("TypeThing", TypeThingPanel),
-            ("Pomodoro", PomodoroPanel),
             ("Updates", UpdatesPanel)
         };
 
@@ -251,13 +241,12 @@ public partial class MainWindow
 
         if (HomeNavButton != null && section == "Home" && HomeNavButton.IsChecked != true) HomeNavButton.IsChecked = true;
         if (AnalyticsNavButton != null && section == "Analytics" && AnalyticsNavButton.IsChecked != true) AnalyticsNavButton.IsChecked = true;
-        if (MetricsNavButton != null && section == "Metrics" && MetricsNavButton.IsChecked != true) MetricsNavButton.IsChecked = true;
+        if (SloDashboardNavButton != null && section == "SloDashboard" && SloDashboardNavButton.IsChecked != true) SloDashboardNavButton.IsChecked = true;
         if (DiagnosticsNavButton != null && section == "Diagnostics" && DiagnosticsNavButton.IsChecked != true) DiagnosticsNavButton.IsChecked = true;
         if (SettingsNavButton != null && section == "Settings" && SettingsNavButton.IsChecked != true) SettingsNavButton.IsChecked = true;
         if (BehaviorNavButton != null && section == "Behavior" && BehaviorNavButton.IsChecked != true) BehaviorNavButton.IsChecked = true;
         if (SmartFeaturesNavButton != null && section == "SmartFeatures" && SmartFeaturesNavButton.IsChecked != true) SmartFeaturesNavButton.IsChecked = true;
         if (TypeThingNavButton != null && section == "TypeThing" && TypeThingNavButton.IsChecked != true) TypeThingNavButton.IsChecked = true;
-        if (PomodoroNavButton != null && section == "Pomodoro" && PomodoroNavButton.IsChecked != true) PomodoroNavButton.IsChecked = true;
         if (UpdatesNavButton != null && section == "Updates" && UpdatesNavButton.IsChecked != true) UpdatesNavButton.IsChecked = true;
     }
 
@@ -265,13 +254,12 @@ public partial class MainWindow
     {
         if (HomeNavButton == null ||
             AnalyticsNavButton == null ||
-            MetricsNavButton == null ||
+            SloDashboardNavButton == null ||
             DiagnosticsNavButton == null ||
             SettingsNavButton == null ||
             BehaviorNavButton == null ||
             SmartFeaturesNavButton == null ||
             TypeThingNavButton == null ||
-            PomodoroNavButton == null ||
             UpdatesNavButton == null)
         {
             return;
@@ -279,13 +267,12 @@ public partial class MainWindow
 
         if (HomeNavButton.IsChecked == true) { ShowSection("Home"); return; }
         if (AnalyticsNavButton.IsChecked == true) { ShowSection("Analytics"); return; }
-        if (MetricsNavButton.IsChecked == true) { ShowSection("Metrics"); return; }
+        if (SloDashboardNavButton.IsChecked == true) { ShowSection("SloDashboard"); return; }
         if (DiagnosticsNavButton.IsChecked == true) { ShowSection("Diagnostics"); return; }
         if (SettingsNavButton.IsChecked == true) { ShowSection("Settings"); return; }
         if (BehaviorNavButton.IsChecked == true) { ShowSection("Behavior"); return; }
         if (SmartFeaturesNavButton.IsChecked == true) { ShowSection("SmartFeatures"); return; }
         if (TypeThingNavButton.IsChecked == true) { ShowSection("TypeThing"); return; }
-        if (PomodoroNavButton.IsChecked == true) { ShowSection("Pomodoro"); return; }
         if (UpdatesNavButton.IsChecked == true) { ShowSection("Updates"); }
     }
 
@@ -338,7 +325,6 @@ public partial class MainWindow
     }
 
     private void ShowAnalyticsButton_Click(object sender, RoutedEventArgs e) => ShowAnalytics();
-    private void ShowMetricsButton_Click(object sender, RoutedEventArgs e) => ShowMetrics();
     private void ShowDiagnosticsButton_Click(object sender, RoutedEventArgs e) => ShowDiagnostics();
     private void ShowSettingsButton_Click(object sender, RoutedEventArgs e) => ShowSettings();
     private void ShowBehaviorButton_Click(object sender, RoutedEventArgs e) => ShowBehavior();
@@ -357,6 +343,16 @@ public partial class MainWindow
             Activate();
             Focus();
         });
+    }
+
+    public void ShowMetrics()
+    {
+        ShowAnalytics();
+    }
+
+    public void ShowPomodoro()
+    {
+        ShowTypeThing();
     }
 
     public void ShowSettings()
@@ -439,21 +435,6 @@ public partial class MainWindow
         });
     }
 
-    public void ShowPomodoro()
-    {
-        Logger.Info("MainWindow", "ShowPomodoro called");
-        _analytics.TrackFeature("pomodoro.opened");
-        Dispatcher.Invoke(() =>
-        {
-            ShowInTaskbar = true;
-            if (!IsVisible) Show();
-            WindowState = WindowState.Normal;
-            ShowSection("Pomodoro");
-            Activate();
-            Focus();
-        });
-    }
-
     public void ShowAbout()
     {
         Logger.Info("MainWindow", "ShowAbout called");
@@ -490,22 +471,6 @@ public partial class MainWindow
             WindowState = WindowState.Normal;
             LoadEmbeddedDashboardContent();
             ShowSection("Analytics");
-            Activate();
-            Focus();
-        });
-    }
-
-    public void ShowMetrics()
-    {
-        Logger.Info("MainWindow", "ShowMetrics called");
-        _analytics.TrackFeature("metrics.opened");
-        Dispatcher.Invoke(() =>
-        {
-            ShowInTaskbar = true;
-            if (!IsVisible) Show();
-            WindowState = WindowState.Normal;
-            LoadEmbeddedDashboardContent();
-            ShowSection("Metrics");
             Activate();
             Focus();
         });
@@ -571,6 +536,11 @@ public partial class MainWindow
         }
     }
 
+    private void OpenLogsFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenLogs();
+    }
+
     /// <summary>
     /// Navigates to a specific section from the command palette.
     /// </summary>
@@ -607,8 +577,8 @@ public partial class MainWindow
                     ShowAnalytics();
                     break;
 
-                case "Metrics":
-                    ShowMetrics();
+                case "SloDashboard":
+                    ShowSloDashboard();
                     break;
 
                 case "Diagnostics":
@@ -627,16 +597,8 @@ public partial class MainWindow
                     ShowTypeThing();
                     break;
 
-                case "Pomodoro":
-                    ShowPomodoro();
-                    break;
-
                 case "Updates":
                     ShowUpdates();
-                    break;
-
-                case "SloDashboard":
-                    ShowSloDashboard();
                     break;
 
                 case "SyncHealth":

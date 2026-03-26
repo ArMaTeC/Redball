@@ -110,6 +110,10 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     public static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
 
+    [DllImport("shell32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsUserAnAdmin();
+
     [StructLayout(LayoutKind.Sequential)]
     public struct LASTINPUTINFO
     {

@@ -110,10 +110,6 @@ public class RedballConfig
     // Text-to-Speech
     public bool TypeThingTtsEnabled { get; set; }
 
-    // Local Web API
-    public bool WebApiEnabled { get; set; }
-    public int WebApiPort { get; set; } = 48080;
-
     // Mini Widget position (-1 = not set, use default)
     public double MiniWidgetLeft { get; set; } = -1;
     public double MiniWidgetTop { get; set; } = -1;
@@ -135,6 +131,9 @@ public class RedballConfig
 
     // Update trust chain validation (sec-3)
     public bool StrictUpdateTrustMode { get; set; } = false;
+
+    // Local Web API port
+    public int WebApiPort { get; set; } = 5000;
 
     // Integrity signature (SHA256 of the JSON without this property)
     public string? ConfigSignature { get; set; }

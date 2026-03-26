@@ -173,4 +173,32 @@ public partial class MainWindow
         _startupUpdateCheckTimer?.Stop();
         _startupUpdateCheckTimer = null;
     }
+
+    private async void MainCheckUpdatesButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            EnsureUpdateService();
+            if (_updateService == null)
+            {
+                NotificationService.Instance.ShowError("Updates", "Update service is not available.");
+                return;
+            }
+
+            _analytics.TrackFeature("update.manual_check");
+            var updateInfo = await _updateService.CheckForUpdateAsync();
+            if (updateInfo == null)
+            {
+                NotificationService.Instance.ShowInfo("Updates", "You are already on the latest version.");
+                return;
+            }
+
+            await ShowUpdateAvailableDialogAsync(updateInfo);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Manual update check failed", ex);
+            NotificationService.Instance.ShowError("Updates", "Failed to check for updates.");
+        }
+    }
 }
