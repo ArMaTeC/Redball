@@ -31,7 +31,7 @@ jobs:
 
     steps:
     - name: Delete Old Artifacts
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
@@ -90,7 +90,7 @@ jobs:
           console.log(`Cleanup complete: ${deletedCount} artifacts deleted, ${skippedCount} runs skipped (successful within retention)`);
 
     - name: Delete Old Workflow Runs
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       if: github.event.inputs.delete_failed_only != 'true'
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
