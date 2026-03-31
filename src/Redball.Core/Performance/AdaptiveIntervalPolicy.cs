@@ -139,6 +139,11 @@ public sealed class AdaptiveIntervalPolicy
     {
         try
         {
+            if (!OperatingSystem.IsWindows())
+            {
+                return false;
+            }
+
             // Check Windows 10/11 battery saver status via registry
             using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
                 @"SYSTEM\CurrentControlSet\Control\Power\PowerThrottling");

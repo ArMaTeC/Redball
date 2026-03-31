@@ -17,6 +17,7 @@ public partial class App : Application
     private Views.MainWindow? _mainWindow; // Keep reference to prevent GC
     private Services.SingletonService? _singleton;
     private IServiceProvider? _serviceProvider;
+    private bool _isStartupTestMode;
     private readonly Stopwatch _startupStopwatch = Stopwatch.StartNew();
     public static TimeSpan StartupDuration { get; private set; }
 
@@ -89,7 +90,10 @@ public partial class App : Application
             var crashLog = Path.Combine(AppContext.BaseDirectory, "crash.log");
             File.WriteAllText(crashLog, $"[{DateTime.Now}] FATAL: {e.ExceptionObject}");
         }
-        catch { }
+        catch (Exception writeEx)
+        {
+            Services.Logger.Debug("App", $"Failed to write emergency crash log: {writeEx.Message}");
+        }
     }
 
     private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
@@ -155,6 +159,24 @@ public partial class App : Application
             return;
         }
 
+        // Handle service installation elevation
+        if (e.Args.Length > 0 && e.Args[0] == "--install-service")
+        {
+            Services.Logger.Info("App", "Running in elevated service installation mode");
+            var success = InstallServiceInElevatedMode();
+            Environment.Exit(success ? 0 : 1);
+            return;
+        }
+
+        // Handle service uninstall elevation
+        if (e.Args.Length > 0 && e.Args[0] == "--uninstall-service")
+        {
+            Services.Logger.Info("App", "Running in elevated service uninstall mode");
+            var success = UninstallServiceInElevatedMode();
+            Environment.Exit(success ? 0 : 1);
+            return;
+        }
+
         // Handle internal driver logic test (diagnostics)
         if (e.Args.Length > 0 && e.Args[0] == "--test-driver-fallbacks")
         {
@@ -181,6 +203,7 @@ public partial class App : Application
 
         // Handle test mode for E2E tests
         bool isTestMode = e.Args.Length > 0 && Array.Exists(e.Args, arg => arg == "--test-mode");
+        _isStartupTestMode = isTestMode;
         if (isTestMode)
         {
             Services.Logger.Info("App", "Running in test-mode for E2E tests");
@@ -199,6 +222,11 @@ public partial class App : Application
             if (!isTestMode && !_singleton.TryAcquire())
             {
                 Services.Logger.Warning("App", "Another instance is already running. Exiting.");
+                MessageBox.Show(
+                    "Redball is already running.\n\nCheck the system tray icon to access the running instance.",
+                    "Redball Already Running",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
                 Shutdown();
                 return;
             }
@@ -399,6 +427,12 @@ public partial class App : Application
         Services.Logger.Info("App", "MainWindow Loaded event fired");
         try
         {
+            if (_isStartupTestMode)
+            {
+                Services.Logger.Debug("App", "MainWindow kept visible for test-mode startup");
+                return;
+            }
+
             if (_mainWindow != null)
             {
                 _mainWindow.WindowState = WindowState.Minimized;
@@ -417,6 +451,137 @@ public partial class App : Application
     {
         Services.Logger.Info("App", "MainWindow Unloaded event fired");
     }
+
+    #region Elevated Service Installation Helpers
+
+    /// <summary>
+    /// Installs the Redball Input Service when running in elevated mode.
+    /// Called when the app is relaunched with --install-service argument.
+    /// </summary>
+    private static bool InstallServiceInElevatedMode()
+    {
+        try
+        {
+            var servicePath = GetServiceExecutablePath();
+            if (!System.IO.File.Exists(servicePath))
+            {
+                Services.Logger.Error("App", $"Service executable not found: {servicePath}");
+                return false;
+            }
+
+            // Create the service
+            var createResult = RunProcessAsAdmin("sc.exe", $"create RedballInputService binPath= \"{servicePath}\" start= auto");
+            if (createResult.ExitCode != 0)
+            {
+                // Check if service already exists
+                if (!createResult.StdErr.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+                {
+                    Services.Logger.Error("App", $"Failed to create service: {createResult.StdErr}");
+                    return false;
+                }
+                Services.Logger.Info("App", "Service already exists, continuing...");
+            }
+            else
+            {
+                Services.Logger.Info("App", "Service created successfully");
+            }
+
+            // Start the service
+            var startResult = RunProcessAsAdmin("sc.exe", "start RedballInputService");
+            if (startResult.ExitCode != 0)
+            {
+                Services.Logger.Warning("App", $"Service created but failed to start: {startResult.StdErr}");
+                // Don't fail if service was created but couldn't start - it might already be running
+            }
+            else
+            {
+                Services.Logger.Info("App", "Service started successfully");
+            }
+
+            Services.Logger.Info("App", "Redball Input Service installed successfully");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Services.Logger.Error("App", "Service installation failed in elevated mode", ex);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Uninstalls the Redball Input Service when running in elevated mode.
+    /// Called when the app is relaunched with --uninstall-service argument.
+    /// </summary>
+    private static bool UninstallServiceInElevatedMode()
+    {
+        try
+        {
+            // Stop the service first
+            RunProcessAsAdmin("sc.exe", "stop RedballInputService");
+
+            // Delete the service
+            var deleteResult = RunProcessAsAdmin("sc.exe", "delete RedballInputService");
+            if (deleteResult.ExitCode != 0 && !deleteResult.StdErr.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
+            {
+                Services.Logger.Error("App", $"Failed to delete service: {deleteResult.StdErr}");
+                return false;
+            }
+
+            Services.Logger.Info("App", "Redball Input Service uninstalled successfully");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Services.Logger.Error("App", "Service uninstallation failed in elevated mode", ex);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Gets the path to the service executable.
+    /// </summary>
+    private static string GetServiceExecutablePath()
+    {
+        var candidates = new[]
+        {
+            System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.Service.exe"),
+            System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.Input.Service.exe")
+        };
+
+        foreach (var candidate in candidates)
+        {
+            if (System.IO.File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return candidates[0];
+    }
+
+    /// <summary>
+    /// Runs a process with redirected output (for use when already elevated).
+    /// </summary>
+    private static (int ExitCode, string StdOut, string StdErr) RunProcessAsAdmin(string fileName, string arguments)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+
+        using var process = System.Diagnostics.Process.Start(psi)!;
+        var stdout = process.StandardOutput.ReadToEnd();
+        var stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        return (process.ExitCode, stdout, stderr);
+    }
+
+    #endregion
 
     private void OnMainWindowClosed(object? sender, EventArgs e)
     {

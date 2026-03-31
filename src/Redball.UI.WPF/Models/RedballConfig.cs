@@ -65,6 +65,8 @@ public class RedballConfig
     public bool ConfirmOnExit { get; set; } = true;
     public bool FirstRun { get; set; } = true;
     public string Theme { get; set; } = "Dark";
+    public string AccentColor { get; set; } = "Blue";
+    public bool FollowSystemTheme { get; set; } = true;
     public DriverSelection TypeThingDriverSelection { get; set; } = DriverSelection.Auto;
 
     // Pomodoro
@@ -138,6 +140,30 @@ public class RedballConfig
     // Integrity signature (SHA256 of the JSON without this property)
     public string? ConfigSignature { get; set; }
     
+    // Team Settings Sync (Q3 2024)
+    public bool TeamSyncEnabled { get; set; }
+    public string? TeamSyncServerUrl { get; set; }
+    public string? TeamId { get; set; }
+    public string? TeamJoinCode { get; set; }
+    public bool TeamSyncPresetsOnly { get; set; } = true;
+    public bool TeamSyncAutoApply { get; set; } = true;
+    public int TeamSyncIntervalMinutes { get; set; } = 60;
+    
+    // Admin Dashboard (Q3 2024)
+    public bool EnableAdminDashboard { get; set; }
+    
+    // Smart Schedule Learning (2025)
+    public bool EnableSmartSchedule { get; set; }
+    public bool AutoStartBasedOnPatterns { get; set; }
+    public bool PredictiveBatteryManagement { get; set; }
+
+    // Focus Mode Integration (2025)
+    public bool FocusAssistIntegration { get; set; }
+    public bool FocusModeDuringPomodoro { get; set; }
+
+    // Advanced Analytics (2025)
+    public bool EnableAdvancedAnalytics { get; set; }
+
     // Salt used for unique device hashing if needed
     public string? ConfigSalt { get; set; }
 

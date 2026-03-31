@@ -58,8 +58,9 @@ public class InputServiceClient : IDisposable
             await pipe.ConnectAsync(timeoutMs);
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"InputServiceClient: Failed to check availability: {ex.Message}");
             return false;
         }
     }

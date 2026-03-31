@@ -459,8 +459,9 @@ public class PerformanceTestService
 
             return (cpuUsedMs / (Environment.ProcessorCount * totalMs)) * 100;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("PerformanceTestService", $"Failed to measure CPU usage: {ex.Message}");
             return 0;
         }
     }

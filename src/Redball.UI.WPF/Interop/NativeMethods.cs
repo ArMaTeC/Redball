@@ -99,8 +99,9 @@ internal static class NativeMethods
                 return BitConverter.ToInt32(buffer, 0);
             return -1;
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"NativeMethods: Failed to get Focus Assist status: {ex.Message}");
             return -1;
         }
     }
@@ -189,7 +190,11 @@ internal static class NativeMethods
             var options = key?.GetValue("SystemStartOptions") as string;
             return options?.Contains("TESTSIGNING", StringComparison.OrdinalIgnoreCase) ?? false;
         }
-        catch { return false; }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"NativeMethods: Failed to check test mode: {ex.Message}");
+            return false;
+        }
     }
 
     // --- Memory Management (psapi.dll) ---

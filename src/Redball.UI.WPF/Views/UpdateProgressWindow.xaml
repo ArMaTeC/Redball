@@ -36,13 +36,13 @@
                            Foreground="{DynamicResource AccentBrush}" 
                            FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBlock x:Name="StatusLabel" Text="Downloading update..." 
-                           Foreground="White" FontSize="15" FontWeight="SemiBold"
+                           Foreground="{DynamicResource ForegroundBrush}" FontSize="15" FontWeight="SemiBold"
                            VerticalAlignment="Center"/>
             </StackPanel>
 
             <Grid Grid.Row="1" Margin="0,0,0,8">
                 <TextBlock x:Name="SizeLabel" Text="0 MB / 0 MB" 
-                           Foreground="#B0B0B0" FontSize="11" HorizontalAlignment="Left"/>
+                           Foreground="{DynamicResource ForegroundSecondaryBrush}" FontSize="11" HorizontalAlignment="Left"/>
                 <TextBlock x:Name="SpeedLabel" Text="0 KB/s" 
                            Foreground="{DynamicResource AccentBrush}" FontSize="11" FontWeight="Medium" 
                            HorizontalAlignment="Right"/>
@@ -55,7 +55,7 @@
                          Minimum="0"
                          Maximum="100"
                          Value="0"
-                         Background="#20FFFFFF"
+                         Background="{DynamicResource HoverBrush}"
                          Foreground="{DynamicResource AccentBrush}"
                          BorderThickness="0">
                 <ProgressBar.Template>
@@ -80,7 +80,7 @@
 
             <TextBlock x:Name="EtaLabel" Grid.Row="3" 
                        Text="Calculating remaining time..." 
-                       Foreground="#808080" FontSize="10" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                       Foreground="{DynamicResource ForegroundSecondaryBrush}" FontSize="10" HorizontalAlignment="Center" Margin="0,4,0,0"/>
         </Grid>
     </Border>
 </Window>

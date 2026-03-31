@@ -182,8 +182,9 @@ public class VersionedDataModelService
             var source = DataModelVersion.Parse(version);
             return source.IsCompatibleWith(_currentVersion);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("VersionedDataModelService", $"Failed to parse version '{version}': {ex.Message}");
             return false;
         }
     }

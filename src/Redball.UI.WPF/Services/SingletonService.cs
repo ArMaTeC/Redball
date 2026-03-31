@@ -64,8 +64,9 @@ public class SingletonService : IDisposable
         {
             return false; // No mutex, no other instance
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("SingletonService", $"Failed to check mutex existence: {ex.Message}");
             return false;
         }
     }

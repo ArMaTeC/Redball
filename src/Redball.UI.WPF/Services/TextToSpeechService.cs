@@ -84,7 +84,10 @@ public class TextToSpeechService
         {
             _synth?.SpeakAsyncCancelAll();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logger.Debug("TextToSpeechService", $"Failed to cancel speech: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -103,8 +106,9 @@ public class TextToSpeechService
                 names[i] = voices[i].VoiceInfo.Name;
             return names;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("TextToSpeechService", $"Failed to get available voices: {ex.Message}");
             return Array.Empty<string>();
         }
     }

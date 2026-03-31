@@ -351,7 +351,7 @@ try {
     # ── 6. Handle dirty working tree ──
     if (Test-DirtyWorkingTree) {
         if ($AllowDirty) {
-            Write-Warn "Working tree has uncommitted changes (--AllowDirty specified, continuing)."
+            Write-Info "Working tree has uncommitted changes (--AllowDirty specified, continuing)."
         }
         else {
             Write-Warn "Working tree has uncommitted changes. Stashing them for a clean release..."
@@ -633,6 +633,18 @@ finally {
 }
 
 # End Main Script
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

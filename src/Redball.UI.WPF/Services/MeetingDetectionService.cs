@@ -101,7 +101,10 @@ public class MeetingDetectionService
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logger.Debug("MeetingDetectionService", $"Failed to read registry key: {ex.Message}");
+        }
         return false;
     }
 }

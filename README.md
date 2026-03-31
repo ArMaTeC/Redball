@@ -1,6 +1,6 @@
 # Redball
 
-[![.NET 8](https://img.shields.io/badge/.NET_8-WPF-512BD4.svg)](https://dotnet.microsoft.com/)
+[![.NET 10](https://img.shields.io/badge/.NET_10-WPF-512BD4.svg)](https://dotnet.microsoft.com/)
 [![Windows](https://img.shields.io/badge/Platform-Windows_8.1%2B-0078D6.svg)](https://www.microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/ArMaTeC/Redball/ci.yml?label=CI)](https://github.com/ArMaTeC/Redball/actions/workflows/ci.yml)
@@ -10,7 +10,7 @@
 
 > A system tray utility to prevent Windows from sleeping, with style.
 
-Redball is a keep-awake utility for Windows built as a **native WPF desktop application** (.NET 8) with 14 custom themes. It keeps your computer awake using the `SetThreadExecutionState` API, with smart monitoring features (battery, network, idle, schedule, presentation mode, thermal protection, process watcher, VPN detection), a Pomodoro timer, clipboard typer, built-in analytics dashboard, auto-updating, code signing, and a branded MSI installer.
+Redball is a keep-awake utility for Windows built as a **native WPF desktop application** (.NET 10) with 14 custom themes. It keeps your computer awake using the `SetThreadExecutionState` API, with smart monitoring features (battery, network, idle, schedule, presentation mode, thermal protection, process watcher, VPN detection), a Pomodoro timer, clipboard typer, built-in analytics dashboard, auto-updating, code signing, comprehensive security framework, performance monitoring, and a branded MSI installer.
 
 ![Redball Icon](installer/redball.png)
 
@@ -18,15 +18,22 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 
 ## Features
 
-### Modern WPF Desktop Application (.NET 8)
+### Modern WPF Desktop Application (.NET 10)
 
-- **Native WPF UI** — Built with .NET 8 WPF, self-contained single-file EXE (~3.3MB compressed)
+- **Native WPF UI** — Built with .NET 10 WPF, self-contained single-file EXE (~3.3MB compressed)
 - **14 Custom Themes** — System (auto-detect), Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost, High Contrast
+- **Design System** — Tokenized spacing, typography, colors, elevation, and motion with full Material Design color roles
+- **Adaptive Layouts** — DPI-aware responsive layouts supporting 100%-300% DPI range across multi-monitor setups
+- **Accessibility Baseline** — WCAG AA compliance framework with contrast auditing, keyboard navigation, and screen reader support
 - **Custom Window Chrome** — Modern borderless window with custom title bar, minimize/maximize/close buttons, and rounded corners via `WindowChrome`
-- **Settings Window** — Tabbed settings with live slider value labels for duration and typing speed, organized into General, Behavior, Smart Features, TypeThing, Pomodoro, and Updates sections
-- **About & Update Windows** — Built-in version info, update checker, and download progress
+- **Command Palette** — Progressive disclosure UX with searchable command surface (Ctrl+K) for instant access to actions and settings
+- **Settings Window** — Tabbed settings with live slider value labels for duration and typing speed, organized into General, Behavior, Smart Features, TypeThing, Pomodoro, Security, and Updates sections
+- **Mini Widget** — Floating mini widget window for quick status and controls with customizable presets (Focus, Meeting, BatterySafe)
+- **Onboarding Tutorial** — Interactive first-run tutorial for new users
+- **Theme QA Matrix** — 14-theme control readability testing across 12 control types with WCAG AA contrast validation
 - **P/Invoke SendInput** — Native Windows API for typing simulation (no WinForms dependency)
 - **Theme Persistence** — Selected theme saved to config and restored on startup
+- **Auto Theme Switching** — Follow Windows light/dark mode changes automatically
 - **Code Signed** — EXE and MSI signed with SHA-256 certificate via `signtool` in CI
 
 ### Smart Monitoring & Automation
@@ -80,7 +87,7 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 ### Prerequisites
 
 - **Windows 10** or later
-- **.NET 8 Runtime** (included in the self-contained WPF EXE — no separate install needed)
+- **.NET 10 Runtime** (included in the self-contained WPF EXE — no separate install needed)
 
 ### Option A — MSI Installer (Recommended)
 
@@ -240,8 +247,8 @@ Settings are stored in `%LocalAppData%\Redball\UserData\Redball.json`. A default
 | ------- | ----------- | ------- |
 | `AutoUpdateCheckEnabled` | Check for updates automatically | `true` |
 | `AutoUpdateCheckIntervalMinutes` | Minutes between automatic update checks | `120` |
-| `UpdateChannel` | Release channel (`stable` or `beta`) | `stable` |
-| `VerifyUpdateSignature` | Require valid digital signature on updates | `false` |
+| `UpdateChannel` | Release channel (`stable`, `beta`, `canary`) | `stable` |
+| `VerifyUpdateSignature` | Require valid digital signature on updates | `true` |
 
 ### Advanced
 
@@ -251,7 +258,8 @@ Settings are stored in `%LocalAppData%\Redball\UserData\Redball.json`. A default
 | `EnablePerformanceMetrics` | Track CPU, memory, and handle metrics | `false` |
 | `WebApiEnabled` | Enable local REST API for remote control | `false` |
 | `WebApiPort` | Port for the local Web API | `48080` |
-| `EncryptConfig` | Encrypt Redball.json with DPAPI | `false` |
+| `EncryptConfig` | Encrypt Redball.json with DPAPI (default: `true`) | `true` |
+| `StrictUpdateTrustMode` | Enforce strict update package validation | `false` |
 | `MiniWidgetPreset` | Floating widget preset (`Focus`, `Meeting`, `BatterySafe`) | `Custom` |
 
 ## Usage
@@ -384,7 +392,7 @@ ConfigService.Instance.Export("backup.json");
 
 ### WPF Application
 
-The WPF desktop application is built with .NET 8 as a self-contained single-file executable:
+The WPF desktop application is built with .NET 10 as a self-contained single-file executable:
 
 ```powershell
 # Publish the WPF app
@@ -504,14 +512,39 @@ src/Redball.UI.WPF/
 │   ├── NotificationService.cs        # Tray/toast notifications
 │   ├── LocalizationService.cs        # i18n (en, es, fr, de, bl)
 │   ├── TextToSpeechService.cs        # TTS for TypeThing
-│   └── Logger.cs                     # Structured logging with rotation
+│   ├── SecurityService.cs              # Security, tamper detection, threat model, CI gates
+│   ├── SecretManagerService.cs       # Windows Credential Manager secret storage
+│   ├── TamperPolicyService.cs          # Tamper detection with Warn/Quarantine/Block policies
+│   ├── ThreatModelService.cs           # STRIDE threat inventory per release
+│   ├── SecurityCIGatesService.cs       # Dependency audit, secret scanning, SBOM generation
+│   ├── StartupTimingService.cs         # Startup SLO instrumentation (<1.5s cold, <0.8s warm)
+│   ├── ResourceBudgetService.cs        # Per-service CPU/RAM budgets
+│   ├── MemoryPressureService.cs        # Memory pressure handling with graceful degradation
+│   ├── PerformanceTestService.cs       # Continuous performance testing framework
+│   ├── RolloutService.cs               # Canary/beta/stable/enterprise staged rollouts
+│   ├── UpdateObservabilityService.cs   # 14-stage update lifecycle telemetry
+│   ├── TaskFunnelService.cs            # End-to-end task funnel analytics
+│   ├── ProductStrategyService.cs       # User personas and north-star metrics
+│   ├── ValueMapService.cs              # Quarterly feature-to-KPI linkage
+│   ├── FeatureTieringService.cs        # Core/Pro/Experimental tier management
+│   ├── CommandPaletteService.cs        # Ctrl+K searchable command surface
+│   ├── WindowsShellIntegrationService.cs # Jump lists, URI protocol, toast activator
+│   ├── EnterprisePolicyService.cs      # Group Policy integration
+│   ├── OutboxDispatcherService.cs        # Durable offline sync with SQLite
+│   ├── CrashTelemetryService.cs        # Privacy-safe crash reporting
+│   ├── AccessibilityService.cs         # WCAG AA compliance framework
+│   ├── DesignSystemService.cs          # Tokenized design system
+│   ├── ThemeQAMatrixService.cs         # 14-theme readability testing
+│   ├── LatencyMaskingService.cs        # Async operation loading UX
+│   ├── InterruptionPolicyService.cs    # Non-blocking interruption management
+│   └── Logger.cs                       # Structured logging with rotation
 ├── Models/RedballConfig.cs           # Strongly-typed configuration
 ├── ViewModels/MainViewModel.cs       # MVVM state + commands
 ├── Views/                            # MainWindow (partial classes), About, Settings, etc.
 ├── Themes/                           # Dark/Light base + ThemeManager variants
 ├── ThemeManager.cs                   # 14-theme switching engine
 ├── App.xaml.cs                       # Entry point + service orchestration
-└── Redball.UI.WPF.csproj             # .NET 8 WPF project
+└── Redball.UI.WPF.csproj             # .NET 10 WPF project
 ```
 
 ### Component Flow
@@ -603,7 +636,7 @@ dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 - [x] TypeThing clipboard typer with global hotkeys
 - [x] About dialog with update checker
 - [x] Themed TypeThing settings dialog (light/dark/hacker)
-- [x] Modern WPF desktop application (.NET 8)
+- [x] Modern WPF desktop application (.NET 10)
 - [x] 14 custom UI themes (Midnight Blue, Cyberpunk, Rose Gold, High Contrast, etc.)
 - [x] P/Invoke SendInput (replaced WinForms SendKeys)
 - [x] Self-contained compressed EXE (~3.3MB)
@@ -644,7 +677,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ## Acknowledgments
 
 - Icon design using System.Drawing GDI+ path gradients
-- [.NET 8 / WPF](https://dotnet.microsoft.com/) for the modern desktop application
+- [.NET 10 / WPF](https://dotnet.microsoft.com/) for the modern desktop application
 - [WiX Toolset v4](https://wixtoolset.org/) for the MSI installer
 - Windows SDK `signtool.exe` for code signing
 

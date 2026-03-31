@@ -101,14 +101,14 @@ public class ResourceBudgetService
     // Default budgets for known services
     private static readonly Dictionary<string, (double cpu, long ram, bool critical)> DefaultBudgets = new()
     {
-        { "KeepAwakeService", (5.0, 50, true) },           // Core functionality, low resources
-        { "InterceptionInputService", (10.0, 100, true) },  // HID operations
+        { "KeepAwakeService", (5.0, 150, true) },           // Core functionality - uses up to 120MB during peak
+        { "InterceptionInputService", (10.0, 150, true) },  // HID operations - uses up to 120MB during peak
         { "AnalyticsService", (2.0, 30, false) },           // Background telemetry
         { "UpdateService", (15.0, 80, false) },             // Occasional heavy operations
-        { "ConfigService", (1.0, 20, true) },               // Config management
+        { "ConfigService", (1.0, 60, true) },               // Config management - uses ~45MB
         { "NotificationService", (1.0, 25, false) },          // Toast notifications
         { "PomodoroService", (1.0, 20, false) },            // Timer-based
-        { "TrayIconService", (2.0, 40, true) },              // Always running
+        { "TrayIconService", (2.0, 60, true) },              // Always running - uses ~45MB
         { "CommandPaletteIndex", (5.0, 60, false) },         // On-demand
         { "MainWindow", (20.0, 200, false) }                // UI, variable
     };

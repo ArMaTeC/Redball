@@ -636,8 +636,9 @@ public class UpdateService : IUpdateService
             }
             return null;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("UpdateService", $"DownloadHashFileAsync failed for {hashUrl}: {ex.Message}");
             return null;
         }
     }
@@ -730,6 +731,50 @@ public class UpdateService : IUpdateService
             sb.AppendLine();
             sb.AppendLine("    Write-Host 'Creating backup of UserData...'");
             sb.AppendLine("    $hasBackup = Backup-UserData");
+            sb.AppendLine();
+            sb.AppendLine("    Write-Host 'Cleaning up orphaned files from previous installs...'");
+            sb.AppendLine("    $orphanedFiles = @(");
+            sb.AppendLine("        'CommunityToolkit.Mvvm.dll', 'e_sqlite3.dll', 'Hardcodet.NotifyIcon.Wpf.dll',");
+            sb.AppendLine("        'libSkiaSharp.dll', 'LottieSharp.dll', 'Microsoft.Data.Sqlite.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.Configuration.Abstractions.dll', 'Microsoft.Extensions.Configuration.Binder.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.Configuration.CommandLine.dll', 'Microsoft.Extensions.Configuration.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.Configuration.EnvironmentVariables.dll', 'Microsoft.Extensions.Configuration.FileExtensions.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.Configuration.Json.dll', 'Microsoft.Extensions.Configuration.UserSecrets.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.DependencyInjection.Abstractions.dll', 'Microsoft.Extensions.DependencyInjection.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.Diagnostics.Abstractions.dll', 'Microsoft.Extensions.Diagnostics.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.FileProviders.Abstractions.dll', 'Microsoft.Extensions.FileProviders.Physical.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.FileSystemGlobbing.dll', 'Microsoft.Extensions.Hosting.Abstractions.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.Hosting.dll', 'Microsoft.Extensions.Http.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.Logging.Abstractions.dll', 'Microsoft.Extensions.Logging.Configuration.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.Logging.Console.dll', 'Microsoft.Extensions.Logging.Debug.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.Logging.dll', 'Microsoft.Extensions.Logging.EventLog.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.Logging.EventSource.dll', 'Microsoft.Extensions.Options.ConfigurationExtensions.dll',");
+            sb.AppendLine("        'Microsoft.Extensions.Options.dll', 'Microsoft.Extensions.Primitives.dll',");
+            sb.AppendLine("        'Microsoft.Xaml.Behaviors.dll', 'Redball.Core.dll', 'Redball.Core.pdb',");
+            sb.AppendLine("        'SkiaSharp.dll', 'SkiaSharp.SceneGraph.dll', 'SkiaSharp.Skottie.dll',");
+            sb.AppendLine("        'SkiaSharp.Views.Desktop.Common.dll', 'SkiaSharp.Views.WPF.dll',");
+            sb.AppendLine("        'SQLitePCLRaw.batteries_v2.dll', 'SQLitePCLRaw.core.dll', 'SQLitePCLRaw.provider.e_sqlite3.dll',");
+            sb.AppendLine("        'System.Diagnostics.EventLog.dll', 'System.Management.dll',");
+            sb.AppendLine("        'System.ServiceProcess.ServiceController.dll', 'System.Speech.dll',");
+            sb.AppendLine("        'analytics.json', 'engine_toggle.json', 'pomodoro_timer.json', 'ram_usage.json',");
+            sb.AppendLine("        'Redball.state.json', 'templates.json', 'typething_launch.json', 'InputInterceptor.dll'");
+            sb.AppendLine("    )");
+            sb.AppendLine("    $removedCount = 0;");
+            sb.AppendLine("    foreach ($file in $orphanedFiles) {");
+            sb.AppendLine("        $filePath = Join-Path $targetDir $file;");
+            sb.AppendLine("        if (Test-Path $filePath) {");
+            sb.AppendLine("            try {");
+            sb.AppendLine("                Remove-Item $filePath -Force -ErrorAction Stop;");
+            sb.AppendLine("                Write-Host ('  Removed orphaned file: ' + $file);");
+            sb.AppendLine("                $removedCount++;");
+            sb.AppendLine("            } catch {");
+            sb.AppendLine("                Write-Warning ('Could not remove orphaned file: ' + $file);");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine("    if ($removedCount -gt 0) {");
+            sb.AppendLine("        Write-Host ('Cleaned up ' + $removedCount + ' orphaned file(s).');");
+            sb.AppendLine("    }");
             sb.AppendLine();
             sb.AppendLine("    Write-Host 'Installing update...'");
             sb.AppendLine("    Start-Sleep -Seconds 2");

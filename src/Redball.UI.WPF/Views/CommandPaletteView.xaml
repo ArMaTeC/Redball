@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-    <Grid Background="#40000000" MouseDown="Overlay_MouseDown">
+    <Grid Background="{DynamicResource BackgroundBrush}" Opacity="0.9" MouseDown="Overlay_MouseDown">
         <Border Width="500" VerticalAlignment="Top" Margin="0,100,0,0"
                 Background="{DynamicResource SurfaceBrush}"
                 BorderThickness="2"
@@ -16,7 +16,7 @@
             <Border.BorderBrush>
                 <LinearGradientBrush x:Name="PaletteBorderBrush" StartPoint="0,0" EndPoint="1,1">
                     <GradientStop Color="{DynamicResource AccentColor}" Offset="0"/>
-                    <GradientStop Color="#33FFFFFF" Offset="0.5"/>
+                    <GradientStop Color="{DynamicResource BorderLightBrush}" Offset="0.5"/>
                     <GradientStop Color="{DynamicResource AccentColor}" Offset="1"/>
                 </LinearGradientBrush>
             </Border.BorderBrush>

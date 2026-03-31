@@ -11,6 +11,21 @@ namespace Redball.UI.Services;
 /// </summary>
 public class SecurityService
 {
+    private static X509Certificate2? TryGetSignerCertificate(string filePath)
+    {
+        try
+        {
+#pragma warning disable SYSLIB0057
+            var signerCertificate = X509Certificate.CreateFromSignedFile(filePath);
+#pragma warning restore SYSLIB0057
+            return new X509Certificate2(signerCertificate);
+        }
+        catch (CryptographicException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// Verifies the Authenticode signature of a file.
     /// </summary>
@@ -24,18 +39,12 @@ public class SecurityService
                 return false;
             }
 
-            X509Certificate? signerCertificate;
-            try
+            using var cert = TryGetSignerCertificate(filePath);
+            if (cert is null)
             {
-                signerCertificate = X509Certificate.CreateFromSignedFile(filePath);
-            }
-            catch (CryptographicException ex)
-            {
-                Logger.Warning("SecurityService", $"No Authenticode signature found on file: {Path.GetFileName(filePath)} ({ex.Message})");
+                Logger.Warning("SecurityService", $"No Authenticode signature found on file: {Path.GetFileName(filePath)}");
                 return false;
             }
-
-            using var cert = new X509Certificate2(signerCertificate);
             using var chain = new X509Chain();
             chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
             chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
@@ -101,7 +110,7 @@ public class SecurityService
             sbom.AppendLine("    {");
             sbom.AppendLine("      \"SPDXID\": \"SPDXRef-DotNet-Runtime\",");
             sbom.AppendLine("      \"name\": \".NET-Runtime\",");
-            sbom.AppendLine("      \"versionInfo\": \"8.0.x\",");
+            sbom.AppendLine("      \"versionInfo\": \"10.0.x\",");
             sbom.AppendLine("      \"downloadLocation\": \"https://dotnet.microsoft.com/\",");
             sbom.AppendLine("      \"licenseConcluded\": \"MIT\",");
             sbom.AppendLine("      \"licenseDeclared\": \"MIT\"");
@@ -249,8 +258,9 @@ public class SecurityService
             var rawSalt = $"{machineName}:{userName}:Redball:4d6167696353616c74";
             return ComputeStringHash(rawSalt);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Warning("SecurityService", $"Failed to compute machine salt: {ex.Message}");
             return "RedballDefaultSalt";
         }
     }
@@ -311,8 +321,12 @@ public class SecurityService
             // Step 2: Get certificate details for publisher pinning
             try
             {
-                var signerCertificate = X509Certificate.CreateFromSignedFile(filePath);
-                using var cert = new X509Certificate2(signerCertificate);
+                using var cert = TryGetSignerCertificate(filePath);
+                if (cert is null)
+                {
+                    result.AddFailure("Certificate validation error: No Authenticode signature found");
+                    return result;
+                }
                 
                 result.CertificateSubject = cert.Subject;
                 result.CertificateIssuer = cert.Issuer;

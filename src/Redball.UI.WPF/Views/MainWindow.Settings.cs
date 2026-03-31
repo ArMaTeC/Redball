@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Security.Principal;
 using System.Text.Json;
 using System.Windows;
@@ -18,6 +20,7 @@ public partial class MainWindow
 {
     private readonly Stack<string> _settingsUndoStack = new(20);
     private bool _suppressVerifySignaturePrompt;
+    private bool _isSettingsDirty;
     private DispatcherTimer? _hidStatusRefreshTimer;
 
     private void LoadEmbeddedSettings()
@@ -60,6 +63,11 @@ public partial class MainWindow
         MainIdleThresholdSlider.Value = config.IdleThreshold;
         MainIdleThresholdText.Text = $"Threshold: {config.IdleThreshold} minutes";
         MainPresentationModeCheck.IsChecked = config.PresentationMode;
+        MainGamingModeEnabledCheck.IsChecked = config.GamingModeEnabled;
+        MainMeetingAwareCheck.IsChecked = config.MeetingAware;
+        MainThermalProtectionEnabledCheck.IsChecked = config.ThermalProtectionEnabled;
+        MainThermalThresholdSlider.Value = config.ThermalThreshold;
+        MainThermalThresholdText.Text = $"Threshold: {config.ThermalThreshold}C";
         MainScheduledOperationCheck.IsChecked = config.ScheduledOperation;
         MainScheduleStartTimeBox.Text = config.ScheduleStartTime;
         MainScheduleStopTimeBox.Text = config.ScheduleStopTime;
@@ -102,8 +110,13 @@ public partial class MainWindow
         MainTypeThingHidSafeModeCheck.IsChecked = config.TypeThingHidSafeMode;
         MainTypeThingHidAudioFeedbackCheck.IsChecked = config.TypeThingHidAudioFeedback;
         InterceptionInputService.Instance.AudioFeedbackEnabled = config.TypeThingHidAudioFeedback;
-        MainTypeThingInputModeCombo.SelectedIndex = config.TypeThingInputMode?.Equals("HID", StringComparison.OrdinalIgnoreCase) == true ? 1 : 0;
-        if (config.TypeThingHidSafeMode)
+        MainTypeThingInputModeCombo.SelectedIndex = config.TypeThingInputMode?.ToUpperInvariant() switch
+        {
+            "HID" => 1,
+            "SERVICE" => 2,
+            _ => 0
+        };
+        if (config.TypeThingHidSafeMode && MainTypeThingInputModeCombo.SelectedIndex == 1)
         {
             MainTypeThingInputModeCombo.SelectedIndex = 0;
         }
@@ -237,6 +250,10 @@ public partial class MainWindow
             config.IdleDetection = MainIdleDetectionCheck.IsChecked ?? false;
             config.IdleThreshold = (int)MainIdleThresholdSlider.Value;
             config.PresentationMode = MainPresentationModeCheck.IsChecked ?? false;
+            config.GamingModeEnabled = MainGamingModeEnabledCheck.IsChecked ?? false;
+            config.MeetingAware = MainMeetingAwareCheck.IsChecked ?? false;
+            config.ThermalProtectionEnabled = MainThermalProtectionEnabledCheck.IsChecked ?? false;
+            config.ThermalThreshold = (int)MainThermalThresholdSlider.Value;
             config.ScheduledOperation = MainScheduledOperationCheck.IsChecked ?? false;
             config.PauseOnScreenLock = MainPauseOnScreenLockCheck.IsChecked ?? false;
             config.VpnAutoKeepAwake = MainVpnAutoKeepAwakeCheck.IsChecked ?? false;
@@ -273,9 +290,14 @@ public partial class MainWindow
             config.TypeThingHidSafeMode = MainTypeThingHidSafeModeCheck.IsChecked ?? false;
             config.TypeThingHidAudioFeedback = MainTypeThingHidAudioFeedbackCheck.IsChecked ?? false;
             InterceptionInputService.Instance.AudioFeedbackEnabled = config.TypeThingHidAudioFeedback;
-            config.TypeThingInputMode = MainTypeThingInputModeCombo.SelectedIndex == 1 ? "HID" : "SendInput";
+            config.TypeThingInputMode = MainTypeThingInputModeCombo.SelectedIndex switch
+            {
+                1 => "HID",
+                2 => "Service",
+                _ => "SendInput"
+            };
 
-            if (config.TypeThingHidSafeMode)
+            if (config.TypeThingHidSafeMode && MainTypeThingInputModeCombo.SelectedIndex == 1)
             {
                 config.TypeThingInputMode = "SendInput";
                 if (MainTypeThingInputModeCombo.SelectedIndex != 0)
@@ -596,6 +618,15 @@ public partial class MainWindow
 
     private void MainSettingChanged(object sender, RoutedEventArgs e)
     {
+        // Track dirty state for Updates panel settings that require explicit save
+        if (IsUpdatesPanelSetting(sender))
+        {
+            _isSettingsDirty = true;
+            if (MainSaveSettingsButton != null)
+                MainSaveSettingsButton.IsEnabled = true;
+            return; // Don't auto-apply; wait for explicit save
+        }
+
         if (ReferenceEquals(sender, MainVerifyUpdateSignatureCheck)
             && !_isLoadingSettings
             && !_suppressVerifySignaturePrompt
@@ -636,6 +667,78 @@ public partial class MainWindow
         AutoApplySettings();
     }
 
+    /// <summary>
+    /// Determines if a setting is part of the Updates panel and requires explicit save.
+    /// </summary>
+    private bool IsUpdatesPanelSetting(object sender)
+    {
+        return ReferenceEquals(sender, MainVerifyUpdateSignatureCheck)
+            || ReferenceEquals(sender, MainAutoUpdateCheckEnabledCheck)
+            || ReferenceEquals(sender, MainUpdateChannelCombo);
+    }
+
+    /// <summary>
+    /// Saves settings from the Updates panel with confirmation dialogs for security-critical changes.
+    /// Matches the behavior of SettingsWindow save flow.
+    /// </summary>
+    private void MainSaveSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_isSettingsDirty)
+            return;
+
+        var config = ConfigService.Instance.Config;
+        var wasVerifySignatureEnabled = config.VerifyUpdateSignature;
+        var wasEncryptConfigEnabled = config.EncryptConfig;
+
+        // Capture new values from UI
+        var newVerifySignature = MainVerifyUpdateSignatureCheck.IsChecked ?? false;
+        var newUpdateChannel = MainUpdateChannelCombo.SelectedIndex switch
+        {
+            1 => "beta",
+            2 => "disabled",
+            _ => "stable"
+        };
+        var newAutoUpdateCheck = MainAutoUpdateCheckEnabledCheck.IsChecked ?? true;
+        var newAutoUpdateInterval = (int)MainAutoUpdateIntervalSlider.Value;
+
+        // Security confirmation: VerifyUpdateSignature being disabled
+        if (wasVerifySignatureEnabled && !newVerifySignature)
+        {
+            var confirmDisable = NotificationWindow.Show(
+                "Security Warning",
+                "Disabling update signature verification reduces security and can allow untrusted updates. Continue?",
+                "\uE7BA",
+                true);
+
+            if (!confirmDisable)
+            {
+                MainVerifyUpdateSignatureCheck.IsChecked = true;
+                return;
+            }
+        }
+
+        // Apply the settings
+        config.VerifyUpdateSignature = newVerifySignature;
+        config.UpdateChannel = newUpdateChannel;
+        config.AutoUpdateCheckEnabled = newAutoUpdateCheck;
+        config.AutoUpdateCheckIntervalMinutes = newAutoUpdateInterval;
+
+        // Reinitialize update service with new settings
+        _updateService = new UpdateService(
+            config.UpdateRepoOwner,
+            config.UpdateRepoName,
+            config.UpdateChannel ?? "stable",
+            config.VerifyUpdateSignature);
+
+        ConfigService.Instance.Save();
+        _isSettingsDirty = false;
+        if (MainSaveSettingsButton != null)
+            MainSaveSettingsButton.IsEnabled = false;
+
+        NotificationService.Instance.ShowInfo("Settings Saved", "Update settings saved successfully.");
+        Logger.Info("MainWindow", "Update settings saved via explicit Save button");
+    }
+
     private void UpdateMainStartWithWindowsStatusText()
     {
         if (MainStartWithWindowsStatusText == null) return;
@@ -647,6 +750,15 @@ public partial class MainWindow
 
     private void MainComboSettingChanged(object sender, SelectionChangedEventArgs e)
     {
+        // Track dirty state for Updates panel settings that require explicit save
+        if (IsUpdatesPanelSetting(sender))
+        {
+            _isSettingsDirty = true;
+            if (MainSaveSettingsButton != null)
+                MainSaveSettingsButton.IsEnabled = true;
+            return; // Don't auto-apply; wait for explicit save
+        }
+
         if (ReferenceEquals(sender, MainTypeThingInputModeCombo))
         {
             if (MainTypeThingHidSafeModeCheck.IsChecked == true && MainTypeThingInputModeCombo.SelectedIndex == 1)
@@ -657,6 +769,15 @@ public partial class MainWindow
 
             RefreshHidDriverInstallVisibility();
             UpdateHidStatusText();
+        }
+        AutoApplySettings();
+    }
+
+    private void MainThermalThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MainThermalThresholdText != null)
+        {
+            MainThermalThresholdText.Text = $"Threshold: {(int)e.NewValue}C";
         }
         AutoApplySettings();
     }
@@ -1030,6 +1151,11 @@ public partial class MainWindow
                 ? "Uninstall Input Service"
                 : "Install Input Service";
             MainInstallHidDriverBtn.Visibility = Visibility.Visible;
+            if (MainServiceAdminHintText != null)
+            {
+                MainServiceAdminHintText.Visibility = Visibility.Visible;
+                MainServiceAdminHintText.Text = "Administrator approval (UAC) is required to install or uninstall the Input Service.";
+            }
             // Hide HID-specific controls when Service is selected
             if (MainRepairHidStackBtn != null) MainRepairHidStackBtn.Visibility = Visibility.Collapsed;
             if (MainHidTestPanel != null) MainHidTestPanel.Visibility = Visibility.Collapsed;
@@ -1049,6 +1175,7 @@ public partial class MainWindow
                 ? "Uninstall HID Driver"
                 : "Install HID Driver (No-Restart Attempt)";
             MainInstallHidDriverBtn.Visibility = Visibility.Visible;
+            if (MainServiceAdminHintText != null) MainServiceAdminHintText.Visibility = Visibility.Collapsed;
             if (MainRepairHidStackBtn != null) MainRepairHidStackBtn.Visibility = Visibility.Visible;
             if (MainHidTestPanel != null) MainHidTestPanel.Visibility = Visibility.Visible;
             if (MainResetHidStackBtn != null)
@@ -1073,6 +1200,7 @@ public partial class MainWindow
         {
             // SendInput mode (index 0)
             MainInstallHidDriverBtn.Visibility = Visibility.Collapsed;
+            if (MainServiceAdminHintText != null) MainServiceAdminHintText.Visibility = Visibility.Collapsed;
             if (MainRepairHidStackBtn != null) MainRepairHidStackBtn.Visibility = Visibility.Collapsed;
             if (MainHidTestPanel != null) MainHidTestPanel.Visibility = Visibility.Collapsed;
             if (MainResetHidStackBtn != null) MainResetHidStackBtn.Visibility = Visibility.Collapsed;
@@ -1275,24 +1403,44 @@ public partial class MainWindow
         RefreshHidDriverInstallVisibility();
     }
 
-    private static bool InstallServiceDirect()
+    private bool InstallServiceDirect()
     {
         try
         {
-            // Check admin rights
-            if (!IsCurrentUserAdministrator())
-            {
-                Logger.Warning("MainWindow", "Service installation requires admin rights");
-                return false;
-            }
-
-            var servicePath = System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.Input.Service.exe");
+            var servicePath = ResolveServiceExecutablePath();
             if (!System.IO.File.Exists(servicePath))
             {
                 Logger.Error("MainWindow", $"Service executable not found: {servicePath}");
                 return false;
             }
 
+            // Check admin rights - if not admin, relaunch app with elevation
+            if (!IsCurrentUserAdministrator())
+            {
+                Logger.Warning("MainWindow", "Service installation requires admin rights; relaunching app with UAC elevation.");
+                
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = Process.GetCurrentProcess().MainModule?.FileName ?? "Redball.UI.WPF.exe",
+                    Arguments = "--install-service",
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
+
+                try
+                {
+                    using var process = Process.Start(processInfo);
+                    process?.WaitForExit();
+                    return process?.ExitCode == 0;
+                }
+                catch (Win32Exception)
+                {
+                    Logger.Warning("MainWindow", "User cancelled UAC elevation for service install");
+                    return false;
+                }
+            }
+
+            // Already admin - install directly
             var createResult = RunProcess("sc.exe", $"create RedballInputService binPath= \"{servicePath}\" start= auto");
             if (createResult.ExitCode != 0)
             {
@@ -1320,13 +1468,33 @@ public partial class MainWindow
     {
         try
         {
-            // Check admin rights
+            // Check admin rights - if not admin, relaunch app with elevation
             if (!IsCurrentUserAdministrator())
             {
-                Logger.Warning("MainWindow", "Service uninstallation requires admin rights");
-                return false;
+                Logger.Warning("MainWindow", "Service uninstallation requires admin rights; relaunching app with UAC elevation.");
+                
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = Process.GetCurrentProcess().MainModule?.FileName ?? "Redball.UI.WPF.exe",
+                    Arguments = "--uninstall-service",
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
+
+                try
+                {
+                    using var process = Process.Start(processInfo);
+                    process?.WaitForExit();
+                    return process?.ExitCode == 0;
+                }
+                catch (Win32Exception)
+                {
+                    Logger.Warning("MainWindow", "User cancelled UAC elevation for service uninstall");
+                    return false;
+                }
             }
 
+            // Already admin - uninstall directly
             // Stop the service first
             RunProcess("sc.exe", "stop RedballInputService");
 
@@ -1345,6 +1513,57 @@ public partial class MainWindow
         {
             Logger.Error("MainWindow", "Service uninstallation failed", ex);
             return false;
+        }
+    }
+
+    private static string ResolveServiceExecutablePath()
+    {
+        var candidates = new[]
+        {
+            System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.Service.exe"),
+            System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.Input.Service.exe")
+        };
+
+        foreach (var candidate in candidates)
+        {
+            if (System.IO.File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return candidates[0];
+    }
+
+    private static (bool Success, int ExitCode, string Error) RunProcessElevated(string fileName, string arguments)
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = fileName,
+                Arguments = arguments,
+                UseShellExecute = true,
+                Verb = "runas",
+                WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
+            };
+
+            using var process = System.Diagnostics.Process.Start(psi);
+            if (process == null)
+            {
+                return (false, -1, "Failed to start elevated process.");
+            }
+
+            process.WaitForExit();
+            return (true, process.ExitCode, string.Empty);
+        }
+        catch (Win32Exception ex)
+        {
+            return (false, -1, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return (false, -1, ex.Message);
         }
     }
 
@@ -1380,8 +1599,9 @@ public partial class MainWindow
             var principal = new WindowsPrincipal(identity);
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("MainWindow", $"Failed to check administrator status: {ex.Message}");
             return false;
         }
     }

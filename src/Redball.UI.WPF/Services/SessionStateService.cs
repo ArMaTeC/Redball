@@ -98,9 +98,9 @@ public class SessionStateService : ISessionStateService
                 File.Delete(statePath);
                 Logger.Debug("SessionState", "State file deleted after restore");
             }
-            catch
+            catch (Exception ex)
             {
-                // Non-critical
+                Logger.Debug("SessionState", $"Failed to delete state file: {ex.Message}");
             }
 
             return true;
@@ -128,7 +128,10 @@ public class SessionStateService : ISessionStateService
                 if (File.Exists(Path.GetFullPath(candidate)))
                     return Path.GetFullPath(candidate);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Logger.Debug("SessionState", $"Failed to resolve state path {candidate}: {ex.Message}");
+            }
         }
 
         return DefaultStatePath;

@@ -1,11 +1,11 @@
 <Project>
   <PropertyGroup>
     <!-- Centralized Versioning -->
-    <Version>2.1.343</Version>
+    <Version>2.1.345</Version>
     <Authors>ArMaTeC</Authors>
     <Company>ArMaTeC</Company>
     <Product>Redball</Product>
-    <Copyright>Copyright © 2024 ArMaTeC</Copyright>
+    <Copyright>Copyright © 2025 ArMaTeC</Copyright>
     
     <!-- Build Flags (Common for all projects) -->
     <AssemblyVersion>$(Version).0</AssemblyVersion>

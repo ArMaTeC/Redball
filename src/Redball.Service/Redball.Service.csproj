@@ -17,7 +17,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="10.0.5" />
-    <PackageReference Include="System.IO.Pipes" Version="4.3.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.5" />
   </ItemGroup>
 </Project>

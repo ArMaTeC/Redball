@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -561,8 +562,9 @@ public class MainViewModel : ViewModelBase
             else
                 BatteryText = $"Battery: {status.ChargePercent}%{(status.IsOnBattery ? " (discharging)" : "")}";
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("MainViewModel", $"Failed to get battery status: {ex.Message}");
             BatteryText = "";
         }
 
@@ -668,11 +670,32 @@ public class MainViewModel : ViewModelBase
         {
             try
             {
+                var servicePath = ResolveServiceExecutablePath();
+                if (!System.IO.File.Exists(servicePath))
+                {
+                    Logger.Error("MainViewModel", $"Service executable not found: {servicePath}");
+                    return false;
+                }
+
                 // Check admin rights
                 if (!Interop.NativeMethods.IsUserAnAdmin())
                 {
-                    Logger.Warning("MainViewModel", "Service installation requires admin rights");
-                    return false;
+                    Logger.Warning("MainViewModel", "Service installation requires admin rights; requesting UAC elevation.");
+                    var elevatedCreate = RunProcessElevated("sc.exe", $"create RedballInputService binPath= \"{servicePath}\" start= auto");
+                    if (!elevatedCreate.Success || elevatedCreate.ExitCode != 0)
+                    {
+                        Logger.Error("MainViewModel", $"Elevated create service failed: {elevatedCreate.Error}");
+                        return false;
+                    }
+
+                    var elevatedStart = RunProcessElevated("sc.exe", "start RedballInputService");
+                    if (!elevatedStart.Success || elevatedStart.ExitCode != 0)
+                    {
+                        Logger.Warning("MainViewModel", $"Service created but failed to start (elevated): {elevatedStart.Error}");
+                    }
+
+                    Logger.Info("MainViewModel", "Redball Input Service installed successfully via elevated command");
+                    return true;
                 }
 
                 // Check if service already exists
@@ -682,17 +705,10 @@ public class MainViewModel : ViewModelBase
                     Logger.Info("MainViewModel", "Redball Input Service already installed");
                     return true;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Logger.Debug("MainViewModel", $"Service check failed (service not installed): {ex.Message}");
                     // Service doesn't exist, proceed with installation
-                }
-
-                // Install the service using sc.exe
-                var servicePath = System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.Input.Service.exe");
-                if (!System.IO.File.Exists(servicePath))
-                {
-                    Logger.Error("MainViewModel", $"Service executable not found: {servicePath}");
-                    return false;
                 }
 
                 var createResult = RunProcess("sc.exe", $"create RedballInputService binPath= \"{servicePath}\" start= auto");
@@ -718,6 +734,57 @@ public class MainViewModel : ViewModelBase
                 return false;
             }
         });
+    }
+
+    private static string ResolveServiceExecutablePath()
+    {
+        var candidates = new[]
+        {
+            System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.Service.exe"),
+            System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.Input.Service.exe")
+        };
+
+        foreach (var candidate in candidates)
+        {
+            if (System.IO.File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return candidates[0];
+    }
+
+    private static (bool Success, int ExitCode, string Error) RunProcessElevated(string fileName, string arguments)
+    {
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = fileName,
+                Arguments = arguments,
+                UseShellExecute = true,
+                Verb = "runas",
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+
+            using var process = Process.Start(psi);
+            if (process == null)
+            {
+                return (false, -1, "Failed to start elevated process.");
+            }
+
+            process.WaitForExit();
+            return (true, process.ExitCode, string.Empty);
+        }
+        catch (Win32Exception ex)
+        {
+            return (false, -1, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return (false, -1, ex.Message);
+        }
     }
 
     private static (int ExitCode, string StdOut, string StdErr) RunProcess(string fileName, string arguments)

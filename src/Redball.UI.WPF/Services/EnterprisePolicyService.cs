@@ -243,8 +243,9 @@ public class EnterprisePolicyService
             using var cuKey = Registry.CurrentUser.OpenSubKey(_gpKey);
             return cuKey?.GetValue(key);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("EnterprisePolicyService", $"Failed to get Group Policy value for {key}: {ex.Message}");
             return null;
         }
     }
@@ -256,8 +257,9 @@ public class EnterprisePolicyService
             using var regKey = Registry.CurrentUser.OpenSubKey(_registryKey);
             return regKey?.GetValue(key);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("EnterprisePolicyService", $"Failed to get Registry Policy value for {key}: {ex.Message}");
             return null;
         }
     }
@@ -271,8 +273,9 @@ public class EnterprisePolicyService
 
             return (T?)Convert.ChangeType(value, typeof(T));
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("EnterprisePolicyService", $"Failed to convert policy value to {typeof(T).Name}: {ex.Message}");
             return default;
         }
     }

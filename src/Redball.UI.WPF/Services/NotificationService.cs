@@ -100,7 +100,10 @@ public class NotificationService : INotificationService
                 };
                 sound.Play();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Logger.Debug("NotificationService", $"Failed to play notification sound: {ex.Message}");
+            }
         }
 
         try

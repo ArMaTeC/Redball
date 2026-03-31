@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redball Companion</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="icons/icon32.png" alt="Redball" class="logo">
+            <h1>Redball Companion</h1>
+            <div id="connection-status" class="status disconnected">●</div>
+        </header>
+
+        <main>
+            <div id="disconnected-panel" class="panel hidden">
+                <div class="message warning">
+                    <strong>Desktop app not running</strong>
+                    <p>Please start the Redball desktop application to use this extension.</p>
+                </div>
+                <button id="retry-btn" class="btn btn-primary">Retry Connection</button>
+            </div>
+
+            <div id="connected-panel" class="panel">
+                <div class="status-bar">
+                    <div id="keep-awake-status" class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Inactive</span>
+                    </div>
+                    <div id="session-time" class="session-time">--:--</div>
+                </div>
+
+                <div class="controls">
+                    <button id="toggle-btn" class="btn btn-primary btn-large">
+                        <span class="btn-icon">🚀</span>
+                        <span class="btn-text">Start Keep-Awake</span>
+                    </button>
+
+                    <div class="quick-timers">
+                        <button class="btn btn-secondary timer-btn" data-minutes="30">30 min</button>
+                        <button class="btn btn-secondary timer-btn" data-minutes="60">1 hour</button>
+                        <button class="btn btn-secondary timer-btn" data-minutes="120">2 hours</button>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-item">
+                        <span class="info-label">Heartbeat:</span>
+                        <span id="heartbeat-mode" class="info-value">F15 key</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Display sleep:</span>
+                        <span id="display-status" class="info-value">Prevented</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Battery aware:</span>
+                        <span id="battery-status" class="info-value">Disabled</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading-panel" class="panel">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Connecting to Redball...</p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <a href="#" id="settings-link" class="footer-link">Settings</a>
+            <span class="separator">•</span>
+            <a href="#" id="help-link" class="footer-link">Help</a>
+        </footer>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

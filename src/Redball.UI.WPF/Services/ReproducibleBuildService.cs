@@ -391,8 +391,9 @@ public class ReproducibleBuildService
 
             return string.IsNullOrWhiteSpace(output);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ReproducibleBuildService", $"Git clean check failed: {ex.Message}");
             return false;
         }
     }
@@ -425,9 +426,9 @@ public class ReproducibleBuildService
                     .Select(l => l.Substring(3).Trim()));
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore git errors
+            Logger.Debug("ReproducibleBuildService", $"Git status check failed: {ex.Message}");
         }
 
         return files;
@@ -440,7 +441,7 @@ public class ReproducibleBuildService
             ["Configuration"] = "Release",
             ["Platform"] = "x64",
             ["Runtime"] = "win-x64",
-            ["Framework"] = "net8.0-windows",
+            ["Framework"] = "net10.0-windows",
             ["SelfContained"] = "true",
             ["PublishReadyToRun"] = "true",
             ["PublishSingleFile"] = "true"

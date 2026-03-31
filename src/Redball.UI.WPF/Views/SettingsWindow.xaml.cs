@@ -267,6 +267,8 @@ public partial class SettingsWindow : Window
             Logger.ApplyConfig(svc.Config);
             // Reload keep-awake engine with updated config
             KeepAwakeService.Instance.ReloadConfig();
+            // Reload global hotkeys with updated TypeThing keybinds
+            _mainWindow?.ReloadHotkeys();
             if (!startupChangedOk)
             {
                 NotificationWindow.Show("Startup Setting", "Could not update Start with Windows setting.", "\uE783");

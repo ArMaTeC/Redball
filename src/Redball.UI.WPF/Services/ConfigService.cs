@@ -359,10 +359,18 @@ public class ConfigService : IConfigService
                     failed++;
                     prop.SetValue(recoveredConfig, prop.GetValue(defaults));
                 }
-                catch
+                catch (Exception ex)
                 {
                     failed++;
-                    try { prop.SetValue(recoveredConfig, prop.GetValue(defaults)); } catch { }
+                    Logger.Debug("ConfigService", $"Property recovery failed for {prop.Name}: {ex.Message}");
+                    try 
+                    { 
+                        prop.SetValue(recoveredConfig, prop.GetValue(defaults)); 
+                    } 
+                    catch (Exception setEx) 
+                    { 
+                        Logger.Debug("ConfigService", $"Failed to set default value for {prop.Name}: {setEx.Message}");
+                    }
                 }
             }
 
@@ -635,7 +643,10 @@ public class ConfigService : IConfigService
                     return true;
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Logger.Debug("ConfigService", $"Backup format parsing failed, falling back to plain format: {ex.Message}");
+            }
 
             // Fall back to plain config format
             Config = JsonSerializer.Deserialize<RedballConfig>(json, ReadOptions) ?? new RedballConfig();

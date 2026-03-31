@@ -126,9 +126,9 @@ public partial class UserFeedbackSurvey : Window
             // For now, we just save locally
             await Task.CompletedTask;
         }
-        catch
+        catch (Exception ex)
         {
-            // Silent fail - local save is primary
+            Logger.Debug("UserFeedbackSurvey", $"GitHub submission failed (local save is primary): {ex.Message}");
         }
     }
 }

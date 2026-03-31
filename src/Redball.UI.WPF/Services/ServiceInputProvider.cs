@@ -64,8 +64,9 @@ public class ServiceInputProvider : IDisposable
             IsServiceInstalled = sc.Status != System.ServiceProcess.ServiceControllerStatus.Stopped ||
                                  sc.Status != System.ServiceProcess.ServiceControllerStatus.StopPending;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ServiceInputProvider", $"Failed to check service status: {ex.Message}");
             IsServiceInstalled = false;
         }
         return IsServiceInstalled;
@@ -333,8 +334,9 @@ public class ServiceInputProvider : IDisposable
             inputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
             return SendInput(2, inputs, Marshal.SizeOf<NativeINPUT>()) == 2;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ServiceInputProvider", $"SendLocalUnicode failed: {ex.Message}");
             return false;
         }
     }

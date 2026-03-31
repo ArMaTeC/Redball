@@ -2,7 +2,7 @@
 
 **Redball** - Keep-Awake Utility for Windows
 
-**Version 1.0** - Effective Date: March 2024
+**Version 1.0** - Effective Date: March 2025
 
 ## 1. License Grant
 
@@ -75,7 +75,7 @@ For questions about this EULA, contact via GitHub: <https://github.com/ArMaTeC/R
 
 ## MIT License Notice
 
-Copyright (c) 2024 ArMaTeC and contributors
+Copyright (c) 2025 ArMaTeC and contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

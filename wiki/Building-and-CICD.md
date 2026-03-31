@@ -62,14 +62,40 @@ The MSI provides:
   - Exit on Timer Complete
 - "Launch Redball" checkbox on the finish page
 
+### MSI Theme Generation
+
+The installer uses modern dark-themed graphics generated programmatically:
+
+```powershell
+# Generate theme images manually (optional - build.ps1 does this automatically)
+.\installer\Generate-InstallerTheme.ps1
+```
+
+**Generated Images:**
+
+- `banner.bmp` (493x58) — Dark gradient header with Redball branding
+- `dialog.bmp` (493x312) — Dark gradient background with sidebar accent
+
+**Features:**
+
+- Professional dark theme matching Redball's UI
+- Anti-aliased Segoe UI typography
+- Red accent bar with decorative circle elements
+- Automatically regenerated during `build.ps1` MSI builds
+
 ### Installer Files
 
 | File | Description |
 | ---- | ----------- |
-| `installer/Build-MSI.ps1` | WiX MSI build script |
+| `installer/Build-MSI.ps1` | WiX MSI build script (legacy v1) |
+| `installer/Build-MSI-v2.ps1` | WiX MSI build script (modern v2 with WixUI_InstallDir) |
 | `installer/Deploy-Redball.ps1` | Full deploy pipeline (WPF + MSI + signing) |
+| `installer/Generate-InstallerTheme.ps1` | PowerShell theme generator for MSI banner/dialog images |
 | `installer/Launch-Redball.vbs` | Hidden-window launcher for MSI post-install |
-| `installer/Redball.wxs` | WiX v4 installer definition |
+| `installer/Redball.wxs` | WiX v4 installer definition (legacy) |
+| `installer/Redball.v2.wxs` | WiX v4 installer definition (modern UI) |
+| `installer/banner.bmp` | MSI installer banner image (493x58) |
+| `installer/dialog.bmp` | MSI installer dialog image (493x312) |
 | `installer/Redball.ico` | Application icon |
 | `installer/Redball-License.rtf` | License for installer UI |
 | `installer/redball.png` | Readme icon image |
@@ -98,7 +124,7 @@ The MSI provides:
 
 **Steps:**
 
-1. **WPF Build** — Build the .NET 8 WPF application
+1. **WPF Build** — Build the .NET 10 WPF application
 2. **Unit Tests** — Run MSTest suite
 3. **JSON Validation** — Validate `Redball.json` and `locales.json`
 4. **PSScriptAnalyzer** — Lint build scripts

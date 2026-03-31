@@ -214,6 +214,11 @@ public class KeepAwakeService : IKeepAwakeService
             {
                 _timedDuration = until.Value - DateTime.Now;
                 _sessionStopwatch = Stopwatch.StartNew();
+                AuditLogService.Instance.LogSessionEvent("TimedSessionStart", _timedDuration, $"Duration: {_timedDuration.TotalMinutes:F0} min");
+            }
+            else
+            {
+                AuditLogService.Instance.LogSessionEvent("SessionStart");
             }
             _heartbeatTimer?.Change(_heartbeatIntervalMs, _heartbeatIntervalMs);
             _durationTimer?.Change(1000, 1000);
@@ -223,7 +228,9 @@ public class KeepAwakeService : IKeepAwakeService
         {
             _heartbeatTimer?.Change(Timeout.Infinite, Timeout.Infinite);
             _sessionStopwatch?.Stop();
+            var duration = _sessionStopwatch?.Elapsed;
             _sessionStopwatch = null;
+            AuditLogService.Instance.LogSessionEvent("SessionStop", duration);
             // Keep duration timer running for monitoring even when paused
             Logger.Info("KeepAwakeService", "Heartbeat timer stopped");
         }
@@ -234,7 +241,9 @@ public class KeepAwakeService : IKeepAwakeService
     /// </summary>
     public void Toggle()
     {
-        SetActive(!IsActive);
+        var newState = !IsActive;
+        AuditLogService.Instance.LogUserAction("ToggleKeepAwake", $"State changed to: {(newState ? "Active" : "Paused")}");
+        SetActive(newState);
     }
 
     /// <summary>
@@ -248,6 +257,7 @@ public class KeepAwakeService : IKeepAwakeService
             return;
         }
         Logger.Debug("KeepAwakeService", $"Starting timed session: {minutes} min (monotonic Stopwatch)");
+        AuditLogService.Instance.LogUserAction("StartTimedSession", $"Duration: {minutes} minutes");
         SetActive(true, DateTime.Now.AddMinutes(minutes));
     }
 
@@ -260,6 +270,7 @@ public class KeepAwakeService : IKeepAwakeService
         if (!IsActive) return;
 
         Logger.Info("KeepAwakeService", $"Auto-pausing: {reason}");
+        AuditLogService.Instance.LogSessionEvent("AutoPause", null, $"Reason: {reason}");
         _activeBeforeAutoPause = true;
 
         switch (reason)
@@ -279,6 +290,7 @@ public class KeepAwakeService : IKeepAwakeService
     public void AutoResume(string reason)
     {
         Logger.Info("KeepAwakeService", $"Auto-resuming: {reason}");
+        AuditLogService.Instance.LogSessionEvent("AutoResume", null, $"Reason: {reason}");
 
         switch (reason)
         {

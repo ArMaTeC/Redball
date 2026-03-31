@@ -45,8 +45,8 @@
     <Border x:Name="MainBorder" 
             Margin="10" 
             CornerRadius="20" 
-            Background="#CC1E1E1E" 
-            BorderBrush="#44FFFFFF" 
+            Background="{DynamicResource SurfaceBrush}" 
+            BorderBrush="{DynamicResource BorderLightBrush}" 
             BorderThickness="1"
             Opacity="0"
             RenderTransformOrigin="0.5,0.5">
@@ -64,18 +64,18 @@
             </Grid.ColumnDefinitions>
 
             <Viewbox Grid.Column="0" Width="40" Height="40" Margin="0,0,15,0">
-                <TextBlock x:Name="IconText" Text="🔔" FontSize="30" Foreground="White" VerticalAlignment="Center"/>
+                <TextBlock x:Name="IconText" Text="🔔" FontSize="30" Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center"/>
             </Viewbox>
 
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                 <TextBlock x:Name="TitleText" 
                            Text="KEEP-AWAKE" 
-                           Foreground="#88FFFFFF" 
+                           Foreground="{DynamicResource ForegroundSecondaryBrush}" 
                            FontSize="12" 
                            FontWeight="SemiBold"/>
                 <TextBlock x:Name="StatusText" 
                            Text="ACTIVATED" 
-                           Foreground="White" 
+                           Foreground="{DynamicResource ForegroundBrush}" 
                            FontSize="20" 
                            FontWeight="Bold"/>
             </StackPanel>

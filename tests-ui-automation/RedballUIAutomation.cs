@@ -4,6 +4,7 @@ using FlaUI.Core.Definitions;
 using FlaUI.UIA3;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace Redball.UIAutomation;
 
@@ -36,26 +37,27 @@ public class RedballUIAutomation : IDisposable
         
         try
         {
-            _app = Application.Launch(exePath);
-            
-            // Give the app time to start - tray-only mode takes longer to initialize
-            Thread.Sleep(3000);
-            
-            // For tray-only apps, GetMainWindow fails because window is hidden.
-            // Get window by process ID instead, then show it.
-            var processId = _app.ProcessId;
-            _mainWindow = GetWindowByProcessId(processId, TimeSpan.FromSeconds(10));
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = exePath,
+                Arguments = "--test-mode",
+                WorkingDirectory = Path.GetDirectoryName(exePath) ?? Environment.CurrentDirectory,
+                UseShellExecute = false
+            };
+
+            _app = Application.Launch(startInfo);
+
+            // Give the app time to initialize WPF + tray services
+            Thread.Sleep(1500);
+
+            _mainWindow = GetWindowByProcessId(_app.ProcessId, TimeSpan.FromSeconds(30));
             
             if (_mainWindow == null)
             {
                 throw new InvalidOperationException("Could not find main window. Application may have crashed or failed to start.");
             }
             
-            // Show the window for UI automation testing using WindowPattern
-            var windowPattern = _mainWindow!.Patterns.Window.Pattern;
-            windowPattern.SetWindowVisualState(WindowVisualState.Normal);
-            _mainWindow.Focus();
-            Thread.Sleep(500);
+            EnsureWindowIsVisible(_mainWindow);
         }
         catch (Exception ex)
         {
@@ -70,44 +72,47 @@ public class RedballUIAutomation : IDisposable
         {
             try
             {
-                // Find desktop and search for window by process ID
+                if (_app != null && _automation != null)
+                {
+                    // Primary strategy: enumerate this process's top-level windows.
+                    var topLevel = _app.GetAllTopLevelWindows(_automation);
+                    foreach (var window in topLevel)
+                    {
+                        var title = window.Title;
+                        if (!string.IsNullOrWhiteSpace(title) && title.Contains("Redball", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return window;
+                        }
+                    }
+                }
+
+                // Fallback strategy: desktop-wide search by process id.
                 var desktop = _automation?.GetDesktop();
                 var windows = desktop?.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
-                
                 if (windows != null)
                 {
                     foreach (var window in windows)
                     {
-                        try
+                        var pid = window.Properties.ProcessId.ValueOrDefault;
+                        if (pid != processId)
                         {
-                            // Check if this window belongs to our process
-                            var windowPattern = window.Patterns.Window.PatternOrDefault;
-                            if (windowPattern != null)
-                            {
-                                // Get the process ID through the window handle
-                                var hwnd = window.Properties.NativeWindowHandle;
-                                if (hwnd != IntPtr.Zero)
-                                {
-                                    try
-                                    {
-                                        var windowProcess = System.Diagnostics.Process.GetProcessById(processId);
-                                        if (windowProcess.MainWindowHandle == hwnd || 
-                                            window.Name.Contains("Redball", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            return window.AsWindow();
-                                        }
-                                    }
-                                    catch { }
-                                }
-                            }
+                            continue;
                         }
-                        catch { }
+
+                        var title = window.Name;
+                        if (!string.IsNullOrWhiteSpace(title) && title.Contains("Redball", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return window.AsWindow();
+                        }
                     }
                 }
             }
-            catch { }
+            catch
+            {
+                // Keep polling until timeout.
+            }
             
-            Thread.Sleep(100);
+            Thread.Sleep(200);
         }
         
         return null;
@@ -119,23 +124,27 @@ public class RedballUIAutomation : IDisposable
         var candidates = new[]
         {
             Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "src", "Redball.UI.WPF",
-                "bin", "Release", "net8.0-windows", "win-x64", "Redball.UI.WPF.exe"),
+                "bin", "Release", "net10.0-windows", "win-x64", "Redball.UI.WPF.exe"),
             Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "src", "Redball.UI.WPF",
-                "bin", "Debug", "net8.0-windows", "win-x64", "Redball.UI.WPF.exe"),
+                "bin", "Debug", "net10.0-windows", "win-x64", "Redball.UI.WPF.exe"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "dist", "wpf-publish", "Redball.UI.WPF.exe"),
             Path.Combine(AppContext.BaseDirectory, "Redball.UI.WPF.exe"),
             Path.Combine(Environment.CurrentDirectory, "Redball.UI.WPF.exe"),
         };
 
-        foreach (var candidate in candidates)
+        var resolvedCandidates = candidates
+            .Select(Path.GetFullPath)
+            .Where(File.Exists)
+            .Select(path => new FileInfo(path))
+            .OrderByDescending(info => info.LastWriteTimeUtc)
+            .ToList();
+
+        if (resolvedCandidates.Count > 0)
         {
-            var fullPath = Path.GetFullPath(candidate);
-            if (File.Exists(fullPath))
-            {
-                return fullPath;
-            }
+            return resolvedCandidates[0].FullName;
         }
 
-        return candidates[0]; // Return first candidate even if not found
+        return Path.GetFullPath(candidates[0]); // Return first candidate even if not found
     }
 
     /// <summary>
@@ -144,8 +153,38 @@ public class RedballUIAutomation : IDisposable
     public void AttachToRunningApplication()
     {
         _automation = new UIA3Automation();
-        _app = Application.Attach("Redball.UI.WPF");
-        _mainWindow = _app.GetMainWindow(_automation);
+
+        var processes = Process.GetProcessesByName("Redball.UI.WPF")
+            .Where(p => !p.HasExited)
+            .OrderByDescending(p => p.StartTime)
+            .ToList();
+
+        if (processes.Count == 0)
+        {
+            throw new InvalidOperationException("No running Redball.UI.WPF process found.");
+        }
+
+        _app = Application.Attach(processes[0]);
+        _mainWindow = GetWindowByProcessId(_app.ProcessId, TimeSpan.FromSeconds(10));
+
+        if (_mainWindow == null)
+        {
+            throw new InvalidOperationException("Attached to process but failed to resolve main window.");
+        }
+
+        EnsureWindowIsVisible(_mainWindow);
+    }
+
+    private static void EnsureWindowIsVisible(Window window)
+    {
+        var windowPattern = window.Patterns.Window.PatternOrDefault;
+        if (windowPattern != null)
+        {
+            windowPattern.SetWindowVisualState(WindowVisualState.Normal);
+        }
+
+        window.Focus();
+        Thread.Sleep(350);
     }
 
     /// <summary>
@@ -154,7 +193,12 @@ public class RedballUIAutomation : IDisposable
     public void ClickButton(string automationId)
     {
         var button = FindElementByAutomationId(automationId);
-        button?.Click();
+        if (button == null)
+        {
+            throw new InvalidOperationException($"Element with AutomationId '{automationId}' was not found.");
+        }
+
+        button.Click();
     }
 
     /// <summary>
@@ -176,6 +220,23 @@ public class RedballUIAutomation : IDisposable
         if (checkbox != null && checkedState != checkbox.IsChecked)
         {
             checkbox.Toggle();
+        }
+    }
+
+    /// <summary>
+    /// Selects a radio button by automation ID.
+    /// </summary>
+    public void SelectRadioButton(string automationId)
+    {
+        var radioButton = FindElementByAutomationId(automationId)?.AsRadioButton();
+        if (radioButton == null)
+        {
+            throw new InvalidOperationException($"RadioButton '{automationId}' was not found.");
+        }
+
+        if (!radioButton.IsChecked)
+        {
+            radioButton.IsChecked = true;
         }
     }
 
@@ -203,7 +264,47 @@ public class RedballUIAutomation : IDisposable
     public void SelectComboBoxItem(string automationId, string itemText)
     {
         var comboBox = FindElementByAutomationId(automationId)?.AsComboBox();
-        comboBox?.Select(itemText);
+        if (comboBox == null)
+        {
+            throw new InvalidOperationException($"ComboBox '{automationId}' was not found.");
+        }
+
+        comboBox.Select(itemText);
+    }
+
+    /// <summary>
+    /// Selects an item in a combo box by zero-based index.
+    /// </summary>
+    public void SelectComboBoxItemByIndex(string automationId, int index)
+    {
+        var comboBox = FindElementByAutomationId(automationId)?.AsComboBox();
+        if (comboBox == null)
+        {
+            throw new InvalidOperationException($"ComboBox '{automationId}' was not found.");
+        }
+
+        comboBox.Expand();
+        var items = comboBox.Items;
+        if (index < 0 || index >= items.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index), $"Index {index} is out of range for ComboBox '{automationId}'.");
+        }
+
+        items[index].Select();
+    }
+
+    /// <summary>
+    /// Returns the currently selected combo box item text.
+    /// </summary>
+    public string GetComboBoxSelectedText(string automationId)
+    {
+        var comboBox = FindElementByAutomationId(automationId)?.AsComboBox();
+        if (comboBox == null)
+        {
+            throw new InvalidOperationException($"ComboBox '{automationId}' was not found.");
+        }
+
+        return comboBox.SelectedItem?.Text ?? string.Empty;
     }
 
     /// <summary>
@@ -256,6 +357,25 @@ public class RedballUIAutomation : IDisposable
     }
 
     /// <summary>
+    /// Waits for an element to appear and be visible (not off-screen).
+    /// </summary>
+    public bool WaitForVisibleElement(string automationId, TimeSpan timeout)
+    {
+        var start = DateTime.Now;
+        while (DateTime.Now - start < timeout)
+        {
+            if (IsElementVisible(automationId))
+            {
+                return true;
+            }
+
+            Thread.Sleep(100);
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Takes a screenshot of the main window.
     /// </summary>
     public void TakeScreenshot(string filePath)
@@ -269,6 +389,20 @@ public class RedballUIAutomation : IDisposable
     public bool ElementExists(string automationId)
     {
         return FindElementByAutomationId(automationId) != null;
+    }
+
+    /// <summary>
+    /// Checks if an element exists and is visible to UI automation.
+    /// </summary>
+    public bool IsElementVisible(string automationId)
+    {
+        var element = FindElementByAutomationId(automationId);
+        if (element == null)
+        {
+            return false;
+        }
+
+        return !element.Properties.IsOffscreen.ValueOrDefault;
     }
 
     /// <summary>
@@ -326,7 +460,29 @@ public class RedballUIAutomation : IDisposable
         try
         {
             _mainWindow?.Close();
-            _app?.WaitWhileMainHandleIsMissing(TimeSpan.FromSeconds(5));
+
+            if (_app != null)
+            {
+                Process? process = null;
+                try
+                {
+                    process = Process.GetProcessById(_app.ProcessId);
+                }
+                catch
+                {
+                    process = null;
+                }
+
+                if (process != null && !process.HasExited)
+                {
+                    process.WaitForExit(2000);
+                }
+
+                if (process != null && !process.HasExited)
+                {
+                    _app.Kill();
+                }
+            }
         }
         catch
         {

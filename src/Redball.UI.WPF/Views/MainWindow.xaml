@@ -23,11 +23,6 @@
                             UseAeroCaptionButtons="False"/>
     </shell:WindowChrome.WindowChrome>
 
-    <Window.Resources>
-        <!-- Add this resource definition if it does not already exist in your merged dictionaries or app resources -->
-        <SolidColorBrush x:Key="ForegroundSecondaryBrush" Color="#99000000"/>
-    </Window.Resources>
-
     <Border Margin="8"
             CornerRadius="18"
             Background="{DynamicResource BackgroundBrush}"
@@ -58,7 +53,7 @@
                     <Separator/>
 
                     <!-- Toggle Action -->
-                    <MenuItem Header="Pause Keep-Awake" Command="{Binding PauseKeepAwakeCommand}">
+                    <MenuItem Header="_Pause Keep-Awake" Command="{Binding PauseKeepAwakeCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE769;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
@@ -66,24 +61,24 @@
                     <Separator/>
 
                     <!-- Quick Settings -->
-                    <MenuItem Header="Prevent Display Sleep" IsCheckable="True" IsChecked="{Binding PreventDisplaySleep, Mode=OneWay}" Command="{Binding ToggleDisplaySleepCommand}"/>
-                    <MenuItem Header="Use F15 Heartbeat" IsCheckable="True" IsChecked="{Binding UseHeartbeat, Mode=OneWay}" Command="{Binding ToggleHeartbeatCommand}"/>
+                    <MenuItem Header="Prevent _Display Sleep" IsCheckable="True" IsChecked="{Binding PreventDisplaySleep, Mode=OneWay}" Command="{Binding ToggleDisplaySleepCommand}"/>
+                    <MenuItem Header="_Use F15 Heartbeat" IsCheckable="True" IsChecked="{Binding UseHeartbeat, Mode=OneWay}" Command="{Binding ToggleHeartbeatCommand}"/>
                     <Separator/>
 
                     <!-- TypeThing -->
-                    <MenuItem Header="TypeThing (Paste as Typing)" Command="{Binding TypeThingCommand}">
+                    <MenuItem Header="TypeThing (_Paste as Typing)" Command="{Binding TypeThingCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE8D2;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Emergency HID Release" Command="{Binding EmergencyHidReleaseCommand}">
+                    <MenuItem Header="Emergency _HID Release" Command="{Binding EmergencyHidReleaseCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xEA39;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
                     <Separator/>
 
-                    <MenuItem Header="Open Logs" Command="{Binding OpenLogsCommand}">
+                    <MenuItem Header="_Open Logs" Command="{Binding OpenLogsCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE8A5;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
@@ -91,28 +86,28 @@
                     <Separator/>
 
                     <!-- Main Actions -->
-                    <MenuItem Header="Mini Widget" Command="{Binding ShowMiniWidgetCommand}">
+                    <MenuItem Header="_Mini Widget" Command="{Binding ShowMiniWidgetCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE737;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Reset Mini Widget Position" Command="{Binding ResetMiniWidgetPositionCommand}"
+                    <MenuItem Header="_Reset Mini Widget Position" Command="{Binding ResetMiniWidgetPositionCommand}"
                               Visibility="{Binding IsMiniWidgetVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Check for Updates" Command="{Binding CheckForUpdatesCommand}">
+                    <MenuItem Header="_Check for Updates" Command="{Binding CheckForUpdatesCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE895;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Settings..." Command="{Binding OpenSettingsCommand}">
+                    <MenuItem Header="_Settings..." Command="{Binding OpenSettingsCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Exit" Command="{Binding ExitCommand}">
+                    <MenuItem Header="E_xit" Command="{Binding ExitCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE7E8;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
@@ -437,14 +432,44 @@
                                                 <ComboBoxItem Content="Errors only"/>
                                                 <ComboBoxItem Content="Silent"/>
                                             </ComboBox>
-                                            <CheckBox x:Name="MainEnableLoggingCheck" Content="Enable logging" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Turn on detailed logging for troubleshooting. Logs are saved to the file system."/>
+                                            <CheckBox x:Name="MainVerboseLoggingCheck" Content="Enable verbose logging" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Turn on detailed logging for troubleshooting. Logs are saved to the file system."/>
                                             <Border Style="{DynamicResource CardStyle}" Margin="0,16,0,0">
                                                 <StackPanel>
                                                     <TextBlock Text="Advanced" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                                    <TextBlock Text="Enable experimental features, adjust performance settings, and configure advanced diagnostics." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
-                                                    <CheckBox x:Name="MainEnableExperimentalCheck" Content="Enable experimental features" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Turn on access to experimental features that are not yet fully tested."/>
-                                                    <CheckBox x:Name="MainForceGpuRenderingCheck" Content="Force GPU rendering" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Use GPU rendering for UI elements to improve performance, especially on high DPI displays."/>
-                                                    <CheckBox x:Name="MainDisableHardwareAccelerationCheck" Content="Disable hardware acceleration" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Disable hardware acceleration for smoother animations at the cost of higher CPU usage."/>
+                                                    <TextBlock Text="Privacy, telemetry, and advanced runtime behavior." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
+                                                    <CheckBox x:Name="MainConfirmOnExitCheck" Content="Confirm on exit" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainEncryptConfigCheck" Content="Encrypt config with DPAPI" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainEnableTelemetryCheck" Content="Enable telemetry" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainEnablePerformanceMetricsCheck" Content="Enable performance metrics" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainProcessIsolationCheck" Content="Enable process isolation" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                                    <TextBlock Text="Max Log Size (MB)" FontWeight="Medium" Margin="0,8,0,4"/>
+                                                    <Slider x:Name="MainMaxLogSizeSlider" Minimum="1" Maximum="1024" TickFrequency="1"
+                                                            IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
+                                                            ValueChanged="MainMaxLogSizeSlider_ValueChanged"/>
+                                                    <TextBlock x:Name="MainMaxLogSizeText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                                    <TextBlock Text="Mini Widget" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,8"/>
+                                                    <ComboBox x:Name="MainMiniWidgetPresetCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged">
+                                                        <ComboBoxItem Content="Custom"/>
+                                                        <ComboBoxItem Content="Focus"/>
+                                                        <ComboBoxItem Content="Meeting"/>
+                                                        <ComboBoxItem Content="Battery Safe"/>
+                                                    </ComboBox>
+                                                    <Button Content="Apply Preset" Style="{DynamicResource ModernButton}" Margin="0,0,0,8" Click="MainMiniWidgetApplyPresetButton_Click"/>
+                                                    <CheckBox x:Name="MainMiniWidgetAlwaysOnTopCheck" Content="Always on top" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <Slider x:Name="MainMiniWidgetOpacitySlider" Minimum="35" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainMiniWidgetOpacitySlider_ValueChanged"/>
+                                                    <TextBlock x:Name="MainMiniWidgetOpacityText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,6"/>
+                                                    <CheckBox x:Name="MainMiniWidgetShowQuickActionsCheck" Content="Show quick actions" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainMiniWidgetShowStatusIconsCheck" Content="Show status icons" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainMiniWidgetDoubleClickDashboardCheck" Content="Double-click opens dashboard" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainMiniWidgetOpenOnStartupCheck" Content="Open on startup" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainMiniWidgetLockPositionCheck" Content="Lock position" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainMiniWidgetSnapToEdgesCheck" Content="Snap to screen edges" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainMiniWidgetKeyboardShortcutsCheck" Content="Enable keyboard shortcuts" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <Slider x:Name="MainMiniWidgetCustomQuickMinutesSlider" Minimum="1" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainMiniWidgetCustomQuickMinutesSlider_ValueChanged"/>
+                                                    <TextBlock x:Name="MainMiniWidgetCustomQuickMinutesText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,6"/>
+                                                    <CheckBox x:Name="MainMiniWidgetConfirmCloseWhenActiveCheck" Content="Confirm close when active" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
                                                     <Button Content="Open Logs Folder" Style="{DynamicResource ModernButton}" Margin="0,8,0,0" Click="OpenLogsFolderButton_Click" ToolTip="Open the folder containing Redball log files"/>
                                                 </StackPanel>
                                             </Border>
@@ -456,7 +481,51 @@
                                     <TextBlock Text="Behavior" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                     <TextBlock Text="Configure display sleep prevention, heartbeat key, and default run duration settings." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                     <Border Style="{DynamicResource CardStyle}">
-                                        <TextBlock Text="Behavior settings content placeholder" FontSize="14"/>
+                                        <StackPanel>
+                                            <TextBlock Text="Core Behavior" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                                            <CheckBox x:Name="MainPreventDisplaySleepCheck" Content="Prevent display sleep"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                            <TextBlock Text="Heartbeat Input Mode" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <ComboBox x:Name="MainHeartbeatInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,10"
+                                                      SelectionChanged="MainComboSettingChanged">
+                                                <ComboBoxItem Content="Disabled"/>
+                                                <ComboBoxItem Content="F13"/>
+                                                <ComboBoxItem Content="F14"/>
+                                                <ComboBoxItem Content="F15"/>
+                                                <ComboBoxItem Content="F16"/>
+                                            </ComboBox>
+
+                                            <TextBlock Text="Default Duration (minutes)" FontWeight="Medium" Margin="0,2,0,6" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <Slider x:Name="MainDurationSlider" Minimum="1" Maximum="1440" TickFrequency="1"
+                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
+                                                    ValueChanged="MainDurationSlider_ValueChanged"/>
+                                            <TextBox x:Name="MainDurationCustomBox" Style="{DynamicResource ModernTextBox}" Margin="0,8,0,8"
+                                                     TextChanged="MainDurationCustomBox_TextChanged"/>
+
+                                            <CheckBox x:Name="MainAutoExitOnCompleteCheck" Content="Auto-exit when timed session completes"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,10"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                            <TextBlock Text="Keep Awake Until" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox x:Name="MainKeepAwakeUntilBox" Grid.Column="0" Style="{DynamicResource ModernTextBox}"
+                                                         ToolTip="Enter time in HH:mm format"/>
+                                                <Button Grid.Column="1" Content="Set" Style="{DynamicResource PrimaryButton}" Margin="8,0,0,0"
+                                                        Click="MainKeepAwakeUntilSet_Click"/>
+                                                <Button Grid.Column="2" Content="Clear" Style="{DynamicResource ModernButton}" Margin="8,0,0,0"
+                                                        Click="MainKeepAwakeUntilClear_Click"/>
+                                            </Grid>
+                                            <TextBlock x:Name="MainKeepAwakeUntilStatus" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,8,0,0"/>
+                                        </StackPanel>
                                     </Border>
                                 </StackPanel>
 
@@ -464,7 +533,138 @@
                                     <TextBlock Text="Smart Features" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                     <TextBlock Text="Tune battery, network, idle, presentation, and scheduled behavior." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                     <Border Style="{DynamicResource CardStyle}">
-                                        <TextBlock Text="Smart Features settings content placeholder" FontSize="14"/>
+                                        <StackPanel>
+                                            <TextBlock Text="Automation Conditions" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="{DynamicResource ForegroundBrush}"/>
+
+                                            <CheckBox x:Name="MainBatteryAwareCheck" Content="Battery-aware mode"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <Slider x:Name="MainBatteryThresholdSlider" Minimum="1" Maximum="100" TickFrequency="1"
+                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
+                                                    ValueChanged="MainBatteryThresholdSlider_ValueChanged"/>
+                                            <TextBlock x:Name="MainBatteryThresholdText" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,10"/>
+
+                                            <CheckBox x:Name="MainNetworkAwareCheck" Content="Network-aware mode"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                            <CheckBox x:Name="MainIdleDetectionCheck" Content="Idle detection"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <Slider x:Name="MainIdleThresholdSlider" Minimum="1" Maximum="240" TickFrequency="1"
+                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
+                                                    ValueChanged="MainIdleThresholdSlider_ValueChanged"/>
+                                            <TextBlock x:Name="MainIdleThresholdText" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,10"/>
+
+                                            <CheckBox x:Name="MainPresentationModeCheck" Content="Presentation mode detection"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                            <CheckBox x:Name="MainGamingModeEnabledCheck" Content="Enable gaming mode detection"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                            <CheckBox x:Name="MainMeetingAwareCheck" Content="Enable meeting detection (Teams/Zoom)"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                            <CheckBox x:Name="MainThermalProtectionEnabledCheck" Content="Enable thermal protection"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <TextBlock Text="CPU Temperature Threshold (°C)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <Slider x:Name="MainThermalThresholdSlider" Minimum="50" Maximum="105" TickFrequency="1"
+                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
+                                                    ValueChanged="MainThermalThresholdSlider_ValueChanged"/>
+                                            <TextBlock x:Name="MainThermalThresholdText" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,10"/>
+
+                                            <CheckBox x:Name="MainScheduledOperationCheck" Content="Scheduled operation"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainScheduledOperationCheck_Checked" Unchecked="MainScheduledOperationCheck_Unchecked"/>
+
+                                            <StackPanel x:Name="MainScheduleDetailsPanel" Margin="24,0,0,10">
+                                                <TextBlock Text="Start Time (HH:mm)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <TextBox x:Name="MainScheduleStartTimeBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,6"
+                                                         LostFocus="MainSettingChanged"/>
+                                                <TextBlock Text="Stop Time (HH:mm)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <TextBox x:Name="MainScheduleStopTimeBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"
+                                                         LostFocus="MainSettingChanged"/>
+
+                                                <TextBlock Text="Active Days" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <WrapPanel>
+                                                    <CheckBox x:Name="MainScheduleMonCheck" Content="Mon" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainScheduleTueCheck" Content="Tue" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainScheduleWedCheck" Content="Wed" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainScheduleThuCheck" Content="Thu" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainScheduleFriCheck" Content="Fri" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainScheduleSatCheck" Content="Sat" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainScheduleSunCheck" Content="Sun" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                </WrapPanel>
+                                            </StackPanel>
+
+                                            <CheckBox x:Name="MainPauseOnScreenLockCheck" Content="Pause on screen lock"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <CheckBox x:Name="MainVpnAutoKeepAwakeCheck" Content="Enable VPN auto keep-awake"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                            <CheckBox x:Name="MainAppRulesEnabledCheck" Content="Enable app-specific keep-awake/pause rules"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <TextBlock Text="Keep Awake Apps (one per line)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBox x:Name="MainKeepAwakeAppsBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"
+                                                     AcceptsReturn="True" Height="60" LostFocus="MainAppRulesBox_LostFocus"/>
+                                            <TextBlock Text="Pause Apps (one per line)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBox x:Name="MainPauseAppsBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,10"
+                                                     AcceptsReturn="True" Height="60" LostFocus="MainAppRulesBox_LostFocus"/>
+
+                                            <CheckBox x:Name="MainPowerPlanAutoSwitchCheck" Content="Auto-switch Windows power plan"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <TextBlock x:Name="MainPowerPlanText" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,8"/>
+
+                                            <CheckBox x:Name="MainWifiProfileSwitchCheck" Content="Enable WiFi profile switching"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <TextBox x:Name="MainWifiProfileMappingsBox" Style="{DynamicResource ModernTextBox}" Margin="24,0,0,10"
+                                                     AcceptsReturn="True" Height="60" TextWrapping="Wrap"
+                                                     ToolTip="Format: WiFiName=ProfileName (one per line)" LostFocus="MainAppRulesBox_LostFocus"/>
+
+                                            <CheckBox x:Name="MainRestartReminderCheck" Content="Enable restart reminders"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <Slider x:Name="MainRestartReminderDaysSlider" Minimum="1" Maximum="365" TickFrequency="1"
+                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
+                                                    ValueChanged="MainRestartReminderDaysSlider_ValueChanged"/>
+                                            <TextBlock x:Name="MainRestartReminderDaysText" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,6"/>
+                                            <CheckBox x:Name="MainAutoRestartCheck" Content="Auto-restart when reminder threshold is reached"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <TextBlock x:Name="MainUptimeStatusText" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,10"/>
+
+                                            <TextBlock Text="Process Watcher" FontWeight="SemiBold" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <Grid Margin="0,0,0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox x:Name="ProcessWatcherTargetBox" Grid.Column="0" Style="{DynamicResource ModernTextBox}"
+                                                         ToolTip="Example: obs64, chrome, teams"/>
+                                                <Button Grid.Column="1" Content="Start" Style="{DynamicResource PrimaryButton}" Margin="8,0,0,0"
+                                                        Click="ProcessWatcherStart_Click"/>
+                                                <Button Grid.Column="2" Content="Stop" Style="{DynamicResource ModernButton}" Margin="8,0,0,0"
+                                                        Click="ProcessWatcherStop_Click"/>
+                                            </Grid>
+                                            <TextBlock x:Name="ProcessWatcherStatusText" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                        </StackPanel>
                                     </Border>
                                 </StackPanel>
 
@@ -612,7 +812,106 @@
                                     </Border>
                                     
                                     <Border Style="{DynamicResource CardStyle}">
-                                        <TextBlock Text="TypeThing settings content placeholder" FontSize="14"/>
+                                        <StackPanel>
+                                            <TextBlock Text="TypeThing Configuration" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="{DynamicResource ForegroundBrush}"/>
+
+                                            <CheckBox x:Name="MainEnableTypeThingCheck" Content="Enable TypeThing"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <CheckBox x:Name="MainUseLowLevelHotkeyCheck" Content="Use low-level hotkey registration"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <CheckBox x:Name="MainTypeThingHidSafeModeCheck" Content="Enable HID safe mode"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <CheckBox x:Name="MainTypeThingHidAudioFeedbackCheck" Content="Enable HID audio feedback"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                            <TextBlock Text="Input Mode" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <ComboBox x:Name="MainTypeThingInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,10"
+                                                      SelectionChanged="MainComboSettingChanged">
+                                                <ComboBoxItem Content="SendInput"/>
+                                                <ComboBoxItem Content="HID"/>
+                                                <ComboBoxItem Content="Service"/>
+                                            </ComboBox>
+
+                                            <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBox x:Name="MainStartHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"
+                                                     LostFocus="MainSettingChanged"/>
+                                            <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBox x:Name="MainStopHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,10"
+                                                     LostFocus="MainSettingChanged"/>
+
+                                            <TextBlock Text="Typing Speed (max delay ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <Slider x:Name="MainTypingSpeedSlider" Minimum="1" Maximum="500" TickFrequency="1"
+                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
+                                                    ValueChanged="MainTypingSpeedSlider_ValueChanged"/>
+                                            <TextBlock x:Name="MainTypingSpeedText" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                            <TextBlock Text="Minimum Delay (ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <Slider x:Name="MainTypeThingMinDelaySlider" Minimum="1" Maximum="500" TickFrequency="1"
+                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
+                                                    ValueChanged="MainTypeThingMinDelaySlider_ValueChanged"/>
+                                            <TextBlock x:Name="MainTypeThingMinDelayText" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                            <TextBlock Text="Start Countdown (seconds)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <Slider x:Name="MainTypeThingStartDelaySlider" Minimum="1" Maximum="30" TickFrequency="1"
+                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
+                                                    ValueChanged="MainTypeThingStartDelaySlider_ValueChanged"/>
+                                            <TextBlock x:Name="MainTypeThingStartDelayText" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                            <CheckBox x:Name="MainAddRandomPausesCheck" Content="Add random pauses"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                            <TextBlock Text="Random Pause Chance (%)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <Slider x:Name="MainTypeThingPauseChanceSlider" Minimum="0" Maximum="100" TickFrequency="1"
+                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
+                                                    ValueChanged="MainTypeThingPauseChanceSlider_ValueChanged"/>
+                                            <TextBlock x:Name="MainTypeThingPauseChanceText" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                            <TextBlock Text="Random Pause Max (ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <Slider x:Name="MainTypeThingPauseMaxSlider" Minimum="0" Maximum="5000" TickFrequency="10"
+                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
+                                                    ValueChanged="MainTypeThingPauseMaxSlider_ValueChanged"/>
+                                            <TextBlock x:Name="MainTypeThingPauseMaxText" FontSize="12"
+                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                            <CheckBox x:Name="MainTypeNewlinesCheck" Content="Type newline characters"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <CheckBox x:Name="MainTypeThingNotificationsCheck" Content="Show TypeThing notifications"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <CheckBox x:Name="MainTypeThingTtsCheck" Content="Enable TypeThing text-to-speech"
+                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,12"
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                            <TextBlock Text="HID Driver Tools" FontWeight="SemiBold" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <WrapPanel>
+                                                <Button x:Name="MainInstallHidDriverBtn" Content="Install/Uninstall Driver" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainInstallHidDriverBtn_Click"/>
+                                                <Button x:Name="MainRepairHidStackBtn" Content="Repair HID Stack" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainRepairHidStackBtn_Click"/>
+                                                <Button x:Name="MainResetHidStackBtn" Content="Reset HID" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainResetHidStackBtn_Click"/>
+                                                <Button x:Name="MainCopyHidDiagnosticsBtn" Content="Copy Diagnostics" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainCopyHidDiagnosticsBtn_Click"/>
+                                                <Button x:Name="MainEmergencyReleaseHidBtn" Content="Emergency Release" Style="{DynamicResource PrimaryButton}" Margin="0,0,8,8" Click="MainEmergencyReleaseHidBtn_Click"/>
+                                            </WrapPanel>
+                                            <TextBlock x:Name="MainServiceAdminHintText"
+                                                       Text="Administrator approval (UAC) is required to install or uninstall the Input Service."
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource WarningBrush}"
+                                                       Margin="0,0,0,8"
+                                                       TextWrapping="Wrap"
+                                                       Visibility="Collapsed"/>
+                                            <StackPanel x:Name="MainHidTestPanel" Margin="0,4,0,4"/>
+                                            <Border x:Name="MainHidStatusIndicator" Width="10" Height="10" CornerRadius="5" Background="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,4"/>
+                                            <TextBlock x:Name="MainHidStatusText" FontWeight="Medium" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBlock x:Name="MainHidDetailsText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                        </StackPanel>
                                     </Border>
                                 </StackPanel>
 
@@ -621,164 +920,59 @@
                                     <TextBlock Text="Manage update channels and check for new releases." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                     <Border Style="{DynamicResource CardStyle}">
                                         <StackPanel>
-                                            <TextBlock Text="Update Settings" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                            <CheckBox x:Name="MainAutoUpdateCheck" Content="Check for updates automatically" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                            <TextBlock x:Name="MainUpdateChannelText" Text="Channel: " FontSize="12" Margin="0,0,0,8"/>
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Update Settings" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <Button Grid.Column="1" x:Name="MainSaveSettingsButton" Content="Save Settings" Style="{DynamicResource PrimaryButton}" Click="MainSaveSettingsButton_Click" IsEnabled="False"/>
+                                            </Grid>
+                                            <CheckBox x:Name="MainAutoUpdateCheckEnabledCheck" Content="Check for updates automatically" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                            <TextBlock Text="Update Channel" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <ComboBox x:Name="MainUpdateChannelCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged">
+                                                <ComboBoxItem Content="Stable"/>
+                                                <ComboBoxItem Content="Beta"/>
+                                                <ComboBoxItem Content="Disabled"/>
+                                            </ComboBox>
+
+                                            <CheckBox x:Name="MainVerifyUpdateSignatureCheck" Content="Verify update signatures" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                            <TextBlock Text="Auto-check Interval (minutes)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <Slider x:Name="MainAutoUpdateIntervalSlider" Minimum="30" Maximum="1440" TickFrequency="30" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainAutoUpdateIntervalSlider_ValueChanged"/>
+                                            <TextBlock x:Name="MainAutoUpdateIntervalText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                            <TextBlock x:Name="MainCurrentVersionText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
                                             <Button Content="Check Now" Style="{DynamicResource ModernButton}" Click="MainCheckUpdatesButton_Click"/>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
 
                                 <StackPanel x:Name="CompatibilityControlsPanel" Visibility="Collapsed">
-                                    <CheckBox x:Name="MainVerboseLoggingCheck"/>
-                                    <CheckBox x:Name="MainConfirmOnExitCheck"/>
-                                    <CheckBox x:Name="MainEncryptConfigCheck"/>
-                                    <CheckBox x:Name="MainEnableTelemetryCheck"/>
-                                    <CheckBox x:Name="MainEnablePerformanceMetricsCheck"/>
-                                    <CheckBox x:Name="MainProcessIsolationCheck"/>
-                                    <Slider x:Name="MainMaxLogSizeSlider" Minimum="1" Maximum="1024"/>
-                                    <TextBlock x:Name="MainMaxLogSizeText"/>
-                                    <CheckBox x:Name="MainPreventDisplaySleepCheck"/>
-                                    <ComboBox x:Name="MainHeartbeatInputModeCombo">
-                                        <ComboBoxItem Content="Disabled"/>
-                                        <ComboBoxItem Content="F13"/>
-                                        <ComboBoxItem Content="F14"/>
-                                        <ComboBoxItem Content="F15"/>
-                                        <ComboBoxItem Content="F16"/>
-                                    </ComboBox>
-                                    <Slider x:Name="MainDurationSlider" Minimum="1" Maximum="1440"/>
-                                    <TextBox x:Name="MainDurationCustomBox"/>
-                                    <CheckBox x:Name="MainAutoExitOnCompleteCheck"/>
-
-                                    <CheckBox x:Name="MainBatteryAwareCheck"/>
-                                    <Slider x:Name="MainBatteryThresholdSlider" Minimum="1" Maximum="100"/>
-                                    <TextBlock x:Name="MainBatteryThresholdText"/>
-                                    <CheckBox x:Name="MainNetworkAwareCheck"/>
-                                    <CheckBox x:Name="MainIdleDetectionCheck"/>
-                                    <Slider x:Name="MainIdleThresholdSlider" Minimum="1" Maximum="240"/>
-                                    <TextBlock x:Name="MainIdleThresholdText"/>
-                                    <CheckBox x:Name="MainPresentationModeCheck"/>
-                                    <CheckBox x:Name="MainScheduledOperationCheck"/>
-                                    <StackPanel x:Name="MainScheduleDetailsPanel">
-                                        <TextBox x:Name="MainScheduleStartTimeBox"/>
-                                        <TextBox x:Name="MainScheduleStopTimeBox"/>
-                                        <CheckBox x:Name="MainScheduleMonCheck"/>
-                                        <CheckBox x:Name="MainScheduleTueCheck"/>
-                                        <CheckBox x:Name="MainScheduleWedCheck"/>
-                                        <CheckBox x:Name="MainScheduleThuCheck"/>
-                                        <CheckBox x:Name="MainScheduleFriCheck"/>
-                                        <CheckBox x:Name="MainScheduleSatCheck"/>
-                                        <CheckBox x:Name="MainScheduleSunCheck"/>
-                                    </StackPanel>
-                                    <CheckBox x:Name="MainPauseOnScreenLockCheck"/>
-                                    <CheckBox x:Name="MainVpnAutoKeepAwakeCheck"/>
-                                    <CheckBox x:Name="MainAppRulesEnabledCheck"/>
-                                    <TextBox x:Name="MainKeepAwakeAppsBox"/>
-                                    <TextBox x:Name="MainPauseAppsBox"/>
-                                    <CheckBox x:Name="MainPowerPlanAutoSwitchCheck"/>
-                                    <TextBlock x:Name="MainPowerPlanText"/>
-                                    <CheckBox x:Name="MainWifiProfileSwitchCheck"/>
-                                    <TextBox x:Name="MainWifiProfileMappingsBox"/>
-                                    <CheckBox x:Name="MainRestartReminderCheck"/>
-                                    <Slider x:Name="MainRestartReminderDaysSlider" Minimum="1" Maximum="365"/>
-                                    <TextBlock x:Name="MainRestartReminderDaysText"/>
-                                    <CheckBox x:Name="MainAutoRestartCheck"/>
-                                    <TextBlock x:Name="MainUptimeStatusText"/>
-
-                                    <CheckBox x:Name="MainEnableTypeThingCheck"/>
-                                    <CheckBox x:Name="MainUseLowLevelHotkeyCheck"/>
-                                    <CheckBox x:Name="MainTypeThingHidSafeModeCheck"/>
-                                    <CheckBox x:Name="MainTypeThingHidAudioFeedbackCheck"/>
-                                    <ComboBox x:Name="MainTypeThingInputModeCombo">
-                                        <ComboBoxItem Content="SendInput"/>
-                                        <ComboBoxItem Content="HID"/>
-                                        <ComboBoxItem Content="Service"/>
-                                    </ComboBox>
-                                    <TextBox x:Name="MainStartHotkeyBox"/>
-                                    <TextBox x:Name="MainStopHotkeyBox"/>
-                                    <Slider x:Name="MainTypingSpeedSlider" Minimum="1" Maximum="500"/>
-                                    <TextBlock x:Name="MainTypingSpeedText"/>
-                                    <CheckBox x:Name="MainAddRandomPausesCheck"/>
-                                    <CheckBox x:Name="MainTypeNewlinesCheck"/>
-                                    <CheckBox x:Name="MainTypeThingNotificationsCheck"/>
-                                    <CheckBox x:Name="MainTypeThingTtsCheck"/>
-                                    <Slider x:Name="MainTypeThingMinDelaySlider" Minimum="1" Maximum="500"/>
-                                    <TextBlock x:Name="MainTypeThingMinDelayText"/>
-                                    <Slider x:Name="MainTypeThingStartDelaySlider" Minimum="1" Maximum="30"/>
-                                    <TextBlock x:Name="MainTypeThingStartDelayText"/>
-                                    <Slider x:Name="MainTypeThingPauseChanceSlider" Minimum="0" Maximum="100"/>
-                                    <TextBlock x:Name="MainTypeThingPauseChanceText"/>
-                                    <Slider x:Name="MainTypeThingPauseMaxSlider" Minimum="0" Maximum="5000"/>
-                                    <TextBlock x:Name="MainTypeThingPauseMaxText"/>
-
-                                    <CheckBox x:Name="MainMiniWidgetAlwaysOnTopCheck"/>
-                                    <Slider x:Name="MainMiniWidgetOpacitySlider" Minimum="35" Maximum="100"/>
-                                    <TextBlock x:Name="MainMiniWidgetOpacityText"/>
-                                    <CheckBox x:Name="MainMiniWidgetShowQuickActionsCheck"/>
-                                    <CheckBox x:Name="MainMiniWidgetShowStatusIconsCheck"/>
-                                    <CheckBox x:Name="MainMiniWidgetDoubleClickDashboardCheck"/>
-                                    <CheckBox x:Name="MainMiniWidgetOpenOnStartupCheck"/>
-                                    <CheckBox x:Name="MainMiniWidgetLockPositionCheck"/>
-                                    <CheckBox x:Name="MainMiniWidgetSnapToEdgesCheck"/>
-                                    <CheckBox x:Name="MainMiniWidgetKeyboardShortcutsCheck"/>
-                                    <Slider x:Name="MainMiniWidgetCustomQuickMinutesSlider" Minimum="1" Maximum="180"/>
-                                    <TextBlock x:Name="MainMiniWidgetCustomQuickMinutesText"/>
-                                    <CheckBox x:Name="MainMiniWidgetConfirmCloseWhenActiveCheck"/>
-                                    <ComboBox x:Name="MainMiniWidgetPresetCombo">
-                                        <ComboBoxItem Content="Custom"/>
-                                        <ComboBoxItem Content="Focus"/>
-                                        <ComboBoxItem Content="Meeting"/>
-                                        <ComboBoxItem Content="Battery Safe"/>
-                                    </ComboBox>
-
-                                    <ComboBox x:Name="MainUpdateChannelCombo">
-                                        <ComboBoxItem Content="Stable"/>
-                                        <ComboBoxItem Content="Beta"/>
-                                        <ComboBoxItem Content="Disabled"/>
-                                    </ComboBox>
-                                    <CheckBox x:Name="MainVerifyUpdateSignatureCheck"/>
-                                    <CheckBox x:Name="MainAutoUpdateCheckEnabledCheck"/>
-                                    <Slider x:Name="MainAutoUpdateIntervalSlider" Minimum="30" Maximum="1440"/>
-                                    <TextBlock x:Name="MainAutoUpdateIntervalText"/>
-                                    <TextBlock x:Name="MainCurrentVersionText"/>
-
-                                    <TextBox x:Name="ProcessWatcherTargetBox"/>
-                                    <TextBlock x:Name="ProcessWatcherStatusText"/>
-
-                                    <TextBox x:Name="MainKeepAwakeUntilBox"/>
-                                    <TextBlock x:Name="MainKeepAwakeUntilStatus"/>
+                                    <Grid x:Name="CompatibilityNoopAnchor"/>
 
                                     <Button x:Name="PomodoroStartBtn" Click="PomodoroStart_Click"/>
                                     <Button x:Name="PomodoroStopBtn" Click="PomodoroStop_Click"/>
                                     <Button x:Name="PomodoroSkipBtn" Click="PomodoroSkip_Click"/>
-                                    <TextBlock x:Name="PomodoroPhaseText"/>
-                                    <TextBlock x:Name="PomodoroTimerText"/>
-                                    <TextBlock x:Name="PomodoroSessionsText"/>
+                                    <TextBlock x:Name="PomodoroPhaseText" Foreground="{DynamicResource ForegroundBrush}"/>
+                                    <TextBlock x:Name="PomodoroTimerText" Foreground="{DynamicResource ForegroundBrush}"/>
+                                    <TextBlock x:Name="PomodoroSessionsText" Foreground="{DynamicResource ForegroundBrush}"/>
                                     <Slider x:Name="PomodoroFocusSlider" Minimum="1" Maximum="180" ValueChanged="PomodoroSlider_ValueChanged"/>
-                                    <TextBlock x:Name="PomodoroFocusText"/>
+                                    <TextBlock x:Name="PomodoroFocusText" Foreground="{DynamicResource ForegroundBrush}"/>
                                     <Slider x:Name="PomodoroBreakSlider" Minimum="1" Maximum="60" ValueChanged="PomodoroSlider_ValueChanged"/>
-                                    <TextBlock x:Name="PomodoroBreakText"/>
+                                    <TextBlock x:Name="PomodoroBreakText" Foreground="{DynamicResource ForegroundBrush}"/>
                                     <Slider x:Name="PomodoroLongBreakSlider" Minimum="1" Maximum="120" ValueChanged="PomodoroSlider_ValueChanged"/>
-                                    <TextBlock x:Name="PomodoroLongBreakText"/>
+                                    <TextBlock x:Name="PomodoroLongBreakText" Foreground="{DynamicResource ForegroundBrush}"/>
                                     <Slider x:Name="PomodoroLongBreakIntervalSlider" Minimum="1" Maximum="12" ValueChanged="PomodoroSlider_ValueChanged"/>
-                                    <TextBlock x:Name="PomodoroLongBreakIntervalText"/>
+                                    <TextBlock x:Name="PomodoroLongBreakIntervalText" Foreground="{DynamicResource ForegroundBrush}"/>
                                     <CheckBox x:Name="PomodoroAutoStartCheck" Checked="PomodoroSettingChanged" Unchecked="PomodoroSettingChanged"/>
                                     <CheckBox x:Name="PomodoroKeepAwakeBreakCheck" Checked="PomodoroSettingChanged" Unchecked="PomodoroSettingChanged"/>
-
-                                    <Button x:Name="MainInstallHidDriverBtn" Click="MainInstallHidDriverBtn_Click"/>
-                                    <Button x:Name="MainRepairHidStackBtn" Click="MainRepairHidStackBtn_Click"/>
-                                    <Button x:Name="MainResetHidStackBtn" Click="MainResetHidStackBtn_Click"/>
-                                    <Button x:Name="MainCopyHidDiagnosticsBtn" Click="MainCopyHidDiagnosticsBtn_Click"/>
-                                    <Button x:Name="MainEmergencyReleaseHidBtn" Click="MainEmergencyReleaseHidBtn_Click"/>
-                                    <StackPanel x:Name="MainHidTestPanel"/>
-                                    <Border x:Name="MainHidStatusIndicator"/>
-                                    <TextBlock x:Name="MainHidStatusText"/>
-                                    <TextBlock x:Name="MainHidDetailsText"/>
 
                                     <Border x:Name="TypeThingProgressOverlay" Visibility="Collapsed">
                                         <StackPanel>
                                             <ProgressBar x:Name="TypeThingProgressBar" Minimum="0" Maximum="100" Value="0"/>
-                                            <TextBlock x:Name="TypeThingProgressText"/>
+                                            <TextBlock x:Name="TypeThingProgressText" Foreground="{DynamicResource ForegroundBrush}"/>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>

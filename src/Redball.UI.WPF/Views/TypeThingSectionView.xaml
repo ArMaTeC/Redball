@@ -25,9 +25,14 @@
                           SelectedItem="{Binding TypeThingDriverSelection}" 
                           Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8"/>
                 
-                <Button Content="Install / Repair Driver" 
+                <Button Content="Install / Repair Driver or Service" 
                         Command="{Binding InstallDriverCommand}"
                         Style="{DynamicResource ModernButton}" Margin="0,0,0,12"/>
+                <TextBlock Text="Service install/uninstall requires Administrator approval (UAC prompt)."
+                           FontSize="12"
+                           Foreground="{DynamicResource WarningBrush}"
+                           Margin="0,0,0,12"
+                           TextWrapping="Wrap"/>
                 <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,8,0,8"/>
                 <TextBox x:Name="TypeThingStartHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"/>
                 <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,8,0,8"/>

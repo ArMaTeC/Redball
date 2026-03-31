@@ -226,7 +226,10 @@ public class LocalizationService : ILocalizationService
                 var full = Path.GetFullPath(candidate);
                 if (File.Exists(full)) return full;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Logger.Debug("LocalizationService", $"Failed to resolve locale path {candidate}: {ex.Message}");
+            }
         }
 
         return null;

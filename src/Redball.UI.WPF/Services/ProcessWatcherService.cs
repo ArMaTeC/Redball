@@ -98,8 +98,9 @@ public class ProcessWatcherService
                 .OrderBy(n => n)
                 .ToArray();
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ProcessWatcherService", $"Failed to get running processes: {ex.Message}");
             return Array.Empty<string>();
         }
     }

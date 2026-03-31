@@ -10,7 +10,7 @@ This file contains the licenses and notices for third-party software used by Red
 - **License:** Microsoft Software License Terms (included with Windows)
 - **Usage:** Keep-awake power state management, simulated keyboard input, global hotkey registration
 
-### .NET 8 Runtime
+### .NET 10 Runtime
 
 - **Source:** Microsoft
 - **License:** MIT License
@@ -59,10 +59,11 @@ This file contains the licenses and notices for third-party software used by Red
 
 ### GitHub Actions
 
-- **actions/checkout@v4** — MIT License
-- **actions/upload-artifact@v4** — MIT License
-- **actions/download-artifact@v4** — MIT License
-- **actions/setup-dotnet@v4** — MIT License
+- **actions/checkout@v6** — MIT License
+- **actions/upload-artifact@v5** — MIT License
+- **actions/download-artifact@v5** — MIT License
+- **actions/setup-dotnet@v5** — MIT License
+- **actions/cache@v5** — MIT License
 - **softprops/action-gh-release@v2** — MIT License
 - **signpath/github-action-submit-signing-request@v1** — Apache License 2.0
 

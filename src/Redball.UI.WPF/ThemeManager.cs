@@ -365,8 +365,9 @@ public static class ThemeManager
             var value = key?.GetValue("AppsUseLightTheme");
             return value is int i && i == 0;
         }
-        catch
+        catch (Exception ex)
         {
+            Services.Logger.Debug("ThemeManager", $"Failed to read system theme: {ex.Message}");
             return true; // Default to dark
         }
     }

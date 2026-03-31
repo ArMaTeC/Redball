@@ -142,8 +142,9 @@ public static class DataExportService
         {
             return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown";
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("DataExportService", $"Failed to get app version: {ex.Message}");
             return "unknown";
         }
     }

@@ -62,7 +62,7 @@ Tests are located in the `tests/` directory. When adding new features, include c
 
 All PRs are validated by GitHub Actions (`ci.yml`):
 
-- **WPF Build** — Build the .NET 8 WPF application
+- **WPF Build** — Build the .NET 10 WPF application
 - **Unit Tests** — Run the full test suite
 - **PSScriptAnalyzer** — Lint build scripts
 - **JSON Validation** — Config and locale files

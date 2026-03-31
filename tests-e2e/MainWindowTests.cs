@@ -56,10 +56,10 @@ public class MainWindowTests
         // 4. Check dev paths (3-5 levels up from bin/Release/net8.0-windows/...)
         var levels = new[]
         {
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "src", "Redball.UI.WPF", "bin", "Release", "net8.0-windows", "win-x64", "Redball.UI.WPF.exe"),
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "src", "Redball.UI.WPF", "bin", "Debug", "net8.0-windows", "win-x64", "Redball.UI.WPF.exe"),
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Redball.UI.WPF", "bin", "Release", "net8.0-windows", "win-x64", "Redball.UI.WPF.exe"),
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Redball.UI.WPF", "bin", "Debug", "net8.0-windows", "win-x64", "Redball.UI.WPF.exe")
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "src", "Redball.UI.WPF", "bin", "Release", "net10.0-windows", "win-x64", "Redball.UI.WPF.exe"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "src", "Redball.UI.WPF", "bin", "Debug", "net10.0-windows", "win-x64", "Redball.UI.WPF.exe"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Redball.UI.WPF", "bin", "Release", "net10.0-windows", "win-x64", "Redball.UI.WPF.exe"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Redball.UI.WPF", "bin", "Debug", "net10.0-windows", "win-x64", "Redball.UI.WPF.exe")
         };
 
         foreach (var p in levels)

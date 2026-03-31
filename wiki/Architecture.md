@@ -9,7 +9,7 @@ Redball/
 ├── .github/workflows/
 │   ├── ci.yml                       # CI pipeline (build, test, lint, security)
 │   └── release.yml                  # Release pipeline (tag, build MSI, publish)
-├── src/Redball.UI.WPF/              # WPF application (.NET 8)
+├── src/Redball.UI.WPF/              # WPF application (.NET 10)
 │   ├── Interop/
 │   │   └── NativeMethods.cs         # All Win32 P/Invoke declarations
 │   ├── Models/

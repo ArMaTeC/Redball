@@ -22,8 +22,9 @@ public static class CrashRecoveryService
         {
             return File.Exists(CrashFlagPath);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("CrashRecovery", $"Could not check crash flag: {ex.Message}");
             return false;
         }
     }

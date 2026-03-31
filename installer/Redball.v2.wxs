@@ -36,6 +36,28 @@
     <Property Id="ALLUSERS" Value="2" />
     <Property Id="MSIINSTALLPERUSER" Value="1" />
     
+    <!-- === ENTERPRISE/SILENT INSTALLATION PROPERTIES === -->
+    <!-- Silent install mode - suppress all UI when set to 1 -->
+    <Property Id="REDBALL_SILENTINSTALL" Secure="yes" />
+    
+    <!-- Enterprise deployment properties (set via msiexec /qn PROPERTY=value) -->
+    <Property Id="REDBALL_STARTMINIMIZED" Secure="yes" />
+    <Property Id="REDBALL_ENABLEBATTERYAWARE" Secure="yes" />
+    <Property Id="REDBALL_ENABLENETWORKAWARE" Secure="yes" />
+    <Property Id="REDBALL_ENABLEIDLEDETECTION" Secure="yes" />
+    <Property Id="REDBALL_INSTALLHID" Secure="yes" />
+    <Property Id="REDBALL_DISABLEDESKTOPSHORTCUT" Secure="yes" />
+    <Property Id="REDBALL_DISABLESTARTUP" Secure="yes" />
+    <Property Id="REDBALL_ENABLETELEMETRY" Secure="yes" />
+    <Property Id="REDBALL_CONFIGENCRYPTED" Secure="yes" />
+    
+    <!-- Registry configuration path for enterprise policies -->
+    <Property Id="REDBALL_POLICYREGISTRY" Secure="yes" />
+    <SetProperty Id="REDBALL_POLICYREGISTRY" 
+                 Value="HKLM\SOFTWARE\Policies\ArMaTeC\Redball" 
+                 After="CostInitialize"
+                 Condition="NOT REDBALL_POLICYREGISTRY" />
+    
     <!-- User data paths -->
     <Property Id="REDBALL_USERDATA_DIR" Secure="yes" />
     <SetProperty Id="REDBALL_USERDATA_DIR" 
@@ -54,7 +76,9 @@
     <!-- Install sequences -->
     <InstallExecuteSequence>
       <Custom Action="InitializeLogging" After="CostFinalize" />
-      <Custom Action="StopRunningProcesses" After="InitializeLogging" Condition="NOT REMOVE" />
+      <Custom Action="ApplyEnterpriseConfig" After="InitializeLogging" Condition="NOT REMOVE" />
+      <Custom Action="StopRunningProcesses" After="ApplyEnterpriseConfig" Condition="NOT REMOVE" />
+      <Custom Action="CleanupOrphanedFiles" After="StopRunningProcesses" Condition="NOT REMOVE" />
       <Custom Action="BackupUserData" Before="RemoveExistingProducts" Condition="UPGRADINGPRODUCTCODE" />
       <Custom Action="RestoreUserData" After="InstallFinalize" Condition="NOT REMOVE" />
       <Custom Action="CleanupUserData" After="RemoveFiles" Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
@@ -65,18 +89,27 @@
       <!-- UI only sequence -->
     </InstallUISequence>
     
-    <!-- === STANDARD UI === -->
+    <!-- === STANDARD UI with Modern Theme === -->
     <UI>
-      <ui:WixUI Id="WixUI_Minimal" />
+      <ui:WixUI Id="WixUI_InstallDir" />
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="1" />
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="1" />
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="1" Condition="NOT WixUI_InstallDir_ChangeDir" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Order="1" Condition="NOT WixUI_InstallDir_ChangeDir" />
       <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
     </UI>
+    
+    <!-- Custom installation directory property -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
 
     <!-- === BINARIES === -->
     <Binary Id="RedballInstallerCA" SourceFile="$(var.CA_PATH)" />
 
     <!-- === CUSTOM ACTIONS === -->
+    <CustomAction Id="ApplyEnterpriseConfig" BinaryRef="RedballInstallerCA" DllEntry="ApplyEnterpriseConfig" Execute="immediate" Return="ignore" />
     <CustomAction Id="InitializeLogging" BinaryRef="RedballInstallerCA" DllEntry="InitializeLogging" Execute="immediate" Return="ignore" />
     <CustomAction Id="StopRunningProcesses" BinaryRef="RedballInstallerCA" DllEntry="StopRunningProcesses" Execute="immediate" Return="ignore" />
+    <CustomAction Id="CleanupOrphanedFiles" BinaryRef="RedballInstallerCA" DllEntry="CleanupOrphanedFiles" Execute="immediate" Return="ignore" />
     <CustomAction Id="BackupUserData" BinaryRef="RedballInstallerCA" DllEntry="BackupUserData" Execute="immediate" Return="ignore" />
     <CustomAction Id="RestoreUserData" BinaryRef="RedballInstallerCA" DllEntry="RestoreUserData" Execute="immediate" Return="ignore" />
     <CustomAction Id="CleanupUserData" BinaryRef="RedballInstallerCA" DllEntry="CleanupUserData" Execute="immediate" Return="ignore" />

@@ -368,7 +368,10 @@ public class InterceptionInputService : IDisposable
         {
             System.Media.SystemSounds.Beep.Play(); // Replace with a custom click wav later if needed
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logger.Debug("InterceptionInputService", $"Failed to play click sound: {ex.Message}");
+        }
     }
 
     private void SetLastDriverAction(string action)
@@ -954,7 +957,8 @@ public class InterceptionInputService : IDisposable
         }
         finally
         {
-            try { if (File.Exists(tempExe)) File.Delete(tempExe); } catch { }
+            try { if (File.Exists(tempExe)) File.Delete(tempExe); }
+            catch (Exception ex) { Logger.Debug("InterceptionInputService", $"Failed to delete temp installer: {ex.Message}"); }
         }
     }
 
@@ -987,7 +991,8 @@ public class InterceptionInputService : IDisposable
         }
         finally
         {
-            try { if (File.Exists(tempSys)) File.Delete(tempSys); } catch { }
+            try { if (File.Exists(tempSys)) File.Delete(tempSys); }
+            catch (Exception ex) { Logger.Debug("InterceptionInputService", $"Failed to delete temp driver file: {ex.Message}"); }
         }
     }
 
@@ -1256,7 +1261,10 @@ public class InterceptionInputService : IDisposable
                 Microsoft.Win32.Registry.LocalMachine.DeleteSubKeyTree($@"SYSTEM\CurrentControlSet\Services\{LegacyServiceName}", false);
                 Microsoft.Win32.Registry.LocalMachine.DeleteSubKeyTree($@"SYSTEM\CurrentControlSet\Services\{RedballKmdfServiceName}", false);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Logger.Debug("InterceptionInputService", $"Registry cleanup error during uninstall: {ex.Message}");
+            }
 
             Logger.Info("InterceptionInputService", "NUCLEAR CLEANUP COMPLETED. Keyboard devices should be restarted now.");
             return true;
@@ -1284,7 +1292,11 @@ public class InterceptionInputService : IDisposable
             proc?.WaitForExit();
             return proc?.ExitCode == 0 || proc?.ExitCode == 1;
         }
-        catch { return false; }
+        catch (Exception ex)
+        {
+            Logger.Debug("InterceptionInputService", $"RunInstallerVisible failed: {ex.Message}");
+            return false;
+        }
     }
 
     private void RemoveFromUpperFilters(string classGuid, string filterStub)

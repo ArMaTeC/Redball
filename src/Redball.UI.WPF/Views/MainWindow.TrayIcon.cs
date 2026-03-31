@@ -454,8 +454,9 @@ public partial class MainWindow
             DestroyIcon(handle);
             return clonedIcon;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("MainWindow", $"Failed to generate state icon: {ex.Message}");
             return baseIcon;
         }
     }

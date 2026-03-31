@@ -69,9 +69,9 @@ public class PresentationModeService
                     return _cachedStatus;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Registry access may fail, ignore
+                Logger.Debug("PresentationMode", $"Registry check failed: {ex.Message}");
             }
 
             _cachedStatus = new PresentationStatus { IsPresenting = false };

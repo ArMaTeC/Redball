@@ -14,7 +14,7 @@
         Topmost="True"
         KeyDown="Window_KeyDown">
 
-    <Border Background="White" CornerRadius="8" BorderBrush="LightGray" BorderThickness="1" Margin="10">
+    <Border Background="{DynamicResource CardBrush}" CornerRadius="8" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="10">
         <Border.Effect>
             <DropShadowEffect BlurRadius="15" ShadowDepth="5" Opacity="0.3"/>
         </Border.Effect>
@@ -28,7 +28,7 @@
             </Grid.RowDefinitions>
 
             <!-- Search Box -->
-            <Border Grid.Row="0" Background="#f5f5f5" CornerRadius="8,8,0,0" Padding="15">
+            <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="8,8,0,0" Padding="15">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -37,14 +37,15 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0" Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="20" 
-                               Foreground="Gray" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                               Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
 
                     <TextBox x:Name="SearchBox" Grid.Column="1" BorderThickness="0" Background="Transparent"
+                             Foreground="{DynamicResource ForegroundBrush}"
                              FontSize="16" VerticalContentAlignment="Center"
                              TextChanged="SearchBox_TextChanged" KeyDown="SearchBox_KeyDown"/>
 
                     <TextBlock Grid.Column="1" x:Name="PlaceholderText" Text="Type a command or search..." 
-                               Foreground="Gray" IsHitTestVisible="False" VerticalAlignment="Center"
+                               Foreground="{DynamicResource ForegroundSecondaryBrush}" IsHitTestVisible="False" VerticalAlignment="Center"
                                Visibility="{Binding Text.IsEmpty, ElementName=SearchBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                     <Button Grid.Column="2" x:Name="CloseButton" Content="&#xE711;" FontFamily="Segoe MDL2 Assets"
@@ -55,7 +56,7 @@
 
             <!-- Category Filter -->
             <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="15,5">
-                <TextBlock Text="Filter: " Foreground="Gray" VerticalAlignment="Center"/>
+                <TextBlock Text="Filter: " Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center"/>
                 <ComboBox x:Name="CategoryFilter" Width="150" Margin="5,0" SelectionChanged="CategoryFilter_SelectionChanged">
                     <ComboBoxItem Content="All" IsSelected="True"/>
                     <ComboBoxItem Content="Navigation"/>
@@ -78,14 +79,14 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Grid.Column="0" Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets"
-                                       FontSize="20" VerticalAlignment="Center" Foreground="#333"/>
+                                       FontSize="20" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}"/>
 
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding Subtitle}" FontSize="11" Foreground="Gray"/>
+                                <TextBlock Text="{Binding Subtitle}" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                             </StackPanel>
 
-                            <TextBlock Grid.Column="2" Text="{Binding Shortcut}" FontSize="11" Foreground="Gray"
+                            <TextBlock Grid.Column="2" Text="{Binding Shortcut}" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}"
                                        VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </Grid>
                     </DataTemplate>
@@ -93,13 +94,13 @@
             </ListBox>
 
             <!-- Footer -->
-            <Border Grid.Row="3" Background="#f5f5f5" CornerRadius="0,0,8,8" Padding="10">
+            <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" CornerRadius="0,0,8,8" Padding="10">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE752;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="Gray" Margin="0,0,5,0"/>
-                    <TextBlock Text="Enter to execute" FontSize="11" Foreground="Gray" Margin="0,0,15,0"/>
-                    <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="Gray" Margin="0,0,5,0"/>
-                    <TextBlock Text="Up/Down to navigate" FontSize="11" Foreground="Gray" Margin="0,0,15,0"/>
-                    <TextBlock Text="Esc to close" FontSize="11" Foreground="Gray"/>
+                    <TextBlock Text="&#xE752;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,5,0"/>
+                    <TextBlock Text="Enter to execute" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,15,0"/>
+                    <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,5,0"/>
+                    <TextBlock Text="Up/Down to navigate" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,15,0"/>
+                    <TextBlock Text="Esc to close" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                 </StackPanel>
             </Border>
         </Grid>

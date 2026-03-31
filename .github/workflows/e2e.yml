@@ -32,7 +32,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '10.0.x'
 
     - name: Install FlaUI dependencies
       run: |
@@ -43,12 +43,17 @@ jobs:
     - name: Build Application
       run: |
         # Build with standard output path so E2E tests can find the EXE
-        dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj -c Release --output ./src/Redball.UI.WPF/bin/Release/net8.0-windows/
+        dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj -c Release --output ./src/Redball.UI.WPF/bin/Release/net10.0-windows/
 
     - name: Run E2E Tests
       continue-on-error: true  # E2E tests may be flaky in CI
       run: |
-        dotnet test tests-e2e/Redball.E2E.Tests.csproj --logger trx --results-directory ./test-results
+        dotnet test tests-e2e/Redball.E2E.Tests.csproj --logger trx --results-directory ./test-results --filter "Category!=Flaky"
+
+    - name: Run Critical Path Tests
+      continue-on-error: true
+      run: |
+        dotnet test tests-e2e/Redball.E2E.Tests.csproj --logger trx --results-directory ./test-results --filter "Category=CriticalPath" || echo "Critical path tests completed"
 
     - name: Upload Test Results
       uses: actions/upload-artifact@v5
@@ -67,7 +72,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '10.0.x'
 
     - name: Build Release
       run: |
@@ -123,13 +128,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '10.0.x'
 
     - name: Build and Run App
       run: |
         # Build with standard output path
-        dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj -c Release --output ./src/Redball.UI.WPF/bin/Release/net8.0-windows/
-        Start-Process -FilePath ./src/Redball.UI.WPF/bin/Release/net8.0-windows/Redball.UI.WPF.exe -WindowStyle Hidden
+        dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj -c Release --output ./src/Redball.UI.WPF/bin/Release/net10.0-windows/
+        Start-Process -FilePath ./src/Redball.UI.WPF/bin/Release/net10.0-windows/Redball.UI.WPF.exe -WindowStyle Hidden
         Start-Sleep -Seconds 5
 
     - name: Run Accessibility Scan

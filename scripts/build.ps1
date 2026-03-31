@@ -213,7 +213,7 @@ function Step-RestoreDependency {
     if (-not $SkipWPF) {
         $dotnet = Get-Command dotnet -ErrorAction SilentlyContinue
         if (-not $dotnet) {
-            throw ".NET SDK not found. Please install .NET 8.0 SDK from https://dotnet.microsoft.com/download"
+            throw ".NET SDK not found. Please install .NET 10.0 SDK from https://dotnet.microsoft.com/download"
         }
         Write-BuildSuccess ".NET SDK found: $(dotnet --version)"
     }
@@ -628,6 +628,19 @@ function Stop-LockingProcess {
     }
 }
 
+function Test-WdkAvailable {
+    [CmdletBinding()]
+    param()
+
+    $kitsRoot = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\Include'
+    if (-not (Test-Path $kitsRoot)) {
+        return $false
+    }
+
+    $ntddkHeader = Get-ChildItem -Path $kitsRoot -Filter 'ntddk.h' -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+    return ($null -ne $ntddkHeader)
+}
+
 function Step-BuildDriver {
     [CmdletBinding()]
     param()
@@ -650,6 +663,11 @@ function Step-BuildDriver {
     
     if (-not (Test-Path $msbuildPath)) {
         Write-Warning "MSBuild not found at $msbuildPath. Driver build will be skipped."
+        return
+    }
+
+    if (-not (Test-WdkAvailable)) {
+        Write-Warning "WDK headers (ntddk.h) were not found. Skipping KMDF driver build. Install WDK 11 to build driver artifacts."
         return
     }
 
@@ -734,7 +752,7 @@ function Step-BuildWpfApp {
     $srcDir = Join-Path $ProjectRoot 'src'
     $wpfDir = Join-Path $srcDir 'Redball.UI.WPF'
     $objDir = Join-Path $wpfDir 'obj'
-    $netDir = Join-Path $objDir 'net8.0-windows'
+    $netDir = Join-Path $objDir 'net10.0-windows'
     $winDir = Join-Path $netDir 'win-x64'
     $dllPath = Join-Path $winDir 'Redball.UI.WPF.dll'
     
@@ -1045,6 +1063,45 @@ function Step-VerifyBuild {
     Write-BuildSuccess "Build verification passed: Executable launched and initialized without fatal errors."
 }
 
+function Step-GenerateInstallerTheme {
+    [CmdletBinding()]
+    param()
+    Write-BuildHeader "Generating MSI Installer Theme"
+    
+    $installerDir = Join-Path $script:ProjectRoot 'installer'
+    $themeScript = Join-Path $installerDir 'Generate-InstallerTheme.ps1'
+    
+    if (-not (Test-Path $themeScript)) {
+        Write-Warning "Theme generator script not found: $themeScript"
+        Write-BuildStep "Using existing banner.bmp and dialog.bmp if available"
+        return
+    }
+    
+    Write-BuildStep "Generating modern theme images for MSI installer..."
+    try {
+        & powershell.exe -ExecutionPolicy Bypass -File $themeScript
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "Theme generation exited with code $LASTEXITCODE. Using existing images if available."
+        }
+        else {
+            Write-BuildSuccess "Theme images generated successfully"
+            $bannerPath = Join-Path $installerDir 'banner.bmp'
+            $dialogPath = Join-Path $installerDir 'dialog.bmp'
+            if (Test-Path $bannerPath) {
+                $bannerInfo = Get-Item $bannerPath
+                Write-HostSafe "  Banner: $($bannerInfo.Name) ($([math]::Round($bannerInfo.Length / 1KB, 2)) KB)" -ForegroundColor Gray
+            }
+            if (Test-Path $dialogPath) {
+                $dialogInfo = Get-Item $dialogPath
+                Write-HostSafe "  Dialog: $($dialogInfo.Name) ($([math]::Round($dialogInfo.Length / 1KB, 2)) KB)" -ForegroundColor Gray
+            }
+        }
+    }
+    catch {
+        Write-Warning "Theme generation failed: $_. Using existing images if available."
+    }
+}
+
 function Step-BuildMsiInstaller {
     [CmdletBinding(SupportsShouldProcess)]
     param()
@@ -1098,7 +1155,17 @@ function Get-ResolvedMsiPath {
 function Step-InstallMsiHelper {
     [CmdletBinding(SupportsShouldProcess)]
     param(
-        [switch]$LaunchInstaller
+        [switch]$LaunchInstaller,
+        [switch]$Silent,
+        [switch]$StartMinimized,
+        [switch]$EnableBatteryAware,
+        [switch]$EnableNetworkAware,
+        [switch]$EnableIdleDetection,
+        [switch]$InstallHid,
+        [switch]$DisableDesktopShortcut,
+        [switch]$DisableStartup,
+        [switch]$EnableTelemetry,
+        [switch]$ConfigEncrypted
     )
 
     Write-BuildHeader "MSI Install Helper"
@@ -1110,11 +1177,36 @@ function Step-InstallMsiHelper {
     }
 
     $msiLogPath = Join-Path $script:ProjectRoot 'msi_install.log'
+    
+    # Build installer arguments
     $installerArguments = "/i `"$resolvedMsiPath`" /L*V `"$msiLogPath`""
+    
+    # Add silent install parameters if requested
+    if ($Silent) {
+        $installerArguments += " /qn REDBALL_SILENTINSTALL=1"
+        Write-BuildStep "Silent installation mode enabled"
+        
+        # Add enterprise configuration properties
+        if ($StartMinimized) { $installerArguments += " REDBALL_STARTMINIMIZED=1" }
+        if ($EnableBatteryAware) { $installerArguments += " REDBALL_ENABLEBATTERYAWARE=1" }
+        if ($EnableNetworkAware) { $installerArguments += " REDBALL_ENABLENETWORKAWARE=1" }
+        if ($EnableIdleDetection) { $installerArguments += " REDBALL_ENABLEIDLEDETECTION=1" }
+        if ($InstallHid) { $installerArguments += " REDBALL_INSTALLHID=1" }
+        if ($DisableDesktopShortcut) { $installerArguments += " REDBALL_DISABLEDESKTOPSHORTCUT=1" }
+        if ($DisableStartup) { $installerArguments += " REDBALL_DISABLESTARTUP=1" }
+        if ($EnableTelemetry) { $installerArguments += " REDBALL_ENABLETELEMETRY=1" }
+        if ($ConfigEncrypted) { $installerArguments += " REDBALL_CONFIGENCRYPTED=1" }
+    }
+    
     $installerCommand = "msiexec $installerArguments"
 
     Write-BuildStep "Use this command (absolute path, with logging):"
     Write-HostSafe "  $installerCommand" -ForegroundColor Gray
+    
+    if ($Silent) {
+        Write-BuildStep "Enterprise deployment example:"
+        Write-HostSafe "  msiexec /i `"$resolvedMsiPath`" /qn REDBALL_SILENTINSTALL=1 REDBALL_STARTMINIMIZED=1 REDBALL_ENABLEBATTERYAWARE=1" -ForegroundColor Gray
+    }
 
     if (-not $LaunchInstaller) {
         return
@@ -1302,6 +1394,14 @@ function Step-CleanBuild {
 # End Helper Functions
 
 # Build timing
+$ErrorActionPreference = 'Stop'
+
+# Initialize logging
+$script:LogsPath = Join-Path $script:ProjectRoot 'logs'
+if (-not (Test-Path $script:LogsPath)) { New-Item -ItemType Directory -Path $script:LogsPath -Force | Out-Null }
+$script:LogFile = Join-Path $script:LogsPath ("build_{0:yyyy-MM-dd_HH-mm-ss}.log" -f (Get-Date))
+Start-Transcript -Path $script:LogFile -IncludeInvocationHeader -Force | Out-Null
+Write-HostSafe "Logging to: $script:LogFile" -ForegroundColor Gray
 $script:BuildStartTime = Get-Date
 
 # Main Build Process
@@ -1380,6 +1480,7 @@ try {
         if ($SkipWPF) {
             Write-Warning "WPF build skipped - MSI will use previously built files if available"
         }
+        Step-GenerateInstallerTheme
         Step-BuildMsiInstaller
         Step-InstallMsiHelper -LaunchInstaller:$InstallMsi
     }
@@ -1439,8 +1540,9 @@ try {
     Write-HostSafe "══════════════════════════════════════════════════════════" -ForegroundColor Green
     $duration = (Get-Date) - $script:BuildStartTime
     Write-HostSafe "  Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor Gray
+    Write-HostSafe "  Log: $script:LogFile" -ForegroundColor Gray
     Write-HostSafe "══════════════════════════════════════════════════════════`n" -ForegroundColor Green
-    
+    Stop-Transcript | Out-Null
     exit 0
 }
 catch {
@@ -1455,7 +1557,9 @@ catch {
         $duration = (Get-Date) - $script:BuildStartTime
         Write-HostSafe "  Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor Gray
     }
+    Write-HostSafe "  Log: $script:LogFile" -ForegroundColor Gray
     Write-HostSafe "══════════════════════════════════════════════════════════`n" -ForegroundColor Red
+    Stop-Transcript | Out-Null
     exit 1
 }
 

@@ -19,6 +19,7 @@ public class TemperatureMonitorService
     private bool _thermalPaused;
     private string _lastError = "";
     private int _consecutiveFailures;
+    private bool _hasLoggedAllMethodsFailed;
     private readonly string[] _wmiClassesToTry = 
     {
         "MSAcpi_ThermalZoneTemperature",
@@ -65,6 +66,7 @@ public class TemperatureMonitorService
         {
             CurrentCpuTemp = temp.Value;
             _consecutiveFailures = 0;
+            _hasLoggedAllMethodsFailed = false; // Reset on success
             TemperatureUpdated?.Invoke(this, temp.Value);
         }
         else
@@ -73,6 +75,12 @@ public class TemperatureMonitorService
             if (_consecutiveFailures >= 3)
             {
                 CurrentCpuTemp = null;
+            }
+            // Only log once when all methods fail, not every poll
+            if (!_hasLoggedAllMethodsFailed && _consecutiveFailures >= 3)
+            {
+                Logger.Debug("TemperatureMonitor", "No temperature sensors available (all methods failed)");
+                _hasLoggedAllMethodsFailed = true;
             }
         }
     }
@@ -95,9 +103,9 @@ public class TemperatureMonitorService
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Logger.Verbose("TemperatureMonitor", $"Performance counter failed: {ex.Message}");
+            // Failures logged in aggregate after all methods tried
         }
         return null;
     }
@@ -122,9 +130,9 @@ public class TemperatureMonitorService
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Logger.Verbose("TemperatureMonitor", $"MSAcpi_ThermalZoneTemperature failed: {ex.Message}");
+            // Failures logged in aggregate after all methods tried
         }
         return null;
     }
@@ -165,9 +173,9 @@ public class TemperatureMonitorService
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Logger.Verbose("TemperatureMonitor", $"ThermalZoneInformation failed: {ex.Message}");
+            // Failures logged in aggregate after all methods tried
         }
         return null;
     }
@@ -198,9 +206,9 @@ public class TemperatureMonitorService
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Logger.Verbose("TemperatureMonitor", $"CIM_Sensor failed: {ex.Message}");
+            // Failures logged in aggregate after all methods tried
         }
         return null;
     }
@@ -226,9 +234,9 @@ public class TemperatureMonitorService
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Logger.Verbose("TemperatureMonitor", $"Win32_TemperatureProbe failed: {ex.Message}");
+            // Failures logged in aggregate after all methods tried
         }
         return null;
     }
@@ -255,9 +263,9 @@ public class TemperatureMonitorService
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Logger.Verbose("TemperatureMonitor", $"AMDK7Temp failed: {ex.Message}");
+            // Failures logged in aggregate after all methods tried
         }
         return null;
     }
@@ -285,9 +293,9 @@ public class TemperatureMonitorService
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Logger.Verbose("TemperatureMonitor", $"Intel WMI failed: {ex.Message}");
+            // Failures logged in aggregate after all methods tried
         }
         return null;
     }

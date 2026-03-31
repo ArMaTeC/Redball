@@ -488,8 +488,9 @@ public class ReleaseGatesService
             var result = await Task.Run(() => SecurityService.VerifyAuthenticodeSignature(_currentChecklist.ArtifactPath));
             return result ? GateStatus.Passed : GateStatus.Failed;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Error("ReleaseGatesService", $"Signing verification failed for {_currentChecklist?.ArtifactPath}: {ex.Message}");
             return GateStatus.Failed;
         }
     }

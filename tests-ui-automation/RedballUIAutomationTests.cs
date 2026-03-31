@@ -13,19 +13,20 @@ namespace Redball.UIAutomation.Tests;
 [ExcludeFromCodeCoverage]
 public class RedballUIAutomationTests
 {
-    private RedballUIAutomation? _ui;
+    private static RedballUIAutomation? _ui;
 
-    [TestInitialize]
-    public void TestInitialize()
+    [ClassInitialize]
+    public static void ClassInitialize(TestContext _)
     {
         _ui = new RedballUIAutomation();
         _ui.LaunchApplication();
     }
 
-    [TestCleanup]
-    public void TestCleanup()
+    [ClassCleanup]
+    public static void ClassCleanup()
     {
         _ui?.Dispose();
+        _ui = null;
     }
 
     [TestMethod]
@@ -111,6 +112,56 @@ public class RedballUIAutomationTests
     }
 
     [TestMethod]
+    [TestCategory("UI"), TestCategory("ThemeSweep")]
+    public void ThemeSweep_AllThemes_RenderCoreSettingsAndTypeThingControls()
+    {
+        _ui!.SelectRadioButton("SettingsNavButton");
+        Assert.IsTrue(_ui.WaitForVisibleElement("MainThemeCombo", TimeSpan.FromSeconds(3)),
+            "Theme combo should be visible in Settings panel.");
+
+        var themes = new[]
+        {
+            "System Default",
+            "Dark Mode",
+            "Light Mode",
+            "Midnight Blue",
+            "Forest Green",
+            "Ocean Blue",
+            "Sunset Orange",
+            "Royal Purple",
+            "Slate Gray",
+            "Rose Gold",
+            "Cyberpunk",
+            "Coffee",
+            "Arctic Frost"
+        };
+
+        for (var i = 0; i < themes.Length; i++)
+        {
+            _ui.SelectComboBoxItemByIndex("MainThemeCombo", i);
+            Thread.Sleep(250);
+
+            Assert.IsTrue(_ui.IsElementVisible("MainThemeCombo"),
+                $"Theme combo should remain visible after selecting '{themes[i]}'.");
+
+            _ui.SelectRadioButton("TypeThingNavButton");
+            Assert.IsTrue(_ui.WaitForElement("MainTypeThingInputModeCombo", TimeSpan.FromSeconds(6)),
+                $"TypeThing input mode should be present in '{themes[i]}'.");
+
+            _ui.SelectComboBoxItem("MainTypeThingInputModeCombo", "Service");
+            Thread.Sleep(200);
+            Assert.IsTrue(_ui.WaitForVisibleElement("MainInstallHidDriverBtn", TimeSpan.FromSeconds(3)),
+                $"Install/Uninstall button should be visible in service mode for '{themes[i]}'.");
+            Assert.IsTrue(_ui.WaitForVisibleElement("MainServiceAdminHintText", TimeSpan.FromSeconds(2)),
+                $"Service admin warning should be visible in service mode for '{themes[i]}'.");
+
+            _ui.SelectRadioButton("SettingsNavButton");
+            Assert.IsTrue(_ui.WaitForVisibleElement("MainThemeCombo", TimeSpan.FromSeconds(3)),
+                $"Settings panel should remain reachable after TypeThing checks for '{themes[i]}'.");
+        }
+    }
+
+    [TestMethod]
     [TestCategory("UI")]
     public void UseHeartbeat_CheckBox_CanBeToggled()
     {
@@ -128,8 +179,7 @@ public class RedballUIAutomationTests
         // Act
         _ui!.ToggleCheckBox("BatteryAwareCheckBox", true);
 
-        // Assert
-        Assert.IsTrue(true, "BatteryAware checkbox toggle should complete");
+        // Assert - no exception means success
     }
 
     [TestMethod]
@@ -167,8 +217,7 @@ public class RedballUIAutomationTests
         // Act
         _ui.SelectComboBoxItem("ThemeComboBox", "Dark");
 
-        // Assert
-        Assert.IsTrue(true, "Theme selection should complete");
+        // Assert - no exception means success
     }
 
     [TestMethod]
@@ -232,8 +281,7 @@ public class RedballUIAutomationTests
             // Save might not be explicit, settings might auto-save
         }
 
-        // Assert
-        Assert.IsTrue(true, "Settings workflow completed");
+        // Assert - workflow completed without exception
     }
 
     [TestMethod]

@@ -154,8 +154,9 @@ public class WindowsShellIntegrationService
             var value = key?.GetValue("Redball");
             return value != null && value.ToString() == _exePath;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("WindowsShellIntegration", $"Failed to check startup status: {ex.Message}");
             return false;
         }
     }
@@ -389,8 +390,9 @@ public class WindowsShellIntegrationService
             using var key = Registry.CurrentUser.OpenSubKey(@"Software\Classes\redball");
             return key != null;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("WindowsShellIntegration", $"Failed to check URI protocol status: {ex.Message}");
             return false;
         }
     }
@@ -405,8 +407,9 @@ public class WindowsShellIntegrationService
             var value = key?.GetValue("Enabled");
             return value == null || (int)value == 1;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("WindowsShellIntegration", $"Failed to check notification status: {ex.Message}");
             return true; // Default to enabled
         }
     }

@@ -924,12 +924,16 @@ public partial class MainWindow
                 });
             }
 
-            // Emergency HID release hotkey: Ctrl+Shift+Esc
-            _hotkeyService.RegisterHotkey(102, HotkeyService.MOD_CONTROL | HotkeyService.MOD_SHIFT, 0x1B /* VK_ESCAPE */, () =>
+            // Emergency HID release hotkey: Ctrl+Shift+F12 (avoiding Ctrl+Shift+Esc which is reserved for Task Manager)
+            var emergencyRegistered = _hotkeyService.RegisterHotkey(102, HotkeyService.MOD_CONTROL | HotkeyService.MOD_SHIFT, 0x7B /* VK_F12 */, () =>
             {
-                Logger.Warning("MainWindow", "Hotkey: Ctrl+Shift+Esc - Emergency HID release requested");
-                EmergencyReleaseHid("Hotkey Ctrl+Shift+Esc", true);
+                Logger.Warning("MainWindow", "Hotkey: Ctrl+Shift+F12 - Emergency HID release requested");
+                EmergencyReleaseHid("Hotkey Ctrl+Shift+F12", true);
             });
+            if (!emergencyRegistered)
+            {
+                Logger.Warning("MainWindow", "Could not register emergency HID release hotkey (Ctrl+Shift+F12). The hotkey may be in use by another application.");
+            }
 
             Logger.Info("MainWindow", "Global hotkeys registered successfully");
         }

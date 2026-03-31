@@ -40,8 +40,8 @@ $versionFilePath = Join-Path $scriptsDir 'version.txt'
 # Custom Action project paths
 $customActionDir = Join-Path $scriptRoot 'Redball.Installer.CustomActions'
 $customActionProj = Join-Path $customActionDir 'Redball.Installer.CustomActions.csproj'
-# Output goes to root bin folder per Directory.Build.props - use the .CA.dll native wrapper
-$customActionDll = Join-Path $projectRoot "bin\$Configuration\net472\Redball.Installer.CustomActions.CA.dll"
+# Output is in the project bin folder
+$customActionDll = Join-Path $customActionDir "bin\$Configuration\net472\Redball.Installer.CustomActions.dll"
 
 Write-HostSafe "=== Redball MSI Builder v2.0 ===" -ForegroundColor Cyan
 Write-HostSafe "Building self-contained installer with native custom actions...`n" -ForegroundColor Gray
@@ -68,19 +68,81 @@ function New-RedballBannerBmp {
     param([Parameter(Mandatory)] [string]$Path)
     
     Add-Type -AssemblyName System.Drawing
-    $bmp = New-Object System.Drawing.Bitmap(493, 58)
+    # WiX v4+ banner size: 493x58 pixels
+    $width = 493
+    $height = 58
+    $bmp = New-Object System.Drawing.Bitmap($width, $height)
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+    $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::ClearTypeGridFit
     
-    # White background with subtle gradient
-    $g.Clear([System.Drawing.Color]::White)
+    # Modern gradient background: Dark professional gradient
+    $background = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+        ([System.Drawing.Rectangle]::new(0, 0, $width, $height)),
+        [System.Drawing.Color]::FromArgb(32, 32, 40),
+        [System.Drawing.Color]::FromArgb(24, 24, 32),
+        [System.Drawing.Drawing2D.LinearGradientMode]::Horizontal
+    )
+    $g.FillRectangle($background, 0, 0, $width, $height)
+    $background.Dispose()
     
-    # Redball brand accent line
-    $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(200, 30, 30), 2)
-    $g.DrawLine($pen, 0, 56, 493, 56)
-    $pen.Dispose()
+    # Add subtle pattern overlay for texture
+    for ($i = 0; $i -lt $width; $i += 20) {
+        $opacity = 3
+        $linePen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb($opacity, 255, 255, 255), 1)
+        $g.DrawLine($linePen, $i, 0, $i + 10, $height)
+        $linePen.Dispose()
+    }
+    
+    # Red accent gradient line at bottom
+    $accentGradient = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+        ([System.Drawing.Rectangle]::new(0, $height - 3, $width, 3)),
+        [System.Drawing.Color]::FromArgb(220, 53, 69),
+        [System.Drawing.Color]::FromArgb(180, 40, 50),
+        [System.Drawing.Drawing2D.LinearGradientMode]::Horizontal
+    )
+    $g.FillRectangle($accentGradient, 0, $height - 3, $width, 3)
+    $accentGradient.Dispose()
+    
+    # Draw Redball logo text with shadow
+    $shadowOffset = 1
+    $titleFont = New-Object System.Drawing.Font('Segoe UI', 14, [System.Drawing.FontStyle]::Bold)
+    $shadowBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(60, 0, 0, 0))
+    $titleBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::White)
+    
+    $titleText = 'Redball'
+    $titleX = 20
+    $titleY = 14
+    
+    # Shadow
+    $g.DrawString($titleText, $titleFont, $shadowBrush, $titleX + $shadowOffset, $titleY + $shadowOffset)
+    # Main text
+    $g.DrawString($titleText, $titleFont, $titleBrush, $titleX, $titleY)
+    
+    $titleFont.Dispose()
+    $shadowBrush.Dispose()
+    $titleBrush.Dispose()
+    
+    # Draw subtle "powered by .NET" badge on right
+    $badgeFont = New-Object System.Drawing.Font('Segoe UI', 7, [System.Drawing.FontStyle]::Regular)
+    $badgeBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(150, 255, 255, 255))
+    $badgeText = 'Windows Desktop Application'
+    $badgeSize = $g.MeasureString($badgeText, $badgeFont)
+    $g.DrawString($badgeText, $badgeFont, $badgeBrush, $width - $badgeSize.Width - 15, $height - 20)
+    $badgeFont.Dispose()
+    $badgeBrush.Dispose()
+    
+    # Left accent bar (gradient)
+    $leftBarGradient = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+        ([System.Drawing.Rectangle]::new(0, 0, 6, $height)),
+        [System.Drawing.Color]::FromArgb(220, 53, 69),
+        [System.Drawing.Color]::FromArgb(180, 40, 50),
+        [System.Drawing.Drawing2D.LinearGradientMode]::Vertical
+    )
+    $g.FillRectangle($leftBarGradient, 0, 0, 6, $height)
+    $leftBarGradient.Dispose()
+    
     $g.Dispose()
-    
     $bmp.Save($Path, [System.Drawing.Imaging.ImageFormat]::Bmp)
     $bmp.Dispose()
     Write-HostSafe "Generated banner: $Path" -ForegroundColor DarkGreen
@@ -90,26 +152,115 @@ function New-RedballDialogBmp {
     param([Parameter(Mandatory)] [string]$Path)
     
     Add-Type -AssemblyName System.Drawing
-    $bmp = New-Object System.Drawing.Bitmap(493, 312)
+    # WiX v4+ dialog size: 493x312 pixels
+    $width = 493
+    $height = 312
+    $bmp = New-Object System.Drawing.Bitmap($width, $height)
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+    $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::ClearTypeGridFit
     
-    # Gradient background
+    # Modern dark gradient background
     $background = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
-        (New-Object System.Drawing.Rectangle 0, 0, 493, 312),
-        [System.Drawing.Color]::White,
-        [System.Drawing.Color]::FromArgb(248, 248, 248),
+        ([System.Drawing.Rectangle]::new(0, 0, $width, $height)),
+        [System.Drawing.Color]::FromArgb(28, 28, 36),
+        [System.Drawing.Color]::FromArgb(20, 20, 28),
         [System.Drawing.Drawing2D.LinearGradientMode]::Vertical
     )
-    $g.FillRectangle($background, 0, 0, 493, 312)
+    $g.FillRectangle($background, 0, 0, $width, $height)
     $background.Dispose()
     
-    # Left accent bar
-    $accentBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(200, 30, 30))
-    $g.FillRectangle($accentBrush, 0, 0, 18, 312)
-    $accentBrush.Dispose()
-    $g.Dispose()
+    # Add subtle dot pattern for texture
+    $random = New-Object System.Random
+    for ($i = 0; $i -lt 150; $i++) {
+        $x = $random.Next(0, $width)
+        $y = $random.Next(0, $height)
+        $opacity = $random.Next(5, 15)
+        $dotBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($opacity, 255, 255, 255))
+        $g.FillEllipse($dotBrush, $x, $y, 2, 2)
+        $dotBrush.Dispose()
+    }
     
+    # Top accent bar with gradient
+    $topGradient = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+        ([System.Drawing.Rectangle]::new(0, 0, $width, 4)),
+        [System.Drawing.Color]::FromArgb(220, 53, 69),
+        [System.Drawing.Color]::FromArgb(180, 40, 50),
+        [System.Drawing.Drawing2D.LinearGradientMode]::Horizontal
+    )
+    $g.FillRectangle($topGradient, 0, 0, $width, 4)
+    $topGradient.Dispose()
+    
+    # Left accent bar (gradient red)
+    $accentGradient = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+        ([System.Drawing.Rectangle]::new(0, 0, 8, $height)),
+        [System.Drawing.Color]::FromArgb(220, 53, 69),
+        [System.Drawing.Color]::FromArgb(150, 35, 45),
+        [System.Drawing.Drawing2D.LinearGradientMode]::Vertical
+    )
+    $g.FillRectangle($accentGradient, 0, 0, 8, $height)
+    $accentGradient.Dispose()
+    
+    # Draw Redball branding in upper area
+    $brandFont = New-Object System.Drawing.Font('Segoe UI', 24, [System.Drawing.FontStyle]::Bold)
+    $brandBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::White)
+    $brandShadowBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(40, 0, 0, 0))
+    
+    $brandText = 'Redball'
+    $brandX = 35
+    $brandY = 35
+    
+    # Shadow effect
+    $g.DrawString($brandText, $brandFont, $brandShadowBrush, $brandX + 2, $brandY + 2)
+    # Main text
+    $g.DrawString($brandText, $brandFont, $brandBrush, $brandX, $brandY)
+    
+    $brandFont.Dispose()
+    $brandBrush.Dispose()
+    $brandShadowBrush.Dispose()
+    
+    # Tagline
+    $taglineFont = New-Object System.Drawing.Font('Segoe UI', 10, [System.Drawing.FontStyle]::Regular)
+    $taglineBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(180, 180, 190))
+    $g.DrawString('Keep-Alive Automation for Windows', $taglineFont, $taglineBrush, 35, 70)
+    $taglineFont.Dispose()
+    $taglineBrush.Dispose()
+    
+    # Feature highlights with icons (text representation)
+    $featureFont = New-Object System.Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Regular)
+    $featureBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(140, 140, 150))
+    $bulletBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(220, 53, 69))
+    
+    $features = @(
+        @('Keep-Awake Engine', 115),
+        @('TypeThing Typing Automation', 135),
+        @('Pomodoro Timer', 155),
+        @('Mini Widget', 175)
+    )
+    
+    foreach ($feature in $features) {
+        $text = $feature[0]
+        $y = $feature[1]
+        
+        # Draw bullet (small circle)
+        $g.FillEllipse($bulletBrush, 35, $y + 4, 6, 6)
+        
+        # Draw text
+        $g.DrawString($text, $featureFont, $featureBrush, 48, $y)
+    }
+    
+    $featureFont.Dispose()
+    $featureBrush.Dispose()
+    $bulletBrush.Dispose()
+    
+    # Bottom area - copyright/version info
+    $infoFont = New-Object System.Drawing.Font('Segoe UI', 8, [System.Drawing.FontStyle]::Regular)
+    $infoBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(100, 100, 110))
+    $g.DrawString('© Redball Project  Microsoft Windows Compatible', $infoFont, $infoBrush, 35, $height - 30)
+    $infoFont.Dispose()
+    $infoBrush.Dispose()
+    
+    $g.Dispose()
     $bmp.Save($Path, [System.Drawing.Imaging.ImageFormat]::Bmp)
     $bmp.Dispose()
     Write-HostSafe "Generated dialog: $Path" -ForegroundColor DarkGreen

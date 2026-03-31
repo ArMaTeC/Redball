@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - **Windows 10** or later
-- **.NET 8 Runtime** (included in the self-contained EXE — no separate install needed)
+- **.NET 10 Runtime** (included in the self-contained EXE — no separate install needed)
 
 ## Installation
 

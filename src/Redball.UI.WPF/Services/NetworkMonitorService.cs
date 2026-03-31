@@ -51,8 +51,9 @@ public class NetworkMonitorService
                                       ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211);
             return wifi?.Name;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("NetworkMonitor", $"Failed to get WiFi name: {ex.Message}");
             return null;
         }
     }
@@ -70,8 +71,9 @@ public class NetworkMonitorService
                 .Select(ni => $"{ni.Name} ({ni.NetworkInterfaceType})")
                 .ToList();
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("NetworkMonitor", $"Failed to get active adapters: {ex.Message}");
             return new List<string>();
         }
     }
