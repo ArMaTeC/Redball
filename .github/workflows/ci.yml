@@ -153,7 +153,7 @@ jobs:
           --collect:"XPlat Code Coverage"
 
     - name: Upload .NET test results
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: dotnet-test-results
@@ -272,7 +272,7 @@ jobs:
         "@ >> $env:GITHUB_STEP_SUMMARY
 
     - name: Upload WPF artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: Redball-WPF-Exe
         path: ./dist/wpf-publish/Redball.UI.WPF.exe
@@ -320,7 +320,7 @@ jobs:
         Pop-Location
 
     - name: Upload Mutation Report
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: mutation-report
@@ -372,7 +372,7 @@ jobs:
         Write-Host "Created release: $releaseName.zip"
 
     - name: Upload Release Artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: Redball-Release
         path: ./Redball-v*.zip
