@@ -16,6 +16,7 @@
             </ResourceDictionary.MergedDictionaries>
 
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
             <converters:SliderValueToWidthConverter x:Key="SliderValueToWidthConverter"/>
         </ResourceDictionary>
     </Application.Resources>

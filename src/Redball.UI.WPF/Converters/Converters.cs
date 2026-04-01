@@ -85,3 +85,19 @@ public class NullToVisibilityConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+/// <summary>
+/// Inverts a boolean value and converts to Visibility (true -> Collapsed, false -> Visible)
+/// </summary>
+public class InverseBooleanToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value is bool b && b ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value is System.Windows.Visibility v && v == System.Windows.Visibility.Collapsed;
+    }
+}
