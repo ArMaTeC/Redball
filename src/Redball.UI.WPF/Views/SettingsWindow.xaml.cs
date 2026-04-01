@@ -16,7 +16,7 @@ public partial class SettingsWindow : Window
     private bool _isDirty;
     private UpdateService? _updateService;
     private MainWindow? _mainWindow;
-    private readonly AnalyticsService _analytics = new(ConfigService.Instance.Config.EnableTelemetry);
+    private readonly AnalyticsService _analytics = AnalyticsService.Instance;
 
     public SettingsWindow(MainWindow? mainWindow = null)
     {

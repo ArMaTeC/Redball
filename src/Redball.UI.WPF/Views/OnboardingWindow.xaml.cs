@@ -10,7 +10,7 @@ namespace Redball.UI.Views;
 /// </summary>
 public partial class OnboardingWindow : Window
 {
-    private readonly AnalyticsService _analytics = new(ConfigService.Instance.Config.EnableTelemetry);
+    private readonly AnalyticsService _analytics = AnalyticsService.Instance;
     private int _currentStep = 1;
     private const int TotalSteps = 4;
 

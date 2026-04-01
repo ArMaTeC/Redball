@@ -7,7 +7,7 @@ namespace Redball.UI.Views;
 public partial class AboutWindow : Window
 {
     private UpdateService? _updateService;
-    private readonly AnalyticsService _analytics = new(ConfigService.Instance.Config.EnableTelemetry);
+    private readonly AnalyticsService _analytics = AnalyticsService.Instance;
 
     public AboutWindow()
     {

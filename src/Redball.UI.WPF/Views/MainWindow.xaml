@@ -288,13 +288,46 @@
 
                                 <StackPanel x:Name="SloDashboardPanel" Visibility="Collapsed">
                                     <TextBlock Text="SLO Dashboard" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Service Level Objective metrics and performance indicators." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
-                                    <Border Style="{DynamicResource CardStyle}">
+                                    <TextBlock Text="Service Level Objective metrics and performance indicators. Track app uptime, keep-awake reliability, and system health." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+                                    <UniformGrid Columns="2" Margin="0,0,0,12">
+                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
+                                            <StackPanel>
+                                                <TextBlock Text="App Uptime" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                <TextBlock x:Name="SloUptimeText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                                                <TextBlock x:Name="SloUptimeStatusText" FontSize="11" Opacity="0.7"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Text="Keep-Awake Success" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                <TextBlock x:Name="SloKeepAwakeSuccessText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                                                <TextBlock x:Name="SloKeepAwakeStatusText" FontSize="11" Opacity="0.7"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </UniformGrid>
+                                    <UniformGrid Columns="2" Margin="0,0,0,12">
+                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
+                                            <StackPanel>
+                                                <TextBlock Text="CPU Temperature" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                <TextBlock x:Name="SloTempText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                                                <TextBlock x:Name="SloTempStatusText" FontSize="11" Opacity="0.7"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Text="HID Driver Status" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                <TextBlock x:Name="SloHidStatusText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                                                <TextBlock x:Name="SloHidDetailsText" FontSize="11" Opacity="0.7"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </UniformGrid>
+                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
                                         <StackPanel>
-                                            <TextBlock Text="SLO Metrics" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                            <TextBlock Text="Session &amp; Feature Metrics" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
                                             <TextBlock x:Name="SloMetricsText" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"/>
                                         </StackPanel>
                                     </Border>
+                                    <Button Content="Refresh Metrics" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left" Click="SloRefreshButton_Click"/>
                                 </StackPanel>
 
                                 <StackPanel x:Name="DiagnosticsPanel" Visibility="Collapsed">
@@ -829,12 +862,37 @@
                                                       Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
 
                                             <TextBlock Text="Input Mode" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
-                                            <ComboBox x:Name="MainTypeThingInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,10"
-                                                      SelectionChanged="MainComboSettingChanged">
-                                                <ComboBoxItem Content="SendInput"/>
-                                                <ComboBoxItem Content="HID"/>
-                                                <ComboBoxItem Content="Service"/>
-                                            </ComboBox>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ComboBox x:Name="MainTypeThingInputModeCombo" Grid.Column="0" Style="{DynamicResource ModernComboBox}" Margin="0,0,8,10"
+                                                          SelectionChanged="MainComboSettingChanged">
+                                                    <ComboBoxItem Content="SendInput"/>
+                                                    <ComboBoxItem Content="HID"/>
+                                                    <ComboBoxItem Content="Service"/>
+                                                </ComboBox>
+                                                <WrapPanel Grid.Column="1" Orientation="Horizontal">
+                                                    <Button x:Name="MainInstallHidDriverBtn" Content="Install/Uninstall Driver" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainInstallHidDriverBtn_Click"/>
+                                                    <Button x:Name="MainRepairHidStackBtn" Content="Repair HID Stack" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainRepairHidStackBtn_Click"/>
+                                                    <Button x:Name="MainResetHidStackBtn" Content="Reset HID" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainResetHidStackBtn_Click"/>
+                                                    <Button x:Name="MainCopyHidDiagnosticsBtn" Content="Copy Diagnostics" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainCopyHidDiagnosticsBtn_Click"/>
+                                                    <Button x:Name="MainEmergencyReleaseHidBtn" Content="Emergency Release" Style="{DynamicResource PrimaryButton}" Margin="0,0,8,8" Click="MainEmergencyReleaseHidBtn_Click"/>
+                                                </WrapPanel>
+                                            </Grid>
+
+                                            <TextBlock x:Name="MainServiceAdminHintText"
+                                                       Text="Administrator approval (UAC) is required to install or uninstall the Input Service."
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource WarningBrush}"
+                                                       Margin="0,4,0,8"
+                                                       TextWrapping="Wrap"
+                                                       Visibility="Collapsed"/>
+                                            <StackPanel x:Name="MainHidTestPanel" Margin="0,4,0,4"/>
+                                            <Border x:Name="MainHidStatusIndicator" Width="10" Height="10" CornerRadius="5" Background="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,4"/>
+                                            <TextBlock x:Name="MainHidStatusText" FontWeight="Medium" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBlock x:Name="MainHidDetailsText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
 
                                             <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
                                             <TextBox x:Name="MainStartHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"
@@ -893,26 +951,6 @@
                                             <CheckBox x:Name="MainTypeThingTtsCheck" Content="Enable TypeThing text-to-speech"
                                                       Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,12"
                                                       Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-
-                                            <TextBlock Text="HID Driver Tools" FontWeight="SemiBold" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
-                                            <WrapPanel>
-                                                <Button x:Name="MainInstallHidDriverBtn" Content="Install/Uninstall Driver" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainInstallHidDriverBtn_Click"/>
-                                                <Button x:Name="MainRepairHidStackBtn" Content="Repair HID Stack" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainRepairHidStackBtn_Click"/>
-                                                <Button x:Name="MainResetHidStackBtn" Content="Reset HID" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainResetHidStackBtn_Click"/>
-                                                <Button x:Name="MainCopyHidDiagnosticsBtn" Content="Copy Diagnostics" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainCopyHidDiagnosticsBtn_Click"/>
-                                                <Button x:Name="MainEmergencyReleaseHidBtn" Content="Emergency Release" Style="{DynamicResource PrimaryButton}" Margin="0,0,8,8" Click="MainEmergencyReleaseHidBtn_Click"/>
-                                            </WrapPanel>
-                                            <TextBlock x:Name="MainServiceAdminHintText"
-                                                       Text="Administrator approval (UAC) is required to install or uninstall the Input Service."
-                                                       FontSize="12"
-                                                       Foreground="{DynamicResource WarningBrush}"
-                                                       Margin="0,0,0,8"
-                                                       TextWrapping="Wrap"
-                                                       Visibility="Collapsed"/>
-                                            <StackPanel x:Name="MainHidTestPanel" Margin="0,4,0,4"/>
-                                            <Border x:Name="MainHidStatusIndicator" Width="10" Height="10" CornerRadius="5" Background="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,4"/>
-                                            <TextBlock x:Name="MainHidStatusText" FontWeight="Medium" Foreground="{DynamicResource ForegroundBrush}"/>
-                                            <TextBlock x:Name="MainHidDetailsText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>

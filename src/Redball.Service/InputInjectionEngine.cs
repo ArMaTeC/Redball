@@ -263,8 +263,8 @@ public class InputInjectionEngine
     private static string GetHelperPath()
     {
         // Look for helper next to service executable
-        var serviceDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var helperPath = Path.Combine(serviceDir ?? AppContext.BaseDirectory, "Redball.SessionHelper.exe");
+        var serviceDir = AppContext.BaseDirectory;
+        var helperPath = Path.Combine(serviceDir, "Redball.SessionHelper.exe");
 
         if (!File.Exists(helperPath))
         {

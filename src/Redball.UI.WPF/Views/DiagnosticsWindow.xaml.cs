@@ -13,7 +13,7 @@ namespace Redball.UI.Views;
 public partial class DiagnosticsWindow : Window
 {
     private static readonly string AnalyticsPath = Path.Combine(AppContext.BaseDirectory, "analytics.json");
-    private readonly AnalyticsService _analytics = new(ConfigService.Instance.Config.EnableTelemetry);
+    private readonly AnalyticsService _analytics = AnalyticsService.Instance;
 
     // Memory leak detection: rolling window of working-set samples
     private static readonly List<(DateTime Time, long WorkingSetBytes)> _memorySamples = new();
@@ -53,7 +53,7 @@ public partial class DiagnosticsWindow : Window
         var config = configService.Config;
         var validationErrors = configService.Validate();
         var keepAwake = KeepAwakeService.Instance;
-        var analytics = new AnalyticsService(true);
+        var analytics = AnalyticsService.Instance;
         var analyticsSummary = analytics.GetSummary();
         var logPath = Logger.LogPath;
         var logDirectory = Logger.GetLogDirectory();

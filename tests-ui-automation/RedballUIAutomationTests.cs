@@ -74,7 +74,6 @@ public class RedballUIAutomationTests
         _ui!.ClickButton("ToggleButton");
 
         // Assert - no exception means success
-        Assert.IsTrue(true, "Toggle button click should complete without exception");
     }
 
     [TestMethod]
@@ -108,7 +107,6 @@ public class RedballUIAutomationTests
         _ui!.ToggleCheckBox("PreventDisplaySleepCheckBox", true);
 
         // Assert - no exception
-        Assert.IsTrue(true, "Checkbox toggle should complete");
     }
 
     [TestMethod]
@@ -168,8 +166,7 @@ public class RedballUIAutomationTests
         // Act
         _ui!.ToggleCheckBox("UseHeartbeatCheckBox", true);
 
-        // Assert
-        Assert.IsTrue(true, "UseHeartbeat checkbox toggle should complete");
+        // Assert - toggle completed
     }
 
     [TestMethod]

@@ -12,7 +12,7 @@ public partial class UpdateAvailableWindow : Window
 {
     private readonly UpdateInfo _updateInfo;
     private readonly UpdateService _updateService;
-    private readonly AnalyticsService _analytics = new(ConfigService.Instance.Config.EnableTelemetry);
+    private readonly AnalyticsService _analytics = AnalyticsService.Instance;
 
     /// <summary>
     /// Set to true if the user chose "Don't remind me for this version".

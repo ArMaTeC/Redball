@@ -24,7 +24,7 @@ public partial class MainWindow : Window
     private DispatcherTimer? _trayIconRefreshTimer;
     private uint _taskbarCreatedMsg;
     private HwndSource? _windowHwndSource;
-    private readonly AnalyticsService _analytics = new(ConfigService.Instance.Config.EnableTelemetry);
+    private readonly AnalyticsService _analytics = AnalyticsService.Instance;
     private readonly Random _random = new();
     private UpdateService? _updateService;
 
@@ -35,6 +35,7 @@ public partial class MainWindow : Window
     private bool _isExiting;
     private DispatcherTimer? _typeThingCountdownTimer;
     private DispatcherTimer? _typeThingTimer;
+    private DispatcherTimer? _sloDashboardRefreshTimer;
 
     public MainWindow()
     {
@@ -196,6 +197,9 @@ public partial class MainWindow : Window
 
             _trayIconRefreshTimer?.Stop();
             _trayIconRefreshTimer = null;
+
+            _sloDashboardRefreshTimer?.Stop();
+            _sloDashboardRefreshTimer = null;
 
             if (_windowHwndSource != null)
             {

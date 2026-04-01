@@ -14,7 +14,7 @@ namespace Redball.UI.Services;
 public class AnalyticsService : IAnalyticsService
 {
     private bool _disposed;
-    private static readonly Lazy<AnalyticsService> _instance = new(() => new AnalyticsService(true));
+    private static readonly Lazy<AnalyticsService> _instance = new(() => new AnalyticsService());
     public static AnalyticsService Instance => _instance.Value;
     
     private static readonly string AnalyticsFile = Path.Combine(
@@ -25,17 +25,16 @@ public class AnalyticsService : IAnalyticsService
     private static readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion);
     private AnalyticsData _data = new();
     private Timer? _flushTimer;
-    private readonly bool _enabled;
 
-    public AnalyticsService(bool enabled)
+    private readonly bool? _testEnabled;
+    private bool IsEnabled => _testEnabled ?? ConfigService.Instance.Config.EnableTelemetry;
+
+    public AnalyticsService(bool? enabled = null)
     {
-        _enabled = enabled;
-        if (enabled)
-        {
-            Load();
-            // Auto-flush every 5 minutes
-            _flushTimer = new Timer(_ => Flush(), null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
-        }
+        _testEnabled = enabled;
+        Load();
+        // Auto-flush every 5 minutes
+        _flushTimer = new Timer(_ => Flush(), null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
     }
 
     private static string GetFeatureCategory(string featureName)
@@ -137,7 +136,7 @@ public class AnalyticsService : IAnalyticsService
     /// </summary>
     public void TrackFeature(string featureName, string? context = null)
     {
-        if (!_enabled) return;
+        if (!IsEnabled) return;
 
         _lock.EnterWriteLock();
         try
@@ -167,7 +166,7 @@ public class AnalyticsService : IAnalyticsService
     /// </summary>
     public void TrackFunnel(string funnelName, string step)
     {
-        if (!_enabled) return;
+        if (!IsEnabled) return;
 
         _lock.EnterWriteLock();
         try
@@ -191,7 +190,7 @@ public class AnalyticsService : IAnalyticsService
     /// </summary>
     public void TrackRetention(int day)
     {
-        if (!_enabled) return;
+        if (!IsEnabled) return;
 
         _lock.EnterWriteLock();
         try
@@ -212,7 +211,7 @@ public class AnalyticsService : IAnalyticsService
     /// </summary>
     public void RecordNps(int score, string? feedback = null)
     {
-        if (!_enabled) return;
+        if (!IsEnabled) return;
 
         _lock.EnterWriteLock();
         try
@@ -303,7 +302,7 @@ public class AnalyticsService : IAnalyticsService
     /// </summary>
     public void TrackSessionStart()
     {
-        if (!_enabled) return;
+        if (!IsEnabled) return;
         _data.SessionStartTime = DateTime.UtcNow;
         _data.TotalSessions++;
         var todayKey = GetDayKey(DateTime.UtcNow);
@@ -312,7 +311,7 @@ public class AnalyticsService : IAnalyticsService
 
     public void TrackSessionEnd()
     {
-        if (!_enabled) return;
+        if (!IsEnabled) return;
         if (_data.SessionStartTime.HasValue)
         {
             var duration = DateTime.UtcNow - _data.SessionStartTime.Value;
@@ -585,7 +584,7 @@ public class AnalyticsService : IAnalyticsService
 
     private void Flush()
     {
-        if (!_enabled) return;
+        if (!IsEnabled) return;
 
         try
         {

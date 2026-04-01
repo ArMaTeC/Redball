@@ -27,8 +27,8 @@ public partial class AnalyticsDashboard : Window
     {
         try
         {
-            // Create temporary analytics service to read data
-            var analytics = new AnalyticsService(true);
+            // Use singleton analytics service to read data
+            var analytics = AnalyticsService.Instance;
             var summary = analytics.GetSummary();
             var leadingCategory = summary.CategoryTrends.FirstOrDefault();
 
@@ -141,7 +141,7 @@ public partial class AnalyticsDashboard : Window
 
             if (dialog.ShowDialog() == true)
             {
-                var analytics = new AnalyticsService(true);
+                var analytics = AnalyticsService.Instance;
                 var data = analytics.Export();
                 File.WriteAllText(dialog.FileName, data);
                 

@@ -65,8 +65,8 @@ public static class ServiceLocator
         services.AddSingleton<ILocalizationService>(LocalizationService.Instance);
         services.AddSingleton<INotificationService>(NotificationService.Instance);
 
-        // Analytics — singleton, enabled based on config
-        services.AddSingleton<IAnalyticsService>(new AnalyticsService(config.EnableTelemetry));
+        // Analytics — singleton instance shared across app
+        services.AddSingleton<IAnalyticsService>(AnalyticsService.Instance);
 
         // Transient services — new instance per resolution
         services.AddTransient<IHealthCheckService, HealthCheckService>();
