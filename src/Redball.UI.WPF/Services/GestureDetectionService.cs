@@ -286,7 +286,11 @@ public class GestureDetectionService : IDisposable
 
             // Run gesture recognition
             // In production, this would use ML model (MediaPipe, etc.)
-            var detectedGesture = await _gestureRecognizer?.RecognizeAsync(frame);
+            DetectedGesture? detectedGesture = null;
+            if (_gestureRecognizer != null)
+            {
+                detectedGesture = await _gestureRecognizer.RecognizeAsync(frame);
+            }
 
             if (detectedGesture != null)
             {
@@ -369,7 +373,9 @@ public class CameraInfo
 /// </summary>
 public class GestureRecognizer : IDisposable
 {
+#pragma warning disable CS0067 // Event is never used - reserved for future ML-based gesture recognition
     public event EventHandler<RecognizedGesture>? GestureRecognized;
+#pragma warning restore CS0067
 
     public async Task<DetectedGesture?> RecognizeAsync(Bitmap frame)
     {
@@ -422,7 +428,9 @@ public class VideoCaptureDevice : IDisposable
     public bool IsRunning { get; private set; }
     public string MonikerString { get; set; } = string.Empty;
     
+#pragma warning disable CS0067 // Event is never used - reserved for future camera frame processing
     public event EventHandler<NewFrameEventArgs>? NewFrame;
+#pragma warning restore CS0067
     
     public VideoCaptureDevice(string monikerString)
     {

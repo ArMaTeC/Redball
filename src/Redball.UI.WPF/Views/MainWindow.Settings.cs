@@ -1086,6 +1086,12 @@ public partial class MainWindow
         Logger.Info("MainWindow", "Keep awake until cleared");
     }
 
+    private void MainStopHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        // Delegate to shared handler
+        MainHotkeyBox_PreviewKeyDown(sender, e);
+    }
+
     private void MainHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         e.Handled = true;
@@ -1130,6 +1136,24 @@ public partial class MainWindow
 
         ResumeHotkeys();
         AutoApplySettings();
+    }
+
+    private void MainStartHotkeyBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox textBox)
+        {
+            textBox.Text = "Press a key combination...";
+        }
+        SuspendHotkeys();
+    }
+
+    private void MainStopHotkeyBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox textBox)
+        {
+            textBox.Text = "Press a key combination...";
+        }
+        SuspendHotkeys();
     }
 
     private void RefreshHidDriverInstallVisibility()
@@ -1368,13 +1392,19 @@ public partial class MainWindow
                 return;
             }
 
-            if (InstallServiceDirect())
+            var installResult = InstallServiceDirect();
+            if (installResult.Success)
             {
                 NotificationService.Instance.ShowInfo("Service Installed", "Redball Input Service installed successfully. No restart required.");
             }
+            else if (installResult.UserCancelled)
+            {
+                // User cancelled UAC - no error message needed
+                Logger.Info("MainWindow", "Service installation cancelled by user at UAC prompt");
+            }
             else
             {
-                NotificationService.Instance.ShowError("Install Failed", "Failed to install Redball Input Service. Ensure the application is running as Administrator.");
+                NotificationService.Instance.ShowError("Install Failed", $"Failed to install Redball Input Service: {installResult.ErrorMessage}");
             }
         }
         else
@@ -1390,28 +1420,35 @@ public partial class MainWindow
                 return;
             }
 
-            if (UninstallServiceDirect())
+            var uninstallResult = UninstallServiceDirect();
+            if (uninstallResult.Success)
             {
                 NotificationService.Instance.ShowInfo("Service Uninstalled", "Redball Input Service uninstalled successfully.");
             }
+            else if (uninstallResult.UserCancelled)
+            {
+                // User cancelled UAC - no error message needed
+                Logger.Info("MainWindow", "Service uninstallation cancelled by user at UAC prompt");
+            }
             else
             {
-                NotificationService.Instance.ShowError("Uninstall Failed", "Failed to uninstall Redball Input Service. Ensure the application is running as Administrator.");
+                NotificationService.Instance.ShowError("Uninstall Failed", $"Failed to uninstall Redball Input Service: {uninstallResult.ErrorMessage}");
             }
         }
 
         RefreshHidDriverInstallVisibility();
     }
 
-    private bool InstallServiceDirect()
+    private (bool Success, bool UserCancelled, string ErrorMessage) InstallServiceDirect()
     {
         try
         {
             var servicePath = ResolveServiceExecutablePath();
             if (!System.IO.File.Exists(servicePath))
             {
-                Logger.Error("MainWindow", $"Service executable not found: {servicePath}");
-                return false;
+                var msg = $"Service executable not found: {servicePath}";
+                Logger.Error("MainWindow", msg);
+                return (false, false, msg);
             }
 
             // Check admin rights - if not admin, relaunch app with elevation
@@ -1430,13 +1467,42 @@ public partial class MainWindow
                 try
                 {
                     using var process = Process.Start(processInfo);
-                    process?.WaitForExit();
-                    return process?.ExitCode == 0;
+                    if (process == null)
+                    {
+                        var err = "Failed to start elevated process.";
+                        Logger.Error("MainWindow", err);
+                        return (false, false, err);
+                    }
+                    
+                    // Wait with 60-second timeout to prevent hanging
+                    if (!process.WaitForExit(60000))
+                    {
+                        Logger.Warning("MainWindow", "Elevated service install process timed out after 60 seconds");
+                        try { process.Kill(); } catch { }
+                        return (false, false, "Installation timed out. The elevated process did not complete in time.");
+                    }
+                    
+                    var exitCode = process.ExitCode;
+                    if (exitCode == 0)
+                    {
+                        return (true, false, string.Empty);
+                    }
+                    else
+                    {
+                        var err = $"Installation failed with exit code {exitCode}. Check logs for details.";
+                        Logger.Error("MainWindow", err);
+                        return (false, false, err);
+                    }
                 }
-                catch (Win32Exception)
+                catch (Win32Exception ex) when (ex.NativeErrorCode == 1223) // ERROR_CANCELLED
                 {
-                    Logger.Warning("MainWindow", "User cancelled UAC elevation for service install");
-                    return false;
+                    Logger.Info("MainWindow", "User cancelled UAC elevation for service install");
+                    return (false, true, string.Empty);
+                }
+                catch (Win32Exception ex)
+                {
+                    Logger.Error("MainWindow", "Win32Exception during elevated service install", ex);
+                    return (false, false, $"Elevation failed: {ex.Message}");
                 }
             }
 
@@ -1444,27 +1510,37 @@ public partial class MainWindow
             var createResult = RunProcess("sc.exe", $"create RedballInputService binPath= \"{servicePath}\" start= auto");
             if (createResult.ExitCode != 0)
             {
-                Logger.Error("MainWindow", $"Failed to create service: {createResult.StdErr}");
-                return false;
+                // Check if service already exists
+                if (createResult.StdErr.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+                {
+                    Logger.Info("MainWindow", "Service already exists, attempting to start...");
+                }
+                else
+                {
+                    var err = $"Failed to create service: {createResult.StdErr}";
+                    Logger.Error("MainWindow", err);
+                    return (false, false, err);
+                }
             }
 
             var startResult = RunProcess("sc.exe", "start RedballInputService");
             if (startResult.ExitCode != 0)
             {
                 Logger.Warning("MainWindow", $"Service created but failed to start: {startResult.StdErr}");
+                // Don't fail if service was created but couldn't start - it might already be running
             }
 
             Logger.Info("MainWindow", "Redball Input Service installed successfully");
-            return true;
+            return (true, false, string.Empty);
         }
         catch (Exception ex)
         {
             Logger.Error("MainWindow", "Service installation failed", ex);
-            return false;
+            return (false, false, $"Unexpected error: {ex.Message}");
         }
     }
 
-    private static bool UninstallServiceDirect()
+    private (bool Success, bool UserCancelled, string ErrorMessage) UninstallServiceDirect()
     {
         try
         {
@@ -1484,13 +1560,42 @@ public partial class MainWindow
                 try
                 {
                     using var process = Process.Start(processInfo);
-                    process?.WaitForExit();
-                    return process?.ExitCode == 0;
+                    if (process == null)
+                    {
+                        var err = "Failed to start elevated process.";
+                        Logger.Error("MainWindow", err);
+                        return (false, false, err);
+                    }
+                    
+                    // Wait with 60-second timeout to prevent hanging
+                    if (!process.WaitForExit(60000))
+                    {
+                        Logger.Warning("MainWindow", "Elevated service uninstall process timed out after 60 seconds");
+                        try { process.Kill(); } catch { }
+                        return (false, false, "Uninstallation timed out. The elevated process did not complete in time.");
+                    }
+                    
+                    var exitCode = process.ExitCode;
+                    if (exitCode == 0)
+                    {
+                        return (true, false, string.Empty);
+                    }
+                    else
+                    {
+                        var err = $"Uninstallation failed with exit code {exitCode}. Check logs for details.";
+                        Logger.Error("MainWindow", err);
+                        return (false, false, err);
+                    }
                 }
-                catch (Win32Exception)
+                catch (Win32Exception ex) when (ex.NativeErrorCode == 1223) // ERROR_CANCELLED
                 {
-                    Logger.Warning("MainWindow", "User cancelled UAC elevation for service uninstall");
-                    return false;
+                    Logger.Info("MainWindow", "User cancelled UAC elevation for service uninstall");
+                    return (false, true, string.Empty);
+                }
+                catch (Win32Exception ex)
+                {
+                    Logger.Error("MainWindow", "Win32Exception during elevated service uninstall", ex);
+                    return (false, false, $"Elevation failed: {ex.Message}");
                 }
             }
 
@@ -1500,19 +1605,20 @@ public partial class MainWindow
 
             // Delete the service
             var deleteResult = RunProcess("sc.exe", "delete RedballInputService");
-            if (deleteResult.ExitCode != 0)
+            if (deleteResult.ExitCode != 0 && !deleteResult.StdErr.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
             {
-                Logger.Error("MainWindow", $"Failed to delete service: {deleteResult.StdErr}");
-                return false;
+                var err = $"Failed to delete service: {deleteResult.StdErr}";
+                Logger.Error("MainWindow", err);
+                return (false, false, err);
             }
 
             Logger.Info("MainWindow", "Redball Input Service uninstalled successfully");
-            return true;
+            return (true, false, string.Empty);
         }
         catch (Exception ex)
         {
             Logger.Error("MainWindow", "Service uninstallation failed", ex);
-            return false;
+            return (false, false, $"Unexpected error: {ex.Message}");
         }
     }
 

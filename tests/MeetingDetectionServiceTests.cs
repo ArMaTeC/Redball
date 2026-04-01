@@ -41,6 +41,9 @@ public class MeetingDetectionServiceTests
         
         // Cleanup
         service.MeetingStateChanged -= handler;
+        
+        // Use eventFired to suppress warning - we're testing subscription only
+        Assert.IsFalse(eventFired);
     }
 
     [TestMethod]

@@ -439,7 +439,7 @@
                                                     <TextBlock Text="Privacy, telemetry, and advanced runtime behavior." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
                                                     <CheckBox x:Name="MainConfirmOnExitCheck" Content="Confirm on exit" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
                                                     <CheckBox x:Name="MainEncryptConfigCheck" Content="Encrypt config with DPAPI" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainEnableTelemetryCheck" Content="Enable telemetry" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainEnableTelemetryCheck" Content="Enable analytics" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Track session counts, usage time, and feature usage locally. Data stays on your device and can be exported anytime."/>
                                                     <CheckBox x:Name="MainEnablePerformanceMetricsCheck" Content="Enable performance metrics" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
                                                     <CheckBox x:Name="MainProcessIsolationCheck" Content="Enable process isolation" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
 
@@ -838,10 +838,12 @@
 
                                             <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
                                             <TextBox x:Name="MainStartHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"
-                                                     LostFocus="MainSettingChanged"/>
+                                                     PreviewKeyDown="MainHotkeyBox_PreviewKeyDown" GotFocus="MainStartHotkeyBox_GotFocus" LostFocus="MainHotkeyBox_LostFocus"
+                                                     Tag="Click here and press your desired hotkey combination..."/>
                                             <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
                                             <TextBox x:Name="MainStopHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,10"
-                                                     LostFocus="MainSettingChanged"/>
+                                                     PreviewKeyDown="MainHotkeyBox_PreviewKeyDown" GotFocus="MainStopHotkeyBox_GotFocus" LostFocus="MainHotkeyBox_LostFocus"
+                                                     Tag="Click here and press your desired hotkey combination..."/>
 
                                             <TextBlock Text="Typing Speed (max delay ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
                                             <Slider x:Name="MainTypingSpeedSlider" Minimum="1" Maximum="500" TickFrequency="1"

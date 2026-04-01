@@ -142,5 +142,8 @@ public class ZoomIntegrationServiceTests
         Assert.IsTrue(true);
         
         ZoomIntegrationService.Instance.StatusChanged -= handler;
+        
+        // Use eventFired to suppress warning - we're testing subscription only
+        Assert.IsFalse(eventFired);
     }
 }

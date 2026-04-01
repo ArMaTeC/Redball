@@ -27,7 +27,9 @@ public class MobileCompanionApiService
 
     public event EventHandler<DevicePairedEventArgs>? DevicePaired;
     public event EventHandler<DeviceUnpairedEventArgs>? DeviceUnpaired;
+#pragma warning disable CS0067 // Event is never used - reserved for future remote command handling
     public event EventHandler<RemoteCommandEventArgs>? RemoteCommandReceived;
+#pragma warning restore CS0067
 
     public bool IsEnabled { get; set; }
     public bool IsRunning => _isRunning;

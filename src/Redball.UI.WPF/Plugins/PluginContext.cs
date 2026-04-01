@@ -56,7 +56,14 @@ internal class PluginLogger : IPluginLogger
 
     public void Error(string message, Exception? exception = null)
     {
-        Logger.Error("Plugin", message, exception);
+        if (exception != null)
+        {
+            Logger.Error("Plugin", message, exception);
+        }
+        else
+        {
+            Logger.Error("Plugin", message);
+        }
     }
 }
 

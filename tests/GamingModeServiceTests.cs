@@ -42,6 +42,9 @@ public class GamingModeServiceTests
         
         // Cleanup
         service.GamingStateChanged -= handler;
+        
+        // Use eventFired to suppress warning - we're testing subscription only
+        Assert.IsFalse(eventFired);
     }
 
     [TestMethod]

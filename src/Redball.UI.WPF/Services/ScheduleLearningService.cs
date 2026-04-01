@@ -260,7 +260,7 @@ public class ScheduleLearningService
         // Find common duration patterns
         var durations = sessions
             .Where(s => s.Duration.HasValue)
-            .Select(s => s.Duration.Value.TotalMinutes)
+            .Select(s => s.Duration.GetValueOrDefault().TotalMinutes)
             .ToList();
 
         if (durations.Count < 5) return;

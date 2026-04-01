@@ -385,6 +385,7 @@ public class SmartHomeIntegrationService
                             foreach (var state in haStates.Where(s => s.EntityId?.StartsWith("light.") == true || 
                                                                         s.EntityId?.StartsWith("switch.") == true))
                             {
+                                if (string.IsNullOrEmpty(state.EntityId)) continue;
                                 devices.Add(new SmartDevice
                                 {
                                     DeviceId = state.EntityId!,

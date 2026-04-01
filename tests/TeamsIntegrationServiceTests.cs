@@ -126,5 +126,8 @@ public class TeamsIntegrationServiceTests
         Assert.IsTrue(true);
         
         TeamsIntegrationService.Instance.StatusChanged -= handler;
+        
+        // Use eventFired to suppress warning - we're testing subscription only
+        Assert.IsFalse(eventFired);
     }
 }

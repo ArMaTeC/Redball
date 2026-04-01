@@ -81,7 +81,7 @@ public class UsageBasedLicensingService
                 });
 
                 Logger.Info("UsageBasedLicensingService", 
-                    $"License activated: {_currentLicense.LicenseType} ({_currentLicense.Tier})");
+                    $"License activated: {_currentLicense?.LicenseType} ({_currentLicense?.Tier})");
 
                 return new LicenseActivationResult
                 {
@@ -630,8 +630,8 @@ public class UsageTracker
             TotalActiveHours = _records.Where(r => r.Type == UsageType.ActiveSession).Sum(r => r.Duration.TotalHours),
             MonthlyActiveHours = _records.Where(r => r.Type == UsageType.ActiveSession && r.StartTime >= monthStart).Sum(r => r.Duration.TotalHours),
             TotalSessions = _records.Count(r => r.Type == UsageType.ActiveSession),
-            FeatureUsage = _records.Where(r => r.Type == UsageType.FeatureUsage)
-                .GroupBy(r => r.FeatureName)
+            FeatureUsage = _records.Where(r => r.Type == UsageType.FeatureUsage && r.FeatureName != null)
+                .GroupBy(r => r.FeatureName!)
                 .ToDictionary(g => g.Key, g => g.Sum(r => r.Count)),
             ConcurrentUsers = 1, // Simplified
             RegisteredDevices = 1 // Simplified
@@ -646,8 +646,8 @@ public class UsageTracker
         {
             TotalActiveHours = periodRecords.Where(r => r.Type == UsageType.ActiveSession).Sum(r => r.Duration.TotalHours),
             TotalSessions = periodRecords.Count(r => r.Type == UsageType.ActiveSession),
-            FeatureUsage = periodRecords.Where(r => r.Type == UsageType.FeatureUsage)
-                .GroupBy(r => r.FeatureName)
+            FeatureUsage = periodRecords.Where(r => r.Type == UsageType.FeatureUsage && r.FeatureName != null)
+                .GroupBy(r => r.FeatureName!)
                 .ToDictionary(g => g.Key, g => g.Sum(r => r.Count))
         };
     }

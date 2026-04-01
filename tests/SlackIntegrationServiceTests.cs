@@ -124,5 +124,8 @@ public class SlackIntegrationServiceTests
         Assert.IsTrue(true);
         
         SlackIntegrationService.Instance.StatusChanged -= handler;
+        
+        // Use eventFired to suppress warning - we're testing subscription only
+        Assert.IsFalse(eventFired);
     }
 }

@@ -35,6 +35,7 @@ public class SecurityPolicyService
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         _policyCachePath = Path.Combine(appData, "Redball", "security-policy.json");
         _violationLog = new List<SecurityViolation>();
+        _currentPolicy = new SecurityPolicy(); // Initialize to default before loading
         
         LoadCachedPolicy();
         

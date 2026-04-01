@@ -171,6 +171,9 @@ public class AdminDashboardServiceTests
         Assert.IsTrue(true);
         
         AdminDashboardService.Instance.PolicyChanged -= handler;
+        
+        // Use eventFired to suppress warning - we're testing subscription only
+        Assert.IsFalse(eventFired);
     }
 
     [TestMethod]
@@ -185,6 +188,9 @@ public class AdminDashboardServiceTests
         Assert.IsTrue(true);
         
         AdminDashboardService.Instance.ComplianceReportReady -= handler;
+        
+        // Use eventFired to suppress warning - we're testing subscription only
+        Assert.IsFalse(eventFired);
     }
 
     [TestMethod]
