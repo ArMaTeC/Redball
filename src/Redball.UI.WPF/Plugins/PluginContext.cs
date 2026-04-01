@@ -136,11 +136,11 @@ internal class KeepAwakePluginServiceAdapter : IKeepAwakePluginService
         _inner.ActiveStateChanged += OnInnerStateChanged;
     }
 
-    private void OnInnerStateChanged(object? sender, EventArgs e)
+    private void OnInnerStateChanged(object? sender, bool isActive)
     {
         StateChanged?.Invoke(this, new KeepAwakeStateChangedEventArgs
         {
-            IsActive = _inner.IsActive
+            IsActive = isActive
         });
     }
 

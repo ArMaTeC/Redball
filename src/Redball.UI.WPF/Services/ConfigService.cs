@@ -52,6 +52,7 @@ public class ConfigService : IConfigService
 
     public RedballConfig Config { get; internal set; } = new();
     public string ConfigPath { get; private set; } = "";
+    public string ConfigFilePath => ConfigPath;
     public bool IsDirty { get; set; }
     
     /// <summary>

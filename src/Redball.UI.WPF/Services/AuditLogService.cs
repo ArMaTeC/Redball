@@ -96,6 +96,25 @@ public class AuditLogService
     }
 
     /// <summary>
+    /// Records a security event from the security policy service.
+    /// </summary>
+    public void LogSecurityEvent(SecurityEvent securityEvent)
+    {
+        var entry = new AuditLogEntry
+        {
+            Timestamp = securityEvent.Timestamp,
+            EventType = AuditEventType.Security,
+            Action = securityEvent.EventType.ToString(),
+            Details = securityEvent.Description,
+            IsSuccess = true,
+            UserId = securityEvent.UserId,
+            MachineName = securityEvent.DeviceId
+        };
+        
+        WriteEntry(entry);
+    }
+
+    /// <summary>
     /// Records system-level events (start, stop, errors).
     /// </summary>
     public void LogSystemEvent(string action, string details, bool isSuccess = true)

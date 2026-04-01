@@ -163,12 +163,11 @@ public class MobileNotificationService
     /// <summary>
     /// Notifies all devices when keep-awake state changes.
     /// </summary>
-    private async void OnKeepAwakeStateChanged(object? sender, EventArgs e)
+    private async void OnKeepAwakeStateChanged(object? sender, bool isActive)
     {
         if (!IsEnabled)
             return;
 
-        var isActive = KeepAwakeService.Instance.IsActive;
         var notification = new MobileNotification
         {
             Title = isActive ? "Redball Activated" : "Redball Deactivated",

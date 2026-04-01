@@ -22,6 +22,10 @@ public class BatteryMonitorService
     public bool IsOnBattery => GetStatus().IsOnBattery;
     public int BatteryPercent => GetStatus().ChargePercent;
 
+    public bool IsBatteryMonitoringAvailable => true;
+    public int CurrentLevel => BatteryPercent;
+    public bool IsCharging => !IsOnBattery;
+    public TimeSpan? EstimatedTimeRemaining => null;
     public bool IsEnabled { get; set; }
     public int Threshold { get; set; } = 20;
 

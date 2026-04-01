@@ -106,8 +106,8 @@
 
 
 
-    <!-- .NET 8 prerequisite is handled by the Bundle (Setup.exe) installer.
-         If the MSI is run standalone without .NET 8, Windows will show the
+    <!-- .NET 10 prerequisite is handled by the Bundle (Setup.exe) installer.
+         If the MSI is run standalone without .NET 10, Windows will show the
          standard .NET runtime-not-found dialog with a direct download link. -->
 
     <!-- Clear Installed property for proper checkbox behavior on upgrades -->

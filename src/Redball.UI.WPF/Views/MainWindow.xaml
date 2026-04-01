@@ -53,7 +53,7 @@
                     <Separator/>
 
                     <!-- Toggle Action -->
-                    <MenuItem Header="_Pause Keep-Awake" Command="{Binding PauseKeepAwakeCommand}">
+                    <MenuItem Header="Pause Keep-Awake" Command="{Binding PauseKeepAwakeCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE769;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
@@ -61,24 +61,24 @@
                     <Separator/>
 
                     <!-- Quick Settings -->
-                    <MenuItem Header="Prevent _Display Sleep" IsCheckable="True" IsChecked="{Binding PreventDisplaySleep, Mode=OneWay}" Command="{Binding ToggleDisplaySleepCommand}"/>
-                    <MenuItem Header="_Use F15 Heartbeat" IsCheckable="True" IsChecked="{Binding UseHeartbeat, Mode=OneWay}" Command="{Binding ToggleHeartbeatCommand}"/>
+                    <MenuItem Header="Prevent Display Sleep" IsCheckable="True" IsChecked="{Binding PreventDisplaySleep, Mode=OneWay}" Command="{Binding ToggleDisplaySleepCommand}"/>
+                    <MenuItem Header="Use F15 Heartbeat" IsCheckable="True" IsChecked="{Binding UseHeartbeat, Mode=OneWay}" Command="{Binding ToggleHeartbeatCommand}"/>
                     <Separator/>
 
                     <!-- TypeThing -->
-                    <MenuItem Header="TypeThing (_Paste as Typing)" Command="{Binding TypeThingCommand}">
+                    <MenuItem Header="TypeThing (Paste as Typing)" Command="{Binding TypeThingCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE8D2;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Emergency _HID Release" Command="{Binding EmergencyHidReleaseCommand}">
+                    <MenuItem Header="Emergency HID Release" Command="{Binding EmergencyHidReleaseCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xEA39;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
                     <Separator/>
 
-                    <MenuItem Header="_Open Logs" Command="{Binding OpenLogsCommand}">
+                    <MenuItem Header="Open Logs" Command="{Binding OpenLogsCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE8A5;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
@@ -86,28 +86,28 @@
                     <Separator/>
 
                     <!-- Main Actions -->
-                    <MenuItem Header="_Mini Widget" Command="{Binding ShowMiniWidgetCommand}">
+                    <MenuItem Header="Mini Widget" Command="{Binding ShowMiniWidgetCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE737;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="_Reset Mini Widget Position" Command="{Binding ResetMiniWidgetPositionCommand}"
+                    <MenuItem Header="Reset Mini Widget Position" Command="{Binding ResetMiniWidgetPositionCommand}"
                               Visibility="{Binding IsMiniWidgetVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="_Check for Updates" Command="{Binding CheckForUpdatesCommand}">
+                    <MenuItem Header="Check for Updates" Command="{Binding CheckForUpdatesCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE895;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="_Settings..." Command="{Binding OpenSettingsCommand}">
+                    <MenuItem Header="Settings..." Command="{Binding OpenSettingsCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="E_xit" Command="{Binding ExitCommand}">
+                    <MenuItem Header="Exit" Command="{Binding ExitCommand}">
                         <MenuItem.Icon>
                             <TextBlock Text="&#xE7E8;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>

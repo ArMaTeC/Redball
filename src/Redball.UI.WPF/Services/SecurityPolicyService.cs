@@ -629,7 +629,22 @@ public class ComplianceExport
     public List<SecurityViolation> RecentViolations { get; set; } = new();
 }
 
+public class PolicyValidationResult
+{
+    public SecurityAction Action { get; set; }
+    public bool IsAllowed { get; set; }
+    public string Reason { get; set; } = string.Empty;
+    public DateTime ValidationTime { get; set; }
+}
+
 // Event args
+public class PolicyChangedEventArgs : EventArgs
+{
+    public SecurityPolicy OldPolicy { get; set; } = new();
+    public SecurityPolicy NewPolicy { get; set; } = new();
+    public DateTime ChangedAt { get; set; }
+}
+
 public class SecurityViolationEventArgs : EventArgs
 {
     public SecurityViolation Violation { get; set; } = new();

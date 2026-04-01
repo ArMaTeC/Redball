@@ -206,7 +206,7 @@ public class AdvancedAnalyticsService
         return score;
     }
 
-    private UsageMetrics CalculateUsageMetrics(List<SessionRecord> sessions, DateTime start, DateTime end)
+    private UsageMetrics CalculateUsageMetrics(IReadOnlyList<SessionStatsService.SessionRecord> sessions, DateTime start, DateTime end)
     {
         var days = (end - start).TotalDays;
         
@@ -228,7 +228,7 @@ public class AdvancedAnalyticsService
         };
     }
 
-    private UsagePredictions GeneratePredictions(List<SessionRecord> sessions)
+    private UsagePredictions GeneratePredictions(IReadOnlyList<SessionStatsService.SessionRecord> sessions)
     {
         if (sessions.Count < 5)
         {
@@ -249,7 +249,7 @@ public class AdvancedAnalyticsService
         };
     }
 
-    private List<UsageInsight> GenerateInsights(List<SessionRecord> sessions, UsageMetrics metrics)
+    private List<UsageInsight> GenerateInsights(IReadOnlyList<SessionStatsService.SessionRecord> sessions, UsageMetrics metrics)
     {
         var insights = new List<UsageInsight>();
 
@@ -341,7 +341,7 @@ public class AdvancedAnalyticsService
         return recommendations.OrderByDescending(r => r.Priority).ToList();
     }
 
-    private List<DetectedPattern> FindUsagePatterns(List<SessionRecord> sessions)
+    private List<DetectedPattern> FindUsagePatterns(IReadOnlyList<SessionStatsService.SessionRecord> sessions)
     {
         var patterns = new List<DetectedPattern>();
         
@@ -386,7 +386,7 @@ public class AdvancedAnalyticsService
         return patterns;
     }
 
-    private TimeSpan? FindMostProductiveTime(List<SessionRecord> sessions)
+    private TimeSpan? FindMostProductiveTime(IReadOnlyList<SessionStatsService.SessionRecord> sessions)
     {
         return sessions
             .Where(s => s.Duration.HasValue && s.Duration.Value.TotalMinutes > 30)
@@ -396,7 +396,7 @@ public class AdvancedAnalyticsService
             .FirstOrDefault();
     }
 
-    private DayOfWeek? FindMostActiveDay(List<SessionRecord> sessions)
+    private DayOfWeek? FindMostActiveDay(IReadOnlyList<SessionStatsService.SessionRecord> sessions)
     {
         return sessions
             .GroupBy(s => s.StartTime.DayOfWeek)
@@ -405,7 +405,7 @@ public class AdvancedAnalyticsService
             .FirstOrDefault();
     }
 
-    private int? FindPeakUsageHour(List<SessionRecord> sessions)
+    private int? FindPeakUsageHour(IReadOnlyList<SessionStatsService.SessionRecord> sessions)
     {
         return sessions
             .GroupBy(s => s.StartTime.Hour)
@@ -414,7 +414,7 @@ public class AdvancedAnalyticsService
             .FirstOrDefault();
     }
 
-    private double CalculateConsistency(List<SessionRecord> sessions, int days)
+    private double CalculateConsistency(IReadOnlyList<SessionStatsService.SessionRecord> sessions, int days)
     {
         if (sessions.Count == 0) return 0;
         

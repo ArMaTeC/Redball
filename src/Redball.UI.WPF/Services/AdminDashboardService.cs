@@ -20,7 +20,7 @@ public class AdminDashboardService
     private readonly string _policyFile;
     private AdminPolicy _activePolicy = new();
     
-    public event EventHandler<PolicyChangedEventArgs>? PolicyChanged;
+    public event EventHandler<AdminPolicyChangedEventArgs>? PolicyChanged;
     public event EventHandler<ComplianceReportReadyEventArgs>? ComplianceReportReady;
 
     public bool IsAdminModeEnabled => ConfigService.Instance.Config.EnableAdminDashboard;
@@ -115,7 +115,7 @@ public class AdminDashboardService
             var config = ConfigService.Instance.Config;
             ApplyPolicyToConfig(config, policy);
             
-            PolicyChanged?.Invoke(this, new PolicyChangedEventArgs 
+            PolicyChanged?.Invoke(this, new AdminPolicyChangedEventArgs 
             { 
                 Policy = policy, 
                 AppliedAt = DateTime.UtcNow 
@@ -134,7 +134,7 @@ public class AdminDashboardService
     /// <summary>
     /// Validates current configuration against active policy.
     /// </summary>
-    public PolicyValidationResult ValidateCompliance()
+    public AdminPolicyValidationResult ValidateCompliance()
     {
         var config = ConfigService.Instance.Config;
         var violations = new List<PolicyViolation>();
@@ -187,7 +187,7 @@ public class AdminDashboardService
             });
         }
         
-        return new PolicyValidationResult
+        return new AdminPolicyValidationResult
         {
             IsCompliant = !violations.Any(v => v.Severity == ViolationSeverity.Error),
             Violations = violations,
@@ -433,6 +433,17 @@ public class AdminPolicy
 
 public class UsageReport
 {
+    // For UsageBasedLicensingService
+    public string LicenseId { get; set; } = string.Empty;
+    public DateTime ReportedAt { get; set; }
+    public object Stats { get; set; } = new();
+    
+    // For CentralizedManagementService
+    public string DeviceId { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
+    public Redball.UI.Services.UsageMetrics Metrics { get; set; } = new();
+    
+    // For AdminDashboardService
     public DateRange Period { get; set; } = new();
     public int TotalSessions { get; set; }
     public TimeSpan TotalActiveTime { get; set; }
@@ -446,6 +457,14 @@ public class UsageReport
 
 public class ComplianceReport
 {
+    // For SecurityPolicyService
+    public DateTime CheckedAt { get; set; }
+    public string PolicyName { get; set; } = string.Empty;
+    public bool IsCompliant { get; set; }
+    public double ComplianceScore { get; set; }
+    public List<ComplianceCheck> Checks { get; set; } = new();
+    
+    // For AdminDashboardService
     public DateRange Period { get; set; } = new();
     public DateTime GeneratedAt { get; set; }
     public int TotalEvents { get; set; }
@@ -456,17 +475,9 @@ public class ComplianceReport
     public int SystemEventCount { get; set; }
     public int SessionEventCount { get; set; }
     public int UniqueUsers { get; set; }
-    public double ComplianceScore { get; set; }
     public List<ComplianceViolation> Violations { get; set; } = new();
     public DataRetentionStatus DataRetentionStatus { get; set; } = new();
     public EncryptionStatus EncryptionStatus { get; set; } = new();
-}
-
-public class PolicyValidationResult
-{
-    public bool IsCompliant { get; set; }
-    public List<PolicyViolation> Violations { get; set; } = new();
-    public DateTime LastChecked { get; set; }
 }
 
 public class SystemHealthMetrics
@@ -540,13 +551,21 @@ public enum ViolationSeverity
 }
 
 // Event args
-public class PolicyChangedEventArgs : EventArgs
+public class ComplianceReportReadyEventArgs : EventArgs
+{
+    public ComplianceReport Report { get; set; } = new();
+}
+
+// AdminDashboard-specific event args and result classes
+public class AdminPolicyChangedEventArgs : EventArgs
 {
     public AdminPolicy Policy { get; set; } = new();
     public DateTime AppliedAt { get; set; }
 }
 
-public class ComplianceReportReadyEventArgs : EventArgs
+public class AdminPolicyValidationResult
 {
-    public ComplianceReport Report { get; set; } = new();
+    public bool IsCompliant { get; set; }
+    public List<PolicyViolation> Violations { get; set; } = new();
+    public DateTime LastChecked { get; set; }
 }

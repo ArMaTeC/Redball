@@ -73,6 +73,8 @@ public class KeepAwakeService : IKeepAwakeService
         }
     }
 
+    public TimeSpan CurrentSessionDuration => _sessionStopwatch?.Elapsed ?? TimeSpan.Zero;
+
     public bool PreventDisplaySleep
     {
         get => _preventDisplaySleep;

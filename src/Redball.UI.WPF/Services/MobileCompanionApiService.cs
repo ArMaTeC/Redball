@@ -82,6 +82,28 @@ public class MobileCompanionApiService
         }
     }
 
+    public async Task<string?> RegisterDeviceAsync(ApiDeviceInfo deviceInfo)
+    {
+        try
+        {
+            var apiKey = Guid.NewGuid().ToString("N");
+            var pairedDevice = new PairedDevice
+            {
+                DeviceId = deviceInfo.DeviceId ?? Guid.NewGuid().ToString("N"),
+                DeviceName = deviceInfo.Name,
+                Platform = deviceInfo.Platform,
+                PairedAt = DateTime.UtcNow,
+                ApiKey = apiKey
+            };
+            _pairedDevices[apiKey] = pairedDevice;
+            return await Task.FromResult(apiKey);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private async Task HandleRequestAsync(HttpListenerContext context)
     {
         var req = context.Request;

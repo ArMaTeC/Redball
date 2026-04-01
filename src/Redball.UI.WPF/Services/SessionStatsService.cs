@@ -101,6 +101,36 @@ public class SessionStatsService
         return string.Join("\n", lines);
     }
 
+    public async Task<IReadOnlyList<SessionRecord>> GetSessionHistoryAsync(int days)
+    {
+        var end = DateTime.Now;
+        var start = end.AddDays(-days);
+        return await GetSessionHistoryAsync(start, end);
+    }
+
+    public async Task<IReadOnlyList<SessionRecord>> GetSessionHistoryAsync(DateTime start, DateTime end)
+    {
+        return await Task.FromResult(_data.DailyHours
+            .Where(d => DateTime.TryParse(d.Key, out var date) && date >= start && date <= end)
+            .Select(d => new SessionRecord
+            {
+                Date = d.Key,
+                Hours = d.Value
+            })
+            .ToList());
+    }
+
+    public class SessionRecord
+    {
+        public string Date { get; set; } = string.Empty;
+        public double Hours { get; set; }
+        
+        // For ScheduleLearningService and AdvancedAnalyticsService compatibility
+        public DateTime StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public TimeSpan? Duration => EndTime.HasValue ? EndTime.Value - StartTime : null;
+    }
+
     private static string FormatDuration(TimeSpan ts)
     {
         if (ts.TotalDays >= 1)

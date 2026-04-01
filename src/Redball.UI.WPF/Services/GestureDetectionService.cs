@@ -424,6 +424,11 @@ public class VideoCaptureDevice : IDisposable
     
     public event EventHandler<NewFrameEventArgs>? NewFrame;
     
+    public VideoCaptureDevice(string monikerString)
+    {
+        MonikerString = monikerString;
+    }
+    
     public void Start() { IsRunning = true; }
     public void SignalToStop() { IsRunning = false; }
     public void WaitForStop() { }

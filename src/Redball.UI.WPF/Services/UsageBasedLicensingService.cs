@@ -321,10 +321,9 @@ public class UsageBasedLicensingService
         }
     }
 
-    private void OnKeepAwakeStateChanged(object? sender, EventArgs e)
+    private void OnKeepAwakeStateChanged(object? sender, bool isActive)
     {
-        // Track session usage for license metering
-        if (KeepAwakeService.Instance.IsActive)
+        if (isActive)
         {
             _usageTracker.StartSession();
         }
@@ -332,6 +331,8 @@ public class UsageBasedLicensingService
         {
             _usageTracker.EndSession();
         }
+        
+        CheckUsageLimits(_usageTracker.GetStats());
     }
 
     private void CheckApproachingLimits()

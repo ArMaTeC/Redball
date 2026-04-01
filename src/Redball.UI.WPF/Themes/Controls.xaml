@@ -522,25 +522,14 @@
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="15" ShadowDepth="4" Opacity="0.35" Color="Black"/>
                         </Border.Effect>
-                        <StackPanel IsItemsHost="True" Opacity="0" x:Name="MenuWrapper">
+                        <StackPanel IsItemsHost="True" Opacity="1" x:Name="MenuWrapper">
                             <StackPanel.RenderTransform>
-                                <TranslateTransform Y="5"/>
+                                <TranslateTransform Y="0"/>
                             </StackPanel.RenderTransform>
                         </StackPanel>
                     </Border>
                     <ControlTemplate.Triggers>
-                        <EventTrigger RoutedEvent="Loaded">
-                            <BeginStoryboard>
-                                <Storyboard>
-                                    <DoubleAnimation Storyboard.TargetName="MenuWrapper" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15"/>
-                                    <DoubleAnimation Storyboard.TargetName="MenuWrapper" Storyboard.TargetProperty="(StackPanel.RenderTransform).(TranslateTransform.Y)" To="0" Duration="0:0:0.2">
-                                        <DoubleAnimation.EasingFunction>
-                                            <PowerEase Power="3" EasingMode="EaseOut"/>
-                                        </DoubleAnimation.EasingFunction>
-                                    </DoubleAnimation>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
+                        <!-- Removed fade animation for faster menu opening -->
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>

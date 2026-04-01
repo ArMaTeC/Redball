@@ -163,7 +163,7 @@ public class AdminDashboardServiceTests
     public void PolicyChanged_EventCanBeSubscribed()
     {
         bool eventFired = false;
-        EventHandler<PolicyChangedEventArgs> handler = (s, e) => eventFired = true;
+        EventHandler<AdminPolicyChangedEventArgs> handler = (s, e) => eventFired = true;
         
         AdminDashboardService.Instance.PolicyChanged += handler;
         

@@ -96,6 +96,8 @@ public class RedballConfig
     // Power Plan
     public bool PowerPlanAutoSwitch { get; set; }
 
+    // Audit Logging
+    public bool EnableAuditLogging { get; set; }
     // WiFi-based profiles (format: "WiFiName=ProfileName" per line)
     public bool WifiProfileSwitchEnabled { get; set; }
     public string WifiProfileMappings { get; set; } = "";

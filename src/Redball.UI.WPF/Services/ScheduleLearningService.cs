@@ -201,7 +201,7 @@ public class ScheduleLearningService
         return prediction;
     }
 
-    private void DetectTimePatterns(List<SessionRecord> sessions)
+    private void DetectTimePatterns(IReadOnlyList<SessionStatsService.SessionRecord> sessions)
     {
         // Group sessions by hour of day
         var hourGroups = sessions
@@ -229,7 +229,7 @@ public class ScheduleLearningService
         }
     }
 
-    private void DetectDayPatterns(List<SessionRecord> sessions)
+    private void DetectDayPatterns(IReadOnlyList<SessionStatsService.SessionRecord> sessions)
     {
         // Group by day of week
         var dayGroups = sessions
@@ -255,7 +255,7 @@ public class ScheduleLearningService
         }
     }
 
-    private void DetectDurationPatterns(List<SessionRecord> sessions)
+    private void DetectDurationPatterns(IReadOnlyList<SessionStatsService.SessionRecord> sessions)
     {
         // Find common duration patterns
         var durations = sessions
