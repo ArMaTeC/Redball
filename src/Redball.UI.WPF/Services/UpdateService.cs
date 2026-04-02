@@ -15,6 +15,98 @@ using System.Windows;
 namespace Redball.UI.Services;
 
 /// <summary>
+/// Cache for file hashes to avoid re-hashing unchanged files during update checks.
+/// </summary>
+public class FileHashCache
+{
+    private readonly string _cacheFilePath;
+    private Dictionary<string, FileHashEntry> _cache = new();
+    private readonly object _lock = new();
+
+    public FileHashCache()
+    {
+        var cacheDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Redball", "UpdateCache");
+        _cacheFilePath = Path.Combine(cacheDir, "filehashcache.json");
+        LoadCache();
+    }
+
+    private void LoadCache()
+    {
+        try
+        {
+            if (File.Exists(_cacheFilePath))
+            {
+                var json = File.ReadAllText(_cacheFilePath);
+                _cache = JsonSerializer.Deserialize<Dictionary<string, FileHashEntry>>(json) ?? new();
+            }
+        }
+        catch
+        {
+            _cache = new();
+        }
+    }
+
+    private void SaveCache()
+    {
+        try
+        {
+            var dir = Path.GetDirectoryName(_cacheFilePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            var json = JsonSerializer.Serialize(_cache, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(_cacheFilePath, json);
+        }
+        catch { /* Ignore save errors */ }
+    }
+
+    /// <summary>
+    /// Gets cached hash if file hasn't changed, or null if re-hash is needed.
+    /// </summary>
+    public string? GetCachedHash(string filePath)
+    {
+        var key = filePath.ToLowerInvariant();
+        if (_cache.TryGetValue(key, out var entry))
+        {
+            var info = new FileInfo(filePath);
+            if (info.Exists && 
+                entry.Size == info.Length && 
+                entry.LastWriteTimeUtc == info.LastWriteTimeUtc.ToString("O"))
+            {
+                return entry.Hash;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Stores hash in cache.
+    /// </summary>
+    public void StoreHash(string filePath, string hash)
+    {
+        var key = filePath.ToLowerInvariant();
+        var info = new FileInfo(filePath);
+        lock (_lock)
+        {
+            _cache[key] = new FileHashEntry
+            {
+                Hash = hash,
+                Size = info.Length,
+                LastWriteTimeUtc = info.LastWriteTimeUtc.ToString("O")
+            };
+        }
+        SaveCache();
+    }
+
+    private class FileHashEntry
+    {
+        public string Hash { get; set; } = "";
+        public long Size { get; set; }
+        public string LastWriteTimeUtc { get; set; } = "";
+    }
+}
+
+/// <summary>
 /// Service for checking, downloading, and installing updates from GitHub releases.
 /// </summary>
 public class UpdateService : IUpdateService
@@ -136,6 +228,9 @@ public class UpdateService : IUpdateService
                 {
                     var filesToUpdate = new List<FileUpdateInfo>();
                     var appDir = AppDomain.CurrentDomain.BaseDirectory;
+                    var hashCache = new FileHashCache();
+                    int cachedHashesUsed = 0;
+                    int filesHashed = 0;
                     
                     foreach (var file in manifest.Files)
                     {
@@ -145,7 +240,23 @@ public class UpdateService : IUpdateService
                         
                         if (File.Exists(localPath))
                         {
-                            var localHash = (await CalculateHashAsync(localPath)).ToUpper();
+                            string? localHash = null;
+                            
+                            // Try to get cached hash first
+                            var cachedHash = hashCache.GetCachedHash(localPath);
+                            if (cachedHash != null)
+                            {
+                                localHash = cachedHash.ToUpper();
+                                cachedHashesUsed++;
+                            }
+                            else
+                            {
+                                // Calculate hash and cache it
+                                localHash = (await CalculateHashAsync(localPath)).ToUpper();
+                                hashCache.StoreHash(localPath, localHash);
+                                filesHashed++;
+                            }
+                            
                             if (localHash == file.Hash.ToUpper())
                             {
                                 needsUpdate = false;
@@ -180,6 +291,8 @@ public class UpdateService : IUpdateService
                             }
                         }
                     }
+                    
+                    Logger.Info("UpdateService", $"Differential check complete: {filesHashed} files hashed, {cachedHashesUsed} cached hashes used");
                     
                     if (filesToUpdate.Count > 0)
                     {
@@ -292,10 +405,24 @@ public class UpdateService : IUpdateService
                 return true;
             }
 
-            // Fallback: Original full asset download logic
+            // Check for cached update file with hash verification
             var downloadPath = Path.Combine(tempDir, updateInfo.FileName);
-            if (!await DownloadFileAsync(updateInfo.DownloadUrl, downloadPath, progress, cancellationToken))
-                return false;
+            var cachedFile = await GetCachedUpdateFileAsync(updateInfo, cancellationToken);
+            if (cachedFile != null)
+            {
+                Logger.Info("UpdateService", "Using cached update file (hash verified)");
+                downloadPath = cachedFile;
+            }
+            else
+            {
+                // Download the file
+                Logger.Info("UpdateService", "Downloading update file...");
+                if (!await DownloadFileAsync(updateInfo.DownloadUrl, downloadPath, progress, cancellationToken))
+                    return false;
+
+                // Cache the downloaded file with its hash
+                await CacheUpdateFileAsync(updateInfo, downloadPath);
+            }
 
             // --- SECURITY: Trust Chain Validation (sec-3) ---
             if (_verifySignature)
@@ -380,6 +507,178 @@ public class UpdateService : IUpdateService
             Logger.Error("UpdateService", "Update download/install failed", ex);
             return false;
         }
+    }
+
+    /// <summary>
+    /// Gets the cache directory for update files.
+    /// </summary>
+    private static string GetUpdateCacheDirectory()
+    {
+        var cacheDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Redball",
+            "UpdateCache");
+        
+        if (!Directory.Exists(cacheDir))
+        {
+            Directory.CreateDirectory(cacheDir);
+        }
+        
+        return cacheDir;
+    }
+
+    /// <summary>
+    /// Tries to get a cached update file if it exists and hash matches.
+    /// Returns the cached file path if valid, null otherwise.
+    /// </summary>
+    private async Task<string?> GetCachedUpdateFileAsync(UpdateInfo updateInfo, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(updateInfo.FileName) || 
+                string.IsNullOrEmpty(updateInfo.DownloadUrl))
+            {
+                return null;
+            }
+
+            var cacheDir = GetUpdateCacheDirectory();
+            var cachedFile = Path.Combine(cacheDir, updateInfo.FileName);
+            var hashFile = cachedFile + ".sha256";
+
+            // Check if cached file exists
+            if (!File.Exists(cachedFile) || !File.Exists(hashFile))
+            {
+                Logger.Debug("UpdateService", "No cached update file found");
+                return null;
+            }
+
+            // Read stored hash
+            var storedHash = await File.ReadAllTextAsync(hashFile, cancellationToken);
+            storedHash = storedHash.Trim().ToLowerInvariant();
+
+            if (string.IsNullOrEmpty(storedHash))
+            {
+                Logger.Warning("UpdateService", "Cached hash file is empty, deleting cache");
+                TryDeleteFile(cachedFile);
+                TryDeleteFile(hashFile);
+                return null;
+            }
+
+            // Calculate actual hash of cached file
+            var actualHash = await CalculateHashAsync(cachedFile);
+            
+            if (!actualHash.Equals(storedHash, StringComparison.OrdinalIgnoreCase))
+            {
+                Logger.Warning("UpdateService", "Cached file hash mismatch, deleting cache");
+                TryDeleteFile(cachedFile);
+                TryDeleteFile(hashFile);
+                return null;
+            }
+
+            // Also check file size if available
+            var fileInfo = new FileInfo(cachedFile);
+            if (updateInfo.FilesToUpdate?.Count > 0)
+            {
+                var totalSize = updateInfo.FilesToUpdate.Sum(f => f.Size);
+                if (fileInfo.Length != totalSize)
+                {
+                    Logger.Warning("UpdateService", $"Cached file size mismatch (expected: {totalSize}, actual: {fileInfo.Length})");
+                    TryDeleteFile(cachedFile);
+                    TryDeleteFile(hashFile);
+                    return null;
+                }
+            }
+
+            Logger.Info("UpdateService", $"Cached update file verified (hash: {actualHash[..16]}...)");
+            return cachedFile;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("UpdateService", $"Error checking cached file: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Caches an update file with its hash for future use.
+    /// </summary>
+    private async Task CacheUpdateFileAsync(UpdateInfo updateInfo, string filePath)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(updateInfo.FileName))
+            {
+                return;
+            }
+
+            var cacheDir = GetUpdateCacheDirectory();
+            var cachedFile = Path.Combine(cacheDir, updateInfo.FileName);
+            var hashFile = cachedFile + ".sha256";
+
+            // Clean up old cache files first (keep only last 3 versions)
+            CleanupOldCacheFiles(cacheDir, updateInfo.FileName);
+
+            // Copy file to cache
+            File.Copy(filePath, cachedFile, true);
+
+            // Calculate and store hash
+            var hash = await CalculateHashAsync(cachedFile);
+            await File.WriteAllTextAsync(hashFile, hash);
+
+            Logger.Info("UpdateService", $"Update file cached (hash: {hash[..16]}...)");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("UpdateService", $"Failed to cache update file: {ex.Message}");
+            // Non-critical error, don't fail the update
+        }
+    }
+
+    /// <summary>
+    /// Cleans up old cached update files, keeping only the most recent ones.
+    /// </summary>
+    private void CleanupOldCacheFiles(string cacheDir, string currentFileName)
+    {
+        try
+        {
+            var cacheFiles = Directory.GetFiles(cacheDir, "*.msi")
+                .Concat(Directory.GetFiles(cacheDir, "*.exe"))
+                .Select(f => new FileInfo(f))
+                .Where(f => f.Name != currentFileName)
+                .OrderByDescending(f => f.LastWriteTime)
+                .Skip(2) // Keep 2 most recent
+                .ToList();
+
+            foreach (var file in cacheFiles)
+            {
+                try
+                {
+                    TryDeleteFile(file.FullName);
+                    TryDeleteFile(file.FullName + ".sha256");
+                    Logger.Debug("UpdateService", $"Cleaned up old cache file: {file.Name}");
+                }
+                catch { /* Ignore cleanup errors */ }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("UpdateService", $"Cache cleanup error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Safely tries to delete a file, ignoring errors.
+    /// </summary>
+    private static void TryDeleteFile(string filePath)
+    {
+        try
+        {
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+        }
+        catch { /* Ignore delete errors */ }
     }
 
     private async Task<string> CalculateHashAsync(string filePath)
@@ -917,7 +1216,7 @@ public class UpdateService : IUpdateService
 $ErrorActionPreference = 'Stop'
 $processName = 'Redball.UI.WPF'
 
-while (Get-Process -Name $processName -ErrorAction SilentlyContinue) {{
+while (Get-Process -Name `$processName -ErrorAction SilentlyContinue) {{
     Start-Sleep -Seconds 1
 }}
 

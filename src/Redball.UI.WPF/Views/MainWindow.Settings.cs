@@ -1165,6 +1165,8 @@ public partial class MainWindow
         var hid = InterceptionInputService.Instance;
         var driverInstalled = hid.RefreshDriverInstalledState();
         var serviceInstalled = ServiceInputProvider.Instance.RefreshServiceInstalledState();
+        var serviceRunning = ServiceInputProvider.Instance.IsReady || 
+                             ServiceInputProvider.Instance.GetDetailedServiceState().Status == ServiceInputProvider.ServiceStatus.Healthy;
 
         MainTypeThingInputModeCombo.IsEnabled = !hidSafeModeEnabled;
 
@@ -1172,7 +1174,7 @@ public partial class MainWindow
         if (serviceSelected)
         {
             MainInstallHidDriverBtn.Content = serviceInstalled
-                ? "Uninstall Input Service"
+                ? (serviceRunning ? "Uninstall Input Service" : "Start Input Service")
                 : "Install Input Service";
             MainInstallHidDriverBtn.Visibility = Visibility.Visible;
             if (MainServiceAdminHintText != null)
@@ -1191,7 +1193,9 @@ public partial class MainWindow
             if (MainHidDetailsText != null) MainHidDetailsText.Visibility = Visibility.Visible;
             
             MainInstallHidDriverBtn.ToolTip = serviceInstalled
-                ? "Uninstall the Redball Input Service."
+                ? (serviceRunning 
+                    ? "Uninstall the Redball Input Service."
+                    : "Start the Redball Input Service (admin required).")
                 : "Install the Redball Input Service (no driver signature required).";
         }
         else if (hidSelected)
@@ -1412,9 +1416,12 @@ public partial class MainWindow
     private void HandleServiceInstallUninstall()
     {
         var serviceInstalled = ServiceInputProvider.Instance.RefreshServiceInstalledState();
+        var serviceRunning = ServiceInputProvider.Instance.IsReady || 
+                             ServiceInputProvider.Instance.GetDetailedServiceState().Status == ServiceInputProvider.ServiceStatus.Healthy;
 
         if (!serviceInstalled)
         {
+            // Service doesn't exist - install it
             var confirmInstall = NotificationWindow.Show(
                 "Install Input Service",
                 "Install the Redball Input Service now? This doesn't require driver signing and works over RDP. Admin approval may be required.",
@@ -1441,8 +1448,37 @@ public partial class MainWindow
                 NotificationService.Instance.ShowError("Install Failed", $"Failed to install Redball Input Service: {installResult.ErrorMessage}");
             }
         }
+        else if (!serviceRunning)
+        {
+            // Service exists but not running - start it (requires admin)
+            var confirmStart = NotificationWindow.Show(
+                "Start Input Service",
+                "The Redball Input Service is installed but not running. Start it now? Admin approval may be required.",
+                "\uE768",
+                true);
+
+            if (!confirmStart)
+            {
+                return;
+            }
+
+            var startResult = StartServiceDirect();
+            if (startResult.Success)
+            {
+                NotificationService.Instance.ShowInfo("Service Started", "Redball Input Service started successfully.");
+            }
+            else if (startResult.UserCancelled)
+            {
+                Logger.Info("MainWindow", "Service start cancelled by user at UAC prompt");
+            }
+            else
+            {
+                NotificationService.Instance.ShowError("Start Failed", $"Failed to start Redball Input Service: {startResult.ErrorMessage}");
+            }
+        }
         else
         {
+            // Service is installed and running - offer to uninstall
             var confirmUninstall = NotificationWindow.Show(
                 "Uninstall Input Service",
                 "This will uninstall the Redball Input Service and disable service-based typing until reinstalled. Continue?",
@@ -1570,6 +1606,84 @@ public partial class MainWindow
         catch (Exception ex)
         {
             Logger.Error("MainWindow", "Service installation failed", ex);
+            return (false, false, $"Unexpected error: {ex.Message}");
+        }
+    }
+
+    private (bool Success, bool UserCancelled, string ErrorMessage) StartServiceDirect()
+    {
+        try
+        {
+            // Check admin rights - if not admin, relaunch app with elevation
+            if (!IsCurrentUserAdministrator())
+            {
+                Logger.Warning("MainWindow", "Service start requires admin rights; relaunching app with UAC elevation.");
+                
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = Process.GetCurrentProcess().MainModule?.FileName ?? "Redball.UI.WPF.exe",
+                    Arguments = "--start-service",
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
+
+                try
+                {
+                    using var process = Process.Start(processInfo);
+                    if (process == null)
+                    {
+                        var err = "Failed to start elevated process.";
+                        Logger.Error("MainWindow", err);
+                        return (false, false, err);
+                    }
+                    
+                    // Wait with 30-second timeout for service start
+                    if (!process.WaitForExit(30000))
+                    {
+                        Logger.Warning("MainWindow", "Elevated service start process timed out after 30 seconds");
+                        try { process.Kill(); } catch { }
+                        return (false, false, "Start timed out. The elevated process did not complete in time.");
+                    }
+                    
+                    var exitCode = process.ExitCode;
+                    if (exitCode == 0)
+                    {
+                        return (true, false, string.Empty);
+                    }
+                    else
+                    {
+                        var err = $"Service start failed with exit code {exitCode}. Check logs for details.";
+                        Logger.Error("MainWindow", err);
+                        return (false, false, err);
+                    }
+                }
+                catch (Win32Exception ex) when (ex.NativeErrorCode == 1223) // ERROR_CANCELLED
+                {
+                    Logger.Info("MainWindow", "User cancelled UAC elevation for service start");
+                    return (false, true, string.Empty);
+                }
+                catch (Win32Exception ex)
+                {
+                    Logger.Error("MainWindow", "Win32Exception during elevated service start", ex);
+                    return (false, false, $"Elevation failed: {ex.Message}");
+                }
+            }
+
+            // Already admin - start directly
+            var startResult = RunProcess("sc.exe", "start RedballInputService");
+            if (startResult.ExitCode != 0)
+            {
+                var err = $"Failed to start service: {startResult.StdErr}";
+                Logger.Error("MainWindow", err);
+                return (false, false, err);
+            }
+
+            Logger.Info("MainWindow", "Redball Input Service started successfully");
+            return (true, false, string.Empty);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainWindow", "Service start failed", ex);
             return (false, false, $"Unexpected error: {ex.Message}");
         }
     }

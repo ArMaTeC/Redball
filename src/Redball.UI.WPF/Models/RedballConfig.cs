@@ -36,8 +36,10 @@ public class RedballConfig
     public string UpdateRepoName { get; set; } = "Redball";
     public string UpdateChannel { get; set; } = "stable";
     public bool VerifyUpdateSignature { get; set; }
+    // Update check settings
     public bool AutoUpdateCheckEnabled { get; set; } = true;
     public int AutoUpdateCheckIntervalMinutes { get; set; } = 120;
+    public string? SkippedUpdateVersion { get; set; }
     public bool TypeThingEnabled { get; set; } = true;
     public int TypeThingMinDelayMs { get; set; } = 30;
     public int TypeThingMaxDelayMs { get; set; } = 120;

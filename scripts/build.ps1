@@ -945,9 +945,10 @@ function Step-BuildService {
     dotnet publish $serviceProject `
         --configuration $Configuration `
         --output $publishDir `
-        --self-contained false `
+        --self-contained true `
         --runtime win-x64 `
-        --property:PublishSingleFile=true
+        --property:PublishSingleFile=true `
+        -p:EnableCompressionInSingleFile=true
 
     if ($LASTEXITCODE -ne 0) {
         throw "Service publish failed"
@@ -960,9 +961,10 @@ function Step-BuildService {
         dotnet publish $helperProject `
             --configuration $Configuration `
             --output $helperPublishDir `
-            --self-contained false `
+            --self-contained true `
             --runtime win-x64 `
-            --property:PublishSingleFile=true
+            --property:PublishSingleFile=true `
+            -p:EnableCompressionInSingleFile=true
 
         if ($LASTEXITCODE -ne 0) {
             throw "Session helper publish failed"
@@ -1327,6 +1329,40 @@ function Step-CreateReleasePackage {
     Write-HostSafe "  Location: $msiPath" -ForegroundColor Gray
     Write-HostSafe "  Contains: WPF Application, Core Services, Configuration, HID Driver Support" -ForegroundColor Gray
     Write-HostSafe "  HID Features: Driver Lifecycle Management, Safe Mode, Robustness Retries" -ForegroundColor Gray
+
+    # Generate SHA256 hashes for all release artifacts
+    Write-BuildStep "Generating SHA256 checksums..."
+    $artifacts = Get-ChildItem -Path $DistPath -File | Where-Object { 
+        $_.Name -match '^Redball-.*\.(msi|exe|zip)$' -or 
+        $_.Name -eq 'manifest.json' -or
+        $_.Name -eq 'SHA256SUMS'
+    }
+    
+    $hashFile = Join-Path $DistPath "SHA256SUMS"
+    $hashLines = @()
+    
+    foreach ($artifact in $artifacts) {
+        if ($artifact.Name -eq 'SHA256SUMS') { continue }
+        
+        try {
+            $hash = (Get-FileHash -Path $artifact.FullName -Algorithm SHA256).Hash
+            # Format: <hash> <filename> (standard SHA256SUMS format)
+            $relativeName = $artifact.Name
+            $hashLines += "$hash  $relativeName"
+            Write-BuildSuccess "$relativeName : $hash"
+        }
+        catch {
+            Write-Warning "Failed to hash $($artifact.Name): $_"
+        }
+    }
+    
+    if ($hashLines.Count -gt 0) {
+        # Write hash file with UTF8 encoding (no BOM)
+        $hashContent = ($hashLines -join "`n") + "`n"
+        [System.IO.File]::WriteAllText($hashFile, $hashContent, [System.Text.UTF8Encoding]::new($false))
+        Write-BuildSuccess "Created SHA256SUMS with $($hashLines.Count) entries"
+        Write-HostSafe "  Location: $hashFile" -ForegroundColor Gray
+    }
 }
 
 function Step-CleanupDist {

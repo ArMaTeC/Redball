@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
+using Redball.UI.Services;
 
 namespace Redball.UI;
 
@@ -16,6 +17,7 @@ public partial class App : Application
 {
     private Views.MainWindow? _mainWindow; // Keep reference to prevent GC
     private Services.SingletonService? _singleton;
+    private Services.SingleInstanceMessenger? _instanceMessenger;
     private IServiceProvider? _serviceProvider;
     private bool _isStartupTestMode;
     private readonly Stopwatch _startupStopwatch = Stopwatch.StartNew();
@@ -177,6 +179,15 @@ public partial class App : Application
             return;
         }
 
+        // Handle service start elevation
+        if (e.Args.Length > 0 && e.Args[0] == "--start-service")
+        {
+            Services.Logger.Info("App", "Running in elevated service start mode");
+            var success = StartServiceInElevatedMode();
+            Environment.Exit(success ? 0 : 1);
+            return;
+        }
+
         // Handle internal driver logic test (diagnostics)
         if (e.Args.Length > 0 && e.Args[0] == "--test-driver-fallbacks")
         {
@@ -221,15 +232,24 @@ public partial class App : Application
             _singleton = new Services.SingletonService();
             if (!isTestMode && !_singleton.TryAcquire())
             {
-                Services.Logger.Warning("App", "Another instance is already running. Exiting.");
-                MessageBox.Show(
-                    "Redball is already running.\n\nCheck the system tray icon to access the running instance.",
-                    "Redball Already Running",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                Services.Logger.Warning("App", "Another instance is already running. Signaling it to show window.");
+                
+                // Try to signal the existing instance to show its window
+                var signaled = Services.SingleInstanceMessenger.TryShowWindow();
+                
+                if (!signaled)
+                {
+                    // Fallback: try to find and activate the window using Win32
+                    TryActivateExistingWindow();
+                }
+                
                 Shutdown();
                 return;
             }
+
+            // Start listening for messages from other instances
+            _instanceMessenger = new Services.SingleInstanceMessenger(OnShowWindowRequested);
+            _instanceMessenger.StartListening();
 
             // Crash recovery check
             var wasCrash = Services.CrashRecoveryService.CheckAndRecover();
@@ -413,6 +433,24 @@ public partial class App : Application
                 Services.Logger.Warning("App", $"Startup exceeded 2-second target: {StartupDuration.TotalSeconds:F2}s");
             }
             Services.Logger.LogMemoryStats("App");
+
+            // Start background update check if enabled (after a short delay to not block startup)
+            if (cfg.AutoUpdateCheckEnabled && !isTestMode)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        // Wait a few seconds for startup to complete
+                        await Task.Delay(TimeSpan.FromSeconds(10));
+                        await PerformStartupUpdateCheckAsync(cfg);
+                    }
+                    catch (Exception ex)
+                    {
+                        Services.Logger.Error("App", "Startup update check failed", ex);
+                    }
+                });
+            }
         }
         catch (Exception ex)
         {
@@ -539,6 +577,31 @@ public partial class App : Application
     }
 
     /// <summary>
+    /// Starts the Redball Input Service when running in elevated mode.
+    /// Called when the app is relaunched with --start-service argument.
+    /// </summary>
+    private static bool StartServiceInElevatedMode()
+    {
+        try
+        {
+            var startResult = RunProcessAsAdmin("sc.exe", "start RedballInputService");
+            if (startResult.ExitCode != 0)
+            {
+                Services.Logger.Error("App", $"Failed to start service: {startResult.StdErr}");
+                return false;
+            }
+
+            Services.Logger.Info("App", "Redball Input Service started successfully");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Services.Logger.Error("App", "Service start failed in elevated mode", ex);
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Gets the path to the service executable.
     /// </summary>
     private static string GetServiceExecutablePath()
@@ -584,6 +647,310 @@ public partial class App : Application
 
     #endregion
 
+    #region Startup Update Check
+
+    /// <summary>
+    /// Performs an update check on startup if enabled.
+    /// Shows the update dialog if an update is available.
+    /// </summary>
+    private async Task PerformStartupUpdateCheckAsync(RedballConfig cfg)
+    {
+        try
+        {
+            if (!cfg.AutoUpdateCheckEnabled)
+            {
+                Services.Logger.Debug("App", "Auto update check disabled, skipping");
+                return;
+            }
+
+            if (string.Equals(cfg.UpdateChannel, "Disabled", StringComparison.OrdinalIgnoreCase))
+            {
+                Services.Logger.Debug("App", "Update channel is disabled, skipping startup check");
+                return;
+            }
+
+            Services.Logger.Info("App", "Starting update check...");
+
+            var updateService = new Services.UpdateService(
+                cfg.UpdateRepoOwner,
+                cfg.UpdateRepoName,
+                cfg.UpdateChannel ?? "stable",
+                cfg.VerifyUpdateSignature);
+
+            var updateInfo = await updateService.CheckForUpdateAsync();
+
+            if (updateInfo == null)
+            {
+                Services.Logger.Info("App", "No update available (already on latest version)");
+                return;
+            }
+
+            Services.Logger.Info("App", $"Update available: {updateInfo.LatestVersion}");
+
+            // Show the update dialog on the UI thread
+            await Dispatcher.BeginInvoke(new Action(async () =>
+            {
+                try
+                {
+                    // Check if user previously skipped this version
+                    var skippedVersion = cfg.SkippedUpdateVersion;
+                    if (!string.IsNullOrEmpty(skippedVersion) &&
+                        string.Equals(skippedVersion, updateInfo.LatestVersion.ToString(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        Services.Logger.Info("App", $"User previously skipped version {updateInfo.LatestVersion}, not showing dialog");
+                        return;
+                    }
+
+                    // Get changelogs for the update
+                    var changelogs = await updateService.GetChangelogBetweenVersionsAsync(
+                        updateInfo.CurrentVersion, 
+                        updateInfo.LatestVersion);
+
+                    // Show update available window
+                    var updateWindow = new Views.UpdateAvailableWindow(updateInfo, updateService, changelogs);
+                    var result = updateWindow.ShowDialog();
+
+                    if (result == true)
+                    {
+                        // User chose to update - show progress window
+                        var progressWindow = new Views.UpdateProgressWindow();
+                        progressWindow.Show();
+                        
+                        // Start the download
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                var progress = new Progress<Services.UpdateDownloadProgress>(p =>
+                                {
+                                    Dispatcher.BeginInvoke(() => progressWindow.UpdateProgress(p));
+                                });
+                                
+                                var success = await updateService.DownloadAndInstallAsync(updateInfo, progress);
+                                
+                                await Dispatcher.BeginInvoke(() =>
+                                {
+                                    if (success)
+                                    {
+                                        progressWindow.Close();
+                                    }
+                                    else
+                                    {
+                                        System.Windows.MessageBox.Show(
+                                            "Update download failed. Please try again later.",
+                                            "Update Error",
+                                            System.Windows.MessageBoxButton.OK,
+                                            System.Windows.MessageBoxImage.Error);
+                                    }
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                Services.Logger.Error("App", "Update download failed", ex);
+                                await Dispatcher.BeginInvoke(() =>
+                                {
+                                    System.Windows.MessageBox.Show(
+                                        $"Update error: {ex.Message}",
+                                        "Update Error",
+                                        System.Windows.MessageBoxButton.OK,
+                                        System.Windows.MessageBoxImage.Error);
+                                });
+                            }
+                        });
+                    }
+                    else if (updateWindow.SkipThisVersion)
+                    {
+                        // User chose to skip this version
+                        cfg.SkippedUpdateVersion = updateInfo.LatestVersion.ToString();
+                        Services.ConfigService.Instance.Save();
+                        Services.Logger.Info("App", $"User skipped update to version {updateInfo.LatestVersion}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Services.Logger.Error("App", "Error showing update dialog", ex);
+                }
+            }), System.Windows.Threading.DispatcherPriority.Background);
+        }
+        catch (Exception ex)
+        {
+            Services.Logger.Error("App", "Update check failed", ex);
+        }
+    }
+
+    #endregion
+
+    #region Single Instance Window Activation
+
+    /// <summary>
+    /// Called when another instance requests this instance to show its main window.
+    /// </summary>
+    private void OnShowWindowRequested()
+    {
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            try
+            {
+                if (_mainWindow == null) return;
+
+                Services.Logger.Info("App", "Showing main window as requested by another instance");
+
+                // Ensure window is visible in taskbar
+                _mainWindow.ShowInTaskbar = true;
+
+                // Show the window if it was hidden
+                _mainWindow.Show();
+
+                // Restore from minimized state
+                if (_mainWindow.WindowState == WindowState.Minimized)
+                {
+                    _mainWindow.WindowState = WindowState.Normal;
+                }
+
+                // Bring to front and activate
+                _mainWindow.Activate();
+                _mainWindow.Focus();
+
+                // Flash the window to get user's attention
+                FlashWindow(_mainWindow);
+
+                Services.Logger.Debug("App", "Main window shown and activated");
+            }
+            catch (Exception ex)
+            {
+                Services.Logger.Error("App", "Error showing main window", ex);
+            }
+        }), System.Windows.Threading.DispatcherPriority.Normal);
+    }
+
+    /// <summary>
+    /// Fallback method to activate an existing window using Win32 when named pipe fails.
+    /// </summary>
+    private static void TryActivateExistingWindow()
+    {
+        try
+        {
+            // Find the main window by class name and title
+            var hwnd = FindWindow(null, "Redball");
+            if (hwnd == IntPtr.Zero)
+            {
+                // Try finding by partial title match
+                hwnd = FindWindowByPartialTitle("Redball");
+            }
+
+            if (hwnd != IntPtr.Zero)
+            {
+                // Restore if minimized
+                if (IsIconic(hwnd))
+                {
+                    ShowWindow(hwnd, SW_RESTORE);
+                }
+
+                // Bring to front
+                SetForegroundWindow(hwnd);
+                FlashWindowWin32(hwnd);
+                Services.Logger.Info("App", "Activated existing window via Win32");
+            }
+            else
+            {
+                Services.Logger.Warning("App", "Could not find existing window to activate");
+            }
+        }
+        catch (Exception ex)
+        {
+            Services.Logger.Error("App", "Error activating existing window", ex);
+        }
+    }
+
+    private static void FlashWindow(Window window)
+    {
+        if (window == null) return;
+        var helper = new System.Windows.Interop.WindowInteropHelper(window);
+        FlashWindowWin32(helper.Handle);
+    }
+
+    private static void FlashWindowWin32(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return;
+        var fi = new FLASHWINFO
+        {
+            cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(FLASHWINFO)),
+            hwnd = hwnd,
+            dwFlags = FLASHW_ALL | FLASHW_TIMERNOFG,
+            uCount = 3,
+            dwTimeout = 0
+        };
+        FlashWindowEx(ref fi);
+    }
+
+    private static IntPtr FindWindowByPartialTitle(string title)
+    {
+        IntPtr found = IntPtr.Zero;
+        EnumWindows((hwnd, param) =>
+        {
+            var len = GetWindowTextLength(hwnd);
+            if (len > 0)
+            {
+                var sb = new System.Text.StringBuilder(len + 1);
+                GetWindowText(hwnd, sb, len + 1);
+                if (sb.ToString().Contains(title))
+                {
+                    found = hwnd;
+                    return false; // Stop enumerating
+                }
+            }
+            return true; // Continue
+        }, IntPtr.Zero);
+        return found;
+    }
+
+    // Win32 imports
+    private const uint FLASHW_STOP = 0;
+    private const uint FLASHW_CAPTION = 1;
+    private const uint FLASHW_TRAY = 2;
+    private const uint FLASHW_ALL = 3;
+    private const uint FLASHW_TIMER = 4;
+    private const uint FLASHW_TIMERNOFG = 12;
+    private const int SW_RESTORE = 9;
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool FlashWindowEx(ref FLASHWINFO pwfi);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool IsIconic(IntPtr hWnd);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+    private static extern IntPtr FindWindow(string? lpClassName, string? lpWindowName);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool EnumWindows(EnumWindowsCallback lpEnumFunc, IntPtr lParam);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+    private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern int GetWindowTextLength(IntPtr hWnd);
+
+    private delegate bool EnumWindowsCallback(IntPtr hWnd, IntPtr lParam);
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct FLASHWINFO
+    {
+        public uint cbSize;
+        public IntPtr hwnd;
+        public uint dwFlags;
+        public uint uCount;
+        public uint dwTimeout;
+    }
+
+    #endregion
+
     private void OnMainWindowClosed(object? sender, EventArgs e)
     {
         Services.Logger.Info("App", "MainWindow Closed event fired");
@@ -616,7 +983,8 @@ public partial class App : Application
             // Clear crash flag on clean exit
             Services.CrashRecoveryService.ClearCrashFlag();
 
-            // Release singleton mutex
+            // Release singleton mutex and stop listening for messages
+            _instanceMessenger?.Dispose();
             _singleton?.Dispose();
         }
         catch (Exception ex)
