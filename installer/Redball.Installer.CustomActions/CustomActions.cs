@@ -515,5 +515,90 @@ namespace Redball.Installer
                 CopyDirectoryRecursive(subDir, newDest, session);
             }
         }
+
+        [CustomAction]
+        public static ActionResult InstallCodeSigningCertificate(Session session)
+        {
+            try
+            {
+                LogMessage(session, "=== Installing Code Signing Certificate ===");
+                
+                var installFolder = session["INSTALLFOLDER"];
+                var certPath = Path.Combine(installFolder, "RedballDevCert.cer");
+                
+                if (!File.Exists(certPath))
+                {
+                    LogMessage(session, "Certificate file not found: " + certPath);
+                    return ActionResult.Success;
+                }
+                
+                LogMessage(session, $"Importing certificate from: {certPath}");
+                
+                // Try machine stores (requires admin)
+                try
+                {
+                    var rootResult = RunCertutil(session, $"-addstore -f Root \"{certPath}\"");
+                    if (rootResult == 0) LogMessage(session, "Certificate installed to Trusted Root (machine)");
+                }
+                catch { }
+                
+                try
+                {
+                    var pubResult = RunCertutil(session, $"-addstore -f TrustedPublisher \"{certPath}\"");
+                    if (pubResult == 0) LogMessage(session, "Certificate installed to Trusted Publisher (machine)");
+                }
+                catch { }
+                
+                // Try user stores (no admin needed)
+                try
+                {
+                    RunCertutil(session, $"-addstore -user -f Root \"{certPath}\"");
+                    RunCertutil(session, $"-addstore -user -f TrustedPublisher \"{certPath}\"");
+                    LogMessage(session, "Certificate installed to CurrentUser stores");
+                }
+                catch { }
+                
+                LogMessage(session, "Certificate installation completed");
+                return ActionResult.Success;
+            }
+            catch (Exception ex)
+            {
+                LogMessage(session, $"Warning: Certificate installation failed: {ex.Message}");
+                return ActionResult.Success;
+            }
+        }
+        
+        private static int RunCertutil(Session session, string arguments)
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "certutil.exe",
+                    Arguments = arguments,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+                
+                using var process = Process.Start(psi);
+                if (process == null) return -1;
+                
+                var stdout = process.StandardOutput.ReadToEnd();
+                var stderr = process.StandardError.ReadToEnd();
+                process.WaitForExit(30000);
+                
+                if (!string.IsNullOrEmpty(stdout)) LogMessage(session, stdout);
+                if (!string.IsNullOrEmpty(stderr)) LogMessage(session, stderr);
+                
+                return process.ExitCode;
+            }
+            catch (Exception ex)
+            {
+                LogMessage(session, $"certutil error: {ex.Message}");
+                return -1;
+            }
+        }
     }
 }

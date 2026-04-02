@@ -368,6 +368,17 @@ New-RedballInstallerLicenseRtf -SourcePath $licenseSourcePath -OutputPath $licen
 New-RedballBannerBmp -Path (Join-Path $scriptRoot 'banner.bmp')
 New-RedballDialogBmp -Path (Join-Path $scriptRoot 'dialog.bmp')
 
+# Export code signing certificate if it exists
+$certPath = Join-Path $env:USERPROFILE '.redball\RedballDevCert.cer'
+if (Test-Path $certPath) {
+    $distCertPath = Join-Path $outputDir 'RedballDevCert.cer'
+    Copy-Item $certPath $distCertPath -Force
+    Write-HostSafe "Certificate exported to: $distCertPath" -ForegroundColor Green
+}
+else {
+    Write-HostSafe "Certificate not found at $certPath (run Create-CodeSigningCert.ps1 first)" -ForegroundColor Yellow
+}
+
 # Build custom actions
 Step-BuildCustomActions
 

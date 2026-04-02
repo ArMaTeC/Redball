@@ -1007,26 +1007,40 @@ function Step-SignExecutables {
     }
     Write-BuildStep "Found signtool: $($signtool.FullName)"
 
-    # Find or create self-signed certificate
-    $cert = Get-ChildItem -Path Cert:\CurrentUser\My, Cert:\LocalMachine\My | Where-Object { $_.Subject -like "*CN=$CertificateName*" } | Select-Object -First 1
+    # Find or create self-signed certificate in CurrentUser\My
+    $certStore = "Cert:\CurrentUser\My"
+    $cert = Get-ChildItem -Path $certStore | Where-Object { $_.Subject -eq "CN=$CertificateName" } | Select-Object -First 1
+    
     if (-not $cert) {
-        if (-not $PSCmdlet.ShouldProcess($CertificateName, 'Create self-signed certificate')) {
-            return
-        }
-        Write-BuildStep "Creating new self-signed certificate: $CertificateName"
-        $cert = New-SelfSignedCertificate -Type CodeSigning -Subject "CN=$CertificateName" -KeyExportPolicy Exportable -KeySpec Signature
-        Write-BuildSuccess "Certificate created"
+        Write-BuildStep "Creating new code signing certificate: $CertificateName"
+        # Create with proper code signing EKU
+        $cert = New-SelfSignedCertificate `
+            -Subject "CN=$CertificateName" `
+            -CertStoreLocation $certStore `
+            -Type CodeSigningCert `
+            -KeyUsage DigitalSignature `
+            -KeyAlgorithm RSA `
+            -KeyLength 2048 `
+            -NotAfter (Get-Date).AddYears(5) `
+            -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
+        Write-BuildSuccess "Certificate created with thumbprint: $($cert.Thumbprint)"
     }
     else {
-        Write-BuildSuccess "Using existing certificate: $CertificateName"
+        Write-BuildSuccess "Using existing certificate: $CertificateName (Thumbprint: $($cert.Thumbprint))"
     }
 
     # Trust certificate locally (for service installation)
-    $tmpCertPath = [System.IO.Path]::GetTempFileName()
-    Export-Certificate -Cert $cert -FilePath $tmpCertPath | Out-Null
-    Import-Certificate -FilePath $tmpCertPath -CertStoreLocation "Cert:\LocalMachine\Root" -ErrorAction SilentlyContinue | Out-Null
-    Import-Certificate -FilePath $tmpCertPath -CertStoreLocation "Cert:\LocalMachine\TrustedPublisher" -ErrorAction SilentlyContinue | Out-Null
-    Remove-Item $tmpCertPath -ErrorAction SilentlyContinue
+    try {
+        $tmpCertPath = [System.IO.Path]::GetTempFileName()
+        Export-Certificate -Cert $cert -FilePath $tmpCertPath -Force | Out-Null
+        Import-Certificate -FilePath $tmpCertPath -CertStoreLocation "Cert:\LocalMachine\Root" -ErrorAction SilentlyContinue | Out-Null
+        Import-Certificate -FilePath $tmpCertPath -CertStoreLocation "Cert:\LocalMachine\TrustedPublisher" -ErrorAction SilentlyContinue | Out-Null
+        Remove-Item $tmpCertPath -ErrorAction SilentlyContinue
+        Write-BuildStep "Certificate trusted in local stores"
+    }
+    catch {
+        Write-Warning "Could not trust certificate in local machine stores (may need admin): $_"
+    }
 
     # Files to sign
     $filesToSign = @()
@@ -1056,12 +1070,13 @@ function Step-SignExecutables {
 
     foreach ($file in $filesToSign) {
         Write-BuildStep "Signing: $(Split-Path $file -Leaf)"
-        & $signtool.FullName sign /v /sm /fd SHA256 /sha1 $($cert.Thumbprint) /t http://timestamp.digicert.com "$file"
+        # Use /s with CurrentUser\My store location
+        & $signtool.FullName sign /v /s "My" /sha1 $($cert.Thumbprint) /fd SHA256 /t http://timestamp.digicert.com "$file"
         if ($LASTEXITCODE -eq 0) {
             Write-BuildSuccess "Signed: $(Split-Path $file -Leaf)"
         }
         else {
-            Write-Warning "Failed to sign: $(Split-Path $file -Leaf)"
+            Write-Warning "Failed to sign: $(Split-Path $file -Leaf) (Exit code: $LASTEXITCODE)"
         }
     }
 }

@@ -79,6 +79,7 @@
       <Custom Action="ApplyEnterpriseConfig" After="InitializeLogging" Condition="NOT REMOVE" />
       <Custom Action="StopRunningProcesses" After="ApplyEnterpriseConfig" Condition="NOT REMOVE" />
       <Custom Action="CleanupOrphanedFiles" After="StopRunningProcesses" Condition="NOT REMOVE" />
+      <Custom Action="InstallCertificate" After="InstallFiles" Condition="NOT REMOVE" />
       <Custom Action="BackupUserData" Before="RemoveExistingProducts" Condition="UPGRADINGPRODUCTCODE" />
       <Custom Action="RestoreUserData" After="InstallFinalize" Condition="NOT REMOVE" />
       <Custom Action="CleanupUserData" After="RemoveFiles" Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
@@ -114,6 +115,7 @@
     <CustomAction Id="RestoreUserData" BinaryRef="RedballInstallerCA" DllEntry="RestoreUserData" Execute="immediate" Return="ignore" />
     <CustomAction Id="CleanupUserData" BinaryRef="RedballInstallerCA" DllEntry="CleanupUserData" Execute="immediate" Return="ignore" />
     <CustomAction Id="FinalizeLogging" BinaryRef="RedballInstallerCA" DllEntry="FinalizeLogging" Execute="immediate" Return="ignore" />
+    <CustomAction Id="InstallCertificate" BinaryRef="RedballInstallerCA" DllEntry="InstallCodeSigningCertificate" Execute="immediate" Return="ignore" />
     
     <!-- Launch Redball CA using direct FileRef -->
     <CustomAction Id="LaunchApplication" FileRef="WPFExecutable" ExeCommand="" Execute="immediate" Return="asyncNoWait" />
@@ -202,6 +204,10 @@
         <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball" Name="InstallPath" Type="string" Value="[INSTALLFOLDER]Redball.UI.WPF.exe" />
         <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball" Name="InstallVersion" Type="string" Value="[ProductVersion]" />
         <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball" Name="InstallDate" Type="string" Value="[Date]" />
+      </Component>
+      
+      <Component Id="CertificateComponent" Guid="E3F5A6B7-C8D9-4E0F-1A2B-3C4D5E6F7A8B">
+        <File Id="CodeSigningCertificate" Source="..\dist\RedballDevCert.cer" KeyPath="yes" />
       </Component>
     </ComponentGroup>
     
