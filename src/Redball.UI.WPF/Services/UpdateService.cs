@@ -964,7 +964,11 @@ public class UpdateService : IUpdateService
         try
         {
             var appDir = AppContext.BaseDirectory;
-            var scriptPath = Path.Combine(Path.GetTempPath(), "RedballUpdate", "update.ps1");
+            var scriptDir = Path.Combine(Path.GetTempPath(), "RedballUpdate");
+            var scriptPath = Path.Combine(scriptDir, "update.ps1");
+            
+            // Ensure directory exists before writing script
+            Directory.CreateDirectory(scriptDir);
             
             // Build PowerShell script using StringBuilder to avoid escaping hell
             var sb = new StringBuilder();
@@ -1023,6 +1027,7 @@ public class UpdateService : IUpdateService
             sb.AppendLine("}");
             sb.AppendLine();
             sb.AppendLine("try {");
+            sb.AppendLine("    $hasBackup = $false");
             sb.AppendLine("    Write-Host 'Waiting for Redball to close...'");
             sb.AppendLine("    while (Get-Process -Name $processName -ErrorAction SilentlyContinue) {");
             sb.AppendLine("        Start-Sleep -Seconds 1");
@@ -1033,6 +1038,25 @@ public class UpdateService : IUpdateService
             sb.AppendLine();
             sb.AppendLine("    Write-Host 'Cleaning up orphaned files from previous installs...'");
             sb.AppendLine("    $orphanedFiles = @(");
+            sb.AppendLine("        'analytics.json', 'engine_toggle.json', 'pomodoro_timer.json', 'ram_usage.json',");
+            sb.AppendLine("        'Redball.state.json', 'templates.json', 'typething_launch.json'");
+            sb.AppendLine("    )");
+            sb.AppendLine("    $removedCount = 0;");
+            sb.AppendLine("    foreach ($file in $orphanedFiles) {");
+            sb.AppendLine("        $filePath = Join-Path $targetDir $file;");
+            sb.AppendLine("        if (Test-Path $filePath) {");
+            sb.AppendLine("            try {");
+            sb.AppendLine("                Remove-Item $filePath -Force -ErrorAction Stop;");
+            sb.AppendLine("                Write-Host ('  Removed orphaned file: ' + $file);");
+            sb.AppendLine("                $removedCount++;");
+            sb.AppendLine("            } catch {");
+            sb.AppendLine("                Write-Warning ('Could not remove orphaned file: ' + $file);");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine("    ");
+            sb.AppendLine("    # Clean up old DLLs from root folder (they should now be in dll/ subfolder)");
+            sb.AppendLine("    $orphanedRootDlls = @(");
             sb.AppendLine("        'CommunityToolkit.Mvvm.dll', 'e_sqlite3.dll', 'Hardcodet.NotifyIcon.Wpf.dll',");
             sb.AppendLine("        'libSkiaSharp.dll', 'LottieSharp.dll', 'Microsoft.Data.Sqlite.dll',");
             sb.AppendLine("        'Microsoft.Extensions.Configuration.Abstractions.dll', 'Microsoft.Extensions.Configuration.Binder.dll',");
@@ -1055,19 +1079,38 @@ public class UpdateService : IUpdateService
             sb.AppendLine("        'SQLitePCLRaw.batteries_v2.dll', 'SQLitePCLRaw.core.dll', 'SQLitePCLRaw.provider.e_sqlite3.dll',");
             sb.AppendLine("        'System.Diagnostics.EventLog.dll', 'System.Management.dll',");
             sb.AppendLine("        'System.ServiceProcess.ServiceController.dll', 'System.Speech.dll',");
-            sb.AppendLine("        'analytics.json', 'engine_toggle.json', 'pomodoro_timer.json', 'ram_usage.json',");
-            sb.AppendLine("        'Redball.state.json', 'templates.json', 'typething_launch.json', 'InputInterceptor.dll'");
+            sb.AppendLine("        'InputInterceptor.dll'");
             sb.AppendLine("    )");
-            sb.AppendLine("    $removedCount = 0;");
-            sb.AppendLine("    foreach ($file in $orphanedFiles) {");
+            sb.AppendLine("    foreach ($file in $orphanedRootDlls) {");
             sb.AppendLine("        $filePath = Join-Path $targetDir $file;");
             sb.AppendLine("        if (Test-Path $filePath) {");
             sb.AppendLine("            try {");
             sb.AppendLine("                Remove-Item $filePath -Force -ErrorAction Stop;");
-            sb.AppendLine("                Write-Host ('  Removed orphaned file: ' + $file);");
+            sb.AppendLine("                Write-Host ('  Removed orphaned root DLL: ' + $file);");
             sb.AppendLine("                $removedCount++;");
             sb.AppendLine("            } catch {");
-            sb.AppendLine("                Write-Warning ('Could not remove orphaned file: ' + $file);");
+            sb.AppendLine("                Write-Warning ('Could not remove orphaned root DLL: ' + $file);");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine("    ");
+            sb.AppendLine("    # Clean up old DLLs from dll folder that are no longer needed");
+            sb.AppendLine("    $dllDir = Join-Path $targetDir 'dll'");
+            sb.AppendLine("    if (Test-Path $dllDir) {");
+            sb.AppendLine("        $stagingDllDir = Join-Path $sourceDir 'dll'");
+            sb.AppendLine("        if (Test-Path $stagingDllDir) {");
+            sb.AppendLine("            $currentDlls = Get-ChildItem -Path $stagingDllDir -Filter '*.dll' | Select-Object -ExpandProperty Name");
+            sb.AppendLine("            $existingDlls = Get-ChildItem -Path $dllDir -Filter '*.dll' -ErrorAction SilentlyContinue");
+            sb.AppendLine("            foreach ($dll in $existingDlls) {");
+            sb.AppendLine("                if ($currentDlls -notcontains $dll.Name) {");
+            sb.AppendLine("                    try {");
+            sb.AppendLine("                        Remove-Item $dll.FullName -Force -ErrorAction Stop;");
+            sb.AppendLine("                        Write-Host ('  Removed obsolete DLL: dll\\' + $dll.Name);");
+            sb.AppendLine("                        $removedCount++;");
+            sb.AppendLine("                    } catch {");
+            sb.AppendLine("                        Write-Warning ('Could not remove obsolete DLL: ' + $dll.Name);");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                }");
             sb.AppendLine("            }");
             sb.AppendLine("        }");
             sb.AppendLine("    }");
@@ -1206,8 +1249,13 @@ public class UpdateService : IUpdateService
     {
         try
         {
-            var scriptPath = Path.Combine(Path.GetTempPath(), "RedballUpdate", "install-update.ps1");
-            var packageDir = Path.GetDirectoryName(installerPath) ?? Path.Combine(Path.GetTempPath(), "RedballUpdate");
+            var scriptDir = Path.Combine(Path.GetTempPath(), "RedballUpdate");
+            var scriptPath = Path.Combine(scriptDir, "install-update.ps1");
+            
+            // Ensure directory exists before writing script
+            Directory.CreateDirectory(scriptDir);
+            
+            var packageDir = Path.GetDirectoryName(installerPath) ?? scriptDir;
             var installerCommand = fileName.EndsWith(".msi", StringComparison.OrdinalIgnoreCase)
                 ? "$process = Start-Process -FilePath 'msiexec.exe' -ArgumentList '/i \"" + installerPath.Replace("'", "''") + "\" /passive /norestart' -Wait -PassThru"
                 : "$process = Start-Process -FilePath '" + installerPath.Replace("'", "''") + "' -ArgumentList '/quiet /norestart' -Wait -PassThru";
