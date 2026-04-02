@@ -54,15 +54,66 @@ public class ServiceInputProvider : IDisposable
     }
 
     /// <summary>
-    /// Checks if the Redball Input Service is installed.
+    /// Checks if the Redball Input Service is installed and running.
+    /// Attempts to start the service if it's installed but stopped.
     /// </summary>
     public bool RefreshServiceInstalledState()
     {
         try
         {
             using var sc = new System.ServiceProcess.ServiceController("RedballInputService");
-            IsServiceInstalled = sc.Status != System.ServiceProcess.ServiceControllerStatus.Stopped ||
-                                 sc.Status != System.ServiceProcess.ServiceControllerStatus.StopPending;
+            var status = sc.Status;
+            
+            // Service is considered available only if it's running
+            IsServiceInstalled = status == System.ServiceProcess.ServiceControllerStatus.Running;
+            
+            // If installed but not running, try to start it using sc.exe (more reliable than ServiceController)
+            if (status == System.ServiceProcess.ServiceControllerStatus.Stopped)
+            {
+                Logger.Info("ServiceInputProvider", "Service is installed but stopped, attempting to start via sc.exe...");
+                try
+                {
+                    var psi = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "sc.exe",
+                        Arguments = "start RedballInputService",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    };
+                    
+                    using var process = System.Diagnostics.Process.Start(psi)!;
+                    var stdout = process.StandardOutput.ReadToEnd();
+                    var stderr = process.StandardError.ReadToEnd();
+                    process.WaitForExit();
+                    
+                    if (process.ExitCode == 0 || stdout.Contains("RUNNING", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Refresh status to confirm
+                        sc.Refresh();
+                        IsServiceInstalled = sc.Status == System.ServiceProcess.ServiceControllerStatus.Running;
+                        Logger.Info("ServiceInputProvider", $"Service started successfully: {IsServiceInstalled}");
+                    }
+                    else
+                    {
+                        Logger.Warning("ServiceInputProvider", $"sc.exe failed to start service: {stderr} {stdout}");
+                        IsServiceInstalled = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning("ServiceInputProvider", $"Failed to start service via sc.exe: {ex.Message}");
+                    IsServiceInstalled = false;
+                }
+            }
+            else if (status == System.ServiceProcess.ServiceControllerStatus.StopPending || 
+                     status == System.ServiceProcess.ServiceControllerStatus.StartPending)
+            {
+                Logger.Info("ServiceInputProvider", $"Service is in pending state ({status}), waiting...");
+                sc.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
+                IsServiceInstalled = sc.Status == System.ServiceProcess.ServiceControllerStatus.Running;
+            }
         }
         catch (Exception ex)
         {

@@ -473,10 +473,11 @@ public partial class App : Application
             var createResult = RunProcessAsAdmin("sc.exe", $"create RedballInputService binPath= \"{servicePath}\" start= auto");
             if (createResult.ExitCode != 0)
             {
-                // Check if service already exists
-                if (!createResult.StdErr.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+                // Check if service already exists (sc.exe may output to stdout or stderr)
+                var combinedOutput = createResult.StdOut + createResult.StdErr;
+                if (!combinedOutput.Contains("already exists", StringComparison.OrdinalIgnoreCase))
                 {
-                    Services.Logger.Error("App", $"Failed to create service: {createResult.StdErr}");
+                    Services.Logger.Error("App", $"Failed to create service: {createResult.StdErr} {createResult.StdOut}");
                     return false;
                 }
                 Services.Logger.Info("App", "Service already exists, continuing...");
