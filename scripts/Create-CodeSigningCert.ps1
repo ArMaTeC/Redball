@@ -95,3 +95,4 @@ Write-Information "${GRAY}  signtool sign /s My /sha1 $($cert.Thumbprint) /fd SH
 Write-Information ""
 
 
+
