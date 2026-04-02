@@ -991,6 +991,81 @@ function Step-BuildService {
     Write-HostSafe "  Uninstall: .\scripts\Uninstall-Service.ps1" -ForegroundColor Gray
 }
 
+function Step-SignExecutables {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [string]$CertificateName = "RedballDevCert"
+    )
+    Write-BuildHeader "Signing Executables"
+
+    # Locate Signtool (SDK)
+    $sdkPath = Join-Path "${env:ProgramFiles(x86)}" "Windows Kits\10\bin"
+    $signtool = Get-ChildItem -Path $sdkPath -Filter "signtool.exe" -Recurse | Where-Object { $_.FullName -like "*\x64\signtool.exe" } | Select-Object -First 1
+    if (-not $signtool) {
+        Write-Warning "signtool.exe not found. Skipping code signing. Install Windows SDK to enable signing."
+        return
+    }
+    Write-BuildStep "Found signtool: $($signtool.FullName)"
+
+    # Find or create self-signed certificate
+    $cert = Get-ChildItem -Path Cert:\CurrentUser\My, Cert:\LocalMachine\My | Where-Object { $_.Subject -like "*CN=$CertificateName*" } | Select-Object -First 1
+    if (-not $cert) {
+        if (-not $PSCmdlet.ShouldProcess($CertificateName, 'Create self-signed certificate')) {
+            return
+        }
+        Write-BuildStep "Creating new self-signed certificate: $CertificateName"
+        $cert = New-SelfSignedCertificate -Type CodeSigning -Subject "CN=$CertificateName" -KeyExportPolicy Exportable -KeySpec Signature
+        Write-BuildSuccess "Certificate created"
+    }
+    else {
+        Write-BuildSuccess "Using existing certificate: $CertificateName"
+    }
+
+    # Trust certificate locally (for service installation)
+    $tmpCertPath = [System.IO.Path]::GetTempFileName()
+    Export-Certificate -Cert $cert -FilePath $tmpCertPath | Out-Null
+    Import-Certificate -FilePath $tmpCertPath -CertStoreLocation "Cert:\LocalMachine\Root" -ErrorAction SilentlyContinue | Out-Null
+    Import-Certificate -FilePath $tmpCertPath -CertStoreLocation "Cert:\LocalMachine\TrustedPublisher" -ErrorAction SilentlyContinue | Out-Null
+    Remove-Item $tmpCertPath -ErrorAction SilentlyContinue
+
+    # Files to sign
+    $filesToSign = @()
+    
+    # Service executable
+    $serviceExe = Join-Path $script:DistPath 'Redball.Service\Redball.Service.exe'
+    if (Test-Path $serviceExe) {
+        $filesToSign += $serviceExe
+    }
+    
+    # Session helper
+    $helperExe = Join-Path $script:DistPath 'Redball.Service\Redball.SessionHelper.exe'
+    if (Test-Path $helperExe) {
+        $filesToSign += $helperExe
+    }
+    
+    # WPF app (in publish dir)
+    $wpfExe = Join-Path $script:DistPath 'wpf-publish\Redball.UI.WPF.exe'
+    if (Test-Path $wpfExe) {
+        $filesToSign += $wpfExe
+    }
+
+    if ($filesToSign.Count -eq 0) {
+        Write-Warning "No executables found to sign"
+        return
+    }
+
+    foreach ($file in $filesToSign) {
+        Write-BuildStep "Signing: $(Split-Path $file -Leaf)"
+        & $signtool.FullName sign /v /sm /fd SHA256 /sha1 $($cert.Thumbprint) /t http://timestamp.digicert.com "$file"
+        if ($LASTEXITCODE -eq 0) {
+            Write-BuildSuccess "Signed: $(Split-Path $file -Leaf)"
+        }
+        else {
+            Write-Warning "Failed to sign: $(Split-Path $file -Leaf)"
+        }
+    }
+}
+
 function Step-VerifyBuild {
     [CmdletBinding()]
     param(
@@ -1470,6 +1545,7 @@ try {
         Step-BuildDriver
         Step-BuildWpfApp
         Step-BuildService
+        Step-SignExecutables
     }
     else {
         Write-HostSafe "  Skipping WPF build ( -SkipWPF )" -ForegroundColor Yellow
