@@ -991,7 +991,7 @@ function Step-BuildService {
     Write-HostSafe "  Uninstall: .\scripts\Uninstall-Service.ps1" -ForegroundColor Gray
 }
 
-function Step-SignExecutables {
+function Step-SignExecutable {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$CertificateName = "RedballDevCert"
@@ -1560,7 +1560,7 @@ try {
         Step-BuildDriver
         Step-BuildWpfApp
         Step-BuildService
-        Step-SignExecutables
+        Step-SignExecutable
     }
     else {
         Write-HostSafe "  Skipping WPF build ( -SkipWPF )" -ForegroundColor Yellow

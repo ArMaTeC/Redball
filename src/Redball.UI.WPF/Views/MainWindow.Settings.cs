@@ -1180,14 +1180,15 @@ public partial class MainWindow
                 MainServiceAdminHintText.Visibility = Visibility.Visible;
                 MainServiceAdminHintText.Text = "Administrator approval (UAC) is required to install or uninstall the Input Service.";
             }
-            // Hide HID-specific controls when Service is selected
+            // Hide HID-specific controls, but show status indicator for service
             if (MainRepairHidStackBtn != null) MainRepairHidStackBtn.Visibility = Visibility.Collapsed;
             if (MainHidTestPanel != null) MainHidTestPanel.Visibility = Visibility.Collapsed;
             if (MainResetHidStackBtn != null) MainResetHidStackBtn.Visibility = Visibility.Collapsed;
             if (MainCopyHidDiagnosticsBtn != null) MainCopyHidDiagnosticsBtn.Visibility = Visibility.Collapsed;
             if (MainEmergencyReleaseHidBtn != null) MainEmergencyReleaseHidBtn.Visibility = Visibility.Collapsed;
-            if (MainHidStatusIndicator != null) MainHidStatusIndicator.Visibility = Visibility.Collapsed;
-            if (MainHidDetailsText != null) MainHidDetailsText.Visibility = Visibility.Collapsed;
+            // Show status indicator and details for service state
+            if (MainHidStatusIndicator != null) MainHidStatusIndicator.Visibility = Visibility.Visible;
+            if (MainHidDetailsText != null) MainHidDetailsText.Visibility = Visibility.Visible;
             
             MainInstallHidDriverBtn.ToolTip = serviceInstalled
                 ? "Uninstall the Redball Input Service."
@@ -1239,10 +1240,43 @@ public partial class MainWindow
     {
         if (MainHidStatusText == null) return;
 
+        var inputMode = MainTypeThingInputModeCombo.SelectedIndex;
         var driverInstalled = InterceptionInputService.Instance.RefreshDriverInstalledState();
         var driverStateText = driverInstalled ? "Installed" : "Not Installed";
+        
+        // Service mode (index 2)
+        if (inputMode == 2)
+        {
+            var serviceState = ServiceInputProvider.Instance.GetDetailedServiceState();
+            var statusText = serviceState.GetDisplayText();
+            
+            MainHidStatusText.Text = $"Service: {statusText}";
+            
+            if (MainHidDetailsText != null)
+            {
+                var details = serviceState.Status switch
+                {
+                    ServiceInputProvider.ServiceStatus.NotInstalled => "Service not installed. Click 'Install Input Service' to set up.",
+                    ServiceInputProvider.ServiceStatus.Stopped => "Service installed but stopped. Try restarting the service.",
+                    ServiceInputProvider.ServiceStatus.RunningNoPipe => "Service running but pipe connection failed. Service may be initializing.",
+                    ServiceInputProvider.ServiceStatus.RunningNoResponse => "Connected to pipe but service not responding to ping.",
+                    ServiceInputProvider.ServiceStatus.Healthy => "Service running and responsive. Ready for input.",
+                    ServiceInputProvider.ServiceStatus.Error => $"Error checking service: {serviceState.ErrorMessage}",
+                    _ => "Unknown service state"
+                };
+                MainHidDetailsText.Text = details;
+            }
+            
+            if (MainHidStatusIndicator != null)
+            {
+                MainHidStatusIndicator.Background = serviceState.GetStatusBrush();
+            }
+            
+            return;
+        }
 
-        if (MainTypeThingInputModeCombo.SelectedIndex != 1)
+        // SendInput mode (index 0)
+        if (inputMode != 1)
         {
             MainHidStatusText.Text = $"HID status: Not in use (SendInput mode) • Driver: {driverStateText}";
             return;

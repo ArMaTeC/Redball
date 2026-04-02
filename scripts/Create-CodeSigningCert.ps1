@@ -6,6 +6,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$InformationPreference = 'Continue'
 
 # Persistent storage for certificate export
 $certStorageDir = Join-Path $env:USERPROFILE '.redball'
@@ -13,12 +14,17 @@ if (-not (Test-Path $certStorageDir)) {
     New-Item -ItemType Directory -Path $certStorageDir -Force | Out-Null
 }
 
-function Write-Step { param($msg) Write-Host "  → $msg" -ForegroundColor Cyan }
-function Write-Success { param($msg) Write-Host "  ✓ $msg" -ForegroundColor Green }
-function Write-Warn { param($msg) Write-Host "  ⚠ $msg" -ForegroundColor Yellow }
+# ANSI color codes for Information stream
+$GRAY = "`e[90m"
+$WHITE = "`e[97m"
+$RESET = "`e[0m"
 
-Write-Host "`n=== Redball Code Signing Certificate ===" -ForegroundColor White
-Write-Host "Storage: $certStorageDir`n" -ForegroundColor Gray
+function Write-Step { param($msg) Write-Information "  → $msg" -InformationAction Continue }
+function Write-Success { param($msg) Write-Information "  ✓ $msg" -InformationAction Continue }
+function Write-Warn { param($msg) Write-Warning "  ⚠ $msg" }
+
+Write-Information "`n${WHITE}=== Redball Code Signing Certificate ===${RESET}"
+Write-Information "${GRAY}Storage: $certStorageDir${RESET}`n"
 
 $certStore = "Cert:\CurrentUser\My"
 
@@ -27,9 +33,9 @@ $existingCert = Get-ChildItem -Path $certStore | Where-Object { $_.Subject -eq "
 
 if ($existingCert -and -not $Force) {
     Write-Success "Certificate already exists: $CertificateName"
-    Write-Host "  Thumbprint: $($existingCert.Thumbprint)" -ForegroundColor Gray
-    Write-Host "  Expires: $($existingCert.NotAfter)" -ForegroundColor Gray
-    Write-Host "`nTo recreate, run with -Force`n" -ForegroundColor Yellow
+    Write-Information "${GRAY}  Thumbprint: $($existingCert.Thumbprint)${RESET}"
+    Write-Information "${GRAY}  Expires: $($existingCert.NotAfter)${RESET}"
+    Write-Information "${GRAY}`nTo recreate, run with -Force`${RESET}`n"
     exit 0
 }
 
@@ -52,9 +58,9 @@ $cert = New-SelfSignedCertificate `
     -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
 
 Write-Success "Certificate created successfully!"
-Write-Host "  Subject: $($cert.Subject)" -ForegroundColor Gray
-Write-Host "  Thumbprint: $($cert.Thumbprint)" -ForegroundColor Gray
-Write-Host "  Valid Until: $($cert.NotAfter)" -ForegroundColor Gray
+Write-Information "${GRAY}  Subject: $($cert.Subject)${RESET}"
+Write-Information "${GRAY}  Thumbprint: $($cert.Thumbprint)${RESET}"
+Write-Information "${GRAY}  Valid Until: $($cert.NotAfter)${RESET}"
 
 # Trust certificate locally and export to persistent location
 Write-Step "Exporting certificate to persistent storage..."
@@ -71,21 +77,21 @@ try {
 }
 catch {
     Write-Warn "Could not trust certificate in local machine stores (requires admin)"
-    Write-Host "  To trust manually, run as administrator:" -ForegroundColor Gray
-    Write-Host "    Import-Certificate -FilePath '$exportPath' -CertStoreLocation Cert:\LocalMachine\Root" -ForegroundColor Gray
-    Write-Host "    Import-Certificate -FilePath '$exportPath' -CertStoreLocation Cert:\LocalMachine\TrustedPublisher" -ForegroundColor Gray
+    Write-Information "${GRAY}  To trust manually, run as administrator:${RESET}"
+    Write-Information "${GRAY}    Import-Certificate -FilePath '$exportPath' -CertStoreLocation Cert:\LocalMachine\Root${RESET}"
+    Write-Information "${GRAY}    Import-Certificate -FilePath '$exportPath' -CertStoreLocation Cert:\LocalMachine\TrustedPublisher${RESET}"
 }
 
-Write-Host "`nCertificate ready for code signing!`n" -ForegroundColor Green
-Write-Host "Certificate Details:" -ForegroundColor Gray
-Write-Host "  Subject: $($cert.Subject)" -ForegroundColor Gray
-Write-Host "  Thumbprint: $($cert.Thumbprint)" -ForegroundColor Gray
-Write-Host "  Valid Until: $($cert.NotAfter)" -ForegroundColor Gray
-Write-Host "  Export Path: $exportPath" -ForegroundColor Gray
-Write-Host "`nUsage:" -ForegroundColor Gray
-Write-Host "  .\scripts\build.ps1" -ForegroundColor Gray
-Write-Host "`nManual signtool:" -ForegroundColor Gray
-Write-Host "  signtool sign /s My /sha1 $($cert.Thumbprint) /fd SHA256 /t http://timestamp.digicert.com yourfile.exe" -ForegroundColor Gray
-Write-Host ""
+Write-Information "${WHITE}`nCertificate ready for code signing!`${RESET}`n"
+Write-Information "${GRAY}Certificate Details:${RESET}"
+Write-Information "${GRAY}  Subject: $($cert.Subject)${RESET}"
+Write-Information "${GRAY}  Thumbprint: $($cert.Thumbprint)${RESET}"
+Write-Information "${GRAY}  Valid Until: $($cert.NotAfter)${RESET}"
+Write-Information "${GRAY}  Export Path: $exportPath${RESET}"
+Write-Information "${GRAY}`nUsage:${RESET}"
+Write-Information "${GRAY}  .\scripts\build.ps1${RESET}"
+Write-Information "${GRAY}`nManual signtool:${RESET}"
+Write-Information "${GRAY}  signtool sign /s My /sha1 $($cert.Thumbprint) /fd SHA256 /t http://timestamp.digicert.com yourfile.exe${RESET}"
+Write-Information ""
 
 

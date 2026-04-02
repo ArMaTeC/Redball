@@ -470,11 +470,19 @@
                                                 <StackPanel>
                                                     <TextBlock Text="Advanced" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
                                                     <TextBlock Text="Privacy, telemetry, and advanced runtime behavior." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
-                                                    <CheckBox x:Name="MainConfirmOnExitCheck" Content="Confirm on exit" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainEncryptConfigCheck" Content="Encrypt config with DPAPI" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainConfirmOnExitCheck" Content="Confirm on exit" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                              ToolTipService.ShowDuration="12000"
+                                                              ToolTip="Show a confirmation dialog when closing Redball to prevent accidental exits. Useful if you rely on Redball running in the background."/>
+                                                    <CheckBox x:Name="MainEncryptConfigCheck" Content="Encrypt config with DPAPI" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                              ToolTipService.ShowDuration="12000"
+                                                              ToolTip="Encrypt sensitive configuration data using Windows Data Protection API (DPAPI). Protects your settings from other users on this machine."/>
                                                     <CheckBox x:Name="MainEnableTelemetryCheck" Content="Enable analytics" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Track session counts, usage time, and feature usage locally. Data stays on your device and can be exported anytime."/>
-                                                    <CheckBox x:Name="MainEnablePerformanceMetricsCheck" Content="Enable performance metrics" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainProcessIsolationCheck" Content="Enable process isolation" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    <CheckBox x:Name="MainEnablePerformanceMetricsCheck" Content="Enable performance metrics" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                              ToolTipService.ShowDuration="12000"
+                                                              ToolTip="Collect performance data like CPU and memory usage for the analytics dashboard. Helps identify resource impact of keep-awake operations."/>
+                                                    <CheckBox x:Name="MainProcessIsolationCheck" Content="Enable process isolation" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                              ToolTipService.ShowDuration="12000"
+                                                              ToolTip="Run TypeThing operations in a separate process for increased stability. If TypeThing crashes, it won't bring down the main application."/>
 
                                                     <TextBlock Text="Max Log Size (MB)" FontWeight="Medium" Margin="0,8,0,4"/>
                                                     <Slider x:Name="MainMaxLogSizeSlider" Minimum="1" Maximum="1024" TickFrequency="1"
@@ -850,16 +858,24 @@
 
                                             <CheckBox x:Name="MainEnableTypeThingCheck" Content="Enable TypeThing"
                                                       Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                      ToolTipService.ShowDuration="12000"
+                                                      ToolTip="Enable the TypeThing feature to paste clipboard content as typed keystrokes. When enabled, you can use hotkeys to type text instead of pasting."/>
                                             <CheckBox x:Name="MainUseLowLevelHotkeyCheck" Content="Use low-level hotkey registration"
                                                       Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                      ToolTipService.ShowDuration="12000"
+                                                      ToolTip="Register hotkeys at the system level for better reliability. Required for global hotkeys to work when app is not focused. May trigger antivirus warnings due to low-level keyboard hook."/>
                                             <CheckBox x:Name="MainTypeThingHidSafeModeCheck" Content="Enable HID safe mode"
                                                       Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                      ToolTipService.ShowDuration="12000"
+                                                      ToolTip="Force TypeThing to use standard SendInput instead of HID driver. Enable this if HID driver causes keyboard issues or system instability. Automatically disables HID input mode."/>
                                             <CheckBox x:Name="MainTypeThingHidAudioFeedbackCheck" Content="Enable HID audio feedback"
                                                       Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                      ToolTipService.ShowDuration="12000"
+                                                      ToolTip="Play subtle click sounds when HID driver captures or releases the keyboard. Useful for debugging HID state but may be distracting."/>
 
                                             <TextBlock Text="Input Mode" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
                                             <Grid>
@@ -868,10 +884,12 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <ComboBox x:Name="MainTypeThingInputModeCombo" Grid.Column="0" Style="{DynamicResource ModernComboBox}" Margin="0,0,8,10"
-                                                          SelectionChanged="MainComboSettingChanged">
-                                                    <ComboBoxItem Content="SendInput"/>
-                                                    <ComboBoxItem Content="HID"/>
-                                                    <ComboBoxItem Content="Service"/>
+                                                          SelectionChanged="MainComboSettingChanged"
+                                                          ToolTipService.ShowDuration="12000"
+                                                          ToolTip="Select input method: SendInput (standard Windows API), HID (driver-level for games/fullscreen apps), or Service (works over RDP without driver).">
+                                                    <ComboBoxItem Content="SendInput" ToolTip="Standard Windows input - works everywhere but some games may block it"/>
+                                                    <ComboBoxItem Content="HID" ToolTip="Driver-level input - bypasses game blockers but requires driver installation"/>
+                                                    <ComboBoxItem Content="Service" ToolTip="Windows Service input - works over RDP, no driver needed, requires service installation"/>
                                                 </ComboBox>
                                                 <WrapPanel Grid.Column="1" Orientation="Horizontal">
                                                     <Button x:Name="MainInstallHidDriverBtn" Content="Install/Uninstall Driver" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainInstallHidDriverBtn_Click"/>
@@ -894,30 +912,39 @@
                                             <TextBlock x:Name="MainHidStatusText" FontWeight="Medium" Foreground="{DynamicResource ForegroundBrush}"/>
                                             <TextBlock x:Name="MainHidDetailsText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
 
-                                            <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
+                                                       ToolTip="Global hotkey to start TypeThing typing. Click the box and press your desired key combination. Works even when Redball is not focused."/>
                                             <TextBox x:Name="MainStartHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"
                                                      PreviewKeyDown="MainHotkeyBox_PreviewKeyDown" GotFocus="MainStartHotkeyBox_GotFocus" LostFocus="MainHotkeyBox_LostFocus"
-                                                     Tag="Click here and press your desired hotkey combination..."/>
-                                            <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                     Tag="Click here and press your desired hotkey combination..."
+                                                     ToolTipService.ShowDuration="12000"
+                                                     ToolTip="Press your desired hotkey combination to set the start hotkey."/>
+                                            <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
+                                                       ToolTip="Global hotkey to immediately stop TypeThing typing. Useful if typing goes wrong or you need to abort. Click and press your key combination."/>
                                             <TextBox x:Name="MainStopHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,10"
                                                      PreviewKeyDown="MainHotkeyBox_PreviewKeyDown" GotFocus="MainStopHotkeyBox_GotFocus" LostFocus="MainHotkeyBox_LostFocus"
-                                                     Tag="Click here and press your desired hotkey combination..."/>
+                                                     Tag="Click here and press your desired hotkey combination..."
+                                                     ToolTipService.ShowDuration="12000"
+                                                     ToolTip="Press your desired hotkey combination to set the stop hotkey."/>
 
-                                            <TextBlock Text="Typing Speed (max delay ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBlock Text="Typing Speed (max delay ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
+                                                       ToolTip="Maximum milliseconds between keystrokes. Lower = faster typing. 1-50ms is very fast, 100-200ms is natural human speed, 300-500ms is slow/deliberate."/>
                                             <Slider x:Name="MainTypingSpeedSlider" Minimum="1" Maximum="500" TickFrequency="1"
                                                     IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
                                                     ValueChanged="MainTypingSpeedSlider_ValueChanged"/>
                                             <TextBlock x:Name="MainTypingSpeedText" FontSize="12"
                                                        Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
 
-                                            <TextBlock Text="Minimum Delay (ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBlock Text="Minimum Delay (ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
+                                                       ToolTip="Minimum milliseconds between keystrokes. TypeThing randomly picks delays between min and max for human-like variation. Keep close to max for consistent speed."/>
                                             <Slider x:Name="MainTypeThingMinDelaySlider" Minimum="1" Maximum="500" TickFrequency="1"
                                                     IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
                                                     ValueChanged="MainTypeThingMinDelaySlider_ValueChanged"/>
                                             <TextBlock x:Name="MainTypeThingMinDelayText" FontSize="12"
                                                        Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
 
-                                            <TextBlock Text="Start Countdown (seconds)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBlock Text="Start Countdown (seconds)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
+                                                       ToolTip="Seconds to wait after pressing Start hotkey before typing begins. Gives you time to switch to the target window. Countdown shows in notification."/>
                                             <Slider x:Name="MainTypeThingStartDelaySlider" Minimum="1" Maximum="30" TickFrequency="1"
                                                     IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
                                                     ValueChanged="MainTypeThingStartDelaySlider_ValueChanged"/>
@@ -926,16 +953,20 @@
 
                                             <CheckBox x:Name="MainAddRandomPausesCheck" Content="Add random pauses"
                                                       Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                      ToolTipService.ShowDuration="12000"
+                                                      ToolTip="Occasionally insert longer pauses between keystrokes to mimic human typing patterns. Makes typed text appear more natural and less robotic."/>
 
-                                            <TextBlock Text="Random Pause Chance (%)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBlock Text="Random Pause Chance (%)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
+                                                       ToolTip="Percentage chance that a random pause will occur between any two keystrokes. Higher values = more frequent pauses. 10-20% is subtle, 30-50% is very human-like."/>
                                             <Slider x:Name="MainTypeThingPauseChanceSlider" Minimum="0" Maximum="100" TickFrequency="1"
                                                     IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
                                                     ValueChanged="MainTypeThingPauseChanceSlider_ValueChanged"/>
                                             <TextBlock x:Name="MainTypeThingPauseChanceText" FontSize="12"
                                                        Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
 
-                                            <TextBlock Text="Random Pause Max (ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBlock Text="Random Pause Max (ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
+                                                       ToolTip="Maximum duration of random pauses in milliseconds. When a random pause occurs, it will be between 50ms and this value. 500-1000ms mimics a human thinking pause."/>
                                             <Slider x:Name="MainTypeThingPauseMaxSlider" Minimum="0" Maximum="5000" TickFrequency="10"
                                                     IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
                                                     ValueChanged="MainTypeThingPauseMaxSlider_ValueChanged"/>
@@ -944,13 +975,19 @@
 
                                             <CheckBox x:Name="MainTypeNewlinesCheck" Content="Type newline characters"
                                                       Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                      ToolTipService.ShowDuration="12000"
+                                                      ToolTip="Convert line breaks in clipboard text to Enter key presses. Disable this if you want multi-line text typed as a single line."/>
                                             <CheckBox x:Name="MainTypeThingNotificationsCheck" Content="Show TypeThing notifications"
                                                       Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                      ToolTipService.ShowDuration="12000"
+                                                      ToolTip="Display toast notifications for TypeThing events: countdown start, typing progress, completion, and errors. Useful for knowing when typing begins/ends."/>
                                             <CheckBox x:Name="MainTypeThingTtsCheck" Content="Enable TypeThing text-to-speech"
                                                       Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,12"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                      ToolTipService.ShowDuration="12000"
+                                                      ToolTip="Read clipboard content aloud using Windows text-to-speech when TypeThing starts. Useful for accessibility or verifying what will be typed before it begins."/>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
@@ -968,18 +1005,24 @@
                                                 <TextBlock Grid.Column="0" Text="Update Settings" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
                                                 <Button Grid.Column="1" x:Name="MainSaveSettingsButton" Content="Save Settings" Style="{DynamicResource PrimaryButton}" Click="MainSaveSettingsButton_Click" IsEnabled="False"/>
                                             </Grid>
-                                            <CheckBox x:Name="MainAutoUpdateCheckEnabledCheck" Content="Check for updates automatically" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <CheckBox x:Name="MainAutoUpdateCheckEnabledCheck" Content="Check for updates automatically" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                      ToolTipService.ShowDuration="12000"
+                                                      ToolTip="Automatically check for new Redball versions at the interval below. Downloads are manual - you'll be notified when updates are available."/>
 
-                                            <TextBlock Text="Update Channel" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBlock Text="Update Channel" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
+                                                       ToolTip="Which release channel to check: Stable (tested releases), Beta (early access with new features), or Disabled (no update checks)."/>
                                             <ComboBox x:Name="MainUpdateChannelCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged">
-                                                <ComboBoxItem Content="Stable"/>
-                                                <ComboBoxItem Content="Beta"/>
-                                                <ComboBoxItem Content="Disabled"/>
+                                                <ComboBoxItem Content="Stable" ToolTip="Tested, stable releases suitable for daily use"/>
+                                                <ComboBoxItem Content="Beta" ToolTip="Early access releases with latest features but may have bugs"/>
+                                                <ComboBoxItem Content="Disabled" ToolTip="Do not check for updates automatically"/>
                                             </ComboBox>
 
-                                            <CheckBox x:Name="MainVerifyUpdateSignatureCheck" Content="Verify update signatures" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                            <CheckBox x:Name="MainVerifyUpdateSignatureCheck" Content="Verify update signatures" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                      ToolTipService.ShowDuration="12000"
+                                                      ToolTip="Cryptographically verify that updates are signed by the Redball developer. Strongly recommended - disabling this allows potentially malicious updates to be installed."/>
 
-                                            <TextBlock Text="Auto-check Interval (minutes)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            <TextBlock Text="Auto-check Interval (minutes)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
+                                                       ToolTip="How often to check for updates when automatic checking is enabled. 60 minutes = hourly, 1440 minutes = daily."/>
                                             <Slider x:Name="MainAutoUpdateIntervalSlider" Minimum="30" Maximum="1440" TickFrequency="30" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainAutoUpdateIntervalSlider_ValueChanged"/>
                                             <TextBlock x:Name="MainAutoUpdateIntervalText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
 
@@ -1023,10 +1066,14 @@
             </Grid>
 
             <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" CornerRadius="0,0,18,18">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Redball - Keep-awake controls, automation, and diagnostics in one place." FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,0" VerticalAlignment="Center"/>
-                    <Button Content="Donate ⓘ" Style="{DynamicResource TextButtonStyle}" Command="{Binding DonateCommand}" ToolTip="Support the development of Redball!" HorizontalAlignment="Right" Margin="0,0,24,0"/>
-                </StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Redball - Keep-awake controls, automation, and diagnostics in one place." FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,0" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="♥ Donate" Style="{DynamicResource TextButtonStyle}" Command="{Binding DonateCommand}" ToolTip="Support the development of Redball!" Margin="0,0,24,0" VerticalAlignment="Center"/>
+                </Grid>
             </Border>
         </Grid>
     </Grid>

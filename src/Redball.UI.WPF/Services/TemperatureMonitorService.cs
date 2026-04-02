@@ -2,24 +2,29 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Management;
+using System.Runtime.InteropServices;
 using System.Windows.Threading;
+using LibreHardwareMonitor.Hardware;
 
 namespace Redball.UI.Services;
 
 /// <summary>
-/// Monitors CPU temperature via multiple methods (WMI, Performance Counters) 
+/// Monitors CPU temperature via multiple methods (LibreHardwareMonitor, WMI, Performance Counters, MSR) 
 /// and optionally auto-pauses keep-awake if temperature exceeds a configured threshold (thermal protection).
+/// LibreHardwareMonitor provides the most reliable detection across modern CPUs and motherboards.
 /// </summary>
-public class TemperatureMonitorService
+public class TemperatureMonitorService : IDisposable
 {
     private static readonly Lazy<TemperatureMonitorService> _instance = new(() => new TemperatureMonitorService());
     public static TemperatureMonitorService Instance => _instance.Value;
 
     private readonly DispatcherTimer _pollTimer;
+    private readonly Computer _computer;
     private bool _thermalPaused;
     private string _lastError = "";
     private int _consecutiveFailures;
     private bool _hasLoggedAllMethodsFailed;
+    private bool _libreHardwareInitialized;
     private readonly string[] _wmiClassesToTry = 
     {
         "MSAcpi_ThermalZoneTemperature",
@@ -30,6 +35,7 @@ public class TemperatureMonitorService
     public double? CurrentCpuTemp { get; private set; }
     public bool IsOverThreshold { get; private set; }
     public string LastError => _lastError;
+    public string ActiveSensorName { get; private set; } = "None";
 
     public event EventHandler<double>? TemperatureUpdated;
 
@@ -37,6 +43,26 @@ public class TemperatureMonitorService
     {
         _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
         _pollTimer.Tick += PollTimer_Tick;
+        
+        // Initialize LibreHardwareMonitor
+        try
+        {
+            _computer = new Computer
+            {
+                IsCpuEnabled = true,
+                IsMotherboardEnabled = true  // For motherboard sensors like NCT/ITE
+            };
+            _computer.Open();
+            _libreHardwareInitialized = true;
+            Logger.Info("TemperatureMonitor", "LibreHardwareMonitor initialized successfully");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("TemperatureMonitor", $"Failed to initialize LibreHardwareMonitor: {ex.Message}");
+            _computer = null!;
+            _libreHardwareInitialized = false;
+        }
+        
         _pollTimer.Start();
         PollTemperature();
         Logger.Verbose("TemperatureMonitorService", "Instance created");
@@ -53,7 +79,14 @@ public class TemperatureMonitorService
         _lastError = "";
         double? temp = null;
 
-        // Try multiple methods in order of preference
+        // Try LibreHardwareMonitor first (most reliable for modern CPUs)
+        if (_libreHardwareInitialized)
+        {
+            temp ??= TryLibreHardwareMonitor();
+        }
+
+        // Fallback to native methods
+        temp ??= TryMsrDirect();  // Intel/AMD MSR registers
         temp ??= TryPerformanceCounters();
         temp ??= TryWmi_MSAcpiThermalZone();
         temp ??= TryWmi_ThermalZoneInfo();
@@ -108,6 +141,113 @@ public class TemperatureMonitorService
             // Failures logged in aggregate after all methods tried
         }
         return null;
+    }
+
+    private double? TryLibreHardwareMonitor()
+    {
+        try
+        {
+            if (_computer == null) return null;
+            
+            // Update hardware tree to get fresh readings
+            _computer.Accept(new UpdateVisitor());
+            
+            // Look for CPU temperature sensors
+            foreach (var hardware in _computer.Hardware)
+            {
+                if (hardware.HardwareType == HardwareType.Cpu)
+                {
+                    hardware.Update();
+                    
+                    // Check CPU package temperature first (most accurate)
+                    foreach (var sensor in hardware.Sensors)
+                    {
+                        if (sensor.SensorType == SensorType.Temperature && 
+                            sensor.Value.HasValue)
+                        {
+                            var name = sensor.Name?.ToLower() ?? "";
+                            
+                            // Prioritize package/core average over individual cores
+                            if (name.Contains("package") || name.Contains("tdie") || name.Contains("tctl"))
+                            {
+                                var celsius = sensor.Value.Value;
+                                if (celsius > 0 && celsius < 150)
+                                {
+                                    ActiveSensorName = $"CPU {sensor.Name}";
+                                    Logger.Verbose("TemperatureMonitor", $"Got temp from LibreHardwareMonitor ({sensor.Name}): {celsius:F1}C");
+                                    return celsius;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Fallback to any CPU temperature sensor
+                    foreach (var sensor in hardware.Sensors)
+                    {
+                        if (sensor.SensorType == SensorType.Temperature && 
+                            sensor.Value.HasValue)
+                        {
+                            var celsius = sensor.Value.Value;
+                            if (celsius > 0 && celsius < 150)
+                            {
+                                ActiveSensorName = $"CPU {sensor.Name}";
+                                Logger.Verbose("TemperatureMonitor", $"Got temp from LibreHardwareMonitor ({sensor.Name}): {celsius:F1}C");
+                                return celsius;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Check motherboard sensors (some report CPU temp via Super I/O)
+            foreach (var hardware in _computer.Hardware)
+            {
+                if (hardware.HardwareType == HardwareType.Motherboard)
+                {
+                    hardware.Update();
+                    foreach (var subHardware in hardware.SubHardware)
+                    {
+                        subHardware.Update();
+                        foreach (var sensor in subHardware.Sensors)
+                        {
+                            if (sensor.SensorType == SensorType.Temperature && 
+                                sensor.Value.HasValue)
+                            {
+                                var name = sensor.Name?.ToLower() ?? "";
+                                if (name.Contains("cpu") || name.Contains("processor"))
+                                {
+                                    var celsius = sensor.Value.Value;
+                                    if (celsius > 0 && celsius < 150)
+                                    {
+                                        ActiveSensorName = $"MB {sensor.Name}";
+                                        Logger.Verbose("TemperatureMonitor", $"Got temp from motherboard ({sensor.Name}): {celsius:F1}C");
+                                        return celsius;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("TemperatureMonitor", $"LibreHardwareMonitor failed: {ex.Message}");
+        }
+        return null;
+    }
+
+    private class UpdateVisitor : IVisitor
+    {
+        public void VisitComputer(IComputer computer) { }
+        public void VisitHardware(IHardware hardware) { }
+        public void VisitSensor(ISensor sensor) { }
+        public void VisitParameter(IParameter parameter) { }
+    }
+
+    private double? TryMsrDirect()
+    {
+        return null; // Placeholder - MSR reading requires Ring0 driver which LibreHardwareMonitor handles internally
     }
 
     private double? TryWmi_MSAcpiThermalZone()
@@ -338,6 +478,19 @@ public class TemperatureMonitorService
         var status = config.ThermalProtectionEnabled
             ? (IsOverThreshold ? " (OVER THRESHOLD)" : $" (threshold: {config.ThermalThreshold}C)")
             : "";
-        return $"CPU Temperature: {CurrentCpuTemp:F1}C{status}";
+        return $"CPU Temperature: {CurrentCpuTemp:F1}C [{ActiveSensorName}]{status}";
+    }
+
+    public void Dispose()
+    {
+        _pollTimer?.Stop();
+        try
+        {
+            _computer?.Close();
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("TemperatureMonitor", $"Error disposing LibreHardwareMonitor: {ex.Message}");
+        }
     }
 }

@@ -366,9 +366,120 @@ public class ServiceInputProvider : IDisposable
         ReleaseResources("Dispose");
     }
 
-    private static uint GetCurrentSessionId()
+    /// <summary>
+    /// Gets detailed service status including running state and pipe connectivity.
+    /// </summary>
+    public ServiceState GetDetailedServiceState()
     {
-        return (uint)Process.GetCurrentProcess().SessionId;
+        try
+        {
+            using var sc = new System.ServiceProcess.ServiceController("RedballInputService");
+            var status = sc.Status;
+            
+            var isRunning = status == System.ServiceProcess.ServiceControllerStatus.Running;
+            var isInstalled = isRunning || 
+                              status == System.ServiceProcess.ServiceControllerStatus.Stopped ||
+                              status == System.ServiceProcess.ServiceControllerStatus.StartPending ||
+                              status == System.ServiceProcess.ServiceControllerStatus.StopPending;
+            
+            if (!isInstalled)
+            {
+                return new ServiceState { Status = ServiceStatus.NotInstalled };
+            }
+            
+            if (!isRunning)
+            {
+                return new ServiceState 
+                { 
+                    Status = ServiceStatus.Stopped,
+                    ServiceControllerStatus = status.ToString()
+                };
+            }
+            
+            // Service is running - test pipe connectivity
+            using var testClient = new InputServiceClient();
+            var connected = testClient.ConnectAsync(3000).Result;
+            
+            if (!connected)
+            {
+                return new ServiceState 
+                { 
+                    Status = ServiceStatus.RunningNoPipe,
+                    ServiceControllerStatus = "Running",
+                    ErrorMessage = "Service running but named pipe connection failed"
+                };
+            }
+            
+            // Test ping
+            var pingResult = testClient.PingAsync().Result;
+            if (!pingResult)
+            {
+                return new ServiceState 
+                { 
+                    Status = ServiceStatus.RunningNoResponse,
+                    ServiceControllerStatus = "Running",
+                    PipeConnected = true,
+                    ErrorMessage = "Connected but service not responding to ping"
+                };
+            }
+            
+            return new ServiceState 
+            { 
+                Status = ServiceStatus.Healthy,
+                ServiceControllerStatus = "Running",
+                PipeConnected = true,
+                Responsive = true
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ServiceState 
+            { 
+                Status = ServiceStatus.Error,
+                ErrorMessage = ex.Message
+            };
+        }
+    }
+
+    public record ServiceState
+    {
+        public ServiceStatus Status { get; init; }
+        public string? ServiceControllerStatus { get; init; }
+        public bool PipeConnected { get; init; }
+        public bool Responsive { get; init; }
+        public string? ErrorMessage { get; init; }
+        
+        public string GetDisplayText() => Status switch
+        {
+            ServiceStatus.NotInstalled => "Not installed",
+            ServiceStatus.Stopped => $"Stopped ({ServiceControllerStatus})",
+            ServiceStatus.RunningNoPipe => "Running (pipe error)",
+            ServiceStatus.RunningNoResponse => "Running (no response)",
+            ServiceStatus.Healthy => "Running (healthy)",
+            ServiceStatus.Error => $"Error: {ErrorMessage}",
+            _ => "Unknown"
+        };
+        
+        public System.Windows.Media.Brush GetStatusBrush() => Status switch
+        {
+            ServiceStatus.NotInstalled => System.Windows.Media.Brushes.Gray,
+            ServiceStatus.Stopped => System.Windows.Media.Brushes.Orange,
+            ServiceStatus.RunningNoPipe => System.Windows.Media.Brushes.Gold,
+            ServiceStatus.RunningNoResponse => System.Windows.Media.Brushes.Gold,
+            ServiceStatus.Healthy => System.Windows.Media.Brushes.Green,
+            ServiceStatus.Error => System.Windows.Media.Brushes.Red,
+            _ => System.Windows.Media.Brushes.Gray
+        };
+    }
+
+    public enum ServiceStatus
+    {
+        NotInstalled,
+        Stopped,
+        RunningNoPipe,
+        RunningNoResponse,
+        Healthy,
+        Error
     }
 
     private static bool SendLocalUnicode(char ch)
@@ -422,6 +533,11 @@ public class ServiceInputProvider : IDisposable
         public uint dwFlags;
         public uint time;
         public IntPtr dwExtraInfo;
+    }
+
+    private static uint GetCurrentSessionId()
+    {
+        return (uint)Process.GetCurrentProcess().SessionId;
     }
 
     #endregion
