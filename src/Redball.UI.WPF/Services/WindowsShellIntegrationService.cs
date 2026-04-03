@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 using Redball.UI.Services;
+using Redball.UI.WPF.Services;
 
 namespace Redball.UI.WPF.Services;
 
@@ -356,6 +357,73 @@ public class WindowsShellIntegrationService
         catch (Exception ex)
         {
             Logger.Warning("WindowsShellIntegration", $"Failed to register toast activator: {ex.Message}");
+        }
+    }
+
+    #endregion
+
+    #region Window Activation
+
+    /// <summary>
+    /// Launches or activates the main Redball window.
+    /// </summary>
+    public void LaunchMainWindow()
+    {
+        try
+        {
+            // Get the main window from the application
+            var mainWindow = System.Windows.Application.Current?.MainWindow;
+            
+            if (mainWindow == null)
+            {
+                // Main window not created yet, start the application
+                Process.Start(_exePath);
+                Logger.Info("WindowsShellIntegration", "Launched new Redball instance");
+            }
+            else
+            {
+                // Activate existing window
+                if (mainWindow.WindowState == System.Windows.WindowState.Minimized)
+                {
+                    mainWindow.WindowState = System.Windows.WindowState.Normal;
+                }
+                mainWindow.Activate();
+                mainWindow.Focus();
+                Logger.Info("WindowsShellIntegration", "Activated existing main window");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("WindowsShellIntegration", "Failed to launch/activate main window", ex);
+        }
+    }
+
+    /// <summary>
+    /// Opens the settings window.
+    /// </summary>
+    public void OpenSettings()
+    {
+        try
+        {
+            // First ensure main window is active
+            LaunchMainWindow();
+            
+            // Navigate to settings - use the main window's view model
+            var mainWindow = System.Windows.Application.Current?.MainWindow;
+            if (mainWindow?.DataContext is Redball.UI.ViewModels.MainViewModel vm)
+            {
+                // Execute the open settings command
+                vm.OpenSettingsCommand?.Execute(null);
+                Logger.Info("WindowsShellIntegration", "Opened settings via MainViewModel");
+            }
+            else
+            {
+                Logger.Warning("WindowsShellIntegration", "Could not navigate to settings - ViewModel not available");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("WindowsShellIntegration", "Failed to open settings", ex);
         }
     }
 

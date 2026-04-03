@@ -535,8 +535,8 @@ public class SharedConfigChangedEventArgs : EventArgs
 }
 
 /// <summary>
-/// Placeholder RedballConfig class for Redball.Core compatibility.
-/// Note: Full implementation is in Redball.UI.WPF
+/// Stub RedballConfig for Redball.Core - full implementation in Redball.UI.WPF.
+/// This minimal version supports SharedConfigManager sync operations.
 /// </summary>
 public class RedballConfig
 {

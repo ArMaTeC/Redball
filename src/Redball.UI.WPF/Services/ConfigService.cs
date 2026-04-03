@@ -20,6 +20,7 @@ public class ConfigService : IConfigService
 {
     // UserData subfolder is NOT managed by the MSI (INSTALLFOLDER = %LocalAppData%\Redball)
     // so its contents survive MajorUpgrade cycles that remove/reinstall the install directory.
+    private readonly ConfigEncryptionService _encryptionService;
     private static readonly string UserDataDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Redball", "UserData");
     private static readonly string LocalAppDataConfigPath = Path.Combine(UserDataDir, "Redball.json");
@@ -65,6 +66,7 @@ public class ConfigService : IConfigService
 
     private ConfigService() 
     { 
+        _encryptionService = ConfigEncryptionService.Instance;
         Logger.Verbose("ConfigService", "Instance created (lazy initialization)");
     }
 
@@ -79,17 +81,18 @@ public class ConfigService : IConfigService
                 return null;
             }
 
-            string json;
-            if (payload.StartsWith(EncryptedHeader, StringComparison.Ordinal))
+            RedballConfig? config;
+            if (payload.StartsWith("RBENC:", StringComparison.Ordinal) || 
+                payload.StartsWith("RBTPM:", StringComparison.Ordinal) ||
+                payload.StartsWith("RBNG:", StringComparison.Ordinal))
             {
-                json = DpapiDecrypt(payload[EncryptedHeader.Length..]);
+                config = _encryptionService.DecryptConfig(payload);
             }
             else
             {
-                json = payload;
+                config = JsonSerializer.Deserialize<RedballConfig>(payload, ReadOptions);
             }
 
-            var config = JsonSerializer.Deserialize<RedballConfig>(json, ReadOptions);
             if (config != null)
             {
                 Logger.Info("ConfigService", "Configuration loaded from registry");
@@ -248,19 +251,27 @@ public class ConfigService : IConfigService
                 return null;
             }
 
+            RedballConfig? config;
             string json;
-            if (raw.StartsWith(EncryptedHeader, StringComparison.Ordinal))
+            if (raw.StartsWith("RBENC:", StringComparison.Ordinal) || 
+                raw.StartsWith("RBTPM:", StringComparison.Ordinal) ||
+                raw.StartsWith("RBNG:", StringComparison.Ordinal))
             {
-                Logger.Debug("ConfigService", $"Detected DPAPI-encrypted config: {filePath}");
-                json = DpapiDecrypt(raw[EncryptedHeader.Length..]);
+                // Use enhanced encryption service for all encrypted payloads
+                config = _encryptionService.DecryptConfig(raw);
+                json = config != null ? JsonSerializer.Serialize(config, ReadOptions) : "";
+                if (config != null)
+                {
+                    var tier = _encryptionService.GetCurrentTier(raw);
+                    Logger.Debug("ConfigService", $"Config decrypted (Tier: {tier})");
+                }
             }
             else
             {
+                // Plain text JSON
                 json = raw;
+                config = JsonSerializer.Deserialize<RedballConfig>(raw, ReadOptions);
             }
-
-            Logger.Debug("ConfigService", $"Attempting to deserialize from: {filePath}");
-            var config = JsonSerializer.Deserialize<RedballConfig>(json, ReadOptions);
             
             if (config != null && !IsTestMode)
             {
@@ -433,8 +444,7 @@ public class ConfigService : IConfigService
                 Logger.Debug("ConfigService", $"Backup before save skipped: {bakEx.Message}");
             }
 
-            // SIGN CONFIG BEFORE SAVING
-            // We clear the signature, serialize, hash it, update the signature, then serialize again for the real file.
+            // SIGN CONFIG BEFORE ENCRYPTION
             Config.ConfigSignature = null;
             var unsignedJson = JsonSerializer.Serialize(Config, WriteOptions);
             Config.ConfigSignature = SecurityService.ComputeStringHash(unsignedJson + SecurityService.GetMachineSalt());
@@ -442,12 +452,15 @@ public class ConfigService : IConfigService
             var finalJson = JsonSerializer.Serialize(Config, WriteOptions);
             Logger.Debug("ConfigService", $"Serialized signed config: {finalJson.Length} bytes");
 
-            // Optionally encrypt with DPAPI (current-user scope)
-            var payload = finalJson;
+            // Encrypt with highest available tier
+            var payload = Config.EncryptConfig 
+                ? _encryptionService.EncryptConfig(Config, EncryptionTier.Maximum)
+                : finalJson;
+            
             if (Config.EncryptConfig)
             {
-                payload = EncryptedHeader + DpapiEncrypt(finalJson);
-                Logger.Debug("ConfigService", "Config encrypted with DPAPI");
+                var tier = _encryptionService.GetCurrentTier(payload);
+                Logger.Debug("ConfigService", $"Config encrypted (Tier: {tier})");
             }
 
             if (!IsTestMode)
@@ -879,27 +892,5 @@ public class ConfigService : IConfigService
             Config.UseHeartbeatKeypress = useHeartbeatKeypress;
             IsDirty = true;
         }
-    }
-
-    /// <summary>
-    /// Encrypts a plaintext string using DPAPI (CurrentUser scope).
-    /// Returns a Base64-encoded ciphertext.
-    /// </summary>
-    private static string DpapiEncrypt(string plaintext)
-    {
-        var plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
-        var encrypted = ProtectedData.Protect(plaintextBytes, null, DataProtectionScope.CurrentUser);
-        return Convert.ToBase64String(encrypted);
-    }
-
-    /// <summary>
-    /// Decrypts a Base64-encoded DPAPI ciphertext back to plaintext.
-    /// Throws CryptographicException if decryption fails (wrong user, corrupt data).
-    /// </summary>
-    private static string DpapiDecrypt(string base64Ciphertext)
-    {
-        var encrypted = Convert.FromBase64String(base64Ciphertext);
-        var decrypted = ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser);
-        return Encoding.UTF8.GetString(decrypted);
     }
 }

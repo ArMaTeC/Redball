@@ -209,7 +209,8 @@
                     <Button Grid.Column="1"
                             Content="Pause / Resume"
                             Command="{Binding PauseKeepAwakeCommand}"
-                            Style="{DynamicResource PrimaryButton}">
+                            Style="{DynamicResource PrimaryButton}"
+                            AutomationProperties.AutomationId="ToggleButton">
                         <Button.ToolTip>
                             <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Pause or resume the keep-awake engine without leaving the dashboard."/>
                         </Button.ToolTip>
@@ -229,7 +230,7 @@
                         <RadioButton x:Name="AnalyticsNavButton" Content="Analytics" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="View session counts, usage patterns, and tracked activity."/>
                         <RadioButton x:Name="SloDashboardNavButton" Content="SLO Dashboard" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="View service level objective metrics and performance indicators."/>
                         <RadioButton x:Name="DiagnosticsNavButton" Content="Diagnostics" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Review runtime state, logging paths, and app health."/>
-                        <RadioButton x:Name="SettingsNavButton" Content="Settings" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="General application settings such as theme, notifications, and logging."/>
+                        <RadioButton x:Name="SettingsNavButton" Content="Settings" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="General application settings such as theme, notifications, and logging." AutomationProperties.AutomationId="SettingsButton"/>
                         <RadioButton x:Name="BehaviorNavButton" Content="Behavior" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Control display sleep prevention, heartbeat key, and default run duration."/>
                         <RadioButton x:Name="SmartFeaturesNavButton" Content="Smart Features" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Tune battery, network, idle, presentation, and scheduled behavior."/>
                         <RadioButton x:Name="TypeThingNavButton" Content="TypeThing" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Configure TypeThing hotkeys, speed, and typing behavior."/>
@@ -527,11 +528,13 @@
 
                                             <CheckBox x:Name="MainPreventDisplaySleepCheck" Content="Prevent display sleep"
                                                       Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
+                                                      AutomationProperties.AutomationId="PreventDisplaySleepCheckBox"/>
 
                                             <TextBlock Text="Heartbeat Input Mode" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
                                             <ComboBox x:Name="MainHeartbeatInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,10"
-                                                      SelectionChanged="MainComboSettingChanged">
+                                                      SelectionChanged="MainComboSettingChanged"
+                                                      AutomationProperties.AutomationId="UseHeartbeatCheckBox">
                                                 <ComboBoxItem Content="Disabled"/>
                                                 <ComboBoxItem Content="F13"/>
                                                 <ComboBoxItem Content="F14"/>
@@ -542,9 +545,11 @@
                                             <TextBlock Text="Default Duration (minutes)" FontWeight="Medium" Margin="0,2,0,6" Foreground="{DynamicResource ForegroundBrush}"/>
                                             <Slider x:Name="MainDurationSlider" Minimum="1" Maximum="1440" TickFrequency="1"
                                                     IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
-                                                    ValueChanged="MainDurationSlider_ValueChanged"/>
+                                                    ValueChanged="MainDurationSlider_ValueChanged"
+                                                    AutomationProperties.AutomationId="HeartbeatIntervalTextBox"/>
                                             <TextBox x:Name="MainDurationCustomBox" Style="{DynamicResource ModernTextBox}" Margin="0,8,0,8"
-                                                     TextChanged="MainDurationCustomBox_TextChanged"/>
+                                                     TextChanged="MainDurationCustomBox_TextChanged"
+                                                     AutomationProperties.AutomationId="DurationTextBox"/>
 
                                             <CheckBox x:Name="MainAutoExitOnCompleteCheck" Content="Auto-exit when timed session completes"
                                                       Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,10"

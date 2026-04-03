@@ -89,6 +89,7 @@ public sealed class AdaptiveIntervalPolicy
     /// Gets current CPU load (0.0 - 1.0).
     /// Caches result for 2 seconds to reduce overhead.
     /// </summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     public double GetCurrentCpuLoad()
     {
         if (DateTime.UtcNow - _lastCpuCheck < TimeSpan.FromSeconds(2))
@@ -98,15 +99,43 @@ public sealed class AdaptiveIntervalPolicy
 
         try
         {
-            using var proc = Process.GetCurrentProcess();
-            proc.Refresh();
-            // Simplified CPU calculation - in production use PerformanceCounter
-            var cpuTime = proc.TotalProcessorTime;
-            _lastCpuLoad = 0.1f; // Placeholder
+            // Use PerformanceCounter for accurate system-wide CPU usage
+            // First call returns 0, subsequent calls return actual percentage
+            using var cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+            cpuCounter.NextValue(); // Initialize
+            System.Threading.Thread.Sleep(100); // Short wait for accurate reading
+            var cpuPercent = cpuCounter.NextValue();
+            _lastCpuLoad = Math.Clamp(cpuPercent / 100f, 0f, 1f);
         }
-        catch
+        catch (Exception ex)
         {
-            _lastCpuLoad = 0;
+            // Fallback to process-specific CPU usage if PerformanceCounter fails
+            try
+            {
+                using var proc = Process.GetCurrentProcess();
+                proc.Refresh();
+                // Calculate process CPU percentage based on processor time
+                var currentTime = DateTime.UtcNow;
+                var procTime = proc.TotalProcessorTime;
+                
+                if (_lastCpuCheck != DateTime.MinValue)
+                {
+                    var timeDelta = (currentTime - _lastCpuCheck).TotalSeconds;
+                    var procTimeDelta = (procTime.TotalMilliseconds / 1000.0) / Environment.ProcessorCount;
+                    var cpuPercent = (procTimeDelta / timeDelta) * 100;
+                    _lastCpuLoad = Math.Clamp((float)(cpuPercent / 100.0), 0f, 1f);
+                }
+                else
+                {
+                    _lastCpuLoad = 0.05f; // Low default on first call
+                }
+            }
+            catch
+            {
+                _lastCpuLoad = 0;
+            }
+            
+            Logger.Debug("AdaptiveIntervalPolicy", $"PerformanceCounter failed, using fallback: {ex.Message}");
         }
 
         _lastCpuCheck = DateTime.UtcNow;
@@ -184,7 +213,7 @@ public sealed class SharedScheduler : IDisposable
                 Name = name,
                 Action = action,
                 MinInterval = minInterval,
-                LastExecuted = DateTime.MinValue
+                LastExecuted = DateTime.UtcNow // Start from now to respect minInterval on first execution
             });
         }
     }

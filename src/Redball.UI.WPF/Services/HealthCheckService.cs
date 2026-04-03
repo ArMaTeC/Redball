@@ -243,6 +243,10 @@ public class HealthCheckResult
     {
         return new HealthCheckResult { Status = HealthStatusCode.Unhealthy, Message = message, Timestamp = DateTime.UtcNow };
     }
+
+    // Alias methods for consistency with other result types
+    public static HealthCheckResult Ok() => Healthy("OK");
+    public static HealthCheckResult Err(string message) => Unhealthy(message);
 }
 
 public enum HealthStatusCode

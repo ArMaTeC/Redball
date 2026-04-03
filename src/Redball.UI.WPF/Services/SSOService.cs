@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -194,13 +196,50 @@ public class SSOService
                 UseShellExecute = true
             });
 
-            // In real implementation, start local HTTP listener for callback
-            // var authCode = await WaitForAuthorizationCallbackAsync(state);
+            // Start local HTTP listener for callback
+            var authCode = await WaitForAuthorizationCallbackAsync(state);
+            
+            if (string.IsNullOrEmpty(authCode))
+            {
+                Logger.Error("SSOService", "OIDC callback did not receive authorization code");
+                return false;
+            }
             
             // Exchange code for tokens
-            // var tokens = await ExchangeCodeForTokensAsync(authCode, codeVerifier);
+            var tokens = await ExchangeCodeForTokensAsync(authCode, codeVerifier);
             
-            return true; // Placeholder
+            if (tokens?.AccessToken == null)
+            {
+                Logger.Error("SSOService", "Failed to exchange authorization code for tokens");
+                return false;
+            }
+
+            // Create session from tokens
+            _currentSession = new SSOSession
+            {
+                Token = tokens.AccessToken,
+                RefreshToken = tokens.RefreshToken,
+                ExpiresAt = DateTime.UtcNow.AddSeconds(tokens.ExpiresIn),
+                IssuedAt = DateTime.UtcNow
+            };
+
+            // Validate token to get user info
+            var validationResult = await ValidateTokenWithIdPAsync(tokens.AccessToken);
+            if (validationResult.IsValid)
+            {
+                _currentSession.Username = validationResult.Username ?? "Unknown";
+                _currentSession.Email = validationResult.Email;
+            }
+
+            AuthenticationCompleted?.Invoke(this, new SSOAuthenticationEventArgs
+            {
+                Success = true,
+                Username = _currentSession.Username,
+                Provider = "OIDC"
+            });
+
+            Logger.Info("SSOService", $"OIDC authentication successful for {_currentSession.Username}");
+            return true;
         }
         catch (Exception ex)
         {
@@ -233,7 +272,43 @@ public class SSOService
                 UseShellExecute = true
             });
 
-            return true; // Placeholder
+            // Wait for SAML response at Assertion Consumer Service URL
+            var samlResponse = await WaitForSAMLResponseAsync();
+            
+            if (string.IsNullOrEmpty(samlResponse))
+            {
+                Logger.Error("SSOService", "SAML response not received");
+                return false;
+            }
+
+            // Parse and validate SAML assertion
+            var assertion = await ParseSAMLResponseAsync(samlResponse);
+            
+            if (assertion == null)
+            {
+                Logger.Error("SSOService", "Failed to parse SAML assertion");
+                return false;
+            }
+
+            // Create session from SAML assertion
+            _currentSession = new SSOSession
+            {
+                Username = assertion.NameID,
+                Email = assertion.Attributes.GetValueOrDefault("email") ?? assertion.NameID,
+                Token = assertion.AssertionID, // Use assertion ID as token reference
+                IssuedAt = DateTime.UtcNow,
+                ExpiresAt = assertion.NotOnOrAfter
+            };
+
+            AuthenticationCompleted?.Invoke(this, new SSOAuthenticationEventArgs
+            {
+                Success = true,
+                Username = _currentSession.Username,
+                Provider = "SAML"
+            });
+
+            Logger.Info("SSOService", $"SAML authentication successful for {_currentSession.Username}");
+            return true;
         }
         catch (Exception ex)
         {
@@ -496,6 +571,292 @@ public class SSOService
         var bytes = Encoding.UTF8.GetBytes(requestXml);
         return Convert.ToBase64String(bytes);
     }
+
+    /// <summary>
+    /// Starts local HTTP listener to receive OIDC authorization callback.
+    /// </summary>
+    private async Task<string?> WaitForAuthorizationCallbackAsync(string expectedState, int timeoutSeconds = 120)
+    {
+        using var listener = new HttpListener();
+        var redirectUri = _config?.OIDCConfig?.RedirectUri ?? "http://localhost:5000/callback";
+        listener.Prefixes.Add(redirectUri.Replace("localhost", "127.0.0.1"));
+        listener.Prefixes.Add(redirectUri.Replace("localhost", "[::1]"));
+        
+        try
+        {
+            listener.Start();
+            Logger.Info("SSOService", $"Waiting for OIDC callback on {redirectUri}");
+
+            var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+            var contextTask = listener.GetContextAsync();
+            var completedTask = await Task.WhenAny(contextTask, Task.Delay(-1, cts.Token));
+
+            if (completedTask != contextTask)
+            {
+                Logger.Warning("SSOService", "OIDC callback timeout - no response received");
+                return null;
+            }
+
+            var context = await contextTask;
+            var request = context.Request;
+            var query = System.Web.HttpUtility.ParseQueryString(request.Url?.Query ?? "");
+
+            var code = query["code"];
+            var state = query["state"];
+            var error = query["error"];
+
+            // Send response to browser
+            var response = context.Response;
+            var responseHtml = string.IsNullOrEmpty(error) 
+                ? "<html><body><h1>Authentication Successful</h1><p>You can close this window.</p></body></html>"
+                : $"<html><body><h1>Authentication Failed</h1><p>Error: {error}</p></body></html>";
+            
+            var buffer = Encoding.UTF8.GetBytes(responseHtml);
+            response.ContentLength64 = buffer.Length;
+            await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+            response.Close();
+
+            // Validate state parameter
+            if (state != expectedState)
+            {
+                Logger.Error("SSOService", "OIDC state mismatch - possible CSRF attack");
+                return null;
+            }
+
+            if (!string.IsNullOrEmpty(error))
+            {
+                Logger.Error("SSOService", $"OIDC authorization error: {error}");
+                return null;
+            }
+
+            return code;
+        }
+        catch (HttpListenerException ex)
+        {
+            Logger.Error("SSOService", $"Failed to start HTTP listener for OIDC callback: {ex.Message}");
+            return null;
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+
+    /// <summary>
+    /// Exchanges authorization code for OIDC tokens.
+    /// </summary>
+    private async Task<OIDCTokens?> ExchangeCodeForTokensAsync(string authCode, string codeVerifier)
+    {
+        if (_config?.OIDCConfig == null)
+            return null;
+
+        try
+        {
+            var request = new Dictionary<string, string>
+            {
+                ["grant_type"] = "authorization_code",
+                ["code"] = authCode,
+                ["redirect_uri"] = _config.OIDCConfig.RedirectUri,
+                ["client_id"] = _config.OIDCConfig.ClientId,
+                ["code_verifier"] = codeVerifier
+            };
+
+            // Add client secret if configured
+            if (!string.IsNullOrEmpty(_config.OIDCConfig.ClientSecret))
+            {
+                request["client_secret"] = _config.OIDCConfig.ClientSecret;
+            }
+
+            var content = new FormUrlEncodedContent(request);
+            var response = await _httpClient.PostAsync(_config.OIDCConfig.TokenEndpoint, content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                Logger.Error("SSOService", $"Token exchange failed: {response.StatusCode} - {errorBody}");
+                return null;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var tokens = JsonSerializer.Deserialize<OIDCTokens>(json);
+            
+            if (tokens?.AccessToken != null)
+            {
+                Logger.Debug("SSOService", "Successfully exchanged authorization code for tokens");
+            }
+            
+            return tokens;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("SSOService", $"Token exchange failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Waits for SAML response at Assertion Consumer Service URL.
+    /// </summary>
+    private async Task<string?> WaitForSAMLResponseAsync(int timeoutSeconds = 120)
+    {
+        using var listener = new HttpListener();
+        var acsUrl = _config?.SAMLConfig?.AssertionConsumerServiceUrl ?? "http://localhost:5000/saml/acs";
+        listener.Prefixes.Add(acsUrl.Replace("localhost", "127.0.0.1"));
+        listener.Prefixes.Add(acsUrl.Replace("localhost", "[::1]"));
+        
+        try
+        {
+            listener.Start();
+            Logger.Info("SSOService", $"Waiting for SAML response on {acsUrl}");
+
+            var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+            var contextTask = listener.GetContextAsync();
+            var completedTask = await Task.WhenAny(contextTask, Task.Delay(-1, cts.Token));
+
+            if (completedTask != contextTask)
+            {
+                Logger.Warning("SSOService", "SAML response timeout - no response received");
+                return null;
+            }
+
+            var context = await contextTask;
+            var request = context.Request;
+            
+            // Read POST body for SAMLResponse
+            string samlResponse = "";
+            if (request.HttpMethod == "POST")
+            {
+                using var reader = new StreamReader(request.InputStream);
+                var body = await reader.ReadToEndAsync();
+                var formData = System.Web.HttpUtility.ParseQueryString(body);
+                samlResponse = formData["SAMLResponse"] ?? "";
+            }
+            else if (request.HttpMethod == "GET")
+            {
+                // Some IdPs use GET with SAMLResponse query parameter
+                var query = System.Web.HttpUtility.ParseQueryString(request.Url?.Query ?? "");
+                samlResponse = query["SAMLResponse"] ?? "";
+            }
+
+            // Send response to browser
+            var response = context.Response;
+            var responseHtml = string.IsNullOrEmpty(samlResponse) 
+                ? "<html><body><h1>Authentication Failed</h1><p>No SAML response received.</p></body></html>"
+                : "<html><body><h1>Authentication Successful</h1><p>You can close this window.</p></body></html>";
+            
+            var buffer = Encoding.UTF8.GetBytes(responseHtml);
+            response.ContentLength64 = buffer.Length;
+            await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+            response.Close();
+
+            if (string.IsNullOrEmpty(samlResponse))
+            {
+                Logger.Error("SSOService", "SAML response not found in request");
+                return null;
+            }
+
+            // Base64 decode the SAML response
+            var decodedBytes = Convert.FromBase64String(samlResponse);
+            var decodedXml = Encoding.UTF8.GetString(decodedBytes);
+            
+            Logger.Debug("SSOService", "Received SAML response");
+            return decodedXml;
+        }
+        catch (HttpListenerException ex)
+        {
+            Logger.Error("SSOService", $"Failed to start HTTP listener for SAML response: {ex.Message}");
+            return null;
+        }
+        catch (FormatException ex)
+        {
+            Logger.Error("SSOService", $"Invalid SAML response format: {ex.Message}");
+            return null;
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+
+    /// <summary>
+    /// Parses SAML response XML and extracts assertion details.
+    /// </summary>
+    private async Task<SAMLAssertion?> ParseSAMLResponseAsync(string samlResponseXml)
+    {
+        try
+        {
+            // Load XML document
+            var xmlDoc = new System.Xml.XmlDocument();
+            xmlDoc.LoadXml(samlResponseXml);
+
+            // Define namespaces for SAML
+            var namespaces = new System.Xml.XmlNamespaceManager(xmlDoc.NameTable);
+            namespaces.AddNamespace("saml", "urn:oasis:names:tc:SAML:2.0:assertion");
+            namespaces.AddNamespace("samlp", "urn:oasis:names:tc:SAML:2.0:protocol");
+
+            // Find Assertion element
+            var assertionNode = xmlDoc.SelectSingleNode("//saml:Assertion", namespaces);
+            if (assertionNode == null)
+            {
+                Logger.Error("SSOService", "SAML Assertion not found in response");
+                return null;
+            }
+
+            // Extract assertion ID
+            var assertionId = assertionNode.Attributes?["ID"]?.Value ?? Guid.NewGuid().ToString();
+
+            // Find Subject/NameID
+            var nameIdNode = xmlDoc.SelectSingleNode("//saml:Subject/saml:NameID", namespaces);
+            var nameId = nameIdNode?.InnerText?.Trim() ?? "";
+
+            // Find conditions
+            var conditionsNode = xmlDoc.SelectSingleNode("//saml:Conditions", namespaces);
+            var notOnOrAfter = conditionsNode?.Attributes?["NotOnOrAfter"]?.Value;
+            var expiresAt = DateTime.TryParse(notOnOrAfter, out var parsedDate) 
+                ? parsedDate 
+                : DateTime.UtcNow.AddHours(1);
+
+            // Extract attributes
+            var attributes = new Dictionary<string, string>();
+            var attributeNodes = xmlDoc.SelectNodes("//saml:AttributeStatement/saml:Attribute", namespaces);
+            if (attributeNodes != null)
+            {
+                foreach (System.Xml.XmlNode attrNode in attributeNodes)
+                {
+                    var attrName = attrNode.Attributes?["Name"]?.Value;
+                    var attrValue = attrNode.SelectSingleNode("saml:AttributeValue", namespaces)?.InnerText;
+                    if (!string.IsNullOrEmpty(attrName) && !string.IsNullOrEmpty(attrValue))
+                    {
+                        attributes[attrName] = attrValue;
+                    }
+                }
+            }
+
+            // Check for status
+            var statusNode = xmlDoc.SelectSingleNode("//samlp:Status/samlp:StatusCode", namespaces);
+            var statusValue = statusNode?.Attributes?["Value"]?.Value;
+            if (statusValue != null && !statusValue.EndsWith("Success"))
+            {
+                Logger.Error("SSOService", $"SAML response status: {statusValue}");
+                return null;
+            }
+
+            Logger.Debug("SSOService", $"Parsed SAML assertion for {nameId}");
+
+            return new SAMLAssertion
+            {
+                AssertionID = assertionId,
+                NameID = nameId,
+                NotOnOrAfter = expiresAt,
+                Attributes = attributes
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("SSOService", $"Failed to parse SAML response: {ex.Message}");
+            return null;
+        }
+    }
 }
 
 // Configuration models
@@ -582,4 +943,15 @@ public class SSOSessionEventArgs : EventArgs
 {
     public SSOSession? Session { get; set; }
     public DateTime RefreshedAt { get; set; }
+}
+
+/// <summary>
+/// Parsed SAML assertion details.
+/// </summary>
+public class SAMLAssertion
+{
+    public string AssertionID { get; set; } = string.Empty;
+    public string NameID { get; set; } = string.Empty;
+    public DateTime NotOnOrAfter { get; set; }
+    public Dictionary<string, string> Attributes { get; set; } = new();
 }

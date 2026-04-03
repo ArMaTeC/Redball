@@ -133,9 +133,33 @@ public partial class SyncHealthPage : Page
             ForceSyncButton.IsEnabled = false;
             ForceSyncButton.Content = "Syncing...";
 
-            // TODO: Implement force sync when dispatcher is available
-            // For now just refresh the display
-            await Task.Delay(500); // Simulate work
+            // Get the sync API and try to send pending events immediately
+            var syncApi = Redball.UI.Services.ServiceLocator.Get<Redball.Core.Sync.ISyncApi>();
+            if (syncApi != null)
+            {
+                var pendingEvents = await _store.GetEventsByStatusAsync(SyncEventStatus.Pending, 100);
+                int successCount = 0;
+                foreach (var evt in pendingEvents)
+                {
+                    if (await syncApi.SendEventAsync(evt))
+                    {
+                        await _store.MarkSucceededAsync(evt.EventId);
+                        successCount++;
+                    }
+                    else
+                    {
+                        await _store.MarkFailedAsync(evt.EventId, "Force sync attempt failed");
+                    }
+                }
+                Logger.Info("SyncHealthPage", $"Force sync completed: {successCount}/{pendingEvents.Count} events sent");
+            }
+            else
+            {
+                // Fallback: just refresh the display
+                Logger.Info("SyncHealthPage", "No sync API available, refreshing display only");
+            }
+            
+            // Refresh the display
             await RefreshAsync();
         }
         catch (Exception ex)

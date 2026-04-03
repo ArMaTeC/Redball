@@ -23,7 +23,8 @@ public class StatusToBrushConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        // Cannot meaningfully convert Brush back to bool - one-way conversion only
+        return System.Windows.Data.Binding.DoNothing;
     }
 }
 
@@ -47,7 +48,20 @@ public class BoolToTextConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        // Parse text back to bool by checking which part of parameter it matches
+        if (value is string text && parameter is string paramText)
+        {
+            var parts = paramText.Split('|');
+            if (parts.Length == 2)
+            {
+                if (text.Equals(parts[0], StringComparison.OrdinalIgnoreCase))
+                    return true;
+                if (text.Equals(parts[1], StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+        }
+        // Return DependencyProperty.UnsetValue to indicate conversion failure
+        return System.Windows.DependencyProperty.UnsetValue;
     }
 }
 
@@ -82,7 +96,8 @@ public class NullToVisibilityConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        // Cannot meaningfully convert Visibility back to the original value - one-way conversion only
+        return System.Windows.Data.Binding.DoNothing;
     }
 }
 

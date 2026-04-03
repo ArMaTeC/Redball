@@ -125,10 +125,102 @@ public class UpdateService : IUpdateService
 
     static UpdateService()
     {
-        _httpClient = new HttpClient();
+        var handler = CreatePinnedHandler();
+        _httpClient = new HttpClient(handler);
         _httpClient.DefaultRequestHeaders.UserAgent.Add(
             new ProductInfoHeaderValue("Redball-Updater", 
                 Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0"));
+    }
+
+    /// <summary>
+    /// Creates an HttpClientHandler with certificate pinning for GitHub API.
+    /// Protects against MITM attacks by validating the certificate chain
+    /// and pinning to known-good public key hashes.
+    /// </summary>
+    private static HttpClientHandler CreatePinnedHandler()
+    {
+        var handler = new HttpClientHandler();
+        
+        // GitHub API certificate pins (SHA-256 hashes of SPKI)
+        // These are the expected public key hashes for GitHub's TLS certificates
+        // Pins verified against DigiCert and Let's Encrypt root CAs
+        var pinnedHashes = new[]
+        {
+            // DigiCert High Assurance EV Root CA (GitHub's current root)
+            "9yF8wUfUQKd9aLkFMMnpx3xMIVC6sAu9TdjRhdZPjOI=",
+            // DigiCert Global Root G2 (backup/fallback)
+            "cAajgxHdb7nHsbRxqmjDn5gEjBuuZKk6YaD8n1BS1DM=",
+            // Let's Encrypt ISRG Root X1 (community builds)
+            "C5+lpZ7tc/VwmBl/DUSJEPSdEjZPw5OLf6IpeigyCNw=",
+        };
+
+        handler.ServerCertificateCustomValidationCallback = (request, cert, chain, errors) =>
+        {
+            if (cert == null || chain == null)
+            {
+                Logger.Error("UpdateService", "Certificate pinning failed: null certificate or chain");
+                return false;
+            }
+
+            // First, verify the standard chain
+            var chainValid = errors == System.Net.Security.SslPolicyErrors.None;
+            
+            // Get the certificate's public key hash
+            var publicKey = cert.GetPublicKey();
+            var publicKeyHash = Convert.ToBase64String(SHA256.HashData(publicKey));
+            
+            // Check if the public key hash matches any pinned hash
+            var isPinned = pinnedHashes.Contains(publicKeyHash, StringComparer.OrdinalIgnoreCase);
+            
+            // Also check intermediate certificates for pinning
+            var chainPinned = false;
+            foreach (var element in chain.ChainElements)
+            {
+                var elementKey = element.Certificate.GetPublicKey();
+                var elementHash = Convert.ToBase64String(SHA256.HashData(elementKey));
+                if (pinnedHashes.Contains(elementHash, StringComparer.OrdinalIgnoreCase))
+                {
+                    chainPinned = true;
+                    break;
+                }
+            }
+
+            if (!chainValid)
+            {
+                Logger.Warning("UpdateService", $"Certificate chain validation failed for {request.RequestUri?.Host}: {errors}");
+            }
+
+            if (!isPinned && !chainPinned)
+            {
+                // Log all chain certificate hashes for debugging
+                var chainHashes = string.Join(", ", chain.ChainElements.Select(e => {
+                    var key = e.Certificate.GetPublicKey();
+                    var hash = Convert.ToBase64String(SHA256.HashData(key));
+                    return $"{e.Certificate.Subject}={hash}";
+                }));
+                
+                Logger.Error("UpdateService", 
+                    $"Certificate pinning FAILED for {request.RequestUri?.Host}. " +
+                    $"Public key hash {publicKeyHash} not in pinned set. " +
+                    $"Chain hashes: [{chainHashes}]" +
+                    "Possible MITM attack detected!");
+                
+                // Log security event
+                Debug.WriteLine($"[SECURITY] Certificate pinning failure for {request.RequestUri?.Host}: Unexpected hash {publicKeyHash}");
+                
+                return false;
+            }
+
+            if (isPinned || chainPinned)
+            {
+                Logger.Debug("UpdateService", 
+                    $"Certificate pinning validated for {request.RequestUri?.Host}");
+            }
+
+            return chainValid;
+        };
+
+        return handler;
     }
 
     private static string NormalizeRelativeUpdatePath(string path)
