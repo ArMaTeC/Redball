@@ -1,0 +1,503 @@
+{
+  "releases": [
+    {
+      "version": "2.1.443",
+      "notes": "Initial test build from Linux via Wine",
+      "channel": "stable",
+      "date": "2026-04-03T19:43:48.951Z",
+      "files": [
+        {
+          "name": "Redball.Service.exe",
+          "size": 373760,
+          "hash": "32ed94ca827202306325cc90c61babfb62c39d4b45c42c9b32b787b538c751dc",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.009Z"
+        },
+        {
+          "name": "Redball.UI.WPF.exe",
+          "size": 373760,
+          "hash": "d45ca912890fd2f58f3db31fa2c4217d7f71a4869c6f506b319c3d1c43f8f32e",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.011Z"
+        },
+        {
+          "name": "Redball.Service.deps.json",
+          "size": 28202,
+          "hash": "1dade0949247324c1655ae7b7655db395697ac52017756abd74359f0229ee5e7",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.012Z"
+        },
+        {
+          "name": "Redball.Service.runtimeconfig.json",
+          "size": 519,
+          "hash": "96bc2946dff8790400d652ec7f8de7bb043e954980d59470c112788b68a1fbd3",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.012Z"
+        },
+        {
+          "name": "Redball.UI.WPF.deps.json",
+          "size": 45829,
+          "hash": "63faf6a1cd27bdfe21e5b9fd00902d264ff602d6cf1a7f80a363b940275dcf2c",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.012Z"
+        },
+        {
+          "name": "Redball.UI.WPF.runtimeconfig.json",
+          "size": 586,
+          "hash": "42bdf3ff1bc458718481097cb192e129babe98117bfdcb7da9ce75bb0af4fbb8",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.013Z"
+        },
+        {
+          "name": "CommunityToolkit.Mvvm.dll",
+          "size": 146760,
+          "hash": "19b2144fed9600d58a742a5a4a5fd7b10d4d0d2c2e79f5d8019307cf5657044f",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.013Z"
+        },
+        {
+          "name": "Hardcodet.NotifyIcon.Wpf.dll",
+          "size": 123904,
+          "hash": "402a8dcb6a9141cb4c73bfacf1c3cc222f96b8e803e50a816a2c56eb406874fb",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.014Z"
+        },
+        {
+          "name": "HidSharp.dll",
+          "size": 235952,
+          "hash": "61eb2e22a5620d789a23d389f1af9d38faff4d85f46adedbc28fb22cfec61bf9",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.015Z"
+        },
+        {
+          "name": "InputInterceptor.dll",
+          "size": 519168,
+          "hash": "4583defc5f2a547a51671ff997be7393f807108ced8b4678b3b45c5762777c41",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.016Z"
+        },
+        {
+          "name": "LibreHardwareMonitorLib.dll",
+          "size": 714240,
+          "hash": "58273c9683cfbdc3179b557321e798b7a67c9448ba7043d9f40619cd6c7eafd0",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.018Z"
+        },
+        {
+          "name": "LottieSharp.dll",
+          "size": 327168,
+          "hash": "476839e8f248b13953403b199792fa507ba5f7dc2ae635756e3a8360ab9d3948",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.019Z"
+        },
+        {
+          "name": "Microsoft.Data.Sqlite.dll",
+          "size": 177736,
+          "hash": "ecabec2922b5ae8c2a2e037d6f31275d18d87df33077551008f9ad7c30379b1c",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.020Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Configuration.Abstractions.dll",
+          "size": 28936,
+          "hash": "e72b875412a613d008f9246a75d5eb7176dc7ef75aa2f228ca05221d4559666e",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.020Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Configuration.Binder.dll",
+          "size": 43824,
+          "hash": "99da3c074c66e16bcc37989f3a0af306895b12ba594f8a9a0ba3db48a08277d4",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.021Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Configuration.CommandLine.dll",
+          "size": 25912,
+          "hash": "705b47c9eddfd30d80b509c4abc38149fec341e0eb33056fee480504de9e7896",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.022Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Configuration.EnvironmentVariables.dll",
+          "size": 22280,
+          "hash": "65a8683c21d18445f56556b875cb8455404fa5aff15850c3f6b96d8ff52e5616",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.022Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Configuration.FileExtensions.dll",
+          "size": 28944,
+          "hash": "6c16ee1787cc70a957c8eb372a35217cb19f3a695101137a89c76f52f69dbd87",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.022Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Configuration.Json.dll",
+          "size": 28432,
+          "hash": "b33ecc843b36ff7d7d3960984e5320a5bd5c8ea3f1ca3277233f3145826ea237",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.022Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Configuration.UserSecrets.dll",
+          "size": 26896,
+          "hash": "bae4bed08c1db117628f3a1cbcbaaa32a3f9ed417df65b42278e0bf289eb3eb1",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.023Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Configuration.dll",
+          "size": 45368,
+          "hash": "e2c8220de237c913e0bc4a40c5aa80038975774bdc940ca9aaa86fbcc1b13603",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.049Z"
+        },
+        {
+          "name": "Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+          "size": 66320,
+          "hash": "842fc19802a761e49c65b0e90b2c68bc6868b989145da5ac6ca30b766e2658f2",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.049Z"
+        },
+        {
+          "name": "Microsoft.Extensions.DependencyInjection.dll",
+          "size": 96048,
+          "hash": "c3b96ffad102f1bfc79b9cf1c3adb7a629d6c1f3755f9606050ec2ad55a22f06",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.050Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Diagnostics.Abstractions.dll",
+          "size": 31536,
+          "hash": "44063e4f4be903a152aa6e3273e86b1e645361c92de2a2ad559be270cf0c28c3",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.050Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Diagnostics.dll",
+          "size": 36624,
+          "hash": "456ad32114882c01f0bce822e7d29f303629a196f465269b118396481d703634",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.050Z"
+        },
+        {
+          "name": "Microsoft.Extensions.FileProviders.Abstractions.dll",
+          "size": 23816,
+          "hash": "e1b60eedf39bbc7559c6098814c353af08d7e93cce175f7673c61953524677e2",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.051Z"
+        },
+        {
+          "name": "Microsoft.Extensions.FileProviders.Physical.dll",
+          "size": 45872,
+          "hash": "7075857d3d929b7243917f63c93b992033df66e76176fb5975dc80bc985701a9",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.051Z"
+        },
+        {
+          "name": "Microsoft.Extensions.FileSystemGlobbing.dll",
+          "size": 48392,
+          "hash": "d2606e4ec8d866f51965b97a52f3776e5e13a5f789563c3a86dd61d233984715",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.051Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Hosting.Abstractions.dll",
+          "size": 54584,
+          "hash": "a671d8ccdf631f88b259e980d3fc2ae8bede80c579d612459f1c56c9e32d44ed",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.052Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Hosting.dll",
+          "size": 72496,
+          "hash": "f542b69f4f5ecf7aac4636d420ffb518099b2b46447653c5df4f5ebf0e44460f",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.052Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Http.dll",
+          "size": 93448,
+          "hash": "f3b37a8d0950dba97ffc4b45841bb1b7bf5c0a6732e29b92aac39be2d4a48a4e",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.053Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Logging.Abstractions.dll",
+          "size": 67384,
+          "hash": "03e916b9c5f91717b67c790325d4e5dd2debe81d8e403928806ba1d430ea7147",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.053Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Logging.Configuration.dll",
+          "size": 28976,
+          "hash": "8eeba93211c328a78df10939a30157221594180b058bfc844426aaeaff68160d",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.054Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Logging.Console.dll",
+          "size": 76560,
+          "hash": "66ba3fba8f1f075fa83b5118c6660742c329a4d217d9cb999549fe8c8f7bff30",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.055Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Logging.Debug.dll",
+          "size": 20240,
+          "hash": "b7f698fc582a9528438746b641df7fd2332b70a51bb8313e745f87e8e36f3ee1",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.055Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Logging.EventLog.dll",
+          "size": 25360,
+          "hash": "c04971a197013b21927d7ee16cecd76fccde40dc68222da9a3ac74732a67a80d",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.055Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Logging.EventSource.dll",
+          "size": 35088,
+          "hash": "7caabead28543311b0333ef13f2139493475b32c3e7bcf956d06322870a751d4",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.056Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Logging.dll",
+          "size": 51976,
+          "hash": "607e91f57502684e35d1c766e84926f2e4f9d35cfb4173c0764fe6eb8a8a6b11",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.056Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Options.ConfigurationExtensions.dll",
+          "size": 22288,
+          "hash": "acb694ff92c66b001ec019ee05a1a88939efd8f045e842b8ae0e8b8490d5403e",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.056Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Options.dll",
+          "size": 65808,
+          "hash": "6f7a4bc2be6b35a1f28cd60c250e5471aac31cb2995ea7ec7365ea5e6f80640e",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.057Z"
+        },
+        {
+          "name": "Microsoft.Extensions.Primitives.dll",
+          "size": 45360,
+          "hash": "e43673ff0bc7621f893db1d802128e4242ccc6cb0cbbe1fa7b5d78090628514f",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.094Z"
+        },
+        {
+          "name": "Microsoft.Xaml.Behaviors.dll",
+          "size": 147016,
+          "hash": "3f90c37d3fd324e03f282f490db2b584502569eddd74196445f5059382496aaa",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.095Z"
+        },
+        {
+          "name": "Mono.Posix.NETStandard.dll",
+          "size": 189504,
+          "hash": "be0215d90462adbae5f03d6e5c3a969c9842a866b013df7a395769c5c352fa7e",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.096Z"
+        },
+        {
+          "name": "MonoPosixHelper.dll",
+          "size": 87600,
+          "hash": "a57141b26d6ea3326b165bdcb15ca2bcd34737370f52358e12ffc8df41b92c62",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.096Z"
+        },
+        {
+          "name": "Redball.Core.dll",
+          "size": 154624,
+          "hash": "c163a063f78876fdc244f0694f1e6aeca9de119d59f6f2b2718c339dcaea9035",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.098Z"
+        },
+        {
+          "name": "SQLitePCLRaw.batteries_v2.dll",
+          "size": 5120,
+          "hash": "94ac800c6b93ae50a025f247547781debe18391110667c5e242f51d8ac188ffb",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.098Z"
+        },
+        {
+          "name": "SQLitePCLRaw.core.dll",
+          "size": 51200,
+          "hash": "3d2ed8e186f124f988ebdb45d0354185b424357be2433bba0033ab9ec31bd25b",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.099Z"
+        },
+        {
+          "name": "SQLitePCLRaw.provider.e_sqlite3.dll",
+          "size": 36864,
+          "hash": "60ab6cfa2f3cc907bcee4d0c1264d5c36de0a3da701dbebf5efc9d542ce69fa2",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.099Z"
+        },
+        {
+          "name": "SkiaSharp.SceneGraph.dll",
+          "size": 17976,
+          "hash": "012cb43f5702047fc6ac8cc6aa3641eab36f8122164f1acfae7a5904977aea11",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.100Z"
+        },
+        {
+          "name": "SkiaSharp.Skottie.dll",
+          "size": 22568,
+          "hash": "7fea5f811609c1b24469335648f5f6b873e0e80b5b7ef598a22c500213b353e4",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.100Z"
+        },
+        {
+          "name": "SkiaSharp.Views.Desktop.Common.dll",
+          "size": 26168,
+          "hash": "0aa10adf4f4e9416f024c206b644db0406a9c6c580e4f2cf60bc559e49624c01",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.100Z"
+        },
+        {
+          "name": "SkiaSharp.Views.WPF.dll",
+          "size": 22584,
+          "hash": "a1a25be37ab9347d0c1e182cbc0792fba6fc6a4ca5b76b1b4a21f60809e2ac55",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.100Z"
+        },
+        {
+          "name": "SkiaSharp.dll",
+          "size": 437808,
+          "hash": "17ee1284313749f73a5cf5f309318d831741a8d6d397c998c5fc6485843c28bb",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.102Z"
+        },
+        {
+          "name": "System.CodeDom.dll",
+          "size": 185104,
+          "hash": "34c344795ccad6407669c1bfd7e4bb44ed7d6d28ee358676214e39e6fbb09bae",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.103Z"
+        },
+        {
+          "name": "System.Configuration.ConfigurationManager.dll",
+          "size": 444688,
+          "hash": "b4db66769e8c81afa1ad8fce586fbe2f08bf3c3fd6a481f412f3b87d744b4c04",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.105Z"
+        },
+        {
+          "name": "System.Diagnostics.EventLog.dll",
+          "size": 176912,
+          "hash": "9f4975cc738087e1579fc3db2a7252c25a5c191e0e54f1085c344592f91edf15",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.106Z"
+        },
+        {
+          "name": "System.Diagnostics.PerformanceCounter.dll",
+          "size": 139568,
+          "hash": "1373b897e46747ec313451b95dfd795dbfb33409d4b9b26a536f9b2431baf571",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.106Z"
+        },
+        {
+          "name": "System.IO.Ports.dll",
+          "size": 89392,
+          "hash": "a487d82f7293ce45a17da8d770a65eff62ba94332b0eff7d65f53c344dab01cb",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.107Z"
+        },
+        {
+          "name": "System.Management.dll",
+          "size": 314640,
+          "hash": "b54deff63d4c23cc4bbea00cea659727872f7ceb8ade74475577d45aa92e6216",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.108Z"
+        },
+        {
+          "name": "System.Security.Cryptography.ProtectedData.dll",
+          "size": 40208,
+          "hash": "7337f0c131b9e5f215a0b147e9fcb01e2ff85e44c12c915b65b9167f0511248a",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.108Z"
+        },
+        {
+          "name": "System.ServiceProcess.ServiceController.dll",
+          "size": 92432,
+          "hash": "98fdd7940fb7f3cc4c6eef24ae58f08df33b3f5afa23c8b3401dae5d5ce8e04e",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.190Z"
+        },
+        {
+          "name": "System.Speech.dll",
+          "size": 687416,
+          "hash": "d90047d9d1800e938bbc8f3059bc467f07700693a8987ecce989973d8fd57398",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.192Z"
+        },
+        {
+          "name": "e_sqlite3.dll",
+          "size": 1795072,
+          "hash": "4dcbb2ad197d893355efa004257e048f2c850feb1078158f4baab0f7b53ac45f",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.196Z"
+        },
+        {
+          "name": "libMonoPosixHelper.dll",
+          "size": 1495800,
+          "hash": "b16f77c155a36559a44da32e17e0bf63d899db0bb48c6590bc8eba7bb0ff87a8",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.200Z"
+        },
+        {
+          "name": "libSkiaSharp.dll",
+          "size": 9414216,
+          "hash": "9a0d95e8caaa852c70d085af6a40a744242172ad9ea3fd6bc7599875a8a1dbcd",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.243Z"
+        },
+        {
+          "name": "redball.ico",
+          "size": 210491,
+          "hash": "1115214eb7c70c7dec87a60fd25c8caa261701e5d21310025eca8cf6958d4f37",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.244Z"
+        },
+        {
+          "name": "engine_toggle.json",
+          "size": 1914,
+          "hash": "1bc00be1b1d593ed3cc3ab1a0414472bec58b6bbfa2f4fbefb8e31a1482e1caf",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.244Z"
+        },
+        {
+          "name": "pomodoro_timer.json",
+          "size": 1914,
+          "hash": "1bc00be1b1d593ed3cc3ab1a0414472bec58b6bbfa2f4fbefb8e31a1482e1caf",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.245Z"
+        },
+        {
+          "name": "ram_usage.json",
+          "size": 1914,
+          "hash": "1bc00be1b1d593ed3cc3ab1a0414472bec58b6bbfa2f4fbefb8e31a1482e1caf",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.245Z"
+        },
+        {
+          "name": "typething_launch.json",
+          "size": 1914,
+          "hash": "1bc00be1b1d593ed3cc3ab1a0414472bec58b6bbfa2f4fbefb8e31a1482e1caf",
+          "downloads": 0,
+          "uploadedAt": "2026-04-03T19:43:49.246Z"
+        }
+      ],
+      "totalDownloads": 0
+    }
+  ]
+}

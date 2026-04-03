@@ -253,11 +253,11 @@ jobs:
         
         ### Build from source
         ```bash
-cd src/Redball.Linux
-meson setup build
-ninja -C build
-sudo ninja -C build install
-```
+        cd src/Redball.Linux
+        meson setup build
+        ninja -C build
+        sudo ninja -C build install
+        ```
         
         ## Features
         - Keep-awake engine with idle detection

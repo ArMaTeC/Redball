@@ -19,13 +19,16 @@ set -euo pipefail
 # === Configuration ===
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DOTNET_VERSION="10.0.100"
-DOTNET_MAJOR="10.0"
+DOTNET_CHANNEL="10.0"
+LINUX_DOTNET_ROOT="/usr/share/dotnet"
 WINE_DOTNET_ROOT="$HOME/.wine-dotnet"
 WINE_PREFIX="$HOME/.wine-redball"
 DIST_DIR="$PROJECT_ROOT/dist"
 WPF_PUBLISH_DIR="$DIST_DIR/wpf-publish"
 WIX_VERSION="4.0.5"
+
+# Windows .NET SDK download version (exact version for zip download)
+WIN_DOTNET_VERSION="10.0.100"
 
 # Colors
 RED='\033[0;31m'
@@ -73,10 +76,16 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-# === Helper: Run dotnet via Wine ===
+# === Helper: Run dotnet via Wine (for build/publish — Windows SDK required) ===
 wine_dotnet() {
     WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all \
         wine "$WINE_DOTNET_ROOT/dotnet.exe" "$@"
+}
+
+# === Helper: Run native Linux dotnet (for restore — bypasses Wine cert issues) ===
+linux_dotnet() {
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false \
+        "$LINUX_DOTNET_ROOT/dotnet" "$@"
 }
 
 # === Helper: Run wix.exe via Wine ===
@@ -148,54 +157,109 @@ init_wine_prefix() {
     WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all wineboot --init 2>/dev/null
     # Wait for wineserver to finish
     WINEPREFIX="$WINE_PREFIX" wineserver --wait 2>/dev/null || true
+
+    # Symlink Wine's NuGet cache to Linux NuGet cache so both SDKs share packages.
+    # Linux dotnet restores to ~/.nuget/packages; Wine dotnet looks at
+    # C:\users\<user>\.nuget\packages which maps into the Wine prefix.
+    local wine_nuget_dir="$WINE_PREFIX/drive_c/users/$USER/.nuget"
+    mkdir -p "$wine_nuget_dir"
+    mkdir -p "$HOME/.nuget/packages"
+    if [[ ! -L "$wine_nuget_dir/packages" ]]; then
+        rm -rf "$wine_nuget_dir/packages"
+        ln -s "$HOME/.nuget/packages" "$wine_nuget_dir/packages"
+        log_success "Linked Wine NuGet cache -> $HOME/.nuget/packages"
+    fi
+
     log_success "Wine prefix initialized"
 }
 
-# === Setup: Install .NET SDK in Wine ===
+# === Setup: Install Linux .NET SDK (for NuGet restore) ===
+install_linux_dotnet() {
+    if [[ -f "$LINUX_DOTNET_ROOT/dotnet" ]]; then
+        local ver
+        ver=$("$LINUX_DOTNET_ROOT/dotnet" --version 2>/dev/null || echo "unknown")
+        log_success "Linux .NET SDK already installed: $ver"
+        return 0
+    fi
+
+    log_step "Installing Linux .NET SDK (channel $DOTNET_CHANNEL)..."
+    local install_script="/tmp/dotnet-install.sh"
+    wget -q https://dot.net/v1/dotnet-install.sh -O "$install_script"
+    chmod +x "$install_script"
+    "$install_script" --channel "$DOTNET_CHANNEL" --install-dir "$LINUX_DOTNET_ROOT"
+    rm -f "$install_script"
+
+    local ver
+    ver=$("$LINUX_DOTNET_ROOT/dotnet" --version 2>/dev/null || echo "FAILED")
+    if [[ "$ver" == "FAILED" ]]; then
+        log_error "Linux .NET SDK installation failed"
+        exit 1
+    fi
+    log_success "Linux .NET SDK $ver installed"
+}
+
+# === Setup: Install Windows .NET SDK in Wine (for build/publish) ===
 install_dotnet_in_wine() {
     if [[ -f "$WINE_DOTNET_ROOT/dotnet.exe" ]]; then
         local installed_version
         installed_version=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all wine "$WINE_DOTNET_ROOT/dotnet.exe" --version 2>/dev/null || echo "unknown")
-        log_success ".NET SDK already installed in Wine: $installed_version"
+        log_success "Windows .NET SDK already installed in Wine: $installed_version"
         return 0
     fi
 
-    log_step "Downloading Windows .NET SDK $DOTNET_VERSION..."
+    log_step "Downloading Windows .NET SDK $WIN_DOTNET_VERSION..."
     mkdir -p "$WINE_DOTNET_ROOT"
 
-    local sdk_url="https://dotnetcli.azureedge.net/dotnet/Sdk/${DOTNET_VERSION}/dotnet-sdk-${DOTNET_VERSION}-win-x64.zip"
+    local sdk_url="https://dotnetcli.azureedge.net/dotnet/Sdk/${WIN_DOTNET_VERSION}/dotnet-sdk-${WIN_DOTNET_VERSION}-win-x64.zip"
     local sdk_zip="/tmp/dotnet-sdk-win-x64.zip"
 
-    # Try the exact version first, fall back to latest preview/rc
-    if ! wget -q -O "$sdk_zip" "$sdk_url" 2>/dev/null; then
-        log_warn "Exact SDK version not found, trying latest $DOTNET_MAJOR channel..."
-        sdk_url="https://dotnetcli.azureedge.net/dotnet/Sdk/${DOTNET_MAJOR}/dotnet-sdk-win-x64.latest.zip"
-        if ! wget -q -O "$sdk_zip" "$sdk_url" 2>/dev/null; then
-            # Try the install script approach
-            log_warn "Direct download failed, trying dotnet-install.ps1 approach..."
-            sdk_url="https://builds.dotnet.microsoft.com/dotnet/Sdk/${DOTNET_MAJOR}.1xx/dotnet-sdk-win-x64.zip"
-            wget -q -O "$sdk_zip" "$sdk_url" 2>/dev/null || {
-                log_error "Could not download .NET SDK. Check version availability."
-                log_error "Tried: $sdk_url"
-                log_error "You can manually download from https://dotnet.microsoft.com/download"
-                exit 1
-            }
-        fi
+    if ! wget -q --show-progress -O "$sdk_zip" "$sdk_url" 2>/dev/null; then
+        log_error "Could not download Windows .NET SDK $WIN_DOTNET_VERSION"
+        log_error "URL: $sdk_url"
+        exit 1
     fi
 
-    log_step "Extracting .NET SDK to $WINE_DOTNET_ROOT..."
+    log_step "Extracting Windows .NET SDK to $WINE_DOTNET_ROOT..."
     unzip -qo "$sdk_zip" -d "$WINE_DOTNET_ROOT"
     rm -f "$sdk_zip"
+
+    # Import NuGet root certificates into Wine's certificate store
+    import_wine_certs
 
     # Verify installation
     local version
     version=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all wine "$WINE_DOTNET_ROOT/dotnet.exe" --version 2>/dev/null || echo "FAILED")
     if [[ "$version" == "FAILED" ]]; then
-        log_error ".NET SDK installation verification failed"
+        log_error "Windows .NET SDK installation verification failed"
         exit 1
     fi
 
-    log_success ".NET SDK $version installed in Wine"
+    log_success "Windows .NET SDK $version installed in Wine"
+}
+
+# === Setup: Import .NET SDK root certs into Wine's Windows cert store ===
+import_wine_certs() {
+    log_step "Importing NuGet root certificates into Wine..."
+    local cert_dir="/tmp/wine-cert-import"
+    mkdir -p "$cert_dir"
+    local imported=0
+
+    for pem_bundle in "$WINE_DOTNET_ROOT"/sdk/*/trustedroots/*.pem; do
+        [[ -f "$pem_bundle" ]] || continue
+        csplit -z -f "$cert_dir/cert-" "$pem_bundle" '/-----BEGIN CERTIFICATE-----/' '{*}' >/dev/null 2>&1
+        for pem in "$cert_dir"/cert-*; do
+            [[ -f "$pem" ]] || continue
+            grep -q "BEGIN CERTIFICATE" "$pem" || continue
+            local der="${pem}.der"
+            if openssl x509 -in "$pem" -outform DER -out "$der" 2>/dev/null; then
+                WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all wine certutil -addstore -f Root "Z:${der}" >/dev/null 2>&1 && imported=$((imported+1))
+            fi
+            rm -f "$pem" "$der"
+        done
+    done
+
+    rm -rf "$cert_dir"
+    log_success "Imported $imported certificates into Wine's trust store"
 }
 
 # === Setup: Install WiX Toolset in Wine ===
@@ -245,6 +309,7 @@ setup_all() {
 
     install_wine
     init_wine_prefix
+    install_linux_dotnet
     install_dotnet_in_wine
 
     if ! $WPF_ONLY; then
@@ -256,13 +321,20 @@ setup_all() {
     echo ""
 }
 
-# === Build: Restore NuGet Packages ===
+# === Build: Restore NuGet Packages (via Linux .NET SDK — avoids Wine cert issues) ===
 step_restore() {
-    log_step "Restoring NuGet packages..."
-    # Convert project root to Windows path for Wine
-    local win_sln
-    win_sln=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all winepath -w "$PROJECT_ROOT/Redball.v3.sln" 2>/dev/null || echo "Z:$PROJECT_ROOT/Redball.v3.sln")
-    wine_dotnet restore "$win_sln" --verbosity quiet
+    log_step "Restoring NuGet packages (Linux .NET SDK)..."
+    linux_dotnet restore "$PROJECT_ROOT/Redball.v3.sln" \
+        --verbosity minimal \
+        -p:EnableWindowsTargeting=true
+
+    # Also restore with win-x64 runtime packs (needed for self-contained Service publish)
+    log_step "Restoring runtime packs for win-x64..."
+    linux_dotnet restore "$PROJECT_ROOT/src/Redball.Service/Redball.Service.csproj" \
+        --verbosity minimal \
+        -p:EnableWindowsTargeting=true \
+        --runtime win-x64
+
     log_success "Packages restored"
 }
 
@@ -272,18 +344,14 @@ step_build_wpf() {
 
     mkdir -p "$WPF_PUBLISH_DIR"
 
-    local win_csproj
-    win_csproj=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all winepath -w "$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" 2>/dev/null || echo "Z:$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj")
-    local win_output
-    win_output=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all winepath -w "$WPF_PUBLISH_DIR" 2>/dev/null || echo "Z:$WPF_PUBLISH_DIR")
-
-    wine_dotnet publish "$win_csproj" \
+    wine_dotnet publish "Z:$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" \
         --configuration "$CONFIGURATION" \
-        --output "$win_output" \
+        --output "Z:$WPF_PUBLISH_DIR" \
         --self-contained false \
         --runtime win-x64 \
         -p:PublishSingleFile=false \
-        -p:PublishTrimmed=false
+        -p:PublishTrimmed=false \
+        --no-restore
 
     log_success "WPF application published to $WPF_PUBLISH_DIR"
 
@@ -335,18 +403,16 @@ step_build_service() {
     local service_dir="$DIST_DIR/Redball.Service"
     mkdir -p "$service_dir"
 
-    local win_csproj
-    win_csproj=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all winepath -w "$PROJECT_ROOT/src/Redball.Service/Redball.Service.csproj" 2>/dev/null || echo "Z:$PROJECT_ROOT/src/Redball.Service/Redball.Service.csproj")
-    local win_output
-    win_output=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all winepath -w "$service_dir" 2>/dev/null || echo "Z:$service_dir")
-
-    wine_dotnet publish "$win_csproj" \
+    # Service is self-contained — build as framework-dependent to avoid
+    # runtime pack version mismatch between Linux and Wine SDK versions.
+    # The Windows runtime is expected to be present on target machines.
+    wine_dotnet publish "Z:$PROJECT_ROOT/src/Redball.Service/Redball.Service.csproj" \
         --configuration "$CONFIGURATION" \
-        --output "$win_output" \
-        --self-contained true \
+        --output "Z:$service_dir" \
+        --self-contained false \
         --runtime win-x64 \
-        -p:PublishSingleFile=true \
-        -p:EnableCompressionInSingleFile=true
+        -p:PublishSingleFile=false \
+        --no-restore
 
     # Copy service files to WPF publish dir
     for f in "$service_dir"/Redball.Service*; do
@@ -366,10 +432,7 @@ step_build_custom_actions() {
         return 0
     fi
 
-    local win_csproj
-    win_csproj=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all winepath -w "$ca_csproj" 2>/dev/null || echo "Z:$ca_csproj")
-
-    wine_dotnet build "$win_csproj" --configuration "$CONFIGURATION" --verbosity minimal
+    wine_dotnet build "Z:$ca_csproj" --configuration "$CONFIGURATION" --verbosity minimal --no-restore
 
     local ca_dll="$PROJECT_ROOT/installer/Redball.Installer.CustomActions/bin/$CONFIGURATION/net472/Redball.Installer.CustomActions.dll"
     if [[ -f "$ca_dll" ]]; then
@@ -421,22 +484,15 @@ step_build_msi() {
     # Accept WiX EULA
     export WIX_OSMF_EULA_ACCEPTED=1
 
-    local win_wxs
-    win_wxs=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all winepath -w "$PROJECT_ROOT/installer/Redball.v2.wxs" 2>/dev/null || echo "Z:$PROJECT_ROOT/installer/Redball.v2.wxs")
-    local win_output
-    win_output=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all winepath -w "$DIST_DIR/Redball-${version}.msi" 2>/dev/null || echo "Z:$DIST_DIR/Redball-${version}.msi")
-    local win_ca_path
-    win_ca_path=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all winepath -w "$ca_dll" 2>/dev/null || echo "Z:$ca_dll")
-
     # Run WiX from the installer directory (so relative paths in WXS work)
     pushd "$PROJECT_ROOT/installer" > /dev/null
     WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all WIX_OSMF_EULA_ACCEPTED=1 \
         wine "$wix_exe" build Redball.v2.wxs \
-            -o "$win_output" \
+            -o "Z:$DIST_DIR/Redball-${version}.msi" \
             -ext WixToolset.UI.wixext \
             -ext WixToolset.Util.wixext \
             -d "ProductVersion=${wix_version}" \
-            -d "CA_PATH=${win_ca_path}"
+            -d "CA_PATH=Z:${ca_dll}"
     popd > /dev/null
 
     local msi_path="$DIST_DIR/Redball-${version}.msi"
