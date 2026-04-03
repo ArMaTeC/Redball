@@ -95,3 +95,6 @@ WDKSetup.exe
 wpf_error_2.txt
 wpf_errors.txt
 improve_me.txt
+test_output.txt
+out_build.txt
+build_errors.txt
