@@ -114,19 +114,105 @@ jobs:
         echo "$wixDir" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         $wix = Join-Path $wixDir 'wix.exe'
         & $wix extension add -g WixToolset.UI.wixext/4.0.5
-        & $wix extension add -g WixToolset.Netfx.wixext/4.0.5
-        & $wix extension add -g WixToolset.Bal.wixext/4.0.5
+        & $wix extension add -g WixToolset.Util.wixext/4.0.5
         & $wix --version
 
     - name: Verify WiX
       run: wix --version
 
+    - name: Restore packages
+      shell: pwsh
+      run: dotnet restore Redball.v3.sln
+
     - name: Publish WPF Application
       shell: pwsh
       run: |
-        dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj --configuration Release -o dist/wpf-publish
-        Write-Host "Published WPF app to dist/wpf-publish"
-        Get-ChildItem dist/wpf-publish/Redball.UI.WPF.exe | Select-Object Name, @{N='SizeMB';E={[math]::Round($_.Length/1MB,1)}}
+        $publishDir = "dist/wpf-publish"
+        dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj `
+          --configuration Release `
+          --output $publishDir `
+          --self-contained false `
+          --runtime win-x64 `
+          -p:PublishSingleFile=false `
+          -p:PublishTrimmed=false
+
+        # Move DLLs to dll subfolder (matches WXS structure)
+        $dllDir = Join-Path $publishDir "dll"
+        New-Item -ItemType Directory -Path $dllDir -Force | Out-Null
+        Get-ChildItem -Path $publishDir -Filter "*.dll" |
+          Where-Object { $_.Name -ne "Redball.UI.WPF.dll" } |
+          ForEach-Object { Move-Item $_.FullName $dllDir -Force }
+        Write-Host "Moved DLLs to dll subfolder"
+
+        # Copy Assets
+        $assetsSource = "src/Redball.UI.WPF/Assets"
+        $assetsDest = Join-Path $publishDir "Assets"
+        if (Test-Path $assetsSource) {
+          New-Item -ItemType Directory -Path $assetsDest -Force | Out-Null
+          Copy-Item -Path "$assetsSource/*" -Destination $assetsDest -Recurse -Force
+          Write-Host "Copied Assets to publish directory"
+        }
+
+        # Create logs folder placeholder
+        $logsDir = Join-Path $publishDir "logs"
+        New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
+        New-Item -ItemType File -Path (Join-Path $logsDir ".keep") -Force | Out-Null
+
+        Write-Host "Published WPF app to $publishDir"
+        Get-ChildItem $publishDir -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+
+    - name: Build Service
+      shell: pwsh
+      run: |
+        $servicePublishDir = "dist/Redball.Service"
+        dotnet publish src/Redball.Service/Redball.Service.csproj `
+          --configuration Release `
+          --output $servicePublishDir `
+          --self-contained true `
+          --runtime win-x64 `
+          -p:PublishSingleFile=true `
+          -p:EnableCompressionInSingleFile=true
+
+        # Copy service files to WPF publish dir for MSI packaging
+        $wpfPublishDir = "dist/wpf-publish"
+        $serviceFiles = Get-ChildItem -Path $servicePublishDir -File |
+          Where-Object { $_.Name -like 'Redball.Service*' }
+        foreach ($file in $serviceFiles) {
+          Copy-Item $file.FullName $wpfPublishDir -Force
+        }
+        Write-Host "Service built and copied to publish directory"
+
+    - name: Build Custom Actions DLL
+      shell: pwsh
+      run: |
+        dotnet build installer/Redball.Installer.CustomActions/Redball.Installer.CustomActions.csproj `
+          --configuration Release --verbosity minimal
+        $dllPath = "installer/Redball.Installer.CustomActions/bin/Release/net472/Redball.Installer.CustomActions.dll"
+        if (-not (Test-Path $dllPath)) {
+          throw "Custom actions DLL not found: $dllPath"
+        }
+        Write-Host "Custom Actions DLL built: $dllPath"
+
+    - name: Generate installer assets
+      shell: pwsh
+      run: |
+        # Generate license RTF from LICENSE file
+        $licenseText = Get-Content LICENSE -Raw
+        $licenseText = $licenseText -replace '(?m)^#+\s*', ''
+        $escaped = $licenseText -replace '\\', '\\\\' -replace '\{', '\{' -replace '\}', '\}'
+        $escaped = $escaped -replace "`r`n", '\par ' -replace "`n", '\par '
+        $rtfContent = "{\rtf1\ansi\deff0{\fonttbl{\f0 Segoe UI;}}\fs20 $escaped}"
+        Set-Content -Path "installer/Redball-License.rtf" -Value $rtfContent -Encoding Ascii -NoNewline
+        Write-Host "Generated license RTF"
+
+        # Create dev certificate placeholder for MSI
+        $cert = New-SelfSignedCertificate -Type CodeSigningCert `
+          -Subject "CN=Redball Development, O=ArMaTeC" `
+          -CertStoreLocation Cert:\CurrentUser\My `
+          -NotAfter (Get-Date).AddYears(1)
+        Export-Certificate -Cert $cert -FilePath "dist/RedballDevCert.cer" -Force | Out-Null
+        Remove-Item "Cert:\CurrentUser\My\$($cert.Thumbprint)" -Force
+        Write-Host "Generated dev certificate for installer"
 
     - name: Sign EXE
       continue-on-error: true
@@ -144,7 +230,6 @@ jobs:
         Write-Host "Using signtool: $($signtool.FullName)"
 
         if ($env:CODE_SIGNING_CERT) {
-          # Decode certificate from secret
           $certBytes = [Convert]::FromBase64String($env:CODE_SIGNING_CERT)
           $certPath = "$env:RUNNER_TEMP\code-signing.pfx"
           [IO.File]::WriteAllBytes($certPath, $certBytes)
@@ -154,7 +239,6 @@ jobs:
           else { Write-Host "EXE signed successfully" }
           Remove-Item $certPath -Force
         } else {
-          # Create self-signed cert for development builds
           Write-Host "No CODE_SIGNING_CERT secret found - creating self-signed certificate..."
           $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=Redball Development, O=ArMaTeC" -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(1)
           $certPath = "$env:RUNNER_TEMP\dev-signing.pfx"
@@ -166,71 +250,59 @@ jobs:
           Remove-Item $certPath -Force
           Remove-Item "Cert:\CurrentUser\My\$($cert.Thumbprint)" -Force
         }
-        # Verify signature (may fail for self-signed certs - that's expected)
         $verifyResult = & $signtool.FullName verify /pa $exePath 2>&1
         $verifyResult | Write-Host
         if ($LASTEXITCODE -ne 0) { Write-Host "Note: Signature verification requires trusted cert chain" }
 
     - name: Debug info
-      shell: bash
+      shell: pwsh
       run: |
-        echo "Version: ${{ needs.tag.outputs.version }}"
-        echo "PWD: $(pwd)"
-        ls -la installer/
-        ls -la dist/wpf-publish/ || echo 'wpf-publish not found'
-        mkdir -p dist
+        Write-Host "Version: ${{ needs.tag.outputs.version }}"
+        Write-Host "=== installer/ ==="
+        Get-ChildItem installer/ | Format-Table Name, Length
+        Write-Host "=== dist/wpf-publish/ ==="
+        Get-ChildItem dist/wpf-publish/ -Recurse | Format-Table FullName, Length
+        Write-Host "=== dist/ (top-level) ==="
+        Get-ChildItem dist/ -File | Format-Table Name, Length
 
     - name: Build MSI
-      shell: bash
+      shell: pwsh
+      env:
+        WIX_OSMF_EULA_ACCEPTED: '1'
       run: |
-        set +e
-        VERSION="${{ needs.tag.outputs.version }}"
-        cd installer
-        echo "=== Building MSI v${VERSION} ==="
-        wix.exe build Redball.wxs -o "../dist/Redball-${VERSION}.msi" -ext WixToolset.UI.wixext -ext WixToolset.Netfx.wixext -d "ProductVersion=${VERSION}" > ../dist/wix.log 2>&1
-        WIX_RC=$?
-        cd ..
-        echo "=== WiX exit code: ${WIX_RC} ==="
-        echo "### WiX Build Log (exit ${WIX_RC})" >> "$GITHUB_STEP_SUMMARY"
-        echo '```' >> "$GITHUB_STEP_SUMMARY"
-        cat dist/wix.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "(no log file)" >> "$GITHUB_STEP_SUMMARY"
-        echo '```' >> "$GITHUB_STEP_SUMMARY"
-        cat dist/wix.log 2>/dev/null
-        ls -la dist/
-        echo "### dist contents" >> "$GITHUB_STEP_SUMMARY"
-        ls -la dist/ >> "$GITHUB_STEP_SUMMARY"
-        if [ ! -f "dist/Redball-${VERSION}.msi" ]; then
-          echo "ERROR: MSI not produced (WiX exit ${WIX_RC})"
-          exit 1
-        fi
-        cp "dist/Redball-${VERSION}.msi" "dist/Redball.msi"
-        echo "OK: MSI produced ($(wc -c < dist/Redball.msi) bytes)"
+        $version = "${{ needs.tag.outputs.version }}"
+        # WiX requires 4-part version
+        $versionParts = $version.Split('.')
+        if ($versionParts.Count -eq 3) { $wixVersion = "$version.0" } else { $wixVersion = $version }
 
-    - name: Build Bundle EXE
-      shell: bash
-      run: |
-        set +e
-        VERSION="${{ needs.tag.outputs.version }}"
-        cd installer
-        echo "=== Building Bundle EXE v${VERSION} ==="
-        wix.exe build Bundle.wxs -o "../dist/Redball-Setup-${VERSION}.exe" -ext WixToolset.Bal.wixext -ext WixToolset.Netfx.wixext -d "ProductVersion=${VERSION}" -d "RedballMsiPath=../dist/Redball-${VERSION}.msi" > ../dist/bundle.log 2>&1
-        BUNDLE_RC=$?
-        cd ..
-        echo "=== Bundle exit code: ${BUNDLE_RC} ==="
-        echo "### Bundle Build Log (exit ${BUNDLE_RC})" >> "$GITHUB_STEP_SUMMARY"
-        echo '```' >> "$GITHUB_STEP_SUMMARY"
-        cat dist/bundle.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "(no log file)" >> "$GITHUB_STEP_SUMMARY"
-        echo '```' >> "$GITHUB_STEP_SUMMARY"
-        cat dist/bundle.log 2>/dev/null
-        ls -la dist/
-        echo "### dist contents after bundle" >> "$GITHUB_STEP_SUMMARY"
-        ls -la dist/ >> "$GITHUB_STEP_SUMMARY"
-        if [ ! -f "dist/Redball-Setup-${VERSION}.exe" ]; then
-          echo "WARNING: Bundle not produced (exit ${BUNDLE_RC}) - continuing with MSI only"
-        else
-          cp "dist/Redball-Setup-${VERSION}.exe" "dist/Redball-Setup.exe"
-          echo "OK: Bundle produced ($(wc -c < dist/Redball-Setup.exe) bytes)"
-        fi
+        $caPath = "installer/Redball.Installer.CustomActions/bin/Release/net472/Redball.Installer.CustomActions.dll"
+        if (-not (Test-Path $caPath)) {
+          throw "Custom actions DLL not found: $caPath"
+        }
+
+        Write-Host "Building MSI v${version} (WiX version: ${wixVersion})..."
+        Push-Location installer
+        wix.exe build Redball.v2.wxs `
+          -o "../dist/Redball-${version}.msi" `
+          -ext WixToolset.UI.wixext `
+          -ext WixToolset.Util.wixext `
+          -d "ProductVersion=${wixVersion}" `
+          -d "CA_PATH=../${caPath}"
+        $wixExitCode = $LASTEXITCODE
+        Pop-Location
+
+        if ($wixExitCode -ne 0) {
+          throw "WiX build failed with exit code $wixExitCode"
+        }
+
+        $msiPath = "dist/Redball-${version}.msi"
+        if (-not (Test-Path $msiPath)) {
+          throw "MSI not found after build: $msiPath"
+        }
+
+        Copy-Item $msiPath "dist/Redball.msi" -Force
+        $msiInfo = Get-Item $msiPath
+        Write-Host "MSI built successfully: $($msiInfo.Name) ($([math]::Round($msiInfo.Length / 1MB, 2)) MB)"
 
     - name: Sign MSI
       continue-on-error: true
@@ -276,15 +348,35 @@ jobs:
         $verifyResult | Write-Host
         if ($LASTEXITCODE -ne 0) { Write-Host "Note: Signature verification requires trusted cert chain" }
 
-    - name: Upload MSI and Bundle
+    - name: Generate SHA256 checksums
+      shell: pwsh
+      run: |
+        $version = "${{ needs.tag.outputs.version }}"
+        $artifacts = @("dist/Redball-${version}.msi", "dist/Redball.msi")
+        $hashLines = @()
+        foreach ($artifact in $artifacts) {
+          if (Test-Path $artifact) {
+            $hash = (Get-FileHash -Path $artifact -Algorithm SHA256).Hash
+            $name = Split-Path $artifact -Leaf
+            $hashLines += "$hash  $name"
+            Write-Host "$name : $hash"
+          }
+        }
+        if ($hashLines.Count -gt 0) {
+          $hashContent = ($hashLines -join "`n") + "`n"
+          [System.IO.File]::WriteAllText("dist/SHA256SUMS", $hashContent, [System.Text.UTF8Encoding]::new($false))
+          Write-Host "Created SHA256SUMS"
+        }
+
+    - name: Upload MSI
       id: upload
       uses: actions/upload-artifact@v7
       with:
         name: redball-msi
         path: |
           ./dist/Redball.msi
-          ./dist/Redball-Setup.exe
-          ./dist/Redball-*-Setup.exe
+          ./dist/Redball-*.msi
+          ./dist/SHA256SUMS
         retention-days: 7
         if-no-files-found: error
 
@@ -312,13 +404,7 @@ jobs:
           echo "ERROR: Redball.msi not found"
           exit 1
         fi
-        # Verify bundle files exist
-        if [ ! -f "./release/Redball-Setup.exe" ]; then
-          echo "ERROR: Redball-Setup.exe not found"
-          exit 1
-        fi
         echo "MSI ready for release"
-        echo "Bundle ready for release"
 
     - name: Generate release notes
       id: notes
@@ -385,8 +471,8 @@ jobs:
         body_path: release_notes.md
         files: |
           ./release/Redball.msi
-          ./release/Redball-Setup.exe
-          ./release/Redball-Setup-${{ needs.tag.outputs.version }}.exe
+          ./release/Redball-*.msi
+          ./release/SHA256SUMS
         generate_release_notes: false
         draft: false
         prerelease: false

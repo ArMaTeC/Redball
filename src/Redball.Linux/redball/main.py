@@ -10,7 +10,7 @@ import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 
-from gi.repository import Gtk, Adw, GLib
+from gi.repository import Gtk, Adw, GLib, Gio
 from .window import RedballWindow
 from .tray import TrayIndicator
 from .keepawake import KeepAwakeEngine
@@ -22,7 +22,7 @@ class RedballApp(Adw.Application):
     def __init__(self):
         super().__init__(
             application_id='com.armatec.Redball',
-            flags=Gio.ApplicationFlags.FLAGS_NONE
+            flags=Gio.ApplicationFlags.DEFAULT_FLAGS
         )
         self.keep_awake = KeepAwakeEngine()
         self.tray = None

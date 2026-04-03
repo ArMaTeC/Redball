@@ -1,5 +1,0 @@
-Test run for C:\Users\karll\Desktop\Redball\tests\bin\Release\net10.0-windows\Redball.Tests.dll (.NETCoreApp,Version=v10.0)
-A total of 1 test files matched the specified pattern.
-  Skipped LongRunningSession_NoMemoryLeak
-
-Passed!  - Failed:     0, Passed:   532, Skipped:     1, Total:   533, Duration: 2 m 32 s - Redball.Tests.dll (net10.0)

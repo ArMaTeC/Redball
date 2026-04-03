@@ -8,6 +8,11 @@ import subprocess
 import dbus
 from enum import Enum
 
+import gi
+gi.require_version('Gtk', '4.0')
+
+from gi.repository import GLib
+
 
 class BackendType(Enum):
     X11 = "x11"
