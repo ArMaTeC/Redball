@@ -65,10 +65,7 @@ param(
     [switch]$NoClean,
 
     [Parameter()]
-    [switch]$Parallel,
-
-    [Parameter()]
-    [switch]$SignDriver
+    [switch]$Parallel
 )
 
 $ErrorActionPreference = 'Stop'
@@ -623,92 +620,6 @@ function Stop-LockingProcess {
     }
 }
 
-function Test-WdkAvailable {
-    [CmdletBinding()]
-    param()
-
-    $kitsRoot = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\Include'
-    if (-not (Test-Path $kitsRoot)) {
-        return $false
-    }
-
-    $ntddkHeader = Get-ChildItem -Path $kitsRoot -Filter 'ntddk.h' -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
-    return ($null -ne $ntddkHeader)
-}
-
-function Step-BuildDriver {
-    [CmdletBinding()]
-    param()
-    Write-BuildHeader "Building Redball.KMDF Driver"
-    
-    $driverProjPath = Join-Path $ProjectRoot 'src\Redball.Driver\Redball.KMDF.vcxproj'
-    $driverDistPath = Join-Path $script:DistPath 'driver'
-    
-    if (-not (Test-Path $driverProjPath)) {
-        Write-Warning "Driver project not found: $driverProjPath"
-        return
-    }
-
-    # Detect MSBuild (Enterprise preferred, BuildTools fallback)
-    $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
-    if (-not $vsPath) {
-        $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -products * -latest -property installationPath
-    }
-    $msbuildPath = Join-Path $vsPath 'MSBuild\Current\Bin\MSBuild.exe'
-    
-    if (-not (Test-Path $msbuildPath)) {
-        Write-Warning "MSBuild not found at $msbuildPath. Driver build will be skipped."
-        return
-    }
-
-    if (-not (Test-WdkAvailable)) {
-        Write-Warning "WDK headers (ntddk.h) were not found. Skipping KMDF driver build. Install WDK 11 to build driver artifacts."
-        return
-    }
-
-    Write-BuildStep "Building driver ($Configuration|x64)..."
-    # Ensure environment is initialized for MSBuild to find its targets (VCTargetsPath)
-    $env:VCTargetsPath = Join-Path $vsPath "MSBuild\Microsoft\VC\v170\"
-    & $msbuildPath $driverProjPath /p:Configuration=$Configuration /p:Platform=x64 /t:Build `
-        /p:SpectreMitigation=false `
-        /p:CheckMSVCComponents=false `
-        /p:InfVerif_DoNotVerify=true `
-        /p:EnableInfVerif=false `
-        /p:SignMode=Off
-    
-    if ($LASTEXITCODE -ne 0) {
-        Write-BuildError "Driver build failed. Ensure WDK 11 is installed."
-        # Don't throw here to allow app build if driver fails
-        return
-    }
-
-    if (-not (Test-Path $driverDistPath)) { New-Item -ItemType Directory -Path $driverDistPath -Force | Out-Null }
-    
-    $outDir = Join-Path (Split-Path $driverProjPath) "x64\$Configuration"
-    Copy-Item -Path (Join-Path $outDir "Redball.KMDF.sys") -Destination $driverDistPath -Force
-    Copy-Item -Path (Join-Path $outDir "Redball.KMDF.inf") -Destination $driverDistPath -Force
-    
-    # Copy catalog file if it exists (Inf2Cat output)
-    $catPath = Join-Path $outDir "Redball.KMDF\redball.kmdf.cat" 
-    if (Test-Path $catPath) {
-        Copy-Item -Path $catPath -Destination $driverDistPath -Force
-    }
-    
-    if ($SignDriver) {
-        Write-BuildStep "Signing driver binary..."
-        $signScript = Join-Path $currentScriptRoot "Sign-Driver.ps1"
-        if (Test-Path $signScript) {
-            $sysPath = Join-Path $driverDistPath "Redball.KMDF.sys"
-            & $signScript -DriverPath $sysPath
-        }
-        else {
-            Write-Warning "Sign-Driver.ps1 not found. Skipping signing."
-        }
-    }
-
-    Write-BuildSuccess "Driver artifacts copied to $driverDistPath"
-}
-
 function Step-BuildWpfApp {
     [CmdletBinding(SupportsShouldProcess)]
     param()
@@ -899,6 +810,17 @@ function Step-BuildWpfApp {
         $assetsSourceWildcard = Join-Path $assetsSource '*'
         Copy-Item -Path $assetsSourceWildcard -Destination $assetsDest -Recurse -Force
         Write-BuildSuccess "Copied Assets to publish directory"
+    }
+    
+    # Copy service executable to publish directory for runtime access
+    $serviceSource = Join-Path $script:DistPath 'Redball.Service\Redball.Service.exe'
+    if (Test-Path $serviceSource) {
+        $serviceDest = Join-Path $publishDir 'Redball.Service.exe'
+        Copy-Item -Path $serviceSource -Destination $serviceDest -Force
+        Write-BuildSuccess "Copied Redball.Service.exe to publish directory"
+    }
+    else {
+        Write-Warning "Redball.Service.exe not found - service installation will not work"
     }
     
     # List output
@@ -1445,8 +1367,7 @@ function Step-CreateReleasePackage {
     $msiInfo = Get-Item $msiPath
     Write-BuildSuccess "Release MSI ready: $($msiInfo.Name) ($([math]::Round($msiInfo.Length / 1MB, 2)) MB)"
     Write-HostSafe "  Location: $msiPath" -ForegroundColor Gray
-    Write-HostSafe "  Contains: WPF Application, Core Services, Configuration, HID Driver Support" -ForegroundColor Gray
-    Write-HostSafe "  HID Features: Driver Lifecycle Management, Safe Mode, Robustness Retries" -ForegroundColor Gray
+    Write-HostSafe "  Contains: WPF Application, Core Services, Configuration" -ForegroundColor Gray
 
     # Generate SHA256 hashes for all release artifacts
     Write-BuildStep "Generating SHA256 checksums..."
@@ -1568,9 +1489,6 @@ function Step-CleanBuild {
         (Join-Path $testE2EDir 'bin'),
         (Join-Path $testUiDir 'obj'),
         (Join-Path $testUiDir 'bin'),
-        (Join-Path $srcDir 'Redball.Driver\obj'),
-        (Join-Path $srcDir 'Redball.Driver\bin'),
-        (Join-Path $srcDir 'Redball.Driver\x64'),
         (Join-Path $srcDir 'Redball.Service\obj'),
         (Join-Path $srcDir 'Redball.Service\bin'),
         (Join-Path $srcDir 'Redball.SessionHelper\obj'),
@@ -1659,9 +1577,8 @@ try {
  |_|  \_\___|\__,_|_.__/ \__,_|_|_| |____/ \__,_|_|_|\__,_|
 '@
     Write-HostSafe "  Building Redball v$Version ($Configuration)`n" -ForegroundColor Cyan
-    Write-HostSafe "  Features: Keep-Awake Engine, TypeThing (Standard/HID), Pomodoro, Mini-Widget" -ForegroundColor Gray
-    Write-HostSafe "  HID Stack: Live Health, Smart Install/Uninstall, Safe Mode, Auto-Fallback, Idle-Release, Repair Stack" -ForegroundColor Gray
-    Write-HostSafe "  Safety: Emergency Release (Ctrl+Shift+Esc), Health Checks, Retry Logic, Integrity Validation`n" -ForegroundColor Gray
+    Write-HostSafe "  Features: Keep-Awake Engine, TypeThing, Pomodoro, Mini-Widget" -ForegroundColor Gray
+    Write-HostSafe "  Safety: Health Checks, Retry Logic, Integrity Validation`n" -ForegroundColor Gray
     
     # Clean build if requested (default on, use -NoClean to skip)
     if (-not $NoClean) {
@@ -1711,7 +1628,6 @@ try {
     
     # WPF Build (required before MSI)
     if (-not $SkipWPF) {
-        Step-BuildDriver
         Step-BuildWpfApp
         Step-BuildService
         Step-SignExecutable

@@ -38,7 +38,7 @@ Use the decision trees below to quickly diagnose common issues. Start at the top
     - **→ Yes:** Another app may have claimed the hotkey. Check Diagnostics → Log for "Failed to register" messages. Change the hotkey in Settings.
   - **→ Yes, but characters aren't appearing:**
     - Click directly in the target text field before pressing the hotkey.
-    - Try switching to **HID input mode** in Settings if you're using RDP/remote desktop.
+    - Try switching to **Service input mode** in Settings if you're using RDP/remote desktop.
   - **→ Yes, but wrong characters or double newlines:**
     - **Double newlines:** Source text may have `\r\n` endings — Redball handles this, but check for unusual encodings.
     - **Wrong characters:** Ensure the target app's keyboard layout matches your system layout.

@@ -562,12 +562,6 @@ public partial class MainWindow
             SloTempText.Text = temp.HasValue ? $"{temp.Value:F0}°C" : "N/A";
             SloTempStatusText.Text = temp > 80 ? "High" : temp > 60 ? "Normal" : temp.HasValue ? "Cool" : "Unknown";
 
-            // HID Status
-            var hidReady = InterceptionInputService.Instance.IsReady;
-            var driverInstalled = InterceptionInputService.Instance.IsDriverInstalled;
-            SloHidStatusText.Text = hidReady ? "Ready" : driverInstalled ? "Installed" : "Not Installed";
-            SloHidDetailsText.Text = hidReady ? "HID input available" : driverInstalled ? "Driver installed, not initialized" : "Install driver for HID input";
-
             // Session & Feature Metrics
             var metrics = $"Total Sessions: {summary.TotalSessions}\n" +
                          $"Total Usage: {summary.TotalUsageTime.TotalHours:F1}h\n" +

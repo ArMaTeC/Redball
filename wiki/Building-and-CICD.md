@@ -29,7 +29,7 @@ For release builds (when MSI is enabled), `scripts/build.ps1` commits and pushes
 .\scripts\build.ps1
 
 # Override release commit message
-.\scripts\build.ps1 -ReleaseMessage "chore(release): v3.1.0 + HID fixes"
+.\scripts\build.ps1 -ReleaseMessage "chore(release): v3.1.0 + service improvements"
 
 # Opt out of auto release commit/push behavior
 .\scripts\build.ps1 -SkipReleaseCommit

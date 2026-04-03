@@ -1,20 +1,14 @@
 namespace Redball.UI.Services;
 
 /// <summary>
-/// Driver selection for HID input mode.
+/// Driver selection for input mode.
 /// </summary>
 public enum DriverSelection
 {
-    /// <summary>No driver selected.</summary>
+    /// <summary>No driver/service selected.</summary>
     None = 0,
-    /// <summary>Standard Interception driver.</summary>
-    Interception = 1,
-    /// <summary>Redball KMDF filter driver (requires test signing).</summary>
-    RedballKMDF = 2,
-    /// <summary>Auto-select based on system state (Recommended).</summary>
-    Auto = 3,
     /// <summary>Windows Service-based input (no driver signing required).</summary>
-    Service = 4
+    Service = 1
 }
 
 /// <summary>
@@ -36,10 +30,8 @@ public enum TypeThingInputMode
 {
     /// <summary>Standard Win32 SendInput with scan codes (default, works locally).</summary>
     SendInput = 0,
-    /// <summary>Driver-level HID keyboard emulation via Interception driver (works over RDP/remote).</summary>
-    HID = 1,
     /// <summary>Windows Service-based input injection (works over RDP, no driver signing required).</summary>
-    Service = 2
+    Service = 1
 }
 
 /// <summary>

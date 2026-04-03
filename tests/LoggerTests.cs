@@ -125,10 +125,14 @@ namespace Redball.Tests
             // Act
             Logger.Info("TestComponent", "Info message");
             Logger.Flush();
+            
+            // Ensure async channel drains and file is written
+            System.Threading.Thread.Sleep(200);
+            System.Threading.SpinWait.SpinUntil(() => File.Exists(_testLogPath), 1000);
 
             // Assert
             var content = File.ReadAllText(_testLogPath);
-            Assert.IsTrue(content.Contains("[INF]"), "Should log info message");
+            Assert.IsTrue(content.Contains("[INF]"), $"Should log info message. Content: {content}");
             Assert.IsTrue(content.Contains("Info message"), "Should contain message text");
         }
 

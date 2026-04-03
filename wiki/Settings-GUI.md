@@ -50,28 +50,18 @@ The settings are organized into dedicated sections accessible via the left navig
 | Typing Speed (ms per char) | Slider (10–500) | `TypeThingMinDelayMs` / `TypeThingMaxDelayMs` | Character typing delay range |
 | Add random pauses | CheckBox | `TypeThingAddRandomPauses` | Insert natural-feeling random delays |
 | Type newlines as Enter key | CheckBox | `TypeThingTypeNewlines` | Send Enter key for line breaks |
-| **Input Method** | Dropdown | `TypeThingInputMode` | **Standard (SendInput)** or **Driver-Level (HID)** for Remote Desktop |
-| **HID Safe Mode** | CheckBox | `TypeThingHidSafeMode` | **Emergency safety**: Forces SendInput-only, disables HID typing. Automatically enabled after 3 failed HID initializations. |
-| **HID Audio Feedback** | CheckBox | `TypeThingHidAudioFeedback` | Play a subtle click sound when characters are successfully sent via HID. |
-| **Install/Uninstall HID Driver** | Button | — | One-click driver management. Toggle changes to "Uninstall" if driver is detected. |
-| **Repair HID Stack (Full Fix)** | Button | — | Runs a complete repair sequence: release resources, validate integrity, re-init, and hardware refresh. |
-| **Reset HID Stack** | Button | — | Emergency recovery if keyboard becomes unresponsive. |
-| **Emergency Release Keyboard (HID)** | Button | — | Immediately releases HID resources and stops typing (Hotkey: `Ctrl+Shift+Esc`). |
-| **HID Test Box** | TextBox | — | Interactive area to test HID typing before starting a real operation. |
-| **HID Status Indicator** | Visual + Text | — | Live status: Ready (pulsing green) / Not Ready / Error (flashing red). |
+| **Input Method** | Dropdown | `TypeThingInputMode` | **Standard (SendInput)** or **Service** for elevated/RDP typing |
+| **Service Mode** | CheckBox | `TypeThingServiceMode` | Use Windows Service for input injection (works over RDP). |
+| **Audio Feedback** | CheckBox | `TypeThingAudioFeedback` | Play a subtle click sound when characters are successfully sent. |
+| **Install Input Service** | Button | — | Install the Redball Input Service for elevated typing support. |
+| **Service Status** | Visual + Text | — | Live status: Ready (pulsing green) / Not Ready / Error (flashing red). |
 | **Last refresh / Next refresh** | Detail text | — | Diagnostics: timestamps, last action, init failures, errors. |
 
-### HID Robustness Features
+### TypeThing Service Features
 
-* **Auto-Fallback**: If HID initialization fails 3 times in a row, the app automatically enables **HID Safe Mode** and falls back to SendInput.
-* **Automatic Re-Init**: Active typing sessions attempt one silent HID re-initialization if a character fails before falling back to SendInput.
-* **Idle Auto-Release**: HID resources are automatically released after 30 minutes of inactivity.
-* **Hot-Plug Recovery**: USB keyboard changes trigger an automatic HID stack refresh.
-* **Per-Character Retry**: HID typing includes a 3-attempt retry with backoff.
-* **Integrity Validation**: The app verifies driver file presence and SHA256 consistency on disk.
-* **Health Checks**: Automatic HID validation on window focus.
+* **Service Mode**: Uses a Windows Service to inject input, which works across UAC boundaries and Remote Desktop sessions.
+* **Automatic Fallback**: If Service mode fails, automatically falls back to SendInput.
 * **Progress Notifications**: Live progress bar and cancel button for long typing sessions.
-* **Layout Matching**: Diagnostics detect if the current Windows keyboard layout is compatible with HID scan-code mapping.
 
 ### Updates Tab
 

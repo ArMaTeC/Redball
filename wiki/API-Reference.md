@@ -258,15 +258,15 @@ Plugin loading and management via `IRedballPlugin` interface.
 
 ---
 
-### InterceptionInputService
+### ServiceInputProvider
 
-Provides driver-level keyboard input simulation via the Interception driver for RDP compatibility.
+Provides service-based keyboard input injection for RDP and elevated process compatibility.
 
 **Properties:**
 
 | Property | Type | Description |
 | --- | --- | --- |
-| `IsDriverInstalled` | bool | Whether the Interception driver is detected |
+| `IsServiceInstalled` | bool | Whether the Redball Input Service is installed |
 | `IsReady` | bool | Whether service is ready to send keystrokes |
 | `LastErrorSummary` | string | Last initialization or runtime error |
 
@@ -274,10 +274,10 @@ Provides driver-level keyboard input simulation via the Interception driver for 
 
 | Method | Parameters | Description |
 | --- | --- | --- |
-| `Initialize()` | - | Initialize the driver and keyboard hook |
-| `SendCharacter(char ch)` | `ch` | Type a character at the driver level |
-| `InstallDriver(bool elev)` | `elev` | Install driver (system reboot required) |
-| `UninstallDriver(bool elev)` | `elev` | Uninstall driver |
+| `RefreshServiceInstalledState()` | - | Check if service is installed and running |
+| `GetDetailedServiceState()` | - | Get detailed service status information |
+| `InstallService()` | - | Install the Redball Input Service (requires admin) |
+| `UninstallService()` | - | Uninstall the service |
 
 ---
 

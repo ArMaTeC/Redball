@@ -127,7 +127,7 @@ public sealed class TutorialService
                 {
                     Id = "typething_mode",
                     Title = "Input Mode",
-                    Content = "Choose how TypeThing sends input: SendInput API, HID device simulation, or Windows Service.",
+                    Content = "Choose how TypeThing sends input: SendInput API or Windows Service.",
                     TargetElementName = "TypeThingModeCombo",
                     Position = TooltipPosition.Top
                 },

@@ -61,17 +61,7 @@ public partial class App : Application
                 return;
             }
 
-            Services.Logger.Info("App", "Installer default detected: InstallHidDriverNoRestart=1. Attempting no-restart HID install...");
-            var installOk = Services.InterceptionInputService.Instance.InstallDriverNoRestart();
-            if (installOk)
-            {
-                Services.Logger.Info("App", "Installer-triggered HID install completed. Driver ready for lazy initialization.");
-            }
-            else
-            {
-                Services.Logger.Warning("App", "Installer-triggered HID install failed or was cancelled");
-            }
-
+            Services.Logger.Info("App", "Installer HID option is no longer supported. Skipping.");
             key.DeleteValue(valueName, throwOnMissingValue: false);
         }
         catch (Exception ex)
@@ -130,37 +120,6 @@ public partial class App : Application
     {
         Services.Logger.Info("App", "=== OnStartup Begin ===");
         
-        // Handle driver installation elevation
-        if (e.Args.Length > 0 && e.Args[0] == "--install-driver")
-        {
-            var selection = Services.DriverSelection.Auto;
-            if (e.Args.Length > 1 && Enum.TryParse<Services.DriverSelection>(e.Args[1], true, out var sel))
-                selection = sel;
-
-            Services.Logger.Info("App", $"Running in elevated driver installation mode ({selection})");
-            var success = Services.InterceptionInputService.Instance.InstallDriver(selection, false);
-            Environment.Exit(success ? 0 : 1);
-            return;
-        }
-
-        // Handle no-restart driver installation elevation
-        if (e.Args.Length > 0 && e.Args[0] == "--install-driver-no-restart")
-        {
-            Services.Logger.Info("App", "Running in elevated no-restart driver installation mode");
-            var success = Services.InterceptionInputService.Instance.InstallDriverNoRestart(Services.DriverSelection.Auto, false);
-            Environment.Exit(success ? 0 : 1);
-            return;
-        }
-
-        // Handle driver uninstall elevation
-        if (e.Args.Length > 0 && e.Args[0] == "--uninstall-driver")
-        {
-            Services.Logger.Info("App", "Running in elevated driver uninstall mode");
-            var success = Services.InterceptionInputService.Instance.UninstallDriver(false);
-            Environment.Exit(success ? 0 : 1);
-            return;
-        }
-
         // Handle service installation elevation
         if (e.Args.Length > 0 && e.Args[0] == "--install-service")
         {
@@ -185,22 +144,6 @@ public partial class App : Application
             Services.Logger.Info("App", "Running in elevated service start mode");
             var success = StartServiceInElevatedMode();
             Environment.Exit(success ? 0 : 1);
-            return;
-        }
-
-        // Handle internal driver logic test (diagnostics)
-        if (e.Args.Length > 0 && e.Args[0] == "--test-driver-fallbacks")
-        {
-            Services.Logger.Info("App", "Running internal driver fallout test...");
-            // Test uninstallation with cleanup
-            var uninstallOk = Services.InterceptionInputService.Instance.UninstallDriver(false);
-            Services.Logger.Info("App", $"Internal test: Uninstall result (with cleanup fallback) = {uninstallOk}");
-            
-            // Test installation with visible window fallback (will only trigger if first install fails)
-            var installOk = Services.InterceptionInputService.Instance.InstallDriver(Services.DriverSelection.Auto, false);
-            Services.Logger.Info("App", $"Internal test: Install result = {installOk}");
-            
-            Environment.Exit(uninstallOk && installOk ? 0 : 1);
             return;
         }
 
@@ -977,8 +920,6 @@ public partial class App : Application
             ThemeManager.StopWatchingSystemTheme();
             Services.KeepAwakeService.Instance.Dispose();
             Services.Logger.Debug("App", "KeepAwakeService disposed");
-            Services.InterceptionInputService.Instance.ReleaseResources("App.OnExit");
-            Services.Logger.Debug("App", "InterceptionInputService resources released");
 
             // Clear crash flag on clean exit
             Services.CrashRecoveryService.ClearCrashFlag();

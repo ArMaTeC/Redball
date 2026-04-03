@@ -44,7 +44,7 @@ Redball/
 │   │   ├── PluginService.cs         # Plugin loading + management
 │   │   ├── WebApiService.cs         # Local REST API
 │   │   ├── ProfileService.cs        # WiFi-based config profiles
-│   │   ├── InterceptionInputService.cs # Driver-level (HID) input
+│   │   ├── ServiceInputProvider.cs  # Service-based input for RDP/UAC
 │   │   ├── ForegroundAppService.cs  # Foreground app tracking
 │   │   ├── TextToSpeechService.cs   # TTS for TypeThing
 │   │   ├── TemplateService.cs       # Named text templates
@@ -102,7 +102,7 @@ App.xaml.cs (entry point)
   │           ├── SessionLockService          (session events)
   │           └── TemperatureMonitorService   (CPU temp checks)
   ├── AnalyticsService        — Feature tracking + session analytics
-  ├── InterceptionInputService — HID driver management (ready on demand)
+  ├── ServiceInputProvider    — Service-based input injection (for RDP/UAC)
   ├── SessionStateService     — Restore previous session
   ├── DataExportService       — User data packaging service
   ├── HealthCheckService      — App self-monitoring

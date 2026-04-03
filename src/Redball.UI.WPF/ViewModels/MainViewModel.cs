@@ -58,27 +58,6 @@ public class MainViewModel : ViewModelBase
         }
     }
 
-    private void EmergencyHidRelease()
-    {
-        Logger.Warning("MainViewModel", "Emergency HID release command invoked from tray");
-
-        if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
-        {
-            mainWindow.EmergencyReleaseHid("Tray menu", true);
-            return;
-        }
-
-        var fallbackMainWindow = Application.Current.MainWindow as MainWindow;
-        if (fallbackMainWindow != null)
-        {
-            fallbackMainWindow.EmergencyReleaseHid("Tray menu fallback", true);
-            return;
-        }
-
-        InterceptionInputService.Instance.ReleaseResources("Tray emergency release (no window reference)");
-        NotificationService.Instance.ShowWarning("HID Emergency Release", "HID resources released from tray action.");
-    }
-
     public bool UseHeartbeat
     {
         get => _keepAwake.UseHeartbeat;
@@ -122,7 +101,6 @@ public class MainViewModel : ViewModelBase
         OpenAboutCommand = new RelayCommand(() => ShowAbout());
         ShowWindowCommand = new RelayCommand(ShowWindow);
         ShowQuickSettingsCommand = new RelayCommand(ShowQuickSettings);
-        EmergencyHidReleaseCommand = new RelayCommand(EmergencyHidRelease);
         ShowMiniWidgetCommand = new RelayCommand(ShowMiniWidget);
         ResetMiniWidgetPositionCommand = new RelayCommand(ResetMiniWidgetPosition);
         CheckForUpdatesCommand = new RelayCommand(CheckForUpdates);
@@ -156,7 +134,7 @@ public class MainViewModel : ViewModelBase
             new PaletteCommand { Name = "Enable/Disable Display Sleep", Description = "Allow or prevent monitor sleep", Icon = "\uE7F4", Action = () => ToggleDisplaySleep() },
             new PaletteCommand { Name = "Toggle Heartbeat (F15)", Description = "Simulate F15 keypresses", Icon = "\uE945", Action = () => ToggleHeartbeat() },
             new PaletteCommand { Name = "Open Settings", Description = "View and modify Redball settings", Icon = "\uE713", Action = () => OpenSettings() },
-            new PaletteCommand { Name = "Open Diagnostics", Description = "System and HID diagnostics", Icon = "\uEBE1", Action = () => OpenDiagnostics() },
+            new PaletteCommand { Name = "Open Diagnostics", Description = "System diagnostics", Icon = "\uEBE1", Action = () => OpenDiagnostics() },
             new PaletteCommand { Name = "Exit Application", Description = "Close Redball completely", Icon = "\uE711", Action = () => ExitApplication() }
         };
 
@@ -263,7 +241,6 @@ public class MainViewModel : ViewModelBase
     public ICommand OpenAboutCommand { get; }
     public ICommand ShowWindowCommand { get; }
     public ICommand ShowQuickSettingsCommand { get; }
-    public ICommand EmergencyHidReleaseCommand { get; }
     public ICommand ShowMiniWidgetCommand { get; }
     public ICommand ResetMiniWidgetPositionCommand { get; }
     public ICommand CheckForUpdatesCommand { get; }
@@ -625,33 +602,17 @@ public class MainViewModel : ViewModelBase
 
     private async System.Threading.Tasks.Task InstallDriverAsync()
     {
-        Logger.Info("MainViewModel", $"Install driver command invoked with selection: {TypeThingDriverSelection}");
+        Logger.Info("MainViewModel", "Install driver command invoked for Service mode");
         
-        if (TypeThingDriverSelection == DriverSelection.Service)
+        // Service mode - install Windows Service
+        var result = await InstallServiceAsync();
+        if (result)
         {
-            // Service mode - install Windows Service instead of HID driver
-            var result = await InstallServiceAsync();
-            if (result)
-            {
-                NotificationService.Instance.ShowInfo("Service Installation", "Redball Input Service installed successfully. No restart required.");
-            }
-            else
-            {
-                NotificationService.Instance.ShowError("Service Installation", "Failed to install Redball Input Service. Ensure the application is running as Administrator.");
-            }
-            return;
-        }
-        
-        var driverResult = await System.Threading.Tasks.Task.Run(() => 
-            InterceptionInputService.Instance.InstallDriver(TypeThingDriverSelection));
-        
-        if (driverResult)
-        {
-            NotificationService.Instance.ShowInfo("Driver Installation", "Installation complete. Please restart your computer to apply the driver changes.");
+            NotificationService.Instance.ShowInfo("Service Installation", "Redball Input Service installed successfully. No restart required.");
         }
         else
         {
-            NotificationService.Instance.ShowError("Driver Installation", "Installation failed. Ensure the application is running as Administrator.");
+            NotificationService.Instance.ShowError("Service Installation", "Failed to install Redball Input Service. Ensure the application is running as Administrator.");
         }
     }
 

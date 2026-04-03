@@ -37,7 +37,6 @@ namespace Redball.Installer
                 ApplyRegistrySetting(session, registryRoot, policyKey, "BatteryAware", "REDBALL_ENABLEBATTERYAWARE");
                 ApplyRegistrySetting(session, registryRoot, policyKey, "NetworkAware", "REDBALL_ENABLENETWORKAWARE");
                 ApplyRegistrySetting(session, registryRoot, policyKey, "IdleDetection", "REDBALL_ENABLEIDLEDETECTION");
-                ApplyRegistrySetting(session, registryRoot, policyKey, "InstallHID", "REDBALL_INSTALLHID");
                 ApplyRegistrySetting(session, registryRoot, policyKey, "DisableDesktopShortcut", "REDBALL_DISABLEDESKTOPSHORTCUT");
                 ApplyRegistrySetting(session, registryRoot, policyKey, "DisableStartup", "REDBALL_DISABLESTARTUP");
                 ApplyRegistrySetting(session, registryRoot, policyKey, "EnableTelemetry", "REDBALL_ENABLETELEMETRY");
@@ -98,7 +97,7 @@ namespace Redball.Installer
             var props = new[] { 
                 "REDBALL_STARTMINIMIZED", "REDBALL_ENABLEBATTERYAWARE", 
                 "REDBALL_ENABLENETWORKAWARE", "REDBALL_ENABLEIDLEDETECTION",
-                "REDBALL_INSTALLHID", "REDBALL_DISABLEDESKTOPSHORTCUT",
+                "REDBALL_DISABLEDESKTOPSHORTCUT",
                 "REDBALL_DISABLESTARTUP", "REDBALL_ENABLETELEMETRY",
                 "REDBALL_CONFIGENCRYPTED"
             };

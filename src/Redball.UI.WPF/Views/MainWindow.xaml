@@ -71,11 +71,6 @@
                             <TextBlock Text="&#xE8D2;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Emergency HID Release" Command="{Binding EmergencyHidReleaseCommand}">
-                        <MenuItem.Icon>
-                            <TextBlock Text="&#xEA39;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
                     <Separator/>
 
                     <MenuItem Header="Open Logs" Command="{Binding OpenLogsCommand}">
@@ -316,9 +311,9 @@
                                         </Border>
                                         <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
                                             <StackPanel>
-                                                <TextBlock Text="HID Driver Status" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                                <TextBlock x:Name="SloHidStatusText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
-                                                <TextBlock x:Name="SloHidDetailsText" FontSize="11" Opacity="0.7"/>
+                                                <TextBlock Text="Service Status" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                <TextBlock x:Name="SloServiceStatusText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                                                <TextBlock x:Name="SloServiceDetailsText" FontSize="11" Opacity="0.7"/>
                                             </StackPanel>
                                         </Border>
                                     </UniformGrid>
@@ -871,16 +866,6 @@
                                                       Checked="MainSettingChanged" Unchecked="MainSettingChanged"
                                                       ToolTipService.ShowDuration="12000"
                                                       ToolTip="Register hotkeys at the system level for better reliability. Required for global hotkeys to work when app is not focused. May trigger antivirus warnings due to low-level keyboard hook."/>
-                                            <CheckBox x:Name="MainTypeThingHidSafeModeCheck" Content="Enable HID safe mode"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                      ToolTipService.ShowDuration="12000"
-                                                      ToolTip="Force TypeThing to use standard SendInput instead of HID driver. Enable this if HID driver causes keyboard issues or system instability. Automatically disables HID input mode."/>
-                                            <CheckBox x:Name="MainTypeThingHidAudioFeedbackCheck" Content="Enable HID audio feedback"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                      ToolTipService.ShowDuration="12000"
-                                                      ToolTip="Play subtle click sounds when HID driver captures or releases the keyboard. Useful for debugging HID state but may be distracting."/>
 
                                             <TextBlock Text="Input Mode" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
                                             <Grid>
@@ -891,17 +876,13 @@
                                                 <ComboBox x:Name="MainTypeThingInputModeCombo" Grid.Column="0" Style="{DynamicResource ModernComboBox}" Margin="0,0,8,10"
                                                           SelectionChanged="MainComboSettingChanged"
                                                           ToolTipService.ShowDuration="12000"
-                                                          ToolTip="Select input method: SendInput (standard Windows API), HID (driver-level for games/fullscreen apps), or Service (works over RDP without driver).">
-                                                    <ComboBoxItem Content="SendInput" ToolTip="Standard Windows input - works everywhere but some games may block it"/>
-                                                    <ComboBoxItem Content="HID" ToolTip="Driver-level input - bypasses game blockers but requires driver installation"/>
-                                                    <ComboBoxItem Content="Service" ToolTip="Windows Service input - works over RDP, no driver needed, requires service installation"/>
+                                                          ToolTip="Select input method: SendInput (standard Windows API) or Service (works over RDP).">
+                                                    <ComboBoxItem Content="SendInput" ToolTip="Standard Windows input - works everywhere"/>
+                                                    <ComboBoxItem Content="Service" ToolTip="Windows Service input - works over RDP, requires service installation"/>
                                                 </ComboBox>
                                                 <WrapPanel Grid.Column="1" Orientation="Horizontal">
-                                                    <Button x:Name="MainInstallHidDriverBtn" Content="Install/Uninstall Driver" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainInstallHidDriverBtn_Click"/>
-                                                    <Button x:Name="MainRepairHidStackBtn" Content="Repair HID Stack" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainRepairHidStackBtn_Click"/>
-                                                    <Button x:Name="MainResetHidStackBtn" Content="Reset HID" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainResetHidStackBtn_Click"/>
-                                                    <Button x:Name="MainCopyHidDiagnosticsBtn" Content="Copy Diagnostics" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainCopyHidDiagnosticsBtn_Click"/>
-                                                    <Button x:Name="MainEmergencyReleaseHidBtn" Content="Emergency Release" Style="{DynamicResource PrimaryButton}" Margin="0,0,8,8" Click="MainEmergencyReleaseHidBtn_Click"/>
+                                                    <Button x:Name="MainInstallServiceBtn" Content="Install Service" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainInstallServiceBtn_Click"/>
+                                                    <Button x:Name="MainUninstallServiceBtn" Content="Uninstall Service" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainUninstallServiceBtn_Click"/>
                                                 </WrapPanel>
                                             </Grid>
 
@@ -912,10 +893,6 @@
                                                        Margin="0,4,0,8"
                                                        TextWrapping="Wrap"
                                                        Visibility="Collapsed"/>
-                                            <StackPanel x:Name="MainHidTestPanel" Margin="0,4,0,4"/>
-                                            <Border x:Name="MainHidStatusIndicator" Width="10" Height="10" CornerRadius="5" Background="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,4"/>
-                                            <TextBlock x:Name="MainHidStatusText" FontWeight="Medium" Foreground="{DynamicResource ForegroundBrush}"/>
-                                            <TextBlock x:Name="MainHidDetailsText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
 
                                             <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
                                                        ToolTip="Global hotkey to start TypeThing typing. Click the box and press your desired key combination. Works even when Redball is not focused."/>

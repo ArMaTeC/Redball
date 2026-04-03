@@ -99,7 +99,6 @@
     <Property Id="WIXUI_FEATURETREE_MAINFEATURE_DESC" Value="Core Redball application with system tray utility, themes, and TypeThing functionality." />
     <Property Id="WIXUI_FEATURETREE_STARTUPFEATURE_DESC" Value="Automatically start Redball when you sign in to Windows." />
     <Property Id="WIXUI_FEATURETREE_CONFIGFEATURE_DESC" Value="Default behavior settings like minimize to tray, battery-aware mode, and idle detection." />
-    <Property Id="WIXUI_FEATURETREE_HIDFEATURE_DESC" Value="Attempt to install and activate Interception HID driver on first launch (requires admin approval)." />
 
     <Icon Id="RedballIcon" SourceFile="Redball.ico" />
     <Property Id="ARPPRODUCTICON" Value="RedballIcon" />
@@ -184,10 +183,6 @@
       <Feature Id="CfgIdleDetection" Title="Idle Detection" Description="Pause when user is idle" Level="2" AllowAdvertise="no">
         <ComponentGroupRef Id="CfgIdleDetectionComponents" />
       </Feature>
-    </Feature>
-
-    <Feature Id="HidFeature" Title="Install HID Driver (No-Restart Attempt)" Description="Attempt to install and activate HID input driver on first launch (requires admin)" Level="2" AllowAdvertise="no">
-      <ComponentGroupRef Id="CfgInstallHidDriverNoRestartComponents" />
     </Feature>
   </Package>
 
@@ -332,12 +327,6 @@
     <ComponentGroup Id="CfgIdleDetectionComponents" Directory="INSTALLFOLDER">
       <Component Id="CfgIdleDetectionComponent" Guid="90CC4352-C1F4-48D1-B60A-99729AF5EA7A">
         <RegistryValue Root="HKCU" Key="Software\Redball\InstallerDefaults" Name="IdleDetection" Type="integer" Value="1" KeyPath="yes" />
-      </Component>
-    </ComponentGroup>
-
-    <ComponentGroup Id="CfgInstallHidDriverNoRestartComponents" Directory="INSTALLFOLDER">
-      <Component Id="CfgInstallHidDriverNoRestartComponent" Guid="4C9A5F7E-6E8F-4B77-9A2F-3F1D5C2A9E11">
-        <RegistryValue Root="HKCU" Key="Software\Redball\InstallerDefaults" Name="InstallHidDriverNoRestart" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </ComponentGroup>
 

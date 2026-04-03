@@ -37,8 +37,8 @@ Current command-line arguments are maintenance-focused:
 
 | Argument | Description |
 | -------- | ----------- |
-| `--install-driver` | Runs elevated Interception driver installation flow |
-| `--install-driver-no-restart` | Runs elevated no-restart driver installation flow |
+| `--install-service` | Install the Redball Input Service for elevated typing |
+| `--uninstall-service` | Uninstall the Redball Input Service |
 
 ## First Run
 

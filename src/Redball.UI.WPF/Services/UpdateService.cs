@@ -112,6 +112,11 @@ public class FileHashCache
 public class UpdateService : IUpdateService
 {
     private static readonly HttpClient _httpClient;
+    private static DateTime _lastApiCall = DateTime.MinValue;
+    private static readonly TimeSpan MinTimeBetweenApiCalls = TimeSpan.FromSeconds(5);
+    private static List<GitHubRelease>? _cachedReleases;
+    private static DateTime _cacheExpiry = DateTime.MinValue;
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
     private readonly string _repoOwner;
     private readonly string _repoName;
     private readonly string _updateChannel;
@@ -150,8 +155,12 @@ public class UpdateService : IUpdateService
             "9yF8wUfUQKd9aLkFMMnpx3xMIVC6sAu9TdjRhdZPjOI=",
             // DigiCert Global Root G2 (backup/fallback)
             "cAajgxHdb7nHsbRxqmjDn5gEjBuuZKk6YaD8n1BS1DM=",
-            // Let's Encrypt ISRG Root X1 (community builds)
-            "C5+lpZ7tc/VwmBl/DUSJEPSdEjZPw5OLf6IpeigyCNw=",
+            // Let's Encrypt ISRG Root X1 (community builds) - CORRECTED HASH
+            "9Fk6HgfMnM7/vtnBHcUhg1b3gU2bIpSd50XmKZkMbGA=",
+            // Let's Encrypt R12 Intermediate (for *.github.io)
+            "ALUp8i2ObzHom0yteD763OkM0dJPVdAf0tkMO9fxm2U=",
+            // GitHub.io wildcard certificate (release-assets.githubusercontent.com)
+            "FgUf9sJof4ufBKwJ2tXxyWz4UnlW8a2leYfUVTuIguA=",
             // Sectigo Public Server Authentication Root E46 (GitHub's current root as of 2026)
             "EdsvlytFf4a/O+hCPwBXFFi46RKXqivCAF+mO7s+5Ng=",
             // Sectigo Public Server Authentication CA DV E36 (intermediate)
@@ -789,18 +798,75 @@ public class UpdateService : IUpdateService
 
     private async Task<List<GitHubRelease>> GetAllReleasesAsync(CancellationToken cancellationToken = default)
     {
+        // Check cache first
+        if (_cachedReleases != null && DateTime.UtcNow < _cacheExpiry)
+        {
+            Logger.Debug("UpdateService", "Using cached releases (valid for another " + 
+                (_cacheExpiry - DateTime.UtcNow).TotalMinutes.ToString("F1") + " min)");
+            return _cachedReleases;
+        }
+
+        // Rate limiting: ensure minimum time between API calls
+        var timeSinceLastCall = DateTime.UtcNow - _lastApiCall;
+        if (timeSinceLastCall < MinTimeBetweenApiCalls)
+        {
+            var delay = MinTimeBetweenApiCalls - timeSinceLastCall;
+            Logger.Debug("UpdateService", $"Rate limiting: waiting {delay.TotalSeconds:F1}s before API call");
+            await Task.Delay(delay, cancellationToken);
+        }
+
         var url = $"https://api.github.com/repos/{_repoOwner}/{_repoName}/releases";
         Logger.Debug("UpdateService", $"Fetching all releases from: {url}");
         
-        var response = await _httpClient.GetStringAsync(url, cancellationToken);
-        Logger.Debug("UpdateService", $"API response length: {response.Length} chars");
-        
-        var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(response, new JsonSerializerOptions
+        try
         {
-            PropertyNameCaseInsensitive = true
-        });
-        
-        return releases ?? new List<GitHubRelease>();
+            _lastApiCall = DateTime.UtcNow;
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+            
+            // Handle rate limiting specifically
+            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                var retryAfter = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromMinutes(5);
+                Logger.Warning("UpdateService", $"GitHub API rate limit exceeded. Retry after: {retryAfter.TotalMinutes:F1} min");
+                
+                // Open circuit breaker to prevent further calls
+                _consecutiveFailures = CircuitBreakerThreshold;
+                _circuitOpenUntil = DateTime.UtcNow + retryAfter;
+                
+                // Return cached data if available, even if expired
+                if (_cachedReleases != null)
+                {
+                    Logger.Info("UpdateService", "Returning stale cached releases due to rate limit");
+                    return _cachedReleases;
+                }
+                
+                throw new HttpRequestException($"GitHub API rate limit exceeded. Please try again after {retryAfter.TotalMinutes:F0} minutes.");
+            }
+            
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            Logger.Debug("UpdateService", $"API response length: {content.Length} chars");
+            
+            var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            
+            _cachedReleases = releases ?? new List<GitHubRelease>();
+            _cacheExpiry = DateTime.UtcNow + CacheDuration;
+            
+            Logger.Info("UpdateService", $"Cached {releases?.Count ?? 0} releases for {CacheDuration.TotalMinutes:F0} minutes");
+            return _cachedReleases;
+        }
+        catch (HttpRequestException ex) when (ex.Message.Contains("rate limit"))
+        {
+            throw;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("UpdateService", $"HTTP error fetching releases: {ex.Message}");
+            throw;
+        }
     }
 
     /// <summary>

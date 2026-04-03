@@ -293,15 +293,6 @@ public partial class MainWindow : Window
     protected override void OnActivated(EventArgs e)
     {
         base.OnActivated(e);
-        // Perform HID health check when window regains focus
-        try
-        {
-            InterceptionInputService.Instance.PerformHealthCheck();
-        }
-        catch (Exception ex)
-        {
-            Logger.Debug("MainWindow", $"HID health check on activation failed: {ex.Message}");
-        }
     }
 
     private void ToggleWindowState()

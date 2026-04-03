@@ -20,8 +20,8 @@ jobs:
     steps:
     - uses: actions/first-interaction@v3
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        issue-message: |
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        issue_message: |
           👋 Welcome to Redball!
 
           Thank you for opening your first issue. To help us assist you better:
@@ -30,7 +30,7 @@ jobs:
           - If it's a bug, check if it exists in the [latest release](https://github.com/${{ github.repository }}/releases)
 
           A maintainer will review this soon. Thanks for helping improve Redball!
-        pr-message: |
+        pr_message: |
           🎉 Welcome and thank you for your first pull request!
 
           The Redball team appreciates your contribution. Here's what happens next:

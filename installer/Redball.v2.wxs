@@ -45,7 +45,6 @@
     <Property Id="REDBALL_ENABLEBATTERYAWARE" Secure="yes" />
     <Property Id="REDBALL_ENABLENETWORKAWARE" Secure="yes" />
     <Property Id="REDBALL_ENABLEIDLEDETECTION" Secure="yes" />
-    <Property Id="REDBALL_INSTALLHID" Secure="yes" />
     <Property Id="REDBALL_DISABLEDESKTOPSHORTCUT" Secure="yes" />
     <Property Id="REDBALL_DISABLESTARTUP" Secure="yes" />
     <Property Id="REDBALL_ENABLETELEMETRY" Secure="yes" />
@@ -171,10 +170,6 @@
       <Feature Id="CfgIdleDetection" Title="Idle Detection" Description="Pause when user is idle" Level="2" AllowAdvertise="no">
         <ComponentGroupRef Id="CfgIdleDetectionComponents" />
       </Feature>
-    </Feature>
-    
-    <Feature Id="HidFeature" Title="HID Driver Support" Description="Install and configure HID input driver for advanced TypeThing functionality" Level="2" AllowAdvertise="no">
-      <ComponentGroupRef Id="HidComponents" />
     </Feature>
     
   </Package>
@@ -340,14 +335,6 @@
     <ComponentGroup Id="CfgIdleDetectionComponents" Directory="INSTALLFOLDER">
       <Component Id="CfgIdleDetectionComponent" Guid="90CC4352-C1F4-48D1-B60A-99729AF5EA7A">
         <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\Defaults" Name="IdleDetection" Type="integer" Value="1" KeyPath="yes" />
-      </Component>
-    </ComponentGroup>
-    
-    <!-- HID Driver Components -->
-    <ComponentGroup Id="HidComponents" Directory="InteropFolder">
-      <Component Id="HidDriverComponent" Guid="4C9A5F7E-6E8F-4B77-9A2F-3F1D5C2A9E11">
-        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\HID" Name="DriverInstalled" Type="integer" Value="1" KeyPath="yes" />
-        <RegistryValue Root="HKCU" Key="Software\ArMaTeC\Redball\HID" Name="InstallAttempted" Type="integer" Value="0" />
       </Component>
     </ComponentGroup>
     
