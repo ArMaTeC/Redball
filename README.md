@@ -141,11 +141,6 @@ Settings are stored in `%LocalAppData%\Redball\UserData\Redball.json`. A default
     "ScheduleStopTime": "18:00",
     "ScheduleDays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
     "PresentationModeDetection": false,
-    "PomodoroEnabled": false,
-    "PomodoroFocusMinutes": 25,
-    "PomodoroBreakMinutes": 5,
-    "PomodoroLongBreakMinutes": 15,
-    "PomodoroLongBreakInterval": 4,
     "ProcessWatcherEnabled": false,
     "ProcessWatcherTarget": "",
     "PauseOnScreenLock": false,
@@ -161,105 +156,93 @@ Settings are stored in `%LocalAppData%\Redball\UserData\Redball.json`. A default
 
 ### General & UI
 
-| Setting | Description | Default |
-| ------- | ----------- | ------- |
-| `HeartbeatSeconds` | Interval between keep-awake refreshes | `59` |
-| `PreventDisplaySleep` | Keep the display on in addition to preventing system sleep | `true` |
-| `UseHeartbeatKeypress` | Send invisible keypresses to prevent app-level idle detection | `true` |
-| `HeartbeatInputMode` | Which function key to send (`F13`, `F14`, `F15`, `F16`) | `F15` |
-| `DefaultDuration` | Default timer duration in minutes | `60` |
-| `Theme` | UI theme name (see theme list above) | `Dark` |
-| `Locale` | Display language (`en`, `es`, `fr`, `de`, `bl`) | `en` |
-| `MinimizeOnStart` | Start minimized to system tray | `false` |
-| `MinimizeToTray` | Minimize to tray instead of taskbar | `false` |
-| `ConfirmOnExit` | Show confirmation dialog when exiting | `true` |
-| `ShowNotifications` | Enable tray/toast notifications | `true` |
-| `SoundNotifications` | Play sound with notifications | `false` |
-| `NotificationMode` | Notification filter (`All`, `Important`, `Errors`, `Silent`) | `All` |
-| `VerboseLogging` | Record extra diagnostic log details | `false` |
-| `MaxLogSizeMB` | Log rotation threshold in MB | `10` |
-| `AutoExitOnComplete` | Exit automatically when a timed session finishes | `false` |
+| Setting                | Description                                                   | Default |
+| ---------------------- | ------------------------------------------------------------- | ------- |
+| `HeartbeatSeconds`     | Interval between keep-awake refreshes                         | `59`    |
+| `PreventDisplaySleep`  | Keep the display on in addition to preventing system sleep    | `true`  |
+| `UseHeartbeatKeypress` | Send invisible keypresses to prevent app-level idle detection | `true`  |
+| `HeartbeatInputMode`   | Which function key to send (`F13`, `F14`, `F15`, `F16`)       | `F15`   |
+| `DefaultDuration`      | Default timer duration in minutes                             | `60`    |
+| `Theme`                | UI theme name (see theme list above)                          | `Dark`  |
+| `Locale`               | Display language (`en`, `es`, `fr`, `de`, `bl`)               | `en`    |
+| `MinimizeOnStart`      | Start minimized to system tray                                | `false` |
+| `MinimizeToTray`       | Minimize to tray instead of taskbar                           | `false` |
+| `ConfirmOnExit`        | Show confirmation dialog when exiting                         | `true`  |
+| `ShowNotifications`    | Enable tray/toast notifications                               | `true`  |
+| `SoundNotifications`   | Play sound with notifications                                 | `false` |
+| `NotificationMode`     | Notification filter (`All`, `Important`, `Errors`, `Silent`)  | `All`   |
+| `VerboseLogging`       | Record extra diagnostic log details                           | `false` |
+| `MaxLogSizeMB`         | Log rotation threshold in MB                                  | `10`    |
+| `AutoExitOnComplete`   | Exit automatically when a timed session finishes              | `false` |
 
 ### Smart Features
 
-| Setting | Description | Default |
-| ------- | ----------- | ------- |
-| `BatteryAware` | Auto-pause when battery is low | `false` |
-| `BatteryThreshold` | Battery % below which to auto-pause | `20` |
-| `NetworkAware` | Auto-pause when network disconnects | `false` |
-| `IdleDetection` | Auto-pause after user inactivity | `false` |
-| `IdleThreshold` | Minutes of inactivity before auto-pause | `30` |
-| `ScheduleEnabled` | Enable daily scheduled activation | `false` |
-| `ScheduleStartTime` | Time to auto-start (HH:mm) | `09:00` |
-| `ScheduleStopTime` | Time to auto-stop (HH:mm) | `18:00` |
-| `ScheduleDays` | Days of the week the schedule applies | Weekdays |
-| `PresentationModeDetection` | Auto-activate for PowerPoint/Teams presentations | `false` |
-| `PauseOnScreenLock` | Auto-pause when the screen is locked | `false` |
-| `VpnAutoKeepAwake` | Auto-activate when VPN is connected | `false` |
-| `ProcessWatcherEnabled` | Auto-activate when target process is running | `false` |
-| `ProcessWatcherTarget` | Process name to watch (e.g. `code.exe`) | `""` |
-| `ThermalProtectionEnabled` | Auto-pause when CPU temperature is too high | `false` |
-| `ThermalThreshold` | CPU temperature threshold (°C) | `85` |
-| `AppRulesEnabled` | Enable app-specific keep-awake/pause rules | `false` |
-| `KeepAwakeApps` | Apps that trigger keep-awake (one per line) | `""` |
-| `PauseApps` | Apps that trigger a pause (one per line) | `""` |
-| `PowerPlanAutoSwitch` | Auto-switch Windows power plan | `false` |
-| `WifiProfileSwitchEnabled` | Switch profiles based on WiFi network | `false` |
-| `WifiProfileMappings` | WiFi-to-profile mappings (`WiFiName=Profile` per line) | `""` |
-| `RestartReminderEnabled` | Remind to restart after N days | `false` |
-| `RestartReminderDays` | Days before restart reminder | `7` |
-
-### Pomodoro
-
-| Setting | Description | Default |
-| ------- | ----------- | ------- |
-| `PomodoroEnabled` | Enable the Pomodoro timer | `false` |
-| `PomodoroFocusMinutes` | Focus session duration | `25` |
-| `PomodoroBreakMinutes` | Short break duration | `5` |
-| `PomodoroLongBreakMinutes` | Long break duration | `15` |
-| `PomodoroLongBreakInterval` | Focus sessions before a long break | `4` |
-| `PomodoroAutoStart` | Auto-start next session | `true` |
-| `PomodoroKeepAwakeDuringBreak` | Stay awake during breaks | `false` |
+| Setting                     | Description                                            | Default  |
+| --------------------------- | ------------------------------------------------------ | -------- |
+| `BatteryAware`              | Auto-pause when battery is low                         | `false`  |
+| `BatteryThreshold`          | Battery % below which to auto-pause                    | `20`     |
+| `NetworkAware`              | Auto-pause when network disconnects                    | `false`  |
+| `IdleDetection`             | Auto-pause after user inactivity                       | `false`  |
+| `IdleThreshold`             | Minutes of inactivity before auto-pause                | `30`     |
+| `ScheduleEnabled`           | Enable daily scheduled activation                      | `false`  |
+| `ScheduleStartTime`         | Time to auto-start (HH:mm)                             | `09:00`  |
+| `ScheduleStopTime`          | Time to auto-stop (HH:mm)                              | `18:00`  |
+| `ScheduleDays`              | Days of the week the schedule applies                  | Weekdays |
+| `PresentationModeDetection` | Auto-activate for PowerPoint/Teams presentations       | `false`  |
+| `PauseOnScreenLock`         | Auto-pause when the screen is locked                   | `false`  |
+| `VpnAutoKeepAwake`          | Auto-activate when VPN is connected                    | `false`  |
+| `ProcessWatcherEnabled`     | Auto-activate when target process is running           | `false`  |
+| `ProcessWatcherTarget`      | Process name to watch (e.g. `code.exe`)                | `""`     |
+| `ThermalProtectionEnabled`  | Auto-pause when CPU temperature is too high            | `false`  |
+| `ThermalThreshold`          | CPU temperature threshold (°C)                         | `85`     |
+| `AppRulesEnabled`           | Enable app-specific keep-awake/pause rules             | `false`  |
+| `KeepAwakeApps`             | Apps that trigger keep-awake (one per line)            | `""`     |
+| `PauseApps`                 | Apps that trigger a pause (one per line)               | `""`     |
+| `PowerPlanAutoSwitch`       | Auto-switch Windows power plan                         | `false`  |
+| `WifiProfileSwitchEnabled`  | Switch profiles based on WiFi network                  | `false`  |
+| `WifiProfileMappings`       | WiFi-to-profile mappings (`WiFiName=Profile` per line) | `""`     |
+| `RestartReminderEnabled`    | Remind to restart after N days                         | `false`  |
+| `RestartReminderDays`       | Days before restart reminder                           | `7`      |
 
 ### TypeThing (Clipboard Typer)
 
-| Setting | Description | Default |
-| ------- | ----------- | ------- |
-| `TypeThingEnabled` | Enable the clipboard typing feature | `true` |
-| `TypeThingMinDelayMs` | Minimum delay between keystrokes (ms) | `30` |
-| `TypeThingMaxDelayMs` | Maximum delay between keystrokes (ms) | `120` |
-| `TypeThingStartDelaySec` | Countdown seconds before typing begins | `3` |
-| `TypeThingStartHotkey` | Global hotkey to start typing | `Ctrl+Shift+V` |
-| `TypeThingStopHotkey` | Global hotkey to stop typing | `Ctrl+Shift+X` |
-| `TypeThingTheme` | Settings dialog theme (`light`, `dark`, `hacker`) | `dark` |
-| `TypeThingAddRandomPauses` | Add occasional longer pauses for realism | `true` |
-| `TypeThingRandomPauseChance` | Chance (%) of a random pause per character | `5` |
-| `TypeThingRandomPauseMaxMs` | Maximum random pause duration (ms) | `500` |
-| `TypeThingTypeNewlines` | Press Enter when a newline is encountered | `true` |
-| `TypeThingNotifications` | Show tray notifications for typing events | `true` |
-| `TypeThingInputMode` | Input method (`SendInput` or `Interception`) | `SendInput` |
-| `TypeThingTtsEnabled` | Enable text-to-speech while typing | `false` |
+| Setting                      | Description                                       | Default        |
+| ---------------------------- | ------------------------------------------------- | -------------- |
+| `TypeThingEnabled`           | Enable the clipboard typing feature               | `true`         |
+| `TypeThingMinDelayMs`        | Minimum delay between keystrokes (ms)             | `30`           |
+| `TypeThingMaxDelayMs`        | Maximum delay between keystrokes (ms)             | `120`          |
+| `TypeThingStartDelaySec`     | Countdown seconds before typing begins            | `3`            |
+| `TypeThingStartHotkey`       | Global hotkey to start typing                     | `Ctrl+Shift+V` |
+| `TypeThingStopHotkey`        | Global hotkey to stop typing                      | `Ctrl+Shift+X` |
+| `TypeThingTheme`             | Settings dialog theme (`light`, `dark`, `hacker`) | `dark`         |
+| `TypeThingAddRandomPauses`   | Add occasional longer pauses for realism          | `true`         |
+| `TypeThingRandomPauseChance` | Chance (%) of a random pause per character        | `5`            |
+| `TypeThingRandomPauseMaxMs`  | Maximum random pause duration (ms)                | `500`          |
+| `TypeThingTypeNewlines`      | Press Enter when a newline is encountered         | `true`         |
+| `TypeThingNotifications`     | Show tray notifications for typing events         | `true`         |
+| `TypeThingInputMode`         | Input method (`SendInput` or `Interception`)      | `SendInput`    |
+| `TypeThingTtsEnabled`        | Enable text-to-speech while typing                | `false`        |
 
 ### Updates
 
-| Setting | Description | Default |
-| ------- | ----------- | ------- |
-| `AutoUpdateCheckEnabled` | Check for updates automatically | `true` |
-| `AutoUpdateCheckIntervalMinutes` | Minutes between automatic update checks | `120` |
-| `UpdateChannel` | Release channel (`stable`, `beta`, `canary`) | `stable` |
-| `VerifyUpdateSignature` | Require valid digital signature on updates | `true` |
+| Setting                          | Description                                  | Default  |
+| -------------------------------- | -------------------------------------------- | -------- |
+| `AutoUpdateCheckEnabled`         | Check for updates automatically              | `true`   |
+| `AutoUpdateCheckIntervalMinutes` | Minutes between automatic update checks      | `120`    |
+| `UpdateChannel`                  | Release channel (`stable`, `beta`, `canary`) | `stable` |
+| `VerifyUpdateSignature`          | Require valid digital signature on updates   | `true`   |
 
 ### Advanced
 
-| Setting | Description | Default |
-| ------- | ----------- | ------- |
-| `EnableTelemetry` | Opt-in anonymous usage telemetry (logged locally) | `false` |
-| `EnablePerformanceMetrics` | Track CPU, memory, and handle metrics | `false` |
-| `WebApiEnabled` | Enable local REST API for remote control | `false` |
-| `WebApiPort` | Port for the local Web API | `48080` |
-| `EncryptConfig` | Encrypt Redball.json with DPAPI (default: `true`) | `true` |
-| `StrictUpdateTrustMode` | Enforce strict update package validation | `false` |
-| `MiniWidgetPreset` | Floating widget preset (`Focus`, `Meeting`, `BatterySafe`) | `Custom` |
+| Setting                    | Description                                                | Default  |
+| -------------------------- | ---------------------------------------------------------- | -------- |
+| `EnableTelemetry`          | Opt-in anonymous usage telemetry (logged locally)          | `false`  |
+| `EnablePerformanceMetrics` | Track CPU, memory, and handle metrics                      | `false`  |
+| `WebApiEnabled`            | Enable local REST API for remote control                   | `false`  |
+| `WebApiPort`               | Port for the local Web API                                 | `48080`  |
+| `EncryptConfig`            | Encrypt Redball.json with DPAPI (default: `true`)          | `true`   |
+| `StrictUpdateTrustMode`    | Enforce strict update package validation                   | `false`  |
+| `MiniWidgetPreset`         | Floating widget preset (`Focus`, `Meeting`, `BatterySafe`) | `Custom` |
 
 ## Usage
 
@@ -267,31 +250,31 @@ Settings are stored in `%LocalAppData%\Redball\UserData\Redball.json`. A default
 
 Right-click the red ball icon in your system tray:
 
-| Menu Item | Description |
-| --------- | ----------- |
-| **Status** | Read-only status line (active state, display, F15, timer) |
-| **Pause / Resume Keep-Awake** | Toggle the keep-awake state |
-| **Prevent Display Sleep** | Toggle display sleep prevention |
-| **Use F15 Heartbeat** | Toggle invisible F15 keypresses |
-| **Stay Awake For →** | Choose duration (15 / 30 / 60 / 120 min) |
-| **Stay Awake Until Paused** | Run indefinitely |
-| **Battery-Aware Mode** | Toggle auto-pause on low battery |
-| **Start with Windows** | Toggle startup shortcut |
-| **Network-Aware Mode** | Toggle auto-pause on disconnect |
-| **Idle Detection** | Toggle idle-based auto-pause |
-| **TypeThing →** | Clipboard typer submenu (Type Clipboard, Stop, Status, Settings) |
-| **Settings...** | Open the tabbed settings dialog |
-| **About...** | Version info and update checker |
-| **Exit** | Close Redball gracefully |
+| Menu Item                     | Description                                                      |
+| ----------------------------- | ---------------------------------------------------------------- |
+| **Status**                    | Read-only status line (active state, display, F15, timer)        |
+| **Pause / Resume Keep-Awake** | Toggle the keep-awake state                                      |
+| **Prevent Display Sleep**     | Toggle display sleep prevention                                  |
+| **Use F15 Heartbeat**         | Toggle invisible F15 keypresses                                  |
+| **Stay Awake For →**          | Choose duration (15 / 30 / 60 / 120 min)                         |
+| **Stay Awake Until Paused**   | Run indefinitely                                                 |
+| **Battery-Aware Mode**        | Toggle auto-pause on low battery                                 |
+| **Start with Windows**        | Toggle startup shortcut                                          |
+| **Network-Aware Mode**        | Toggle auto-pause on disconnect                                  |
+| **Idle Detection**            | Toggle idle-based auto-pause                                     |
+| **TypeThing →**               | Clipboard typer submenu (Type Clipboard, Stop, Status, Settings) |
+| **Settings...**               | Open the tabbed settings dialog                                  |
+| **About...**                  | Version info and update checker                                  |
+| **Exit**                      | Close Redball gracefully                                         |
 
 ### Keyboard Shortcuts
 
-| Main UI | Description |
-| ------- | ----------- |
-| **Title Bar** | Custom chrome with app icon, title, subtitle, and window controls (minimize, maximize, close) |
-| **Navigation Panel** | Left-side navigation with Home, Analytics, Metrics, Diagnostics, Settings, Behavior, Smart Features, TypeThing, Pomodoro, and Updates sections |
-| **Content Area** | Dynamic content that changes based on selected navigation item |
-| **Tray Icon** | Right-click for quick controls; left-click to toggle pause/resume |
+| Main UI              | Description                                                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Title Bar**        | Custom chrome with app icon, title, subtitle, and window controls (minimize, maximize, close)                                        |
+| **Navigation Panel** | Left-side navigation with Home, Analytics, Metrics, Diagnostics, Settings, Behavior, Smart Features, TypeThing, and Updates sections |
+| **Content Area**     | Dynamic content that changes based on selected navigation item                                                                       |
+| **Tray Icon**        | Right-click for quick controls; left-click to toggle pause/resume                                                                    |
 
 ## Command Line Arguments
 
@@ -305,14 +288,14 @@ The WPF application supports the following command-line arguments:
 .\Redball.UI.WPF.exe -config "C:\Tools\Redball.json"
 ```
 
-| Argument | Description |
-| -------- | ----------- |
-| `-minimized` | Start minimized to system tray |
-| `-config <path>` | Specify a custom config file path |
-| `--install-driver` | Install Interception driver and prompt reboot |
-| `--install-driver-no-restart` | Install and attempt to restart HIDs |
-| `--uninstall-driver` | Uninstall Interception driver |
-| `-help` | Show help information |
+| Argument                      | Description                                   |
+| ----------------------------- | --------------------------------------------- |
+| `-minimized`                  | Start minimized to system tray                |
+| `-config <path>`              | Specify a custom config file path             |
+| `--install-driver`            | Install Interception driver and prompt reboot |
+| `--install-driver-no-restart` | Install and attempt to restart HIDs           |
+| `--uninstall-driver`          | Uninstall Interception driver                 |
+| `-help`                       | Show help information                         |
 
 ## Settings GUI
 
@@ -326,7 +309,6 @@ The main window provides a left-side navigation panel with dedicated sections:
 - **Behavior** — Display sleep prevention, heartbeat key, default duration, auto-exit
 - **Smart Features** — Battery, network, idle, schedule, presentation, process watcher, VPN, thermal, session lock, app rules
 - **TypeThing** — Enable/disable, typing speed, hotkeys, random pauses, newlines, TTS
-- **Pomodoro** — Focus/break timer with configurable intervals
 - **Updates** — Update channel, auto-check interval, signature verification
 
 Changes are saved to `Redball.json` when you click **Apply Settings**.
@@ -339,37 +321,36 @@ Redball v3.0 is implemented as a pure C# WPF application. The core functionality
 
 ### Core Services
 
-| Service | Purpose |
-| --------- | --------- |
-| `KeepAwakeService` | Core keep-awake engine with `SetThreadExecutionState` and heartbeat |
-| `BatteryMonitorService` | WMI-based battery monitoring with auto-pause/resume |
-| `NetworkMonitorService` | Network connectivity monitoring |
-| `IdleDetectionService` | User idle detection via `GetLastInputInfo` |
-| `ScheduleService` | Time/day-based scheduled activation |
-| `PresentationModeService` | PowerPoint/Teams/Windows presentation detection |
-| `CalendarIntegrationService` | JSON calendar meeting auto-activation |
-| `PomodoroService` | Focus/break cycle timer |
-| `ProcessWatcherService` | Auto-activate when target process is running |
-| `SessionLockService` | Pause on screen lock |
-| `TemperatureMonitorService` | CPU thermal protection |
-| `PowerPlanService` | Automatic Windows power plan switching |
-| `ProfileService` | WiFi-based configuration profiles |
-| `ScheduledRestartService` | Uptime-based restart reminders |
-| `SessionStateService` | Save/restore session state |
-| `SessionStatsService` | Session statistics tracking |
-| `AnalyticsService` | Local analytics and feature tracking |
-| `CloudAnalyticsService` | Opt-in remote analytics collection |
-| `DataExportService` | GDPR-style user data bundling |
-| `HealthCheckService` | Application self-monitoring |
-| `PluginService` | Plugin loading and management |
-| `WebApiService` | Local REST API for remote control |
-| `TextToSpeechService` | TTS for TypeThing |
-| `ForegroundAppService` | Track active foreground application |
-| `SecurityService` | Security, code signing, and SBOM |
-| `InterceptionInputService` | Driver-level (HID) input simulation |
-| `TemplateService` | Named text templates for TypeThing |
-| `ServiceLocator` | Central DI container management |
-| `Logger` | Structured logging with rotation |
+| Service                      | Purpose                                                             |
+| ---------------------------- | ------------------------------------------------------------------- |
+| `KeepAwakeService`           | Core keep-awake engine with `SetThreadExecutionState` and heartbeat |
+| `BatteryMonitorService`      | WMI-based battery monitoring with auto-pause/resume                 |
+| `NetworkMonitorService`      | Network connectivity monitoring                                     |
+| `IdleDetectionService`       | User idle detection via `GetLastInputInfo`                          |
+| `ScheduleService`            | Time/day-based scheduled activation                                 |
+| `PresentationModeService`    | PowerPoint/Teams/Windows presentation detection                     |
+| `CalendarIntegrationService` | JSON calendar meeting auto-activation                               |
+| `ProcessWatcherService`      | Auto-activate when target process is running                        |
+| `SessionLockService`         | Pause on screen lock                                                |
+| `TemperatureMonitorService`  | CPU thermal protection                                              |
+| `PowerPlanService`           | Automatic Windows power plan switching                              |
+| `ProfileService`             | WiFi-based configuration profiles                                   |
+| `ScheduledRestartService`    | Uptime-based restart reminders                                      |
+| `SessionStateService`        | Save/restore session state                                          |
+| `SessionStatsService`        | Session statistics tracking                                         |
+| `AnalyticsService`           | Local analytics and feature tracking                                |
+| `CloudAnalyticsService`      | Opt-in remote analytics collection                                  |
+| `DataExportService`          | GDPR-style user data bundling                                       |
+| `HealthCheckService`         | Application self-monitoring                                         |
+| `PluginService`              | Plugin loading and management                                       |
+| `WebApiService`              | Local REST API for remote control                                   |
+| `TextToSpeechService`        | TTS for TypeThing                                                   |
+| `ForegroundAppService`       | Track active foreground application                                 |
+| `SecurityService`            | Security, code signing, and SBOM                                    |
+| `InterceptionInputService`   | Driver-level (HID) input simulation                                 |
+| `TemplateService`            | Named text templates for TypeThing                                  |
+| `ServiceLocator`             | Central DI container management                                     |
+| `Logger`                     | Structured logging with rotation                                    |
 
 ### Usage Example
 
@@ -493,7 +474,6 @@ src/Redball.UI.WPF/
 │   ├── IdleDetectionService.cs       # GetLastInputInfo idle detection
 │   ├── ScheduleService.cs            # Time/day scheduled activation
 │   ├── PresentationModeService.cs    # PowerPoint/Teams/Windows detection
-│   ├── PomodoroService.cs            # Focus/break cycle timer
 │   ├── ProcessWatcherService.cs      # Process-based auto-activation
 │   ├── SessionLockService.cs         # Screen lock detection
 │   ├── TemperatureMonitorService.cs  # CPU thermal protection
@@ -644,7 +624,6 @@ dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 - [x] Comprehensive build system (`build.ps1`)
 - [x] Version management script (`Bump-Version.ps1`)
 - [x] Node.js 24-compatible GitHub Actions (v5)
-- [x] Pomodoro focus/break timer
 - [x] Process watcher (auto-activate for specific processes)
 - [x] Session lock detection (pause on screen lock)
 - [x] VPN auto keep-awake

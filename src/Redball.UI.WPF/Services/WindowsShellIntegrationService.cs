@@ -323,10 +323,6 @@ public class WindowsShellIntegrationService
                 case "type":
                     // Open TypeThing
                     break;
-                case "pomodoro":
-                case "focus":
-                    // Start Pomodoro session
-                    break;
             }
         }
     }

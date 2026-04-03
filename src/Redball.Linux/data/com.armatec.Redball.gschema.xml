@@ -28,26 +28,6 @@
       <description>Seconds between automatic keypresses</description>
     </key>
     
-    <key name="pomodoro-enabled" type="b">
-      <default>false</default>
-      <summary>Pomodoro timer enabled</summary>
-      <description>Enable Pomodoro productivity timer</description>
-    </key>
-    
-    <key name="pomodoro-work-minutes" type="i">
-      <default>25</default>
-      <range min="1" max="60"/>
-      <summary>Work session length</summary>
-      <description>Minutes for each work session</description>
-    </key>
-    
-    <key name="pomodoro-break-minutes" type="i">
-      <default>5</default>
-      <range min="1" max="30"/>
-      <summary>Break length</summary>
-      <description>Minutes for each break</description>
-    </key>
-    
     <key name="battery-aware" type="b">
       <default>true</default>
       <summary>Battery aware mode</summary>

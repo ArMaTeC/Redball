@@ -499,8 +499,7 @@ public class TaskFunnelService
             {
                 new() { Id = "activate_keepawake", Name = "Activate Keep-Awake", Order = 1, TargetDuration = TimeSpan.FromSeconds(5), UIElementId = "ActivateButton" },
                 new() { Id = "configure_duration", Name = "Configure Duration", Order = 2, TargetDuration = TimeSpan.FromSeconds(10), UIElementId = "DurationCombo" },
-                new() { Id = "enable_pomodoro", Name = "Enable Pomodoro (Optional)", Order = 3, TargetDuration = TimeSpan.FromSeconds(10), UIElementId = "PomodoroToggle" },
-                new() { Id = "minimize_to_tray", Name = "Minimize to Tray", Order = 4, TargetDuration = TimeSpan.FromSeconds(5), UIElementId = "MinimizeButton" }
+                new() { Id = "minimize_to_tray", Name = "Minimize to Tray", Order = 3, TargetDuration = TimeSpan.FromSeconds(5), UIElementId = "MinimizeButton" }
             },
             SuccessCriteria = "Keep-awake active and user returned to work"
         });

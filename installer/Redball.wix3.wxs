@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="Redball" Language="1033" Version="2.1.443.0" Manufacturer="ArMaTeC" UpgradeCode="A7A9B089-9D1D-4F8A-86DB-6FE89B6F99B0">
+    <Package InstallerVersion="2.1.443.0" Compressed="yes" InstallScope="perUser" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." Schedule="afterInstallInitialize" />
+    <Property Id="ARPCOMMENTS" Value="Keep-awake utility for Windows" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/ArMaTeC/Redball" />
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="LocalAppDataFolder">
+        <Directory Id="INSTALLFOLDER" Name="Redball">
+          <Component Id="Redball.exe" Guid="B5C1A4F2-3E8D-4A9B-9C2D-1F6E5A3B7D4E">
+            <File Id="Redball.exe" Source="Redball.UI.WPF.exe" KeyPath="yes">
+              <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="Redball" WorkingDirectory="INSTALLFOLDER" Icon="RedballIcon.exe" Advertise="yes" />
+            </File>
+          </Component>
+          <Component Id="Redball.dll" Guid="A3D2B8C1-5F4E-4B7A-9C1D-2E5F8A6B3C9D">
+            <File Id="Redball.dll" Source="Redball.UI.WPF.dll" KeyPath="yes" />
+          </Component>
+          <Component Id="Redball.deps.json" Guid="C7E9F4A2-8B3D-4C5E-1F2A-9B8C7D6E5F4A">
+            <File Id="Redball.deps.json" Source="Redball.UI.WPF.deps.json" KeyPath="yes" />
+          </Component>
+          <Component Id="Redball.runtimeconfig.json" Guid="D8F1A5B3-9C4E-5D6F-2A3B-0C9D8E7F6A5B">
+            <File Id="Redball.runtimeconfig.json" Source="Redball.UI.WPF.runtimeconfig.json" KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder" Name="Programs" />
+    </Directory>
+    <Feature Id="ProductFeature" Title="Redball" Level="1">
+      <ComponentRef Id="Redball.exe" />
+      <ComponentRef Id="Redball.dll" />
+      <ComponentRef Id="Redball.deps.json" />
+      <ComponentRef Id="Redball.runtimeconfig.json" />
+    </Feature>
+    <Icon Id="RedballIcon.exe" SourceFile="redball.ico" />
+    <Property Id="ARPPRODUCTICON" Value="RedballIcon.exe" />
+  </Product>
+</Wix>

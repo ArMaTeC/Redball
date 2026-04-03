@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  
+  <Package Name="Redball"
+           Manufacturer="ArMaTeC"
+           Version="$(var.ProductVersion)"
+           UpgradeCode="A7A9B089-9D1D-4F8A-86DB-6FE89B6F99B0"
+           Scope="perUser"
+           Compressed="yes"
+           InstallerVersion="200">
+    
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                  Schedule="afterInstallInitialize" />
+    
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+    
+    <Property Id="ARPCOMMENTS" Value="Keep-awake utility for Windows" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/ArMaTeC/Redball" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/ArMaTeC/Redball/releases" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/ArMaTeC/Redball/issues" />
+    
+    <Property Id="ALLUSERS" Value="2" />
+    <Property Id="MSIINSTALLPERUSER" Value="1" />
+    
+    <UI>
+      <ui:WixUI Id="WixUI_InstallDir" />
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="1" />
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="1" />
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="1" Condition="NOT WixUI_InstallDir_ChangeDir" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Order="1" Condition="NOT WixUI_InstallDir_ChangeDir" />
+    </UI>
+    
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="Redball">
+        <Component Id="Redball.exe" Guid="B5C1A4F2-3E8D-4A9B-9C2D-1F6E5A3B7D4E">
+          <File Id="Redball.exe" Source="$(var.PublishDir)\Redball.UI.WPF.exe" KeyPath="yes">
+            <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="Redball" 
+                      WorkingDirectory="INSTALLFOLDER" Icon="Redball.exe" Advertise="yes" />
+            <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="Redball" 
+                      WorkingDirectory="INSTALLFOLDER" Icon="Redball.exe" Advertise="yes" />
+          </File>
+        </Component>
+        <Component Id="Redball.dll" Guid="A3D2B8C1-5F4E-4B7A-9C1D-2E5F8A6B3C9D">
+          <File Id="Redball.dll" Source="$(var.PublishDir)\Redball.UI.WPF.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="Redball.deps.json" Guid="C7E9F4A2-8B3D-4C5E-1F2A-9B8C7D6E5F4A">
+          <File Id="Redball.deps.json" Source="$(var.PublishDir)\Redball.UI.WPF.deps.json" KeyPath="yes" />
+        </Component>
+        <Component Id="Redball.runtimeconfig.json" Guid="D8F1A5B3-9C4E-5D6F-2G3B-0C9D8E7F6G5B">
+          <File Id="Redball.runtimeconfig.json" Source="$(var.PublishDir)\Redball.UI.WPF.runtimeconfig.json" KeyPath="yes" />
+        </Component>
+      </Directory>
+    </StandardDirectory>
+    
+    <StandardDirectory Id="ProgramMenuFolder" />
+    <StandardDirectory Id="DesktopFolder" />
+    
+    <Feature Id="ProductFeature" Title="Redball" Level="1">
+      <ComponentRef Id="Redball.exe" />
+      <ComponentRef Id="Redball.dll" />
+      <ComponentRef Id="Redball.deps.json" />
+      <ComponentRef Id="Redball.runtimeconfig.json" />
+    </Feature>
+    
+    <Icon Id="Redball.exe" SourceFile="$(var.InstallerDir)\redball.ico" />
+    <Property Id="ARPPRODUCTICON" Value="Redball.exe" />
+    
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.InstallerDir)\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.InstallerDir)\dialog.bmp" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.InstallerDir)\Redball-License.rtf" />
+    
+  </Package>
+</Wix>

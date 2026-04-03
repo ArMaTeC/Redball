@@ -334,8 +334,8 @@ public class AdvancedAnalyticsService
         {
             Category = RecommendationCategory.Health,
             Priority = RecommendationPriority.High,
-            Title = "Use Pomodoro Timer",
-            Description = "Take regular breaks with the Pomodoro timer to maintain productivity."
+            Title = "Take Regular Breaks",
+            Description = "Consider taking short breaks every hour to maintain productivity and reduce eye strain."
         });
 
         return recommendations.OrderByDescending(r => r.Priority).ToList();

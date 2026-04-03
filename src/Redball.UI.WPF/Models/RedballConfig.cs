@@ -153,7 +153,6 @@ public class RedballConfig
 
     // Focus Mode Integration (2025)
     public bool FocusAssistIntegration { get; set; }
-    public bool FocusModeDuringPomodoro { get; set; }
 
     // Advanced Analytics (2025)
     public bool EnableAdvancedAnalytics { get; set; }

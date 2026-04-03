@@ -53,7 +53,11 @@ function sha256File(filePath) {
 }
 
 // === Middleware ===
-app.use(morgan('short'));
+// Only use morgan logging if TTY is available (not in background)
+if (process.stdin.isTTY) {
+  app.use(morgan('short'));
+}
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -352,8 +356,11 @@ function guessMimeType(filename) {
   return types[ext] || 'application/octet-stream';
 }
 
-// === SPA fallback ===
-app.get('*', (req, res) => {
+// === SPA fallback (catch-all for non-API routes) ===
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/') || req.path.startsWith('/downloads/')) {
+    return next();
+  }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

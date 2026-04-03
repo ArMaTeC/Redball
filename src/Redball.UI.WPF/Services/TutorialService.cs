@@ -141,26 +141,6 @@ public sealed class TutorialService
                     IsLastStep = true
                 }
             },
-            "pomodoro" => new[]
-            {
-                new TourStep
-                {
-                    Id = "pomodoro_intro",
-                    Title = "Pomodoro Timer",
-                    Content = "The Pomodoro technique helps you stay focused with timed work sessions and breaks.",
-                    TargetElementName = "PomodoroTab",
-                    Position = TooltipPosition.Bottom
-                },
-                new TourStep
-                {
-                    Id = "pomodoro_settings",
-                    Title = "Customize Durations",
-                    Content = "Adjust work session length, short break, and long break durations to match your preference.",
-                    TargetElementName = "PomodoroWorkDurationSlider",
-                    Position = TooltipPosition.Top,
-                    IsLastStep = true
-                }
-            },
             _ => Array.Empty<TourStep>()
         });
 

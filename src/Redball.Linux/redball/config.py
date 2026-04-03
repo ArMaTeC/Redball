@@ -72,39 +72,6 @@ class Config:
         if self.settings:
             self.settings.set_int('typething-interval-seconds', seconds)
     
-    def get_pomodoro_enabled(self) -> bool:
-        """Get Pomodoro timer enabled state"""
-        if self.settings:
-            return self.settings.get_boolean('pomodoro-enabled')
-        return False
-    
-    def set_pomodoro_enabled(self, enabled: bool):
-        """Set Pomodoro timer enabled state"""
-        if self.settings:
-            self.settings.set_boolean('pomodoro-enabled', enabled)
-    
-    def get_pomodoro_work_minutes(self) -> int:
-        """Get Pomodoro work session length in minutes"""
-        if self.settings:
-            return self.settings.get_int('pomodoro-work-minutes')
-        return 25
-    
-    def set_pomodoro_work_minutes(self, minutes: int):
-        """Set Pomodoro work session length"""
-        if self.settings:
-            self.settings.set_int('pomodoro-work-minutes', minutes)
-    
-    def get_pomodoro_break_minutes(self) -> int:
-        """Get Pomodoro break length in minutes"""
-        if self.settings:
-            return self.settings.get_int('pomodoro-break-minutes')
-        return 5
-    
-    def set_pomodoro_break_minutes(self, minutes: int):
-        """Set Pomodoro break length"""
-        if self.settings:
-            self.settings.set_int('pomodoro-break-minutes', minutes)
-    
     def get_battery_aware(self) -> bool:
         """Get battery-aware mode state"""
         if self.settings:

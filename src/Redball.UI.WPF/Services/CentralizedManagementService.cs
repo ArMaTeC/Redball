@@ -498,7 +498,6 @@ public class ManagementPolicy
     // Feature restrictions
     public bool? DisableBrowserExtension { get; set; }
     public bool? DisableTypeThing { get; set; }
-    public bool? DisablePomodoro { get; set; }
     
     // Audit settings
     public bool? RequireAuditLogging { get; set; }

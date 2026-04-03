@@ -5,6 +5,7 @@ This directory contains the Ubuntu/Debian build system for Redball Linux - a nat
 ## Overview
 
 The build system uses:
+
 - **Meson** - Build configuration and compilation
 - **Ninja** - Build execution
 - **GTK4/libadwaita** - Native Linux UI framework
@@ -40,13 +41,14 @@ sudo apt-get install -y meson ninja-build python3-pip \
 ### 3. Build with GitHub Actions
 
 The `.github/workflows/linux-ci.yml` workflow will automatically:
+
 - Build on your self-hosted Ubuntu runner
 - Create DEB and tarball packages
 - Create GitHub releases for the Linux version
 
 ## File Structure
 
-```
+```text
 src/Redball.Linux/
 ├── redball/                    # Python application source
 │   ├── __init__.py
@@ -55,7 +57,7 @@ src/Redball.Linux/
 │   ├── tray.py                 # System tray indicator
 │   ├── keepawake.py            # Keep-awake engine (X11/Wayland/systemd)
 │   ├── config.py               # GSettings configuration
-│   ├── timer.py                # Pomodoro/session timers
+│   ├── timer.py                # Session timers
 │   └── widgets/                # UI widgets
 │       ├── __init__.py
 │       ├── status_indicator.py
@@ -76,14 +78,14 @@ src/Redball.Linux/
 
 ## Build Options
 
-| Option | Description |
-|--------|-------------|
-| `./scripts/build-linux.sh` | Standard build only |
-| `./scripts/build-linux.sh -d` | Build + create tarball |
-| `./scripts/build-linux.sh --deb` | Build + create DEB package |
-| `./scripts/build-linux.sh -f` | Build + create Flatpak |
-| `./scripts/build-linux.sh -a` | Build all package types |
-| `./scripts/build-linux.sh -c` | Clean build artifacts |
+| Option                                    | Description                |
+| ----------------------------------------- | -------------------------- |
+| `./scripts/build-linux.sh`                | Standard build only        |
+| `./scripts/build-linux.sh -d`             | Build + create tarball     |
+| `./scripts/build-linux.sh --deb`          | Build + create DEB package |
+| `./scripts/build-linux.sh -f`             | Build + create Flatpak     |
+| `./scripts/build-linux.sh -a`             | Build all package types    |
+| `./scripts/build-linux.sh -c`             | Clean build artifacts      |
 | `./scripts/build-linux.sh --install-deps` | Install build dependencies |
 
 ## Manual Build (without script)
@@ -153,12 +155,14 @@ The runner will automatically pick up jobs from the `linux-ci.yml` workflow.
 ## Package Installation
 
 ### DEB Package
+
 ```bash
 sudo dpkg -i redball_2.1.19_amd64.deb
 sudo apt-get install -f  # Fix dependencies if needed
 ```
 
 ### Tarball
+
 ```bash
 tar -xzf redball-2.1.19-linux-amd64.tar.gz
 sudo cp -r usr/* /usr/
@@ -166,6 +170,7 @@ sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
 ```
 
 ### Flatpak
+
 ```bash
 flatpak install redball.flatpak
 ```
@@ -173,6 +178,7 @@ flatpak install redball.flatpak
 ## Requirements
 
 ### Build Requirements
+
 - Python 3.9+
 - Meson 0.59+
 - GTK 4.6+
@@ -180,6 +186,7 @@ flatpak install redball.flatpak
 - gobject-introspection
 
 ### Runtime Requirements
+
 - Python 3.9+
 - GTK 4.0+
 - libadwaita 1.0+
@@ -189,35 +196,39 @@ flatpak install redball.flatpak
 ## Troubleshooting
 
 ### GSettings schema not found
+
 ```bash
 sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
 ```
 
 ### Missing GTK4 theme
+
 ```bash
 sudo apt-get install gnome-themes-extra
 ```
 
 ### AppIndicator not showing
+
 ```bash
 sudo apt-get install gir1.2-appindicator3-0.1
 ```
 
 ## Differences from Windows Version
 
-| Feature | Windows (WPF) | Linux (GTK4) |
-|---------|---------------|--------------|
-| UI Framework | WPF | GTK4 + libadwaita |
-| Service | Windows Service | systemd user service |
-| Keep-Awake | P/Invoke SendInput | xdg-screensaver/idle-inhibit portal |
-| TypeThing | HID/CGEvent | AT-SPI / xdotool |
-| Tray | NotifyIcon | AppIndicator |
-| Notifications | Toast | libnotify |
-| Installer | MSI | DEB/Flatpak |
+| Feature       | Windows (WPF)      | Linux (GTK4)                        |
+| ------------- | ------------------ | ----------------------------------- |
+| UI Framework  | WPF                | GTK4 + libadwaita                   |
+| Service       | Windows Service    | systemd user service                |
+| Keep-Awake    | P/Invoke SendInput | xdg-screensaver/idle-inhibit portal |
+| TypeThing     | HID/CGEvent        | AT-SPI / xdotool                    |
+| Tray          | NotifyIcon         | AppIndicator                        |
+| Notifications | Toast              | libnotify                           |
+| Installer     | MSI                | DEB/Flatpak                         |
 
 ## Contributing
 
 When modifying the Linux build:
+
 1. Test with `./scripts/build-linux.sh`
 2. Verify desktop file: `desktop-file-validate data/com.armatec.Redball.desktop`
 3. Test installation in a clean VM if possible

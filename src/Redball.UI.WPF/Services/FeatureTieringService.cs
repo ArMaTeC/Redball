@@ -257,16 +257,6 @@ public class FeatureTieringService
         // Pro features
         RegisterFeature(new TieredFeature
         {
-            Id = "pomodoro",
-            Name = "Pomodoro Timer",
-            Tier = FeatureTier.Pro,
-            Description = "Focus time management",
-            LaunchDate = DateTime.Now.AddMonths(-6),
-            KillCriteria = new KillCriteria { MinAdoptionRate = 20, MaxBugCount = 5, MaxSupportTickets = 10 }
-        });
-
-        RegisterFeature(new TieredFeature
-        {
             Id = "schedules",
             Name = "Smart Schedules",
             Tier = FeatureTier.Pro,

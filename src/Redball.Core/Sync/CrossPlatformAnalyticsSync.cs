@@ -194,7 +194,6 @@ public class CrossPlatformAnalyticsSync
             "NetworkAware",
             "IdleDetection",
             "TypeThing",
-            "Pomodoro",
             "MiniWidget",
             "TeamsIntegration",
             "SlackIntegration",

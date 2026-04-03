@@ -352,15 +352,6 @@ public class FeatureParityVerifier
             },
             new FeatureDefinition
             {
-                Name = "Pomodoro Timer",
-                Category = "Advanced",
-                Description = "Focus time management",
-                WindowsStatus = FeatureStatus.Available,
-                MacOSStatus = FeatureStatus.Available,
-                LinuxStatus = FeatureStatus.Available
-            },
-            new FeatureDefinition
-            {
                 Name = "Smart Schedule Learning",
                 Category = "Advanced",
                 Description = "AI-powered pattern detection",

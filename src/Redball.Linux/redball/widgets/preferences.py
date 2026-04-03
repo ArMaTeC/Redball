@@ -67,30 +67,6 @@ class PreferencesWindow(Adw.PreferencesWindow):
             interval_row.set_value(self.config.get_typething_interval_seconds())
             interval_row.connect('changed', self._on_interval_changed)
         
-        # Pomodoro group
-        pomodoro_group = Adw.PreferencesGroup(title='Pomodoro Timer')
-        general_page.add(pomodoro_group)
-        
-        # Work duration
-        work_row = Adw.SpinRow.new_with_range(1, 60, 5)
-        work_row.set_title('Work Duration')
-        work_row.set_subtitle('Minutes per work session')
-        pomodoro_group.add(work_row)
-        
-        if self.config:
-            work_row.set_value(self.config.get_pomodoro_work_minutes())
-            work_row.connect('changed', self._on_work_changed)
-        
-        # Break duration
-        break_row = Adw.SpinRow.new_with_range(1, 30, 1)
-        break_row.set_title('Break Duration')
-        break_row.set_subtitle('Minutes per break')
-        pomodoro_group.add(break_row)
-        
-        if self.config:
-            break_row.set_value(self.config.get_pomodoro_break_minutes())
-            break_row.connect('changed', self._on_break_changed)
-        
         # Startup group
         startup_group = Adw.PreferencesGroup(title='Startup')
         general_page.add(startup_group)
@@ -114,13 +90,3 @@ class PreferencesWindow(Adw.PreferencesWindow):
         """Handle interval change"""
         if self.config:
             self.config.set_typething_interval_seconds(int(row.get_value()))
-    
-    def _on_work_changed(self, row):
-        """Handle work duration change"""
-        if self.config:
-            self.config.set_pomodoro_work_minutes(int(row.get_value()))
-    
-    def _on_break_changed(self, row):
-        """Handle break duration change"""
-        if self.config:
-            self.config.set_pomodoro_break_minutes(int(row.get_value()))

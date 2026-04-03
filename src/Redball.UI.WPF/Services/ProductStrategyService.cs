@@ -299,7 +299,7 @@ public class ProductStrategyService
                 "Automate based on calendar/activity",
                 "Type long text without manual entry",
                 "Track productive time accurately",
-                "Manage work/life boundaries with Pomodoro"
+                "Maintain focus during work sessions"
             },
             SuccessMetrics = new()
             {

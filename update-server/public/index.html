@@ -1,57 +1,73 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Redball Update Server</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23e53935'/></svg>">
+  <title>Redball — Keep Windows Awake with Style</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23e53935'/></svg>">
   <style>
     :root {
-      --bg: #0f1117;
-      --bg-card: #161822;
-      --bg-hover: #1c1f2e;
-      --border: #2a2d3e;
-      --text: #e4e4e7;
-      --text-dim: #8b8fa3;
       --accent: #e53935;
-      --accent-hover: #f44336;
-      --green: #4caf50;
-      --blue: #42a5f5;
-      --orange: #ff9800;
-      --radius: 10px;
-      --shadow: 0 2px 12px rgba(0,0,0,0.3);
+      --accent-light: #ff6659;
+      --bg: #0a0c10;
+      --bg-elevated: #11141a;
+      --bg-card: #1a1e27;
+      --border: #2a2f3a;
+      --text: #f0f2f5;
+      --text-dim: #8b92a8;
+      --success: #4caf50;
+      --warning: #ff9800;
+      --gradient: linear-gradient(135deg, #e53935 0%, #ff6659 100%);
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      line-height: 1.6;
     }
 
-    /* Header */
     .header {
-      background: var(--bg-card);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(10, 12, 16, 0.85);
+      backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
       padding: 16px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(12px);
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
     }
 
     .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    .logo-icon {
       width: 36px;
       height: 36px;
       background: var(--accent);
@@ -59,115 +75,147 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
-      font-size: 18px;
-      color: white;
-      box-shadow: 0 0 16px rgba(229, 57, 53, 0.3);
+      box-shadow: 0 0 20px rgba(229, 57, 53, 0.4);
     }
 
-    .header h1 {
-      font-size: 20px;
-      font-weight: 600;
+    .nav {
+      display: flex;
+      gap: 32px;
     }
 
-    .header h1 span {
+    .nav a {
       color: var(--text-dim);
-      font-weight: 400;
+      text-decoration: none;
       font-size: 14px;
-      margin-left: 8px;
+      font-weight: 500;
+      transition: color 0.2s;
     }
 
-    /* Stats bar */
-    .stats-bar {
-      display: flex;
-      gap: 24px;
-      align-items: center;
-    }
-
-    .stat {
-      text-align: center;
-    }
-
-    .stat-value {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    .stat-label {
-      font-size: 11px;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    /* Main content */
-    .main {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 24px;
-    }
-
-    /* Toolbar */
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .toolbar-left { display: flex; gap: 8px; align-items: center; }
-
-    .channel-filter {
-      display: flex;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-
-    .channel-btn {
-      padding: 8px 16px;
-      background: none;
-      border: none;
-      color: var(--text-dim);
-      cursor: pointer;
-      font-size: 13px;
-      transition: all 0.15s;
-    }
-
-    .channel-btn.active {
-      background: var(--accent);
-      color: white;
-    }
-
-    .channel-btn:hover:not(.active) {
-      background: var(--bg-hover);
+    .nav a:hover {
       color: var(--text);
     }
 
-    /* Buttons */
-    .btn {
-      padding: 8px 18px;
-      border: none;
-      border-radius: var(--radius);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s;
+    .nav a.download-link {
+      color: var(--accent);
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(229, 57, 53, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      max-width: 900px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+    }
+
+    .hero-badge .dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .hero h1 {
+      font-size: clamp(40px, 8vw, 72px);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero h1 span {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-tagline {
+      font-size: clamp(18px, 3vw, 24px);
+      color: var(--text-dim);
+      margin-bottom: 40px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
     }
 
     .btn-primary {
-      background: var(--accent);
+      background: var(--gradient);
       color: white;
+      box-shadow: 0 4px 20px rgba(229, 57, 53, 0.3);
     }
 
-    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(229, 57, 53, 0.4);
+    }
 
     .btn-secondary {
       background: var(--bg-card);
@@ -175,680 +223,1337 @@
       border: 1px solid var(--border);
     }
 
-    .btn-secondary:hover { background: var(--bg-hover); }
-
-    .btn-danger {
-      background: transparent;
-      color: var(--accent);
-      border: 1px solid var(--accent);
+    .btn-secondary:hover {
+      background: var(--border);
     }
 
-    .btn-danger:hover { background: rgba(229, 57, 53, 0.1); }
+    .hero-meta {
+      margin-top: 40px;
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      flex-wrap: wrap;
+      font-size: 14px;
+      color: var(--text-dim);
+    }
 
-    .btn-sm { padding: 5px 12px; font-size: 12px; }
+    .hero-meta span {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-    /* Release cards */
-    .releases { display: flex; flex-direction: column; gap: 12px; }
+    .hero-meta svg {
+      width: 18px;
+      height: 18px;
+      color: var(--success);
+    }
 
-    .release-card {
+    .section {
+      padding: 100px 24px;
+    }
+
+    .section-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .section-header h2 {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .section-header p {
+      font-size: 18px;
+      color: var(--text-dim);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      transition: border-color 0.15s;
+      border-radius: 16px;
+      padding: 28px;
+      transition: all 0.2s;
     }
 
-    .release-card:hover { border-color: var(--accent); }
+    .feature-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+    }
 
-    .release-header {
-      padding: 16px 20px;
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(229, 57, 53, 0.1);
+      border-radius: 12px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      cursor: pointer;
+      justify-content: center;
+      margin-bottom: 20px;
     }
 
-    .release-header-left {
+    .feature-icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--accent);
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .download-section {
+      background: var(--bg-elevated);
+    }
+
+    .download-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .download-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .download-card.recommended {
+      border-color: var(--accent);
+      box-shadow: 0 0 30px rgba(229, 57, 53, 0.15);
+    }
+
+    .download-card.recommended::before {
+      content: 'RECOMMENDED';
+      position: absolute;
+      top: 12px;
+      right: -28px;
+      background: var(--accent);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 30px;
+      transform: rotate(45deg);
+    }
+
+    .download-card h3 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .download-card .version {
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+    }
+
+    .download-card .file-info {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+    }
+
+    .download-card .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .channel-tabs {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+
+    .channel-tab {
+      padding: 8px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 14px;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .channel-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .channel-tab:hover:not(.active) {
+      border-color: var(--text-dim);
+      color: var(--text);
+    }
+
+    .themes-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .theme-badge {
+      padding: 8px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .stat-card .label {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 24px;
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+
+    .footer-brand .logo-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 14px;
+    }
+
+    .footer p {
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .footer h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .footer-links {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 12px;
+    }
+
+    .footer-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--text);
+    }
+
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 40px auto 0;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    @media (max-width: 768px) {
+      .nav {
+        display: none;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .footer-inner {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Installation Section */
+    .install-section {
+      background: var(--bg-elevated);
+    }
+
+    .install-tabs {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+
+    .install-tab {
+      padding: 12px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .install-tab:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .install-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .install-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .install-panel {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+    }
+
+    .install-panel.active {
+      display: block;
+    }
+
+    .install-panel h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .release-version {
-      font-size: 18px;
-      font-weight: 600;
+    .install-panel ol {
+      margin: 0 0 24px 0;
+      padding-left: 24px;
     }
 
-    .release-badge {
-      padding: 2px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .badge-stable { background: rgba(76, 175, 80, 0.15); color: var(--green); }
-    .badge-beta { background: rgba(255, 152, 0, 0.15); color: var(--orange); }
-    .badge-dev { background: rgba(66, 165, 245, 0.15); color: var(--blue); }
-
-    .release-meta {
-      display: flex;
-      gap: 16px;
+    .install-panel li {
+      margin-bottom: 12px;
+      line-height: 1.6;
       color: var(--text-dim);
+    }
+
+    .install-panel li strong {
+      color: var(--text);
+    }
+
+    .code-block {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
       font-size: 13px;
+      color: var(--text);
+      overflow-x: auto;
+      margin: 16px 0;
     }
 
-    .release-meta svg { width: 14px; height: 14px; opacity: 0.6; }
+    .code-block .comment {
+      color: var(--text-dim);
+    }
 
-    .release-body {
-      display: none;
-      border-top: 1px solid var(--border);
+    .install-note {
+      background: rgba(229, 57, 53, 0.1);
+      border-left: 3px solid var(--accent);
       padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 20px;
     }
 
-    .release-card.expanded .release-body { display: block; }
+    .install-note strong {
+      color: var(--accent);
+      display: block;
+      margin-bottom: 4px;
+    }
 
-    .release-notes {
+    .install-note p {
       color: var(--text-dim);
       font-size: 14px;
-      line-height: 1.6;
-      margin-bottom: 16px;
-      white-space: pre-wrap;
+      margin: 0;
     }
 
-    .release-notes:empty::after {
-      content: 'No release notes.';
-      font-style: italic;
-      opacity: 0.5;
+    /* Requirements Section */
+    .req-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      max-width: 1000px;
+      margin: 0 auto;
     }
 
-    /* Files table */
-    .files-table {
-      width: 100%;
-      border-collapse: collapse;
+    .req-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
     }
 
-    .files-table th {
-      text-align: left;
-      padding: 8px 12px;
-      font-size: 11px;
+    .req-card h3 {
+      font-size: 18px;
       font-weight: 600;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .req-card h3 svg {
+      width: 20px;
+      height: 20px;
+      color: var(--accent);
+    }
+
+    .req-list {
+      list-style: none;
+    }
+
+    .req-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
       border-bottom: 1px solid var(--border);
+      font-size: 14px;
     }
 
-    .files-table td {
-      padding: 8px 12px;
-      font-size: 13px;
-      border-bottom: 1px solid var(--border);
+    .req-list li:last-child {
+      border-bottom: none;
     }
 
-    .files-table tr:last-child td { border-bottom: none; }
-
-    .files-table .filename {
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      color: var(--blue);
-    }
-
-    .files-table .hash {
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 11px;
+    .req-list .label {
       color: var(--text-dim);
-      max-width: 180px;
+    }
+
+    .req-list .value {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .req-list .value.success {
+      color: var(--success);
+    }
+
+    /* FAQ Section */
+    .faq-list {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 16px;
       overflow: hidden;
-      text-overflow: ellipsis;
     }
 
-    .files-table a {
+    .faq-question {
+      padding: 20px 24px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.2s;
+    }
+
+    .faq-question:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .faq-question svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-dim);
+      transition: transform 0.2s;
+    }
+
+    .faq-item.active .faq-question svg {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 500px;
+    }
+
+    .faq-answer-inner {
+      padding: 0 24px 24px;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+
+    .faq-answer-inner a {
       color: var(--accent);
       text-decoration: none;
     }
 
-    .files-table a:hover { text-decoration: underline; }
+    .faq-answer-inner a:hover {
+      text-decoration: underline;
+    }
 
-    .release-actions {
+    /* Feature Comparison */
+    .comparison-table {
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 16px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comparison-table th {
+      font-weight: 600;
+      color: var(--text);
+      background: var(--bg-card);
+    }
+
+    .comparison-table td {
+      color: var(--text-dim);
+    }
+
+    .comparison-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .comparison-table .check {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .comparison-table .cross {
+      color: var(--text-dim);
+    }
+
+    /* Download improvements */
+    .download-meta {
       display: flex;
+      flex-direction: column;
       gap: 8px;
       margin-top: 16px;
-      padding-top: 12px;
+      padding-top: 16px;
       border-top: 1px solid var(--border);
     }
 
-    /* Modal */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: 200;
-      backdrop-filter: blur(4px);
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-overlay.active { display: flex; }
-
-    .modal {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      width: 100%;
-      max-width: 520px;
-      box-shadow: var(--shadow);
-    }
-
-    .modal h2 {
-      font-size: 18px;
-      margin-bottom: 16px;
-    }
-
-    .form-group {
-      margin-bottom: 14px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-dim);
-      margin-bottom: 4px;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      padding: 8px 12px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 14px;
-      font-family: inherit;
-    }
-
-    .form-group textarea { min-height: 80px; resize: vertical; }
-
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-      margin-top: 16px;
-    }
-
-    /* Drop zone */
-    .drop-zone {
-      border: 2px dashed var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-      text-align: center;
-      color: var(--text-dim);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .drop-zone:hover, .drop-zone.dragover {
-      border-color: var(--accent);
-      background: rgba(229, 57, 53, 0.05);
-      color: var(--text);
-    }
-
-    .drop-zone input { display: none; }
-
-    .upload-list {
-      margin-top: 12px;
-      font-size: 13px;
-    }
-
-    .upload-list .file-item {
+    .download-meta-row {
       display: flex;
       justify-content: space-between;
-      padding: 4px 0;
+      font-size: 12px;
+    }
+
+    .download-meta-row .label {
       color: var(--text-dim);
     }
 
-    /* Progress */
-    .progress-bar {
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-      margin-top: 8px;
-    }
-
-    .progress-bar .fill {
-      height: 100%;
-      background: var(--accent);
-      width: 0;
-      transition: width 0.3s;
-    }
-
-    /* Empty state */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-dim);
-    }
-
-    .empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
-    .empty-state p { margin-bottom: 20px; }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px 20px;
-      font-size: 14px;
-      box-shadow: var(--shadow);
-      z-index: 300;
-      transform: translateY(80px);
-      opacity: 0;
-      transition: all 0.3s;
-    }
-
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { border-left: 3px solid var(--green); }
-    .toast.error { border-left: 3px solid var(--accent); }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .header { flex-direction: column; gap: 12px; }
-      .stats-bar { gap: 16px; }
-      .toolbar { flex-direction: column; align-items: stretch; }
-      .release-header { flex-direction: column; align-items: flex-start; gap: 8px; }
-      .release-meta { flex-wrap: wrap; }
+    .download-meta-row .value {
+      color: var(--text);
+      font-family: monospace;
     }
   </style>
 </head>
-<body>
-  <div class="header">
-    <div class="header-left">
-      <div class="logo">R</div>
-      <h1>Redball Update Server <span id="server-version">v1.0</span></h1>
-    </div>
-    <div class="stats-bar">
-      <div class="stat">
-        <div class="stat-value" id="stat-releases">0</div>
-        <div class="stat-label">Releases</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value" id="stat-files">0</div>
-        <div class="stat-label">Files</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value" id="stat-downloads">0</div>
-        <div class="stat-label">Downloads</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value" id="stat-latest">—</div>
-        <div class="stat-label">Latest</div>
-      </div>
-    </div>
-  </div>
 
-  <div class="main">
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <div class="channel-filter">
-          <button class="channel-btn active" data-channel="all">All</button>
-          <button class="channel-btn" data-channel="stable">Stable</button>
-          <button class="channel-btn" data-channel="beta">Beta</button>
-          <button class="channel-btn" data-channel="dev">Dev</button>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">R</div>
+        Redball
+      </div>
+      <nav class="nav">
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+        <a href="#install">Install</a>
+        <a href="#themes">Themes</a>
+        <a href="https://github.com/ArMaTeC/Redball" target="_blank">GitHub</a>
+        <a href="#download" class="download-link">Get Redball →</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        <span id="latest-version">Latest: v2.1.443</span>
+      </div>
+      <h1>Keep Windows <span>Awake</span><br>with Style</h1>
+      <p class="hero-tagline">
+        A modern system tray utility to prevent Windows from sleeping.
+        Built with .NET 10 WPF, featuring 14 themes, smart monitoring, and a built-in clipboard typer.
+      </p>
+      <div class="hero-buttons">
+        <a href="#download" class="btn btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Download for Windows
+        </a>
+        <a href="https://github.com/ArMaTeC/Redball" target="_blank" class="btn btn-secondary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+          </svg>
+          View on GitHub
+        </a>
+      </div>
+      <div class="hero-meta">
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Free & Open Source
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Code Signed
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Windows 10/11
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          No Install Required
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2>Everything You Need</h2>
+        <p>Smart features that adapt to your workflow, not the other way around.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+          </div>
+          <h3>Smart Monitoring</h3>
+          <p>Battery-aware, network-aware, and idle detection modes automatically pause when conditions change.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <h3>Scheduled Operation</h3>
+          <p>Auto-start and stop at specific times. Perfect for work-from-home schedules and daily routines.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+          </div>
+          <h3>TypeThing</h3>
+          <p>Clipboard typer with human-like typing simulation. Press Ctrl+Shift+V to type clipboard contents anywhere.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
+          </div>
+          <h3>14 Custom Themes</h3>
+          <p>From Dark and Light to Cyberpunk, Midnight Blue, and Rose Gold. Match your style or mood.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          </div>
+          <h3>Presentation Mode</h3>
+          <p>Auto-detects when you're in PowerPoint or screen sharing on Teams. Never fall asleep during a presentation
+            again.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <h3>Security First</h3>
+          <p>Code-signed EXE and MSI. SHA-256 verification. Tamper detection. Your system stays secure.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+          </div>
+          <h3>Analytics Dashboard</h3>
+          <p>Track your usage patterns, session counts, and feature adoption. Export data as CSV or JSON.</p>
         </div>
       </div>
-      <button class="btn btn-primary" onclick="showNewReleaseModal()">+ New Release</button>
     </div>
+  </section>
 
-    <div id="releases-list" class="releases">
-      <div class="empty-state">
-        <h3>No releases yet</h3>
-        <p>Create your first release to start hosting update files.</p>
-        <button class="btn btn-primary" onclick="showNewReleaseModal()">+ New Release</button>
+  <section class="section download-section" id="download">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2>Download Redball</h2>
+        <p>Choose your preferred installation method. All downloads are code-signed and verified.</p>
+      </div>
+
+      <div class="channel-tabs">
+        <button class="channel-tab active" data-channel="stable">Stable</button>
+        <button class="channel-tab" data-channel="beta">Beta</button>
+        <button class="channel-tab" data-channel="dev">Dev</button>
+      </div>
+
+      <div class="download-grid" id="download-grid">
+        <div class="download-card recommended" id="card-msi">
+          <h3>MSI Installer</h3>
+          <p class="version">Latest Stable</p>
+          <p class="file-info">~3 MB • Code Signed • Windows 10/11</p>
+          <a href="#" class="btn btn-primary" id="download-msi">Download MSI</a>
+        </div>
+        <div class="download-card" id="card-zip">
+          <h3>Portable ZIP</h3>
+          <p class="version">Latest Stable</p>
+          <p class="file-info">~3 MB • No Install Required</p>
+          <a href="#" class="btn btn-secondary" id="download-zip">Download ZIP</a>
+        </div>
+        <div class="download-card" id="card-exe">
+          <h3>Standalone EXE</h3>
+          <p class="version">Latest Stable</p>
+          <p class="file-info">~3.3 MB • Single File</p>
+          <a href="#" class="btn btn-secondary" id="download-exe">Download EXE</a>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="value" id="stat-total">—</div>
+          <div class="label">Total Downloads</div>
+        </div>
+        <div class="stat-card">
+          <div class="value" id="stat-releases">—</div>
+          <div class="label">Releases</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">14</div>
+          <div class="label">Themes</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">40+</div>
+          <div class="label">Services</div>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- New Release Modal -->
-  <div class="modal-overlay" id="new-release-modal">
-    <div class="modal">
-      <h2>Create New Release</h2>
-      <div class="form-group">
-        <label>Version</label>
-        <input type="text" id="new-version" placeholder="e.g. 2.1.444">
+  <section class="section" id="themes">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2>14 Beautiful Themes</h2>
+        <p>From professional to playful, find a look that matches your style.</p>
       </div>
-      <div class="form-group">
-        <label>Channel</label>
-        <select id="new-channel">
-          <option value="stable">Stable</option>
-          <option value="beta">Beta</option>
-          <option value="dev">Dev</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Release Notes</label>
-        <textarea id="new-notes" placeholder="What's new in this release..."></textarea>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal('new-release-modal')">Cancel</button>
-        <button class="btn btn-primary" onclick="createRelease()">Create Release</button>
+      <div class="themes-grid">
+        <span class="theme-badge">System (Auto)</span>
+        <span class="theme-badge">Dark</span>
+        <span class="theme-badge">Light</span>
+        <span class="theme-badge">Midnight Blue</span>
+        <span class="theme-badge">Forest Green</span>
+        <span class="theme-badge">Ocean Blue</span>
+        <span class="theme-badge">Sunset Orange</span>
+        <span class="theme-badge">Royal Purple</span>
+        <span class="theme-badge">Slate Gray</span>
+        <span class="theme-badge">Rose Gold</span>
+        <span class="theme-badge">Cyberpunk</span>
+        <span class="theme-badge">Coffee</span>
+        <span class="theme-badge">Arctic Frost</span>
+        <span class="theme-badge">High Contrast</span>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Upload Modal -->
-  <div class="modal-overlay" id="upload-modal">
-    <div class="modal">
-      <h2>Upload Files to <span id="upload-version-label"></span></h2>
-      <div class="drop-zone" id="drop-zone">
-        <p>Drop files here or click to browse</p>
-        <p style="font-size:12px;margin-top:4px;">MSI, EXE, DLL, ZIP, JSON, and other files</p>
-        <input type="file" id="file-input" multiple>
+  <section class="section install-section" id="install">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2>How to Install</h2>
+        <p>Choose your preferred installation method. Each option includes step-by-step instructions.</p>
       </div>
-      <div class="upload-list" id="upload-list"></div>
-      <div class="progress-bar" id="upload-progress" style="display:none">
-        <div class="fill" id="upload-progress-fill"></div>
+
+      <div class="install-tabs">
+        <button class="install-tab active" data-install="msi">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="4" width="16" height="16" rx="2" />
+            <path d="M8 8h8M8 12h8M8 16h5" />
+          </svg>
+          MSI Installer
+        </button>
+        <button class="install-tab" data-install="zip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          Portable ZIP
+        </button>
+        <button class="install-tab" data-install="winget">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 17 10 11 4 5" />
+            <line x1="12" y1="19" x2="20" y2="19" />
+          </svg>
+          Winget
+        </button>
       </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal('upload-modal')">Cancel</button>
-        <button class="btn btn-primary" id="upload-btn" onclick="uploadFiles()" disabled>Upload</button>
+
+      <div class="install-content">
+        <div class="install-panel active" id="install-msi">
+          <h3>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              style="color: var(--accent)">
+              <rect x="4" y="4" width="16" height="16" rx="2" />
+              <path d="M8 8h8M8 12h8M8 16h5" />
+            </svg>
+            MSI Installer (Recommended)
+          </h3>
+          <ol>
+            <li>Download the <strong>Redball.msi</strong> file from the download section above</li>
+            <li>Double-click the downloaded file to launch the installer</li>
+            <li>If Windows SmartScreen appears, click "More info" then "Run anyway"</li>
+            <li>Follow the setup wizard prompts</li>
+            <li>Redball will start automatically after installation</li>
+          </ol>
+          <div class="code-block">
+            <span class="comment"># Or install silently via command line:</span>
+            msiexec /i Redball.msi /quiet /norestart
+          </div>
+          <div class="install-note">
+            <strong>Administrator Required?</strong>
+            <p>No admin rights needed for per-user installation. Admin only required for all-users install.</p>
+          </div>
+        </div>
+
+        <div class="install-panel" id="install-zip">
+          <h3>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              style="color: var(--accent)">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Portable ZIP
+          </h3>
+          <ol>
+            <li>Download the <strong>Redball.zip</strong> file from the download section</li>
+            <li>Extract the ZIP to any folder (e.g., <code>C:\Tools\Redball</code> or your Desktop)</li>
+            <li>Run <code>Redball.UI.WPF.exe</code> to start the application</li>
+            <li>No installation required - runs directly from the extracted folder</li>
+          </ol>
+          <div class="code-block">
+            <span class="comment"># Using PowerShell to extract and run:</span>
+            Expand-Archive -Path Redball.zip -DestinationPath C:\Tools\Redball
+            C:\Tools\Redball\Redball.UI.WPF.exe
+          </div>
+          <div class="install-note">
+            <strong>Perfect for:</strong>
+            <p>Work computers without admin rights, USB drives, or quick testing before full install.</p>
+          </div>
+        </div>
+
+        <div class="install-panel" id="install-winget">
+          <h3>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              style="color: var(--accent)">
+              <polyline points="4 17 10 11 4 5" />
+              <line x1="12" y1="19" x2="20" y2="19" />
+            </svg>
+            Windows Package Manager (winget)
+          </h3>
+          <ol>
+            <li>Open PowerShell or Command Prompt as Administrator</li>
+            <li>Run the install command below</li>
+            <li>Wait for the installation to complete</li>
+            <li>Redball will be available in your Start Menu</li>
+          </ol>
+          <div class="code-block">
+            <span class="comment"># Install via winget:</span>
+            winget install ArMaTeC.Redball
+
+            <span class="comment"># Upgrade to latest version:</span>
+            winget upgrade ArMaTeC.Redball
+
+            <span class="comment"># Uninstall:</span>
+            winget uninstall ArMaTeC.Redball
+          </div>
+          <div class="install-note">
+            <strong>Automatic Updates</strong>
+            <p>Winget makes it easy to keep Redball updated. Just run <code>winget upgrade</code> periodically.</p>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="toast" id="toast"></div>
+  <section class="section" id="requirements">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2>System Requirements</h2>
+        <p>Redball runs on modern Windows systems with minimal resource usage.</p>
+      </div>
+
+      <div class="req-grid">
+        <div class="req-card">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            Minimum Requirements
+          </h3>
+          <ul class="req-list">
+            <li><span class="label">Operating System</span><span class="value success">Windows 10/11</span></li>
+            <li><span class="label">Architecture</span><span class="value success">x64</span></li>
+            <li><span class="label">RAM</span><span class="value">50 MB</span></li>
+            <li><span class="label">Disk Space</span><span class="value">15 MB</span></li>
+            <li><span class="label">.NET Runtime</span><span class="value success">Included</span></li>
+            <li><span class="label">Display</span><span class="value">Any resolution</span></li>
+          </ul>
+        </div>
+
+        <div class="req-card">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+            Recommended
+          </h3>
+          <ul class="req-list">
+            <li><span class="label">Operating System</span><span class="value success">Windows 11</span></li>
+            <li><span class="label">Architecture</span><span class="value success">x64</span></li>
+            <li><span class="label">RAM</span><span class="value">100 MB</span></li>
+            <li><span class="label">Disk Space</span><span class="value">50 MB</span></li>
+            <li><span class="label">Display</span><span class="value">1080p+</span></li>
+            <li><span class="label">Internet</span><span class="value">Optional</span></li>
+          </ul>
+        </div>
+
+        <div class="req-card">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            Security
+          </h3>
+          <ul class="req-list">
+            <li><span class="label">Code Signing</span><span class="value success">SHA-256</span></li>
+            <li><span class="label">Virus Scan</span><span class="value success">Clean</span></li>
+            <li><span class="label">Privileges</span><span class="value">User / Admin</span></li>
+            <li><span class="label">Network</span><span class="value">Local only</span></li>
+            <li><span class="label">Telemetry</span><span class="value success">Optional</span></li>
+            <li><span class="label">Open Source</span><span class="value success">MIT License</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="faq">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2>Frequently Asked Questions</h2>
+        <p>Quick answers to common questions about Redball.</p>
+      </div>
+
+      <div class="faq-list">
+        <div class="faq-item active">
+          <div class="faq-question">
+            Is Redball really free?
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Yes! Redball is completely free and open source under the MIT License. No ads, no subscriptions, no hidden
+              costs. You can even view and modify the source code on <a href="https://github.com/ArMaTeC/Redball"
+                target="_blank">GitHub</a>.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            How does Redball keep my computer awake?
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Redball uses the Windows <code>SetThreadExecutionState</code> API to tell Windows that the system is in
+              use, preventing it from going to sleep. It can also optionally send invisible F15 keypresses (heartbeat)
+              to prevent application-level idle detection.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            Does Redball work with Windows 11?
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Yes, Redball is fully compatible with Windows 10 and Windows 11 (both Home and Pro editions). It also
+              works on Windows Server 2019 and 2022.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            What is TypeThing and how does it work?
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              TypeThing is a clipboard typer that simulates human-like typing. Press <code>Ctrl+Shift+V</code> anywhere
+              and Redball will type your clipboard contents with natural delays between keystrokes. Perfect for pasting
+              into remote desktop sessions, VMs, or secure fields that block Ctrl+V.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            Will Redball slow down my computer?
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              No. Redball is designed to be lightweight, using less than 50MB of RAM and minimal CPU. The keep-awake
+              check happens every 59 seconds with virtually no performance impact. You can also enable battery-aware
+              mode to automatically pause when on battery power.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            How do I update Redball?
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Redball can check for updates automatically (optional). When an update is available, you'll get a
+              notification. Click it to download and install the update automatically. If you installed via winget, use
+              <code>winget upgrade ArMaTeC.Redball</code>.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            Where is the source code?
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Redball is open source and hosted on GitHub at <a href="https://github.com/ArMaTeC/Redball"
+                target="_blank">github.com/ArMaTeC/Redball</a>. Feel free to report issues, suggest features, or
+              contribute pull requests!
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">
+          <div class="logo-icon">R</div>
+          Redball
+        </div>
+        <p>A modern keep-awake utility for Windows.<br>Built with .NET 10, WPF, and attention to detail.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul class="footer-links">
+          <li><a href="#download">Download</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#themes">Themes</a></li>
+          <li><a href="/api/releases">Releases API</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Resources</h4>
+        <ul class="footer-links">
+          <li><a href="https://github.com/ArMaTeC/Redball/wiki" target="_blank">Documentation</a></li>
+          <li><a href="https://github.com/ArMaTeC/Redball/issues" target="_blank">Issues</a></li>
+          <li><a href="https://github.com/ArMaTeC/Redball/releases" target="_blank">GitHub Releases</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul class="footer-links">
+          <li><a href="/LICENSE">License (MIT)</a></li>
+          <li><a href="/docs/PRIVACY.md">Privacy</a></li>
+          <li><a href="/docs/SECURITY.md">Security</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Redball. Open source under MIT License. Made with care for Windows users everywhere.</p>
+    </div>
+  </footer>
 
   <script>
-    let currentChannel = 'all';
-    let uploadVersion = '';
-    let selectedFiles = [];
-
-    // === API ===
-    async function fetchJSON(url, opts) {
-      const res = await fetch(url, opts);
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(err.error || res.statusText);
-      }
-      return res.json();
-    }
-
-    // === Load data ===
-    async function loadStats() {
-      try {
-        const stats = await fetchJSON('/api/stats');
-        document.getElementById('stat-releases').textContent = stats.totalReleases;
-        document.getElementById('stat-files').textContent = stats.totalFiles;
-        document.getElementById('stat-downloads').textContent = stats.totalDownloads;
-        document.getElementById('stat-latest').textContent = stats.latestVersion === 'none' ? '—' : `v${stats.latestVersion}`;
-      } catch {}
-    }
-
     async function loadReleases() {
       try {
-        const releases = await fetchJSON('/api/releases');
-        renderReleases(releases);
-      } catch (e) {
-        showToast('Failed to load releases: ' + e.message, 'error');
+        const [stats, releases] = await Promise.all([
+          fetch('/api/stats').then(r => r.json()),
+          fetch('/api/releases').then(r => r.json())
+        ]);
+        document.getElementById('stat-total').textContent = (stats.totalDownloads || 0).toLocaleString();
+        document.getElementById('stat-releases').textContent = stats.totalReleases || 0;
+        const latest = releases.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+        if (latest) {
+          document.getElementById('latest-version').textContent = 'Latest: v' + latest.version;
+          updateDownloadCards(latest);
+        }
+        window.allReleases = releases;
+      } catch (err) {
+        console.error('Failed to load releases:', err);
       }
     }
 
-    function renderReleases(releases) {
-      const container = document.getElementById('releases-list');
-      const filtered = currentChannel === 'all'
-        ? releases
-        : releases.filter(r => r.channel === currentChannel);
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <h3>No releases found</h3>
-            <p>${currentChannel !== 'all' ? `No ${currentChannel} releases yet.` : 'Create your first release to start hosting update files.'}</p>
-            <button class="btn btn-primary" onclick="showNewReleaseModal()">+ New Release</button>
-          </div>`;
-        return;
+    function updateDownloadCards(release) {
+      const msi = release.files?.find(f => f.name.endsWith('.msi'));
+      const zip = release.files?.find(f => f.name.endsWith('.zip'));
+      const exe = release.files?.find(f => f.name.endsWith('.exe') && !f.name.includes('Service'));
+      const fmtSize = bytes => {
+        if (!bytes) return '0 B';
+        const units = ['B', 'KB', 'MB'];
+        let i = 0;
+        while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+        return bytes.toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
+      };
+      const fmtDate = iso => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' });
+      };
+      if (msi) {
+        document.querySelector('#card-msi .version').textContent = 'v' + release.version + ' • ' + fmtDate(release.date);
+        document.querySelector('#card-msi .file-info').textContent = fmtSize(msi.size) + ' • Code Signed';
+        document.getElementById('download-msi').href = '/downloads/' + release.version + '/' + msi.name;
+      } else {
+        document.getElementById('card-msi').classList.add('hidden');
       }
-
-      container.innerHTML = filtered.map(r => `
-        <div class="release-card" id="release-${r.version}">
-          <div class="release-header" onclick="toggleRelease('${r.version}')">
-            <div class="release-header-left">
-              <span class="release-version">v${r.version}</span>
-              <span class="release-badge badge-${r.channel || 'stable'}">${r.channel || 'stable'}</span>
-            </div>
-            <div class="release-meta">
-              <span>${(r.files || []).length} files</span>
-              <span>${formatSize(totalSize(r))}</span>
-              <span>${r.totalDownloads || 0} downloads</span>
-              <span>${formatDate(r.date)}</span>
-            </div>
-          </div>
-          <div class="release-body">
-            <div class="release-notes">${escapeHtml(r.notes || '')}</div>
-            ${renderFilesTable(r)}
-            <div class="release-actions">
-              <button class="btn btn-primary btn-sm" onclick="showUploadModal('${r.version}')">Upload Files</button>
-              <button class="btn btn-secondary btn-sm" onclick="copyManifestUrl('${r.version}')">Copy Manifest URL</button>
-              <button class="btn btn-secondary btn-sm" onclick="copyApiUrl('${r.version}')">Copy API URL</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteRelease('${r.version}')">Delete</button>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function renderFilesTable(release) {
-      if (!release.files || release.files.length === 0) {
-        return '<p style="color:var(--text-dim);font-size:13px;font-style:italic;">No files uploaded yet.</p>';
+      if (zip) {
+        document.querySelector('#card-zip .version').textContent = 'v' + release.version + ' • ' + fmtDate(release.date);
+        document.querySelector('#card-zip .file-info').textContent = fmtSize(zip.size) + ' • Portable';
+        document.getElementById('download-zip').href = '/downloads/' + release.version + '/' + zip.name;
+      } else {
+        document.getElementById('card-zip').classList.add('hidden');
       }
-      return `
-        <table class="files-table">
-          <thead>
-            <tr><th>File</th><th>Size</th><th>SHA256</th><th>Downloads</th><th></th></tr>
-          </thead>
-          <tbody>
-            ${release.files.map(f => `
-              <tr>
-                <td class="filename">${f.name}</td>
-                <td>${formatSize(f.size)}</td>
-                <td class="hash" title="${f.hash || ''}">${f.hash ? f.hash.substring(0, 16) + '...' : '—'}</td>
-                <td>${f.downloads || 0}</td>
-                <td><a href="/downloads/${release.version}/${f.name}">Download</a></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>`;
-    }
-
-    // === Actions ===
-    function toggleRelease(version) {
-      const card = document.getElementById(`release-${version}`);
-      card.classList.toggle('expanded');
-    }
-
-    async function createRelease() {
-      const version = document.getElementById('new-version').value.trim();
-      const channel = document.getElementById('new-channel').value;
-      const notes = document.getElementById('new-notes').value;
-      if (!version) { showToast('Version is required', 'error'); return; }
-
-      try {
-        await fetchJSON('/api/releases', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ version, channel, notes })
-        });
-        closeModal('new-release-modal');
-        showToast(`Release v${version} created`, 'success');
-        loadReleases();
-        loadStats();
-        document.getElementById('new-version').value = '';
-        document.getElementById('new-notes').value = '';
-      } catch (e) {
-        showToast(e.message, 'error');
+      if (exe) {
+        document.querySelector('#card-exe .version').textContent = 'v' + release.version + ' • ' + fmtDate(release.date);
+        document.querySelector('#card-exe .file-info').textContent = fmtSize(exe.size) + ' • Self-Contained';
+        document.getElementById('download-exe').href = '/downloads/' + release.version + '/' + exe.name;
+      } else {
+        document.getElementById('card-exe').classList.add('hidden');
       }
     }
 
-    async function deleteRelease(version) {
-      if (!confirm(`Delete release v${version} and all its files?`)) return;
-      try {
-        await fetchJSON(`/api/releases/${version}`, { method: 'DELETE' });
-        showToast(`Release v${version} deleted`, 'success');
-        loadReleases();
-        loadStats();
-      } catch (e) {
-        showToast(e.message, 'error');
-      }
-    }
-
-    function copyManifestUrl(version) {
-      const url = `${location.origin}/api/releases/${version}/manifest`;
-      navigator.clipboard.writeText(url);
-      showToast('Manifest URL copied', 'success');
-    }
-
-    function copyApiUrl(version) {
-      const url = `${location.origin}/api/releases/${version}`;
-      navigator.clipboard.writeText(url);
-      showToast('API URL copied', 'success');
-    }
-
-    // === Upload ===
-    function showUploadModal(version) {
-      uploadVersion = version;
-      selectedFiles = [];
-      document.getElementById('upload-version-label').textContent = `v${version}`;
-      document.getElementById('upload-list').innerHTML = '';
-      document.getElementById('upload-btn').disabled = true;
-      document.getElementById('upload-progress').style.display = 'none';
-      openModal('upload-modal');
-    }
-
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file-input');
-
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      addFiles(e.dataTransfer.files);
-    });
-    fileInput.addEventListener('change', () => addFiles(fileInput.files));
-
-    function addFiles(fileList) {
-      for (const f of fileList) selectedFiles.push(f);
-      const list = document.getElementById('upload-list');
-      list.innerHTML = selectedFiles.map(f =>
-        `<div class="file-item"><span>${f.name}</span><span>${formatSize(f.size)}</span></div>`
-      ).join('');
-      document.getElementById('upload-btn').disabled = selectedFiles.length === 0;
-    }
-
-    async function uploadFiles() {
-      if (selectedFiles.length === 0) return;
-      const form = new FormData();
-      selectedFiles.forEach(f => form.append('files', f));
-
-      document.getElementById('upload-btn').disabled = true;
-      document.getElementById('upload-btn').textContent = 'Uploading...';
-      document.getElementById('upload-progress').style.display = 'block';
-
-      try {
-        const xhr = new XMLHttpRequest();
-        xhr.upload.onprogress = e => {
-          if (e.lengthComputable) {
-            document.getElementById('upload-progress-fill').style.width = `${(e.loaded / e.total * 100)}%`;
-          }
-        };
-        await new Promise((resolve, reject) => {
-          xhr.onload = () => xhr.status < 400 ? resolve() : reject(new Error('Upload failed'));
-          xhr.onerror = () => reject(new Error('Network error'));
-          xhr.open('POST', `/api/releases/${uploadVersion}/upload`);
-          xhr.send(form);
-        });
-        closeModal('upload-modal');
-        showToast(`${selectedFiles.length} file(s) uploaded`, 'success');
-        loadReleases();
-        loadStats();
-      } catch (e) {
-        showToast(e.message, 'error');
-      } finally {
-        document.getElementById('upload-btn').disabled = false;
-        document.getElementById('upload-btn').textContent = 'Upload';
-      }
-    }
-
-    // === Modals ===
-    function showNewReleaseModal() { openModal('new-release-modal'); }
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-      overlay.addEventListener('click', e => {
-        if (e.target === overlay) overlay.classList.remove('active');
+    document.querySelectorAll('.channel-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.channel-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const channel = tab.dataset.channel;
+        const releases = window.allReleases || [];
+        const filtered = releases.filter(r =>
+          channel === 'stable' ? r.channel === 'stable' || !r.channel :
+            channel === 'beta' ? r.channel === 'beta' :
+              r.channel === 'dev' || r.channel === 'canary'
+        );
+        if (filtered.length > 0) {
+          updateDownloadCards(filtered[0]);
+          ['card-msi', 'card-zip', 'card-exe'].forEach(id => {
+            document.getElementById(id)?.classList.remove('hidden');
+          });
+        }
       });
     });
 
-    // === Channel filter ===
-    document.querySelectorAll('.channel-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.channel-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentChannel = btn.dataset.channel;
-        loadReleases();
+    // Installation tabs
+    document.querySelectorAll('.install-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.install-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const install = tab.dataset.install;
+        document.querySelectorAll('.install-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('install-' + install)?.classList.add('active');
       });
     });
 
-    // === Toast ===
-    function showToast(msg, type = 'success') {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.className = `toast ${type} show`;
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
+    // FAQ accordion
+    document.querySelectorAll('.faq-question').forEach(q => {
+      q.addEventListener('click', () => {
+        const item = q.parentElement;
+        const isActive = item.classList.contains('active');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+        if (!isActive) {
+          item.classList.add('active');
+        }
+      });
+    });
 
-    // === Helpers ===
-    function formatSize(bytes) {
-      if (!bytes) return '0 B';
-      const units = ['B', 'KB', 'MB', 'GB'];
-      let i = 0;
-      while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
-      return `${bytes.toFixed(i > 0 ? 1 : 0)} ${units[i]}`;
-    }
-
-    function formatDate(iso) {
-      if (!iso) return '—';
-      const d = new Date(iso);
-      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-    }
-
-    function totalSize(release) {
-      return (release.files || []).reduce((s, f) => s + (f.size || 0), 0);
-    }
-
-    function escapeHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    // === Init ===
-    loadStats();
     loadReleases();
   </script>
 </body>
+
 </html>

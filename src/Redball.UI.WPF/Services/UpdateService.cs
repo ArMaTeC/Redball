@@ -1292,7 +1292,7 @@ public class UpdateService : IUpdateService
             sb.AppendLine();
             sb.AppendLine("    Write-Host 'Cleaning up orphaned files from previous installs...'");
             sb.AppendLine("    $orphanedFiles = @(");
-            sb.AppendLine("        'analytics.json', 'engine_toggle.json', 'pomodoro_timer.json', 'ram_usage.json',");
+            sb.AppendLine("        'analytics.json', 'engine_toggle.json', 'ram_usage.json',");
             sb.AppendLine("        'Redball.state.json', 'templates.json', 'typething_launch.json'");
             sb.AppendLine("    )");
             sb.AppendLine("    $removedCount = 0;");
