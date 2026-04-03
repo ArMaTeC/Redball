@@ -450,30 +450,45 @@ public partial class App : Application
                 return false;
             }
 
-            // Create the service
+            // Check if service already exists
+            var queryResult = RunProcessAsAdmin("sc.exe", "query RedballInputService");
+            if (queryResult.ExitCode == 0)
+            {
+                Services.Logger.Info("App", "Service already exists, stopping and removing for clean installation...");
+                
+                // Stop the service first
+                RunProcessAsAdmin("sc.exe", "stop RedballInputService");
+                System.Threading.Thread.Sleep(1000); // Give service time to stop
+                
+                // Delete the service
+                var deleteResult = RunProcessAsAdmin("sc.exe", "delete RedballInputService");
+                if (deleteResult.ExitCode != 0)
+                {
+                    Services.Logger.Warning("App", $"Failed to delete existing service: {deleteResult.StdErr}");
+                    // Continue anyway - might be permissions issue but create might still work
+                }
+                else
+                {
+                    Services.Logger.Info("App", "Existing service removed successfully");
+                    System.Threading.Thread.Sleep(500); // Give SCM time to process
+                }
+            }
+
+            // Create the service fresh
             var createResult = RunProcessAsAdmin("sc.exe", $"create RedballInputService binPath= \"{servicePath}\" start= auto");
             if (createResult.ExitCode != 0)
             {
-                // Check if service already exists (sc.exe may output to stdout or stderr)
-                var combinedOutput = createResult.StdOut + createResult.StdErr;
-                if (!combinedOutput.Contains("already exists", StringComparison.OrdinalIgnoreCase))
-                {
-                    Services.Logger.Error("App", $"Failed to create service: {createResult.StdErr} {createResult.StdOut}");
-                    return false;
-                }
-                Services.Logger.Info("App", "Service already exists, continuing...");
+                Services.Logger.Error("App", $"Failed to create service: {createResult.StdErr} {createResult.StdOut}");
+                return false;
             }
-            else
-            {
-                Services.Logger.Info("App", "Service created successfully");
-            }
+            Services.Logger.Info("App", "Service created successfully");
 
             // Start the service
             var startResult = RunProcessAsAdmin("sc.exe", "start RedballInputService");
             if (startResult.ExitCode != 0)
             {
                 Services.Logger.Warning("App", $"Service created but failed to start: {startResult.StdErr}");
-                // Don't fail if service was created but couldn't start - it might already be running
+                // Don't fail if service was created but couldn't start - it might need manual start
             }
             else
             {

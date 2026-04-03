@@ -812,15 +812,23 @@ function Step-BuildWpfApp {
         Write-BuildSuccess "Copied Assets to publish directory"
     }
     
-    # Copy service executable to publish directory for runtime access
-    $serviceSource = Join-Path $script:DistPath 'Redball.Service\Redball.Service.exe'
-    if (Test-Path $serviceSource) {
-        $serviceDest = Join-Path $publishDir 'Redball.Service.exe'
-        Copy-Item -Path $serviceSource -Destination $serviceDest -Force
-        Write-BuildSuccess "Copied Redball.Service.exe to publish directory"
+    # Copy service files to publish directory for runtime access
+    $servicePublishDir = Join-Path $script:DistPath 'Redball.Service'
+    if (Test-Path $servicePublishDir) {
+        $serviceFiles = Get-ChildItem -Path $servicePublishDir -File | Where-Object { 
+            $_.Name -like 'Redball.Service*' -or 
+            $_.Name -eq 'Redball.SessionHelper.exe' -or
+            $_.Name -like 'Microsoft.Extensions.*.dll' -or
+            $_.Name -eq 'System.ServiceProcess.ServiceController.dll'
+        }
+        foreach ($file in $serviceFiles) {
+            $destPath = Join-Path $publishDir $file.Name
+            Copy-Item -Path $file.FullName -Destination $destPath -Force
+        }
+        Write-BuildSuccess "Copied $($serviceFiles.Count) service files to publish directory"
     }
     else {
-        Write-Warning "Redball.Service.exe not found - service installation will not work"
+        Write-Warning "Service publish directory not found - service installation will not work"
     }
     
     # List output

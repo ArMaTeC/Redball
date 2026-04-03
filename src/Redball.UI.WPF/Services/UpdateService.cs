@@ -385,14 +385,37 @@ public class UpdateService : IUpdateService
                                     break;
                                 }
 
-                                filesToUpdate.Add(new FileUpdateInfo
+                                // Check if binary delta patch is available (preferred for bandwidth)
+                                var patchAsset = latestRelease.Assets.Find(a => 
+                                    a.Name.Equals(Path.GetFileName(file.Name) + ".patch", StringComparison.OrdinalIgnoreCase));
+                                
+                                if (patchAsset != null && patchAsset.Size > 0 && patchAsset.Size < file.Size)
                                 {
-                                    Name = normalizedName,
-                                    DownloadUrl = asset.DownloadUrl,
-                                    Hash = file.Hash,
-                                    Size = file.Size,
-                                    Signature = file.Signature
-                                });
+                                    // Use delta patch - much smaller download
+                                    filesToUpdate.Add(new FileUpdateInfo
+                                    {
+                                        Name = normalizedName,
+                                        DownloadUrl = asset.DownloadUrl, // Fallback full file
+                                        PatchUrl = patchAsset.DownloadUrl,
+                                        PatchSize = patchAsset.Size,
+                                        Hash = file.Hash,
+                                        Size = file.Size,
+                                        Signature = file.Signature
+                                    });
+                                    Logger.Debug("UpdateService", $"Using delta patch for {normalizedName}: {patchAsset.Size} bytes vs {file.Size} bytes full file");
+                                }
+                                else
+                                {
+                                    // Use full file download
+                                    filesToUpdate.Add(new FileUpdateInfo
+                                    {
+                                        Name = normalizedName,
+                                        DownloadUrl = asset.DownloadUrl,
+                                        Hash = file.Hash,
+                                        Size = file.Size,
+                                        Signature = file.Signature
+                                    });
+                                }
                             }
                         }
                     }
@@ -465,6 +488,9 @@ public class UpdateService : IUpdateService
             {
                 Logger.Info("UpdateService", $"Starting differential download of {updateInfo.FilesToUpdate.Count} files...");
                 int completed = 0;
+                long totalBytesSaved = 0;
+                var appDir = AppDomain.CurrentDomain.BaseDirectory;
+                
                 foreach (var file in updateInfo.FilesToUpdate)
                 {
                     var normalizedName = NormalizeRelativeUpdatePath(file.Name);
@@ -472,6 +498,67 @@ public class UpdateService : IUpdateService
                     var destDir = Path.GetDirectoryName(destPath);
                     if (destDir != null && !Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
                     
+                    // Try binary delta patch first if available
+                    if (!string.IsNullOrEmpty(file.PatchUrl) && file.PatchSize > 0)
+                    {
+                        try
+                        {
+                            var localFilePath = Path.Combine(appDir, normalizedName);
+                            if (File.Exists(localFilePath))
+                            {
+                                Logger.Info("UpdateService", $"Downloading binary delta patch for {normalizedName}...");
+                                var patchPath = Path.Combine(tempDir, normalizedName + ".patch");
+                                
+                                if (await DownloadFileAsync(file.PatchUrl, patchPath, progress, cancellationToken))
+                                {
+                                    // Apply the patch using DeltaUpdateService
+                                    var oldData = await File.ReadAllBytesAsync(localFilePath, cancellationToken);
+                                    var patchData = await File.ReadAllBytesAsync(patchPath, cancellationToken);
+                                    
+                                    var patch = new DeltaPatch
+                                    {
+                                        Data = patchData,
+                                        NewFileHash = file.Hash,
+                                        NewFileSize = file.Size
+                                    };
+                                    
+                                    var newData = await DeltaUpdateService.Instance.ApplyPatchAsync(oldData, patch, cancellationToken);
+                                    await File.WriteAllBytesAsync(destPath, newData, cancellationToken);
+                                    
+                                    // Verify hash
+                                    var actualHash = await CalculateHashAsync(destPath);
+                                    if (!actualHash.Equals(file.Hash, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        Logger.Warning("UpdateService", $"Patch result hash mismatch for {normalizedName}, falling back to full download");
+                                        File.Delete(destPath);
+                                        throw new InvalidOperationException("Patch hash mismatch");
+                                    }
+                                    
+                                    totalBytesSaved += (file.Size - file.PatchSize);
+                                    Logger.Info("UpdateService", $"Successfully applied delta patch for {normalizedName} (saved {file.Size - file.PatchSize} bytes)");
+                                    
+                                    // Clean up patch file
+                                    TryDeleteFile(patchPath);
+                                    completed++;
+                                    progress?.Report(new UpdateDownloadProgress 
+                                    { 
+                                        Percentage = completed * 100 / updateInfo.FilesToUpdate.Count,
+                                        BytesReceived = completed,
+                                        TotalBytes = updateInfo.FilesToUpdate.Count,
+                                        StatusText = $"Patched {completed} of {updateInfo.FilesToUpdate.Count}: {normalizedName}"
+                                    });
+                                    continue; // Skip full download
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Warning("UpdateService", $"Delta patch failed for {normalizedName}, falling back to full download: {ex.Message}");
+                            // Fall through to full download
+                        }
+                    }
+                    
+                    // Full file download (fallback or no patch available)
                     if (!await DownloadFileAsync(file.DownloadUrl, destPath, progress, cancellationToken))
                         return false;
                     
@@ -491,10 +578,15 @@ public class UpdateService : IUpdateService
                     progress?.Report(new UpdateDownloadProgress 
                     { 
                         Percentage = completed * 100 / updateInfo.FilesToUpdate.Count,
-                        BytesReceived = completed, // Simplified progress reporting for file count
+                        BytesReceived = completed,
                         TotalBytes = updateInfo.FilesToUpdate.Count,
                         StatusText = $"File {completed} of {updateInfo.FilesToUpdate.Count}: {normalizedName}"
                     });
+                }
+                
+                if (totalBytesSaved > 0)
+                {
+                    Logger.Info("UpdateService", $"Delta patching saved {totalBytesSaved} bytes total");
                 }
                 
                 var scriptPath = CreateUpdateScript(stagingDir);
@@ -1511,6 +1603,8 @@ public class FileUpdateInfo
     [System.Text.Json.Serialization.JsonPropertyName("signature")]
     public string Signature { get; set; } = "";
     public string DownloadUrl { get; set; } = "";
+    public string? PatchUrl { get; set; }  // Binary delta patch URL (if available)
+    public long PatchSize { get; set; }     // Size of patch file
 }
 
 /// <summary>
