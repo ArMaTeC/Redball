@@ -247,7 +247,6 @@ namespace Redball.Tests.ViewModels
             Assert.IsNotNull(vm.OpenBehaviorCommand);
             Assert.IsNotNull(vm.OpenSmartFeaturesCommand);
             Assert.IsNotNull(vm.OpenTypeThingCommand);
-            Assert.IsNotNull(vm.OpenPomodoroCommand);
             Assert.IsNotNull(vm.OpenUpdatesCommand);
             Assert.IsNotNull(vm.OpenAboutCommand);
             Assert.IsNotNull(vm.ShowQuickSettingsCommand);
@@ -275,7 +274,6 @@ namespace Redball.Tests.ViewModels
             Assert.IsTrue(vm.OpenBehaviorCommand.CanExecute(null));
             Assert.IsTrue(vm.OpenSmartFeaturesCommand.CanExecute(null));
             Assert.IsTrue(vm.OpenTypeThingCommand.CanExecute(null));
-            Assert.IsTrue(vm.OpenPomodoroCommand.CanExecute(null));
             Assert.IsTrue(vm.OpenUpdatesCommand.CanExecute(null));
             Assert.IsTrue(vm.OpenAboutCommand.CanExecute(null));
             Assert.IsTrue(vm.ShowQuickSettingsCommand.CanExecute(null));
@@ -480,12 +478,6 @@ namespace Redball.Tests.ViewModels
             vm.OpenTypeThingCommand.Execute(null);
         }
 
-        [TestMethod]
-        public void MainViewModel_OpenPomodoroCommand_NoMainWindow_DoesNotThrow()
-        {
-            var vm = new MainViewModel();
-            vm.OpenPomodoroCommand.Execute(null);
-        }
 
         [TestMethod]
         public void MainViewModel_OpenUpdatesCommand_NoMainWindow_DoesNotThrow()

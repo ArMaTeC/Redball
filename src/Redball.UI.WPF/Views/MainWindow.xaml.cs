@@ -104,7 +104,6 @@ public partial class MainWindow : Window
             SetupTrayIconRefreshTimer();
             SetupGlobalHotkeys();
             LoadEmbeddedDashboardContent();
-            InitializePomodoro();
             RefreshTemplateCombo();
             StartAutoUpdateCheck();
             InitializeResourceBudgetMonitoring();

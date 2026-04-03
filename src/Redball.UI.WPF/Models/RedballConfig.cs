@@ -71,14 +71,6 @@ public class RedballConfig
     public bool FollowSystemTheme { get; set; } = true;
     public DriverSelection TypeThingDriverSelection { get; set; } = DriverSelection.Auto;
 
-    // Pomodoro
-    public bool PomodoroEnabled { get; set; }
-    public int PomodoroFocusMinutes { get; set; } = 25;
-    public int PomodoroBreakMinutes { get; set; } = 5;
-    public int PomodoroLongBreakMinutes { get; set; } = 15;
-    public int PomodoroLongBreakInterval { get; set; } = 4;
-    public bool PomodoroAutoStart { get; set; } = true;
-    public bool PomodoroKeepAwakeDuringBreak { get; set; }
 
     // Process Watcher
     public bool ProcessWatcherEnabled { get; set; }

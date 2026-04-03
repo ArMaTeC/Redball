@@ -99,18 +99,18 @@ public class ResourceBudgetService
     private readonly TimeSpan _historyRetention = TimeSpan.FromHours(24);
 
     // Default budgets for known services
+    // Note: RAM budgets reflect shared process memory - all services share the same process space
     private static readonly Dictionary<string, (double cpu, long ram, bool critical)> DefaultBudgets = new()
     {
-        { "KeepAwakeService", (5.0, 150, true) },           // Core functionality - uses up to 120MB during peak
-        { "InterceptionInputService", (10.0, 150, true) },  // HID operations - uses up to 120MB during peak
-        { "AnalyticsService", (2.0, 30, false) },           // Background telemetry
-        { "UpdateService", (15.0, 80, false) },             // Occasional heavy operations
-        { "ConfigService", (1.0, 60, true) },               // Config management - uses ~45MB
-        { "NotificationService", (1.0, 25, false) },          // Toast notifications
-        { "PomodoroService", (1.0, 20, false) },            // Timer-based
-        { "TrayIconService", (2.0, 60, true) },              // Always running - uses ~45MB
-        { "CommandPaletteIndex", (5.0, 60, false) },         // On-demand
-        { "MainWindow", (20.0, 200, false) }                // UI, variable
+        { "KeepAwakeService", (10.0, 400, true) },           // Core functionality - shared process memory
+        { "InterceptionInputService", (15.0, 400, true) },   // HID operations - shared process memory
+        { "AnalyticsService", (5.0, 400, false) },           // Background telemetry - shared process memory
+        { "UpdateService", (20.0, 400, false) },             // Occasional heavy operations - shared process memory
+        { "ConfigService", (5.0, 400, true) },               // Config management - shared process memory
+        { "NotificationService", (3.0, 400, false) },        // Toast notifications - shared process memory
+        { "TrayIconService", (5.0, 400, true) },             // Always running - shared process memory
+        { "CommandPaletteIndex", (10.0, 400, false) },       // On-demand - shared process memory
+        { "MainWindow", (25.0, 400, false) }                 // UI, variable - shared process memory
     };
 
     private ResourceBudgetService()

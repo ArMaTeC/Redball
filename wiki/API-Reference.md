@@ -195,18 +195,6 @@ Crash detection and safe recovery.
 | `SetCrashFlag()` | void | Set crash flag for this session |
 | `ClearCrashFlag()` | void | Clear flag on clean exit |
 
-### PomodoroService
-
-Focus/break cycle timer.
-
-**Methods:**
-
-| Method | Returns | Description |
-| --- | --- | --- |
-| `Start()` | void | Start a Pomodoro focus session |
-| `Stop()` | void | Stop the Pomodoro timer |
-| `Skip()` | void | Skip to the next phase (focus → break or break → focus) |
-
 ---
 
 ### ProcessWatcherService
@@ -359,7 +347,6 @@ Key sections:
 
 - **General & UI** — Theme, locale, notifications, logging
 - **Smart Features** — Battery, network, idle, schedule, presentation, thermal, process watcher, VPN, session lock, app rules, power plan, WiFi profiles, restart reminders
-- **Pomodoro** — Focus/break timer settings
 - **TypeThing** — Clipboard typer settings including TTS
 - **Updates** — Auto-update check, channel, signature verification
 - **Advanced** — Telemetry, performance metrics, Web API

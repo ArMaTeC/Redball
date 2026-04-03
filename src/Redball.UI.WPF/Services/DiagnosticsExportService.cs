@@ -284,7 +284,6 @@ public sealed class DiagnosticsExportService
             config.NetworkAware,
             config.IdleDetection,
             config.ScheduleEnabled,
-            config.PomodoroEnabled,
             config.AutoUpdateCheckEnabled,
             config.EncryptConfig,
             // Exclude any sensitive paths or keys

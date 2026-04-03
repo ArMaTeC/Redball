@@ -54,7 +54,7 @@ On first run, Redball will:
 The main window opens with a modern custom chrome design featuring:
 
 - **Title bar** with app icon, title, and window controls (minimize, maximize, close)
-- **Left navigation panel** with ten sections: Home, Analytics, Metrics, Diagnostics, Settings, Behavior, Smart Features, TypeThing, Pomodoro, and Updates
+- **Left navigation panel** with nine sections: Home, Analytics, SLO Dashboard, Diagnostics, Settings, Behavior, Smart Features, TypeThing, and Updates
 - **Content area** showing the selected section's controls and information
 
 Right-click the tray icon to access quick controls, or use the main window for full access to all features and settings.

@@ -22,7 +22,6 @@ Redball/
 │   │   ├── ScheduleService.cs       # Scheduled activation
 │   │   ├── PresentationModeService.cs # Presentation detection
 │   │   ├── CalendarIntegrationService.cs # Calendar auto-activation
-│   │   ├── PomodoroService.cs       # Focus/break cycle timer
 │   │   ├── ProcessWatcherService.cs # Process-based auto-activation
 │   │   ├── SessionLockService.cs    # Screen lock detection
 │   │   ├── TemperatureMonitorService.cs # CPU thermal protection
@@ -61,7 +60,6 @@ Redball/
 │   │   ├── MainWindow.Settings.cs   # Embedded settings
 │   │   ├── MainWindow.TrayIcon.cs   # Tray icon setup/recovery
 │   │   ├── MainWindow.TypeThing.cs  # TypeThing integration
-│   │   ├── MainWindow.Pomodoro.cs   # Pomodoro integration
 │   │   ├── MainWindow.Updates.cs    # Update management
 │   │   ├── AboutWindow.xaml/.cs     # Version info + update check
 │   │   ├── MiniWidgetWindow.xaml/.cs # Floating mini widget
@@ -102,15 +100,14 @@ App.xaml.cs (entry point)
   │           ├── ScheduleService             (every 30s)
   │           ├── ProcessWatcherService       (process scanning)
   │           ├── SessionLockService          (session events)
-  │           ├── TemperatureMonitorService   (CPU temp checks)
-  │           └── PomodoroService             (focus/break cycles)
+  │           └── TemperatureMonitorService   (CPU temp checks)
   ├── AnalyticsService        — Feature tracking + session analytics
   ├── InterceptionInputService — HID driver management (ready on demand)
   ├── SessionStateService     — Restore previous session
   ├── DataExportService       — User data packaging service
   ├── HealthCheckService      — App self-monitoring
   ├── WebApiService           — Optional local REST API
-  └── MainWindow              — Tray icon, hotkeys, TypeThing, Pomodoro
+  └── MainWindow              — Tray icon, hotkeys, TypeThing
         └── MainViewModel     — Binds to KeepAwakeService.ActiveStateChanged
 ```
 

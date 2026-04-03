@@ -1040,22 +1040,6 @@
                                 <StackPanel x:Name="CompatibilityControlsPanel" Visibility="Collapsed">
                                     <Grid x:Name="CompatibilityNoopAnchor"/>
 
-                                    <Button x:Name="PomodoroStartBtn" Click="PomodoroStart_Click"/>
-                                    <Button x:Name="PomodoroStopBtn" Click="PomodoroStop_Click"/>
-                                    <Button x:Name="PomodoroSkipBtn" Click="PomodoroSkip_Click"/>
-                                    <TextBlock x:Name="PomodoroPhaseText" Foreground="{DynamicResource ForegroundBrush}"/>
-                                    <TextBlock x:Name="PomodoroTimerText" Foreground="{DynamicResource ForegroundBrush}"/>
-                                    <TextBlock x:Name="PomodoroSessionsText" Foreground="{DynamicResource ForegroundBrush}"/>
-                                    <Slider x:Name="PomodoroFocusSlider" Minimum="1" Maximum="180" ValueChanged="PomodoroSlider_ValueChanged"/>
-                                    <TextBlock x:Name="PomodoroFocusText" Foreground="{DynamicResource ForegroundBrush}"/>
-                                    <Slider x:Name="PomodoroBreakSlider" Minimum="1" Maximum="60" ValueChanged="PomodoroSlider_ValueChanged"/>
-                                    <TextBlock x:Name="PomodoroBreakText" Foreground="{DynamicResource ForegroundBrush}"/>
-                                    <Slider x:Name="PomodoroLongBreakSlider" Minimum="1" Maximum="120" ValueChanged="PomodoroSlider_ValueChanged"/>
-                                    <TextBlock x:Name="PomodoroLongBreakText" Foreground="{DynamicResource ForegroundBrush}"/>
-                                    <Slider x:Name="PomodoroLongBreakIntervalSlider" Minimum="1" Maximum="12" ValueChanged="PomodoroSlider_ValueChanged"/>
-                                    <TextBlock x:Name="PomodoroLongBreakIntervalText" Foreground="{DynamicResource ForegroundBrush}"/>
-                                    <CheckBox x:Name="PomodoroAutoStartCheck" Checked="PomodoroSettingChanged" Unchecked="PomodoroSettingChanged"/>
-                                    <CheckBox x:Name="PomodoroKeepAwakeBreakCheck" Checked="PomodoroSettingChanged" Unchecked="PomodoroSettingChanged"/>
 
                                     <Border x:Name="TypeThingProgressOverlay" Visibility="Collapsed">
                                         <StackPanel>

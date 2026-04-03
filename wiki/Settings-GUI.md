@@ -73,18 +73,6 @@ The settings are organized into dedicated sections accessible via the left navig
 * **Progress Notifications**: Live progress bar and cancel button for long typing sessions.
 * **Layout Matching**: Diagnostics detect if the current Windows keyboard layout is compatible with HID scan-code mapping.
 
-### Pomodoro Tab
-
-| Control | Type | Config Key | Description |
-| ------- | ---- | ---------- | ----------- |
-| Enable Pomodoro | CheckBox | `PomodoroEnabled` | Master switch for Pomodoro timer |
-| Focus duration (min) | Slider (1–90) | `PomodoroFocusMinutes` | Length of focus sessions |
-| Short break (min) | Slider (1–30) | `PomodoroBreakMinutes` | Length of short breaks |
-| Long break (min) | Slider (5–60) | `PomodoroLongBreakMinutes` | Length of long breaks |
-| Sessions before long break | Slider (2–8) | `PomodoroLongBreakInterval` | Focus sessions before a long break |
-| Auto-start next session | CheckBox | `PomodoroAutoStart` | Automatically start the next session |
-| Keep awake during breaks | CheckBox | `PomodoroKeepAwakeDuringBreak` | Stay awake during break periods |
-
 ### Updates Tab
 
 | Control | Type | Config Key | Description |
@@ -189,7 +177,6 @@ Left-side navigation with ten sections:
 | **Behavior** | Keep-awake controls (display sleep, heartbeat key, duration) |
 | **Smart Features** | Battery, network, idle, schedule, presentation, process watcher, VPN, thermal, session lock, app rules |
 | **TypeThing** | Typing automation hotkeys, speed, and behavior |
-| **Pomodoro** | Focus/break cycle timer with configurable intervals |
 | **Updates** | Update channels, auto-check, and version management |
 
 Click any navigation item to switch the content area. All navigation items show descriptive tooltips on hover.

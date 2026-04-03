@@ -767,18 +767,6 @@ public class ConfigService : IConfigService
         if (Config.AutoUpdateCheckIntervalMinutes < 30 || Config.AutoUpdateCheckIntervalMinutes > 1440)
         { Config.AutoUpdateCheckIntervalMinutes = d.AutoUpdateCheckIntervalMinutes; healed++; }
 
-        // Pomodoro settings
-        if (Config.PomodoroFocusMinutes < 1 || Config.PomodoroFocusMinutes > 120)
-        { Config.PomodoroFocusMinutes = d.PomodoroFocusMinutes; healed++; }
-
-        if (Config.PomodoroBreakMinutes < 1 || Config.PomodoroBreakMinutes > 60)
-        { Config.PomodoroBreakMinutes = d.PomodoroBreakMinutes; healed++; }
-
-        if (Config.PomodoroLongBreakMinutes < 1 || Config.PomodoroLongBreakMinutes > 120)
-        { Config.PomodoroLongBreakMinutes = d.PomodoroLongBreakMinutes; healed++; }
-
-        if (Config.PomodoroLongBreakInterval < 1 || Config.PomodoroLongBreakInterval > 20)
-        { Config.PomodoroLongBreakInterval = d.PomodoroLongBreakInterval; healed++; }
 
         // Thermal
         if (Config.ThermalThreshold < 50 || Config.ThermalThreshold > 105)

@@ -143,15 +143,19 @@ public class UpdateService : IUpdateService
         
         // GitHub API certificate pins (SHA-256 hashes of SPKI)
         // These are the expected public key hashes for GitHub's TLS certificates
-        // Pins verified against DigiCert and Let's Encrypt root CAs
+        // Pins verified against DigiCert, Sectigo, and Let's Encrypt root CAs
         var pinnedHashes = new[]
         {
-            // DigiCert High Assurance EV Root CA (GitHub's current root)
+            // DigiCert High Assurance EV Root CA (legacy GitHub root)
             "9yF8wUfUQKd9aLkFMMnpx3xMIVC6sAu9TdjRhdZPjOI=",
             // DigiCert Global Root G2 (backup/fallback)
             "cAajgxHdb7nHsbRxqmjDn5gEjBuuZKk6YaD8n1BS1DM=",
             // Let's Encrypt ISRG Root X1 (community builds)
             "C5+lpZ7tc/VwmBl/DUSJEPSdEjZPw5OLf6IpeigyCNw=",
+            // Sectigo Public Server Authentication Root E46 (GitHub's current root as of 2026)
+            "EdsvlytFf4a/O+hCPwBXFFi46RKXqivCAF+mO7s+5Ng=",
+            // Sectigo Public Server Authentication CA DV E36 (intermediate)
+            "VqePxH3EcFwZuYK3CCOMz5HKMoeIZpZcEyBf4diPGSA=",
         };
 
         handler.ServerCertificateCustomValidationCallback = (request, cert, chain, errors) =>

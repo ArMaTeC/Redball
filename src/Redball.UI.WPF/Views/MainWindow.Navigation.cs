@@ -272,15 +272,15 @@ public partial class MainWindow
             return;
         }
 
-        if (HomeNavButton.IsChecked == true) { ShowSection("Home"); return; }
-        if (AnalyticsNavButton.IsChecked == true) { ShowSection("Analytics"); LoadEmbeddedDashboardContent(); return; }
-        if (SloDashboardNavButton.IsChecked == true) { ShowSection("SloDashboard"); return; }
-        if (DiagnosticsNavButton.IsChecked == true) { ShowSection("Diagnostics"); LoadEmbeddedDashboardContent(); return; }
-        if (SettingsNavButton.IsChecked == true) { ShowSection("Settings"); return; }
-        if (BehaviorNavButton.IsChecked == true) { ShowSection("Behavior"); return; }
-        if (SmartFeaturesNavButton.IsChecked == true) { ShowSection("SmartFeatures"); return; }
-        if (TypeThingNavButton.IsChecked == true) { ShowSection("TypeThing"); return; }
-        if (UpdatesNavButton.IsChecked == true) { ShowSection("Updates"); }
+        if (HomeNavButton.IsChecked == true) { ShowSection("Home"); StopSloDashboardRefreshTimer(); return; }
+        if (AnalyticsNavButton.IsChecked == true) { ShowSection("Analytics"); LoadEmbeddedDashboardContent(); StopSloDashboardRefreshTimer(); return; }
+        if (SloDashboardNavButton.IsChecked == true) { ShowSection("SloDashboard"); LoadSloDashboardContent(); StartSloDashboardRefreshTimer(); return; }
+        if (DiagnosticsNavButton.IsChecked == true) { ShowSection("Diagnostics"); LoadEmbeddedDashboardContent(); StopSloDashboardRefreshTimer(); return; }
+        if (SettingsNavButton.IsChecked == true) { ShowSection("Settings"); StopSloDashboardRefreshTimer(); return; }
+        if (BehaviorNavButton.IsChecked == true) { ShowSection("Behavior"); StopSloDashboardRefreshTimer(); return; }
+        if (SmartFeaturesNavButton.IsChecked == true) { ShowSection("SmartFeatures"); StopSloDashboardRefreshTimer(); return; }
+        if (TypeThingNavButton.IsChecked == true) { ShowSection("TypeThing"); StopSloDashboardRefreshTimer(); return; }
+        if (UpdatesNavButton.IsChecked == true) { ShowSection("Updates"); StopSloDashboardRefreshTimer(); }
     }
 
     private void AnalyticsExportCsv_Click(object sender, RoutedEventArgs e)
@@ -357,10 +357,6 @@ public partial class MainWindow
         ShowAnalytics();
     }
 
-    public void ShowPomodoro()
-    {
-        ShowTypeThing();
-    }
 
     public void ShowSettings()
     {

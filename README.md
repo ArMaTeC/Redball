@@ -10,7 +10,7 @@
 
 > A system tray utility to prevent Windows from sleeping, with style.
 
-Redball is a keep-awake utility for Windows built as a **native WPF desktop application** (.NET 10) with 14 custom themes. It keeps your computer awake using the `SetThreadExecutionState` API, with smart monitoring features (battery, network, idle, schedule, presentation mode, thermal protection, process watcher, VPN detection), a Pomodoro timer, clipboard typer, built-in analytics dashboard, auto-updating, code signing, comprehensive security framework, performance monitoring, and a branded MSI installer.
+Redball is a keep-awake utility for Windows built as a **native WPF desktop application** (.NET 10) with 14 custom themes. It keeps your computer awake using the `SetThreadExecutionState` API, with smart monitoring features (battery, network, idle, schedule, presentation mode, thermal protection, process watcher, VPN detection), clipboard typer, built-in analytics dashboard, auto-updating, code signing, comprehensive security framework, performance monitoring, and a branded MSI installer.
 
 ![Redball Icon](installer/redball.png)
 
@@ -27,7 +27,7 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 - **Accessibility Baseline** — WCAG AA compliance framework with contrast auditing, keyboard navigation, and screen reader support
 - **Custom Window Chrome** — Modern borderless window with custom title bar, minimize/maximize/close buttons, and rounded corners via `WindowChrome`
 - **Command Palette** — Progressive disclosure UX with searchable command surface (Ctrl+K) for instant access to actions and settings
-- **Settings Window** — Tabbed settings with live slider value labels for duration and typing speed, organized into General, Behavior, Smart Features, TypeThing, Pomodoro, Security, and Updates sections
+- **Settings Window** — Tabbed settings with live slider value labels for duration and typing speed, organized into General, Behavior, Smart Features, TypeThing, Security, and Updates sections
 - **Mini Widget** — Floating mini widget window for quick status and controls with customizable presets (Focus, Meeting, BatterySafe)
 - **Onboarding Tutorial** — Interactive first-run tutorial for new users
 - **Theme QA Matrix** — 14-theme control readability testing across 12 control types with WCAG AA contrast validation
@@ -61,7 +61,6 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 - **Timed Sessions** — Set duration (15, 30, 60, 120 minutes) or run indefinitely
 - **Display Sleep Control** — Optionally keep display awake too
 - **Configurable Heartbeat Key** — Sends invisible F13–F16 keypresses to prevent idle detection via native `SendInput`
-- **Pomodoro Timer** — Built-in focus/break cycle timer with configurable intervals and auto-start
 - **Startup with Windows** — Launch automatically via Registry Run key or MSI installer
 - **Toast Notifications** — Modern toast-style notifications with configurable mode filtering (All, Important, Errors, Silent)
 - **JSON Configuration** — Persistent settings via `Redball.json` in `%LocalAppData%\Redball\UserData`

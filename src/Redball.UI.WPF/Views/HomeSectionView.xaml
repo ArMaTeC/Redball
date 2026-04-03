@@ -109,23 +109,6 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
-                            <lottie:LottieAnimationView Width="32" Height="32" FileName="Assets/Animations/pomodoro_timer.json" AutoPlay="True" RepeatCount="-1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
-                            <TextBlock Text="Pomodoro Timer" FontSize="16" FontWeight="SemiBold"/>
-                            <TextBlock Text="Start a focus session to boost your productivity." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
-                            <Button Content="Open Timer" Command="{Binding OpenPomodoroCommand}" Style="{DynamicResource AnimatedModernButton}" HorizontalAlignment="Left"/>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-
-                <Border Style="{DynamicResource AnimatedCardStyle}" Margin="8,8,0,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SurfaceBrush}" VerticalAlignment="Top">
                             <TextBlock Text="&#xE8A5;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel Grid.Column="1" Margin="16,0,0,0">

@@ -68,18 +68,6 @@ Config is migrated automatically from legacy locations (install dir, old LocalAp
 | `ScheduleStopTime` | string | Time to auto-stop (HH:mm) | `18:00` |
 | `ScheduleDays` | string[] | Days of the week the schedule applies | Weekdays |
 
-### Pomodoro Settings
-
-| Setting | Type | Description | Default |
-| ------- | ---- | ----------- | ------- |
-| `PomodoroEnabled` | bool | Enable the Pomodoro timer | `false` |
-| `PomodoroFocusMinutes` | int | Focus session duration | `25` |
-| `PomodoroBreakMinutes` | int | Short break duration | `5` |
-| `PomodoroLongBreakMinutes` | int | Long break duration | `15` |
-| `PomodoroLongBreakInterval` | int | Focus sessions before a long break | `4` |
-| `PomodoroAutoStart` | bool | Auto-start next session | `true` |
-| `PomodoroKeepAwakeDuringBreak` | bool | Stay awake during breaks | `false` |
-
 ### TypeThing Settings
 
 | Setting | Type | Description | Default |

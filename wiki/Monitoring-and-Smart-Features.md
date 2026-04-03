@@ -178,22 +178,6 @@ Reminds the user to restart the application (or auto-restarts) after a configura
 
 ---
 
-## Pomodoro Timer
-
-**Settings:** `PomodoroEnabled`, `PomodoroFocusMinutes`, `PomodoroBreakMinutes`, `PomodoroLongBreakMinutes`, `PomodoroLongBreakInterval` | **Service:** `PomodoroService`
-
-A built-in Pomodoro technique timer that alternates between focus sessions and breaks:
-
-1. **Focus session:** Keep-awake is active for `PomodoroFocusMinutes` (default: 25 min)
-2. **Short break:** Break for `PomodoroBreakMinutes` (default: 5 min)
-3. **Long break:** After `PomodoroLongBreakInterval` focus sessions (default: 4), take a `PomodoroLongBreakMinutes` break (default: 15 min)
-4. **Auto-start:** Optionally auto-start the next session (`PomodoroAutoStart`)
-5. **Break behaviour:** Optionally keep awake during breaks (`PomodoroKeepAwakeDuringBreak`)
-
-Access via the **Pomodoro** section in the main window navigation.
-
----
-
 ## Calendar Integration
 
 **Setting:** `CalendarIntegrationEnabled` | **Service:** `CalendarIntegrationService`

@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (Unreleased)
 
+- **Certificate Pinning: GitHub Certificate Chain Update**: Updated certificate pinning to support GitHub's migration from DigiCert to Sectigo certificate authority.
+  - Added Sectigo Public Server Authentication Root E46 certificate hash to pinned set.
+  - Added Sectigo Public Server Authentication CA DV E36 intermediate certificate hash.
+  - Maintains backward compatibility with existing DigiCert and Let's Encrypt certificates.
+  - Resolves SSL connection failures when checking for updates from GitHub API.
+  - Updated in `src/Redball.UI.WPF/Services/UpdateService.cs`.
+
+- **Resource Budget Service: Adjusted Memory Limits**: Updated resource budget limits to reflect actual shared process memory usage.
+  - Increased all service RAM budgets from 25-200MB to 400MB to account for shared process memory space.
+  - Increased CPU limits to more realistic values (5-25% depending on service).
+  - Added documentation noting that all services share the same process memory space.
+  - Eliminates false-positive critical resource violation warnings.
+  - Updated in `src/Redball.UI.WPF/Services/ResourceBudgetService.cs`.
+
+- **SLO Dashboard: Auto-Refresh Timer**: Fixed SLO Dashboard not auto-refreshing when navigating to the dashboard.
+  - Added `StartSloDashboardRefreshTimer()` call when SLO Dashboard nav button is checked.
+  - Added `StopSloDashboardRefreshTimer()` calls when navigating away from SLO Dashboard.
+  - Dashboard now refreshes every 5 seconds when visible, stops when navigating to other sections.
+  - Updated in `src/Redball.UI.WPF/Views/MainWindow.Navigation.cs`.
+
+### Removed (Unreleased)
+
+- **Pomodoro Timer Feature**: Removed entire Pomodoro timer functionality as it was not being used.
+  - Deleted `PomodoroService.cs`, `MainWindow.Pomodoro.cs`, `PomodoroSectionView.xaml` and related files.
+  - Removed Pomodoro UI controls from MainWindow compatibility panel and HomeSectionView.
+  - Removed Pomodoro configuration properties from `RedballConfig` model.
+  - Removed Pomodoro validation logic from `ConfigService`.
+  - Removed `OpenPomodoroCommand` from `MainViewModel`.
+  - Removed Pomodoro tests from test suite.
+  - Updated documentation to remove all Pomodoro references.
+
+### Fixed (Unreleased 2)
+
 - **Build Script: Fixed PSScriptAnalyzer Directory Lint Warning**: Fixed "Object reference not set to an instance of an object" warning in `scripts/build.ps1`.
   - Changed `Step-RunLinting` function to skip directory-level analysis which is prone to null reference errors with certain files.
   - Now uses per-file analysis directly for more reliable results.
