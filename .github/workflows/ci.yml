@@ -337,7 +337,7 @@ jobs:
       uses: actions/checkout@v6
 
     - name: Download WPF artifact
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v8
       with:
         name: Redball-WPF-Exe
         path: ./dist/wpf-publish
