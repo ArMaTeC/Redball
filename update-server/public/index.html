@@ -1007,7 +1007,7 @@
             </svg>
           </div>
           <h3>Security First</h3>
-          <p>Code-signed EXE and MSI. SHA-256 verification. Tamper detection. Your system stays secure.</p>
+          <p>Code-signed EXE and installer. SHA-256 verification. Tamper detection. Your system stays secure.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">
@@ -1038,11 +1038,11 @@
       </div>
 
       <div class="download-grid" id="download-grid">
-        <div class="download-card recommended" id="card-msi">
-          <h3>MSI Installer</h3>
+        <div class="download-card recommended" id="card-nsis">
+          <h3>NSIS Installer</h3>
           <p class="version">Latest Stable</p>
-          <p class="file-info">~3 MB • Code Signed • Windows 10/11</p>
-          <a href="#" class="btn btn-primary" id="download-msi">Download MSI</a>
+          <p class="file-info">~8 MB • Code Signed • Windows 10/11</p>
+          <a href="#" class="btn btn-primary" id="download-nsis">Download Installer</a>
         </div>
         <div class="download-card" id="card-zip">
           <h3>Portable ZIP</h3>
@@ -1112,12 +1112,12 @@
       </div>
 
       <div class="install-tabs">
-        <button class="install-tab active" data-install="msi">
+        <button class="install-tab active" data-install="nsis">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="4" y="4" width="16" height="16" rx="2" />
             <path d="M8 8h8M8 12h8M8 16h5" />
           </svg>
-          MSI Installer
+          NSIS Installer
         </button>
         <button class="install-tab" data-install="zip">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1137,26 +1137,22 @@
       </div>
 
       <div class="install-content">
-        <div class="install-panel active" id="install-msi">
+        <div class="install-panel active" id="install-nsis">
           <h3>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               style="color: var(--accent)">
               <rect x="4" y="4" width="16" height="16" rx="2" />
               <path d="M8 8h8M8 12h8M8 16h5" />
             </svg>
-            MSI Installer (Recommended)
+            NSIS Installer (Recommended)
           </h3>
           <ol>
-            <li>Download the <strong>Redball.msi</strong> file from the download section above</li>
+            <li>Download the <strong>Redball-Setup.exe</strong> file from the download section above</li>
             <li>Double-click the downloaded file to launch the installer</li>
             <li>If Windows SmartScreen appears, click "More info" then "Run anyway"</li>
-            <li>Follow the setup wizard prompts</li>
-            <li>Redball will start automatically after installation</li>
+            <li>Follow the setup wizard prompts - choose your features (shortcuts, auto-start, .NET runtime)</li>
+            <li>Click "Launch Redball" on the finish page to start using it immediately</li>
           </ol>
-          <div class="code-block">
-            <span class="comment"># Or install silently via command line:</span>
-            msiexec /i Redball.msi /quiet /norestart
-          </div>
           <div class="install-note">
             <strong>Administrator Required?</strong>
             <p>No admin rights needed for per-user installation. Admin only required for all-users install.</p>
@@ -1471,9 +1467,9 @@
     }
 
     function updateDownloadCards(release) {
-      const msi = release.files?.find(f => f.name.endsWith('.msi'));
+      const nsis = release.files?.find(f => f.name.endsWith('-Setup.exe') || f.name.includes('Setup'));
       const zip = release.files?.find(f => f.name.endsWith('.zip'));
-      const exe = release.files?.find(f => f.name.endsWith('.exe') && !f.name.includes('Service'));
+      const exe = release.files?.find(f => f.name.endsWith('.exe') && !f.name.includes('Service') && !f.name.includes('Setup'));
       const fmtSize = bytes => {
         if (!bytes) return '0 B';
         const units = ['B', 'KB', 'MB'];
@@ -1486,12 +1482,12 @@
         const d = new Date(iso);
         return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' });
       };
-      if (msi) {
-        document.querySelector('#card-msi .version').textContent = 'v' + release.version + ' • ' + fmtDate(release.date);
-        document.querySelector('#card-msi .file-info').textContent = fmtSize(msi.size) + ' • Code Signed';
-        document.getElementById('download-msi').href = '/downloads/' + release.version + '/' + msi.name;
+      if (nsis) {
+        document.querySelector('#card-nsis .version').textContent = 'v' + release.version + ' • ' + fmtDate(release.date);
+        document.querySelector('#card-nsis .file-info').textContent = fmtSize(nsis.size) + ' • Code Signed';
+        document.getElementById('download-nsis').href = '/downloads/' + release.version + '/' + nsis.name;
       } else {
-        document.getElementById('card-msi').classList.add('hidden');
+        document.getElementById('card-nsis').classList.add('hidden');
       }
       if (zip) {
         document.querySelector('#card-zip .version').textContent = 'v' + release.version + ' • ' + fmtDate(release.date);
@@ -1522,7 +1518,7 @@
         );
         if (filtered.length > 0) {
           updateDownloadCards(filtered[0]);
-          ['card-msi', 'card-zip', 'card-exe'].forEach(id => {
+          ['card-nsis', 'card-zip', 'card-exe'].forEach(id => {
             document.getElementById(id)?.classList.remove('hidden');
           });
         }

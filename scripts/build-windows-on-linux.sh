@@ -2,14 +2,14 @@
 # ============================================================================
 # Redball Windows Build on Linux (via Wine + .NET SDK)
 # ============================================================================
-# Builds the WPF application and MSI installer on Ubuntu using Wine to run
+# Builds the WPF application and NSIS installer on Ubuntu using Wine to run
 # the Windows .NET SDK. Based on the approach from:
 # https://kovacsbalinthunor.medium.com/unhinged-way-to-build-net-wpf-applications-on-linux-8bbea39bcd99
 #
 # Usage:
-#   ./scripts/build-windows-on-linux.sh              # Full build (WPF + MSI)
+#   ./scripts/build-windows-on-linux.sh              # Full build (WPF + NSIS)
 #   ./scripts/build-windows-on-linux.sh --setup       # Only install dependencies
-#   ./scripts/build-windows-on-linux.sh --wpf-only    # Build WPF app only (no MSI)
+#   ./scripts/build-windows-on-linux.sh --wpf-only    # Build WPF app only (no installer)
 #   ./scripts/build-windows-on-linux.sh --skip-setup   # Skip dependency installation
 #   ./scripts/build-windows-on-linux.sh --clean        # Clean build artifacts
 # ============================================================================
@@ -25,7 +25,6 @@ WINE_DOTNET_ROOT="$HOME/.wine-dotnet"
 WINE_PREFIX="$HOME/.wine-redball"
 DIST_DIR="$PROJECT_ROOT/dist"
 WPF_PUBLISH_DIR="$DIST_DIR/wpf-publish"
-WIX_VERSION="4.0.5"
 
 # Windows .NET SDK download version (exact version for zip download)
 WIN_DOTNET_VERSION="10.0.100"
@@ -47,25 +46,22 @@ SETUP_ONLY=false
 WPF_ONLY=false
 SKIP_SETUP=false
 CLEAN_ONLY=false
-SKIP_MSI=false
 CONFIGURATION="Release"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --setup)       SETUP_ONLY=true ;;
-        --wpf-only)    WPF_ONLY=true; SKIP_MSI=true ;;
+        --wpf-only)    WPF_ONLY=true ;;
         --skip-setup)  SKIP_SETUP=true ;;
         --clean)       CLEAN_ONLY=true ;;
-        --skip-msi)    SKIP_MSI=true ;;
         --debug)       CONFIGURATION="Debug" ;;
         --help|-h)
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
             echo "  --setup       Only install dependencies (Wine, .NET SDK)"
-            echo "  --wpf-only    Build WPF application only (no MSI)"
+            echo "  --wpf-only    Build WPF application only (no installer)"
             echo "  --skip-setup  Skip dependency installation"
-            echo "  --skip-msi    Skip MSI installer build"
             echo "  --clean       Clean build artifacts"
             echo "  --debug       Build in Debug configuration"
             echo "  --help        Show this help"
@@ -86,17 +82,6 @@ wine_dotnet() {
 linux_dotnet() {
     DOTNET_NUGET_SIGNATURE_VERIFICATION=false \
         "$LINUX_DOTNET_ROOT/dotnet" "$@"
-}
-
-# === Helper: Run wix.exe via Wine ===
-wine_wix() {
-    local wix_exe="$WINE_DOTNET_ROOT/tools/wix.exe"
-    if [[ ! -f "$wix_exe" ]]; then
-        log_error "WiX not installed. Run with --setup first."
-        return 1
-    fi
-    WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all \
-        wine "$wix_exe" "$@"
 }
 
 # === Clean ===
@@ -262,43 +247,6 @@ import_wine_certs() {
     log_success "Imported $imported certificates into Wine's trust store"
 }
 
-# === Setup: Install WiX Toolset in Wine ===
-install_wix_in_wine() {
-    local wix_exe="$WINE_DOTNET_ROOT/tools/wix.exe"
-    if [[ -f "$wix_exe" ]]; then
-        log_success "WiX Toolset already installed"
-        return 0
-    fi
-
-    log_step "Installing WiX Toolset $WIX_VERSION via dotnet tool..."
-    # Install as a global tool within the Wine .NET environment
-    wine_dotnet tool install --tool-path "$(winepath -w "$WINE_DOTNET_ROOT/tools" 2>/dev/null || echo "Z:$WINE_DOTNET_ROOT/tools")" wix --version "$WIX_VERSION" || {
-        log_warn "dotnet tool install failed, trying manual download..."
-        mkdir -p "$WINE_DOTNET_ROOT/tools"
-        local wix_nupkg="/tmp/wix-${WIX_VERSION}.nupkg"
-        wget -q -O "$wix_nupkg" "https://api.nuget.org/v3-flatcontainer/wix/${WIX_VERSION}/wix.${WIX_VERSION}.nupkg" 2>/dev/null || {
-            log_error "Failed to download WiX toolset"
-            exit 1
-        }
-        unzip -qo "$wix_nupkg" -d "/tmp/wix-extract"
-        cp /tmp/wix-extract/tools/net6.0/any/* "$WINE_DOTNET_ROOT/tools/" 2>/dev/null || \
-        cp /tmp/wix-extract/tools/net8.0-windows/* "$WINE_DOTNET_ROOT/tools/" 2>/dev/null || true
-        rm -rf /tmp/wix-extract "$wix_nupkg"
-    }
-
-    # Install required WiX extensions
-    if [[ -f "$wix_exe" ]]; then
-        log_step "Installing WiX extensions..."
-        WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all wine "$wix_exe" extension add -g "WixToolset.UI.wixext/$WIX_VERSION" 2>/dev/null || true
-        WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all wine "$wix_exe" extension add -g "WixToolset.Util.wixext/$WIX_VERSION" 2>/dev/null || true
-        log_success "WiX extensions installed"
-    else
-        log_warn "WiX exe not found after install — MSI build will be skipped"
-    fi
-
-    log_success "WiX Toolset installed"
-}
-
 # === Setup: All ===
 setup_all() {
     echo ""
@@ -311,10 +259,6 @@ setup_all() {
     init_wine_prefix
     install_linux_dotnet
     install_dotnet_in_wine
-
-    if ! $WPF_ONLY; then
-        install_wix_in_wine
-    fi
 
     echo ""
     log_success "Build environment ready!"
@@ -441,221 +385,10 @@ step_build_custom_actions() {
         if [[ -f "$ca_dll" ]]; then
             log_success "Custom Actions DLL built: $ca_dll"
         else
-            log_warn "Custom Actions DLL not found after build - will build MSI without custom actions"
+            log_warn "Custom Actions DLL not found after build - will build without custom actions"
         fi
     else
-        log_warn "Custom Actions build failed - will build MSI without custom actions"
-    fi
-}
-
-# === Build: MSI Installer (WiX v4 via Wine - full featured) ===
-step_build_msi_wix4() {
-    local wix_exe="$WINE_DOTNET_ROOT/tools/wix.exe"
-    if [[ ! -f "$wix_exe" ]]; then
-        return 1
-    fi
-
-    log_step "Building MSI Installer (WiX v4 via Wine)..."
-
-    # Read version
-    local version
-    if [[ -f "$PROJECT_ROOT/scripts/version.txt" ]]; then
-        version=$(cat "$PROJECT_ROOT/scripts/version.txt" | tr -d '[:space:]')
-    else
-        version=$(grep -oP '<Version>\K[\d.]+' "$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" || echo "2.1.0")
-    fi
-
-    # WiX needs 4-part version
-    local wix_version="${version}.0"
-
-    local ca_dll="$PROJECT_ROOT/installer/Redball.Installer.CustomActions/bin/$CONFIGURATION/net8.0-windows/Redball.Installer.CustomActions.dll"
-    if [[ ! -f "$ca_dll" ]]; then
-        log_warn "Custom Actions DLL not found, trying without custom actions..."
-        ca_dll=""
-    fi
-
-    # Generate license RTF if missing
-    local license_rtf="$PROJECT_ROOT/installer/Redball-License.rtf"
-    if [[ ! -f "$license_rtf" ]]; then
-        log_step "Generating license RTF..."
-        local license_text
-        license_text=$(cat "$PROJECT_ROOT/LICENSE" | sed 's/\\/\\\\/g; s/{/\\{/g; s/}/\\}/g' | sed ':a;N;$!ba;s/\n/\\par /g')
-        echo "{\\rtf1\ansi\deff0{\fonttbl{\f0 Segoe UI;}}\fs20 $license_text}" > "$license_rtf"
-        log_success "License RTF generated"
-    fi
-
-    # Accept WiX EULA
-    export WIX_OSMF_EULA_ACCEPTED=1
-
-    # Run WiX from the installer directory (so relative paths in WXS work)
-    pushd "$PROJECT_ROOT/installer" > /dev/null
-    if [[ -n "$ca_dll" ]]; then
-        WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all WIX_OSMF_EULA_ACCEPTED=1 \
-            wine "$wix_exe" build Redball.v2.wxs \
-                -o "Z:$DIST_DIR/Redball-${version}.msi" \
-                -ext WixToolset.UI.wixext \
-                -ext WixToolset.Util.wixext \
-                -d "ProductVersion=${wix_version}" \
-                -d "CA_PATH=Z:${ca_dll}" 2>/dev/null
-    else
-        WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all WIX_OSMF_EULA_ACCEPTED=1 \
-            wine "$wix_exe" build Redball.v2.wxs \
-                -o "Z:$DIST_DIR/Redball-${version}.msi" \
-                -ext WixToolset.UI.wixext \
-                -ext WixToolset.Util.wixext \
-                -d "ProductVersion=${wix_version}" 2>/dev/null
-    fi
-    local wix_exit=$?
-    popd > /dev/null
-
-    if [[ $wix_exit -eq 0 && -f "$DIST_DIR/Redball-${version}.msi" ]]; then
-        local size
-        size=$(du -h "$DIST_DIR/Redball-${version}.msi" | cut -f1)
-        cp "$DIST_DIR/Redball-${version}.msi" "$DIST_DIR/Redball.msi"
-        log_success "MSI built (WiX v4): Redball-${version}.msi ($size)"
-        return 0
-    else
-        return 1
-    fi
-}
-
-# === Build: MSI Installer (WiX v3 via wixl - Linux native fallback) ===
-step_build_msi_wix3() {
-    if ! command -v wixl &>/dev/null; then
-        log_warn "wixl not installed — install with: apt-get install msitools"
-        return 1
-    fi
-
-    log_step "Building MSI Installer (WiX v3 via wixl - Linux native)..."
-
-    # Read version
-    local version
-    if [[ -f "$PROJECT_ROOT/scripts/version.txt" ]]; then
-        version=$(cat "$PROJECT_ROOT/scripts/version.txt" | tr -d '[:space:]')
-    else
-        version=$(grep -oP '<Version>\K[\d.]+' "$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" || echo "2.1.0")
-    fi
-
-    # Generate license RTF if missing
-    local license_rtf="$PROJECT_ROOT/installer/Redball-License.rtf"
-    if [[ ! -f "$license_rtf" ]]; then
-        log_step "Generating license RTF..."
-        local license_text
-        license_text=$(cat "$PROJECT_ROOT/LICENSE" | sed 's/\\/\\\\/g; s/{/\\{/g; s/}/\\}/g' | sed ':a;N;$!ba;s/\n/\\par /g')
-        echo "{\\rtf1\ansi\deff0{\fonttbl{\f0 Segoe UI;}}\fs20 $license_text}" > "$license_rtf"
-        log_success "License RTF generated"
-    fi
-
-    # Check if wix3 WXS exists, create minimal one if not
-    local wxs_path="$PROJECT_ROOT/installer/Redball.wix3.wxs"
-    if [[ ! -f "$wxs_path" ]]; then
-        log_step "Creating minimal WiX v3 source file..."
-        cat > "$wxs_path" << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="Redball" Language="1033" Version="2.1.443.0" Manufacturer="ArMaTeC" UpgradeCode="A7A9B089-9D1D-4F8A-86DB-6FE89B6F99B0">
-    <Package InstallerVersion="200" Compressed="yes" InstallScope="perUser" />
-    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
-    <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." Schedule="afterInstallInitialize" />
-    <Property Id="ARPCOMMENTS" Value="Keep-awake utility for Windows" />
-    <Property Id="ARPURLINFOABOUT" Value="https://github.com/ArMaTeC/Redball" />
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="LocalAppDataFolder">
-        <Directory Id="INSTALLFOLDER" Name="Redball">
-          <Component Id="Redball.exe" Guid="B5C1A4F2-3E8D-4A9B-9C2D-1F6E5A3B7D4E">
-            <File Id="Redball.exe" Source="Redball.UI.WPF.exe" KeyPath="yes">
-              <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="Redball" WorkingDirectory="INSTALLFOLDER" Icon="RedballIcon.exe" Advertise="yes" />
-            </File>
-          </Component>
-          <Component Id="Redball.dll" Guid="A3D2B8C1-5F4E-4B7A-9C1D-2E5F8A6B3C9D">
-            <File Id="Redball.dll" Source="Redball.UI.WPF.dll" KeyPath="yes" />
-          </Component>
-          <Component Id="Redball.deps.json" Guid="C7E9F4A2-8B3D-4C5E-1F2A-9B8C7D6E5F4A">
-            <File Id="Redball.deps.json" Source="Redball.UI.WPF.deps.json" KeyPath="yes" />
-          </Component>
-          <Component Id="Redball.runtimeconfig.json" Guid="D8F1A5B3-9C4E-5D6F-2A3B-0C9D8E7F6A5B">
-            <File Id="Redball.runtimeconfig.json" Source="Redball.UI.WPF.runtimeconfig.json" KeyPath="yes" />
-          </Component>
-        </Directory>
-      </Directory>
-      <Directory Id="ProgramMenuFolder" Name="Programs" />
-    </Directory>
-    <Feature Id="ProductFeature" Title="Redball" Level="1">
-      <ComponentRef Id="Redball.exe" />
-      <ComponentRef Id="Redball.dll" />
-      <ComponentRef Id="Redball.deps.json" />
-      <ComponentRef Id="Redball.runtimeconfig.json" />
-    </Feature>
-    <Icon Id="RedballIcon.exe" SourceFile="redball.ico" />
-    <Property Id="ARPPRODUCTICON" Value="RedballIcon.exe" />
-  </Product>
-</Wix>
-EOF
-        log_success "Created $wxs_path"
-    fi
-
-    # Update version in WXS file
-    sed -i "s/Version=\"[^\"]*\"/Version=\"${version}.0\"/" "$wxs_path"
-
-    # Build MSI from publish directory
-    pushd "$WPF_PUBLISH_DIR" > /dev/null
-    wixl -o "$DIST_DIR/Redball-${version}.msi" "$wxs_path" 2>/dev/null
-    local wixl_exit=$?
-    popd > /dev/null
-
-    if [[ $wixl_exit -eq 0 && -f "$DIST_DIR/Redball-${version}.msi" ]]; then
-        local size
-        size=$(du -h "$DIST_DIR/Redball-${version}.msi" | cut -f1)
-        cp "$DIST_DIR/Redball-${version}.msi" "$DIST_DIR/Redball.msi"
-        log_success "MSI built (WiX v3): Redball-${version}.msi ($size)"
-        log_warn "Note: This is a basic MSI without custom actions (auto-start, etc.)"
-        return 0
-    else
-        return 1
-    fi
-}
-
-# === Build: MSI Installer (main entry point) ===
-step_build_msi() {
-    # Try WiX v4 first (full featured with custom actions)
-    if step_build_msi_wix4; then
-        generate_checksums
-        return 0
-    fi
-
-    log_warn "WiX v4 build failed or not available, trying WiX v3..."
-
-    # Fall back to WiX v3 (simpler but works on Linux)
-    if step_build_msi_wix3; then
-        generate_checksums
-        return 0
-    fi
-
-    log_error "MSI build failed — both WiX v4 and WiX v3 approaches failed"
-    exit 1
-}
-
-generate_checksums() {
-    local version
-    if [[ -f "$PROJECT_ROOT/scripts/version.txt" ]]; then
-        version=$(cat "$PROJECT_ROOT/scripts/version.txt" | tr -d '[:space:]')
-    else
-        version=$(grep -oP '<Version>\K[\d.]+' "$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" || echo "2.1.0")
-    fi
-
-    log_step "Generating checksums..."
-    # Only checksum files that exist
-    local files_to_checksum=""
-    [[ -f "$DIST_DIR/Redball-${version}.msi" ]] && files_to_checksum="$files_to_checksum Redball-${version}.msi"
-    [[ -f "$DIST_DIR/Redball.msi" ]] && files_to_checksum="$files_to_checksum Redball.msi"
-    [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] && files_to_checksum="$files_to_checksum Redball-${version}-Setup.exe"
-    [[ -f "$DIST_DIR/Redball-Setup.exe" ]] && files_to_checksum="$files_to_checksum Redball-Setup.exe"
-    
-    if [[ -n "$files_to_checksum" ]]; then
-        (cd "$DIST_DIR" && sha256sum $files_to_checksum > SHA256SUMS)
-        log_success "SHA256SUMS generated"
-    else
-        log_warn "No files to checksum"
+        log_warn "Custom Actions build failed - will build without custom actions"
     fi
 }
 
@@ -708,13 +441,22 @@ step_build_nsis() {
         cp "$PROJECT_ROOT/LICENSE" "$WPF_PUBLISH_DIR/LICENSE.txt"
     fi
 
-    # Update version in NSIS script
-    sed -i "s/!define PRODUCT_VERSION \"[^\"]*\"/!define PRODUCT_VERSION \"${version}.0\"/" "$nsi_path"
-    sed -i "s/!define PRODUCT_VERSION_SHORT \"[^\"]*\"/!define PRODUCT_VERSION_SHORT \"${version}\"/" "$nsi_path"
+    # Copy NSIS script and assets to publish directory for building
+    cp "$nsi_path" "$WPF_PUBLISH_DIR/"
+    cp "$installer_dir/redball.ico" "$WPF_PUBLISH_DIR/" 2>/dev/null || true
+    cp "$installer_dir/nsis-header.bmp" "$WPF_PUBLISH_DIR/" 2>/dev/null || true
+    cp "$installer_dir/nsis-welcome.bmp" "$WPF_PUBLISH_DIR/" 2>/dev/null || true
+
+    # Update version in copied NSIS script
+    local build_nsi="$WPF_PUBLISH_DIR/Redball.nsi"
+    sed -i "s/!define PRODUCT_VERSION \"[^\"]*\"/!define PRODUCT_VERSION \"${version}.0\"/" "$build_nsi"
+    sed -i "s/!define PRODUCT_VERSION_SHORT \"[^\"]*\"/!define PRODUCT_VERSION_SHORT \"${version}\"/" "$build_nsi"
+    # Fix license path for local build
+    sed -i 's|/root/Redball/LICENSE|LICENSE.txt|g' "$build_nsi"
 
     # Build NSIS installer from publish directory
     pushd "$WPF_PUBLISH_DIR" > /dev/null
-    makensis -V2 "$nsi_path"
+    makensis -V2 "Redball.nsi"
     local nsis_exit=$?
     popd > /dev/null
 
@@ -724,11 +466,34 @@ step_build_nsis() {
         local size
         size=$(du -h "$DIST_DIR/Redball-${version}-Setup.exe" | cut -f1)
         log_success "NSIS Installer built: Redball-${version}-Setup.exe ($size)"
-        log_success "Features: Custom pages, auto-start, service install, shortcuts"
+        log_success "Features: Custom pages, auto-start, service install, shortcuts, .NET detection"
+        generate_checksums
         return 0
     else
         log_warn "NSIS build failed (exit: $nsis_exit)"
         return 1
+    fi
+}
+
+generate_checksums() {
+    local version
+    if [[ -f "$PROJECT_ROOT/scripts/version.txt" ]]; then
+        version=$(cat "$PROJECT_ROOT/scripts/version.txt" | tr -d '[:space:]')
+    else
+        version=$(grep -oP '<Version>\K[\d.]+' "$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" || echo "2.1.0")
+    fi
+
+    log_step "Generating checksums..."
+    # Only checksum files that exist
+    local files_to_checksum=""
+    [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] && files_to_checksum="$files_to_checksum Redball-${version}-Setup.exe"
+    [[ -f "$DIST_DIR/Redball-Setup.exe" ]] && files_to_checksum="$files_to_checksum Redball-Setup.exe"
+    
+    if [[ -n "$files_to_checksum" ]]; then
+        (cd "$DIST_DIR" && sha256sum $files_to_checksum > SHA256SUMS)
+        log_success "SHA256SUMS generated"
+    else
+        log_warn "No files to checksum"
     fi
 }
 
@@ -761,9 +526,7 @@ main() {
     step_build_wpf
     step_build_service
 
-    if ! $SKIP_MSI; then
-        step_build_custom_actions
-        step_build_msi
+    if ! $WPF_ONLY; then
         step_build_nsis
     fi
 
@@ -783,9 +546,9 @@ main() {
     echo "  Output:   $DIST_DIR"
     echo ""
 
-    if [[ -f "$DIST_DIR/Redball.msi" ]] || [[ -f "$DIST_DIR/Redball-Setup.exe" ]]; then
+    if [[ -f "$DIST_DIR/Redball-Setup.exe" ]]; then
         echo "  Artifacts:"
-        ls -lh "$DIST_DIR"/*.msi "$DIST_DIR"/*-Setup.exe "$DIST_DIR"/SHA256SUMS 2>/dev/null | awk '{print "    " $NF " (" $5 ")"}'
+        ls -lh "$DIST_DIR"/*-Setup.exe "$DIST_DIR"/SHA256SUMS 2>/dev/null | awk '{print "    " $NF " (" $5 ")"}'
     else
         echo "  Artifacts:"
         ls -lh "$WPF_PUBLISH_DIR/Redball.UI.WPF.exe" 2>/dev/null | awk '{print "    " $NF " (" $5 ")"}'

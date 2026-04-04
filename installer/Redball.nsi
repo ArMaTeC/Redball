@@ -25,6 +25,7 @@
 ; Version will be replaced by build script
 !define PRODUCT_VERSION "2.1.443.0"
 !define PRODUCT_VERSION_SHORT "2.1.443"
+!define PROJECT_ROOT "..\.."
 
 ; Installer settings
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION_SHORT}"
@@ -41,6 +42,17 @@ SetCompressorDictSize 32
 !include "x64.nsh"
 !include "FileFunc.nsh"
 !include "Sections.nsh"
+!include "nsDialogs.nsh"
+!include "NSISdl.nsh"
+
+; ============================================================================
+; .NET Runtime Settings
+; ============================================================================
+!define DOTNET_VERSION "10.0.0"
+!define DOTNET_MAJOR "10"
+!define DOTNET_DOWNLOAD_URL "https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.5/windowsdesktop-runtime-10.0.5-win-x64.exe"
+!define DOTNET_INSTALLER "windowsdesktop-runtime-10.0.5-win-x64.exe"
+!define DOTNET_SIZE_MB "64"
 
 ; ============================================================================
 ; MUI Settings
@@ -92,7 +104,7 @@ SetCompressorDictSize 32
 
 ; Installer pages
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
+!insertmacro MUI_PAGE_LICENSE "/root/Redball/LICENSE"
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
@@ -126,6 +138,114 @@ LangString DESC_SecStartup ${LANG_ENGLISH} "Start Redball automatically when Win
 
 Var RunningProcess
 Var ServiceInstalled
+Var DotNetInstalled
+Var DotNetDownloaded
+
+; ============================================================================
+; .NET Runtime Detection and Installation
+; ============================================================================
+
+Function CheckDotNet
+    ; Check if .NET 10 is installed via registry
+    ClearErrors
+    ReadRegStr $0 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full" "Release"
+    ${If} ${Errors}
+        ; Try WOW64
+        ClearErrors
+        ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\NET Framework Setup\NDP\v4\Full" "Release"
+    ${EndIf}
+    
+    ${IfNot} ${Errors}
+        ; Check if .NET 10 runtime is available (look for Windows Desktop Runtime)
+        ClearErrors
+        ReadRegStr $0 HKLM "SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App" "10.0.0"
+        ${IfNot} ${Errors}
+            StrCpy $DotNetInstalled 1
+            DetailPrint ".NET 10 Windows Desktop Runtime found"
+            Return
+        ${EndIf}
+        
+        ; Check for newer versions
+        ClearErrors
+        ReadRegStr $0 HKLM "SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App" "10.0"
+        ${IfNot} ${Errors}
+            StrCpy $DotNetInstalled 1
+            DetailPrint ".NET 10+ Windows Desktop Runtime found"
+            Return
+        ${EndIf}
+    ${EndIf}
+    
+    ; Also check for self-contained flag - if set, we don't need .NET
+    ${If} ${FileExists} "$INSTDIR\.selfcontained"
+        StrCpy $DotNetInstalled 1
+        DetailPrint "Self-contained build detected"
+        Return
+    ${EndIf}
+    
+    StrCpy $DotNetInstalled 0
+    DetailPrint ".NET 10 Windows Desktop Runtime not found"
+FunctionEnd
+
+Function InstallDotNet
+    ${If} $DotNetInstalled == 1
+        DetailPrint ".NET already installed, skipping"
+        Return
+    ${EndIf}
+    
+    ; Check if we have bundled installer
+    ${If} ${FileExists} "$EXEDIR\${DOTNET_INSTALLER}"
+        DetailPrint "Using bundled .NET installer..."
+        ExecWait '"$EXEDIR\${DOTNET_INSTALLER}" /install /quiet /norestart' $0
+        ${If} $0 == 0
+            DetailPrint ".NET 10 installed successfully"
+            StrCpy $DotNetInstalled 1
+        ${Else}
+            DetailPrint ".NET installation failed (code: $0)"
+            MessageBox MB_OK|MB_ICONEXCLAMATION ".NET 10 installation failed. You may need to install it manually from https://dotnet.microsoft.com/download"
+        ${EndIf}
+        Return
+    ${EndIf}
+    
+    ; Download .NET installer
+    DetailPrint "Downloading .NET 10 Windows Desktop Runtime (~${DOTNET_SIZE_MB} MB)..."
+    DetailPrint "This may take a few minutes depending on your connection..."
+    
+    NSISdl::download "${DOTNET_DOWNLOAD_URL}" "$TEMP\${DOTNET_INSTALLER}"
+    Pop $0
+    ${If} $0 != "success"
+        DetailPrint "Download failed: $0"
+        MessageBox MB_OK|MB_ICONEXCLAMATION "Failed to download .NET 10 Runtime ($0). Please install it manually from https://dotnet.microsoft.com/download/dotnet/10.0"
+        Return
+    ${EndIf}
+    
+    StrCpy $DotNetDownloaded 1
+    DetailPrint "Download complete. Installing .NET 10..."
+    
+    ; Install .NET
+    ExecWait '"$TEMP\${DOTNET_INSTALLER}" /install /quiet /norestart' $0
+    
+    ${If} $0 == 0
+        DetailPrint ".NET 10 installed successfully"
+        StrCpy $DotNetInstalled 1
+    ${Else}
+        DetailPrint ".NET installation failed (code: $0)"
+        MessageBox MB_OK|MB_ICONEXCLAMATION ".NET 10 installation failed (code: $0). You may need to install it manually from https://dotnet.microsoft.com/download"
+    ${EndIf}
+    
+    ; Clean up downloaded file
+    Delete "$TEMP\${DOTNET_INSTALLER}"
+FunctionEnd
+
+Section /o ".NET 10 Runtime" SecDotNet
+    SectionIn 2
+    
+    Call CheckDotNet
+    ${If} $DotNetInstalled == 0
+        Call InstallDotNet
+    ${EndIf}
+SectionEnd
+
+LangString DESC_SecDotNet ${LANG_ENGLISH} "Automatically download and install .NET 10 Windows Desktop Runtime (~64 MB) if not already installed"
 
 ; ============================================================================
 ; Installer Sections
@@ -161,45 +281,19 @@ Section "!${PRODUCT_NAME} Application" SecApp
     
     ; Create README
     FileOpen $0 "$INSTDIR\README.txt" w
-    FileWrite $0 "${PRODUCT_NAME} ${PRODUCT_VERSION_SHORT}$
-$
-"
-    FileWrite $0 "=========================$
-$
-"
-    FileWrite $0 "$
-$
-"
-    FileWrite $0 "Thank you for installing ${PRODUCT_NAME}!$
-$
-"
-    FileWrite $0 "$
-$
-"
-    FileWrite $0 "Quick Start:$
-$
-"
-    FileWrite $0 "1. Launch ${PRODUCT_NAME} from Start Menu or Desktop$
-$
-"
-    FileWrite $0 "2. Right-click the system tray icon to access settings$
-$
-"
-    FileWrite $0 "3. Enable 'Keep Awake' to prevent Windows sleep$
-$
-"
-    FileWrite $0 "4. Use Ctrl+Shift+V for TypeThing clipboard typing$
-$
-"
-    FileWrite $0 "$
-$
-"
-    FileWrite $0 "For more information, visit:$
-$
-"
-    FileWrite $0 "${PRODUCT_WEB_SITE}$
-$
-"
+    FileWrite $0 "${PRODUCT_NAME} ${PRODUCT_VERSION_SHORT}$\r$\n"
+    FileWrite $0 "=========================$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "Thank you for installing ${PRODUCT_NAME}!$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "Quick Start:$\r$\n"
+    FileWrite $0 "1. Launch ${PRODUCT_NAME} from Start Menu or Desktop$\r$\n"
+    FileWrite $0 "2. Right-click the system tray icon to access settings$\r$\n"
+    FileWrite $0 "3. Enable 'Keep Awake' to prevent Windows sleep$\r$\n"
+    FileWrite $0 "4. Use Ctrl+Shift+V for TypeThing clipboard typing$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "For more information, visit:$\r$\n"
+    FileWrite $0 "${PRODUCT_WEB_SITE}$\r$\n"
     FileClose $0
     
     ; Register application
@@ -321,14 +415,13 @@ Section "Uninstall"
         Delete "$DESKTOP\${PRODUCT_NAME}.lnk"
     ${EndIf}
     
-    ; Stop running process
+    ; Stop running process (simplified)
     DetailPrint "Stopping ${PRODUCT_NAME}..."
-    nsProcess::FindProcess "Redball.UI.WPF.exe"
-    Pop $0
-    ${If} $0 == 1
-        nsProcess::KillProcess "Redball.UI.WPF.exe"
-        Pop $0
-        Sleep 1000
+    ; Just try to delete - if running it will fail
+    Delete "$INSTDIR\Redball.UI.WPF.exe"
+    ${If} ${Errors}
+        DetailPrint "Could not delete executable - may still be running"
+        ClearErrors
     ${EndIf}
     
     ; Remove files
@@ -364,28 +457,94 @@ Section "Uninstall"
 SectionEnd
 
 ; ============================================================================
-; Functions
+; Kill All Project EXEs Function
 ; ============================================================================
+Function KillAllRedballProcesses
+    DetailPrint "Checking for running Redball processes..."
+    
+    ; Kill Redball.UI.WPF.exe using taskkill
+    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
+    Pop $0
+    ${If} $0 == 0
+        DetailPrint "Stopped Redball.UI.WPF.exe"
+        Sleep 500
+    ${EndIf}
+    
+    ; Kill Redball.Service.exe using taskkill
+    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
+    Pop $0
+    ${If} $0 == 0
+        DetailPrint "Stopped Redball.Service.exe"
+        Sleep 500
+    ${EndIf}
+    
+    ; Alternative method using WMIC if taskkill didn't work
+    nsExec::Exec 'wmic process where "name='"'"'Redball.UI.WPF.exe'"'"'" delete'
+    nsExec::Exec 'wmic process where "name='"'"'Redball.Service.exe'"'"'" delete'
+    
+    ; Wait a moment for processes to fully terminate
+    Sleep 1000
+    
+    ; Check if still running by trying to rename file
+    ${If} ${FileExists} "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe"
+        Rename "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe" "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe.check"
+        ${If} ${Errors}
+            ClearErrors
+            MessageBox MB_YESNO|MB_ICONQUESTION "${PRODUCT_NAME} is still running and could not be closed automatically.$\r$\n$\r$\nWould you like to continue anyway? (Installation may fail if files are locked)" IDYES continue IDNO abort
+            abort:
+                Abort
+            continue:
+        ${Else}
+            Rename "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe.check" "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe"
+        ${EndIf}
+    ${EndIf}
+    
+    DetailPrint "Process check complete"
+FunctionEnd
 
 Function .onInit
-    ; Check if already running
+    ; Initialize variables
+    StrCpy $DotNetInstalled 0
+    StrCpy $DotNetDownloaded 0
+    StrCpy $ServiceInstalled 0
+    
+    ; Kill all Redball processes before starting installation
+    Call KillAllRedballProcesses
+    
+    ; Check if installer is already running
     System::Call 'kernel32::CreateMutexW(i 0, i 0, w "${PRODUCT_NAME}Setup") i .r0'
     ${If} $0 == 0
         MessageBox MB_OK|MB_ICONEXCLAMATION "${PRODUCT_NAME} installer is already running."
         Abort
     ${EndIf}
     
-    ; Check if Redball is already running
-    nsProcess::FindProcess "Redball.UI.WPF.exe"
-    Pop $RunningProcess
-    ${If} $RunningProcess == 1
-        MessageBox MB_OKCANCEL|MB_ICONQUESTION "${PRODUCT_NAME} is currently running. Setup will close it to continue. Click OK to close ${PRODUCT_NAME} and continue, or Cancel to exit." IDOK continue IDCANCEL cancel
-        cancel:
-            Abort
-        continue:
-            nsProcess::KillProcess "Redball.UI.WPF.exe"
-            Sleep 1500
+    ; Check if Redball is already running - try to find window first
+    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r0'
+    ${If} $0 != 0
+        MessageBox MB_OK|MB_ICONEXCLAMATION "${PRODUCT_NAME} is currently running. Please close it before installing."
+        Abort
     ${EndIf}
+    
+    ; Also check by window class
+    System::Call 'user32::FindWindowW(w "HwndWrapper*", w "${PRODUCT_NAME}") i .r0'
+    ${If} $0 != 0
+        MessageBox MB_OK|MB_ICONEXCLAMATION "${PRODUCT_NAME} is currently running. Please close it before installing."
+        Abort
+    ${EndIf}
+    
+    ; Check common install locations for locked files
+    ${If} ${FileExists} "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe"
+        Rename "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe" "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe.check"
+        ${If} ${Errors}
+            ClearErrors
+            MessageBox MB_OK|MB_ICONEXCLAMATION "${PRODUCT_NAME} is currently running (detected in AppData). Please close it before installing."
+            Abort
+        ${EndIf}
+        Rename "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe.check" "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe"
+    ${EndIf}
+    
+    ; Check .NET runtime status
+    Call CheckDotNet
     
     ; Extract version from command line if provided
     ${GetParameters} $R0
@@ -400,8 +559,6 @@ Function .onInit
     ${If} $0 != ""
         StrCpy $INSTDIR $0
     ${EndIf}
-    
-    StrCpy $ServiceInstalled 0
 FunctionEnd
 
 Function .onInstSuccess
@@ -424,6 +581,12 @@ Function un.onInit
     cancel:
         Abort
     continue:
+    
+    ; Kill all Redball processes during uninstall
+    DetailPrint "Stopping all Redball processes..."
+    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
+    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
+    Sleep 1500
 FunctionEnd
 
 ; ============================================================================
@@ -431,6 +594,7 @@ FunctionEnd
 ; ============================================================================
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecDotNet} $(DESC_SecDotNet)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecApp} $(DESC_SecApp)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecService} $(DESC_SecService)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecStartMenu} $(DESC_SecStartMenu)

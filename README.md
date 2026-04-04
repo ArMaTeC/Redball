@@ -34,7 +34,7 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 - **P/Invoke SendInput** — Native Windows API for typing simulation (no WinForms dependency)
 - **Theme Persistence** — Selected theme saved to config and restored on startup
 - **Auto Theme Switching** — Follow Windows light/dark mode changes automatically
-- **Code Signed** — EXE and MSI signed with SHA-256 certificate via `signtool` in CI
+- **Code Signed** — EXE and installer signed with SHA-256 certificate via `signtool` in CI
 
 ### Smart Monitoring & Automation
 
@@ -69,7 +69,7 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 - **Global Hotkey** — Ctrl+Alt+Pause to toggle pause/resume system-wide
 - **Localization (i18n)** — English, Spanish, French, German, and Blade Runner theme
 - **Auto-Updater** — Automatic background update checks with configurable interval, or manual check from GitHub Releases
-- **Code Signing** — EXE and MSI signed with SHA-256 certificate via `signtool` in CI
+- **Code Signing** — EXE and installer signed with SHA-256 certificate via `signtool` in CI
 - **TypeThing — Clipboard Typer** — Simulates human-like typing of clipboard contents via global hotkeys, with optional TTS and Driver-Level (HID) support
 - **Analytics Dashboard** — Built-in session tracking, feature adoption metrics, and CSV/JSON export
 - **Mini Widget** — Floating mini widget window for quick status and controls with customizable presets
@@ -78,7 +78,7 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 - **Plugin System** — Extensible plugin interface for custom functionality
 - **Data Export** — GDPR-style user data export (config, analytics, session, logs)
 - **Health Check Service** — Self-monitoring and diagnostics
-- **MSI Installer** — WiX v4 installer with branded UI, shortcuts, and post-install launch
+- **NSIS Installer** — Modern branded installer with feature selection, .NET runtime detection, auto-start options, and post-install launch
 - **CI/CD** — GitHub Actions with unit tests, PSScriptAnalyzer lint, WPF build, security scan, and GitHub Release creation
 
 ## Quick Start
@@ -88,16 +88,18 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 - **Windows 10** or later
 - **.NET 10 Runtime** (included in the self-contained WPF EXE — no separate install needed)
 
-### Option A — MSI Installer (Recommended)
+### Option A — NSIS Installer (Recommended)
 
-Download the latest **`Redball.msi`** from the [Releases](https://github.com/ArMaTeC/Redball/releases) page and run it. The MSI is code-signed and includes:
+Download the latest **`Redball-Setup.exe`** from the [Releases](https://github.com/ArMaTeC/Redball/releases) page and run it. The installer is code-signed and includes:
 
 - **WPF application** — Modern themed desktop UI (`Redball.UI.WPF.exe`)
 - Per-user installation to `%LocalAppData%\Redball`
 - Start Menu, Desktop, and optional Startup shortcuts (all with Redball icon)
 - Branded installer UI with custom banner and dialog images
 - Optional default behavior features (battery-aware, network-aware, idle detection, etc.)
+- .NET 10 Runtime detection and installation option
 - "Launch Redball" checkbox on the finish page
+- Full uninstaller that cleans registry and shortcuts
 
 ### Option B — Run the Executable
 
@@ -384,19 +386,23 @@ dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj --configuration Release 
 
 The published EXE (~3.3MB compressed) includes the .NET runtime, uses compression and native library embedding, and has embedded debug symbols (no separate PDB file).
 
-### MSI Installer
+### NSIS Installer
 
-The MSI is built with [WiX Toolset v4](https://wixtoolset.org/):
+The NSIS installer is built with [Nullsoft Scriptable Install System](https://nsis.sourceforge.io/):
 
 ```powershell
-# Full deploy pipeline (MSI via WiX, with code signing)
+# Full deploy pipeline (NSIS installer, with code signing)
 .\installer\Deploy-Redball.ps1
 
-# Build MSI only
-.\installer\Build-MSI.ps1 -Version "3.0.0"
+# Build installer only
+.\scripts\build-windows-on-linux.sh
 ```
 
-The installer includes branded UI images (custom banner and dialog backgrounds) and the Redball icon on all shortcuts.
+The installer includes:
+- Branded UI images (custom banner and dialog backgrounds)
+- Feature selection (WPF app, Service, shortcuts, auto-start, .NET runtime)
+- .NET 10 Runtime detection and bundled/offline install option
+- Redball icon on all shortcuts
 
 ### Build Script
 
@@ -435,7 +441,7 @@ Version is defined in two places (kept in sync by `scripts/Bump-Version.ps1`):
 
 ### Code Signing
 
-Both the EXE and MSI are automatically code-signed during CI releases:
+Both the EXE and installer are automatically code-signed during CI releases:
 
 - **Algorithm**: SHA-256 with RSA 2048-bit key
 - **Timestamping**: DigiCert RFC 3161 timestamp server
@@ -458,7 +464,7 @@ If no certificate secrets are configured, the CI creates a self-signed developme
 GitHub Actions workflows (all using Node.js 24-compatible actions):
 
 - **`ci.yml`** — On push/PR: runs WPF build, Pester tests (legacy), JSON validation, and security scan
-- **`release.yml`** — On push to `main`: auto-tags version, publishes WPF app, signs EXE, builds branded MSI with WiX, signs MSI, creates GitHub Release with MSI attached
+- **`release.yml`** — On push to `main`: auto-tags version, publishes WPF app, signs EXE, builds NSIS installer, signs installer, creates GitHub Release with installer attached
 
 ## Architecture
 

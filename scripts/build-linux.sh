@@ -1,6 +1,6 @@
 #!/bin/bash
-# Redball Linux Build Script
-# Builds the Linux version on Ubuntu/Debian systems
+# Unified Redball Linux Build Script
+# One-stop script for versioning, build, and release
 
 set -e
 
@@ -9,29 +9,144 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 LINUX_DIR="${PROJECT_ROOT}/src/Redball.Linux"
 BUILD_DIR="${LINUX_DIR}/build"
 DIST_DIR="${PROJECT_ROOT}/dist/linux"
-VERSION="2.1.19"
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-log_info() {
-    echo -e "${CYAN}[INFO]${NC} $1"
+log_info() { echo -e "${CYAN}[INFO]${NC} $1"; }
+log_success() { echo -e "${GREEN}[OK]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+log_step() { echo -e "\n${BLUE}=== $1 ===${NC}"; }
+
+# Default flags
+DO_VERSION_BUMP=0
+VERSION_COMPONENT="patch"
+DO_BUILD=0
+DO_DIST=0
+DO_FLATPAK=0
+DO_DEB=0
+DO_RELEASE=0
+DO_ALL=0
+DO_CLEAN=0
+DO_COVERAGE=0
+DO_INSTALL_SERVICE=0
+DO_UNINSTALL_SERVICE=0
+DO_INSTALL_DEPS=0
+
+# Get version
+get_version() {
+    if [[ -f "${SCRIPT_DIR}/version.txt" ]]; then
+        cat "${SCRIPT_DIR}/version.txt"
+    else
+        echo "2.1.19"
+    fi
 }
 
-log_success() {
-    echo -e "${GREEN}[OK]${NC} $1"
+VERSION=$(get_version)
+
+# Show help
+show_help() {
+    cat << EOF
+Redball Linux Unified Build Script
+One-stop script for versioning, build, and release
+
+Usage: $0 [OPTIONS]
+
+WORKFLOW OPTIONS:
+    --all, -a                   Full workflow: bump version, build, dist, release
+    --release, -r               Create GitHub release after building
+    --bump [--major|--minor]    Bump version before building (default: patch)
+    
+BUILD OPTIONS:
+    -b, --build                 Build the application
+    -d, --dist                  Create distribution tarball
+    -f, --flatpak               Build Flatpak package
+    --deb                       Build Debian package
+    -c, --clean                 Clean build artifacts
+    
+DEV OPTIONS:
+    --coverage                  Generate code coverage report
+    --install-service           Install as systemd service
+    --uninstall-service         Uninstall systemd service
+    --install-deps              Install build dependencies
+    
+OTHER OPTIONS:
+    -h, --help                  Show this help
+    --dry-run                   Preview what would happen (for --release)
+
+EXAMPLES:
+    $0 -a                       # Full workflow: version bump, build, dist, release
+    $0 --bump --minor -a        # Bump minor version, then full workflow
+    $0 -b -d                    # Just build and create dist
+    $0 -r                       # Build current version and release
+    $0 --coverage               # Generate code coverage report
+    $0 -c && $0 -a              # Clean and full rebuild
+
+SUB-COMMANDS:
+    $0 version <command>        # Version management
+      version bump [--major|--minor|--patch]  # Bump version
+      version get                 # Get current version
+    
+    $0 service <command>          # Service management
+      service install [--system]  # Install systemd service
+      service uninstall           # Uninstall service
+    
+    $0 coverage                   # Generate code coverage
+    $0 release [--dry-run]        # Create GitHub release
+EOF
 }
 
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
+# Version management
+version_cmd() {
+    case $1 in
+        bump)
+            shift
+            "${SCRIPT_DIR}/bump-version.sh" "$@"
+            ;;
+        get)
+            echo "Current version: $(get_version)"
+            ;;
+        *)
+            log_error "Unknown version command: $1"
+            echo "Usage: $0 version {bump|get}"
+            exit 1
+            ;;
+    esac
 }
 
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+# Service management
+service_cmd() {
+    case $1 in
+        install)
+            shift
+            "${SCRIPT_DIR}/install-service.sh" "$@"
+            ;;
+        uninstall)
+            shift
+            "${SCRIPT_DIR}/uninstall-service.sh" "$@"
+            ;;
+        *)
+            log_error "Unknown service command: $1"
+            echo "Usage: $0 service {install|uninstall}"
+            exit 1
+            ;;
+    esac
+}
+
+# Coverage command
+coverage_cmd() {
+    "${SCRIPT_DIR}/get-code-coverage.sh" "$@"
+}
+
+# Release command
+release_cmd() {
+    "${SCRIPT_DIR}/release.sh" "$@"
 }
 
 # Check if running on Ubuntu/Debian
@@ -215,8 +330,8 @@ EOF
 }
 
 # Clean build artifacts
-clean() {
-    log_info "Cleaning build artifacts..."
+clean_build() {
+    log_step "Cleaning build artifacts"
     rm -rf "${LINUX_DIR}/build"
     rm -rf "${DIST_DIR}"
     log_success "Clean completed"
@@ -225,75 +340,153 @@ clean() {
 # Show help
 show_help() {
     cat << EOF
-Redball Linux Build Script
+Redball Linux Unified Build Script
+One-stop script for versioning, build, and release
 
 Usage: $0 [OPTIONS]
 
-Options:
-    --install-deps      Install build dependencies
-    -c, --clean         Clean build artifacts
-    -b, --build         Build the application (default)
-    -d, --dist          Create distribution tarball
-    -f, --flatpak       Build Flatpak package
-    --deb               Build Debian package
-    -a, --all           Build all package types
-    -h, --help          Show this help message
+WORKFLOW OPTIONS:
+    --all, -a                   Full workflow: bump version, build, dist, release
+    --release, -r               Create GitHub release after building
+    --bump [--major|--minor]    Bump version before building (default: patch)
+    
+BUILD OPTIONS:
+    -b, --build                 Build the application
+    -d, --dist                  Create distribution tarball
+    -f, --flatpak               Build Flatpak package
+    --deb                       Build Debian package
+    -c, --clean                 Clean build artifacts
+    
+DEV OPTIONS:
+    --coverage                  Generate code coverage report
+    --install-service           Install as systemd service
+    --uninstall-service         Uninstall systemd service
+    --install-deps              Install build dependencies
+    
+OTHER OPTIONS:
+    -h, --help                  Show this help
+    --dry-run                   Preview what would happen (for --release)
 
-Examples:
-    $0                  # Build only
-    $0 --install-deps # Install dependencies
-    $0 -a              # Build everything
-    $0 -c && $0 -a     # Clean and full rebuild
+EXAMPLES:
+    $0 -a                       # Full workflow: version bump, build, dist, release
+    $0 --bump --minor -a        # Bump minor version, then full workflow
+    $0 -b -d                    # Just build and create dist
+    $0 -r                       # Build current version and release
+    $0 --coverage               # Generate code coverage report
+    $0 -c && $0 -a              # Clean and full rebuild
+
+SUB-COMMANDS:
+    $0 version <command>        # Version management
+      version bump [--major|--minor|--patch]  # Bump version
+      version get                 # Get current version
+    
+    $0 service <command>          # Service management
+      service install [--system]  # Install systemd service
+      service uninstall           # Uninstall service
+    
+    $0 coverage                   # Generate code coverage
+    $0 release [--dry-run]        # Create GitHub release
 EOF
 }
 
-# Main
+# Main workflow
 main() {
-    local do_clean=0
-    local do_build=1
-    local do_dist=0
-    local do_flatpak=0
-    local do_deb=0
-    local do_install_deps=0
-    
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
-            --install-deps)
-                do_install_deps=1
+            # Workflow options
+            --all|-a)
+                DO_ALL=1
+                DO_BUILD=1
+                DO_DIST=1
+                DO_FLATPAK=1
+                DO_DEB=1
                 shift
                 ;;
-            -c|--clean)
-                do_clean=1
-                do_build=0
+            --release|-r)
+                DO_RELEASE=1
+                DO_BUILD=1
+                DO_DIST=1
+                DO_FLATPAK=1
+                DO_DEB=1
                 shift
                 ;;
+            --bump)
+                DO_VERSION_BUMP=1
+                shift
+                ;;
+            --major|--minor|--patch)
+                DO_VERSION_BUMP=1
+                VERSION_COMPONENT="${1#--}"
+                shift
+                ;;
+            
+            # Build options
             -b|--build)
-                do_build=1
+                DO_BUILD=1
                 shift
                 ;;
             -d|--dist)
-                do_dist=1
-                do_build=1
+                DO_DIST=1
+                DO_BUILD=1
                 shift
                 ;;
             -f|--flatpak)
-                do_flatpak=1
-                do_build=1
+                DO_FLATPAK=1
+                DO_BUILD=1
                 shift
                 ;;
             --deb)
-                do_deb=1
-                do_build=1
+                DO_DEB=1
+                DO_BUILD=1
                 shift
                 ;;
-            -a|--all)
-                do_build=1
-                do_dist=1
-                do_flatpak=1
-                do_deb=1
+            -c|--clean)
+                DO_CLEAN=1
                 shift
                 ;;
+            
+            # Dev options
+            --coverage)
+                DO_COVERAGE=1
+                shift
+                ;;
+            --install-service)
+                DO_INSTALL_SERVICE=1
+                shift
+                ;;
+            --uninstall-service)
+                DO_UNINSTALL_SERVICE=1
+                shift
+                ;;
+            --install-deps)
+                DO_INSTALL_DEPS=1
+                shift
+                ;;
+            
+            # Sub-commands
+            version)
+                shift
+                version_cmd "$@"
+                exit 0
+                ;;
+            service)
+                shift
+                service_cmd "$@"
+                exit 0
+                ;;
+            coverage)
+                shift
+                coverage_cmd "$@"
+                exit 0
+                ;;
+            release)
+                shift
+                release_cmd "$@"
+                exit 0
+                ;;
+            
+            # Other options
             -h|--help)
                 show_help
                 exit 0
@@ -310,40 +503,84 @@ main() {
     check_os
     
     # Install deps if requested
-    if [ $do_install_deps -eq 1 ]; then
+    if [ $DO_INSTALL_DEPS -eq 1 ]; then
         install_deps
         exit 0
     fi
     
     # Clean if requested
-    if [ $do_clean -eq 1 ]; then
-        clean
+    if [ $DO_CLEAN -eq 1 ]; then
+        clean_build
         exit 0
+    fi
+    
+    # Coverage if requested
+    if [ $DO_COVERAGE -eq 1 ]; then
+        coverage_cmd
+        exit 0
+    fi
+    
+    # Service management
+    if [ $DO_INSTALL_SERVICE -eq 1 ]; then
+        service_cmd install
+        exit 0
+    fi
+    
+    if [ $DO_UNINSTALL_SERVICE -eq 1 ]; then
+        service_cmd uninstall
+        exit 0
+    fi
+    
+    # Default action: show help if no options
+    if [[ $DO_VERSION_BUMP -eq 0 && $DO_BUILD -eq 0 && $DO_RELEASE -eq 0 && $DO_COVERAGE -eq 0 ]]; then
+        show_help
+        exit 0
+    fi
+    
+    # Version bump
+    if [ $DO_VERSION_BUMP -eq 1 ]; then
+        log_step "Version Management"
+        "${SCRIPT_DIR}/bump-version.sh" --"$VERSION_COMPONENT" -c
+        VERSION=$(get_version)
     fi
     
     # Check dependencies
     check_deps
     
     # Build
-    if [ $do_build -eq 1 ]; then
+    if [ $DO_BUILD -eq 1 ]; then
         build_meson
     fi
     
     # Create distribution packages
-    if [ $do_dist -eq 1 ]; then
+    if [ $DO_DIST -eq 1 ]; then
         create_dist
     fi
     
-    if [ $do_deb -eq 1 ]; then
+    if [ $DO_DEB -eq 1 ]; then
         build_deb
     fi
     
-    if [ $do_flatpak -eq 1 ]; then
+    if [ $DO_FLATPAK -eq 1 ]; then
         build_flatpak
     fi
     
-    log_success "Build process completed!"
+    # Release
+    if [ $DO_RELEASE -eq 1 ]; then
+        log_step "Creating GitHub Release"
+        "${SCRIPT_DIR}/release.sh" -v "$VERSION"
+    fi
+    
+    log_step "Build Process Complete"
+    log_success "Redball Linux v${VERSION}"
     log_info "Output directory: ${DIST_DIR}"
+    
+    # List artifacts
+    if [[ -d "$DIST_DIR" ]]; then
+        echo ""
+        log_info "Generated artifacts:"
+        ls -lh "$DIST_DIR"/redball-* 2>/dev/null || true
+    fi
 }
 
 main "$@"
