@@ -1,0 +1,32 @@
+{
+  "version": "2.1.450",
+  "channel": "stable",
+  "date": "2026-04-06T11:03:59Z",
+  "files": [
+    {
+      "name": "Redball-2.1.450-Setup.exe",
+      "size": 8392846,
+      "sha256": "36d4256264a5be2c83c87088aa7b252aeeba0f0f58549dd9d00a24ca38ea997c"
+    },
+    {
+      "name": "Redball-2.1.450.exe",
+      "size": 373760,
+      "sha256": "28da13822cca17ac27c60ec337a6e8409dd44848b843d7d73dcaffa4da65148e"
+    },
+    {
+      "name": "Redball-2.1.450.zip",
+      "size": 9967817,
+      "sha256": "adbafe252b2420234542e4a7bb1c03f2b3485fbd958a75447324d8e26bf62d30"
+    },
+    {
+      "name": "redball-2.1.450-linux.tar.gz",
+      "size": 252548,
+      "sha256": "df804cc901864ba63772a941b1e35733cde333f5d235519f14a0308fb1666d98"
+    },
+    {
+      "name": "redball-2.1.450.flatpak",
+      "size": 360968,
+      "sha256": "644a92e085f9ff7798e743f205593397a8b7f1f5d617b4fa0922a55b0bd78173"
+    }
+  ]
+}

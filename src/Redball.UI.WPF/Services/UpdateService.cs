@@ -121,6 +121,7 @@ public class UpdateService : IUpdateService
     private readonly string _repoName;
     private readonly string _updateChannel;
     private readonly bool _verifySignature;
+    private readonly string? _updateServerUrl;
 
     // Circuit breaker: stop calling GitHub API after consecutive failures
     private static int _consecutiveFailures;
@@ -907,8 +908,45 @@ public class UpdateService : IUpdateService
             await Task.Delay(delay, cancellationToken);
         }
 
+        // Try update-server first if configured (for delta patches)
+        if (!string.IsNullOrEmpty(_updateServerUrl))
+        {
+            try
+            {
+                var updateServerUrl = $"{_updateServerUrl.TrimEnd('/')}/api/github/releases";
+                Logger.Debug("UpdateService", $"Trying update-server: {updateServerUrl}");
+                
+                _lastApiCall = DateTime.UtcNow;
+                var response = await _httpClient.GetAsync(updateServerUrl, cancellationToken);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                    var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    
+                    if (releases != null && releases.Count > 0)
+                    {
+                        _cachedReleases = releases;
+                        _cacheExpiry = DateTime.UtcNow + CacheDuration;
+                        Logger.Info("UpdateService", $"Using update-server with {releases.Count} releases (includes delta patches)");
+                        return releases;
+                    }
+                }
+                
+                Logger.Warning("UpdateService", "Update-server unavailable, falling back to GitHub");
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning("UpdateService", $"Update-server failed: {ex.Message}, falling back to GitHub");
+            }
+        }
+
+        // Fallback to GitHub API
         var url = $"https://api.github.com/repos/{_repoOwner}/{_repoName}/releases";
-        Logger.Debug("UpdateService", $"Fetching all releases from: {url}");
+        Logger.Debug("UpdateService", $"Fetching releases from GitHub: {url}");
         
         try
         {

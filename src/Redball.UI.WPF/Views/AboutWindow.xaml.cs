@@ -20,7 +20,8 @@ public partial class AboutWindow : Window
             cfg.UpdateRepoOwner,
             cfg.UpdateRepoName,
             cfg.UpdateChannel,
-            cfg.VerifyUpdateSignature);
+            cfg.VerifyUpdateSignature,
+            "https://redball.certrunnerx.com/");
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)

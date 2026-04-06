@@ -37,7 +37,8 @@ public partial class SettingsWindow : Window
             cfg.UpdateRepoOwner,
             cfg.UpdateRepoName,
             cfg.UpdateChannel,
-            cfg.VerifyUpdateSignature);
+            cfg.VerifyUpdateSignature,
+            "https://redball.certrunnerx.com/");
     }
 
     private void SetVersionText()

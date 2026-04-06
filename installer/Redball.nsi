@@ -192,10 +192,10 @@ Function InstallDotNet
         Return
     ${EndIf}
     
-    ; Check if we have bundled installer
-    ${If} ${FileExists} "$EXEDIR\${DOTNET_INSTALLER}"
-        DetailPrint "Using bundled .NET installer..."
-        ExecWait '"$EXEDIR\${DOTNET_INSTALLER}" /install /quiet /norestart' $0
+    ; Use the embedded installer from $PLUGINSDIR
+    ${If} ${FileExists} "$PLUGINSDIR\${DOTNET_INSTALLER}"
+        DetailPrint "Installing bundled .NET 10 Runtime..."
+        ExecWait '"$PLUGINSDIR\${DOTNET_INSTALLER}" /install /quiet /norestart' $0
         ${If} $0 == 0
             DetailPrint ".NET 10 installed successfully"
             StrCpy $DotNetInstalled 1
@@ -206,7 +206,7 @@ Function InstallDotNet
         Return
     ${EndIf}
     
-    ; Download .NET installer
+    ; Fallback: Download .NET installer (shouldn't happen with embedded)
     DetailPrint "Downloading .NET 10 Windows Desktop Runtime (~${DOTNET_SIZE_MB} MB)..."
     DetailPrint "This may take a few minutes depending on your connection..."
     
@@ -236,8 +236,15 @@ Function InstallDotNet
     Delete "$TEMP\${DOTNET_INSTALLER}"
 FunctionEnd
 
-Section /o ".NET 10 Runtime" SecDotNet
-    SectionIn 2
+; ============================================================================
+; .NET Runtime Section - Embeds installer in package
+; ============================================================================
+Section ".NET 10 Runtime (Embedded)" SecDotNet
+    SectionIn RO
+    
+    ; Extract embedded .NET installer to plugins directory
+    SetOutPath "$PLUGINSDIR"
+    File "${DOTNET_INSTALLER}"
     
     Call CheckDotNet
     ${If} $DotNetInstalled == 0
@@ -245,7 +252,7 @@ Section /o ".NET 10 Runtime" SecDotNet
     ${EndIf}
 SectionEnd
 
-LangString DESC_SecDotNet ${LANG_ENGLISH} "Automatically download and install .NET 10 Windows Desktop Runtime (~64 MB) if not already installed"
+LangString DESC_SecDotNet ${LANG_ENGLISH} ".NET 10 Windows Desktop Runtime (~64 MB bundled) - required to run Redball"
 
 ; ============================================================================
 ; Installer Sections

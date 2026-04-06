@@ -29,7 +29,8 @@ public partial class MainWindow
             config.UpdateRepoOwner,
             config.UpdateRepoName,
             config.UpdateChannel ?? "stable",
-            config.VerifyUpdateSignature);
+            config.VerifyUpdateSignature,
+            "https://redball.certrunnerx.com/");
     }
 
     /// <summary>

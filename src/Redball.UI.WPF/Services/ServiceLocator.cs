@@ -76,7 +76,8 @@ public static class ServiceLocator
                 config.UpdateRepoOwner,
                 config.UpdateRepoName,
                 config.UpdateChannel,
-                config.VerifyUpdateSignature));
+                config.VerifyUpdateSignature,
+                "https://redball.certrunnerx.com/"));
 
         var provider = services.BuildServiceProvider();
         Configure(provider);
