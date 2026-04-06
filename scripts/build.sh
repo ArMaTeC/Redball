@@ -183,6 +183,21 @@ auto_release() {
     # 1. Build all components
     build_all
     
+    # 1.5 Commit any pending changes to git
+    log_step "Committing changes to git..."
+    if [[ $DRY_RUN == true ]]; then
+        log_info "[DRY RUN] Would commit changes to git"
+    else
+        # Check if there are changes to commit
+        if [[ -n $(git status --porcelain 2>/dev/null) ]]; then
+            git add -A
+            git commit -m "Build release $(get_version)" || true
+            log_success "Changes committed to git"
+        else
+            log_info "No changes to commit"
+        fi
+    fi
+    
     # 2. Sign artifacts (placeholder - implement if needed)
     log_step "Code signing..."
     if [[ $DRY_RUN == true ]]; then
