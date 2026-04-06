@@ -5,6 +5,8 @@ const crypto = require('crypto');
 const multer = require('multer');
 const morgan = require('morgan');
 
+const { generatePatches, formatBytes } = require('./lib/delta-patches');
+
 const app = express();
 const PORT = process.env.PORT || 3500;
 const RELEASES_DIR = path.join(__dirname, 'releases');
@@ -111,19 +113,39 @@ app.get('/api/github/releases', (req, res) => {
   const db = loadDB();
   const sorted = db.releases.sort((a, b) => compareVersions(b.version, a.version));
   // Map to GitHub release format
-  const ghReleases = sorted.map(r => ({
-    tag_name: `v${r.version}`,
-    name: `Redball v${r.version}`,
-    body: r.notes || '',
-    prerelease: r.channel !== 'stable',
-    published_at: r.date || new Date().toISOString(),
-    assets: (r.files || []).map(f => ({
-      name: f.name,
-      size: f.size,
-      browser_download_url: `${req.protocol}://${req.get('host')}/downloads/${r.version}/${f.name}`,
-      content_type: guessMimeType(f.name)
-    }))
-  }));
+  const ghReleases = sorted.map(r => {
+    const baseAssets = (r.files || [])
+      .filter(f => !f.name.endsWith('.msi') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS')
+      .map(f => ({
+        name: f.name,
+        size: f.size,
+        browser_download_url: `${req.protocol}://${req.get('host')}/downloads/${r.version}/${f.name}`,
+        content_type: guessMimeType(f.name)
+      }));
+
+    // Add patch assets if available
+    const patchAssets = (r.files || [])
+      .filter(f => f.name.endsWith('.patch'))
+      .map(f => ({
+        name: f.name,
+        size: f.size,
+        browser_download_url: `${req.protocol}://${req.get('host')}/downloads/${r.version}/patches/${f.name}`,
+        content_type: 'application/octet-stream',
+        patch_for: f.patchFor,
+        original_size: f.originalSize,
+        savings: f.savings
+      }));
+
+    return {
+      tag_name: `v${r.version}`,
+      name: `Redball v${r.version}`,
+      body: r.notes || '',
+      prerelease: r.channel !== 'stable',
+      published_at: r.date || new Date().toISOString(),
+      assets: [...baseAssets, ...patchAssets],
+      patch_info: r.patchInfo || null
+    };
+  });
   res.json(ghReleases);
 });
 
@@ -148,7 +170,7 @@ app.get('/downloads/:version/:filename', (req, res) => {
 });
 
 // --- Get manifest.json for a release (differential updates) ---
-app.get('/api/releases/:version/manifest', (req, res) => {
+app.get('/api/releases/:version/manifest', async (req, res) => {
   const db = loadDB();
   const release = db.releases.find(r => r.version === req.params.version);
   if (!release) return res.status(404).json({ error: 'Release not found' });
@@ -157,7 +179,7 @@ app.get('/api/releases/:version/manifest', (req, res) => {
   const manifest = {
     version: release.version,
     files: (release.files || [])
-      .filter(f => !f.name.endsWith('.msi') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS')
+      .filter(f => !f.name.endsWith('.msi') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS' && !f.name.endsWith('.patch'))
       .map(f => ({
         name: f.name,
         hash: f.hash || '',
@@ -165,6 +187,29 @@ app.get('/api/releases/:version/manifest', (req, res) => {
         signature: f.signature || ''
       }))
   };
+
+  // Add patch information if available
+  const patchesDir = path.join(RELEASES_DIR, req.params.version, 'patches');
+  if (fs.existsSync(patchesDir)) {
+    const patchManifestPath = path.join(patchesDir, 'patch-manifest.json');
+    if (fs.existsSync(patchManifestPath)) {
+      try {
+        const patchManifest = JSON.parse(fs.readFileSync(patchManifestPath, 'utf8'));
+        manifest.fromVersion = patchManifest.fromVersion;
+        manifest.patches = patchManifest.patches.map(p => ({
+          file: p.file,
+          patchFile: p.patchFile,
+          patchSize: p.patchSize,
+          originalSize: p.originalSize,
+          savings: p.savings
+        }));
+        manifest.totalSavings = patchManifest.totalSavings;
+      } catch {
+        // ignore parse errors
+      }
+    }
+  }
+
   res.json(manifest);
 });
 
@@ -322,6 +367,9 @@ app.post('/api/publish', upload.array('files', 50), async (req, res) => {
   };
   fs.writeFileSync(path.join(releaseDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 
+  // Auto-generate delta patches from previous version
+  generatePatchesForRelease(version);
+
   res.status(201).json({ published: version, files: release.files.length });
 });
 
@@ -346,6 +394,171 @@ app.get('/api/health', (req, res) => {
     version: process.env.npm_package_version || '1.0.0'
   });
 });
+
+// --- Get delta patches for a version ---
+app.get('/api/releases/:version/patches', (req, res) => {
+  const patchesDir = path.join(RELEASES_DIR, req.params.version, 'patches');
+
+  if (!fs.existsSync(patchesDir)) {
+    return res.json({ patches: [], fromVersion: null });
+  }
+
+  // Read patch manifest if exists
+  const manifestPath = path.join(patchesDir, 'patch-manifest.json');
+  let manifest = null;
+  if (fs.existsSync(manifestPath)) {
+    try {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    } catch {
+      // ignore
+    }
+  }
+
+  // Get all patch files
+  const patches = [];
+  const files = fs.readdirSync(patchesDir);
+  for (const file of files) {
+    if (file.endsWith('.patch')) {
+      const stat = fs.statSync(path.join(patchesDir, file));
+      const patchInfo = manifest?.patches?.find(p => p.patchFile === file);
+      patches.push({
+        name: file,
+        size: stat.size,
+        targetFile: file.replace('.patch', ''),
+        ...patchInfo
+      });
+    }
+  }
+
+  res.json({
+    version: req.params.version,
+    fromVersion: manifest?.fromVersion || null,
+    patches,
+    totalSavings: manifest?.totalSavings || 0
+  });
+});
+
+// --- Download a patch file ---
+app.get('/downloads/:version/patches/:filename', (req, res) => {
+  const filePath = path.join(RELEASES_DIR, req.params.version, 'patches', req.params.filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Patch not found' });
+
+  res.download(filePath);
+});
+
+// --- Trigger patch generation for all versions ---
+app.post('/api/admin/generate-patches', async (req, res) => {
+  // Run in background
+  res.json({ message: 'Patch generation started in background' });
+
+  try {
+    const { generateAllPatches } = require('./lib/delta-patches');
+    await generateAllPatches(RELEASES_DIR);
+    console.log('[PATCH] Background patch generation completed');
+  } catch (err) {
+    console.error('[PATCH] Background generation failed:', err);
+  }
+});
+
+// === Helper: Generate patches for a release ===
+async function generatePatchesForRelease(newVersion) {
+  try {
+    // Find previous version
+    const versions = fs.readdirSync(RELEASES_DIR)
+      .filter(v => fs.statSync(path.join(RELEASES_DIR, v)).isDirectory())
+      .sort(compareVersions);
+
+    const newIndex = versions.indexOf(newVersion);
+    if (newIndex <= 0) {
+      console.log(`[PATCH] No previous version found for ${newVersion}`);
+      return;
+    }
+
+    const oldVersion = versions[newIndex - 1];
+    console.log(`[PATCH] Generating patches: ${oldVersion} → ${newVersion}`);
+
+    const oldDir = path.join(RELEASES_DIR, oldVersion);
+    const newDir = path.join(RELEASES_DIR, newVersion);
+    const patchesDir = path.join(newDir, 'patches');
+
+    const results = await generatePatches(oldDir, newDir, patchesDir);
+
+    console.log(`[PATCH] Generated ${results.generated.length} patches (${formatBytes(results.totalSavings)} saved)`);
+
+    // Save manifest
+    const manifest = {
+      fromVersion: oldVersion,
+      toVersion: newVersion,
+      generatedAt: new Date().toISOString(),
+      patches: results.generated,
+      skipped: results.skipped,
+      totalSavings: results.totalSavings,
+      totalOriginalSize: results.totalOriginalSize
+    };
+
+    fs.writeFileSync(
+      path.join(patchesDir, 'patch-manifest.json'),
+      JSON.stringify(manifest, null, 2)
+    );
+
+    // Update release files in database with patch info
+    const db = loadDB();
+    const release = db.releases.find(r => r.version === newVersion);
+    if (release) {
+      // Add patch files to release
+      for (const patch of results.generated) {
+        const patchFilePath = path.join(patchesDir, patch.patchFile);
+        if (fs.existsSync(patchFilePath)) {
+          const stat = fs.statSync(patchFilePath);
+          const hash = await sha256File(patchFilePath);
+
+          // Check if already added
+          const existing = release.files.findIndex(f => f.name === patch.patchFile);
+          const patchEntry = {
+            name: patch.patchFile,
+            size: stat.size,
+            hash: hash,
+            downloads: 0,
+            uploadedAt: new Date().toISOString(),
+            patchFor: patch.file,
+            originalSize: patch.originalSize,
+            savings: patch.savings
+          };
+
+          if (existing >= 0) {
+            release.files[existing] = patchEntry;
+          } else {
+            release.files.push(patchEntry);
+          }
+        }
+      }
+
+      release.patchInfo = {
+        fromVersion: oldVersion,
+        generatedAt: manifest.generatedAt,
+        totalPatches: results.generated.length,
+        totalSavings: results.totalSavings
+      };
+
+      saveDB(db);
+    }
+
+  } catch (err) {
+    console.error('[PATCH] Error generating patches:', err);
+  }
+}
+
+// === Helper: Compare versions ===
+function compareVersions(a, b) {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const na = pa[i] || 0;
+    const nb = pb[i] || 0;
+    if (na !== nb) return na - nb;
+  }
+  return 0;
+}
 
 // === Helpers ===
 function guessMimeType(filename) {

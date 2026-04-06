@@ -231,6 +231,23 @@ auto_release() {
         fi
     fi
     
+    # 5.5 Generate delta patches for differential updates
+    log_step "Generating delta patches..."
+    if [[ $DRY_RUN == true ]]; then
+        log_info "[DRY RUN] Would generate delta patches"
+    else
+        local patch_script="$UPDATE_SERVER_DIR/scripts/generate-patches.js"
+        if [[ -f "$patch_script" ]]; then
+            cd "$UPDATE_SERVER_DIR"
+            node "$patch_script" 2>&1 | while read line; do
+                log_info "  $line"
+            done
+            log_success "Delta patches generated"
+        else
+            log_warn "Patch generation script not found: $patch_script"
+        fi
+    fi
+    
     # 6. Publish to GitHub
     log_step "Publishing to GitHub..."
     if [[ $DRY_RUN == true ]]; then
