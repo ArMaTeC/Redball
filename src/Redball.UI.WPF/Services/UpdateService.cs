@@ -262,12 +262,13 @@ public class UpdateService : IUpdateService
         return normalized;
     }
 
-    public UpdateService(string repoOwner, string repoName, string updateChannel = "stable", bool verifySignature = false)
+    public UpdateService(string repoOwner, string repoName, string updateChannel = "stable", bool verifySignature = false, string? updateServerUrl = null)
     {
         _repoOwner = repoOwner;
         _repoName = repoName;
         _updateChannel = updateChannel;
         _verifySignature = verifySignature;
+        _updateServerUrl = updateServerUrl;
     }
 
     /// <summary>

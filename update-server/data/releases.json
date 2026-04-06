@@ -268,7 +268,7 @@
           "name": "Redball.UI.WPF.exe",
           "size": 373760,
           "hash": "d45ca912890fd2f58f3db31fa2c4217d7f71a4869c6f506b319c3d1c43f8f32e",
-          "downloads": 0
+          "downloads": 1
         },
         {
           "name": "Redball.UI.WPF.runtimeconfig.json",
@@ -427,7 +427,7 @@
           "downloads": 0
         }
       ],
-      "totalDownloads": 0
+      "totalDownloads": 1
     }
   ]
 }
