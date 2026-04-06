@@ -192,7 +192,10 @@ auto_release() {
         if [[ -n $(git status --porcelain 2>/dev/null) ]]; then
             git add -A
             git commit -m "Build release $(get_version)" || true
-            log_success "Changes committed to git"
+            # Push commit using gh CLI token (avoids HTTPS credential issues)
+            git push origin $(git branch --show-current) 2>/dev/null || \
+                git push "https://x-access-token:$(gh auth token)@github.com/$(gh repo view --json nameWithOwner -q .nameWithOwner).git" $(git branch --show-current)
+            log_success "Changes committed and pushed to git"
         else
             log_info "No changes to commit"
         fi
