@@ -8,6 +8,30 @@ Open via **Settings** in the main window navigation panel, or **Settings...** in
 
 The settings are organized into dedicated sections accessible via the left navigation panel:
 
+### TypeThing Tab (Primary Feature)
+
+The TypeThing tab contains all settings for the clipboard typing feature.
+
+| Control | Type | Config Key | Description |
+| ------- | ---- | ---------- | ----------- |
+| Enable TypeThing | CheckBox | `TypeThingEnabled` | Master switch for clipboard typer |
+| Start Hotkey | Hotkey capture | `TypeThingStartHotkey` | Key combination to start typing |
+| Stop Hotkey | Hotkey capture | `TypeThingStopHotkey` | Key combination to stop typing |
+| Typing Speed (ms per char) | Slider (10–500) | `TypeThingMinDelayMs` / `TypeThingMaxDelayMs` | Character typing delay range |
+| Add random pauses | CheckBox | `TypeThingAddRandomPauses` | Insert natural-feeling random delays |
+| Type newlines as Enter key | CheckBox | `TypeThingTypeNewlines` | Send Enter key for line breaks |
+| Text-to-Speech | CheckBox | `TypeThingTtsEnabled` | Read text aloud while typing |
+| Input Method | Dropdown | `TypeThingInputMode` | Standard (SendInput) or Service |
+| Service Mode | CheckBox | `TypeThingServiceMode` | Use Windows Service for input injection |
+| Install Input Service | Button | — | Install Redball Input Service |
+| Service Status | Visual + Text | — | Live status indicator |
+
+#### TypeThing Service Features
+
+* **Service Mode**: Uses a Windows Service to inject input, working across UAC boundaries and Remote Desktop sessions
+* **Automatic Fallback**: Falls back to SendInput if Service mode fails
+* **Progress Notifications**: Live progress bar and cancel button for long sessions
+
 ### General Tab
 
 | Control | Type | Config Key | Description |
@@ -19,7 +43,9 @@ The settings are organized into dedicated sections accessible via the left navig
 | Enable verbose logging | CheckBox | `VerboseLogging` | Record extra diagnostic details |
 | Max Log Size (MB) | Slider (1–100) | `MaxLogSizeMB` | Log rotation threshold |
 
-### Behavior Tab
+### Behavior Tab (Keep-Awake)
+
+Settings for the secondary keep-awake feature.
 
 | Control | Type | Config Key | Description |
 | ------- | ---- | ---------- | ----------- |
@@ -28,7 +54,9 @@ The settings are organized into dedicated sections accessible via the left navig
 | Default Duration (minutes) | Slider (1–720) | `DefaultDuration` | Default timer duration for timed sessions |
 | Auto-exit after duration completes | CheckBox | `AutoExitOnComplete` | Exit when timed session finishes |
 
-### Smart Features Tab
+### Smart Features Tab (Keep-Awake)
+
+Smart monitoring features for the keep-awake utility.
 
 | Control | Type | Config Key | Description |
 | ------- | ---- | ---------- | ----------- |
@@ -39,29 +67,6 @@ The settings are organized into dedicated sections accessible via the left navig
 | Idle threshold (minutes) | Slider (5–120) | `IdleThreshold` | Minutes of inactivity before auto-pause |
 | Presentation mode detection | CheckBox | `PresentationModeDetection` | Auto-activate for PowerPoint/Teams |
 | Scheduled operation | CheckBox | `ScheduleEnabled` | Enable daily scheduled activation |
-
-### TypeThing Tab
-
-| Control | Type | Config Key | Description |
-| ------- | ---- | ---------- | ----------- |
-| Enable TypeThing | CheckBox | `TypeThingEnabled` | Master switch for clipboard typer |
-| Start Hotkey | Hotkey capture | `TypeThingStartHotkey` | Key combination to start typing |
-| Stop Hotkey | Hotkey capture | `TypeThingStopHotkey` | Key combination to stop typing |
-| Typing Speed (ms per char) | Slider (10–500) | `TypeThingMinDelayMs` / `TypeThingMaxDelayMs` | Character typing delay range |
-| Add random pauses | CheckBox | `TypeThingAddRandomPauses` | Insert natural-feeling random delays |
-| Type newlines as Enter key | CheckBox | `TypeThingTypeNewlines` | Send Enter key for line breaks |
-| **Input Method** | Dropdown | `TypeThingInputMode` | **Standard (SendInput)** or **Service** for elevated/RDP typing |
-| **Service Mode** | CheckBox | `TypeThingServiceMode` | Use Windows Service for input injection (works over RDP). |
-| **Audio Feedback** | CheckBox | `TypeThingAudioFeedback` | Play a subtle click sound when characters are successfully sent. |
-| **Install Input Service** | Button | — | Install the Redball Input Service for elevated typing support. |
-| **Service Status** | Visual + Text | — | Live status: Ready (pulsing green) / Not Ready / Error (flashing red). |
-| **Last refresh / Next refresh** | Detail text | — | Diagnostics: timestamps, last action, init failures, errors. |
-
-### TypeThing Service Features
-
-* **Service Mode**: Uses a Windows Service to inject input, which works across UAC boundaries and Remote Desktop sessions.
-* **Automatic Fallback**: If Service mode fails, automatically falls back to SendInput.
-* **Progress Notifications**: Live progress bar and cancel button for long typing sessions.
 
 ### Updates Tab
 
@@ -164,9 +169,9 @@ Left-side navigation with ten sections:
 | **Metrics** | Feature adoption rates, retention, and product usage metrics |
 | **Diagnostics** | Runtime state, logging paths, temperature, session stats, app health |
 | **Settings** | General application settings (theme, notifications, logging) |
+| **TypeThing** | Typing automation hotkeys, speed, and behavior (primary feature) |
 | **Behavior** | Keep-awake controls (display sleep, heartbeat key, duration) |
 | **Smart Features** | Battery, network, idle, schedule, presentation, process watcher, VPN, thermal, session lock, app rules |
-| **TypeThing** | Typing automation hotkeys, speed, and behavior |
 | **Updates** | Update channels, auto-check, and version management |
 
 Click any navigation item to switch the content area. All navigation items show descriptive tooltips on hover.

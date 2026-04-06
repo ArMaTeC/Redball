@@ -1,5 +1,7 @@
+fs = import('fs')
+
 test_env = environment()
-test_env.set('PYTHONPATH', meson.source_root())
+test_env.set('PYTHONPATH', meson.project_source_root())
 
 # Python unit tests
 python_tests = [

@@ -6,7 +6,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-VERSION_FILE="${SCRIPT_DIR}/version.txt"
+VERSION_FILE="${SCRIPT_DIR}/../version.txt"
 
 # Colors
 RED='\033[0;31m'

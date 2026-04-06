@@ -1,0 +1,50 @@
+{
+  "id" : "com.armatec.Redball",
+  "runtime" : "org.gnome.Platform",
+  "runtime-version" : "47",
+  "runtime-commit" : "7d00756d7d5f6397c54f09ac69521991cff9e40a31e6eca6bf61ae9864149380",
+  "sdk" : "org.gnome.Sdk",
+  "sdk-commit" : "fb298c9ea35750b1037f755885076d16ffeed5462b4cee83705b6007474b0307",
+  "command" : "redball",
+  "modules" : [
+    {
+      "name" : "redball",
+      "buildsystem" : "meson",
+      "sources" : [
+        {
+          "path" : "..",
+          "skip" : [
+            ".git",
+            "flatpak",
+            "build",
+            ".flatpak-builder"
+          ],
+          "type" : "dir"
+        }
+      ]
+    }
+  ],
+  "finish-args" : [
+    "--share=ipc",
+    "--socket=fallback-x11",
+    "--socket=wayland",
+    "--device=dri",
+    "--talk-name=org.freedesktop.Notifications",
+    "--talk-name=org.freedesktop.ScreenSaver",
+    "--talk-name=org.gnome.SessionManager",
+    "--talk-name=org.gnome.SettingsDaemon",
+    "--talk-name=org.freedesktop.DBus",
+    "--talk-name=org.freedesktop.portal.Desktop",
+    "--talk-name=org.freedesktop.portal.Settings",
+    "--env=XDG_CURRENT_DESKTOP=GNOME",
+    "--env=XDG_SESSION_TYPE=wayland",
+    "--talk-name=com.canonical.indicator.application",
+    "--talk-name=com.canonical.AppMenu.Registrar",
+    "--talk-name=org.kde.StatusNotifierWatcher",
+    "--talk-name=org.freedesktop.login1",
+    "--own-name=com.armatec.Redball",
+    "--talk-name=org.freedesktop.at-spi.bus",
+    "--socket=session-bus"
+  ],
+  "source-date-epoch" : 1775465002
+}

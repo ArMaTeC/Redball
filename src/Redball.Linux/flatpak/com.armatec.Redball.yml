@@ -30,22 +30,13 @@ finish-args:
   - --socket=session-bus
 
 modules:
-  - name: python3-pygobject
-    buildsystem: simple
-    build-commands:
-      - pip3 install --prefix=/app PyGObject
-    sources:
-      - type: file
-        url: https://files.pythonhosted.org/packages/source/P/PyGObject/PyGObject-3.48.2.tar.gz
-        sha256: c3c0a7afbe5a0b06e3d270babc8d2c7f234e5c9b1f38c9f5d2c3d3e0b0a1c2d3
-    
   - name: redball
-    builddir: true
     buildsystem: meson
     sources:
       - type: dir
-        path: .
+        path: ..
         skip:
           - .git
           - flatpak
-          - tests
+          - build
+          - .flatpak-builder

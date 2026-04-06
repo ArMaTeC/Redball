@@ -8,15 +8,32 @@
 [![VirusTotal](https://img.shields.io/github/actions/workflow/status/ArMaTeC/Redball/virustotal.yml?label=VirusTotal&logo=virustotal&color=green)](https://github.com/ArMaTeC/Redball/actions/workflows/virustotal.yml)
 [![Signed](https://img.shields.io/badge/Code_Signed-SHA256-success.svg)](#code-signing)
 
-> A system tray utility to prevent Windows from sleeping, with style.
+> A professional clipboard typer that keeps your computer awake — type anything, anywhere.
 
-Redball is a keep-awake utility for Windows built as a **native WPF desktop application** (.NET 10) with 14 custom themes. It keeps your computer awake using the `SetThreadExecutionState` API, with smart monitoring features (battery, network, idle, schedule, presentation mode, thermal protection, process watcher, VPN detection), clipboard typer, built-in analytics dashboard, auto-updating, code signing, comprehensive security framework, performance monitoring, and a branded MSI installer.
+Redball is a **clipboard automation tool** for Windows built as a native WPF desktop application (.NET 10) with 14 custom themes. Its flagship feature, **TypeThing**, simulates human-like typing of clipboard contents into any application — perfect for systems that block Ctrl+V. It also includes a smart **keep-awake** utility with monitoring features (battery, network, idle, schedule, presentation mode, thermal protection, process watcher, VPN detection), built-in analytics dashboard, auto-updating, code signing, comprehensive security framework, performance monitoring, and a branded MSI installer.
 
 ![Redball Icon](installer/redball.png)
 
 > **[Full Documentation Wiki](https://github.com/ArMaTeC/Redball/wiki)** — Comprehensive guides for every feature, function, and configuration option.
 
 ## Features
+
+### TypeThing — Clipboard Typer
+
+The flagship feature of Redball. TypeThing reads text from your clipboard and types it character-by-character using the Windows `SendInput` API with `KEYEVENTF_UNICODE`, making it compatible with virtually any application and character set.
+
+- **Global Hotkeys** — Start typing with Ctrl+Shift+V (configurable), emergency stop with Ctrl+Shift+X
+- **Human-Like Typing** — Configurable random delays and pauses simulate natural typing patterns
+- **Universal Compatibility** — Works in applications that block Ctrl+V paste (remote desktop, secure terminals, VMs, web forms)
+- **Full Unicode Support** — Handles any character set via `KEYEVENTF_UNICODE`
+- **Configurable Speed** — 10–500ms per character (~60–400 WPM range)
+- **Smart Newline Handling** — Optionally types Enter for line breaks
+- **Emergency Stop** — Instant stop hotkey at any time
+- **Progress Tracking** — Live tray menu status shows typing progress
+- **Text-to-Speech** — Optional TTS reads text as it types
+- **HID/Driver-Level Support** — Optional Windows Service for elevated and RDP environments
+- **Countdown Timer** — Configurable delay before typing starts (switch to target app)
+- **Large Clipboard Warning** — Confirmation dialog for >10,000 characters
 
 ### Modern WPF Desktop Application (.NET 10)
 
@@ -31,10 +48,19 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 - **Mini Widget** — Floating mini widget window for quick status and controls with customizable presets (Focus, Meeting, BatterySafe)
 - **Onboarding Tutorial** — Interactive first-run tutorial for new users
 - **Theme QA Matrix** — 14-theme control readability testing across 12 control types with WCAG AA contrast validation
-- **P/Invoke SendInput** — Native Windows API for typing simulation (no WinForms dependency)
 - **Theme Persistence** — Selected theme saved to config and restored on startup
 - **Auto Theme Switching** — Follow Windows light/dark mode changes automatically
 - **Code Signed** — EXE and installer signed with SHA-256 certificate via `signtool` in CI
+
+### Keep-Awake — Smart System Monitor
+
+A secondary feature that prevents Windows from sleeping using the `SetThreadExecutionState` API with intelligent monitoring and automation.
+
+- **Timed Sessions** — Set duration (15, 30, 60, 120 minutes) or run indefinitely
+- **Display Sleep Control** — Optionally keep display awake too
+- **Configurable Heartbeat Key** — Sends invisible F13–F16 keypresses to prevent idle detection via native `SendInput`
+- **Smart Monitoring & Automation** — Battery-aware, network-aware, idle detection, scheduled operation, presentation mode detection, thermal protection, process watcher, VPN detection, session lock detection
+- **Toast Notifications** — Modern toast-style notifications with configurable mode filtering (All, Important, Errors, Silent)
 
 ### Smart Monitoring & Automation
 
@@ -52,28 +78,18 @@ Redball is a keep-awake utility for Windows built as a **native WPF desktop appl
 - **WiFi-Based Profiles** — Switch configuration profiles based on the connected WiFi network
 - **Calendar Integration** — Auto-activate during meetings from local JSON calendar
 - **Scheduled Restart Reminder** — Notify (or auto-restart) after a configurable number of days uptime
-- **Session Restore** — Saves state on exit, restores on next startup
-- **Singleton Instance** — Named mutex prevents multiple instances
-- **Crash Recovery** — Detects previous abnormal termination and resets to safe defaults
 
 ### Core Features
 
-- **Timed Sessions** — Set duration (15, 30, 60, 120 minutes) or run indefinitely
-- **Display Sleep Control** — Optionally keep display awake too
-- **Configurable Heartbeat Key** — Sends invisible F13–F16 keypresses to prevent idle detection via native `SendInput`
 - **Startup with Windows** — Launch automatically via Registry Run key or MSI installer
-- **Toast Notifications** — Modern toast-style notifications with configurable mode filtering (All, Important, Errors, Silent)
 - **JSON Configuration** — Persistent settings via `Redball.json` in `%LocalAppData%\Redball\UserData`
 - **Structured Logging** — Rotating log files with configurable size limits and verbose mode
 - **Settings Backup/Restore** — Export and import all settings to a JSON backup file
 - **Global Hotkey** — Ctrl+Alt+Pause to toggle pause/resume system-wide
 - **Localization (i18n)** — English, Spanish, French, German, and Blade Runner theme
 - **Auto-Updater** — Automatic background update checks with configurable interval, or manual check from GitHub Releases
-- **Code Signing** — EXE and installer signed with SHA-256 certificate via `signtool` in CI
-- **TypeThing — Clipboard Typer** — Simulates human-like typing of clipboard contents via global hotkeys, with optional TTS and Driver-Level (HID) support
 - **Analytics Dashboard** — Built-in session tracking, feature adoption metrics, and CSV/JSON export
 - **Mini Widget** — Floating mini widget window for quick status and controls with customizable presets
-- **Onboarding Tutorial** — Interactive first-run tutorial for new users
 - **Local Web API** — Optional REST API for remote control and integration (configurable port)
 - **Plugin System** — Extensible plugin interface for custom functionality
 - **Data Export** — GDPR-style user data export (config, analytics, session, logs)
@@ -113,12 +129,70 @@ If you have the self-contained EXE from the repository or a custom build:
 # Right-click the tray icon to access all features
 ```
 
+## Using TypeThing
+
+TypeThing is the fastest way to use Redball:
+
+1. **Copy text** to your clipboard (Ctrl+C)
+2. **Press Ctrl+Shift+V** (or your configured start hotkey)
+3. **Switch to your target application** during the 3-second countdown
+4. **Watch as text is typed** character-by-character with human-like delays
+5. **Press Ctrl+Shift+X** at any time to emergency-stop
+
+### TypeThing Settings
+
+Access TypeThing settings via:
+- **Tray Menu → TypeThing → TypeThing Settings...**
+- **Main Window → TypeThing tab**
+
+| Setting | Default | Description |
+| ------- | ------- | ----------- |
+| `TypeThingEnabled` | `true` | Master switch for the TypeThing feature |
+| `TypeThingMinDelayMs` | `30` | Minimum delay between keystrokes (ms) |
+| `TypeThingMaxDelayMs` | `120` | Maximum delay between keystrokes (ms) |
+| `TypeThingStartDelaySec` | `3` | Countdown seconds before typing begins |
+| `TypeThingStartHotkey` | `Ctrl+Shift+V` | Global hotkey to start typing |
+| `TypeThingStopHotkey` | `Ctrl+Shift+X` | Global hotkey to stop typing |
+| `TypeThingTypeNewlines` | `true` | Press Enter when a newline is encountered |
+| `TypeThingTtsEnabled` | `false` | Enable text-to-speech while typing |
+| `TypeThingInputMode` | `SendInput` | Input method (`SendInput` or `Interception`) |
+
+### Typing Speed Reference
+
+| Min Delay | Max Delay | Approx WPM |
+| --------- | --------- | ----------- |
+| 10 ms | 50 ms | ~400 WPM |
+| 30 ms | 120 ms | ~160 WPM |
+| 50 ms | 200 ms | ~96 WPM |
+| 100 ms | 300 ms | ~60 WPM |
+
+## Keep-Awake Configuration
+
+The keep-awake feature is secondary and disabled by default. Enable it from the tray menu or settings:
+
+| Setting | Description | Default |
+| ------- | ----------- | ------- |
+| `HeartbeatSeconds` | Interval for keep-awake heartbeat | 59 |
+| `PreventDisplaySleep` | Keep display awake while active | true |
+| `UseHeartbeatKeypress` | Send invisible F15 keypress | true |
+| `DefaultDuration` | Default timer duration (minutes) | 60 |
+
+See the [Keep-Awake documentation](https://github.com/ArMaTeC/Redball/wiki/KeepAwake) for full smart monitoring features.
+
 ## Configuration
 
 Settings are stored in `%LocalAppData%\Redball\UserData\Redball.json`. A default file is created on first run. You can also change all settings from the **Settings** sections in the main window.
 
 ```json
 {
+    "TypeThingEnabled": true,
+    "TypeThingMinDelayMs": 30,
+    "TypeThingMaxDelayMs": 120,
+    "TypeThingStartDelaySec": 3,
+    "TypeThingStartHotkey": "Ctrl+Shift+V",
+    "TypeThingStopHotkey": "Ctrl+Shift+X",
+    "TypeThingTypeNewlines": true,
+    "TypeThingTtsEnabled": false,
     "HeartbeatSeconds": 59,
     "PreventDisplaySleep": true,
     "UseHeartbeatKeypress": true,
@@ -156,316 +230,6 @@ Settings are stored in `%LocalAppData%\Redball\UserData\Redball.json`. A default
 }
 ```
 
-### General & UI
-
-| Setting                | Description                                                   | Default |
-| ---------------------- | ------------------------------------------------------------- | ------- |
-| `HeartbeatSeconds`     | Interval between keep-awake refreshes                         | `59`    |
-| `PreventDisplaySleep`  | Keep the display on in addition to preventing system sleep    | `true`  |
-| `UseHeartbeatKeypress` | Send invisible keypresses to prevent app-level idle detection | `true`  |
-| `HeartbeatInputMode`   | Which function key to send (`F13`, `F14`, `F15`, `F16`)       | `F15`   |
-| `DefaultDuration`      | Default timer duration in minutes                             | `60`    |
-| `Theme`                | UI theme name (see theme list above)                          | `Dark`  |
-| `Locale`               | Display language (`en`, `es`, `fr`, `de`, `bl`)               | `en`    |
-| `MinimizeOnStart`      | Start minimized to system tray                                | `false` |
-| `MinimizeToTray`       | Minimize to tray instead of taskbar                           | `false` |
-| `ConfirmOnExit`        | Show confirmation dialog when exiting                         | `true`  |
-| `ShowNotifications`    | Enable tray/toast notifications                               | `true`  |
-| `SoundNotifications`   | Play sound with notifications                                 | `false` |
-| `NotificationMode`     | Notification filter (`All`, `Important`, `Errors`, `Silent`)  | `All`   |
-| `VerboseLogging`       | Record extra diagnostic log details                           | `false` |
-| `MaxLogSizeMB`         | Log rotation threshold in MB                                  | `10`    |
-| `AutoExitOnComplete`   | Exit automatically when a timed session finishes              | `false` |
-
-### Smart Features
-
-| Setting                     | Description                                            | Default  |
-| --------------------------- | ------------------------------------------------------ | -------- |
-| `BatteryAware`              | Auto-pause when battery is low                         | `false`  |
-| `BatteryThreshold`          | Battery % below which to auto-pause                    | `20`     |
-| `NetworkAware`              | Auto-pause when network disconnects                    | `false`  |
-| `IdleDetection`             | Auto-pause after user inactivity                       | `false`  |
-| `IdleThreshold`             | Minutes of inactivity before auto-pause                | `30`     |
-| `ScheduleEnabled`           | Enable daily scheduled activation                      | `false`  |
-| `ScheduleStartTime`         | Time to auto-start (HH:mm)                             | `09:00`  |
-| `ScheduleStopTime`          | Time to auto-stop (HH:mm)                              | `18:00`  |
-| `ScheduleDays`              | Days of the week the schedule applies                  | Weekdays |
-| `PresentationModeDetection` | Auto-activate for PowerPoint/Teams presentations       | `false`  |
-| `PauseOnScreenLock`         | Auto-pause when the screen is locked                   | `false`  |
-| `VpnAutoKeepAwake`          | Auto-activate when VPN is connected                    | `false`  |
-| `ProcessWatcherEnabled`     | Auto-activate when target process is running           | `false`  |
-| `ProcessWatcherTarget`      | Process name to watch (e.g. `code.exe`)                | `""`     |
-| `ThermalProtectionEnabled`  | Auto-pause when CPU temperature is too high            | `false`  |
-| `ThermalThreshold`          | CPU temperature threshold (°C)                         | `85`     |
-| `AppRulesEnabled`           | Enable app-specific keep-awake/pause rules             | `false`  |
-| `KeepAwakeApps`             | Apps that trigger keep-awake (one per line)            | `""`     |
-| `PauseApps`                 | Apps that trigger a pause (one per line)               | `""`     |
-| `PowerPlanAutoSwitch`       | Auto-switch Windows power plan                         | `false`  |
-| `WifiProfileSwitchEnabled`  | Switch profiles based on WiFi network                  | `false`  |
-| `WifiProfileMappings`       | WiFi-to-profile mappings (`WiFiName=Profile` per line) | `""`     |
-| `RestartReminderEnabled`    | Remind to restart after N days                         | `false`  |
-| `RestartReminderDays`       | Days before restart reminder                           | `7`      |
-
-### TypeThing (Clipboard Typer)
-
-| Setting                      | Description                                       | Default        |
-| ---------------------------- | ------------------------------------------------- | -------------- |
-| `TypeThingEnabled`           | Enable the clipboard typing feature               | `true`         |
-| `TypeThingMinDelayMs`        | Minimum delay between keystrokes (ms)             | `30`           |
-| `TypeThingMaxDelayMs`        | Maximum delay between keystrokes (ms)             | `120`          |
-| `TypeThingStartDelaySec`     | Countdown seconds before typing begins            | `3`            |
-| `TypeThingStartHotkey`       | Global hotkey to start typing                     | `Ctrl+Shift+V` |
-| `TypeThingStopHotkey`        | Global hotkey to stop typing                      | `Ctrl+Shift+X` |
-| `TypeThingTheme`             | Settings dialog theme (`light`, `dark`, `hacker`) | `dark`         |
-| `TypeThingAddRandomPauses`   | Add occasional longer pauses for realism          | `true`         |
-| `TypeThingRandomPauseChance` | Chance (%) of a random pause per character        | `5`            |
-| `TypeThingRandomPauseMaxMs`  | Maximum random pause duration (ms)                | `500`          |
-| `TypeThingTypeNewlines`      | Press Enter when a newline is encountered         | `true`         |
-| `TypeThingNotifications`     | Show tray notifications for typing events         | `true`         |
-| `TypeThingInputMode`         | Input method (`SendInput` or `Interception`)      | `SendInput`    |
-| `TypeThingTtsEnabled`        | Enable text-to-speech while typing                | `false`        |
-
-### Updates
-
-| Setting                          | Description                                  | Default  |
-| -------------------------------- | -------------------------------------------- | -------- |
-| `AutoUpdateCheckEnabled`         | Check for updates automatically              | `true`   |
-| `AutoUpdateCheckIntervalMinutes` | Minutes between automatic update checks      | `120`    |
-| `UpdateChannel`                  | Release channel (`stable`, `beta`, `canary`) | `stable` |
-| `VerifyUpdateSignature`          | Require valid digital signature on updates   | `true`   |
-
-### Advanced
-
-| Setting                    | Description                                                | Default  |
-| -------------------------- | ---------------------------------------------------------- | -------- |
-| `EnableTelemetry`          | Opt-in anonymous usage telemetry (logged locally)          | `false`  |
-| `EnablePerformanceMetrics` | Track CPU, memory, and handle metrics                      | `false`  |
-| `WebApiEnabled`            | Enable local REST API for remote control                   | `false`  |
-| `WebApiPort`               | Port for the local Web API                                 | `48080`  |
-| `EncryptConfig`            | Encrypt Redball.json with DPAPI (default: `true`)          | `true`   |
-| `StrictUpdateTrustMode`    | Enforce strict update package validation                   | `false`  |
-| `MiniWidgetPreset`         | Floating widget preset (`Focus`, `Meeting`, `BatterySafe`) | `Custom` |
-
-## Usage
-
-### Tray Icon Menu
-
-Right-click the red ball icon in your system tray:
-
-| Menu Item                     | Description                                                      |
-| ----------------------------- | ---------------------------------------------------------------- |
-| **Status**                    | Read-only status line (active state, display, F15, timer)        |
-| **Pause / Resume Keep-Awake** | Toggle the keep-awake state                                      |
-| **Prevent Display Sleep**     | Toggle display sleep prevention                                  |
-| **Use F15 Heartbeat**         | Toggle invisible F15 keypresses                                  |
-| **Stay Awake For →**          | Choose duration (15 / 30 / 60 / 120 min)                         |
-| **Stay Awake Until Paused**   | Run indefinitely                                                 |
-| **Battery-Aware Mode**        | Toggle auto-pause on low battery                                 |
-| **Start with Windows**        | Toggle startup shortcut                                          |
-| **Network-Aware Mode**        | Toggle auto-pause on disconnect                                  |
-| **Idle Detection**            | Toggle idle-based auto-pause                                     |
-| **TypeThing →**               | Clipboard typer submenu (Type Clipboard, Stop, Status, Settings) |
-| **Settings...**               | Open the tabbed settings dialog                                  |
-| **About...**                  | Version info and update checker                                  |
-| **Exit**                      | Close Redball gracefully                                         |
-
-### Keyboard Shortcuts
-
-| Main UI              | Description                                                                                                                          |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| **Title Bar**        | Custom chrome with app icon, title, subtitle, and window controls (minimize, maximize, close)                                        |
-| **Navigation Panel** | Left-side navigation with Home, Analytics, Metrics, Diagnostics, Settings, Behavior, Smart Features, TypeThing, and Updates sections |
-| **Content Area**     | Dynamic content that changes based on selected navigation item                                                                       |
-| **Tray Icon**        | Right-click for quick controls; left-click to toggle pause/resume                                                                    |
-
-## Command Line Arguments
-
-The WPF application supports the following command-line arguments:
-
-```powershell
-# Start minimized to tray
-.\Redball.UI.WPF.exe -minimized
-
-# Start with specific config path
-.\Redball.UI.WPF.exe -config "C:\Tools\Redball.json"
-```
-
-| Argument                      | Description                                   |
-| ----------------------------- | --------------------------------------------- |
-| `-minimized`                  | Start minimized to system tray                |
-| `-config <path>`              | Specify a custom config file path             |
-| `--install-driver`            | Install Interception driver and prompt reboot |
-| `--install-driver-no-restart` | Install and attempt to restart HIDs           |
-| `--uninstall-driver`          | Uninstall Interception driver                 |
-| `-help`                       | Show help information                         |
-
-## Settings GUI
-
-The main window provides a left-side navigation panel with dedicated sections:
-
-- **Home** — Overview dashboard with quick access cards
-- **Analytics** — Session counts, usage patterns, feature events with CSV/JSON export
-- **Metrics** — Feature adoption rates, retention, TypeThing success rates
-- **Diagnostics** — Runtime state, logging, config validation, recent log viewer
-- **Settings** — Theme, notifications, logging, minimize behavior
-- **Behavior** — Display sleep prevention, heartbeat key, default duration, auto-exit
-- **Smart Features** — Battery, network, idle, schedule, presentation, process watcher, VPN, thermal, session lock, app rules
-- **TypeThing** — Enable/disable, typing speed, hotkeys, random pauses, newlines, TTS
-- **Updates** — Update channel, auto-check interval, signature verification
-
-Changes are saved to `Redball.json` when you click **Apply Settings**.
-
-TypeThing also has its own dedicated settings dialog (accessible from the TypeThing tray submenu) with grouped controls for speed, behaviour, hotkeys, and appearance — including a live WPM estimate and theme preview.
-
-## C# Services API
-
-Redball v3.0 is implemented as a pure C# WPF application. The core functionality is organized into services:
-
-### Core Services
-
-| Service                      | Purpose                                                             |
-| ---------------------------- | ------------------------------------------------------------------- |
-| `KeepAwakeService`           | Core keep-awake engine with `SetThreadExecutionState` and heartbeat |
-| `BatteryMonitorService`      | WMI-based battery monitoring with auto-pause/resume                 |
-| `NetworkMonitorService`      | Network connectivity monitoring                                     |
-| `IdleDetectionService`       | User idle detection via `GetLastInputInfo`                          |
-| `ScheduleService`            | Time/day-based scheduled activation                                 |
-| `PresentationModeService`    | PowerPoint/Teams/Windows presentation detection                     |
-| `CalendarIntegrationService` | JSON calendar meeting auto-activation                               |
-| `ProcessWatcherService`      | Auto-activate when target process is running                        |
-| `SessionLockService`         | Pause on screen lock                                                |
-| `TemperatureMonitorService`  | CPU thermal protection                                              |
-| `PowerPlanService`           | Automatic Windows power plan switching                              |
-| `ProfileService`             | WiFi-based configuration profiles                                   |
-| `ScheduledRestartService`    | Uptime-based restart reminders                                      |
-| `SessionStateService`        | Save/restore session state                                          |
-| `SessionStatsService`        | Session statistics tracking                                         |
-| `AnalyticsService`           | Local analytics and feature tracking                                |
-| `CloudAnalyticsService`      | Opt-in remote analytics collection                                  |
-| `DataExportService`          | GDPR-style user data bundling                                       |
-| `HealthCheckService`         | Application self-monitoring                                         |
-| `PluginService`              | Plugin loading and management                                       |
-| `WebApiService`              | Local REST API for remote control                                   |
-| `TextToSpeechService`        | TTS for TypeThing                                                   |
-| `ForegroundAppService`       | Track active foreground application                                 |
-| `SecurityService`            | Security, code signing, and SBOM                                    |
-| `InterceptionInputService`   | Driver-level (HID) input simulation                                 |
-| `TemplateService`            | Named text templates for TypeThing                                  |
-| `ServiceLocator`             | Central DI container management                                     |
-| `Logger`                     | Structured logging with rotation                                    |
-
-### Usage Example
-
-```csharp
-// Access the KeepAwakeService singleton
-var keepAwake = KeepAwakeService.Instance;
-
-// Toggle active state
-keepAwake.SetActive(!keepAwake.IsActive);
-
-// Start a timed session
-keepAwake.StartTimedAwake(TimeSpan.FromMinutes(30));
-
-// Export settings
-ConfigService.Instance.Export("backup.json");
-```
-
-## Building
-
-### WPF Application
-
-The WPF desktop application is built with .NET 10 as a self-contained single-file executable:
-
-```powershell
-# Publish the WPF app
-dotnet publish src/Redball.UI.WPF/Redball.UI.WPF.csproj --configuration Release -o dist/wpf-publish
-
-# Or use the comprehensive build script
-.\scripts\build.ps1
-```
-
-The published EXE (~3.3MB compressed) includes the .NET runtime, uses compression and native library embedding, and has embedded debug symbols (no separate PDB file).
-
-### NSIS Installer
-
-The NSIS installer is built with [Nullsoft Scriptable Install System](https://nsis.sourceforge.io/):
-
-```powershell
-# Full deploy pipeline (NSIS installer, with code signing)
-.\installer\Deploy-Redball.ps1
-
-# Build installer only
-.\scripts\build-windows-on-linux.sh
-```
-
-The installer includes:
-- Branded UI images (custom banner and dialog backgrounds)
-- Feature selection (WPF app, Service, shortcuts, auto-start, .NET runtime)
-- .NET 10 Runtime detection and bundled/offline install option
-- Redball icon on all shortcuts
-
-### Build Script
-
-The `build.ps1` script (located in `scripts/`) provides a comprehensive build pipeline:
-
-```powershell
-# Full build (version from version.txt)
-.\scripts\build.ps1
-
-# Specific tasks
-.\scripts\build.ps1 -SkipTests    # Skip Pester tests
-.\scripts\build.ps1 -SkipLint      # Skip PSScriptAnalyzer
-.\scripts\build.ps1 -SkipWPF      # Skip WPF build
-```
-
-For release builds (when MSI is enabled), `build.ps1` now commits and pushes the version bump before calling `release.ps1` so GitHub release notes always have commit history.
-
-```powershell
-# Release build with default release commit message
-.\scripts\build.ps1
-
-# Override release commit message
-.\scripts\build.ps1 -ReleaseMessage "chore(release): v3.1.0 + HID fixes"
-
-# Opt out of auto release commit/push behavior
-.\scripts\build.ps1 -SkipReleaseCommit
-.\scripts\build.ps1 -SkipReleasePush
-```
-
-### Version Management
-
-Version is defined in two places (kept in sync by `scripts/Bump-Version.ps1`):
-
-1. `src/Redball.UI.WPF/Redball.UI.WPF.csproj` — `<Version>`, `<FileVersion>`, `<AssemblyVersion>`
-2. `scripts/version.txt` — fallback version
-
-### Code Signing
-
-Both the EXE and installer are automatically code-signed during CI releases:
-
-- **Algorithm**: SHA-256 with RSA 2048-bit key
-- **Timestamping**: DigiCert RFC 3161 timestamp server
-- **Tool**: Windows SDK `signtool.exe`
-- **Secrets**: `CODE_SIGNING_CERT` (base64 PFX) and `CODE_SIGNING_PASSWORD` stored as GitHub repository secrets
-
-To use your own certificate, set the GitHub secrets:
-
-```powershell
-# Base64-encode your PFX certificate
-$base64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes("your-cert.pfx"))
-$base64 | gh secret set CODE_SIGNING_CERT --repo YourOrg/Redball
-"your-password" | gh secret set CODE_SIGNING_PASSWORD --repo YourOrg/Redball
-```
-
-If no certificate secrets are configured, the CI creates a self-signed development certificate as a fallback.
-
-### CI/CD
-
-GitHub Actions workflows (all using Node.js 24-compatible actions):
-
-- **`ci.yml`** — On push/PR: runs WPF build, Pester tests (legacy), JSON validation, and security scan
-- **`release.yml`** — On push to `main`: auto-tags version, publishes WPF app, signs EXE, builds NSIS installer, signs installer, creates GitHub Release with installer attached
-
 ## Architecture
 
 Redball v3.0 is a **pure C# WPF application** — all functionality runs natively with no PowerShell dependency.
@@ -474,7 +238,8 @@ Redball v3.0 is a **pure C# WPF application** — all functionality runs nativel
 src/Redball.UI.WPF/
 ├── Interop/NativeMethods.cs          # All Win32 P/Invoke declarations
 ├── Services/                         # 40+ singleton services
-│   ├── KeepAwakeService.cs           # Core engine (SetThreadExecutionState + heartbeat)
+│   ├── TypeThingService.cs           # Core clipboard typing engine
+│   ├── KeepAwakeService.cs           # Keep-awake engine (SetThreadExecutionState + heartbeat)
 │   ├── BatteryMonitorService.cs      # WMI battery monitoring
 │   ├── NetworkMonitorService.cs      # Network connectivity monitoring
 │   ├── IdleDetectionService.cs       # GetLastInputInfo idle detection
@@ -499,29 +264,6 @@ src/Redball.UI.WPF/
 │   ├── TextToSpeechService.cs        # TTS for TypeThing
 │   ├── SecurityService.cs              # Security, tamper detection, threat model, CI gates
 │   ├── SecretManagerService.cs       # Windows Credential Manager secret storage
-│   ├── TamperPolicyService.cs          # Tamper detection with Warn/Quarantine/Block policies
-│   ├── ThreatModelService.cs           # STRIDE threat inventory per release
-│   ├── SecurityCIGatesService.cs       # Dependency audit, secret scanning, SBOM generation
-│   ├── StartupTimingService.cs         # Startup SLO instrumentation (<1.5s cold, <0.8s warm)
-│   ├── ResourceBudgetService.cs        # Per-service CPU/RAM budgets
-│   ├── MemoryPressureService.cs        # Memory pressure handling with graceful degradation
-│   ├── PerformanceTestService.cs       # Continuous performance testing framework
-│   ├── RolloutService.cs               # Canary/beta/stable/enterprise staged rollouts
-│   ├── UpdateObservabilityService.cs   # 14-stage update lifecycle telemetry
-│   ├── TaskFunnelService.cs            # End-to-end task funnel analytics
-│   ├── ProductStrategyService.cs       # User personas and north-star metrics
-│   ├── ValueMapService.cs              # Quarterly feature-to-KPI linkage
-│   ├── FeatureTieringService.cs        # Core/Pro/Experimental tier management
-│   ├── CommandPaletteService.cs        # Ctrl+K searchable command surface
-│   ├── WindowsShellIntegrationService.cs # Jump lists, URI protocol, toast activator
-│   ├── EnterprisePolicyService.cs      # Group Policy integration
-│   ├── OutboxDispatcherService.cs        # Durable offline sync with SQLite
-│   ├── CrashTelemetryService.cs        # Privacy-safe crash reporting
-│   ├── AccessibilityService.cs         # WCAG AA compliance framework
-│   ├── DesignSystemService.cs          # Tokenized design system
-│   ├── ThemeQAMatrixService.cs         # 14-theme readability testing
-│   ├── LatencyMaskingService.cs        # Async operation loading UX
-│   ├── InterruptionPolicyService.cs    # Non-blocking interruption management
 │   └── Logger.cs                       # Structured logging with rotation
 ├── Models/RedballConfig.cs           # Strongly-typed configuration
 ├── ViewModels/MainViewModel.cs       # MVVM state + commands
@@ -534,13 +276,22 @@ src/Redball.UI.WPF/
 
 ### Component Flow
 
-1. **Startup** — Singleton mutex → crash recovery → load config → init theme → init KeepAwakeService → restore session → create tray icon → register hotkeys
-2. **Heartbeat Timer** — Fires every N seconds: re-assert `SetThreadExecutionState` + send F15 keypress via `SendInput`
-3. **Duration Timer** — Fires every 1s: check timed expiry, idle (1s), battery/network/presentation (10s), schedule (30s)
-4. **Settings Save** — `KeepAwakeService.ReloadConfig()` syncs all monitor settings immediately
-5. **Shutdown** — Save session state → dispose KeepAwakeService → clear crash flag → release mutex → exit
+1. **Startup** — Singleton mutex → crash recovery → load config → init theme → init TypeThingService → init KeepAwakeService → restore session → create tray icon → register hotkeys
+2. **TypeThing** — Global hotkey → read clipboard → countdown → SendInput with delays → progress tracking → cleanup
+3. **Keep-Awake Heartbeat** — Fires every N seconds: re-assert `SetThreadExecutionState` + send F15 keypress via `SendInput`
+4. **Duration Timer** — Fires every 1s: check timed expiry, idle (1s), battery/network/presentation (10s), schedule (30s)
+5. **Settings Save** — `ConfigService.Save()` syncs all settings immediately
+6. **Shutdown** — Save session state → dispose services → clear crash flag → release mutex → exit
 
 ## Troubleshooting
+
+### TypeThing not typing
+
+- Ensure the target application has focus before the countdown ends
+- Check that TypeThing is enabled in Settings
+- Verify your hotkeys are not conflicting with other applications
+- Try increasing the start delay to give yourself more time to switch windows
+- Check verbose logs for SendInput errors
 
 ### Tray icon not appearing
 
@@ -596,6 +347,10 @@ dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 
 ## Roadmap
 
+- [x] TypeThing clipboard typer with global hotkeys
+- [x] TypeThing human-like typing with random delays
+- [x] TypeThing text-to-speech support
+- [x] TypeThing HID/Driver-level support via Windows Service
 - [x] Keyboard shortcuts (tray menu access keys)
 - [x] Multiple language support (i18n — en, es, fr, de)
 - [x] GUI configuration editor (tabbed settings dialog)
@@ -618,7 +373,6 @@ dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 - [x] Global hotkey (Ctrl+Alt+Pause)
 - [x] CI/CD (GitHub Actions)
 - [x] Performance metrics
-- [x] TypeThing clipboard typer with global hotkeys
 - [x] About dialog with update checker
 - [x] Themed TypeThing settings dialog (light/dark/hacker)
 - [x] Modern WPF desktop application (.NET 10)
@@ -638,7 +392,6 @@ dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 - [x] WiFi-based configuration profiles
 - [x] Scheduled restart reminders
 - [x] Thermal protection (CPU temperature monitoring)
-- [x] TypeThing text-to-speech
 - [x] Local Web API for remote control
 - [x] Analytics dashboard with CSV/JSON export
 - [x] Product metrics (feature adoption, retention)

@@ -31,6 +31,8 @@ DRY_RUN=0
 FORCE=0
 ALLOW_DIRTY=0
 SKIP_AUTO_BUILD=0
+CHANNEL="stable"
+PUBLISH_TO_UPDATE_SERVER=1
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -67,6 +69,18 @@ while [[ $# -gt 0 ]]; do
             SKIP_AUTO_BUILD=1
             shift
             ;;
+        -c|--channel)
+            CHANNEL="$2"
+            shift 2
+            ;;
+        --beta)
+            CHANNEL="beta"
+            shift
+            ;;
+        --no-publish)
+            PUBLISH_TO_UPDATE_SERVER=0
+            shift
+            ;;
         -h|--help)
             cat << 'EOF'
 Release Script for Linux
@@ -82,11 +96,16 @@ Options:
     -f, --force                 Skip all confirmation prompts
     --allow-dirty               Allow release from a dirty working tree
     --skip-auto-build           Skip automatically running build when artifacts missing
+    -c, --channel CHANNEL       Release channel: stable, beta, dev (default: stable)
+    --beta                      Shortcut for --channel beta
+    --no-publish                Skip publishing to update-server
     -h, --help                  Show this help
 
 Examples:
-    $0                          # Create release from current version
+    $0                          # Create stable release from current version
     $0 -v 2.1.81                # Create release for specific version
+    $0 --beta                   # Create beta release
+    $0 -c dev                   # Create dev channel release
     $0 -s                       # Validate only, don't create release
     $0 --dry-run                # Preview what would happen
 EOF
@@ -143,8 +162,8 @@ get_project_version() {
     fi
     
     # Fallback to version.txt
-    if [[ -z "$VERSION" && -f "${SCRIPT_DIR}/version.txt" ]]; then
-        VERSION=$(cat "${SCRIPT_DIR}/version.txt")
+    if [[ -z "$VERSION" && -f "${SCRIPT_DIR}/../version.txt" ]]; then
+        VERSION=$(cat "${SCRIPT_DIR}/../version.txt")
     fi
     
     if [[ -z "$VERSION" ]]; then
@@ -183,16 +202,35 @@ get_changelog() {
     
     changelog+="\n\n## Installation\n\n"
     changelog+="Download the appropriate package for your platform.\n\n"
-    changelog+="## SHA256 Checksums\n\n"
+    changelog+="\n\n## SHA256 Checksums\n\n"
+    changelog+="### Linux\n"
     
-    # Calculate checksums
-    for file in "${DIST_DIR}"/redball-*.{tar.gz,flatpak,deb} 2>/dev/null; do
+    # Calculate Linux checksums
+    for file in "${DIST_DIR}"/redball-*.tar.gz "${DIST_DIR}"/redball-*.flatpak "${DIST_DIR}"/redball-*.deb; do
+        [[ -f "$file" ]] || continue
+        local hash=$(sha256sum "$file" | cut -d' ' -f1)
+        local basename=$(basename "$file")
+        changelog+="- \`${basename}\`: \`${hash}\`\n"
+    done
+    
+    # Calculate Windows checksums
+    changelog+="\n### Windows\n"
+    local windows_dist="$PROJECT_ROOT/dist"
+    
+    for file in "$windows_dist"/Redball-*-Setup.exe "$windows_dist"/Redball-*.zip; do
         if [[ -f "$file" ]]; then
             local hash=$(sha256sum "$file" | cut -d' ' -f1)
             local basename=$(basename "$file")
             changelog+="- \`${basename}\`: \`${hash}\`\n"
         fi
     done
+    
+    # Standalone EXE checksum
+    local wpf_exe="$windows_dist/wpf-publish/Redball.UI.WPF.exe"
+    if [[ -f "$wpf_exe" ]]; then
+        local hash=$(sha256sum "$wpf_exe" | cut -d' ' -f1)
+        changelog+="- \`Redball.exe\` (standalone): \`${hash}\`\n"
+    fi
     
     echo -e "$changelog"
 }
@@ -203,7 +241,7 @@ build_if_needed() {
     
     # Check for artifacts
     local has_artifacts=0
-    for file in "${DIST_DIR}"/redball-*.{tar.gz,flatpak,deb} 2>/dev/null; do
+    for file in "${DIST_DIR}"/redball-*.tar.gz "${DIST_DIR}"/redball-*.flatpak "${DIST_DIR}"/redball-*.deb; do
         [[ -f "$file" ]] && has_artifacts=1 && break
     done
     
@@ -328,9 +366,26 @@ main() {
         
         # Build upload file list
         local upload_files=()
-        for file in "${DIST_DIR}"/redball-*.{tar.gz,flatpak,deb} 2>/dev/null; do
+        
+        # Add Linux artifacts
+        for file in "${DIST_DIR}"/redball-*.tar.gz "${DIST_DIR}"/redball-*.flatpak "${DIST_DIR}"/redball-*.deb; do
             [[ -f "$file" ]] && upload_files+=("$file")
         done
+        
+        # Add Windows artifacts from dist/
+        local windows_dist="$PROJECT_ROOT/dist"
+        for file in "$windows_dist"/Redball-*-Setup.exe "$windows_dist"/Redball-*.zip; do
+            [[ -f "$file" ]] && upload_files+=("$file")
+        done
+        
+        # Add standalone Windows EXE
+        local wpf_exe="$windows_dist/wpf-publish/Redball.UI.WPF.exe"
+        if [[ -f "$wpf_exe" ]]; then
+            # Copy to dist with versioned name for upload
+            local versioned_exe="${DIST_DIR}/Redball-${VERSION}.exe"
+            cp "$wpf_exe" "$versioned_exe"
+            upload_files+=("$versioned_exe")
+        fi
         
         if [[ $release_exists -eq 1 ]]; then
             log_warn "Release $TAG already exists. Updating artifacts..."
@@ -354,7 +409,84 @@ main() {
     # Cleanup
     rm -f "$notes_file"
     
+    # Publish to update server
+    if [[ $PUBLISH_TO_UPDATE_SERVER -eq 1 ]]; then
+        publish_to_update_server "$VERSION"
+    fi
+    
     log_success "Release $TAG completed successfully!"
+}
+
+# Publish artifacts to update-server
+publish_to_update_server() {
+    local version="$1"
+    local update_server_dir="$PROJECT_ROOT/update-server/releases/$version"
+    
+    log_info "Publishing to update-server (channel: $CHANNEL)..."
+    
+    if [[ $DRY_RUN -eq 1 ]]; then
+        log_info "[DRY RUN] Would publish to $update_server_dir"
+        return 0
+    fi
+    
+    # Create release directory
+    mkdir -p "$update_server_dir"
+    
+    # Copy Windows artifacts if they exist
+    local windows_dist="$PROJECT_ROOT/dist"
+    if [[ -d "$windows_dist" ]]; then
+        # Copy Setup.exe
+        for setup in "$windows_dist"/Redball-*-Setup.exe; do
+            [[ -f "$setup" ]] && cp "$setup" "$update_server_dir/" && log_success "Copied: $(basename "$setup")"
+        done
+        
+        # Copy ZIP
+        for zip in "$windows_dist"/Redball-*.zip; do
+            [[ -f "$zip" ]] && cp "$zip" "$update_server_dir/" && log_success "Copied: $(basename "$zip")"
+        done
+        
+        # Copy standalone EXE from wpf-publish
+        local wpf_exe="$windows_dist/wpf-publish/Redball.UI.WPF.exe"
+        if [[ -f "$wpf_exe" ]]; then
+            cp "$wpf_exe" "$update_server_dir/Redball-${version}.exe"
+            log_success "Copied: Redball-${version}.exe"
+        fi
+    fi
+    
+    # Copy Linux artifacts if they exist
+    local linux_dist="$PROJECT_ROOT/dist/linux"
+    if [[ -d "$linux_dist" ]]; then
+        for artifact in "$linux_dist"/redball-*.{tar.gz,flatpak,deb}; do
+            [[ -f "$artifact" ]] && cp "$artifact" "$update_server_dir/" && log_success "Copied: $(basename "$artifact")"
+        done
+    fi
+    
+    # Create release metadata JSON
+    local metadata_file="$update_server_dir/release.json"
+    local release_date=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    cat > "$metadata_file" << EOF
+{
+  "version": "$version",
+  "channel": "$CHANNEL",
+  "date": "$release_date",
+  "files": [
+$(ls -1 "$update_server_dir" 2>/dev/null | grep -v "release.json" | while read file; do
+    local size=$(stat -f%z "$update_server_dir/$file" 2>/dev/null || stat -c%s "$update_server_dir/$file" 2>/dev/null || echo "0")
+    local sha256=$(sha256sum "$update_server_dir/$file" 2>/dev/null | awk '{print $1}' || echo "")
+    echo "    {"
+    echo "      \"name\": \"$file\","
+    echo "      \"size\": $size,"
+    echo "      \"sha256\": \"$sha256\""
+    echo "    },"
+done | sed '$ s/,$//')
+  ]
+}
+EOF
+    
+    log_success "Published to update-server: $update_server_dir"
+    log_info "Channel: $CHANNEL"
+    log_info "Files: $(ls -1 "$update_server_dir" | grep -v "release.json" | wc -l)"
 }
 
 main "$@"

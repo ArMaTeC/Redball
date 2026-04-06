@@ -18,7 +18,7 @@ set -euo pipefail
 
 # === Configuration ===
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 DOTNET_CHANNEL="10.0"
 LINUX_DOTNET_ROOT="/usr/share/dotnet"
 WINE_DOTNET_ROOT="$HOME/.wine-dotnet"
@@ -475,6 +475,41 @@ step_build_nsis() {
     fi
 }
 
+# === Build: ZIP Package ===
+step_build_zip() {
+    local version
+    if [[ -f "$PROJECT_ROOT/scripts/version.txt" ]]; then
+        version=$(cat "$PROJECT_ROOT/scripts/version.txt" | tr -d '[:space:]')
+    else
+        version=$(grep -oP '<Version>\K[\d.]+' "$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" || echo "2.1.0")
+    fi
+
+    log_step "Creating portable ZIP package..."
+    
+    local zip_name="Redball-${version}.zip"
+    local zip_path="$DIST_DIR/$zip_name"
+    
+    # Create ZIP from published WPF directory
+    if command -v zip &>/dev/null; then
+        pushd "$WPF_PUBLISH_DIR" > /dev/null
+        zip -r "$zip_path" . -x "*.nsi" -x "*.bmp" -x "Redball.nsi" -x "nsis-*.bmp" > /dev/null
+        popd > /dev/null
+        
+        if [[ -f "$zip_path" ]]; then
+            local size
+            size=$(du -h "$zip_path" | cut -f1)
+            log_success "ZIP package created: $zip_name ($size)"
+            return 0
+        else
+            log_warn "ZIP creation failed"
+            return 1
+        fi
+    else
+        log_warn "zip command not found - install with: apt-get install zip"
+        return 1
+    fi
+}
+
 generate_checksums() {
     local version
     if [[ -f "$PROJECT_ROOT/scripts/version.txt" ]]; then
@@ -488,6 +523,7 @@ generate_checksums() {
     local files_to_checksum=""
     [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] && files_to_checksum="$files_to_checksum Redball-${version}-Setup.exe"
     [[ -f "$DIST_DIR/Redball-Setup.exe" ]] && files_to_checksum="$files_to_checksum Redball-Setup.exe"
+    [[ -f "$DIST_DIR/Redball-${version}.zip" ]] && files_to_checksum="$files_to_checksum Redball-${version}.zip"
     
     if [[ -n "$files_to_checksum" ]]; then
         (cd "$DIST_DIR" && sha256sum $files_to_checksum > SHA256SUMS)
@@ -525,6 +561,7 @@ main() {
     step_restore
     step_build_wpf
     step_build_service
+    step_build_zip
 
     if ! $WPF_ONLY; then
         step_build_nsis
@@ -546,12 +583,11 @@ main() {
     echo "  Output:   $DIST_DIR"
     echo ""
 
+    echo "  Artifacts:"
     if [[ -f "$DIST_DIR/Redball-Setup.exe" ]]; then
-        echo "  Artifacts:"
-        ls -lh "$DIST_DIR"/*-Setup.exe "$DIST_DIR"/SHA256SUMS 2>/dev/null | awk '{print "    " $NF " (" $5 ")"}'
+        ls -lh "$DIST_DIR"/*-Setup.exe "$DIST_DIR"/*.zip "$DIST_DIR"/SHA256SUMS 2>/dev/null | awk '{print "    " $NF " (" $5 ")"}'
     else
-        echo "  Artifacts:"
-        ls -lh "$WPF_PUBLISH_DIR/Redball.UI.WPF.exe" 2>/dev/null | awk '{print "    " $NF " (" $5 ")"}'
+        ls -lh "$WPF_PUBLISH_DIR/Redball.UI.WPF.exe" "$DIST_DIR"/*.zip 2>/dev/null | awk '{print "    " $NF " (" $5 ")"}'
     fi
     echo ""
 }

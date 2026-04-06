@@ -41,8 +41,8 @@ DO_INSTALL_DEPS=0
 
 # Get version
 get_version() {
-    if [[ -f "${SCRIPT_DIR}/version.txt" ]]; then
-        cat "${SCRIPT_DIR}/version.txt"
+    if [[ -f "${SCRIPT_DIR}/../version.txt" ]]; then
+        cat "${SCRIPT_DIR}/../version.txt"
     else
         echo "2.1.19"
     fi
@@ -152,7 +152,11 @@ release_cmd() {
 # Check if running on Ubuntu/Debian
 check_os() {
     if [ -f /etc/os-release ]; then
+        # Preserve project VERSION before sourcing OS info
+        local PROJECT_VERSION="$VERSION"
         . /etc/os-release
+        # Restore project VERSION after sourcing OS info
+        VERSION="$PROJECT_VERSION"
         if [[ "$ID" != "ubuntu" && "$ID" != "debian" ]]; then
             log_warn "This script is optimized for Ubuntu/Debian. Detected: $ID"
         else
@@ -271,21 +275,31 @@ build_flatpak() {
     cd "${LINUX_DIR}"
     
     # Add flathub remote if not present
-    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
     
     # Install required SDK
-    flatpak install -y flathub org.gnome.Platform//47 org.gnome.Sdk//47
+    flatpak install -y flathub org.gnome.Platform//47 org.gnome.Sdk//47 2>/dev/null || {
+        log_warn "Failed to install Flatpak SDK - skipping Flatpak build"
+        return 0
+    }
     
-    # Build
+    # Build with --disable-rofiles-fuse to work without FUSE
     flatpak-builder --force-clean \
+        --disable-rofiles-fuse \
         --repo=flatpak/repo \
         flatpak/build \
-        flatpak/com.armatec.Redball.yml
+        flatpak/com.armatec.Redball.yml || {
+        log_warn "Flatpak build failed - skipping"
+        return 0
+    }
     
     # Create bundle
     flatpak build-bundle flatpak/repo \
         "${DIST_DIR}/redball-${VERSION}.flatpak" \
-        com.armatec.Redball
+        com.armatec.Redball || {
+        log_warn "Flatpak bundle creation failed - skipping"
+        return 0
+    }
     
     log_success "Flatpak bundle created: redball-${VERSION}.flatpak"
 }
@@ -531,10 +545,13 @@ main() {
         exit 0
     fi
     
-    # Default action: show help if no options
-    if [[ $DO_VERSION_BUMP -eq 0 && $DO_BUILD -eq 0 && $DO_RELEASE -eq 0 && $DO_COVERAGE -eq 0 ]]; then
-        show_help
-        exit 0
+    # Default action: full workflow if no options specified
+    if [[ $DO_VERSION_BUMP -eq 0 && $DO_BUILD -eq 0 && $DO_RELEASE -eq 0 && $DO_COVERAGE -eq 0 && $DO_CLEAN -eq 0 && $DO_INSTALL_DEPS -eq 0 && $DO_INSTALL_SERVICE -eq 0 && $DO_UNINSTALL_SERVICE -eq 0 ]]; then
+        log_info "No options specified - running full workflow (build, test, package)"
+        DO_BUILD=1
+        DO_DIST=1
+        DO_DEB=1
+        DO_FLATPAK=1
     fi
     
     # Version bump
