@@ -447,6 +447,31 @@ step_build_nsis() {
     cp "$installer_dir/nsis-header.bmp" "$WPF_PUBLISH_DIR/" 2>/dev/null || true
     cp "$installer_dir/nsis-welcome.bmp" "$WPF_PUBLISH_DIR/" 2>/dev/null || true
 
+    # Download .NET 10 runtime for bundling (avoids download failures during installation)
+    log_step "Downloading .NET 10 runtime for bundling..."
+    local dotnet_installer="windowsdesktop-runtime-10.0.5-win-x64.exe"
+    local dotnet_url="https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.5/windowsdesktop-runtime-10.0.5-win-x64.exe"
+    
+    if [[ ! -f "$installer_dir/$dotnet_installer" ]]; then
+        if command -v curl &>/dev/null; then
+            curl -L -o "$installer_dir/$dotnet_installer" "$dotnet_url" 2>/dev/null || {
+                log_warn "Failed to download .NET runtime - installer will attempt download during installation"
+            }
+        elif command -v wget &>/dev/null; then
+            wget -q -O "$installer_dir/$dotnet_installer" "$dotnet_url" 2>/dev/null || {
+                log_warn "Failed to download .NET runtime - installer will attempt download during installation"
+            }
+        fi
+    fi
+    
+    # Copy .NET installer to publish directory if available
+    if [[ -f "$installer_dir/$dotnet_installer" ]]; then
+        cp "$installer_dir/$dotnet_installer" "$WPF_PUBLISH_DIR/"
+        log_success ".NET 10 runtime bundled with installer"
+    else
+        log_warn ".NET 10 runtime not bundled - installer will download during installation"
+    fi
+
     # Update version in copied NSIS script
     local build_nsi="$WPF_PUBLISH_DIR/Redball.nsi"
     sed -i "s/!define PRODUCT_VERSION \"[^\"]*\"/!define PRODUCT_VERSION \"${version}.0\"/" "$build_nsi"
