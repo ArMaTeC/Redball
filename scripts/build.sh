@@ -237,7 +237,8 @@ auto_release() {
         log_info "[DRY RUN] Would create GitHub release"
     else
         if [[ -f "$SCRIPT_DIR/linux/release.sh" ]]; then
-            "$SCRIPT_DIR/linux/release.sh" -v "$(get_version)" --channel "$CHANNEL"
+            # Pass --allow-dirty since build artifacts don't need to be committed
+            "$SCRIPT_DIR/linux/release.sh" -v "$(get_version)" --channel "$CHANNEL" --allow-dirty
         fi
     fi
     
