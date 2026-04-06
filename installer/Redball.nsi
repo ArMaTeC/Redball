@@ -136,7 +136,6 @@ LangString DESC_SecStartup ${LANG_ENGLISH} "Start Redball automatically when Win
 ; Variables
 ; ============================================================================
 
-Var RunningProcess
 Var ServiceInstalled
 Var DotNetInstalled
 Var DotNetDownloaded
@@ -307,7 +306,7 @@ Section "!${PRODUCT_NAME} Application" SecApp
     WriteRegStr HKCU "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\Redball.UI.WPF.exe"
     WriteRegStr HKCU "${PRODUCT_REGISTRY_KEY}" "" "$INSTDIR"
     WriteRegStr HKCU "${PRODUCT_REGISTRY_KEY}" "Version" "${PRODUCT_VERSION}"
-    WriteRegStr HKCU "${PRODUCT_REGISTRY_KEY}" "InstallDate" "$INSTLOGTIME"
+    WriteRegStr HKCU "${PRODUCT_REGISTRY_KEY}" "InstallDate" "${PRODUCT_VERSION}"
     
     ; Uninstall information
     WriteRegStr HKCU "${PRODUCT_UNINST_KEY}" "DisplayName" "${PRODUCT_NAME}"

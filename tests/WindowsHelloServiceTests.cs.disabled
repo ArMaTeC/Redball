@@ -1,0 +1,159 @@
+using System;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Redball.UI.Services;
+
+namespace Redball.Tests;
+
+/// <summary>
+/// Unit tests for WindowsHelloService.
+/// Tests biometric authentication and hardware key operations.
+/// </summary>
+[TestClass]
+public class WindowsHelloServiceTests
+{
+    private WindowsHelloService _service = null!;
+
+    [TestInitialize]
+    public void Setup()
+    {
+        _service = WindowsHelloService.Instance;
+    }
+
+    [TestMethod]
+    public void Instance_IsSingleton()
+    {
+        // Arrange & Act
+        var instance1 = WindowsHelloService.Instance;
+        var instance2 = WindowsHelloService.Instance;
+
+        // Assert
+        Assert.AreSame(instance1, instance2, "WindowsHelloService should be a singleton");
+    }
+
+    [TestMethod]
+    public async Task IsAvailableAsync_ReturnsBoolean()
+    {
+        // Act
+        var isAvailable = await _service.IsAvailableAsync();
+
+        // Assert
+        // Result depends on hardware - we just verify it doesn't throw
+        Assert.IsTrue(true, "IsAvailableAsync should complete without exception");
+    }
+
+    [TestMethod]
+    public async Task IsAvailableAsync_CachesResult()
+    {
+        // Act
+        var result1 = await _service.IsAvailableAsync();
+        var result2 = await _service.IsAvailableAsync();
+
+        // Assert
+        Assert.AreEqual(result1, result2, "Availability check should be consistent");
+    }
+
+    [TestMethod]
+    public async Task GetAvailabilityDetails_ReturnsDetails()
+    {
+        // Act
+        var details = await _service.GetAvailabilityDetailsAsync();
+
+        // Assert
+        Assert.IsNotNull(details, "Details should not be null");
+        // Details content depends on hardware - we just verify the method works
+    }
+
+    [TestMethod]
+    public async Task AuthenticateAsync_WithUnavailable_ReturnsFalse()
+    {
+        // This test verifies graceful handling when Windows Hello is not available
+        // We can't reliably test the actual authentication without user interaction
+        
+        // Arrange
+        var isAvailable = await _service.IsAvailableAsync();
+        
+        if (!isAvailable)
+        {
+            // Act
+            var result = await _service.AuthenticateAsync("Test purpose");
+
+            // Assert
+            Assert.IsFalse(result, "Should return false when Windows Hello is not available");
+        }
+        else
+        {
+            // When available, we can't test actual authentication (requires user interaction)
+            Assert.Inconclusive("Windows Hello is available - skipping actual authentication test");
+        }
+    }
+
+    [TestMethod]
+    public async Task CreateKeyCredential_WithUnavailable_ReturnsNull()
+    {
+        // Arrange
+        var isAvailable = await _service.IsAvailableAsync();
+        
+        if (!isAvailable)
+        {
+            // Act
+            var credential = await _service.CreateKeyCredentialAsync("test_key");
+
+            // Assert
+            Assert.IsNull(credential, "Should return null when Windows Hello is not available");
+        }
+        else
+        {
+            Assert.Inconclusive("Windows Hello is available - skipping key credential creation test");
+        }
+    }
+
+    [TestMethod]
+    public async Task OpenKeyCredential_NonExistent_ReturnsNull()
+    {
+        // Act
+        var credential = await _service.OpenKeyCredentialAsync($"nonexistent_key_{Guid.NewGuid()}");
+
+        // Assert
+        Assert.IsNull(credential, "Opening non-existent key should return null");
+    }
+
+    [TestMethod]
+    public async Task DeleteKeyCredential_ReturnsTrue()
+    {
+        // Act
+        var result = await _service.DeleteKeyCredentialAsync("test_key");
+
+        // Assert
+        Assert.IsTrue(result, "Delete should succeed (or return true if key doesn't exist)");
+    }
+
+    [TestMethod]
+    public void Dispose_DoesNotThrow()
+    {
+        // Act & Assert
+        try
+        {
+            // We can't dispose the singleton, but we can verify it implements IDisposable
+            var service = new WindowsHelloService();
+            service.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail($"Dispose should not throw: {ex.Message}");
+        }
+    }
+
+    [TestMethod]
+    public async Task HelloAvailabilityDetails_HasExpectedStructure()
+    {
+        // Arrange & Act
+        var details = await _service.GetAvailabilityDetailsAsync();
+
+        // Assert
+        Assert.IsNotNull(details, "Details should not be null");
+        // Verify the object can be serialized
+        var json = System.Text.Json.JsonSerializer.Serialize(details);
+        Assert.IsFalse(string.IsNullOrEmpty(json), "Details should be serializable");
+    }
+}

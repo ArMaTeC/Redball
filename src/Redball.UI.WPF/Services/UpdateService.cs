@@ -29,6 +29,20 @@ public class FileHashCache
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Redball", "UpdateCache");
         _cacheFilePath = Path.Combine(cacheDir, "filehashcache.json");
+        
+        // Ensure directory exists before trying to load cache (fixes first-run race condition)
+        try
+        {
+            if (!Directory.Exists(cacheDir))
+            {
+                Directory.CreateDirectory(cacheDir);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("UpdateService", $"Failed to create cache directory: {ex.Message}");
+        }
+        
         LoadCache();
     }
 
@@ -273,6 +287,7 @@ public class UpdateService : IUpdateService
 
     /// <summary>
     /// Checks for updates by comparing current version with latest GitHub release.
+    /// Includes automatic retry logic for transient failures.
     /// </summary>
     /// <returns>Update info if an update is available, null if up to date or error.</returns>
     public async Task<UpdateInfo?> CheckForUpdateAsync(CancellationToken cancellationToken = default)
@@ -284,6 +299,55 @@ public class UpdateService : IUpdateService
             return null;
         }
 
+        // Retry logic for transient failures
+        int maxRetries = 3;
+        for (int attempt = 0; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                var result = await CheckForUpdateInternalAsync(cancellationToken);
+                
+                if (result != null || attempt == maxRetries)
+                {
+                    return result;
+                }
+                
+                // If result is null but no exception, check if we should retry
+                if (attempt < maxRetries)
+                {
+                    var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt)); // 1s, 2s, 4s
+                    Logger.Debug("UpdateService", $"Update check returned null, retrying in {delay.TotalSeconds}s (attempt {attempt + 1}/{maxRetries})");
+                    await Task.Delay(delay, cancellationToken);
+                }
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("rate limit", StringComparison.OrdinalIgnoreCase))
+            {
+                // Don't retry on rate limit
+                Logger.Warning("UpdateService", "GitHub API rate limit hit - not retrying");
+                return null;
+            }
+            catch (Exception ex) when (attempt < maxRetries && IsTransientError(ex))
+            {
+                var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt)); // 1s, 2s, 4s
+                Logger.Warning("UpdateService", $"Update check failed (attempt {attempt + 1}/{maxRetries + 1}): {ex.Message}. Retrying in {delay.TotalSeconds}s...");
+                await Task.Delay(delay, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _consecutiveFailures++;
+                Logger.Error("UpdateService", $"Update check failed after {attempt + 1} attempts", ex);
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Internal implementation of update check (extracted for retry logic).
+    /// </summary>
+    private async Task<UpdateInfo?> CheckForUpdateInternalAsync(CancellationToken cancellationToken = default)
+    {
         try
         {
             var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
@@ -456,12 +520,25 @@ public class UpdateService : IUpdateService
                 ReleaseDate = latestRelease.PublishedAt
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _consecutiveFailures++;
-            Logger.Error("UpdateService", "Update check failed", ex);
-            return null;
+            // Re-throw for retry logic to handle
+            throw;
         }
+    }
+
+    /// <summary>
+    /// Determines if an exception is transient and should be retried.
+    /// </summary>
+    private bool IsTransientError(Exception ex)
+    {
+        return ex is HttpRequestException ||
+               ex is TimeoutException ||
+               ex is TaskCanceledException ||
+               (ex is IOException ioEx && 
+                (ioEx.Message.Contains("being used by another process") ||
+                 ioEx.Message.Contains("access is denied") ||
+                 ioEx.Message.Contains("cannot access")));
     }
 
     /// <summary>
@@ -481,7 +558,25 @@ public class UpdateService : IUpdateService
         try
         {
             var tempDir = Path.Combine(Path.GetTempPath(), "RedballUpdate");
-            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
+            
+            // Retry temp directory cleanup (handles race conditions with AV scanning)
+            for (int i = 0; i < 3; i++)
+            {
+                try
+                {
+                    if (Directory.Exists(tempDir))
+                    {
+                        Directory.Delete(tempDir, true);
+                    }
+                    break;
+                }
+                catch (IOException) when (i < 2)
+                {
+                    Logger.Warning("UpdateService", $"Temp directory cleanup attempt {i + 1} failed, retrying...");
+                    await Task.Delay(500, cancellationToken);
+                }
+            }
+            
             Directory.CreateDirectory(tempDir);
             var stagingDir = Path.Combine(tempDir, "staging");
             Directory.CreateDirectory(stagingDir);
@@ -1150,7 +1245,8 @@ public class UpdateService : IUpdateService
         var downloadedBytes = 0L;
 
         await using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        await using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None);
+        // Use FileShare.Read instead of FileShare.None to avoid conflicts with AV/real-time scanning
+        await using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.Read);
 
         var buffer = new byte[16384]; // Larger buffer for speed
         int read;

@@ -335,7 +335,22 @@ public enum AuditEventType
     ConfigChange,
     Security,
     System,
-    Session
+    Session,
+    // Security audit specific types
+    ServiceStarted,
+    AuthenticationSuccess,
+    AuthenticationFailure,
+    EncryptionOperation,
+    EncryptionFailure,
+    TamperDetected,
+    UpdateSuccess,
+    UpdateFailure,
+    AccessGranted,
+    AccessDenied,
+    KeyCredentialCreated,
+    KeyCredentialDeleted,
+    SuspiciousActivity,
+    IntegrityViolation
 }
 
 public class AuditLogEntry

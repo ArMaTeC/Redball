@@ -121,14 +121,9 @@
     }
 
     .logo-icon {
-      width: 36px;
-      height: 36px;
-      background: var(--accent);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 20px rgba(229, 57, 53, 0.4);
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
     }
 
     .nav {
@@ -527,19 +522,455 @@
     }
 
     .themes-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
     }
 
-    .theme-badge {
-      padding: 8px 16px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      font-size: 13px;
-      color: var(--text-dim);
+    .theme-preview-card {
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+    }
+
+    .theme-preview-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .theme-preview-header {
+      padding: 16px 20px;
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-preview-accent {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .theme-preview-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .theme-preview-card-mock {
+      height: 60px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 12px;
+      gap: 10px;
+    }
+
+    .theme-preview-card-mock .mock-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .theme-preview-card-mock .mock-text {
+      flex: 1;
+      height: 8px;
+      border-radius: 4px;
+      opacity: 0.3;
+    }
+
+    /* Theme Preview Styles - Exact colors from ThemeManager.cs */
+    .theme-preview-dark {
+      background: #202020;
+    }
+
+    .theme-preview-dark .theme-preview-header {
+      background: #2d2d2d;
+      color: #e0e0e0;
+    }
+
+    .theme-preview-dark .theme-preview-accent {
+      background: #dc3545;
+    }
+
+    .theme-preview-dark .theme-preview-card-mock {
+      background: #3c3c3c;
+    }
+
+    .theme-preview-dark .mock-dot {
+      background: #dc3545;
+    }
+
+    .theme-preview-dark .mock-text {
+      background: #b0b0b0;
+    }
+
+    .theme-preview-light {
+      background: #fafafa;
+    }
+
+    .theme-preview-light .theme-preview-header {
+      background: #ffffff;
+      color: #212529;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .theme-preview-light .theme-preview-accent {
+      background: #dc3545;
+    }
+
+    .theme-preview-light .theme-preview-card-mock {
+      background: #f5f5f5;
+    }
+
+    .theme-preview-light .mock-dot {
+      background: #dc3545;
+    }
+
+    .theme-preview-light .mock-text {
+      background: #6c757d;
+    }
+
+    .theme-preview-midnight {
+      background: #0f1423;
+    }
+
+    .theme-preview-midnight .theme-preview-header {
+      background: #161e32;
+      color: #c8d2e6;
+    }
+
+    .theme-preview-midnight .theme-preview-accent {
+      background: #4682e6;
+    }
+
+    .theme-preview-midnight .theme-preview-card-mock {
+      background: #1e2a44;
+    }
+
+    .theme-preview-midnight .mock-dot {
+      background: #4682e6;
+    }
+
+    .theme-preview-midnight .mock-text {
+      background: #8c9bb9;
+    }
+
+    .theme-preview-forest {
+      background: #121c14;
+    }
+
+    .theme-preview-forest .theme-preview-header {
+      background: #19281c;
+      color: #d2e6d2;
+    }
+
+    .theme-preview-forest .theme-preview-accent {
+      background: #4caf50;
+    }
+
+    .theme-preview-forest .theme-preview-card-mock {
+      background: #233726;
+    }
+
+    .theme-preview-forest .mock-dot {
+      background: #4caf50;
+    }
+
+    .theme-preview-forest .mock-text {
+      background: #96b496;
+    }
+
+    .theme-preview-ocean {
+      background: #0f1923;
+    }
+
+    .theme-preview-ocean .theme-preview-header {
+      background: #142332;
+      color: #cde1f0;
+    }
+
+    .theme-preview-ocean .theme-preview-accent {
+      background: #0096c8;
+    }
+
+    .theme-preview-ocean .theme-preview-card-mock {
+      background: #1c3041;
+    }
+
+    .theme-preview-ocean .mock-dot {
+      background: #0096c8;
+    }
+
+    .theme-preview-ocean .mock-text {
+      background: #8caac8;
+    }
+
+    .theme-preview-sunset {
+      background: #23140f;
+    }
+
+    .theme-preview-sunset .theme-preview-header {
+      background: #301c14;
+      color: #f0dccd;
+    }
+
+    .theme-preview-sunset .theme-preview-accent {
+      background: #ff7832;
+    }
+
+    .theme-preview-sunset .theme-preview-card-mock {
+      background: #3e261c;
+    }
+
+    .theme-preview-sunset .mock-dot {
+      background: #ff7832;
+    }
+
+    .theme-preview-sunset .mock-text {
+      background: #c8aa91;
+    }
+
+    .theme-preview-purple {
+      background: #160f23;
+    }
+
+    .theme-preview-purple .theme-preview-header {
+      background: #201632;
+      color: #e1d2f0;
+    }
+
+    .theme-preview-purple .theme-preview-accent {
+      background: #9c5adc;
+    }
+
+    .theme-preview-purple .theme-preview-card-mock {
+      background: #2d2044;
+    }
+
+    .theme-preview-purple .mock-dot {
+      background: #9c5adc;
+    }
+
+    .theme-preview-purple .mock-text {
+      background: #aa96c3;
+    }
+
+    .theme-preview-slate {
+      background: #1e2328;
+    }
+
+    .theme-preview-slate .theme-preview-header {
+      background: #2a3037;
+      color: #dce1e6;
+    }
+
+    .theme-preview-slate .theme-preview-accent {
+      background: #00bcd4;
+    }
+
+    .theme-preview-slate .theme-preview-card-mock {
+      background: #373e46;
+    }
+
+    .theme-preview-slate .mock-dot {
+      background: #00bcd4;
+    }
+
+    .theme-preview-slate .mock-text {
+      background: #a0aab4;
+    }
+
+    .theme-preview-rose {
+      background: #231619;
+    }
+
+    .theme-preview-rose .theme-preview-header {
+      background: #301e23;
+      color: #f0d7dc;
+    }
+
+    .theme-preview-rose .theme-preview-accent {
+      background: #e68296;
+    }
+
+    .theme-preview-rose .theme-preview-card-mock {
+      background: #3e2a30;
+    }
+
+    .theme-preview-rose .mock-dot {
+      background: #e68296;
+    }
+
+    .theme-preview-rose .mock-text {
+      background: #c8a5af;
+    }
+
+    .theme-preview-cyberpunk {
+      background: #0a0812;
+    }
+
+    .theme-preview-cyberpunk .theme-preview-header {
+      background: #120e1e;
+      color: #00ffe6;
+    }
+
+    .theme-preview-cyberpunk .theme-preview-accent {
+      background: #ff0080;
+    }
+
+    .theme-preview-cyberpunk .theme-preview-card-mock {
+      background: #1c162d;
+    }
+
+    .theme-preview-cyberpunk .mock-dot {
+      background: #ff0080;
+    }
+
+    .theme-preview-cyberpunk .mock-text {
+      background: #00beaa;
+    }
+
+    .theme-preview-coffee {
+      background: #1e1610;
+    }
+
+    .theme-preview-coffee .theme-preview-header {
+      background: #2a2018;
+      color: #ebdcc8;
+    }
+
+    .theme-preview-coffee .theme-preview-accent {
+      background: #c38c3c;
+    }
+
+    .theme-preview-coffee .theme-preview-card-mock {
+      background: #3a2d23;
+    }
+
+    .theme-preview-coffee .mock-dot {
+      background: #c38c3c;
+    }
+
+    .theme-preview-coffee .mock-text {
+      background: #b9a58c;
+    }
+
+    .theme-preview-arctic {
+      background: #ebf2fa;
+    }
+
+    .theme-preview-arctic .theme-preview-header {
+      background: #f5faff;
+      color: #1e3246;
+      border-bottom: 1px solid #c3d2e6;
+    }
+
+    .theme-preview-arctic .theme-preview-accent {
+      background: #3282c8;
+    }
+
+    .theme-preview-arctic .theme-preview-card-mock {
+      background: #e1ebf8;
+    }
+
+    .theme-preview-arctic .mock-dot {
+      background: #3282c8;
+    }
+
+    .theme-preview-arctic .mock-text {
+      background: #50697f;
+    }
+
+    .theme-preview-highcontrast {
+      background: #000000;
+      border: 2px solid #ffffff;
+    }
+
+    .theme-preview-highcontrast .theme-preview-header {
+      background: #000000;
+      color: #ffffff;
+      border-bottom: 2px solid #ffffff;
+    }
+
+    .theme-preview-highcontrast .theme-preview-accent {
+      background: #ffff00;
+    }
+
+    .theme-preview-highcontrast .theme-preview-card-mock {
+      background: #141414;
+      border: 1px solid #ffffff;
+    }
+
+    .theme-preview-highcontrast .mock-dot {
+      background: #ffff00;
+    }
+
+    .theme-preview-highcontrast .mock-text {
+      background: #ffffff;
+      opacity: 0.8;
+    }
+
+    .theme-preview-system {
+      background: linear-gradient(135deg, #202020 50%, #fafafa 50%);
+    }
+
+    .theme-preview-system .theme-preview-header {
+      background: linear-gradient(135deg, #2d2d2d 50%, #ffffff 50%);
+      color: #909090;
+      position: relative;
+    }
+
+    .theme-preview-system .theme-preview-header::before,
+    .theme-preview-system .theme-preview-header::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 45%;
+      height: 2px;
+      background: #dc3545;
+    }
+
+    .theme-preview-system .theme-preview-header::before {
+      left: 4%;
+    }
+
+    .theme-preview-system .theme-preview-header::after {
+      right: 4%;
+    }
+
+    .theme-preview-system .theme-preview-accent {
+      background: linear-gradient(135deg, #dc3545 50%, #dc3545 50%);
+    }
+
+    .theme-preview-system .theme-preview-card-mock {
+      background: linear-gradient(135deg, #3c3c3c 50%, #f5f5f5 50%);
+    }
+
+    .theme-preview-system .mock-dot {
+      background: linear-gradient(135deg, #dc3545 50%, #dc3545 50%);
+    }
+
+    .theme-preview-system .mock-text {
+      background: linear-gradient(135deg, #b0b0b0 50%, #6c757d 50%);
+    }
+
+    [data-theme="light"] .theme-preview-card {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="light"] .theme-preview-card:hover {
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
     }
 
     .stats-grid {
@@ -1085,8 +1516,189 @@
       font-weight: 600;
     }
 
-    .comparison-table .cross {
-      color: var(--text-dim);
+    .hidden {
+      display: none !important;
+    }
+
+    /* Dramatic Light Mode Improvements */
+    [data-theme="light"] body {
+      background: #ffffff;
+      color: #0f172a;
+    }
+
+    [data-theme="light"] .header {
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom-color: #e2e8f0;
+    }
+
+    [data-theme="light"] .hero {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    [data-theme="light"] .hero::before {
+      background: radial-gradient(circle, rgba(229, 57, 53, 0.12) 0%, transparent 70%);
+    }
+
+    [data-theme="light"] .hero-badge {
+      background: #ffffff;
+      border-color: #e2e8f0;
+      color: #475569;
+    }
+
+    [data-theme="light"] .hero h1 {
+      color: #0f172a;
+    }
+
+    [data-theme="light"] .hero-tagline {
+      color: #475569;
+    }
+
+    [data-theme="light"] .feature-card,
+    [data-theme="light"] .download-card,
+    [data-theme="light"] .wiki-card,
+    [data-theme="light"] .screenshot-card,
+    [data-theme="light"] .req-card,
+    [data-theme="light"] .faq-item,
+    [data-theme="light"] .stat-card {
+      background: #ffffff;
+      border-color: #e2e8f0;
+    }
+
+    [data-theme="light"] .feature-card:hover,
+    [data-theme="light"] .wiki-card:hover {
+      border-color: #e53935;
+      box-shadow: 0 20px 40px rgba(229, 57, 53, 0.12);
+    }
+
+    [data-theme="light"] .feature-icon,
+    [data-theme="light"] .wiki-icon {
+      background: rgba(229, 57, 53, 0.1);
+    }
+
+    [data-theme="light"] .download-section,
+    [data-theme="light"] .screenshots-section,
+    [data-theme="light"] .wiki-footer {
+      background: #f1f5f9;
+    }
+
+    [data-theme="light"] .install-section {
+      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+
+    [data-theme="light"] .btn-secondary {
+      background: #ffffff;
+      border-color: #e2e8f0;
+      color: #0f172a;
+    }
+
+    [data-theme="light"] .btn-secondary:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    [data-theme="light"] .channel-tab,
+    [data-theme="light"] .install-tab {
+      background: #ffffff;
+      border-color: #e2e8f0;
+      color: #64748b;
+    }
+
+    [data-theme="light"] .channel-tab:hover,
+    [data-theme="light"] .install-tab:hover {
+      border-color: #e53935;
+      color: #0f172a;
+    }
+
+    [data-theme="light"] .code-block {
+      background: #f8fafc;
+      border-color: #e2e8f0;
+      color: #0f172a;
+    }
+
+    [data-theme="light"] .install-note {
+      background: rgba(229, 57, 53, 0.08);
+    }
+
+    [data-theme="light"] .footer {
+      background: #ffffff;
+      border-top-color: #e2e8f0;
+    }
+
+    [data-theme="light"] .faq-question:hover {
+      background: #f8fafc;
+    }
+
+    [data-theme="light"] .comparison-table th {
+      background: #f8fafc;
+    }
+
+    [data-theme="light"] .comparison-table tr:hover td {
+      background: #f8fafc;
+    }
+
+    [data-theme="light"] .theme-badge {
+      background: #ffffff;
+      border-color: #e2e8f0;
+      color: #475569;
+    }
+
+    [data-theme="light"] .nav a {
+      color: #64748b;
+    }
+
+    [data-theme="light"] .nav a:hover {
+      color: #0f172a;
+    }
+
+    [data-theme="light"] .feature-card p,
+    [data-theme="light"] .wiki-card p,
+    [data-theme="light"] .screenshot-info p,
+    [data-theme="light"] .faq-answer-inner,
+    [data-theme="light"] .section-header p {
+      color: #64748b;
+    }
+
+    [data-theme="light"] .download-card .file-info,
+    [data-theme="light"] .download-card .version {
+      color: #64748b;
+    }
+
+    [data-theme="light"] .req-list .label {
+      color: #64748b;
+    }
+
+    [data-theme="light"] .req-list .value {
+      color: #0f172a;
+    }
+
+    [data-theme="light"] .footer-links a {
+      color: #64748b;
+    }
+
+    [data-theme="light"] .footer-links a:hover {
+      color: #0f172a;
+    }
+
+    [data-theme="light"] .footer-bottom {
+      color: #94a3b8;
+    }
+
+    /* Transition for smooth theme switching */
+    body,
+    .header,
+    .hero,
+    .feature-card,
+    .download-card,
+    .wiki-card,
+    .screenshot-card,
+    .btn,
+    .channel-tab,
+    .install-tab,
+    .code-block,
+    .faq-item,
+    .req-card,
+    .stat-card {
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     /* Download improvements */
@@ -1313,8 +1925,12 @@
   <header class="header">
     <div class="header-inner">
       <div class="logo">
-        <div class="logo-icon">T</div>
-        TypeThing
+        <svg class="logo-icon" width="32" height="32" viewBox="0 0 100 100" fill="none">
+          <circle cx="50" cy="50" r="45" fill="#e53935" />
+          <text x="50" y="68" text-anchor="middle" fill="white" font-size="45" font-weight="bold"
+            font-family="system-ui">T</text>
+        </svg>
+        Redball
       </div>
       <nav class="nav">
         <a href="#features">Features</a>
@@ -1693,22 +2309,62 @@
 
       <div class="download-grid" id="download-grid">
         <div class="download-card recommended" id="card-nsis">
-          <h3>NSIS Installer</h3>
+          <h3>Windows Installer</h3>
           <p class="version" id="version-nsis">Latest Stable</p>
-          <p class="file-info">~8 MB • Code Signed • Windows 10/11</p>
-          <a href="#" class="btn btn-primary" id="download-nsis">Download Installer</a>
+          <p class="file-info">~66 MB • Code Signed • Windows 10/11</p>
+          <a href="https://github.com/ArMaTeC/Redball/releases/latest/download/Redball-Setup.exe"
+            class="btn btn-primary" id="download-nsis">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download Setup.exe
+          </a>
+          <div class="download-meta">
+            <div class="download-meta-row">
+              <span class="label">Includes:</span>
+              <span class="value">App + .NET 10 Runtime</span>
+            </div>
+          </div>
         </div>
         <div class="download-card" id="card-zip">
           <h3>Portable ZIP</h3>
           <p class="version" id="version-zip">Latest Stable</p>
-          <p class="file-info">~3 MB • No Install Required</p>
-          <a href="#" class="btn btn-secondary" id="download-zip">Download ZIP</a>
+          <p class="file-info">~12 MB • No Install Required</p>
+          <a href="https://github.com/ArMaTeC/Redball/releases/latest/download/Redball.zip" class="btn btn-secondary"
+            id="download-zip">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Download ZIP
+          </a>
+          <div class="download-meta">
+            <div class="download-meta-row">
+              <span class="label">Requires:</span>
+              <span class="value">.NET 10 Runtime</span>
+            </div>
+          </div>
         </div>
         <div class="download-card" id="card-exe">
           <h3>Standalone EXE</h3>
           <p class="version" id="version-exe">Latest Stable</p>
-          <p class="file-info">~3.3 MB • Single File</p>
-          <a href="#" class="btn btn-secondary" id="download-exe">Download EXE</a>
+          <p class="file-info">~15 MB • Self-Contained</p>
+          <a href="https://github.com/ArMaTeC/Redball/releases/latest" class="btn btn-secondary" id="download-exe">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="4 17 10 11 4 5" />
+              <line x1="12" y1="19" x2="20" y2="19" />
+            </svg>
+            GitHub Releases
+          </a>
+          <div class="download-meta">
+            <div class="download-meta-row">
+              <span class="label">All versions:</span>
+              <span class="value">See releases page</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1740,20 +2396,201 @@
         <p>From professional to playful, find a look that matches your style.</p>
       </div>
       <div class="themes-grid">
-        <span class="theme-badge">System (Auto)</span>
-        <span class="theme-badge">Dark</span>
-        <span class="theme-badge">Light</span>
-        <span class="theme-badge">Midnight Blue</span>
-        <span class="theme-badge">Forest Green</span>
-        <span class="theme-badge">Ocean Blue</span>
-        <span class="theme-badge">Sunset Orange</span>
-        <span class="theme-badge">Royal Purple</span>
-        <span class="theme-badge">Slate Gray</span>
-        <span class="theme-badge">Rose Gold</span>
-        <span class="theme-badge">Cyberpunk</span>
-        <span class="theme-badge">Coffee</span>
-        <span class="theme-badge">Arctic Frost</span>
-        <span class="theme-badge">High Contrast</span>
+        <!-- System (Auto) -->
+        <div class="theme-preview-card theme-preview-system">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            <span style="flex:1; text-align:center;">System (Auto)</span>
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dark -->
+        <div class="theme-preview-card theme-preview-dark">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            Dark
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Light -->
+        <div class="theme-preview-card theme-preview-light">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            Light
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Midnight Blue -->
+        <div class="theme-preview-card theme-preview-midnight">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            Midnight Blue
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Forest Green -->
+        <div class="theme-preview-card theme-preview-forest">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            Forest Green
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ocean Blue -->
+        <div class="theme-preview-card theme-preview-ocean">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            Ocean Blue
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sunset Orange -->
+        <div class="theme-preview-card theme-preview-sunset">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            Sunset Orange
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Royal Purple -->
+        <div class="theme-preview-card theme-preview-purple">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            Royal Purple
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slate Gray -->
+        <div class="theme-preview-card theme-preview-slate">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            Slate Gray
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rose Gold -->
+        <div class="theme-preview-card theme-preview-rose">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            Rose Gold
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cyberpunk -->
+        <div class="theme-preview-card theme-preview-cyberpunk">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            Cyberpunk
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coffee -->
+        <div class="theme-preview-card theme-preview-coffee">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            Coffee
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Arctic Frost -->
+        <div class="theme-preview-card theme-preview-arctic">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            Arctic Frost
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- High Contrast -->
+        <div class="theme-preview-card theme-preview-highcontrast">
+          <div class="theme-preview-header">
+            <span class="theme-preview-accent"></span>
+            High Contrast
+          </div>
+          <div class="theme-preview-body">
+            <div class="theme-preview-card-mock">
+              <div class="mock-dot"></div>
+              <div class="mock-text"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -2104,8 +2941,8 @@
     async function loadReleases() {
       try {
         const [stats, releases] = await Promise.all([
-          fetch('/api/stats').then(r => r.json()),
-          fetch('/api/releases').then(r => r.json())
+          fetch('/api/stats').then(r => r.json()).catch(() => ({})),
+          fetch('/api/releases').then(r => r.json()).catch(() => [])
         ]);
         document.getElementById('stat-total').textContent = (stats.totalDownloads || 0).toLocaleString();
         document.getElementById('stat-releases').textContent = stats.totalReleases || 0;
@@ -2121,42 +2958,18 @@
     }
 
     function updateDownloadCards(release) {
-      const nsis = release.files?.find(f => f.name.endsWith('-Setup.exe') || f.name.includes('Setup'));
-      const zip = release.files?.find(f => f.name.endsWith('.zip'));
-      const exe = release.files?.find(f => f.name.endsWith('.exe') && !f.name.includes('Service') && !f.name.includes('Setup'));
-      const fmtSize = bytes => {
-        if (!bytes) return '0 B';
-        const units = ['B', 'KB', 'MB'];
-        let i = 0;
-        while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
-        return bytes.toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
-      };
       const fmtDate = iso => {
         if (!iso) return '';
         const d = new Date(iso);
         return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' });
       };
-      if (nsis) {
+      // Always update version and date if release exists
+      if (release) {
         document.querySelector('#card-nsis .version').textContent = 'v' + release.version + ' • ' + fmtDate(release.date);
-        document.querySelector('#card-nsis .file-info').textContent = fmtSize(nsis.size) + ' • Code Signed';
-        document.getElementById('download-nsis').href = '/downloads/' + release.version + '/' + nsis.name;
-      } else {
-        document.getElementById('card-nsis').classList.add('hidden');
-      }
-      if (zip) {
         document.querySelector('#card-zip .version').textContent = 'v' + release.version + ' • ' + fmtDate(release.date);
-        document.querySelector('#card-zip .file-info').textContent = fmtSize(zip.size) + ' • Portable';
-        document.getElementById('download-zip').href = '/downloads/' + release.version + '/' + zip.name;
-      } else {
-        document.getElementById('card-zip').classList.add('hidden');
-      }
-      if (exe) {
         document.querySelector('#card-exe .version').textContent = 'v' + release.version + ' • ' + fmtDate(release.date);
-        document.querySelector('#card-exe .file-info').textContent = fmtSize(exe.size) + ' • Self-Contained';
-        document.getElementById('download-exe').href = '/downloads/' + release.version + '/' + exe.name;
-      } else {
-        document.getElementById('card-exe').classList.add('hidden');
       }
+      // Never hide cards - links are already set to GitHub in HTML
     }
 
     document.querySelectorAll('.channel-tab').forEach(tab => {
