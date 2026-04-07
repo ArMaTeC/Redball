@@ -1,0 +1,26 @@
+{
+  "fromVersion": "2.1.459",
+  "toVersion": "2.1.462",
+  "generatedAt": "2026-04-07T20:52:48.278Z",
+  "patches": [],
+  "skipped": [
+    {
+      "file": "redball-2.1.461-linux.tar.gz",
+      "reason": "new_file"
+    },
+    {
+      "file": "redball-2.1.462-linux.tar.gz",
+      "reason": "new_file"
+    },
+    {
+      "file": "redball-2.1.462.flatpak",
+      "reason": "new_file"
+    },
+    {
+      "file": "release.json",
+      "reason": "too_small"
+    }
+  ],
+  "totalSavings": 0,
+  "totalOriginalSize": 866523
+}
