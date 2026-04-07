@@ -1,0 +1,10 @@
+{
+  "folders": [
+    {
+      "path": "/root/Redball"
+    }
+  ],
+  "settings": {
+    "npm.enableRunFromFolder": true
+  }
+}

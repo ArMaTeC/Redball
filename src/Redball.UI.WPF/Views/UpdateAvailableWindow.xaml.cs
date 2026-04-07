@@ -142,7 +142,11 @@ public partial class UpdateAvailableWindow : Window
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        try { DragMove(); } catch (InvalidOperationException) { }
+        try { DragMove(); }
+        catch (InvalidOperationException ex)
+        {
+            Logger.Debug("UpdateAvailableWindow", $"DragMove failed: {ex.Message}");
+        }
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)

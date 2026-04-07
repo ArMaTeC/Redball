@@ -93,7 +93,11 @@ public static class Logger
                     File.AppendAllText(_logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] FALLBACK: Logger initialization failed: {ex.Message}{Environment.NewLine}");
                     _initialized = true;
                 }
-                catch { /* Silent fail - we tried */ }
+                catch (Exception fallbackEx)
+                {
+                    // Silent fail - we tried everything to log
+                    System.Diagnostics.Debug.WriteLine($"[Logger] Critical: Even fallback logging failed: {fallbackEx.Message}");
+                }
             }
         }
     }
@@ -157,9 +161,10 @@ public static class Logger
                 _eventLog.WriteEntry(eventMessage, eventType);
             }
         }
-        catch
+        catch (Exception ex)
         {
             // Silently fail - Event Log is best-effort
+            System.Diagnostics.Debug.WriteLine($"[Logger] Event Log write failed: {ex.Message}");
             _eventLogEnabled = false;
         }
     }

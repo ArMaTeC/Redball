@@ -421,7 +421,10 @@ public class SecurityPolicyService
                     detected.Add(software);
                 }
             }
-            catch { /* Ignore errors */ }
+            catch (Exception ex)
+            {
+                Logger.Debug("SecurityPolicyService", $"Process check failed for {software}: {ex.Message}");
+            }
         }
 
         return new ComplianceCheck

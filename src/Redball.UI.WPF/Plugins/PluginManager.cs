@@ -345,8 +345,9 @@ public class PluginManager : IDisposable
             var required = Version.Parse(minVersion);
             return current >= required;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("PluginManager", $"Version compatibility check failed: {ex.Message}");
             return false;
         }
     }

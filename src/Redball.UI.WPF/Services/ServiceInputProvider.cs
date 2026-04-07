@@ -328,9 +328,9 @@ public class ServiceInputProvider : IDisposable
                 Initialize();
             }
         }
-        catch
+        catch (Exception ex)
         {
-            Logger.Warning("ServiceInputProvider", "Health check exception, releasing resources");
+            Logger.Warning("ServiceInputProvider", $"Health check exception: {ex.Message}");
             ReleaseResources("Health check exception");
         }
     }

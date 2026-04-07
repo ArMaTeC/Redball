@@ -130,10 +130,10 @@ public sealed class AdaptiveIntervalPolicy
                     _lastCpuLoad = 0.05f; // Low default on first call
                 }
             }
-            catch (Exception ex)
+            catch (Exception innerEx)
             {
                 _lastCpuLoad = 0;
-                Logger.Debug("AdaptiveIntervalPolicy", $"CPU fallback failed: {ex.Message}");
+                Logger.Debug("AdaptiveIntervalPolicy", $"CPU fallback failed: {innerEx.Message}");
             }
             
             Logger.Debug("AdaptiveIntervalPolicy", $"PerformanceCounter failed, using fallback: {ex.Message}");

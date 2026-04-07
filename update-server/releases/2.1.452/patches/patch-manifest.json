@@ -1,15 +1,15 @@
 {
   "fromVersion": "2.1.450",
   "toVersion": "2.1.452",
-  "generatedAt": "2026-04-07T19:17:12.454Z",
+  "generatedAt": "2026-04-07T19:52:19.590Z",
   "patches": [
     {
       "file": "patches/patch-manifest.json",
       "patchFile": "patch-manifest.json.patch",
-      "patchSize": 1021,
-      "originalSize": 8182,
-      "savings": 7161,
-      "savingsPercent": "87.5%"
+      "patchSize": 1076,
+      "originalSize": 8315,
+      "savings": 7239,
+      "savingsPercent": "87.1%"
     }
   ],
   "skipped": [
@@ -326,6 +326,10 @@
       "reason": "too_small"
     },
     {
+      "file": "patches/patch-manifest.json.patch",
+      "reason": "new_file"
+    },
+    {
       "file": "redball-2.1.452-linux.tar.gz",
       "reason": "new_file"
     },
@@ -338,6 +342,6 @@
       "reason": "too_small"
     }
   ],
-  "totalSavings": 7161,
-  "totalOriginalSize": 103099810
+  "totalSavings": 7239,
+  "totalOriginalSize": 103101019
 }

@@ -56,8 +56,9 @@ public class FileHashCache
                 _cache = JsonSerializer.Deserialize<Dictionary<string, FileHashEntry>>(json) ?? new();
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("FileHashCache", $"Failed to load cache: {ex.Message}");
             _cache = new();
         }
     }

@@ -65,8 +65,8 @@ public class MobileCompanionApiService
         }
         catch (Exception ex)
         {
-            Logger.Error("MobileCompanionApiService", "Failed to start API server", ex);
-            throw;
+            Logger.Warning("MobileCompanionApiService", $"Failed to start API server: {ex.Message}");
+            ReleaseResources("Failed to start API server");
         }
     }
 
@@ -100,8 +100,9 @@ public class MobileCompanionApiService
             _pairedDevices[apiKey] = pairedDevice;
             return await Task.FromResult(apiKey);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("MobileCompanionApiService", $"Failed to pair device: {ex.Message}");
             return null;
         }
     }
@@ -251,7 +252,7 @@ public class MobileCompanionApiService
         }
         catch (Exception ex)
         {
-            Logger.Error("MobileCompanionApiService", "Error stopping API server", ex);
+            Logger.Warning("MobileCompanionApiService", $"Error stopping API server: {ex.Message}");
         }
     }
 
@@ -337,7 +338,7 @@ public class MobileCompanionApiService
         }
         catch (Exception ex)
         {
-            Logger.Debug("MobileCompanionApiService", $"Failed to get local IP address: {ex.Message}");
+            Logger.Warning("MobileCompanionApiService", $"Failed to get local IP address: {ex.Message}");
         }
         
         return "localhost";

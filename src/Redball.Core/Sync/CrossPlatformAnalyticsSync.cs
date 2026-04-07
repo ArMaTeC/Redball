@@ -79,9 +79,10 @@ public class CrossPlatformAnalyticsSync
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
             // If we can't read consent file, treat as unconfigured (require opt-in)
+            Logger.Debug("CrossPlatformAnalyticsSync", $"Consent file read failed: {ex.Message}");
             _consentGranted = false;
             _consentConfigured = false;
         }

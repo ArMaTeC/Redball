@@ -256,7 +256,10 @@ public class SecurityAuditService : IDisposable
                             events.Add(evt);
                             if (events.Count >= maxResults) break;
                         }
-                        catch { /* Skip malformed lines */ }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug("SecurityAuditService", $"Skipping malformed audit line: {ex.Message}");
+                        }
                     }
                 }
                 catch (Exception ex)
