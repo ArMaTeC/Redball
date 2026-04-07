@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.armatec.Redball</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Redball</name>
+  <summary>Keep your system awake with TypeThing automation</summary>
+  <description>
+    <p>
+      Redball is a system tray application that prevents your computer from going to sleep
+      while you're working. It features:
+    </p>
+    <ul>
+      <li>Keep-awake engine with idle detection</li>
+      <li>TypeThing - automatic typing simulation</li>
+      <li>Battery-aware operation</li>
+      <li>System notifications</li>
+      <li>Lightweight service architecture</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">com.armatec.Redball.desktop</launchable>
+  <url type="homepage">https://github.com/ArMaTeC/Redball</url>
+  <url type="bugtracker">https://github.com/ArMaTeC/Redball/issues</url>
+  <developer_name>ArMaTeC</developer_name>
+  <content_rating type="oars-1.1" />
+  
+  <releases>
+    <release version="2.1.464" date="2026-04-03">
+      <description>
+        <p>Initial Linux release with GTK4/libadwaita.</p>
+      </description>
+    </release>
+  </releases>
+  
+  <screenshots>
+    <screenshot type="default">
+      <caption>Main window with keep-awake controls</caption>
+    </screenshot>
+    <screenshot>
+      <caption>System tray integration</caption>
+    </screenshot>
+  </screenshots>
+  
+  <categories>
+    <category>Utility</category>
+    <category>System</category>
+  </categories>
+  
+  <keywords>
+    <keyword>awake</keyword>
+    <keyword>keep</keyword>
+    <keyword>screensaver</keyword>
+    <keyword>idle</keyword>
+    <keyword>typing</keyword>
+    <keyword>automation</keyword>
+  </keywords>
+  
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+</component>
