@@ -166,7 +166,10 @@ public sealed class DiagnosticsExportService
             info["BatteryPercent"] = battery.BatteryPercent;
             info["IsCharging"] = battery.IsCharging;
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logger.Debug("DiagnosticsExport", $"Failed to get battery info: {ex.Message}");
+        }
 
         // Get power plan
         try
@@ -174,7 +177,10 @@ public sealed class DiagnosticsExportService
             info["PowerPlan"] = "Unknown"; // Placeholder
             // info["PowerPlan"] = PowerPlanService.Instance.GetCurrentPlanName();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logger.Debug("DiagnosticsExport", $"Failed to get power plan: {ex.Message}");
+        }
 
         var destPath = Path.Combine(targetDir, "system_info.json");
         var json = JsonSerializer.Serialize(info, new JsonSerializerOptions { WriteIndented = true });

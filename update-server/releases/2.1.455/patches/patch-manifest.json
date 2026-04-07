@@ -1,0 +1,26 @@
+{
+  "fromVersion": "2.1.452",
+  "toVersion": "2.1.455",
+  "generatedAt": "2026-04-07T13:05:16.633Z",
+  "patches": [],
+  "skipped": [
+    {
+      "file": "patches/patch-manifest.json",
+      "reason": "too_small"
+    },
+    {
+      "file": "redball-2.1.455-linux.tar.gz",
+      "reason": "new_file"
+    },
+    {
+      "file": "redball-2.1.455.flatpak",
+      "reason": "new_file"
+    },
+    {
+      "file": "release.json",
+      "reason": "too_small"
+    }
+  ],
+  "totalSavings": 0,
+  "totalOriginalSize": 614463
+}

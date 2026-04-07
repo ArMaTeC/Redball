@@ -175,7 +175,7 @@ public class HardenedUpdateService
                 Logger.Warning("HardenedUpdate", $"Attempt {attempt + 1} failed: {ex.Message}. Retrying in {delay.TotalSeconds}s...");
                 await Task.Delay(delay, cancellationToken);
             }
-            catch (TaskCanceledException ex) when (cancellationToken.IsCancellationRequested)
+            catch (TaskCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 Logger.Info("HardenedUpdate", "Update check cancelled by user");
                 _diagnostics.LastError = "Cancelled";
@@ -284,8 +284,9 @@ public class HardenedUpdateService
             var response = await client.GetAsync("https://1.1.1.1", cancellationToken);
             return true; // If we get any response (even 404/403), network is up
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("HardenedUpdate", $"Network connectivity check failed: {ex.Message}");
             return false;
         }
     }
@@ -297,8 +298,9 @@ public class HardenedUpdateService
             var addresses = await System.Net.Dns.GetHostAddressesAsync(hostname, cancellationToken);
             return addresses.Length > 0;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("HardenedUpdate", $"DNS resolution check failed for {hostname}: {ex.Message}");
             return false;
         }
     }
@@ -311,8 +313,9 @@ public class HardenedUpdateService
             var driveInfo = new DriveInfo(Path.GetPathRoot(tempPath) ?? "C:\\");
             return driveInfo.AvailableFreeSpace > requiredBytes;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("HardenedUpdate", $"Disk space check failed: {ex.Message}");
             return false;
         }
     }
@@ -326,8 +329,9 @@ public class HardenedUpdateService
             File.Delete(tempFile);
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("HardenedUpdate", $"Temp directory write test failed: {ex.Message}");
             return false;
         }
     }
@@ -378,8 +382,9 @@ public class HardenedUpdateService
             return response.StatusCode == System.Net.HttpStatusCode.Forbidden || 
                    response.StatusCode == System.Net.HttpStatusCode.OK;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("HardenedUpdate", $"HTTP client check failed: {ex.Message}");
             return false;
         }
     }

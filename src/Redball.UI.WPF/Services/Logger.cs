@@ -9,6 +9,9 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+// Alias to disambiguate from Logger.Debug method
+using SysDebug = System.Diagnostics.Debug;
+
 namespace Redball.UI.Services;
 
 /// <summary>
@@ -466,7 +469,14 @@ public static class Logger
             if (info.Length < maxSizeBytes) return;
 
             var backup = _logPath + ".old";
-            if (File.Exists(backup)) File.Delete(backup);
+            try
+            {
+                File.Delete(backup); // Safe to call even if file doesn't exist
+            }
+            catch (Exception ex)
+            {
+                SysDebug.WriteLine($"[Logger] Failed to delete old backup: {ex.Message}");
+            }
             File.Move(_logPath, backup);
             Info("Logger", $"Log rotated (was {info.Length / 1024 / 1024}MB)");
         }
@@ -484,8 +494,9 @@ public static class Logger
             var version = assembly.GetName().Version;
             return version?.ToString() ?? "Unknown";
         }
-        catch
+        catch (Exception ex)
         {
+            SysDebug.WriteLine($"[Logger] Failed to get app version: {ex.Message}");
             return "Unknown";
         }
     }
@@ -546,7 +557,10 @@ public static class Logger
             {
                 File.AppendAllText(_logPath, formatted);
             }
-            catch { /* Silent fail */ }
+            catch (Exception ex)
+            {
+                SysDebug.WriteLine($"[Logger] Failed to write log entry: {ex.Message}");
+            }
         }
     }
 
@@ -576,12 +590,18 @@ public static class Logger
                         {
                             File.AppendAllText(_logPath, combined);
                         }
-                        catch { /* Silent fail */ }
+                        catch (Exception ex)
+                        {
+                            SysDebug.WriteLine($"[Logger] Background writer failed to write: {ex.Message}");
+                        }
                     }
                 }
             }
         }
-        catch (OperationCanceledException) { /* Expected on shutdown */ }
+        catch (OperationCanceledException)
+        {
+            // Expected on shutdown - no action needed
+        }
     }
 
     /// <summary>
@@ -606,7 +626,10 @@ public static class Logger
                 {
                     File.AppendAllText(_logPath, string.Concat(remaining));
                 }
-                catch { /* Silent fail */ }
+                catch (Exception ex)
+                {
+                    SysDebug.WriteLine($"[Logger] Flush failed to write remaining entries: {ex.Message}");
+                }
             }
         }
     }
@@ -617,7 +640,11 @@ public static class Logger
     public static void Shutdown()
     {
         _channel?.Writer.TryComplete();
-        try { _writerTask?.Wait(TimeSpan.FromSeconds(2)); } catch { }
+        try { _writerTask?.Wait(TimeSpan.FromSeconds(2)); }
+        catch (Exception ex)
+        {
+            SysDebug.WriteLine($"[Logger] Warning: Writer task did not complete gracefully: {ex.Message}");
+        }
         Flush();
     }
 }

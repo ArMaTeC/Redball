@@ -373,7 +373,12 @@ public class WindowsShellIntegrationService
             if (mainWindow == null)
             {
                 // Main window not created yet, start the application
-                Process.Start(_exePath);
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = _exePath,
+                    UseShellExecute = true
+                };
+                Process.Start(startInfo);
                 Logger.Info("WindowsShellIntegration", "Launched new Redball instance");
             }
             else

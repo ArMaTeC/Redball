@@ -1274,7 +1274,11 @@ public partial class MainWindow
                     if (!process.WaitForExit(60000))
                     {
                         Logger.Warning("MainWindow", "Elevated service install process timed out after 60 seconds");
-                        try { process.Kill(); } catch { }
+                        try { process.Kill(); }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug("MainWindow", $"Failed to kill timed out install process: {ex.Message}");
+                        }
                         return (false, false, "Installation timed out. The elevated process did not complete in time.");
                     }
                     
@@ -1367,7 +1371,11 @@ public partial class MainWindow
                     if (!process.WaitForExit(30000))
                     {
                         Logger.Warning("MainWindow", "Elevated service start process timed out after 30 seconds");
-                        try { process.Kill(); } catch { }
+                        try { process.Kill(); }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug("MainWindow", $"Failed to kill timed out start process: {ex.Message}");
+                        }
                         return (false, false, "Start timed out. The elevated process did not complete in time.");
                     }
                     
@@ -1445,7 +1453,11 @@ public partial class MainWindow
                     if (!process.WaitForExit(60000))
                     {
                         Logger.Warning("MainWindow", "Elevated service uninstall process timed out after 60 seconds");
-                        try { process.Kill(); } catch { }
+                        try { process.Kill(); }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug("MainWindow", $"Failed to kill timed out uninstall process: {ex.Message}");
+                        }
                         return (false, false, "Uninstallation timed out. The elevated process did not complete in time.");
                     }
                     

@@ -123,7 +123,10 @@ public class CrossPlatformAnalyticsSync
                 File.Delete(_consentFilePath);
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logger.Debug("CrossPlatformAnalyticsSync", $"Failed to delete consent file: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -597,7 +600,10 @@ public class CrossPlatformAnalyticsSync
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logger.Debug("CrossPlatformAnalyticsSync", $"Failed to parse file date: {ex.Message}");
+        }
         
         return true; // Include if we can't parse
     }

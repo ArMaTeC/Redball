@@ -478,6 +478,37 @@ publish_to_update_server() {
             cp "$wpf_exe" "$update_server_dir/Redball-${version}.exe"
             log_success "Copied: Redball-${version}.exe"
         fi
+        
+        # Copy individual files for delta patching (only key binaries, not all DLLs)
+        local wpf_publish="$windows_dist/wpf-publish"
+        if [[ -d "$wpf_publish" ]]; then
+            log_info "Copying individual binaries for delta patching..."
+            
+            # Create binaries subdirectory
+            mkdir -p "$update_server_dir/binaries"
+            
+            # Copy main executables and their DLLs
+            for file in Redball.UI.WPF.exe Redball.UI.WPF.dll Redball.Service.exe Redball.Service.dll; do
+                if [[ -f "$wpf_publish/$file" ]]; then
+                    cp "$wpf_publish/$file" "$update_server_dir/binaries/"
+                    log_debug "  Copied binary: $file"
+                fi
+            done
+            
+            # Copy critical DLLs from dll folder (top-level only, not recursively)
+            if [[ -d "$wpf_publish/dll" ]]; then
+                local dll_count=0
+                for dll in "$wpf_publish/dll"/*.dll; do
+                    if [[ -f "$dll" ]]; then
+                        cp "$dll" "$update_server_dir/binaries/"
+                        ((dll_count++))
+                    fi
+                done
+                log_info "Copied $dll_count DLLs for delta patching"
+            fi
+            
+            log_success "Binaries copied for delta patching"
+        fi
     fi
     
     # Copy Linux artifacts if they exist
@@ -492,28 +523,83 @@ publish_to_update_server() {
     local metadata_file="$update_server_dir/release.json"
     local release_date=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     
+    # Build file list including binaries subdirectory
+    local file_list=""
+    for file in "$update_server_dir"/*; do
+        [[ -f "$file" ]] || continue
+        [[ "$(basename "$file")" == "release.json" ]] && continue
+        local size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "0")
+        local sha256=$(sha256sum "$file" 2>/dev/null | awk '{print $1}' || echo "")
+        file_list+="    {\n"
+        file_list+="      \"name\": \"$(basename "$file")\",\n"
+        file_list+="      \"size\": $size,\n"
+        file_list+="      \"sha256\": \"$sha256\"\n"
+        file_list+="    },\n"
+    done
+    
+    # Add binaries from subdirectory
+    if [[ -d "$update_server_dir/binaries" ]]; then
+        for file in "$update_server_dir/binaries"/*; do
+            [[ -f "$file" ]] || continue
+            local size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "0")
+            local sha256=$(sha256sum "$file" 2>/dev/null | awk '{print $1}' || echo "")
+            file_list+="    {\n"
+            file_list+="      \"name\": \"binaries/$(basename "$file")\",\n"
+            file_list+="      \"size\": $size,\n"
+            file_list+="      \"sha256\": \"$sha256\"\n"
+            file_list+="    },\n"
+        done
+    fi
+    
+    # Remove trailing comma
+    file_list=$(echo -e "$file_list" | sed '$ s/,$//')
+    
     cat > "$metadata_file" << EOF
 {
   "version": "$version",
   "channel": "$CHANNEL",
   "date": "$release_date",
   "files": [
-$(ls -1 "$update_server_dir" 2>/dev/null | grep -v "release.json" | while read file; do
-    local size=$(stat -f%z "$update_server_dir/$file" 2>/dev/null || stat -c%s "$update_server_dir/$file" 2>/dev/null || echo "0")
-    local sha256=$(sha256sum "$update_server_dir/$file" 2>/dev/null | awk '{print $1}' || echo "")
-    echo "    {"
-    echo "      \"name\": \"$file\","
-    echo "      \"size\": $size,"
-    echo "      \"sha256\": \"$sha256\""
-    echo "    },"
-done | sed '$ s/,$//')
+$file_list
   ]
 }
 EOF
     
+    # Register with update-server API
+    log_info "Registering release with update-server API..."
+    local api_response=$(curl -s -X POST "http://localhost:3500/api/releases" \
+        -H "Content-Type: application/json" \
+        -d "{\"version\": \"$version\", \"channel\": \"$CHANNEL\", \"notes\": \"Release $version\"}" 2>/dev/null || echo "")
+    
+    if [[ -n "$api_response" ]]; then
+        log_success "Release registered with update-server API"
+    else
+        log_warn "Could not register with API, database may need manual update"
+    fi
+    
+    # Upload files via API
+    log_info "Uploading files to update-server..."
+    for file in "$update_server_dir"/*; do
+        [[ -f "$file" ]] || continue
+        [[ "$(basename "$file")" == "release.json" ]] && continue
+        curl -s -X POST "http://localhost:3500/api/releases/$version/upload" \
+            -F "files=@$file" > /dev/null 2>&1 || true
+    done
+    
+    # Upload binaries
+    if [[ -d "$update_server_dir/binaries" ]]; then
+        for file in "$update_server_dir/binaries"/*; do
+            [[ -f "$file" ]] || continue
+            curl -s -X POST "http://localhost:3500/api/releases/$version/upload" \
+                -F "files=@$file" > /dev/null 2>&1 || true
+        done
+        log_success "Binaries uploaded to update-server"
+    fi
+    
     log_success "Published to update-server: $update_server_dir"
     log_info "Channel: $CHANNEL"
     log_info "Files: $(ls -1 "$update_server_dir" | grep -v "release.json" | wc -l)"
+    log_info "Binaries: $(ls -1 "$update_server_dir/binaries" 2>/dev/null | wc -l)"
 }
 
 main "$@"

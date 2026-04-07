@@ -71,7 +71,10 @@ public class FileHashCache
             var json = JsonSerializer.Serialize(_cache, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(_cacheFilePath, json);
         }
-        catch { /* Ignore save errors */ }
+        catch (Exception ex)
+        {
+            Logger.Debug("FileHashCache", $"Failed to save cache: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -951,7 +954,10 @@ public class UpdateService : IUpdateService
                     TryDeleteFile(file.FullName + ".sha256");
                     Logger.Debug("UpdateService", $"Cleaned up old cache file: {file.Name}");
                 }
-                catch { /* Ignore cleanup errors */ }
+                catch (Exception ex)
+                {
+                    Logger.Debug("UpdateService", $"Failed to cleanup cache file {file.Name}: {ex.Message}");
+                }
             }
         }
         catch (Exception ex)
@@ -972,7 +978,10 @@ public class UpdateService : IUpdateService
                 File.Delete(filePath);
             }
         }
-        catch { /* Ignore delete errors */ }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[UpdateService] Failed to delete file {filePath}: {ex.Message}");
+        }
     }
 
     private async Task<string> CalculateHashAsync(string filePath)
@@ -1289,7 +1298,35 @@ public class UpdateService : IUpdateService
                 Directory.Delete(extractPath, true);
             
             Directory.CreateDirectory(extractPath);
-            ZipFile.ExtractToDirectory(zipPath, extractPath);
+            
+            // SECURITY: Extract with ZipSlip protection
+            using var archive = System.IO.Compression.ZipFile.OpenRead(zipPath);
+            var fullExtractPath = Path.GetFullPath(extractPath);
+            
+            foreach (var entry in archive.Entries)
+            {
+                // Validate entry path to prevent directory traversal
+                var entryName = entry.FullName.Replace('/', Path.DirectorySeparatorChar);
+                var entryPath = Path.GetFullPath(Path.Combine(extractPath, entryName));
+                
+                if (!entryPath.StartsWith(fullExtractPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    Logger.Error("UpdateService", $"Security: ZIP entry escapes target directory: {entry.FullName}");
+                    return false;
+                }
+                
+                var entryDir = Path.GetDirectoryName(entryPath);
+                if (!string.IsNullOrEmpty(entryDir))
+                {
+                    Directory.CreateDirectory(entryDir);
+                }
+                
+                if (!entry.FullName.EndsWith("/"))
+                {
+                    entry.ExtractToFile(entryPath, overwrite: true);
+                }
+            }
+            
             return true;
         }
         catch (Exception ex)

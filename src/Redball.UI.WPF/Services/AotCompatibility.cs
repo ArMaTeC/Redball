@@ -168,9 +168,10 @@ public static class PropertyCache<T>
                     _cache[property.Name] = getter;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore properties that can't be compiled
+                Debug.WriteLine($"[AotCompatibility] Failed to compile getter for {property.Name}: {ex.Message}");
+                // Continue with other properties - don't re-throw
             }
         }
     }
@@ -216,9 +217,10 @@ public static class PropertySetterCache<T>
                     _cache[property.Name] = setter;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore properties that can't be compiled
+                Debug.WriteLine($"[AotCompatibility] Failed to compile setter for {property.Name}: {ex.Message}");
+                // Continue with other properties - don't re-throw
             }
         }
     }

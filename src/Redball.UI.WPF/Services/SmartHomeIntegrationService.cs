@@ -291,7 +291,11 @@ public class SmartHomeIntegrationService
                         };
                     }
                 }
-                catch { /* Try next */ }
+                catch (Exception ex)
+                {
+                    Logger.Debug("SmartHomeIntegrationService", $"HomeAssistant discovery attempt failed for {host}: {ex.Message}");
+                    // Try next potential host
+                }
             }
         }
         catch (Exception ex)
@@ -330,8 +334,9 @@ public class SmartHomeIntegrationService
                     return false;
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("SmartHomeIntegrationService", $"Connection validation failed for {platform.Name}: {ex.Message}");
             return false;
         }
     }

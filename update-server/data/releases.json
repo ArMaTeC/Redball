@@ -463,6 +463,384 @@
           "size": 360856,
           "sha256": "adb0f63be7588a8d4a08ef357ac14d3e045d8c53314fa985e46f5864bc7b3057",
           "downloads": 0
+        },
+        {
+          "name": "binaries/SQLitePCLRaw.batteries_v2.dll",
+          "size": 5120,
+          "hash": "94AC800C6B93AE50A025F247547781DEBE18391110667C5E242F51D8AC188FFB",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/SQLitePCLRaw.provider.e_sqlite3.dll",
+          "size": 36864,
+          "hash": "60AB6CFA2F3CC907BCEE4D0C1264D5C36DE0A3DA701DBEBF5EFC9D542CE69FA2",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Logging.Debug.dll",
+          "size": 20240,
+          "hash": "B7F698FC582A9528438746B641DF7FD2332B70A51BB8313E745F87E8E36F3EE1",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Hosting.Abstractions.dll",
+          "size": 54584,
+          "hash": "A671D8CCDF631F88B259E980D3FC2AE8BEDE80C579D612459F1C56C9E32D44ED",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/HidSharp.dll",
+          "size": 235952,
+          "hash": "61EB2E22A5620D789A23D389F1AF9D38FAFF4D85F46ADEDBC28FB22CFEC61BF9",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Configuration.Binder.dll",
+          "size": 43824,
+          "hash": "99DA3C074C66E16BCC37989F3A0AF306895B12BA594F8A9A0BA3DB48A08277D4",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Configuration.UserSecrets.dll",
+          "size": 26896,
+          "hash": "BAE4BED08C1DB117628F3A1CBCBAAA32A3F9ED417DF65B42278E0BF289EB3EB1",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/System.Diagnostics.PerformanceCounter.dll",
+          "size": 139568,
+          "hash": "1373B897E46747EC313451B95DFD795DBFB33409D4B9B26A536F9B2431BAF571",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Configuration.dll",
+          "size": 45368,
+          "hash": "E2C8220DE237C913E0BC4A40C5AA80038975774BDC940CA9AAA86FBCC1B13603",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/LibreHardwareMonitorLib.dll",
+          "size": 714240,
+          "hash": "58273C9683CFBDC3179B557321E798B7A67C9448BA7043D9F40619CD6C7EAFD0",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Xaml.Behaviors.dll",
+          "size": 147016,
+          "hash": "3F90C37D3FD324E03F282F490DB2B584502569EDDD74196445F5059382496AAA",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Data.Sqlite.dll",
+          "size": 177736,
+          "hash": "ECABEC2922B5AE8C2A2E037D6F31275D18D87DF33077551008F9AD7C30379B1C",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Logging.dll",
+          "size": 51976,
+          "hash": "607E91F57502684E35D1C766E84926F2E4F9D35CFB4173C0764FE6EB8A8A6B11",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/System.IO.Ports.dll",
+          "size": 89392,
+          "hash": "A487D82F7293CE45A17DA8D770A65EFF62BA94332B0EFF7D65F53C344DAB01CB",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/System.Security.Cryptography.ProtectedData.dll",
+          "size": 40208,
+          "hash": "7337F0C131B9E5F215A0B147E9FCB01E2FF85E44C12C915B65B9167F0511248A",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Configuration.CommandLine.dll",
+          "size": 25912,
+          "hash": "705B47C9EDDFD30D80B509C4ABC38149FEC341E0EB33056FEE480504DE9E7896",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/System.Diagnostics.EventLog.dll",
+          "size": 176912,
+          "hash": "9F4975CC738087E1579FC3DB2A7252C25A5C191E0E54F1085C344592F91EDF15",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.FileProviders.Abstractions.dll",
+          "size": 23816,
+          "hash": "E1B60EEDF39BBC7559C6098814C353AF08D7E93CCE175F7673C61953524677E2",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/System.CodeDom.dll",
+          "size": 185104,
+          "hash": "34C344795CCAD6407669C1BFD7E4BB44ED7D6D28EE358676214E39E6FBB09BAE",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Logging.Configuration.dll",
+          "size": 28976,
+          "hash": "8EEBA93211C328A78DF10939A30157221594180B058BFC844426AAEAFF68160D",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/LottieSharp.dll",
+          "size": 327168,
+          "hash": "476839E8F248B13953403B199792FA507BA5F7DC2AE635756E3A8360AB9D3948",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+          "size": 66320,
+          "hash": "842FC19802A761E49C65B0E90B2C68BC6868B989145DA5AC6CA30B766E2658F2",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Logging.Console.dll",
+          "size": 76560,
+          "hash": "66BA3FBA8F1F075FA83B5118C6660742C329A4D217D9CB999549FE8C8F7BFF30",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.FileSystemGlobbing.dll",
+          "size": 48392,
+          "hash": "D2606E4EC8D866F51965B97A52F3776E5E13A5F789563C3A86DD61D233984715",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/SkiaSharp.Views.Desktop.Common.dll",
+          "size": 26168,
+          "hash": "0AA10ADF4F4E9416F024C206B644DB0406A9C6C580E4F2CF60BC559E49624C01",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/SkiaSharp.Skottie.dll",
+          "size": 22568,
+          "hash": "7FEA5F811609C1B24469335648F5F6B873E0E80B5B7EF598A22C500213B353E4",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Redball.UI.WPF.dll",
+          "size": 2779648,
+          "hash": "1E9B84E2729CED71ED420F5346E1E3F8BF400937E88069018FFAA4C3E5DB3C40",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Redball.Service.dll",
+          "size": 240128,
+          "hash": "FE1509061305CDCD0B12E830610E51699A0A289294B409B3C8ABB7BD2488EDD3",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Options.dll",
+          "size": 65808,
+          "hash": "6F7A4BC2BE6B35A1F28CD60C250E5471AAC31CB2995EA7EC7365EA5E6F80640E",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/MonoPosixHelper.dll",
+          "size": 87600,
+          "hash": "A57141B26D6EA3326B165BDCB15CA2BCD34737370F52358E12FFC8DF41B92C62",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Options.ConfigurationExtensions.dll",
+          "size": 22288,
+          "hash": "ACB694FF92C66B001EC019EE05A1A88939EFD8F045E842B8AE0E8B8490D5403E",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/InputInterceptor.dll",
+          "size": 519168,
+          "hash": "4583DEFC5F2A547A51671FF997BE7393F807108CED8B4678B3B45C5762777C41",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Diagnostics.Abstractions.dll",
+          "size": 31536,
+          "hash": "44063E4F4BE903A152AA6E3273E86B1E645361C92DE2A2AD559BE270CF0C28C3",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Primitives.dll",
+          "size": 45360,
+          "hash": "E43673FF0BC7621F893DB1D802128E4242CCC6CB0CBBE1FA7B5D78090628514F",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Logging.Abstractions.dll",
+          "size": 67384,
+          "hash": "03E916B9C5F91717B67C790325D4E5DD2DEBE81D8E403928806BA1D430EA7147",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Hardcodet.NotifyIcon.Wpf.dll",
+          "size": 123904,
+          "hash": "402A8DCB6A9141CB4C73BFACF1C3CC222F96B8E803E50A816A2C56EB406874FB",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Hosting.dll",
+          "size": 72496,
+          "hash": "F542B69F4F5ECF7AAC4636D420FFB518099B2B46447653C5DF4F5EBF0E44460F",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.DependencyInjection.dll",
+          "size": 96048,
+          "hash": "C3B96FFAD102F1BFC79B9CF1C3ADB7A629D6C1F3755F9606050EC2AD55A22F06",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Diagnostics.dll",
+          "size": 36624,
+          "hash": "456AD32114882C01F0BCE822E7D29F303629A196F465269B118396481D703634",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.FileProviders.Physical.dll",
+          "size": 45872,
+          "hash": "7075857D3D929B7243917F63C93B992033DF66E76176FB5975DC80BC985701A9",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Redball.Core.dll",
+          "size": 168960,
+          "hash": "4DE78C94F70C29BF3BBF5CB1428AC5357B92DC104B8C4B9FBC65D2ADC3A2C240",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Configuration.Json.dll",
+          "size": 28432,
+          "hash": "B33ECC843B36FF7D7D3960984E5320A5BD5C8EA3F1CA3277233F3145826EA237",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/System.Configuration.ConfigurationManager.dll",
+          "size": 444688,
+          "hash": "B4DB66769E8C81AFA1AD8FCE586FBE2F08BF3C3FD6A481F412F3B87D744B4C04",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Mono.Posix.NETStandard.dll",
+          "size": 189504,
+          "hash": "BE0215D90462ADBAE5F03D6E5C3A969C9842A866B013DF7A395769C5C352FA7E",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/SkiaSharp.Views.WPF.dll",
+          "size": 22584,
+          "hash": "A1A25BE37AB9347D0C1E182CBC0792FBA6FC6A4CA5B76B1B4A21F60809E2AC55",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/SkiaSharp.dll",
+          "size": 437808,
+          "hash": "17EE1284313749F73A5CF5F309318D831741A8D6D397C998C5FC6485843C28BB",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/e_sqlite3.dll",
+          "size": 1795072,
+          "hash": "4DCBB2AD197D893355EFA004257E048F2C850FEB1078158F4BAAB0F7B53AC45F",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Logging.EventLog.dll",
+          "size": 25360,
+          "hash": "C04971A197013B21927D7EE16CECD76FCCDE40DC68222DA9A3AC74732A67A80D",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Redball.UI.WPF.exe",
+          "size": 373760,
+          "hash": "D07A8810802DDC78824E8A80E284811BE5FFC0A1BDA5AEC5FE43B88208A472D6",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/libSkiaSharp.dll",
+          "size": 9414216,
+          "hash": "9A0D95E8CAAA852C70D085AF6A40A744242172AD9EA3FD6BC7599875A8A1DBCD",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Configuration.FileExtensions.dll",
+          "size": 28944,
+          "hash": "6C16EE1787CC70A957C8EB372A35217CB19F3A695101137A89C76F52F69DBD87",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Configuration.EnvironmentVariables.dll",
+          "size": 22280,
+          "hash": "65A8683C21D18445F56556B875CB8455404FA5AFF15850C3F6B96D8FF52E5616",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/libMonoPosixHelper.dll",
+          "size": 1495800,
+          "hash": "B16F77C155A36559A44DA32E17E0BF63D899DB0BB48C6590BC8EBA7BB0FF87A8",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Http.dll",
+          "size": 93448,
+          "hash": "F3B37A8D0950DBA97FFC4B45841BB1B7BF5C0A6732E29B92AAC39BE2D4A48A4E",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/SQLitePCLRaw.core.dll",
+          "size": 51200,
+          "hash": "3D2ED8E186F124F988EBDB45D0354185B424357BE2433BBA0033AB9EC31BD25B",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/System.Management.dll",
+          "size": 314640,
+          "hash": "B54DEFF63D4C23CC4BBEA00CEA659727872F7CEB8ADE74475577D45AA92E6216",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/CommunityToolkit.Mvvm.dll",
+          "size": 146760,
+          "hash": "19B2144FED9600D58A742A5A4A5FD7B10D4D0D2C2E79F5D8019307CF5657044F",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Redball.Service.exe",
+          "size": 373760,
+          "hash": "61C92D1746A1E85FAFD095FEC73AC296522F43A9F8F0F3C6A653CCC89D17966E",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/System.ServiceProcess.ServiceController.dll",
+          "size": 92432,
+          "hash": "98FDD7940FB7F3CC4C6EEF24AE58F08DF33B3F5AFA23C8B3401DAE5D5CE8E04E",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/SkiaSharp.SceneGraph.dll",
+          "size": 17976,
+          "hash": "012CB43F5702047FC6AC8CC6AA3641EAB36F8122164F1ACFAE7A5904977AEA11",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/System.Speech.dll",
+          "size": 687416,
+          "hash": "D90047D9D1800E938BBC8F3059BC467F07700693A8987ECCE989973D8FD57398",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Logging.EventSource.dll",
+          "size": 35088,
+          "hash": "7CAABEAD28543311B0333EF13F2139493475B32C3E7BCF956D06322870A751D4",
+          "downloads": 0
+        },
+        {
+          "name": "binaries/Microsoft.Extensions.Configuration.Abstractions.dll",
+          "size": 28936,
+          "hash": "E72B875412A613D008F9246A75D5EB7176DC7EF75AA2F228CA05221D4559666E",
+          "downloads": 0
         }
       ],
       "totalDownloads": 0

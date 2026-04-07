@@ -274,7 +274,10 @@ public class MainViewModel : ViewModelBase
             var analytics = ServiceLocator.Get<IAnalyticsService>();
             analytics?.TrackFeature(_keepAwake.IsActive ? "keepawake.enabled" : "keepawake.disabled");
         }
-        catch { /* Analytics is non-critical */ }
+        catch (Exception ex)
+        {
+            Logger.Debug("MainViewModel", $"Analytics tracking failed: {ex.Message}");
+        }
     }
 
     private void ToggleDisplaySleep()

@@ -361,8 +361,9 @@ public class VoiceCommandService : IDisposable
             var recognizers = SpeechRecognitionEngine.InstalledRecognizers();
             return recognizers.Any();
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("VoiceCommandService", $"Speech recognition availability check failed: {ex.Message}");
             return false;
         }
     }

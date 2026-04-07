@@ -85,8 +85,9 @@ public class SlackIntegrationService
             return _lastStatus == SlackHuddleStatus.InHuddle || 
                    _lastStatus == SlackHuddleStatus.ScreenSharing;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("SlackIntegrationService", $"Error checking huddle status: {ex.Message}");
             return false;
         }
     }
@@ -112,8 +113,9 @@ public class SlackIntegrationService
 
             return _lastStatus == SlackHuddleStatus.ScreenSharing;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("SlackIntegrationService", $"Error checking screen share status: {ex.Message}");
             return false;
         }
     }
@@ -141,8 +143,9 @@ public class SlackIntegrationService
 
             return SlackHuddleStatus.Available;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("SlackIntegrationService", $"Error detecting huddle status: {ex.Message}");
             return SlackHuddleStatus.Unknown;
         }
     }
@@ -160,8 +163,9 @@ public class SlackIntegrationService
 
             return null;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("SlackIntegrationService", $"Error getting Slack process: {ex.Message}");
             return null;
         }
     }
@@ -172,8 +176,9 @@ public class SlackIntegrationService
         {
             return process.MainWindowTitle;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("SlackIntegrationService", $"Error getting window title: {ex.Message}");
             return null;
         }
     }

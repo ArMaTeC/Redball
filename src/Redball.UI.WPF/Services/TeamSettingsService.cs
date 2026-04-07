@@ -321,11 +321,17 @@ public class TeamSettingsService
     // Private methods
     private string GenerateJoinCode()
     {
-        // Generate 8-character alphanumeric code
+        // Generate 8-character alphanumeric code using cryptographically secure RNG
         const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        var random = new Random();
-        return new string(Enumerable.Repeat(chars, 8)
-            .Select(s => s[random.Next(s.Length)]).ToArray());
+        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+        var bytes = new byte[8];
+        rng.GetBytes(bytes);
+        var result = new char[8];
+        for (int i = 0; i < 8; i++)
+        {
+            result[i] = chars[bytes[i] % chars.Length];
+        }
+        return new string(result);
     }
 
     private string? LookupTeamByJoinCode(string joinCode)

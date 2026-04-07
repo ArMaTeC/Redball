@@ -145,36 +145,49 @@ Var DotNetDownloaded
 ; ============================================================================
 
 Function CheckDotNet
-    ; Check if .NET 10 is installed via registry
+    ; Check multiple registry locations for .NET 10 Windows Desktop Runtime
+    
+    ; Method 1: Check Windows Desktop App 10.0.x (specific version)
     ClearErrors
-    ReadRegStr $0 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full" "Release"
-    ${If} ${Errors}
-        ; Try WOW64
-        ClearErrors
-        ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\NET Framework Setup\NDP\v4\Full" "Release"
-    ${EndIf}
-    
+    ReadRegStr $0 HKLM "SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App" "10.0.5"
     ${IfNot} ${Errors}
-        ; Check if .NET 10 runtime is available (look for Windows Desktop Runtime)
-        ClearErrors
-        ReadRegStr $0 HKLM "SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App" "10.0.0"
-        ${IfNot} ${Errors}
+        StrCpy $DotNetInstalled 1
+        DetailPrint ".NET 10 Windows Desktop Runtime found (10.0.5)"
+        Return
+    ${EndIf}
+    
+    ; Method 2: Check for any 10.0.x version
+    ClearErrors
+    ReadRegStr $0 HKLM "SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App" "10.0.0"
+    ${IfNot} ${Errors}
+        StrCpy $DotNetInstalled 1
+        DetailPrint ".NET 10 Windows Desktop Runtime found (10.0.0)"
+        Return
+    ${EndIf}
+    
+    ; Method 3: Check WOW64 node for 32-bit registry on 64-bit Windows
+    ClearErrors
+    ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App" "10.0.5"
+    ${IfNot} ${Errors}
+        StrCpy $DotNetInstalled 1
+        DetailPrint ".NET 10 Windows Desktop Runtime found (WOW64)"
+        Return
+    ${EndIf}
+    
+    ; Method 4: Check if dotnet.exe exists and can report version
+    ClearErrors
+    nsExec::ExecToStack '"$ProgramFiles64\dotnet\dotnet.exe" --version'
+    Pop $0
+    Pop $1
+    ${If} $0 == 0
+        ${If} $1 != ""
             StrCpy $DotNetInstalled 1
-            DetailPrint ".NET 10 Windows Desktop Runtime found"
-            Return
-        ${EndIf}
-        
-        ; Check for newer versions
-        ClearErrors
-        ReadRegStr $0 HKLM "SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App" "10.0"
-        ${IfNot} ${Errors}
-            StrCpy $DotNetInstalled 1
-            DetailPrint ".NET 10+ Windows Desktop Runtime found"
+            DetailPrint ".NET 10 found via dotnet.exe: $1"
             Return
         ${EndIf}
     ${EndIf}
     
-    ; Also check for self-contained flag - if set, we don't need .NET
+    ; Method 5: Check for self-contained flag
     ${If} ${FileExists} "$INSTDIR\.selfcontained"
         StrCpy $DotNetInstalled 1
         DetailPrint "Self-contained build detected"

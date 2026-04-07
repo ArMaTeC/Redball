@@ -121,7 +121,10 @@ public sealed class CrashTelemetryService
                 File.Delete(_consentFilePath);
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logger.Debug("CrashTelemetry", $"Failed to delete consent file: {ex.Message}");
+        }
     }
 
     /// <summary>

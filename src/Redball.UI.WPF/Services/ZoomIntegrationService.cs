@@ -104,8 +104,9 @@ public class ZoomIntegrationService
                    _lastStatus == ZoomStatus.ScreenSharing || 
                    _lastStatus == ZoomStatus.Recording;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ZoomIntegrationService", $"Error checking if in Zoom meeting: {ex.Message}");
             return false;
         }
     }
@@ -121,8 +122,9 @@ public class ZoomIntegrationService
         {
             return _lastStatus == ZoomStatus.ScreenSharing;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ZoomIntegrationService", $"Error checking screen share status: {ex.Message}");
             return false;
         }
     }
@@ -138,8 +140,9 @@ public class ZoomIntegrationService
         {
             return _lastStatus == ZoomStatus.Recording;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ZoomIntegrationService", $"Error checking recording status: {ex.Message}");
             return false;
         }
     }
@@ -248,8 +251,9 @@ public class ZoomIntegrationService
 
             return ZoomStatus.Unknown;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ZoomIntegrationService", $"Error detecting status from process: {ex.Message}");
             return ZoomStatus.Unknown;
         }
     }
@@ -266,8 +270,9 @@ public class ZoomIntegrationService
 
             return null;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ZoomIntegrationService", $"Error getting Zoom process: {ex.Message}");
             return null;
         }
     }
@@ -278,8 +283,9 @@ public class ZoomIntegrationService
         {
             return process.MainWindowTitle;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ZoomIntegrationService", $"Error getting window title: {ex.Message}");
             return null;
         }
     }
@@ -305,8 +311,9 @@ public class ZoomIntegrationService
             
             return lines.ToArray();
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ZoomIntegrationService", $"Error reading Zoom log file: {ex.Message}");
             return Array.Empty<string>();
         }
     }

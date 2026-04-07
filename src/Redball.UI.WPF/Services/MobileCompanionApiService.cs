@@ -304,9 +304,17 @@ public class MobileCompanionApiService
 
     private string GeneratePairingCode()
     {
-        // Generate 6-digit numeric code
-        var random = new Random();
-        return random.Next(100000, 999999).ToString();
+        // Generate 6-digit numeric code using cryptographically secure RNG
+        const string chars = "0123456789";
+        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+        var bytes = new byte[6];
+        rng.GetBytes(bytes);
+        var result = new char[6];
+        for (int i = 0; i < 6; i++)
+        {
+            result[i] = chars[bytes[i] % chars.Length];
+        }
+        return new string(result);
     }
 
     private string GenerateApiKey()
@@ -327,7 +335,10 @@ public class MobileCompanionApiService
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logger.Debug("MobileCompanionApiService", $"Failed to get local IP address: {ex.Message}");
+        }
         
         return "localhost";
     }

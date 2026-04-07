@@ -236,7 +236,11 @@ public class InputInjectionEngine
                     if (!process.WaitForExit(5000))
                     {
                         _logger.LogWarning("Session helper timed out");
-                        try { process.Kill(); } catch { }
+                        try { process.Kill(); }
+                        catch (Exception ex)
+                        {
+                            _logger.LogDebug("Failed to kill timed out session helper: {Message}", ex.Message);
+                        }
                         return false;
                     }
 

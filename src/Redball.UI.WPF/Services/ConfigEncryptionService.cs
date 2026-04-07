@@ -106,8 +106,9 @@ public sealed class ConfigEncryptionService : IDisposable
             }
             return false;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ConfigEncryption", $"DPAPI-NG availability check failed: {ex.Message}");
             return false;
         }
     }

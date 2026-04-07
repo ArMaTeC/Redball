@@ -293,8 +293,9 @@ public sealed class DynamicPluginLoader : IDisposable
             return cert != null;
             #endif
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.WriteLine($"[DynamicPluginLoader] Certificate verification failed for {path}: {ex.Message}");
             return false;
         }
     }

@@ -1,0 +1,295 @@
+{
+  "fromVersion": "2.1.455",
+  "toVersion": "2.1.456",
+  "generatedAt": "2026-04-07T13:05:16.767Z",
+  "patches": [
+    {
+      "file": "patches/patch-manifest.json",
+      "patchFile": "patch-manifest.json.patch",
+      "patchSize": 908,
+      "originalSize": 7052,
+      "savings": 6144,
+      "savingsPercent": "87.1%"
+    }
+  ],
+  "skipped": [
+    {
+      "file": "Redball-2.1.456-Setup.exe",
+      "reason": "new_file"
+    },
+    {
+      "file": "Redball-2.1.456.exe",
+      "reason": "new_file"
+    },
+    {
+      "file": "Redball-2.1.456.zip",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/CommunityToolkit.Mvvm.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Hardcodet.NotifyIcon.Wpf.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/HidSharp.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/InputInterceptor.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/LibreHardwareMonitorLib.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/LottieSharp.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Data.Sqlite.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Configuration.Abstractions.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Configuration.Binder.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Configuration.CommandLine.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Configuration.EnvironmentVariables.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Configuration.FileExtensions.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Configuration.Json.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Configuration.UserSecrets.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Configuration.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.DependencyInjection.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Diagnostics.Abstractions.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Diagnostics.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.FileProviders.Abstractions.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.FileProviders.Physical.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.FileSystemGlobbing.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Hosting.Abstractions.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Hosting.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Http.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Logging.Abstractions.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Logging.Configuration.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Logging.Console.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Logging.Debug.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Logging.EventLog.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Logging.EventSource.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Logging.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Options.ConfigurationExtensions.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Options.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Extensions.Primitives.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Microsoft.Xaml.Behaviors.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Mono.Posix.NETStandard.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/MonoPosixHelper.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Redball.Core.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Redball.Service.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Redball.Service.exe",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Redball.UI.WPF.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/Redball.UI.WPF.exe",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/SQLitePCLRaw.batteries_v2.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/SQLitePCLRaw.core.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/SQLitePCLRaw.provider.e_sqlite3.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/SkiaSharp.SceneGraph.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/SkiaSharp.Skottie.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/SkiaSharp.Views.Desktop.Common.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/SkiaSharp.Views.WPF.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/SkiaSharp.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/System.CodeDom.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/System.Configuration.ConfigurationManager.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/System.Diagnostics.EventLog.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/System.Diagnostics.PerformanceCounter.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/System.IO.Ports.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/System.Management.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/System.Security.Cryptography.ProtectedData.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/System.ServiceProcess.ServiceController.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/System.Speech.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/e_sqlite3.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/libMonoPosixHelper.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "binaries/libSkiaSharp.dll",
+      "reason": "new_file"
+    },
+    {
+      "file": "redball-2.1.456-linux.tar.gz",
+      "reason": "new_file"
+    },
+    {
+      "file": "redball-2.1.456.flatpak",
+      "reason": "new_file"
+    },
+    {
+      "file": "release.json",
+      "reason": "too_small"
+    }
+  ],
+  "totalSavings": 6144,
+  "totalOriginalSize": 102847854
+}

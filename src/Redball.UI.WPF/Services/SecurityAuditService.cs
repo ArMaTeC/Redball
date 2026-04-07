@@ -371,8 +371,9 @@ public class SecurityAuditService : IDisposable
         {
             return System.Security.Principal.WindowsIdentity.GetCurrent().User?.Value ?? "Unknown";
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("SecurityAuditService", $"Failed to get current user SID: {ex.Message}");
             return "Unknown";
         }
     }
@@ -439,8 +440,9 @@ internal static class ProcessInfo
             var process = System.Diagnostics.Process.GetProcessById(processId);
             return process.StartTime;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("ProcessInfo", $"Failed to get process start time for PID {processId}: {ex.Message}");
             return DateTime.Now;
         }
     }

@@ -98,7 +98,11 @@ public sealed class BlueGreenUpdateService : IDisposable
         if (!healthCheck.IsHealthy)
         {
             // Kill failed process and rollback
-            try { process.Kill(); } catch { }
+            try { process.Kill(); }
+            catch (Exception ex)
+            {
+                Logger.Debug("BlueGreenUpdate", $"Failed to kill process during rollback: {ex.Message}");
+            }
             File.WriteAllText(_currentMarkerPath, _activeSlot);
             return UpdateSwitchResult.Err($"Health check failed: {healthCheck.Message}");
         }
@@ -290,7 +294,18 @@ public sealed class BlueGreenUpdateService : IDisposable
 
             foreach (var entry in archive.Entries)
             {
-                var entryPath = Path.Combine(targetPath, entry.FullName);
+                // SECURITY: Prevent ZipSlip directory traversal attack
+                // Validate that the extracted path stays within targetPath
+                var entryName = entry.FullName.Replace('/', Path.DirectorySeparatorChar);
+                var entryPath = Path.GetFullPath(Path.Combine(targetPath, entryName));
+                var fullTargetPath = Path.GetFullPath(targetPath);
+                
+                if (!entryPath.StartsWith(fullTargetPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    Logger.Error("BlueGreenUpdate", $"Security: ZIP entry escapes target directory: {entry.FullName}");
+                    throw new InvalidOperationException($"Malicious ZIP entry detected: {entry.FullName}");
+                }
+                
                 var entryDir = Path.GetDirectoryName(entryPath);
                 
                 if (!string.IsNullOrEmpty(entryDir))

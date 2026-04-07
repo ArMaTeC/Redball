@@ -109,12 +109,16 @@ public class TeamsIntegrationService
                     // High CPU may indicate active call
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Logger.Debug("TeamsIntegrationService", $"Failed to check CPU time: {ex.Message}");
+            }
 
             return false;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("TeamsIntegrationService", $"Error checking Teams call status: {ex.Message}");
             return false;
         }
     }
@@ -141,8 +145,9 @@ public class TeamsIntegrationService
 
             return _lastStatus == TeamsStatus.Presenting;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("TeamsIntegrationService", $"Failed to detect screen sharing: {ex.Message}");
             return false;
         }
     }
@@ -259,8 +264,9 @@ public class TeamsIntegrationService
 
             return TeamsStatus.Available;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("TeamsIntegrationService", $"Failed to detect status from process: {ex.Message}");
             return TeamsStatus.Unknown;
         }
     }
@@ -279,8 +285,9 @@ public class TeamsIntegrationService
 
             return null;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("TeamsIntegrationService", $"Failed to get Teams process: {ex.Message}");
             return null;
         }
     }
@@ -291,8 +298,9 @@ public class TeamsIntegrationService
         {
             return process.MainWindowTitle;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("TeamsIntegrationService", $"Failed to get window title: {ex.Message}");
             return null;
         }
     }
@@ -319,8 +327,9 @@ public class TeamsIntegrationService
             
             return lines.ToArray();
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("TeamsIntegrationService", $"Failed to read log lines: {ex.Message}");
             return Array.Empty<string>();
         }
     }
