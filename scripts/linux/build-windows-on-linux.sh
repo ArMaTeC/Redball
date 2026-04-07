@@ -338,6 +338,14 @@ step_build_wpf() {
 
     mkdir -p "$WPF_PUBLISH_DIR"
 
+    # Build all projects first so intermediate DLLs + artifacts exist
+    log_debug "Building entire WPF project graph via Wine (Release)..."
+    wine_dotnet build "Z:$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" \
+        --configuration "$CONFIGURATION" \
+        --runtime win-x64 \
+        --no-restore
+
+    log_debug "Publishing WPF application..."
     wine_dotnet publish "Z:$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" \
         --configuration "$CONFIGURATION" \
         --output "Z:$WPF_PUBLISH_DIR" \

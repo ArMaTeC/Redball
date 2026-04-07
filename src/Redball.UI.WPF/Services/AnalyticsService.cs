@@ -61,7 +61,7 @@ public class AnalyticsService : IAnalyticsService
             var removedCount = 0;
             
             // Clean up feature usage history
-            foreach (var feature in _data.FeatureUsage.Values)
+            foreach (var feature in _data.Features.Values)
             {
                 var keysToRemove = feature.DailyUsage.Keys
                     .Where(k => string.Compare(k, cutoffKey, StringComparison.Ordinal) < 0)
@@ -75,13 +75,13 @@ public class AnalyticsService : IAnalyticsService
             }
             
             // Clean up engagement history
-            var engagementKeysToRemove = _data.EngagementHistory.Keys
+            var engagementKeysToRemove = _data.SessionHistory.Keys
                 .Where(k => string.Compare(k, cutoffKey, StringComparison.Ordinal) < 0)
                 .ToList();
             
             foreach (var key in engagementKeysToRemove)
             {
-                _data.EngagementHistory.Remove(key);
+                _data.SessionHistory.Remove(key);
                 removedCount++;
             }
             

@@ -65,13 +65,13 @@ public class SecurityAuditServiceTests
     public void LogEvent_WithDifferentSeverities()
     {
         // Act
-        _service.LogEvent(AuditEventType.ConfigChanged, "Test", null, SecuritySeverity.Info);
+        _service.LogEvent(AuditEventType.ConfigChange, "Test", null, SecuritySeverity.Info);
         _service.LogEvent(AuditEventType.AuthenticationFailure, "Test", null, SecuritySeverity.Warning);
         _service.LogEvent(AuditEventType.TamperDetected, "Test", null, SecuritySeverity.Critical);
         _service.Flush();
 
         // Assert
-        var infoEvents = _service.QueryEvents(DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, AuditEventType.ConfigChanged);
+        var infoEvents = _service.QueryEvents(DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, AuditEventType.ConfigChange);
         var warningEvents = _service.QueryEvents(DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, AuditEventType.AuthenticationFailure);
         var criticalEvents = _service.QueryEvents(DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, AuditEventType.TamperDetected);
 
@@ -93,7 +93,7 @@ public class SecurityAuditServiceTests
         _service.Flush();
 
         // Assert
-        var events = _service.QueryEvents(DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, AuditEventType.ConfigChanged);
+        var events = _service.QueryEvents(DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, AuditEventType.ConfigChange);
         Assert.IsTrue(events.Count > 0, "Should have config change event");
     }
 

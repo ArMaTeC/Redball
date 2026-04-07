@@ -137,6 +137,13 @@ log_success "Updated $TARGET_PATH"
 echo "$NEW_VERSION" > "$VERSION_FILE"
 log_success "Updated version.txt"
 
+# Update meson.build for Linux builds
+MESON_BUILD="${PROJECT_ROOT}/src/Redball.Linux/meson.build"
+if [[ -f "$MESON_BUILD" ]]; then
+    sed -i "s/version : '[0-9]\+\.[0-9]\+\.[0-9]\+'/version : '${NEW_VERSION}'/" "$MESON_BUILD"
+    log_success "Updated meson.build"
+fi
+
 # Commit if requested
 if [[ $DO_COMMIT -eq 1 ]]; then
     if [[ -z "$COMMIT_MESSAGE" ]]; then
@@ -146,6 +153,9 @@ if [[ $DO_COMMIT -eq 1 ]]; then
     log_info "Committing with message: $COMMIT_MESSAGE"
     cd "$PROJECT_ROOT"
     git add "$VERSION_FILE" "$TARGET_PATH"
+    if [[ -f "$MESON_BUILD" ]]; then
+        git add "$MESON_BUILD"
+    fi
     git commit -m "$COMMIT_MESSAGE"
     
     if [[ $DO_PUSH -eq 1 ]]; then

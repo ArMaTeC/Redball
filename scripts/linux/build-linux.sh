@@ -251,6 +251,11 @@ build_meson() {
     
     cd "${LINUX_DIR}"
     
+    # Sync version from version.txt to meson.build
+    log_step "Syncing version to meson.build"
+    sed -i "s/version : '[0-9]\+\.[0-9]\+\.[0-9]\+'/version : '${VERSION}'/" meson.build
+    log_success "Version synced: ${VERSION}"
+    
     # Clean previous build
     if [ -d "$BUILD_DIR" ]; then
         log_info "Cleaning previous build directory..."

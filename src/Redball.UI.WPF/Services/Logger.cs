@@ -121,7 +121,7 @@ public static class Logger
         {
             // Event Log access may require elevated privileges
             _eventLogEnabled = false;
-            Debug.WriteLine($"[Logger] Event Log initialization failed: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[Logger] Event Log initialization failed: {ex.Message}");
         }
     }
 
