@@ -415,8 +415,9 @@ public class SharedConfigManager
             var source = Version.Parse(version);
             return current.Major == source.Major; // Same major version
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("SharedConfigManager", $"Version compatibility check failed: {ex.Message}");
             return false;
         }
     }

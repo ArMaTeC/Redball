@@ -130,9 +130,10 @@ public sealed class AdaptiveIntervalPolicy
                     _lastCpuLoad = 0.05f; // Low default on first call
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 _lastCpuLoad = 0;
+                Logger.Debug("AdaptiveIntervalPolicy", $"CPU fallback failed: {ex.Message}");
             }
             
             Logger.Debug("AdaptiveIntervalPolicy", $"PerformanceCounter failed, using fallback: {ex.Message}");
@@ -155,8 +156,9 @@ public sealed class AdaptiveIntervalPolicy
             }
             return false;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("AdaptiveIntervalPolicy", $"Battery power check failed: {ex.Message}");
             return false;
         }
     }
@@ -179,8 +181,9 @@ public sealed class AdaptiveIntervalPolicy
             var value = key?.GetValue("PowerThrottlingOff");
             return value is int i && i == 0;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Debug("AdaptiveIntervalPolicy", $"Battery saver check failed: {ex.Message}");
             return false;
         }
     }

@@ -122,8 +122,9 @@ public sealed class HttpSyncApi : ISyncApi, IDisposable
             var response = await _httpClient.GetAsync(url, ct);
             return response.IsSuccessStatusCode;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger?.LogDebug("Health check failed: {Message}", ex.Message);
             return false;
         }
     }

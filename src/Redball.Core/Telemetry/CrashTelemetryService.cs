@@ -77,9 +77,10 @@ public sealed class CrashTelemetryService
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
             // If we can't read consent file, treat as unconfigured
+            Logger.Debug("CrashTelemetry", $"Failed to read consent file: {ex.Message}");
             _consentGranted = false;
             _consentConfigured = false;
         }
@@ -252,9 +253,9 @@ public sealed class CrashTelemetryService
                     crashes.Add(envelope);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Skip corrupted files
+                Logger.Debug("CrashTelemetry", $"Skipping corrupted crash file {Path.GetFileName(file)}: {ex.Message}");
             }
         }
 
@@ -319,9 +320,9 @@ public sealed class CrashTelemetryService
                     purged++;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Skip files we can't delete
+                Logger.Debug("CrashTelemetry", $"Failed to delete old crash file {Path.GetFileName(file)}: {ex.Message}");
             }
         }
 

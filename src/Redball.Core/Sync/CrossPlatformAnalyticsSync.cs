@@ -293,7 +293,10 @@ public class CrossPlatformAnalyticsSync
                             allEvents.Add(evt);
                         }
                     }
-                    catch { /* Skip malformed lines */ }
+                    catch (Exception ex)
+                    {
+                        Logger.Debug("CrossPlatformAnalyticsSync", $"Skipping malformed analytics line in aggregation: {ex.Message}");
+                    }
                 }
             }
 
@@ -538,7 +541,10 @@ public class CrossPlatformAnalyticsSync
                             allEvents.Add(evt);
                         }
                     }
-                    catch { /* Skip malformed lines */ }
+                    catch (Exception ex)
+                    {
+                        Logger.Debug("CrossPlatformAnalyticsSync", $"Skipping malformed analytics line in export: {ex.Message}");
+                    }
                 }
             }
         }

@@ -1,8 +1,17 @@
 {
   "fromVersion": "2.1.450",
   "toVersion": "2.1.452",
-  "generatedAt": "2026-04-07T13:05:16.631Z",
-  "patches": [],
+  "generatedAt": "2026-04-07T19:17:12.454Z",
+  "patches": [
+    {
+      "file": "patches/patch-manifest.json",
+      "patchFile": "patch-manifest.json.patch",
+      "patchSize": 1021,
+      "originalSize": 8182,
+      "savings": 7161,
+      "savingsPercent": "87.5%"
+    }
+  ],
   "skipped": [
     {
       "file": "Redball-2.1.452-Setup.exe",
@@ -317,10 +326,6 @@
       "reason": "too_small"
     },
     {
-      "file": "patches/patch-manifest.json",
-      "reason": "too_small"
-    },
-    {
       "file": "redball-2.1.452-linux.tar.gz",
       "reason": "new_file"
     },
@@ -333,6 +338,6 @@
       "reason": "too_small"
     }
   ],
-  "totalSavings": 0,
-  "totalOriginalSize": 103092380
+  "totalSavings": 7161,
+  "totalOriginalSize": 103099810
 }

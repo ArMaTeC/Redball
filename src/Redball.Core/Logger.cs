@@ -59,9 +59,10 @@ internal static class Logger
             {
                 File.AppendAllText(LogFilePath, entry + Environment.NewLine);
             }
-            catch
+            catch (Exception ex)
             {
                 // Silent fail - logging should not crash the app
+                System.Diagnostics.Debug.WriteLine($"[Logger] Failed to write to log file: {ex.Message}");
             }
         }
 
