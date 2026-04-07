@@ -1,0 +1,22 @@
+{
+  "version": "2.1.462",
+  "channel": "stable",
+  "date": "2026-04-07T20:27:42Z",
+  "files": [
+    {
+      "name": "redball-2.1.461-linux.tar.gz",
+      "size": 252536,
+      "sha256": "124bc84d21b7d29e341237d5f52814d50d5034abcbdd7364a22b7fa920e61316"
+    },
+    {
+      "name": "redball-2.1.462-linux.tar.gz",
+      "size": 252558,
+      "sha256": "1fea7563161ddd828e8574ef0a1c4c2849d878cf930af472ca8bd4a1fb1f3b0f"
+    },
+    {
+      "name": "redball-2.1.462.flatpak",
+      "size": 360840,
+      "sha256": "28613b0878da0a849d819f56f69dbfba7a9b335e5aa5eaebe5edbff46cffb9fc"
+    },
+  ]
+}

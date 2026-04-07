@@ -19,7 +19,7 @@ public class TemperatureMonitorService : IDisposable
     public static TemperatureMonitorService Instance => _instance.Value;
 
     private readonly DispatcherTimer _pollTimer;
-    private readonly Computer _computer;
+    private readonly Computer? _computer;
     private bool _thermalPaused;
     private string _lastError = "";
     private int _consecutiveFailures;
@@ -59,7 +59,7 @@ public class TemperatureMonitorService : IDisposable
         catch (Exception ex)
         {
             Logger.Warning("TemperatureMonitor", $"Failed to initialize LibreHardwareMonitor: {ex.Message}");
-            _computer = null!;
+            _computer = null;
             _libreHardwareInitialized = false;
         }
         

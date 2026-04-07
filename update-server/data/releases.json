@@ -890,6 +890,36 @@
         }
       ],
       "totalDownloads": 0
+    },
+    {
+      "version": "2.1.462",
+      "notes": "Release 2.1.462",
+      "channel": "stable",
+      "date": "2026-04-07T20:27:42.976Z",
+      "files": [
+        {
+          "name": "redball-2.1.461-linux.tar.gz",
+          "size": 252536,
+          "hash": "124bc84d21b7d29e341237d5f52814d50d5034abcbdd7364a22b7fa920e61316",
+          "downloads": 0,
+          "uploadedAt": "2026-04-07T20:27:43.010Z"
+        },
+        {
+          "name": "redball-2.1.462-linux.tar.gz",
+          "size": 252558,
+          "hash": "1fea7563161ddd828e8574ef0a1c4c2849d878cf930af472ca8bd4a1fb1f3b0f",
+          "downloads": 0,
+          "uploadedAt": "2026-04-07T20:27:43.048Z"
+        },
+        {
+          "name": "redball-2.1.462.flatpak",
+          "size": 360840,
+          "hash": "28613b0878da0a849d819f56f69dbfba7a9b335e5aa5eaebe5edbff46cffb9fc",
+          "downloads": 0,
+          "uploadedAt": "2026-04-07T20:27:43.080Z"
+        }
+      ],
+      "totalDownloads": 0
     }
   ]
 }

@@ -70,6 +70,22 @@ public class MobileCompanionApiService
         }
     }
 
+    private void ReleaseResources(string context)
+    {
+        try
+        {
+            _cts?.Cancel();
+            _listener?.Stop();
+            _listener?.Close();
+            _isRunning = false;
+            Logger.Debug("MobileCompanionApiService", $"Resources released: {context}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("MobileCompanionApiService", $"Error releasing resources: {ex.Message}");
+        }
+    }
+
     private async Task ListenLoopAsync(CancellationToken ct)
     {
         while (!ct.IsCancellationRequested && _listener != null)

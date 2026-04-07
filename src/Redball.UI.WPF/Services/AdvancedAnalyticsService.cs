@@ -46,7 +46,7 @@ public class AdvancedAnalyticsService
             
             // Calculate metrics
             report.UsageMetrics = CalculateUsageMetrics(sessions, startDate, endDate);
-            report.Predictions = GeneratePredictions(sessions);
+            report.Predictions = await GeneratePredictions(sessions);
             report.Insights = GenerateInsights(sessions, report.UsageMetrics);
             report.Recommendations = GenerateRecommendations(report);
 
@@ -63,7 +63,7 @@ public class AdvancedAnalyticsService
     /// <summary>
     /// Predicts usage for the upcoming week.
     /// </summary>
-    public UsagePrediction PredictUpcomingWeek()
+    public async Task<UsagePrediction> PredictUpcomingWeekAsync()
     {
         var today = DateTime.Now;
         var weekStart = today.AddDays(-(int)today.DayOfWeek);
@@ -107,7 +107,7 @@ public class AdvancedAnalyticsService
     /// <summary>
     /// Gets battery optimization suggestions.
     /// </summary>
-    public BatteryOptimizationSuggestions GetBatterySuggestions()
+    public async Task<BatteryOptimizationSuggestions> GetBatterySuggestionsAsync()
     {
         var suggestions = new BatteryOptimizationSuggestions();
         
@@ -118,7 +118,7 @@ public class AdvancedAnalyticsService
         }
 
         var battery = BatteryMonitorService.Instance;
-        var sessions = _stats.GetSessionHistoryAsync(30).Result;
+        var sessions = await _stats.GetSessionHistoryAsync(30);
         
         if (sessions.Count == 0)
         {
@@ -175,12 +175,12 @@ public class AdvancedAnalyticsService
     /// <summary>
     /// Calculates productivity score based on usage patterns.
     /// </summary>
-    public ProductivityScore CalculateProductivityScore(int days = 30)
+    public async Task<ProductivityScore> CalculateProductivityScore(int days = 30)
     {
         var endDate = DateTime.Now;
         var startDate = endDate.AddDays(-days);
         
-        var sessions = _stats.GetSessionHistoryAsync(days).Result;
+        var sessions = await _stats.GetSessionHistoryAsync(days);
         var auditEntries = _audit.GetEntries(startDate, endDate, AuditEventType.Session);
 
         var score = new ProductivityScore
@@ -228,7 +228,7 @@ public class AdvancedAnalyticsService
         };
     }
 
-    private UsagePredictions GeneratePredictions(IReadOnlyList<SessionStatsService.SessionRecord> sessions)
+    private async Task<UsagePredictions> GeneratePredictions(IReadOnlyList<SessionStatsService.SessionRecord> sessions)
     {
         if (sessions.Count < 5)
         {
@@ -239,7 +239,7 @@ public class AdvancedAnalyticsService
             };
         }
 
-        var nextWeekPrediction = PredictUpcomingWeek();
+        var nextWeekPrediction = await PredictUpcomingWeekAsync();
         
         return new UsagePredictions
         {
