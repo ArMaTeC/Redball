@@ -43,7 +43,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DIST_DIR="$PROJECT_ROOT/dist"
 UPDATE_SERVER_DIR="$PROJECT_ROOT/update-server"
-BUILD_LOG="$PROJECT_ROOT/build.log"
+LOGS_DIR="/logs"
+BUILD_LOG="$LOGS_DIR/redball-build.log"
 BUILD_START_TIME=$(date +%s)
 
 # Colors
@@ -85,6 +86,15 @@ trap_error() {
     exit $exit_code
 }
 trap 'trap_error $LINENO' ERR
+
+# Ensure logs directory exists
+if [[ ! -d "$LOGS_DIR" ]]; then
+    mkdir -p "$LOGS_DIR" 2>/dev/null || {
+        echo "Warning: Cannot create $LOGS_DIR, falling back to project root"
+        LOGS_DIR="$PROJECT_ROOT"
+        BUILD_LOG="$PROJECT_ROOT/build.log"
+    }
+fi
 
 # Initialize build log
 : > "$BUILD_LOG"
