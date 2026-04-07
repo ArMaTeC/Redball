@@ -1,5 +1,5 @@
 project('redball', 'c',
-  version : '2.1.459',
+  version : '2.1.460',
   meson_version : '>= 0.59.0',
   default_options : [ 'warning_level=2',
                       'werror=false',
