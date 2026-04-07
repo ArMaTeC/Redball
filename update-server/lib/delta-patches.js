@@ -7,6 +7,7 @@
  */
 
 const fs = require('fs');
+const fsp = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
 const zlib = require('zlib');
@@ -57,13 +58,13 @@ function findCommonSuffix(oldData, newData, prefixLen) {
 async function createPatch(oldData, newData) {
   const oldSize = oldData.length;
   const newSize = newData.length;
-  
+
   const commonPrefix = findCommonPrefix(oldData, newData);
   const commonSuffix = findCommonSuffix(oldData, newData, commonPrefix);
-  
+
   const newStart = commonPrefix;
   const newLength = newSize - commonPrefix - commonSuffix;
-  
+
   // Build patch data
   const header = Buffer.alloc(20); // 5 x int32
   header.writeInt32LE(oldSize, 0);
@@ -71,16 +72,16 @@ async function createPatch(oldData, newData) {
   header.writeInt32LE(commonPrefix, 8);
   header.writeInt32LE(commonSuffix, 12);
   header.writeInt32LE(newLength, 16);
-  
+
   // Extract new data section
   const newSection = newData.slice(newStart, newStart + newLength);
-  
+
   // Combine header + new section
   const patchData = Buffer.concat([header, newSection]);
-  
+
   // Compress
   const compressed = await gzipCompress(patchData, { level: 9 });
-  
+
   return {
     data: compressed,
     oldFileHash: computeHash(oldData),
@@ -98,33 +99,33 @@ async function createPatch(oldData, newData) {
 async function applyPatch(oldData, patchData) {
   // Decompress
   const decompressed = await gzipDecompress(patchData);
-  
+
   // Read header
   const oldSize = decompressed.readInt32LE(0);
   const newSize = decompressed.readInt32LE(4);
   const commonPrefix = decompressed.readInt32LE(8);
   const commonSuffix = decompressed.readInt32LE(12);
   const newDataLength = decompressed.readInt32LE(16);
-  
+
   if (oldSize !== oldData.length) {
     throw new Error(`Old file size mismatch: expected ${oldSize}, got ${oldData.length}`);
   }
-  
+
   // Reconstruct
   const result = Buffer.alloc(newSize);
-  
+
   // Copy prefix
   oldData.copy(result, 0, 0, commonPrefix);
-  
+
   // Copy new section
   const newSection = decompressed.slice(20, 20 + newDataLength);
   newSection.copy(result, commonPrefix);
-  
+
   // Copy suffix
   const suffixStartOld = oldData.length - commonSuffix;
   const suffixStartNew = newSize - commonSuffix;
   oldData.copy(result, suffixStartNew, suffixStartOld);
-  
+
   return result;
 }
 
@@ -132,11 +133,11 @@ async function applyPatch(oldData, patchData) {
  * Generate patches between two release versions
  */
 async function generatePatches(oldVersionDir, newVersionDir, patchesDir, options = {}) {
-  const { 
+  const {
     minSavingsPercent = 10,  // Minimum savings to generate patch
     maxPatchSizeRatio = 0.9  // Skip if patch is >90% of full file
   } = options;
-  
+
   const results = {
     generated: [],
     skipped: [],
@@ -144,80 +145,84 @@ async function generatePatches(oldVersionDir, newVersionDir, patchesDir, options
     totalSavings: 0,
     totalOriginalSize: 0
   };
-  
+
   if (!fs.existsSync(patchesDir)) {
     fs.mkdirSync(patchesDir, { recursive: true });
   }
-  
+
   // Get all files in new version
   const newFiles = getAllFiles(newVersionDir);
-  
+
   for (const newFile of newFiles) {
+    let relativePath = '';
     try {
-      const relativePath = path.relative(newVersionDir, newFile);
+      relativePath = path.relative(newVersionDir, newFile);
       const oldFile = path.join(oldVersionDir, relativePath);
-      
-      const newData = fs.readFileSync(newFile);
+
+      // ASYNC: Use non-blocking file read
+      const newData = await fsp.readFile(newFile);
       results.totalOriginalSize += newData.length;
-      
+
       // Skip very small files
       if (newData.length < 1024) {
         results.skipped.push({ file: relativePath, reason: 'too_small' });
         continue;
       }
-      
+
       // If old file doesn't exist, full download required
       if (!fs.existsSync(oldFile)) {
         results.skipped.push({ file: relativePath, reason: 'new_file' });
         continue;
       }
-      
-      const oldData = fs.readFileSync(oldFile);
-      
+
+      // ASYNC: Use non-blocking file read for old data too
+      const oldData = await fsp.readFile(oldFile);
+
       // Check if files are identical
       if (computeHash(oldData) === computeHash(newData)) {
         results.skipped.push({ file: relativePath, reason: 'unchanged' });
         continue;
       }
-      
+
       // Generate patch
       console.log(`[PATCH] Generating patch for ${relativePath}...`);
       const patch = await createPatch(oldData, newData);
-      
+
       // Check if patch is worthwhile
       const savingsPercent = ((newData.length - patch.patchSize) / newData.length) * 100;
-      
+
       if (savingsPercent < minSavingsPercent || patch.patchSize > newData.length * maxPatchSizeRatio) {
-        results.skipped.push({ 
-          file: relativePath, 
+        results.skipped.push({
+          file: relativePath,
           reason: 'not_worthwhile',
           savings: savingsPercent.toFixed(1) + '%'
         });
         continue;
       }
-      
+
       // Verify patch works
       const testResult = await applyPatch(oldData, patch.data);
       if (computeHash(testResult) !== patch.newFileHash) {
         results.errors.push({ file: relativePath, error: 'patch_verification_failed' });
         continue;
       }
-      
+
       // Save patch
       const patchFileName = `${path.basename(relativePath)}.patch`;
       const patchPath = path.join(patchesDir, patchFileName);
-      
+
       // Create subdirectory if needed
       const patchSubDir = path.dirname(patchPath);
       if (!fs.existsSync(patchSubDir)) {
         fs.mkdirSync(patchSubDir, { recursive: true });
       }
-      
-      fs.writeFileSync(patchPath, patch.data);
-      
+
+      // ASYNC: Use non-blocking file write
+      await fsp.writeFile(patchPath, patch.data);
+
       const savings = newData.length - patch.patchSize;
       results.totalSavings += savings;
-      
+
       results.generated.push({
         file: relativePath,
         patchFile: patchFileName,
@@ -226,15 +231,15 @@ async function generatePatches(oldVersionDir, newVersionDir, patchesDir, options
         savings: savings,
         savingsPercent: savingsPercent.toFixed(1) + '%'
       });
-      
+
       console.log(`[PATCH] ✓ ${relativePath}: ${savingsPercent.toFixed(1)}% savings (${formatBytes(savings)} saved)`);
-      
+
     } catch (err) {
-      results.errors.push({ file: relativePath, error: err.message });
-      console.error(`[PATCH] ✗ Error patching ${relativePath}: ${err.message}`);
+      results.errors.push({ file: relativePath || newFile, error: err.message });
+      console.error(`[PATCH] ✗ Error patching ${relativePath || newFile}: ${err.message}`);
     }
   }
-  
+
   return results;
 }
 
@@ -243,9 +248,9 @@ async function generatePatches(oldVersionDir, newVersionDir, patchesDir, options
  */
 function getAllFiles(dir, files = []) {
   if (!fs.existsSync(dir)) return files;
-  
+
   const entries = fs.readdirSync(dir, { withFileTypes: true });
-  
+
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
@@ -254,7 +259,7 @@ function getAllFiles(dir, files = []) {
       files.push(fullPath);
     }
   }
-  
+
   return files;
 }
 
@@ -276,31 +281,31 @@ async function generateAllPatches(releasesDir) {
   const versions = fs.readdirSync(releasesDir)
     .filter(v => fs.statSync(path.join(releasesDir, v)).isDirectory())
     .sort(compareVersions);
-  
+
   if (versions.length < 2) {
     console.log('[PATCH] Need at least 2 versions to generate patches');
     return;
   }
-  
+
   console.log(`[PATCH] Found ${versions.length} versions: ${versions.join(', ')}`);
-  
+
   // Generate patches between consecutive versions
   for (let i = 0; i < versions.length - 1; i++) {
     const oldVersion = versions[i];
     const newVersion = versions[i + 1];
-    
+
     console.log(`\n[PATCH] Generating patches: ${oldVersion} → ${newVersion}`);
-    
+
     const oldDir = path.join(releasesDir, oldVersion);
     const newDir = path.join(releasesDir, newVersion);
     const patchesDir = path.join(releasesDir, newVersion, 'patches');
-    
+
     const results = await generatePatches(oldDir, newDir, patchesDir);
-    
+
     console.log(`[PATCH] Generated ${results.generated.length} patches`);
     console.log(`[PATCH] Skipped ${results.skipped.length} files`);
     console.log(`[PATCH] Total savings: ${formatBytes(results.totalSavings)}`);
-    
+
     // Save patch manifest
     const manifest = {
       fromVersion: oldVersion,
@@ -311,7 +316,7 @@ async function generateAllPatches(releasesDir) {
       totalSavings: results.totalSavings,
       totalOriginalSize: results.totalOriginalSize
     };
-    
+
     fs.writeFileSync(
       path.join(patchesDir, 'patch-manifest.json'),
       JSON.stringify(manifest, null, 2)

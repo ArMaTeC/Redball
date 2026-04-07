@@ -25,6 +25,12 @@ public class AnalyticsService : IAnalyticsService
     private static readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion);
     private AnalyticsData _data = new();
     private Timer? _flushTimer;
+    
+    // DEBOUNCE: Timer and tracking for high-frequency events
+    private readonly Dictionary<string, Timer> _debounceTimers = new();
+    private readonly Dictionary<string, int> _pendingEventCounts = new();
+    private const int DebounceMs = 250;
+    private readonly object _debounceLock = new();
 
     private readonly bool? _testEnabled;
     private bool IsEnabled => _testEnabled ?? ConfigService.Instance.Config.EnableTelemetry;
@@ -35,6 +41,64 @@ public class AnalyticsService : IAnalyticsService
         Load();
         // Auto-flush every 5 minutes
         _flushTimer = new Timer(_ => Flush(), null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+        
+        // PRIVACY: Clean up old analytics data on startup
+        CleanupOldData();
+    }
+    
+    /// <summary>
+    /// Removes analytics data older than the retention period (90 days default).
+    /// Implements GDPR/CCPA data minimization principles.
+    /// </summary>
+    private void CleanupOldData()
+    {
+        try
+        {
+            _lock.EnterWriteLock();
+            
+            var cutoffDate = DateTime.UtcNow.AddDays(-DataRetentionDays);
+            var cutoffKey = GetDayKey(cutoffDate);
+            var removedCount = 0;
+            
+            // Clean up feature usage history
+            foreach (var feature in _data.FeatureUsage.Values)
+            {
+                var keysToRemove = feature.DailyUsage.Keys
+                    .Where(k => string.Compare(k, cutoffKey, StringComparison.Ordinal) < 0)
+                    .ToList();
+                
+                foreach (var key in keysToRemove)
+                {
+                    feature.DailyUsage.Remove(key);
+                    removedCount++;
+                }
+            }
+            
+            // Clean up engagement history
+            var engagementKeysToRemove = _data.EngagementHistory.Keys
+                .Where(k => string.Compare(k, cutoffKey, StringComparison.Ordinal) < 0)
+                .ToList();
+            
+            foreach (var key in engagementKeysToRemove)
+            {
+                _data.EngagementHistory.Remove(key);
+                removedCount++;
+            }
+            
+            if (removedCount > 0)
+            {
+                Logger.Info("AnalyticsService", $"Cleaned up {removedCount} analytics entries older than {DataRetentionDays} days");
+                Flush();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("AnalyticsService", "Failed to cleanup old analytics data", ex);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
     }
 
     private static string GetFeatureCategory(string featureName)
@@ -132,11 +196,18 @@ public class AnalyticsService : IAnalyticsService
     }
 
     /// <summary>
-    /// Track a feature usage event
+    /// Track a feature usage event with automatic debouncing for high-frequency events.
     /// </summary>
     public void TrackFeature(string featureName, string? context = null)
     {
         if (!IsEnabled) return;
+
+        // DEBOUNCE: High-frequency events (scroll, resize, mouse) are debounced
+        if (IsHighFrequencyEvent(featureName))
+        {
+            TrackFeatureDebounced(featureName, context);
+            return;
+        }
 
         _lock.EnterWriteLock();
         try
@@ -159,6 +230,81 @@ public class AnalyticsService : IAnalyticsService
         }
 
         Logger.Debug("Analytics", $"Tracked feature: {featureName}");
+    }
+
+    /// <summary>
+    /// Check if an event is high-frequency and should be debounced.
+    /// </summary>
+    private static bool IsHighFrequencyEvent(string featureName)
+    {
+        var highFreqPrefixes = new[] { "scroll.", "resize.", "mouse.move", "mouse.drag" };
+        return highFreqPrefixes.Any(prefix => featureName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Track high-frequency event with debouncing (250ms).
+    /// </summary>
+    private void TrackFeatureDebounced(string featureName, string? context)
+    {
+        lock (_debounceLock)
+        {
+            _pendingEventCounts[featureName] = _pendingEventCounts.GetValueOrDefault(featureName) + 1;
+
+            // Cancel existing timer if any
+            if (_debounceTimers.TryGetValue(featureName, out var existingTimer))
+            {
+                existingTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                existingTimer.Dispose();
+            }
+
+            // Create new timer
+            var timer = new Timer(_ =>
+            {
+                FlushDebouncedEvent(featureName, context);
+            }, null, DebounceMs, Timeout.Infinite);
+
+            _debounceTimers[featureName] = timer;
+        }
+    }
+
+    /// <summary>
+    /// Flush a debounced event after the delay period.
+    /// </summary>
+    private void FlushDebouncedEvent(string featureName, string? context)
+    {
+        int count;
+        lock (_debounceLock)
+        {
+            if (!_pendingEventCounts.TryGetValue(featureName, out count))
+                return;
+
+            _pendingEventCounts.Remove(featureName);
+            _debounceTimers.Remove(featureName);
+        }
+
+        if (count == 0) return;
+
+        _lock.EnterWriteLock();
+        try
+        {
+            var feature = _data.Features.GetValueOrDefault(featureName) ?? new FeatureStats();
+            var todayKey = GetDayKey(DateTime.UtcNow);
+            feature.UsageCount += count;
+            feature.LastUsed = DateTime.UtcNow;
+            feature.DailyUsage[todayKey] = feature.DailyUsage.GetValueOrDefault(todayKey) + count;
+            if (context != null)
+            {
+                feature.Contexts[context] = feature.Contexts.GetValueOrDefault(context) + count;
+            }
+            _data.Features[featureName] = feature;
+            _data.LastUpdated = DateTime.UtcNow;
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+
+        Logger.Debug("Analytics", $"Tracked debounced feature: {featureName} (count: {count})");
     }
 
     /// <summary>
@@ -611,6 +757,17 @@ public class AnalyticsService : IAnalyticsService
 
         _flushTimer?.Dispose();
         _flushTimer = null;
+
+        // Dispose all debounce timers
+        lock (_debounceLock)
+        {
+            foreach (var timer in _debounceTimers.Values)
+            {
+                timer?.Dispose();
+            }
+            _debounceTimers.Clear();
+            _pendingEventCounts.Clear();
+        }
 
         Flush();
 

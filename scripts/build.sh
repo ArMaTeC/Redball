@@ -43,6 +43,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DIST_DIR="$PROJECT_ROOT/dist"
 UPDATE_SERVER_DIR="$PROJECT_ROOT/update-server"
+BUILD_LOG="$PROJECT_ROOT/build.log"
+BUILD_START_TIME=$(date +%s)
 
 # Colors
 RED='\033[0;31m'
@@ -52,15 +54,43 @@ CYAN='\033[0;36m'
 BLUE='\033[0;34m'
 MAGENTA='\033[0;35m'
 GRAY='\033[0;90m'
+BOLD='\033[1m'
 NC='\033[0m'
 
-# Logging
-log_step()    { echo -e "${CYAN}[STEP]${NC} $1"; }
-log_success() { echo -e "${GREEN}[OK]${NC} $1"; }
-log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error()   { echo -e "${RED}[ERROR]${NC} $1"; }
-log_info()    { echo -e "${BLUE}[INFO]${NC} $1"; }
-log_debug()   { echo -e "${GRAY}[DEBUG]${NC} $1"; }
+# Timestamp helper
+timestamp() { date '+%Y-%m-%d %H:%M:%S'; }
+elapsed() {
+    local now=$(date +%s)
+    local diff=$((now - BUILD_START_TIME))
+    printf '%dm%02ds' $((diff/60)) $((diff%60))
+}
+
+# Logging — every message also appended to build.log (without color codes)
+log_step()    { echo -e "${CYAN}[STEP $(timestamp)]${NC} ${BOLD}$1${NC}";   echo "[STEP $(timestamp)] $1" >> "$BUILD_LOG"; }
+log_success() { echo -e "${GREEN}[  OK $(timestamp)]${NC} $1";              echo "[  OK $(timestamp)] $1" >> "$BUILD_LOG"; }
+log_warn()    { echo -e "${YELLOW}[WARN $(timestamp)]${NC} $1";             echo "[WARN $(timestamp)] $1" >> "$BUILD_LOG"; }
+log_error()   { echo -e "${RED}[ERROR $(timestamp)]${NC} $1";               echo "[ERROR $(timestamp)] $1" >> "$BUILD_LOG"; }
+log_info()    { echo -e "${BLUE}[INFO $(timestamp)]${NC} $1";               echo "[INFO $(timestamp)] $1" >> "$BUILD_LOG"; }
+log_debug()   { echo -e "${GRAY}[DEBUG $(timestamp)]${NC} $1";              echo "[DEBUG $(timestamp)] $1" >> "$BUILD_LOG"; }
+log_detail()  { echo -e "${GRAY}       ↳ $1${NC}";                           echo "       ↳ $1" >> "$BUILD_LOG"; }
+
+# Error trap — catches any unexpected failure with file:line info
+trap_error() {
+    local exit_code=$?
+    local line_no=$1
+    log_error "Unexpected failure at line $line_no (exit code: $exit_code)"
+    log_error "Last command: ${BASH_COMMAND}"
+    log_error "Build log saved to: $BUILD_LOG"
+    log_error "Elapsed: $(elapsed)"
+    exit $exit_code
+}
+trap 'trap_error $LINENO' ERR
+
+# Initialize build log
+: > "$BUILD_LOG"
+echo "=== Redball Build Log — $(timestamp) ===" >> "$BUILD_LOG"
+echo "Script: $0 $*" >> "$BUILD_LOG"
+echo "" >> "$BUILD_LOG"
 
 # Default values
 COMMAND=""
@@ -69,6 +99,7 @@ VERSION=""
 SKIP_WINDOWS=false
 SKIP_LINUX=false
 DRY_RUN=false
+VERBOSE=true  # always verbose now
 
 # === Parse Arguments ===
 while [[ $# -gt 0 ]]; do
@@ -117,9 +148,15 @@ done
 
 # Check if update-server is running
 check_server_running() {
-    if curl -s http://localhost:3500/api/releases >/dev/null 2>&1; then
+    log_debug "Checking if update-server is running on http://localhost:3500 ..."
+    if curl -s --connect-timeout 3 http://localhost:3500/api/health 2>/dev/null | grep -q 'healthy'; then
+        log_debug "Server health check passed"
+        return 0
+    elif curl -s --connect-timeout 3 http://localhost:3500/api/releases >/dev/null 2>&1; then
+        log_debug "Server /api/releases responded"
         return 0
     else
+        log_debug "Server not responding"
         return 1
     fi
 }
@@ -133,76 +170,130 @@ start_server_background() {
         return 0
     fi
     
-    cd "$UPDATE_SERVER_DIR"
+    log_debug "update-server directory: $UPDATE_SERVER_DIR"
+    log_debug "Checking for node_modules..."
     
     # Install dependencies if needed
-    if [[ ! -d "node_modules" ]]; then
+    if [[ ! -d "$UPDATE_SERVER_DIR/node_modules" ]]; then
         log_info "Installing npm dependencies..."
-        npm install --silent
+        log_debug "Running: npm install in $UPDATE_SERVER_DIR"
+        npm install --prefix "$UPDATE_SERVER_DIR" 2>&1 | while IFS= read -r line; do log_detail "npm: $line"; done
+        log_success "npm install completed"
+    else
+        log_debug "node_modules already exists"
+    fi
+    
+    # Kill any existing server on port 3500
+    local existing_pid
+    existing_pid=$(lsof -ti:3500 2>/dev/null || true)
+    if [[ -n "$existing_pid" ]]; then
+        log_warn "Killing existing process on port 3500 (PID: $existing_pid)"
+        kill -9 $existing_pid 2>/dev/null || true
+        sleep 1
     fi
     
     # Start server in background
-    nohup npm start > /tmp/update-server.log 2>&1 &
+    log_debug "Starting: node server.js in $UPDATE_SERVER_DIR"
+    nohup node "$UPDATE_SERVER_DIR/server.js" > /tmp/update-server.log 2>&1 &
+    local server_pid=$!
+    log_debug "Server process started with PID: $server_pid"
     
     # Wait for server to be ready
     local retries=30
+    log_debug "Waiting up to 30s for server to become ready..."
     while [[ $retries -gt 0 ]]; do
-        if curl -s http://localhost:3500/api/releases >/dev/null 2>&1; then
-            log_success "Update-server started on http://localhost:3500"
+        if curl -s --connect-timeout 2 http://localhost:3500/api/health 2>/dev/null | grep -q 'healthy'; then
+            log_success "Update-server started on http://localhost:3500 (PID: $server_pid)"
             return 0
         fi
         sleep 1
         ((retries--))
+        # Check if process is still alive
+        if ! kill -0 $server_pid 2>/dev/null; then
+            log_error "Server process died! Check /tmp/update-server.log"
+            log_error "Last 20 lines of server log:"
+            tail -20 /tmp/update-server.log 2>/dev/null | while IFS= read -r line; do log_detail "$line"; done
+            return 1
+        fi
     done
     
-    log_error "Failed to start update-server"
+    log_error "Server started but not responding after 30s"
+    log_error "Last 20 lines of server log:"
+    tail -20 /tmp/update-server.log 2>/dev/null | while IFS= read -r line; do log_detail "$line"; done
     return 1
 }
 
 # Full auto-release workflow
 auto_release() {
-    log_step "Starting FULL AUTO-RELEASE workflow..."
-    log_info "Channel: $CHANNEL | Current Version: $(get_version)"
+    log_step "========================================"
+    log_step "Starting FULL AUTO-RELEASE workflow"
+    log_step "========================================"
+    log_info "Channel:  $CHANNEL"
+    log_info "Version:  $(get_version)"
+    log_info "Host:     $(hostname)"
+    log_info "User:     $(whoami)"
+    log_info "OS:       $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d'"' -f2 || uname -s)"
+    log_info "Node:     $(node --version 2>/dev/null || echo 'NOT FOUND')"
+    log_info "Wine:     $(wine --version 2>/dev/null || echo 'NOT FOUND')"
+    log_info "Git:      $(git --version 2>/dev/null | head -1 || echo 'NOT FOUND')"
+    log_info ".NET SDK: $(/usr/share/dotnet/dotnet --version 2>/dev/null || echo 'NOT FOUND')"
+    log_info "Build log: $BUILD_LOG"
     echo ""
     
     local start_time=$(date +%s)
     
     # 0. Auto-increment version number
-    log_step "Auto-incrementing version number..."
+    log_step "Phase 0: Auto-incrementing version number..."
+    log_debug "Looking for bump script at: $SCRIPT_DIR/linux/bump-version.sh"
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would bump patch version"
     else
         if [[ -f "$SCRIPT_DIR/linux/bump-version.sh" ]]; then
-            "$SCRIPT_DIR/linux/bump-version.sh" --patch --commit
+            log_debug "Running: bump-version.sh --patch --commit"
+            "$SCRIPT_DIR/linux/bump-version.sh" --patch --commit 2>&1 | while IFS= read -r line; do log_detail "$line"; done
             log_success "Version bumped to: $(get_version)"
         else
-            log_warn "bump-version.sh not found, skipping version bump"
+            log_warn "bump-version.sh not found at $SCRIPT_DIR/linux/bump-version.sh, skipping version bump"
         fi
     fi
     
     # 1. Build all components
+    log_step "Phase 1: Building all components..."
     build_all
     
     # 1.5 Commit any pending changes to git
-    log_step "Committing changes to git..."
+    log_step "Phase 1.5: Committing changes to git..."
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would commit changes to git"
     else
-        # Check if there are changes to commit
-        if [[ -n $(git status --porcelain 2>/dev/null) ]]; then
+        log_debug "Checking git status..."
+        local changes
+        changes=$(git status --porcelain 2>/dev/null || true)
+        if [[ -n "$changes" ]]; then
+            log_debug "Uncommitted changes found:"
+            echo "$changes" | while IFS= read -r line; do log_detail "$line"; done
             git add -A
             git commit -m "Build release $(get_version)" || true
+            local branch
+            branch=$(git branch --show-current)
+            log_debug "Pushing to branch: $branch"
             # Push commit using gh CLI token (avoids HTTPS credential issues)
-            git push origin $(git branch --show-current) 2>/dev/null || \
-                git push "https://x-access-token:$(gh auth token)@github.com/$(gh repo view --json nameWithOwner -q .nameWithOwner).git" $(git branch --show-current)
-            log_success "Changes committed and pushed to git"
+            if git push origin "$branch" 2>/dev/null; then
+                log_success "Changes committed and pushed to git"
+            else
+                log_debug "Direct push failed, trying gh token approach"
+                local repo_url
+                repo_url="https://x-access-token:$(gh auth token)@github.com/$(gh repo view --json nameWithOwner -q .nameWithOwner).git"
+                git push "$repo_url" "$branch" 2>&1 | while IFS= read -r line; do log_detail "$line"; done
+                log_success "Changes committed and pushed via gh token"
+            fi
         else
             log_info "No changes to commit"
         fi
     fi
     
     # 2. Sign artifacts (placeholder - implement if needed)
-    log_step "Code signing..."
+    log_step "Phase 2: Code signing..."
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would sign artifacts"
     else
@@ -210,37 +301,44 @@ auto_release() {
     fi
     
     # 3. Build website
+    log_step "Phase 3: Building website..."
     build_website
     
     # 4. Check if update-server is running, start if not
+    log_step "Phase 4: Ensuring update-server is running..."
     if check_server_running; then
         log_success "Update-server is already running on http://localhost:3500"
     else
+        log_info "Update-server not running, starting it..."
         start_server_background
     fi
     
     # 5. Publish to update-server
-    log_step "Publishing to update-server..."
+    log_step "Phase 5: Publishing to update-server..."
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would publish to update-server"
     else
-        # Enable auto-publish to update-server
         export PUBLISH_TO_UPDATE_SERVER=1
         if [[ -f "$SCRIPT_DIR/linux/release.sh" ]]; then
-            "$SCRIPT_DIR/linux/release.sh" -v "$(get_version)" --channel "$CHANNEL" --skip-release
+            log_debug "Running: release.sh -v $(get_version) --channel $CHANNEL --skip-release"
+            "$SCRIPT_DIR/linux/release.sh" -v "$(get_version)" --channel "$CHANNEL" --skip-release 2>&1 | while IFS= read -r line; do log_detail "$line"; done
+            log_success "Published to update-server"
+        else
+            log_warn "release.sh not found at $SCRIPT_DIR/linux/release.sh"
         fi
     fi
     
     # 5.5 Generate delta patches for differential updates
-    log_step "Generating delta patches..."
+    log_step "Phase 5.5: Generating delta patches..."
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would generate delta patches"
     else
         local patch_script="$UPDATE_SERVER_DIR/scripts/generate-patches.js"
+        log_debug "Looking for patch script at: $patch_script"
         if [[ -f "$patch_script" ]]; then
-            cd "$UPDATE_SERVER_DIR"
-            node "$patch_script" 2>&1 | while read line; do
-                log_info "  $line"
+            log_debug "Running: node $patch_script"
+            node "$patch_script" 2>&1 | while IFS= read -r line; do
+                log_detail "$line"
             done
             log_success "Delta patches generated"
         else
@@ -249,13 +347,16 @@ auto_release() {
     fi
     
     # 6. Publish to GitHub
-    log_step "Publishing to GitHub..."
+    log_step "Phase 6: Publishing to GitHub..."
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would create GitHub release"
     else
         if [[ -f "$SCRIPT_DIR/linux/release.sh" ]]; then
-            # Pass --allow-dirty since build artifacts don't need to be committed
-            "$SCRIPT_DIR/linux/release.sh" -v "$(get_version)" --channel "$CHANNEL" --allow-dirty
+            log_debug "Running: release.sh -v $(get_version) --channel $CHANNEL --allow-dirty"
+            "$SCRIPT_DIR/linux/release.sh" -v "$(get_version)" --channel "$CHANNEL" --allow-dirty 2>&1 | while IFS= read -r line; do log_detail "$line"; done
+            log_success "Published to GitHub"
+        else
+            log_warn "release.sh not found at $SCRIPT_DIR/linux/release.sh"
         fi
     fi
     
@@ -291,22 +392,66 @@ get_version() {
     
     if [[ -f "$SCRIPT_DIR/version.txt" ]]; then
         cat "$SCRIPT_DIR/version.txt" | tr -d '[:space:]'
+    elif [[ -f "$PROJECT_ROOT/Directory.Build.props" ]]; then
+        grep -oP '<Version>\K[0-9]+\.[0-9]+\.[0-9]+' "$PROJECT_ROOT/Directory.Build.props" || echo "0.0.0"
     else
-        echo "2.1.19"
+        echo "0.0.0"
     fi
 }
 
 check_dependencies() {
+    log_step "Checking build dependencies..."
     local missing=()
+    local found=()
     
-    # Check for node/npm (update-server)
-    if ! command -v node &>/dev/null; then
-        missing+=("node")
+    # Check each dependency
+    for dep in node npm wine makensis git gh curl zip; do
+        if command -v "$dep" &>/dev/null; then
+            local ver
+            case "$dep" in
+                node)     ver=$(node --version 2>/dev/null) ;;
+                npm)      ver=$(npm --version 2>/dev/null) ;;
+                wine)     ver=$(wine --version 2>/dev/null) ;;
+                makensis) ver=$(makensis -VERSION 2>/dev/null) ;;
+                git)      ver=$(git --version 2>/dev/null | awk '{print $3}') ;;
+                gh)       ver=$(gh --version 2>/dev/null | head -1 | awk '{print $3}') ;;
+                *)        ver="found" ;;
+            esac
+            found+=("$dep")
+            log_debug "  ✓ $dep ($ver)"
+        else
+            missing+=("$dep")
+            log_debug "  ✗ $dep (NOT FOUND)"
+        fi
+    done
+    
+    # Check .NET SDKs
+    if [[ -f "/usr/share/dotnet/dotnet" ]]; then
+        log_debug "  ✓ Linux .NET SDK ($(/usr/share/dotnet/dotnet --version 2>/dev/null))"
+    else
+        log_debug "  ✗ Linux .NET SDK (NOT FOUND at /usr/share/dotnet)"
+        missing+=("linux-dotnet")
+    fi
+    
+    if [[ -f "$HOME/.wine-dotnet/dotnet.exe" ]]; then
+        log_debug "  ✓ Wine .NET SDK (at $HOME/.wine-dotnet/dotnet.exe)"
+    else
+        log_debug "  ✗ Wine .NET SDK (NOT FOUND at $HOME/.wine-dotnet/dotnet.exe)"
+        missing+=("wine-dotnet")
+    fi
+    
+    # Check meson for linux build
+    if command -v meson &>/dev/null; then
+        log_debug "  ✓ meson ($(meson --version 2>/dev/null))"
+    else
+        log_debug "  ✗ meson (NOT FOUND — needed for Linux build)"
     fi
     
     if [[ ${#missing[@]} -gt 0 ]]; then
-        log_warn "Missing dependencies: ${missing[*]}"
-        log_info "Some build operations may fail"
+        log_warn "Missing optional dependencies: ${missing[*]}"
+        log_info "Some build operations may fail. Install missing tools as needed."
+    else
+        log_success "All dependencies present"
     fi
 }
 
@@ -314,43 +459,75 @@ check_dependencies() {
 
 build_windows() {
     log_step "Building Windows artifacts..."
+    local win_start=$(date +%s)
     
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would run: $SCRIPT_DIR/linux/build-windows-on-linux.sh"
         return 0
     fi
     
-    if [[ ! -f "$SCRIPT_DIR/linux/build-windows-on-linux.sh" ]]; then
-        log_error "Windows build script not found"
+    local win_script="$SCRIPT_DIR/linux/build-windows-on-linux.sh"
+    if [[ ! -f "$win_script" ]]; then
+        log_error "Windows build script not found at: $win_script"
         return 1
     fi
     
-    "$SCRIPT_DIR/linux/build-windows-on-linux.sh"
-    log_success "Windows build completed"
+    log_debug "Running: $win_script"
+    log_debug "Passing --skip-setup flag (setup should be done already)"
+    "$win_script" --skip-setup 2>&1 | while IFS= read -r line; do log_detail "$line"; done
+    local win_exit=${PIPESTATUS[0]}
+    
+    local win_end=$(date +%s)
+    local win_dur=$((win_end - win_start))
+    
+    if [[ $win_exit -eq 0 ]]; then
+        log_success "Windows build completed in ${win_dur}s"
+        # List produced artifacts
+        log_debug "Windows artifacts:"
+        ls -lh "$DIST_DIR"/*.exe "$DIST_DIR"/*.zip "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" 2>/dev/null | while IFS= read -r line; do log_detail "$line"; done
+    else
+        log_error "Windows build FAILED (exit code: $win_exit, took ${win_dur}s)"
+        return 1
+    fi
 }
 
 build_linux() {
     log_step "Building Linux artifacts..."
+    local lin_start=$(date +%s)
     
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would run: $SCRIPT_DIR/linux/build-linux.sh -a"
         return 0
     fi
     
-    if [[ ! -f "$SCRIPT_DIR/linux/build-linux.sh" ]]; then
-        log_error "Linux build script not found"
+    local lin_script="$SCRIPT_DIR/linux/build-linux.sh"
+    if [[ ! -f "$lin_script" ]]; then
+        log_error "Linux build script not found at: $lin_script"
         return 1
     fi
     
-    "$SCRIPT_DIR/linux/build-linux.sh" -a
-    log_success "Linux build completed"
+    log_debug "Running: $lin_script -a"
+    "$lin_script" -a 2>&1 | while IFS= read -r line; do log_detail "$line"; done
+    local lin_exit=${PIPESTATUS[0]}
+    
+    local lin_end=$(date +%s)
+    local lin_dur=$((lin_end - lin_start))
+    
+    if [[ $lin_exit -eq 0 ]]; then
+        log_success "Linux build completed in ${lin_dur}s"
+        log_debug "Linux artifacts:"
+        ls -lh "$DIST_DIR/linux"/ 2>/dev/null | while IFS= read -r line; do log_detail "$line"; done
+    else
+        log_error "Linux build FAILED (exit code: $lin_exit, took ${lin_dur}s)"
+        return 1
+    fi
 }
 
 build_update_server() {
     log_step "Building update-server..."
     
     if [[ ! -d "$UPDATE_SERVER_DIR" ]]; then
-        log_error "Update server directory not found"
+        log_error "Update server directory not found at: $UPDATE_SERVER_DIR"
         return 1
     fi
     
@@ -359,17 +536,36 @@ build_update_server() {
         return 0
     fi
     
-    cd "$UPDATE_SERVER_DIR"
+    log_debug "Update server dir: $UPDATE_SERVER_DIR"
+    log_debug "package.json exists: $(test -f "$UPDATE_SERVER_DIR/package.json" && echo 'yes' || echo 'NO')"
     
     # Install dependencies if needed
-    if [[ ! -d "node_modules" ]]; then
+    if [[ ! -d "$UPDATE_SERVER_DIR/node_modules" ]]; then
         log_info "Installing npm dependencies..."
-        npm install --silent
+        npm install --prefix "$UPDATE_SERVER_DIR" 2>&1 | while IFS= read -r line; do log_detail "npm: $line"; done
+    else
+        local pkg_count
+        pkg_count=$(ls -1 "$UPDATE_SERVER_DIR/node_modules" 2>/dev/null | wc -l)
+        log_debug "node_modules already exists ($pkg_count packages)"
     fi
     
-    # Validate server.js
-    log_info "Validating server..."
-    npm run build
+    # Validate server.js syntax
+    log_info "Validating server.js syntax..."
+    if node -c "$UPDATE_SERVER_DIR/server.js" 2>&1; then
+        log_success "server.js syntax is valid"
+    else
+        log_error "server.js has syntax errors!"
+        return 1
+    fi
+    
+    # Check required files
+    for f in server.js package.json public/index.html; do
+        if [[ -f "$UPDATE_SERVER_DIR/$f" ]]; then
+            log_debug "  ✓ $f exists"
+        else
+            log_warn "  ✗ $f MISSING"
+        fi
+    done
     
     log_success "Update server ready"
 }
@@ -389,37 +585,72 @@ build_website() {
         return 0
     fi
     
+    local size
+    size=$(du -h "$website_file" | cut -f1)
+    log_debug "Website file: $website_file ($size)"
+    
     # Validate HTML (basic check)
     if grep -q "TypeThing" "$website_file"; then
         log_success "Website validated: $website_file"
     else
-        log_warn "Website may need updates"
+        log_warn "Website may need updates (TypeThing keyword not found)"
     fi
+    
+    # Check for required assets
+    local public_dir="$UPDATE_SERVER_DIR/public"
+    local asset_count
+    asset_count=$(find "$public_dir" -type f 2>/dev/null | wc -l)
+    log_debug "Public directory has $asset_count files"
 }
 
 build_all() {
     log_step "Building all components..."
     
     local start_time=$(date +%s)
+    local failed=()
     
     # Build update server first (needed for publishing)
-    build_update_server
+    log_info "[1/4] Update Server"
+    if build_update_server; then
+        log_success "[1/4] Update Server ✓"
+    else
+        log_error "[1/4] Update Server FAILED"
+        failed+=("update-server")
+    fi
     
     # Build website
-    build_website
+    log_info "[2/4] Website"
+    if build_website; then
+        log_success "[2/4] Website ✓"
+    else
+        log_error "[2/4] Website FAILED"
+        failed+=("website")
+    fi
     
     # Build Windows if not skipped
     if [[ $SKIP_WINDOWS == false ]]; then
-        build_windows
+        log_info "[3/4] Windows"
+        if build_windows; then
+            log_success "[3/4] Windows ✓"
+        else
+            log_error "[3/4] Windows FAILED"
+            failed+=("windows")
+        fi
     else
-        log_info "Skipping Windows build (--skip-windows)"
+        log_info "[3/4] Windows — SKIPPED (--skip-windows)"
     fi
     
     # Build Linux if not skipped
     if [[ $SKIP_LINUX == false ]]; then
-        build_linux
+        log_info "[4/4] Linux"
+        if build_linux; then
+            log_success "[4/4] Linux ✓"
+        else
+            log_error "[4/4] Linux FAILED"
+            failed+=("linux")
+        fi
     else
-        log_info "Skipping Linux build (--skip-linux)"
+        log_info "[4/4] Linux — SKIPPED (--skip-linux)"
     fi
     
     local end_time=$(date +%s)
@@ -428,11 +659,21 @@ build_all() {
     local seconds=$((duration % 60))
     
     echo ""
-    echo "  ╔══════════════════════════════════════════════════╗"
-    echo "  ║  BUILD COMPLETED                                 ║"
-    echo "  ╚══════════════════════════════════════════════════╝"
-    echo ""
-    echo "  Duration: ${minutes}m ${seconds}s"
+    if [[ ${#failed[@]} -gt 0 ]]; then
+        echo "  ╔══════════════════════════════════════════════════╗"
+        echo "  ║  BUILD COMPLETED WITH ERRORS                     ║"
+        echo "  ╚══════════════════════════════════════════════════╝"
+        echo ""
+        echo "  Duration: ${minutes}m ${seconds}s"
+        echo "  Failed:   ${failed[*]}"
+        log_error "${#failed[@]} component(s) failed: ${failed[*]}"
+    else
+        echo "  ╔══════════════════════════════════════════════════╗"
+        echo "  ║  BUILD COMPLETED SUCCESSFULLY                    ║"
+        echo "  ╚══════════════════════════════════════════════════╝"
+        echo ""
+        echo "  Duration: ${minutes}m ${seconds}s"
+    fi
     echo ""
 }
 
@@ -486,23 +727,21 @@ serve_update_server() {
     log_step "Starting update-server..."
     
     if [[ ! -d "$UPDATE_SERVER_DIR" ]]; then
-        log_error "Update server directory not found"
+        log_error "Update server directory not found at: $UPDATE_SERVER_DIR"
         return 1
     fi
     
-    cd "$UPDATE_SERVER_DIR"
-    
     # Ensure dependencies are installed
-    if [[ ! -d "node_modules" ]]; then
+    if [[ ! -d "$UPDATE_SERVER_DIR/node_modules" ]]; then
         log_info "Installing npm dependencies..."
-        npm install --silent
+        npm install --prefix "$UPDATE_SERVER_DIR" 2>&1 | while IFS= read -r line; do log_detail "npm: $line"; done
     fi
     
     log_info "Server starting on http://localhost:3500"
     log_info "Press Ctrl+C to stop"
     echo ""
     
-    npm start
+    node "$UPDATE_SERVER_DIR/server.js"
 }
 
 show_status() {
@@ -585,12 +824,22 @@ main() {
     echo "  ╚══════════════════════════════════════════════════╝"
     echo ""
     
+    log_debug "Script:       $0"
+    log_debug "Arguments:    $COMMAND ${CHANNEL:+--channel $CHANNEL} ${VERSION:+--version $VERSION}"
+    log_debug "Project root: $PROJECT_ROOT"
+    log_debug "Dist dir:     $DIST_DIR"
+    log_debug "Server dir:   $UPDATE_SERVER_DIR"
+    log_debug "Build log:    $BUILD_LOG"
+    echo ""
+    
     # Default to 'auto-release' if no command specified (builds + publishes everything)
     if [[ -z "$COMMAND" ]]; then
         COMMAND="auto-release"
         log_info "No command specified, running FULL AUTO-RELEASE workflow"
         echo ""
     fi
+    
+    log_info "Command: $COMMAND"
     
     if [[ $DRY_RUN == true ]]; then
         log_warn "DRY RUN MODE - no changes will be made"

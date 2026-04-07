@@ -412,7 +412,7 @@ public class AdminPolicy
 {
     public string PolicyName { get; set; } = "Default Policy";
     public string? OrganizationName { get; set; }
-    public bool AllowUserOverrides { get; set; } = true;
+    public bool AllowUserOverrides { get; set; } = false;
     
     // Feature requirements
     public bool RequireBatteryAware { get; set; }

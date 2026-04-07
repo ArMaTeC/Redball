@@ -3,8 +3,50 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 
 namespace Redball.UI.Services;
+
+/// <summary>
+/// Custom AssemblyLoadContext for plugin isolation and unloadability.
+/// </summary>
+public class PluginLoadContext : AssemblyLoadContext
+{
+    private readonly AssemblyDependencyResolver _resolver;
+
+    public PluginLoadContext(string pluginPath) : base(isCollectible: true)
+    {
+        _resolver = new AssemblyDependencyResolver(pluginPath);
+    }
+
+    protected override Assembly? Load(AssemblyName assemblyName)
+    {
+        // Don't load Redball assemblies into plugin context - use default
+        if (assemblyName.Name?.StartsWith("Redball.") == true)
+        {
+            return null;
+        }
+
+        var assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
+        if (assemblyPath != null)
+        {
+            return LoadFromAssemblyPath(assemblyPath);
+        }
+
+        return null; // Fall back to default context
+    }
+
+    protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)
+    {
+        var libraryPath = _resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
+        if (libraryPath != null)
+        {
+            return LoadUnmanagedDllFromPath(libraryPath);
+        }
+
+        return IntPtr.Zero;
+    }
+}
 
 /// <summary>
 /// Manages loading and executing Redball plugins from DLLs in the Plugins folder.
@@ -16,6 +58,7 @@ public class PluginService
     public static PluginService Instance => _instance.Value;
 
     private readonly List<IRedballPlugin> _plugins = new();
+    private readonly List<PluginLoadContext> _loadContexts = new();
     private readonly string _pluginsDir;
 
     public IReadOnlyList<IRedballPlugin> LoadedPlugins => _plugins;
@@ -33,10 +76,12 @@ public class PluginService
 
     /// <summary>
     /// Scans the plugins directory for DLLs containing IRedballPlugin implementations and loads them.
+    /// Uses AssemblyLoadContext for isolation and unloadability.
     /// </summary>
     public void LoadPlugins()
     {
-        _plugins.Clear();
+        // Unload existing plugins first
+        UnloadAll();
 
         try
         {
@@ -47,7 +92,11 @@ public class PluginService
             {
                 try
                 {
-                    var assembly = Assembly.LoadFrom(dll);
+                    // Create isolated load context for each plugin
+                    var loadContext = new PluginLoadContext(dll);
+                    _loadContexts.Add(loadContext);
+
+                    var assembly = loadContext.LoadFromAssemblyPath(dll);
                     var pluginTypes = assembly.GetTypes()
                         .Where(t => typeof(IRedballPlugin).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
 
@@ -106,7 +155,27 @@ public class PluginService
             catch (Exception ex) { Logger.Error("PluginService", $"Plugin {plugin.Name} OnUnload failed", ex); }
         }
         _plugins.Clear();
-        Logger.Info("PluginService", "All plugins unloaded");
+
+        // Unload all AssemblyLoadContexts
+        foreach (var context in _loadContexts)
+        {
+            try
+            {
+                context.Unload();
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning("PluginService", $"Failed to unload plugin context: {ex.Message}");
+            }
+        }
+        _loadContexts.Clear();
+
+        // Force garbage collection to complete unloading
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        Logger.Info("PluginService", "All plugins unloaded and contexts disposed");
     }
 
     public string GetStatusText()

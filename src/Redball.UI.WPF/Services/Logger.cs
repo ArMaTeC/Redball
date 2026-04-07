@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -26,6 +27,10 @@ public static class Logger
     private static Channel<string>? _channel;
     private static Task? _writerTask;
     private static readonly CancellationTokenSource _cts = new();
+
+    // Windows Event Log integration for service-tier logging
+    private static EventLog? _eventLog;
+    private static bool _eventLogEnabled = false;
 
     public static string LogPath => _logPath;
 
@@ -71,6 +76,9 @@ public static class Logger
                 _channel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions { SingleReader = true });
                 _writerTask = Task.Run(() => BackgroundWriterAsync(_cts.Token));
 
+                // Initialize Windows Event Log for service-tier logging
+                InitializeEventLog();
+
                 _initialized = true;
             }
             catch (Exception ex)
@@ -84,6 +92,72 @@ public static class Logger
                 }
                 catch { /* Silent fail - we tried */ }
             }
+        }
+    }
+
+    /// <summary>
+    /// Initialize Windows Event Log integration for service-tier logging.
+    /// </summary>
+    private static void InitializeEventLog()
+    {
+        try
+        {
+            const string sourceName = "Redball";
+            const string logName = "Application";
+
+            // Create event source if it doesn't exist (requires admin rights)
+            if (!EventLog.SourceExists(sourceName))
+            {
+                EventLog.CreateEventSource(sourceName, logName);
+            }
+
+            _eventLog = new EventLog(logName)
+            {
+                Source = sourceName
+            };
+            _eventLogEnabled = true;
+        }
+        catch (Exception ex)
+        {
+            // Event Log access may require elevated privileges
+            _eventLogEnabled = false;
+            Debug.WriteLine($"[Logger] Event Log initialization failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Write a log entry to Windows Event Log (for Error and Fatal levels).
+    /// </summary>
+    private static void WriteToEventLog(string level, string component, string message)
+    {
+        if (!_eventLogEnabled || _eventLog == null) return;
+
+        try
+        {
+            var eventType = level switch
+            {
+                "ERR" => EventLogEntryType.Error,
+                "FTL" => EventLogEntryType.Error,
+                "WRN" => EventLogEntryType.Warning,
+                _ => EventLogEntryType.Information
+            };
+
+            // Only write Error, Fatal, and Warning to Event Log to avoid spam
+            if (level is "ERR" or "FTL" or "WRN")
+            {
+                var eventMessage = $"[{component}] {message}";
+                // Truncate if too long (Event Log has ~31KB limit)
+                if (eventMessage.Length > 30000)
+                {
+                    eventMessage = eventMessage[..30000] + "... (truncated)";
+                }
+                _eventLog.WriteEntry(eventMessage, eventType);
+            }
+        }
+        catch
+        {
+            // Silently fail - Event Log is best-effort
+            _eventLogEnabled = false;
         }
     }
 
@@ -455,6 +529,9 @@ public static class Logger
               .Append(component).Append("] ").AppendLine(line);
         }
         var formatted = sb.ToString();
+
+        // Also write to Windows Event Log for service-tier visibility
+        WriteToEventLog(level, component, redacted);
 
         // Enqueue to async channel if available; fall back to synchronous write
         if (_channel != null && _channel.Writer.TryWrite(formatted))

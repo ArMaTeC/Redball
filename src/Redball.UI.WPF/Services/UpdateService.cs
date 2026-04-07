@@ -1598,6 +1598,7 @@ public class UpdateService : IUpdateService
             sb.AppendLine();
             sb.AppendLine("    Remove-Item -Path (Split-Path -Parent $sourceDir) -Recurse -Force -ErrorAction SilentlyContinue");
             sb.AppendLine("    Remove-Item -Path $PSCommandPath -Force -ErrorAction SilentlyContinue");
+            sb.AppendLine("    exit 0");
             sb.AppendLine("}");
             sb.AppendLine("catch {");
             sb.AppendLine("    $errorText = ($_ | Out-String)");
@@ -1680,6 +1681,7 @@ if (Test-Path $appPath) {{
 
 Remove-Item -Path '{packageDir.Replace("'", "''")}' -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -Path $PSCommandPath -Force -ErrorAction SilentlyContinue
+exit 0
 ";
 
             File.WriteAllText(scriptPath, script);

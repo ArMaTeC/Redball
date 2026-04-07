@@ -34,12 +34,37 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
+BLUE='\033[0;34m'
+GRAY='\033[0;90m'
+BOLD='\033[1m'
 NC='\033[0m'
 
-log_step()    { echo -e "${CYAN}[STEP]${NC} $1"; }
-log_success() { echo -e "${GREEN}[OK]${NC} $1"; }
-log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error()   { echo -e "${RED}[ERROR]${NC} $1"; }
+WIN_BUILD_START=$(date +%s)
+timestamp() { date '+%Y-%m-%d %H:%M:%S'; }
+elapsed_win() {
+    local now=$(date +%s)
+    local diff=$((now - WIN_BUILD_START))
+    printf '%dm%02ds' $((diff/60)) $((diff%60))
+}
+
+log_step()    { echo -e "${CYAN}[STEP $(timestamp)]${NC} ${BOLD}$1${NC}"; }
+log_success() { echo -e "${GREEN}[  OK $(timestamp)]${NC} $1"; }
+log_warn()    { echo -e "${YELLOW}[WARN $(timestamp)]${NC} $1"; }
+log_error()   { echo -e "${RED}[ERROR $(timestamp)]${NC} $1"; }
+log_info()    { echo -e "${BLUE}[INFO $(timestamp)]${NC} $1"; }
+log_debug()   { echo -e "${GRAY}[DEBUG $(timestamp)]${NC} $1"; }
+log_detail()  { echo -e "${GRAY}       ↳ $1${NC}"; }
+
+# Error trap for this script
+trap_win_error() {
+    local exit_code=$?
+    local line_no=$1
+    log_error "Build failed at line $line_no (exit code: $exit_code)"
+    log_error "Last command: ${BASH_COMMAND}"
+    log_error "Elapsed: $(elapsed_win)"
+    exit $exit_code
+}
+trap 'trap_win_error $LINENO' ERR
 
 # === Parse Arguments ===
 SETUP_ONLY=false
@@ -74,14 +99,22 @@ done
 
 # === Helper: Run dotnet via Wine (for build/publish — Windows SDK required) ===
 wine_dotnet() {
+    log_debug "wine_dotnet: wine $WINE_DOTNET_ROOT/dotnet.exe $*"
     WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all \
         wine "$WINE_DOTNET_ROOT/dotnet.exe" "$@"
+    local rc=$?
+    log_debug "wine_dotnet: exit code $rc"
+    return $rc
 }
 
 # === Helper: Run native Linux dotnet (for restore — bypasses Wine cert issues) ===
 linux_dotnet() {
+    log_debug "linux_dotnet: $LINUX_DOTNET_ROOT/dotnet $*"
     DOTNET_NUGET_SIGNATURE_VERIFICATION=false \
         "$LINUX_DOTNET_ROOT/dotnet" "$@"
+    local rc=$?
+    log_debug "linux_dotnet: exit code $rc"
+    return $rc
 }
 
 # === Clean ===
@@ -268,23 +301,40 @@ setup_all() {
 # === Build: Restore NuGet Packages (via Linux .NET SDK — avoids Wine cert issues) ===
 step_restore() {
     log_step "Restoring NuGet packages (Linux .NET SDK)..."
+    local restore_start=$(date +%s)
+    
+    log_debug "Solution: $PROJECT_ROOT/Redball.v3.sln"
+    log_debug "Linux .NET version: $(/usr/share/dotnet/dotnet --version 2>/dev/null || echo 'unknown')"
+    log_debug "DOTNET_NUGET_SIGNATURE_VERIFICATION=false"
+    log_debug "EnableWindowsTargeting=true"
+    
     linux_dotnet restore "$PROJECT_ROOT/Redball.v3.sln" \
         --verbosity minimal \
         -p:EnableWindowsTargeting=true
+    log_success "Solution packages restored"
 
     # Also restore with win-x64 runtime packs (needed for self-contained Service publish)
     log_step "Restoring runtime packs for win-x64..."
+    log_debug "Project: $PROJECT_ROOT/src/Redball.Service/Redball.Service.csproj"
     linux_dotnet restore "$PROJECT_ROOT/src/Redball.Service/Redball.Service.csproj" \
         --verbosity minimal \
         -p:EnableWindowsTargeting=true \
         --runtime win-x64
 
-    log_success "Packages restored"
+    local restore_end=$(date +%s)
+    log_success "All packages restored ($(( restore_end - restore_start ))s)"
 }
 
 # === Build: WPF Application ===
 step_build_wpf() {
     log_step "Building WPF Application ($CONFIGURATION)..."
+    local wpf_start=$(date +%s)
+    
+    log_debug "Configuration: $CONFIGURATION"
+    log_debug "Output dir:    $WPF_PUBLISH_DIR"
+    log_debug "Project:       $PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj"
+    log_debug "Wine prefix:   $WINE_PREFIX"
+    log_debug "Wine .NET:     $WINE_DOTNET_ROOT/dotnet.exe"
 
     mkdir -p "$WPF_PUBLISH_DIR"
 
@@ -297,7 +347,9 @@ step_build_wpf() {
         -p:PublishTrimmed=false \
         --no-restore
 
-    log_success "WPF application published to $WPF_PUBLISH_DIR"
+    local wpf_end=$(date +%s)
+    log_success "WPF application published to $WPF_PUBLISH_DIR ($(( wpf_end - wpf_start ))s)"
+    log_debug "Published files: $(ls -1 "$WPF_PUBLISH_DIR" 2>/dev/null | wc -l) items"
 
     # Organize DLLs into dll/ subfolder (matches installer WXS structure)
     log_step "Organizing publish output..."
@@ -343,6 +395,8 @@ step_build_wpf() {
 # === Build: Service ===
 step_build_service() {
     log_step "Building Redball Service..."
+    local svc_start=$(date +%s)
+    log_debug "Project: $PROJECT_ROOT/src/Redball.Service/Redball.Service.csproj"
 
     local service_dir="$DIST_DIR/Redball.Service"
     mkdir -p "$service_dir"
@@ -363,7 +417,10 @@ step_build_service() {
         [[ -f "$f" ]] && cp "$f" "$WPF_PUBLISH_DIR/"
     done
 
-    log_success "Service built"
+    local svc_end=$(date +%s)
+    log_success "Service built ($(( svc_end - svc_start ))s)"
+    log_debug "Service files copied to WPF publish dir:"
+    ls -la "$WPF_PUBLISH_DIR"/Redball.Service* 2>/dev/null | while IFS= read -r line; do log_detail "$line"; done
 }
 
 # === Build: Custom Actions DLL ===
@@ -396,10 +453,13 @@ step_build_custom_actions() {
 step_build_nsis() {
     if ! command -v makensis &>/dev/null; then
         log_warn "NSIS not installed — install with: apt-get install nsis"
+        log_warn "NSIS version needed: 3.x"
         return 1
     fi
 
     log_step "Building NSIS Installer (Modern EXE with features)..."
+    local nsis_start=$(date +%s)
+    log_debug "NSIS version: $(makensis -VERSION 2>/dev/null)"
 
     # Read version
     local version
@@ -485,17 +545,20 @@ step_build_nsis() {
     local nsis_exit=$?
     popd > /dev/null
 
+    local nsis_end=$(date +%s)
+    
     if [[ $nsis_exit -eq 0 && -f "$WPF_PUBLISH_DIR/Redball-${version}-Setup.exe" ]]; then
         mv "$WPF_PUBLISH_DIR/Redball-${version}-Setup.exe" "$DIST_DIR/"
         cp "$DIST_DIR/Redball-${version}-Setup.exe" "$DIST_DIR/Redball-Setup.exe"
         local size
         size=$(du -h "$DIST_DIR/Redball-${version}-Setup.exe" | cut -f1)
-        log_success "NSIS Installer built: Redball-${version}-Setup.exe ($size)"
+        log_success "NSIS Installer built: Redball-${version}-Setup.exe ($size) in $(( nsis_end - nsis_start ))s"
         log_success "Features: Custom pages, auto-start, service install, shortcuts, .NET detection"
         generate_checksums
         return 0
     else
-        log_warn "NSIS build failed (exit: $nsis_exit)"
+        log_error "NSIS build failed (exit: $nsis_exit, took $(( nsis_end - nsis_start ))s)"
+        log_error "Check makensis output above for details"
         return 1
     fi
 }
@@ -614,6 +677,10 @@ main() {
     else
         ls -lh "$WPF_PUBLISH_DIR/Redball.UI.WPF.exe" "$DIST_DIR"/*.zip 2>/dev/null | awk '{print "    " $NF " (" $5 ")"}'
     fi
+    echo ""
+    
+    log_info "Full artifact listing:"
+    find "$DIST_DIR" -type f -exec ls -lh {} \; 2>/dev/null | while IFS= read -r line; do log_detail "$line"; done
     echo ""
 }
 

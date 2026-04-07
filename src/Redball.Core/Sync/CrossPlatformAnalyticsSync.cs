@@ -10,6 +10,7 @@ namespace Redball.Core.Sync;
 /// <summary>
 /// Cross-platform analytics synchronization service.
 /// Aggregates usage data across Windows, macOS, and Linux implementations.
+/// Requires explicit user consent before collecting any data.
 /// </summary>
 public class CrossPlatformAnalyticsSync
 {
@@ -17,14 +18,38 @@ public class CrossPlatformAnalyticsSync
     public static CrossPlatformAnalyticsSync Instance => _instance.Value;
 
     private readonly string _analyticsDirectory;
+    private readonly string _consentFilePath;
     private readonly JsonSerializerOptions _jsonOptions;
+    private bool _consentGranted;
+    private bool _consentConfigured;
 
     public event EventHandler<AnalyticsSyncEventArgs>? AnalyticsSynced;
+
+    /// <summary>
+    /// Whether the user has granted consent for analytics collection.
+    /// </summary>
+    public bool ConsentGranted
+    {
+        get => _consentGranted;
+        set
+        {
+            _consentGranted = value;
+            _consentConfigured = true;
+            SaveConsentConfiguration();
+        }
+    }
+
+    /// <summary>
+    /// Whether the user has made a consent decision (opt-in or opt-out).
+    /// If false, first-run consent dialog should be shown.
+    /// </summary>
+    public bool IsConsentConfigured => _consentConfigured;
 
     private CrossPlatformAnalyticsSync()
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         _analyticsDirectory = Path.Combine(appData, "Redball", "Analytics");
+        _consentFilePath = Path.Combine(appData, "Redball", "analytics_consent.json");
         
         _jsonOptions = new JsonSerializerOptions
         {
@@ -33,22 +58,106 @@ public class CrossPlatformAnalyticsSync
         };
 
         EnsureDirectoryExists();
+        LoadConsentConfiguration();
+    }
+
+    /// <summary>
+    /// Loads consent configuration from disk.
+    /// </summary>
+    private void LoadConsentConfiguration()
+    {
+        try
+        {
+            if (File.Exists(_consentFilePath))
+            {
+                var json = File.ReadAllText(_consentFilePath);
+                var config = JsonSerializer.Deserialize<AnalyticsConsentConfig>(json);
+                if (config != null)
+                {
+                    _consentGranted = config.ConsentGranted;
+                    _consentConfigured = config.ConsentConfigured;
+                }
+            }
+        }
+        catch
+        {
+            // If we can't read consent file, treat as unconfigured (require opt-in)
+            _consentGranted = false;
+            _consentConfigured = false;
+        }
+    }
+
+    /// <summary>
+    /// Persists consent configuration to disk.
+    /// </summary>
+    private void SaveConsentConfiguration()
+    {
+        try
+        {
+            var config = new AnalyticsConsentConfig
+            {
+                ConsentGranted = _consentGranted,
+                ConsentConfigured = _consentConfigured,
+                ConfiguredAt = DateTime.UtcNow
+            };
+            var json = JsonSerializer.Serialize(config, _jsonOptions);
+            File.WriteAllText(_consentFilePath, json);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("CrossPlatformAnalyticsSync", "Failed to save consent configuration", ex);
+        }
+    }
+
+    /// <summary>
+    /// Resets consent configuration (for testing or privacy resets).
+    /// </summary>
+    public void ResetConsent()
+    {
+        _consentGranted = false;
+        _consentConfigured = false;
+        try
+        {
+            if (File.Exists(_consentFilePath))
+            {
+                File.Delete(_consentFilePath);
+            }
+        }
+        catch { }
     }
 
     /// <summary>
     /// Records a cross-platform analytics event.
+    /// Only records if user has granted consent.
+    /// Applies aggressive sampling for high-frequency events.
     /// </summary>
     public async Task RecordEventAsync(string eventName, Dictionary<string, object>? properties = null, string? platform = null)
     {
+        // PRIVACY: Do not collect analytics without explicit user consent
+        if (!_consentGranted)
+        {
+            return;
+        }
+
+        // PERFORMANCE: Apply sampling for high-frequency events to reduce storage/battery impact
+        if (!ShouldSampleEvent(eventName))
+        {
+            return;
+        }
+
         try
         {
             var platformName = platform ?? GetCurrentPlatform();
+            
+            // PRIVACY: Sanitize properties to prevent PII leakage
+            var sanitizedProperties = SanitizeProperties(properties);
+            
             var eventData = new CrossPlatformAnalyticsEvent
             {
                 Timestamp = DateTime.UtcNow,
                 Platform = platformName,
                 EventName = eventName,
-                Properties = properties ?? new Dictionary<string, object>(),
+                Properties = sanitizedProperties,
                 SessionId = GetCurrentSessionId(),
                 UserId = GetAnonymousUserId()
             };
@@ -64,6 +173,85 @@ public class CrossPlatformAnalyticsSync
         {
             Logger.Error("CrossPlatformAnalyticsSync", $"Failed to record analytics event: {eventName}", ex);
         }
+    }
+
+    /// <summary>
+    /// Determines if an event should be sampled based on frequency.
+    /// High-frequency events: 1% for mouse moves, 10% for scroll, 100% for clicks.
+    /// </summary>
+    private static bool ShouldSampleEvent(string eventName)
+    {
+        var random = Random.Shared.Next(100);
+        
+        // Mouse movement: 1% sampling
+        if (eventName.Contains("mouse.move", StringComparison.OrdinalIgnoreCase) ||
+            eventName.Contains("mouse.drag", StringComparison.OrdinalIgnoreCase))
+        {
+            return random < 1;
+        }
+        
+        // Scroll events: 10% sampling
+        if (eventName.Contains("scroll", StringComparison.OrdinalIgnoreCase))
+        {
+            return random < 10;
+        }
+        
+        // All other events (clicks, etc.): 100% sampling
+        return true;
+    }
+
+    /// <summary>
+    /// Sanitizes analytics properties to prevent PII leakage.
+    /// Only allows whitelisted property names and safe value types.
+    /// </summary>
+    private static Dictionary<string, object> SanitizeProperties(Dictionary<string, object>? properties)
+    {
+        if (properties == null || properties.Count == 0)
+        {
+            return new Dictionary<string, object>();
+        }
+
+        var sanitized = new Dictionary<string, object>();
+        
+        // Whitelist of allowed property names (case-insensitive)
+        var allowedProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "duration", "count", "size", "width", "height", "index", "page",
+            "category", "type", "status", "result", "action", "feature",
+            "enabled", "disabled", "success", "failure", "error_code",
+            "version", "platform", "theme", "language", "timezone_offset"
+        };
+
+        foreach (var kvp in properties)
+        {
+            // Skip properties not in whitelist
+            if (!allowedProperties.Contains(kvp.Key))
+            {
+                continue;
+            }
+
+            // Only allow safe value types (primitives, no strings that could contain PII)
+            var value = kvp.Value;
+            if (value == null)
+            {
+                sanitized[kvp.Key] = "null";
+            }
+            else if (value is bool || value is int || value is long || value is double || value is float)
+            {
+                sanitized[kvp.Key] = value;
+            }
+            else if (value is string str)
+            {
+                // For strings, only allow short enum-like values (no user input)
+                if (str.Length <= 50 && !str.Contains('/') && !str.Contains('\\') && !str.Contains('@'))
+                {
+                    sanitized[kvp.Key] = str;
+                }
+            }
+            // Skip complex objects, arrays, etc.
+        }
+
+        return sanitized;
     }
 
     /// <summary>
@@ -260,6 +448,105 @@ public class CrossPlatformAnalyticsSync
         return deletedCount;
     }
 
+    /// <summary>
+    /// GDPR/CCPA: Export all user analytics data in portable JSON format.
+    /// </summary>
+    public async Task<string> ExportUserDataAsync(string exportPath)
+    {
+        try
+        {
+            var exportData = new
+            {
+                ExportedAt = DateTime.UtcNow,
+                UserId = GetAnonymousUserId(),
+                ConsentGranted = _consentGranted,
+                ConsentConfiguredAt = _consentConfigured ? DateTime.UtcNow : (DateTime?)null,
+                Analytics = await LoadAllAnalyticsEventsAsync()
+            };
+
+            var json = JsonSerializer.Serialize(exportData, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(exportPath, json);
+
+            Logger.Info("CrossPlatformAnalyticsSync", $"User data exported to {exportPath}");
+            return exportPath;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("CrossPlatformAnalyticsSync", "Data export failed", ex);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// GDPR/CCPA: Delete all user analytics data permanently.
+    /// </summary>
+    public async Task<bool> DeleteAllUserDataAsync()
+    {
+        try
+        {
+            // Delete all analytics files
+            var files = Directory.GetFiles(_analyticsDirectory, "analytics_*.json");
+            foreach (var file in files)
+            {
+                File.Delete(file);
+            }
+
+            // Delete consent file
+            if (File.Exists(_consentFilePath))
+            {
+                File.Delete(_consentFilePath);
+            }
+
+            // Reset consent state
+            _consentGranted = false;
+            _consentConfigured = false;
+
+            Logger.Info("CrossPlatformAnalyticsSync", $"Deleted all user data ({files.Length} files)");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("CrossPlatformAnalyticsSync", "Data deletion failed", ex);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Loads all analytics events from disk for export.
+    /// </summary>
+    private async Task<List<CrossPlatformAnalyticsEvent>> LoadAllAnalyticsEventsAsync()
+    {
+        var allEvents = new List<CrossPlatformAnalyticsEvent>();
+
+        try
+        {
+            var files = Directory.GetFiles(_analyticsDirectory, "analytics_*.json");
+            
+            foreach (var file in files)
+            {
+                var lines = await File.ReadAllLinesAsync(file);
+                foreach (var line in lines.Where(l => !string.IsNullOrWhiteSpace(l)))
+                {
+                    try
+                    {
+                        var evt = JsonSerializer.Deserialize<CrossPlatformAnalyticsEvent>(line, _jsonOptions);
+                        if (evt != null)
+                        {
+                            allEvents.Add(evt);
+                        }
+                    }
+                    catch { /* Skip malformed lines */ }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("CrossPlatformAnalyticsSync", "Failed to load analytics events", ex);
+        }
+
+        return allEvents;
+    }
+
     private void EnsureDirectoryExists()
     {
         if (!Directory.Exists(_analyticsDirectory))
@@ -415,4 +702,14 @@ public class DateRange
 {
     public DateTime Start { get; set; }
     public DateTime End { get; set; }
+}
+
+/// <summary>
+/// Analytics consent configuration for persistence.
+/// </summary>
+public class AnalyticsConsentConfig
+{
+    public bool ConsentGranted { get; set; }
+    public bool ConsentConfigured { get; set; }
+    public DateTime ConfiguredAt { get; set; }
 }

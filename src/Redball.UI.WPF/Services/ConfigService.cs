@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using Microsoft.Win32;
 
 namespace Redball.UI.Services;
@@ -63,11 +64,61 @@ public class ConfigService : IConfigService
     public bool IsTestMode { get; set; }
 
     private static readonly object _syncLock = new();
+    
+    // PERFORMANCE: Debounced save to prevent excessive I/O on rapid property changes
+    private Timer? _debounceSaveTimer;
+    private const int DebounceSaveMs = 5000; // 5 seconds
 
     private ConfigService() 
     { 
         _encryptionService = ConfigEncryptionService.Instance;
         Logger.Verbose("ConfigService", "Instance created (lazy initialization)");
+    }
+
+    /// <summary>
+    /// Marks config as dirty and schedules a debounced save.
+    /// Prevents excessive I/O when multiple properties change rapidly.
+    /// </summary>
+    public void MarkDirtyAndScheduleSave()
+    {
+        IsDirty = true;
+        
+        // Cancel existing timer if any
+        _debounceSaveTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+        
+        // Schedule new save after debounce period
+        _debounceSaveTimer ??= new Timer(_ => DebouncedSave(), null, Timeout.Infinite, Timeout.Infinite);
+        _debounceSaveTimer.Change(DebounceSaveMs, Timeout.Infinite);
+        
+        Logger.Debug("ConfigService", $"Config marked dirty, save scheduled in {DebounceSaveMs}ms");
+    }
+
+    /// <summary>
+    /// Executes the debounced save operation.
+    /// </summary>
+    private void DebouncedSave()
+    {
+        if (!IsDirty) return;
+        
+        Logger.Debug("ConfigService", "Executing debounced save");
+        Save();
+    }
+
+    /// <summary>
+    /// Flushes any pending debounced save immediately.
+    /// Call before application exit.
+    /// </summary>
+    public void FlushPendingSave()
+    {
+        _debounceSaveTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+        _debounceSaveTimer?.Dispose();
+        _debounceSaveTimer = null;
+        
+        if (IsDirty)
+        {
+            Logger.Debug("ConfigService", "Flushing pending save");
+            Save();
+        }
     }
 
     private RedballConfig? TryLoadFromRegistry()

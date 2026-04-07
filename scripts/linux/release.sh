@@ -14,13 +14,29 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 GRAY='\033[0;90m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
 NC='\033[0m'
 
-log_info() { echo -e "${CYAN}[INFO]${NC} $1"; }
-log_success() { echo -e "${GREEN}[OK]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-log_debug() { echo -e "${GRAY}[DEBUG]${NC} $1"; }
+timestamp() { date '+%Y-%m-%d %H:%M:%S'; }
+
+log_info()    { echo -e "${CYAN}[INFO $(timestamp)]${NC} $1"; }
+log_success() { echo -e "${GREEN}[  OK $(timestamp)]${NC} $1"; }
+log_warn()    { echo -e "${YELLOW}[WARN $(timestamp)]${NC} $1"; }
+log_error()   { echo -e "${RED}[ERROR $(timestamp)]${NC} $1"; }
+log_debug()   { echo -e "${GRAY}[DEBUG $(timestamp)]${NC} $1"; }
+log_step()    { echo -e "${BLUE}[STEP $(timestamp)]${NC} ${BOLD}$1${NC}"; }
+log_detail()  { echo -e "${GRAY}       ↳ $1${NC}"; }
+
+# Error trap
+trap_release_error() {
+    local exit_code=$?
+    local line_no=$1
+    log_error "Release script failed at line $line_no (exit code: $exit_code)"
+    log_error "Last command: ${BASH_COMMAND}"
+    exit $exit_code
+}
+trap 'trap_release_error $LINENO' ERR
 
 # Default values
 VERSION=""
@@ -265,7 +281,13 @@ build_if_needed() {
 
 # Main
 main() {
-    log_info "Redball GitHub Release Script"
+    log_step "Redball GitHub Release Script"
+    log_debug "Version: $VERSION"
+    log_debug "Channel: $CHANNEL"
+    log_debug "Dist dir: $DIST_DIR"
+    log_debug "Skip release: $SKIP_RELEASE"
+    log_debug "Dry run: $DRY_RUN"
+    log_debug "Allow dirty: $ALLOW_DIRTY"
     test_gh
     test_git_repo
     

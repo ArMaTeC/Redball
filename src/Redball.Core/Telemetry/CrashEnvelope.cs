@@ -122,6 +122,7 @@ public static class CrashFingerprint
     /// <summary>
     /// Normalizes a stack trace by removing line numbers and file paths
     /// that change between builds, keeping only method signatures.
+    /// PRIVACY: Sanitizes user-specific paths (C:\Users\..., /home/..., etc.)
     /// </summary>
     private static string NormalizeStackTrace(string stackTrace)
     {
@@ -131,7 +132,7 @@ public static class CrashFingerprint
         foreach (var line in lines)
         {
             // Extract just the method signature part
-            // From: "   at Redball.UI.Services.ConfigService.Load() in C:\\src\\ConfigService.cs:line 123"
+            // From: "   at Redball.UI.Services.ConfigService.Load() in C:\\Users\\john\\src\\ConfigService.cs:line 123"
             // To: "Redball.UI.Services.ConfigService.Load"
 
             var trimmed = line.Trim();
@@ -139,7 +140,8 @@ public static class CrashFingerprint
 
             var methodPart = trimmed[3..]; // Remove "at "
 
-            // Remove file path and line number if present
+            // PRIVACY: Remove file path and line number if present
+            // This prevents leaking user-specific paths like C:\Users\username\...
             var inIndex = methodPart.IndexOf(" in ", StringComparison.Ordinal);
             if (inIndex > 0)
             {
@@ -153,9 +155,39 @@ public static class CrashFingerprint
                 methodPart = methodPart[..ilIndex];
             }
 
+            // PRIVACY: Additional sanitization - remove any remaining path separators
+            // that might leak directory structure
+            methodPart = SanitizeMethodSignature(methodPart);
+
             normalized.Add(methodPart.Trim());
         }
 
         return string.Join(" -> ", normalized);
+    }
+
+    /// <summary>
+    /// Sanitizes a method signature to remove any remaining path information.
+    /// </summary>
+    private static string SanitizeMethodSignature(string signature)
+    {
+        // Remove any Windows-style paths (C:\, D:\, etc.)
+        signature = System.Text.RegularExpressions.Regex.Replace(
+            signature, 
+            @"[A-Z]:\\[^\s]+", 
+            "[PATH_REMOVED]");
+
+        // Remove any Unix-style absolute paths (/home/, /usr/, etc.)
+        signature = System.Text.RegularExpressions.Regex.Replace(
+            signature, 
+            @"/(?:home|usr|opt|var|root)/[^\s]+", 
+            "[PATH_REMOVED]");
+
+        // Remove any UNC paths (\\server\share\...)
+        signature = System.Text.RegularExpressions.Regex.Replace(
+            signature, 
+            @"\\\\[^\s]+", 
+            "[PATH_REMOVED]");
+
+        return signature;
     }
 }

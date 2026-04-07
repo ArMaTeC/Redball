@@ -13,6 +13,96 @@ const RELEASES_DIR = path.join(__dirname, 'releases');
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'releases.json');
 
+// GitHub cache configuration
+const GITHUB_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+let githubCache = {
+  releases: null,
+  latest: null,
+  lastFetch: 0
+};
+
+// GitHub API fetch with caching
+async function fetchGitHubReleases() {
+  const now = Date.now();
+  if (githubCache.releases && (now - githubCache.lastFetch) < GITHUB_CACHE_TTL) {
+    return githubCache.releases;
+  }
+
+  try {
+    const response = await fetch('https://api.github.com/repos/ArMaTeC/Redball/releases');
+    if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+
+    const ghReleases = await response.json();
+
+    // Transform GitHub format to our format
+    const releases = ghReleases.map(r => ({
+      version: r.tag_name.replace(/^v/, ''),
+      channel: r.prerelease ? 'beta' : 'stable',
+      date: r.published_at,
+      notes: r.body || '',
+      files: r.assets.map(a => ({
+        name: a.name,
+        size: a.size,
+        hash: '', // GitHub doesn't provide hashes in the API
+        downloads: a.download_count,
+        url: a.browser_download_url
+      })),
+      totalDownloads: r.assets.reduce((sum, a) => sum + a.download_count, 0),
+      githubUrl: r.html_url
+    }));
+
+    githubCache = {
+      releases,
+      latest: releases[0] || null,
+      lastFetch: now
+    };
+
+    return releases;
+  } catch (err) {
+    console.error('[GitHub] Failed to fetch releases:', err.message);
+    // Return cached data even if stale, or empty array
+    return githubCache.releases || [];
+  }
+}
+
+async function fetchGitHubLatest() {
+  const now = Date.now();
+  if (githubCache.latest && (now - githubCache.lastFetch) < GITHUB_CACHE_TTL) {
+    return githubCache.latest;
+  }
+
+  try {
+    const response = await fetch('https://api.github.com/repos/ArMaTeC/Redball/releases/latest');
+    if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+
+    const r = await response.json();
+
+    const latest = {
+      version: r.tag_name.replace(/^v/, ''),
+      channel: r.prerelease ? 'beta' : 'stable',
+      date: r.published_at,
+      notes: r.body || '',
+      files: r.assets.map(a => ({
+        name: a.name,
+        size: a.size,
+        hash: '',
+        downloads: a.download_count,
+        url: a.browser_download_url
+      })),
+      totalDownloads: r.assets.reduce((sum, a) => sum + a.download_count, 0),
+      githubUrl: r.html_url
+    };
+
+    githubCache.latest = latest;
+    githubCache.lastFetch = now;
+
+    return latest;
+  } catch (err) {
+    console.error('[GitHub] Failed to fetch latest:', err.message);
+    return githubCache.latest || null;
+  }
+}
+
 // Ensure directories exist
 [RELEASES_DIR, DATA_DIR].forEach(dir => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -81,23 +171,43 @@ const upload = multer({ storage, limits: { fileSize: 500 * 1024 * 1024 } }); // 
 // API Routes
 // ============================================================
 
-// --- List all releases ---
-app.get('/api/releases', (req, res) => {
-  const db = loadDB();
-  const sorted = db.releases.sort((a, b) => compareVersions(b.version, a.version));
-  res.json(sorted);
+// --- List all releases (from GitHub with cache) ---
+app.get('/api/releases', async (req, res) => {
+  try {
+    const releases = await fetchGitHubReleases();
+    res.json(releases);
+  } catch (err) {
+    console.error('[API] Error fetching releases:', err);
+    res.status(500).json({ error: 'Failed to fetch releases' });
+  }
 });
 
-// --- Get latest release ---
-app.get('/api/releases/latest', (req, res) => {
-  const db = loadDB();
-  const channel = req.query.channel || 'stable';
-  const filtered = db.releases.filter(r =>
-    channel === 'all' || r.channel === channel || (!r.channel && channel === 'stable')
-  );
-  if (filtered.length === 0) return res.status(404).json({ error: 'No releases found' });
-  const sorted = filtered.sort((a, b) => compareVersions(b.version, a.version));
-  res.json(sorted[0]);
+// --- Get latest release (from GitHub with cache) ---
+app.get('/api/releases/latest', async (req, res) => {
+  try {
+    const channel = req.query.channel || 'stable';
+    const latest = await fetchGitHubLatest();
+
+    if (!latest) {
+      return res.status(404).json({ error: 'No releases found' });
+    }
+
+    // Filter by channel if needed
+    if (channel !== 'all' && latest.channel !== channel) {
+      // If latest doesn't match channel, fetch all and filter
+      const all = await fetchGitHubReleases();
+      const filtered = all.filter(r => r.channel === channel);
+      if (filtered.length === 0) {
+        return res.status(404).json({ error: 'No releases found for channel' });
+      }
+      return res.json(filtered[0]);
+    }
+
+    res.json(latest);
+  } catch (err) {
+    console.error('[API] Error fetching latest:', err);
+    res.status(500).json({ error: 'Failed to fetch latest release' });
+  }
 });
 
 // --- Get specific release ---
@@ -108,57 +218,61 @@ app.get('/api/releases/:version', (req, res) => {
   res.json(release);
 });
 
-// --- GitHub-compatible releases endpoint (for UpdateService compatibility) ---
-app.get('/api/github/releases', (req, res) => {
-  const db = loadDB();
-  const sorted = db.releases.sort((a, b) => compareVersions(b.version, a.version));
-  // Map to GitHub release format
-  const ghReleases = sorted.map(r => {
-    const baseAssets = (r.files || [])
-      .filter(f => !f.name.endsWith('.msi') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS')
-      .map(f => ({
-        name: f.name,
-        size: f.size,
-        browser_download_url: `${req.protocol}://${req.get('host')}/downloads/${r.version}/${f.name}`,
-        content_type: guessMimeType(f.name)
-      }));
-
-    // Add patch assets if available
-    const patchAssets = (r.files || [])
-      .filter(f => f.name.endsWith('.patch'))
-      .map(f => ({
-        name: f.name,
-        size: f.size,
-        browser_download_url: `${req.protocol}://${req.get('host')}/downloads/${r.version}/patches/${f.name}`,
-        content_type: 'application/octet-stream',
-        patch_for: f.patchFor,
-        original_size: f.originalSize,
-        savings: f.savings
-      }));
-
-    return {
+// --- GitHub-compatible releases endpoint (fetches from GitHub API with cache) ---
+app.get('/api/github/releases', async (req, res) => {
+  try {
+    const releases = await fetchGitHubReleases();
+    // Map to GitHub release format
+    const ghReleases = releases.map(r => ({
       tag_name: `v${r.version}`,
       name: `Redball v${r.version}`,
-      body: r.notes || '',
+      body: r.notes,
       prerelease: r.channel !== 'stable',
-      published_at: r.date || new Date().toISOString(),
-      assets: [...baseAssets, ...patchAssets],
-      patch_info: r.patchInfo || null
-    };
-  });
-  res.json(ghReleases);
+      published_at: r.date,
+      assets: (r.files || [])
+        .filter(f => !f.name.endsWith('.msi') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS')
+        .map(f => ({
+          name: f.name,
+          size: f.size,
+          browser_download_url: f.url || `${req.protocol}://${req.get('host')}/downloads/${r.version}/${f.name}`,
+          content_type: guessMimeType(f.name),
+          download_count: f.downloads || 0
+        })),
+      html_url: r.githubUrl
+    }));
+    res.json(ghReleases);
+  } catch (err) {
+    console.error('[API] Error fetching GitHub releases:', err);
+    res.status(500).json({ error: 'Failed to fetch releases' });
+  }
 });
 
 // --- Download a file ---
 app.get('/downloads/:version/:filename', (req, res) => {
-  const filePath = path.join(RELEASES_DIR, req.params.version, req.params.filename);
+  // SECURITY: Sanitize filename to prevent path traversal
+  const sanitizedFilename = path.basename(req.params.filename);
+  if (sanitizedFilename !== req.params.filename) {
+    console.warn(`[SECURITY] Path traversal attempt blocked: ${req.params.filename}`);
+    return res.status(400).json({ error: 'Invalid filename' });
+  }
+
+  const filePath = path.join(RELEASES_DIR, req.params.version, sanitizedFilename);
+
+  // SECURITY: Verify resolved path is within allowed directory
+  const resolvedPath = path.resolve(filePath);
+  const allowedDir = path.resolve(path.join(RELEASES_DIR, req.params.version));
+  if (!resolvedPath.startsWith(allowedDir)) {
+    console.warn(`[SECURITY] Path escape attempt blocked: ${req.params.filename}`);
+    return res.status(400).json({ error: 'Invalid path' });
+  }
+
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
 
   // Track download count
   const db = loadDB();
   const release = db.releases.find(r => r.version === req.params.version);
   if (release) {
-    const file = (release.files || []).find(f => f.name === req.params.filename);
+    const file = (release.files || []).find(f => f.name === sanitizedFilename);
     if (file) {
       file.downloads = (file.downloads || 0) + 1;
       release.totalDownloads = (release.totalDownloads || 0) + 1;
@@ -373,16 +487,19 @@ app.post('/api/publish', upload.array('files', 50), async (req, res) => {
   res.status(201).json({ published: version, files: release.files.length });
 });
 
-// --- Server stats ---
-app.get('/api/stats', (req, res) => {
-  const db = loadDB();
-  const totalReleases = db.releases.length;
-  const totalFiles = db.releases.reduce((sum, r) => sum + (r.files?.length || 0), 0);
-  const totalDownloads = db.releases.reduce((sum, r) => sum + (r.totalDownloads || 0), 0);
-  const latestVersion = db.releases.length > 0
-    ? db.releases.sort((a, b) => compareVersions(b.version, a.version))[0].version
-    : 'none';
-  res.json({ totalReleases, totalFiles, totalDownloads, latestVersion });
+// --- Server stats (from GitHub with cache) ---
+app.get('/api/stats', async (req, res) => {
+  try {
+    const releases = await fetchGitHubReleases();
+    const totalReleases = releases.length;
+    const totalFiles = releases.reduce((sum, r) => sum + (r.files?.length || 0), 0);
+    const totalDownloads = releases.reduce((sum, r) => sum + (r.totalDownloads || 0), 0);
+    const latestVersion = releases.length > 0 ? releases[0].version : 'none';
+    res.json({ totalReleases, totalFiles, totalDownloads, latestVersion });
+  } catch (err) {
+    console.error('[API] Error fetching stats:', err);
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
 });
 
 // --- Health check endpoint ---
@@ -440,7 +557,23 @@ app.get('/api/releases/:version/patches', (req, res) => {
 
 // --- Download a patch file ---
 app.get('/downloads/:version/patches/:filename', (req, res) => {
-  const filePath = path.join(RELEASES_DIR, req.params.version, 'patches', req.params.filename);
+  // SECURITY: Sanitize filename to prevent path traversal
+  const sanitizedFilename = path.basename(req.params.filename);
+  if (sanitizedFilename !== req.params.filename) {
+    Logger.Warning("UpdateServer", `Path traversal attempt blocked: ${req.params.filename}`);
+    return res.status(400).json({ error: 'Invalid filename' });
+  }
+
+  const filePath = path.join(RELEASES_DIR, req.params.version, 'patches', sanitizedFilename);
+
+  // SECURITY: Verify resolved path is within allowed directory
+  const resolvedPath = path.resolve(filePath);
+  const allowedDir = path.resolve(path.join(RELEASES_DIR, req.params.version, 'patches'));
+  if (!resolvedPath.startsWith(allowedDir)) {
+    Logger.Warning("UpdateServer", `Path escape attempt blocked: ${req.params.filename}`);
+    return res.status(400).json({ error: 'Invalid path' });
+  }
+
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Patch not found' });
 
   res.download(filePath);

@@ -16,13 +16,30 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 BLUE='\033[0;34m'
+GRAY='\033[0;90m'
+BOLD='\033[1m'
 NC='\033[0m'
 
-log_info() { echo -e "${CYAN}[INFO]${NC} $1"; }
-log_success() { echo -e "${GREEN}[OK]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-log_step() { echo -e "\n${BLUE}=== $1 ===${NC}"; }
+LINUX_BUILD_START=$(date +%s)
+timestamp() { date '+%Y-%m-%d %H:%M:%S'; }
+
+log_info()    { echo -e "${CYAN}[INFO $(timestamp)]${NC} $1"; }
+log_success() { echo -e "${GREEN}[  OK $(timestamp)]${NC} $1"; }
+log_warn()    { echo -e "${YELLOW}[WARN $(timestamp)]${NC} $1"; }
+log_error()   { echo -e "${RED}[ERROR $(timestamp)]${NC} $1"; }
+log_step()    { echo -e "\n${BLUE}[STEP $(timestamp)]${NC} ${BOLD}=== $1 ===${NC}"; }
+log_debug()   { echo -e "${GRAY}[DEBUG $(timestamp)]${NC} $1"; }
+log_detail()  { echo -e "${GRAY}       ↳ $1${NC}"; }
+
+# Error trap
+trap_linux_error() {
+    local exit_code=$?
+    local line_no=$1
+    log_error "Linux build failed at line $line_no (exit code: $exit_code)"
+    log_error "Last command: ${BASH_COMMAND}"
+    exit $exit_code
+}
+trap 'trap_linux_error $LINENO' ERR
 
 # Default flags
 DO_VERSION_BUMP=0
@@ -204,8 +221,13 @@ check_deps() {
     local missing=()
     
     for dep in "${deps[@]}"; do
-        if ! command -v "$dep" &> /dev/null; then
+        if command -v "$dep" &> /dev/null; then
+            local ver
+            ver=$($dep --version 2>/dev/null | head -1 || echo "found")
+            log_debug "  ✓ $dep ($ver)"
+        else
             missing+=("$dep")
+            log_debug "  ✗ $dep (NOT FOUND)"
         fi
     done
     
@@ -221,51 +243,70 @@ check_deps() {
 # Build with Meson
 build_meson() {
     log_info "Building Redball Linux v${VERSION}..."
+    local build_start=$(date +%s)
+    
+    log_debug "Linux dir: ${LINUX_DIR}"
+    log_debug "Build dir: ${BUILD_DIR}"
+    log_debug "Dist dir:  ${DIST_DIR}"
     
     cd "${LINUX_DIR}"
     
     # Clean previous build
     if [ -d "$BUILD_DIR" ]; then
-        log_info "Cleaning previous build..."
+        log_info "Cleaning previous build directory..."
         rm -rf "$BUILD_DIR"
     fi
     
     # Setup build
+    log_step "Meson Setup"
+    log_debug "Running: meson setup $BUILD_DIR --prefix=/usr --buildtype=release -Doptimization=2"
     meson setup "$BUILD_DIR" \
         --prefix=/usr \
         --buildtype=release \
         -Doptimization=2
+    log_success "Meson setup complete"
     
     # Compile
+    log_step "Ninja Compile"
+    log_debug "Running: ninja -C $BUILD_DIR"
     ninja -C "$BUILD_DIR"
+    log_success "Compilation complete"
     
     # Run tests
+    log_step "Running Tests"
     if meson test -C "$BUILD_DIR"; then
         log_success "All tests passed"
     else
         log_warn "Some tests failed (non-fatal)"
     fi
     
-    log_success "Build completed"
+    local build_end=$(date +%s)
+    log_success "Build completed in $(( build_end - build_start ))s"
 }
 
 # Create distribution package
 create_dist() {
     log_info "Creating distribution package..."
+    local dist_start=$(date +%s)
     
     cd "${LINUX_DIR}"
     
     # Create dist directory
     mkdir -p "$DIST_DIR"
+    log_debug "Installing to DESTDIR: ${DIST_DIR}/install"
     
     # Install to DESTDIR for packaging
     DESTDIR="${DIST_DIR}/install" ninja -C "$BUILD_DIR" install
     
     # Create tarball
     cd "$DIST_DIR"
+    log_debug "Creating tarball: redball-${VERSION}-linux.tar.gz"
     tar -czf "redball-${VERSION}-linux.tar.gz" -C install .
     
-    log_success "Distribution package created: redball-${VERSION}-linux.tar.gz"
+    local size
+    size=$(du -h "redball-${VERSION}-linux.tar.gz" | cut -f1)
+    local dist_end=$(date +%s)
+    log_success "Distribution package created: redball-${VERSION}-linux.tar.gz ($size) in $(( dist_end - dist_start ))s"
 }
 
 # Build Flatpak package

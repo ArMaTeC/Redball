@@ -21,14 +21,36 @@ public sealed class HttpSyncApi : ISyncApi, IDisposable
     private readonly ILogger<HttpSyncApi>? _logger;
 
     /// <summary>
-    /// Creates a new HTTP sync API client.
+    /// Creates a new HTTP sync API client with connection pooling.
     /// </summary>
     public HttpSyncApi(string baseUrl, string apiKey, ILogger<HttpSyncApi>? logger = null, HttpClient? httpClient = null)
     {
         _baseUrl = baseUrl?.TrimEnd('/') ?? throw new ArgumentNullException(nameof(baseUrl));
         _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
         _logger = logger;
-        _httpClient = httpClient ?? new HttpClient();
+        
+        // SECURITY: Enforce HTTPS for API key transmission
+        if (!_baseUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("HTTPS is required for API key transmission. Non-HTTPS URLs are not allowed.", nameof(baseUrl));
+        }
+        
+        // PERFORMANCE: Use SocketsHttpHandler with connection pooling
+        if (httpClient == null)
+        {
+            var handler = new SocketsHttpHandler
+            {
+                PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+                PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1),
+                MaxConnectionsPerServer = 10
+            };
+            _httpClient = new HttpClient(handler);
+        }
+        else
+        {
+            _httpClient = httpClient;
+        }
+        
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         _httpClient.DefaultRequestHeaders.Add("X-API-Key", _apiKey);
     }

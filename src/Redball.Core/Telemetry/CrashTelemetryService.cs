@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 /// <summary>
 /// Collects, stores, and uploads crash telemetry with privacy-safe PII scrubbing.
-/// Implements retry logic and consent-based reporting.
+/// Implements retry logic and consent-based reporting with first-run opt-in flow.
 /// </summary>
 public sealed class CrashTelemetryService
 {
@@ -17,7 +17,9 @@ public sealed class CrashTelemetryService
 
     private readonly string _crashStorePath;
     private readonly string _uploadQueuePath;
+    private readonly string _consentFilePath;
     private bool _consentGranted;
+    private bool _consentConfigured;
     private string? _endpointUrl;
     private string? _apiKey;
 
@@ -29,9 +31,12 @@ public sealed class CrashTelemetryService
 
         _crashStorePath = Path.Combine(redballDir, "crashes");
         _uploadQueuePath = Path.Combine(redballDir, "upload_queue");
+        _consentFilePath = Path.Combine(redballDir, "consent.json");
 
         Directory.CreateDirectory(_crashStorePath);
         Directory.CreateDirectory(_uploadQueuePath);
+
+        LoadConsentConfiguration();
     }
 
     /// <summary>
@@ -40,7 +45,93 @@ public sealed class CrashTelemetryService
     public bool ConsentGranted
     {
         get => _consentGranted;
-        set => _consentGranted = value;
+        set
+        {
+            _consentGranted = value;
+            _consentConfigured = true;
+            SaveConsentConfiguration();
+        }
+    }
+
+    /// <summary>
+    /// Whether the user has made a consent decision (opt-in or opt-out).
+    /// If false, first-run consent dialog should be shown.
+    /// </summary>
+    public bool IsConsentConfigured => _consentConfigured;
+
+    /// <summary>
+    /// Loads consent configuration from disk.
+    /// </summary>
+    private void LoadConsentConfiguration()
+    {
+        try
+        {
+            if (File.Exists(_consentFilePath))
+            {
+                var json = File.ReadAllText(_consentFilePath);
+                var config = JsonSerializer.Deserialize<ConsentConfig>(json);
+                if (config != null)
+                {
+                    _consentGranted = config.ConsentGranted;
+                    _consentConfigured = config.ConsentConfigured;
+                }
+            }
+        }
+        catch
+        {
+            // If we can't read consent file, treat as unconfigured
+            _consentGranted = false;
+            _consentConfigured = false;
+        }
+    }
+
+    /// <summary>
+    /// Persists consent configuration to disk.
+    /// </summary>
+    private void SaveConsentConfiguration()
+    {
+        try
+        {
+            var config = new ConsentConfig
+            {
+                ConsentGranted = _consentGranted,
+                ConsentConfigured = _consentConfigured,
+                ConfiguredAt = DateTime.UtcNow
+            };
+            var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(_consentFilePath, json);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("CrashTelemetry", "Failed to save consent configuration", ex);
+        }
+    }
+
+    /// <summary>
+    /// Resets consent configuration to show dialog again (for testing or privacy resets).
+    /// </summary>
+    public void ResetConsent()
+    {
+        _consentGranted = false;
+        _consentConfigured = false;
+        try
+        {
+            if (File.Exists(_consentFilePath))
+            {
+                File.Delete(_consentFilePath);
+            }
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Configuration for consent persistence.
+    /// </summary>
+    private class ConsentConfig
+    {
+        public bool ConsentGranted { get; set; }
+        public bool ConsentConfigured { get; set; }
+        public DateTime ConfiguredAt { get; set; }
     }
 
     /// <summary>
