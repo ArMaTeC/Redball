@@ -117,7 +117,7 @@ public class HardenedUpdateService
     /// <summary>
     /// Checks for updates with automatic retry and comprehensive logging.
     /// </summary>
-    public async Task<UpdateInfo?> CheckForUpdateWithRetryAsync(CancellationToken cancellationToken = default)
+    public async Task<UpdateInfo?> CheckForUpdateWithRetryAsync(IProgress<UpdateCheckProgress>? progress = null, CancellationToken cancellationToken = default)
     {
         _diagnostics.AttemptCount = 0;
         _diagnostics.StartTime = DateTime.UtcNow;
@@ -141,7 +141,7 @@ public class HardenedUpdateService
             {
                 Logger.Info("HardenedUpdate", $"Update check attempt {attempt + 1}/{RetryDelays.Length + 1}...");
                 
-                var result = await _innerService.CheckForUpdateAsync(cancellationToken);
+                var result = await _innerService.CheckForUpdateAsync(progress, cancellationToken);
                 
                 attemptSw.Stop();
                 _diagnostics.LastAttemptDuration = attemptSw.Elapsed;

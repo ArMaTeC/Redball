@@ -55,12 +55,14 @@ public partial class SettingsWindow : Window
     {
         if (_updateService == null) return;
 
-        // Show checking dialog
-        var checking = NotificationWindow.Show("Check for Update", "Checking for updates...", "\uE896", true);
-        if (!checking) return;
+        // Show progress window during check
+        var progressWindow = new UpdateCheckProgressWindow();
+        progressWindow.Show();
 
-        // Check for updates
-        var updateInfo = await _updateService.CheckForUpdateAsync();
+        var progress = new Progress<UpdateCheckProgress>(p => progressWindow.UpdateProgress(p));
+        var updateInfo = await _updateService.CheckForUpdateAsync(progress);
+        
+        progressWindow.Close();
         
         if (updateInfo == null)
         {
@@ -68,29 +70,10 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        // Download and install
-        var progressWindow = new UpdateProgressWindow();
-        progressWindow.Show();
-
-        var progress = new Progress<UpdateDownloadProgress>(dp => progressWindow.UpdateProgress(dp));
-        
-        bool success = await _updateService.DownloadAndInstallAsync(updateInfo, progress);
-        
-        progressWindow.Close();
-
-        if (success)
+        // Show the full changelog dialog instead of jumping straight to download
+        if (Application.Current.MainWindow is MainWindow mw)
         {
-            if (Application.Current.MainWindow is MainWindow mw)
-            {
-                mw.ExitApplication();
-                return;
-            }
-
-            Application.Current.Shutdown();
-        }
-        else
-        {
-            NotificationWindow.Show("Update Failed", "Failed to download or install the update. Please check the log for details.", "\uE783");
+            await mw.ShowUpdateAvailableDialogAsync(updateInfo);
         }
     }
 

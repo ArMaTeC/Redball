@@ -90,7 +90,15 @@ public partial class MainWindow
 
         _analytics.TrackFeature("update.manual_check");
 
-        var updateInfo = await _updateService.CheckForUpdateAsync();
+        // Show progress window during check
+        var progressWindow = new UpdateCheckProgressWindow();
+        progressWindow.Show();
+
+        var progress = new Progress<UpdateCheckProgress>(p => progressWindow.UpdateProgress(p));
+        var updateInfo = await _updateService.CheckForUpdateAsync(progress);
+        
+        progressWindow.Close();
+        
         if (updateInfo == null)
         {
             NotificationWindow.Show("Up to Date", "You're running the latest version of Redball.", "\uE73E"); 

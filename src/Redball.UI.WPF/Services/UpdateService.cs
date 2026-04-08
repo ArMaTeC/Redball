@@ -298,7 +298,7 @@ public class UpdateService : IUpdateService
     /// Includes automatic retry logic for transient failures.
     /// </summary>
     /// <returns>Update info if an update is available, null if up to date or error.</returns>
-    public async Task<UpdateInfo?> CheckForUpdateAsync(CancellationToken cancellationToken = default)
+    public async Task<UpdateInfo?> CheckForUpdateAsync(IProgress<UpdateCheckProgress>? progress = null, CancellationToken cancellationToken = default)
     {
         // Circuit breaker: skip if too many recent failures
         if (_consecutiveFailures >= CircuitBreakerThreshold && DateTime.UtcNow < _circuitOpenUntil)
@@ -307,17 +307,26 @@ public class UpdateService : IUpdateService
             return null;
         }
 
+        ReportCheckProgress(progress, UpdateCheckStage.Connecting, 0, "Connecting to update server...");
+
         // Retry logic for transient failures
         int maxRetries = 3;
         for (int attempt = 0; attempt <= maxRetries; attempt++)
         {
             try
             {
-                var result = await CheckForUpdateInternalAsync(cancellationToken);
+                var result = await CheckForUpdateInternalAsync(progress, cancellationToken);
                 
-                if (result != null || attempt == maxRetries)
+                if (result != null)
                 {
+                    ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, "Update available!");
                     return result;
+                }
+                
+                if (attempt == maxRetries)
+                {
+                    ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, "Up to date");
+                    return null;
                 }
                 
                 // If result is null but no exception, check if we should retry
@@ -332,6 +341,7 @@ public class UpdateService : IUpdateService
             {
                 // Don't retry on rate limit
                 Logger.Warning("UpdateService", "GitHub API rate limit hit - not retrying");
+                ReportCheckProgress(progress, UpdateCheckStage.Failed, 0, "Rate limit hit");
                 return null;
             }
             catch (Exception ex) when (attempt < maxRetries && IsTransientError(ex))
@@ -344,6 +354,7 @@ public class UpdateService : IUpdateService
             {
                 _consecutiveFailures++;
                 Logger.Error("UpdateService", $"Update check failed after {attempt + 1} attempts", ex);
+                ReportCheckProgress(progress, UpdateCheckStage.Failed, 0, "Check failed");
                 return null;
             }
         }
@@ -351,10 +362,22 @@ public class UpdateService : IUpdateService
         return null;
     }
 
+    private static void ReportCheckProgress(IProgress<UpdateCheckProgress>? progress, UpdateCheckStage stage, int percentage, string statusText, int filesHashed = 0, int totalFiles = 0)
+    {
+        progress?.Report(new UpdateCheckProgress
+        {
+            Stage = stage,
+            Percentage = percentage,
+            StatusText = statusText,
+            FilesHashed = filesHashed,
+            TotalFilesToHash = totalFiles
+        });
+    }
+
     /// <summary>
     /// Internal implementation of update check (extracted for retry logic).
     /// </summary>
-    private async Task<UpdateInfo?> CheckForUpdateInternalAsync(CancellationToken cancellationToken = default)
+    private async Task<UpdateInfo?> CheckForUpdateInternalAsync(IProgress<UpdateCheckProgress>? progress, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -368,6 +391,7 @@ public class UpdateService : IUpdateService
             }
             
             // Get all releases and find the highest version
+            ReportCheckProgress(progress, UpdateCheckStage.FetchingReleases, 20, "Fetching release information...");
             var allReleases = await GetAllReleasesAsync(cancellationToken);
             var latestRelease = FindHighestVersionRelease(allReleases);
             
@@ -389,6 +413,8 @@ public class UpdateService : IUpdateService
             var currentNormalized = new Version(currentVersion.Major, currentVersion.Minor, currentVersion.Build);
             var latestNormalized = new Version(latestVersion.Major, latestVersion.Minor, latestVersion.Build);
             
+            ReportCheckProgress(progress, UpdateCheckStage.ComparingVersions, 40, $"Comparing versions (current: {currentNormalized}, latest: {latestNormalized})...");
+            
             if (latestNormalized <= currentNormalized)
             {
                 Logger.Info("UpdateService", $"Up to date (current: {currentNormalized}, latest: {latestNormalized})");
@@ -401,6 +427,8 @@ public class UpdateService : IUpdateService
             {
                 Logger.Info("UpdateService", "Found update manifest, checking for differential updates...");
                 Logger.Debug("UpdateService", $"Manifest URL: {manifestAsset.DownloadUrl}");
+                ReportCheckProgress(progress, UpdateCheckStage.ParsingManifest, 50, "Reading update manifest...");
+                
                 var manifestJson = await _httpClient.GetStringAsync(manifestAsset.DownloadUrl, cancellationToken);
                 var manifest = JsonSerializer.Deserialize<UpdateManifest>(manifestJson);
                 
@@ -411,12 +439,25 @@ public class UpdateService : IUpdateService
                     var hashCache = new FileHashCache();
                     int cachedHashesUsed = 0;
                     int filesHashed = 0;
+                    int totalFiles = manifest.Files.Count;
+                    int processedFiles = 0;
+                    
+                    ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, 60, $"Checking {totalFiles} files for changes...", 0, totalFiles);
                     
                     foreach (var file in manifest.Files)
                     {
+                        processedFiles++;
                         var normalizedName = NormalizeRelativeUpdatePath(file.Name);
                         var localPath = Path.Combine(appDir, normalizedName);
                         bool needsUpdate = true;
+                        
+                        // Report progress every 5 files
+                        if (processedFiles % 5 == 0)
+                        {
+                            int progressPct = 60 + (processedFiles * 25 / totalFiles);
+                            ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
+                                $"Checking {totalFiles} files... ({processedFiles}/{totalFiles})", filesHashed, totalFiles);
+                        }
                         
                         if (File.Exists(localPath))
                         {
@@ -489,6 +530,7 @@ public class UpdateService : IUpdateService
                     }
                     
                     Logger.Info("UpdateService", $"Differential check complete: {filesHashed} files hashed, {cachedHashesUsed} cached hashes used");
+                    ReportCheckProgress(progress, UpdateCheckStage.CalculatingDiff, 90, $"Found {filesToUpdate.Count} files to update...");
                     
                     if (filesToUpdate.Count > 0)
                     {

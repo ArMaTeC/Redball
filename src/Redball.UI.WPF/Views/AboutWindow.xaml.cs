@@ -70,37 +70,16 @@ public partial class AboutWindow : Window
         if (updateInfo == null)
         {
             _analytics.TrackFeature("update.not_available");
-            NotificationWindow.Show("Up to Date", "Your version of Redball is already current.", "\uE73E"); 
+            NotificationWindow.Show("Up to Date", "You're running the latest version of Redball.", "\uE73E"); 
             return;
         }
 
         _analytics.TrackFeature("update.available");
 
-        // Download and install
-        var progressWindow = new UpdateProgressWindow();
-        progressWindow.Show();
-
-        var progress = new Progress<UpdateDownloadProgress>(dp => progressWindow.UpdateProgress(dp));
-        
-        bool success = await _updateService.DownloadAndInstallAsync(updateInfo, progress);
-        
-        progressWindow.Close();
-
-        if (success)
+        // Show the full changelog dialog instead of jumping straight to download
+        if (Application.Current.MainWindow is MainWindow mw)
         {
-            _analytics.TrackFeature("update.download_succeeded");
-            if (Application.Current.MainWindow is MainWindow mw)
-            {
-                mw.ExitApplication();
-                return;
-            }
-
-            Application.Current.Shutdown();
-        }
-        else
-        {
-            _analytics.TrackFeature("update.download_failed");
-            NotificationWindow.Show("Update Failed", "Could not download or install the update. Please check the log for details.", "\uE783");
+            await mw.ShowUpdateAvailableDialogAsync(updateInfo);
         }
     }
 }

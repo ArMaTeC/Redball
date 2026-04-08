@@ -20,11 +20,39 @@ public enum UpdateStage
 }
 
 /// <summary>
+/// Stages for update checking progress.
+/// </summary>
+public enum UpdateCheckStage
+{
+    Connecting,
+    FetchingReleases,
+    ParsingManifest,
+    ComparingVersions,
+    HashingFiles,
+    CalculatingDiff,
+    Complete,
+    Failed
+}
+
+/// <summary>
+/// Progress information for update check operation.
+/// </summary>
+public class UpdateCheckProgress
+{
+    public int Percentage { get; set; }
+    public UpdateCheckStage Stage { get; set; } = UpdateCheckStage.Connecting;
+    public string? StatusText { get; set; }
+    public string? LogEntry { get; set; }
+    public int FilesHashed { get; set; }
+    public int TotalFilesToHash { get; set; }
+}
+
+/// <summary>
 /// Interface for update checking and installation.
 /// </summary>
     public interface IUpdateService
     {
-        Task<UpdateInfo?> CheckForUpdateAsync(CancellationToken cancellationToken = default);
+        Task<UpdateInfo?> CheckForUpdateAsync(IProgress<UpdateCheckProgress>? progress = null, CancellationToken cancellationToken = default);
         Task<bool> DownloadAndInstallAsync(UpdateInfo updateInfo, IProgress<UpdateDownloadProgress>? progress = null, CancellationToken cancellationToken = default);
     }
 

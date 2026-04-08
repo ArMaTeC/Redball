@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.ComponentModel;
 using System.Windows;
@@ -606,20 +607,30 @@ public class MainViewModel : ViewModelBase
     private async System.Threading.Tasks.Task InstallDriverAsync()
     {
         Logger.Info("MainViewModel", "Install driver command invoked for Service mode");
-        
+
         // Service mode - install Windows Service
         var result = await InstallServiceAsync();
-        if (result)
+        if (result.Success)
         {
             NotificationService.Instance.ShowInfo("Service Installation", "Redball Input Service installed successfully. No restart required.");
         }
+        else if (result.UserCancelled)
+        {
+            // User cancelled UAC - no error message needed, just log it
+            Logger.Info("MainViewModel", "Service installation cancelled by user at UAC prompt");
+        }
         else
         {
-            NotificationService.Instance.ShowError("Service Installation", "Failed to install Redball Input Service. Ensure the application is running as Administrator.");
+            NotificationService.Instance.ShowError("Service Installation", $"Failed to install Redball Input Service: {result.ErrorMessage}");
         }
     }
 
-    private async System.Threading.Tasks.Task<bool> InstallServiceAsync()
+    /// <summary>
+    /// Result of a service operation with user cancellation detection.
+    /// </summary>
+    private record ServiceOperationResult(bool Success, bool UserCancelled, string ErrorMessage);
+
+    private async System.Threading.Tasks.Task<ServiceOperationResult> InstallServiceAsync()
     {
         return await System.Threading.Tasks.Task.Run(() =>
         {
@@ -628,67 +639,129 @@ public class MainViewModel : ViewModelBase
                 var servicePath = ResolveServiceExecutablePath();
                 if (!System.IO.File.Exists(servicePath))
                 {
-                    Logger.Error("MainViewModel", $"Service executable not found: {servicePath}");
-                    return false;
+                    var msg = $"Service executable not found: {servicePath}";
+                    Logger.Error("MainViewModel", msg);
+                    return new ServiceOperationResult(false, false, msg);
                 }
 
-                // Check admin rights
+                // Check admin rights - if not admin, relaunch app with elevation
                 if (!Interop.NativeMethods.IsUserAnAdmin())
                 {
-                    Logger.Warning("MainViewModel", "Service installation requires admin rights; requesting UAC elevation.");
-                    var elevatedCreate = RunProcessElevated("sc.exe", $"create RedballInputService binPath= \"{servicePath}\" start= auto");
-                    if (!elevatedCreate.Success || elevatedCreate.ExitCode != 0)
-                    {
-                        Logger.Error("MainViewModel", $"Elevated create service failed: {elevatedCreate.Error}");
-                        return false;
-                    }
-
-                    var elevatedStart = RunProcessElevated("sc.exe", "start RedballInputService");
-                    if (!elevatedStart.Success || elevatedStart.ExitCode != 0)
-                    {
-                        Logger.Warning("MainViewModel", $"Service created but failed to start (elevated): {elevatedStart.Error}");
-                    }
-
-                    Logger.Info("MainViewModel", "Redball Input Service installed successfully via elevated command");
-                    return true;
+                    Logger.Warning("MainViewModel", "Service installation requires admin rights; relaunching app with UAC elevation.");
+                    return InstallServiceWithElevation();
                 }
 
+                // Already admin - install directly
                 // Check if service already exists
                 try
                 {
                     using var sc = new System.ServiceProcess.ServiceController("RedballInputService");
                     Logger.Info("MainViewModel", "Redball Input Service already installed");
-                    return true;
+                    return new ServiceOperationResult(true, false, string.Empty);
                 }
                 catch (Exception ex)
                 {
                     Logger.Debug("MainViewModel", $"Service check failed (service not installed): {ex.Message}");
-                    // Service doesn't exist, proceed with installation
                 }
 
                 var createResult = RunProcess("sc.exe", $"create RedballInputService binPath= \"{servicePath}\" start= auto");
                 if (createResult.ExitCode != 0)
                 {
-                    Logger.Error("MainViewModel", $"Failed to create service: {createResult.StdErr}");
-                    return false;
+                    if (createResult.StdErr.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Logger.Info("MainViewModel", "Service already exists, attempting to start...");
+                    }
+                    else
+                    {
+                        var err = $"Failed to create service: {createResult.StdErr}";
+                        Logger.Error("MainViewModel", err);
+                        return new ServiceOperationResult(false, false, err);
+                    }
                 }
 
                 var startResult = RunProcess("sc.exe", "start RedballInputService");
                 if (startResult.ExitCode != 0)
                 {
                     Logger.Warning("MainViewModel", $"Service created but failed to start: {startResult.StdErr}");
-                    // Don't fail - service is installed but needs manual start
                 }
 
                 Logger.Info("MainViewModel", "Redball Input Service installed successfully");
-                return true;
+                return new ServiceOperationResult(true, false, string.Empty);
             }
             catch (Exception ex)
             {
                 Logger.Error("MainViewModel", "Service installation failed", ex);
-                return false;
+                return new ServiceOperationResult(false, false, $"Unexpected error: {ex.Message}");
             }
         });
+    }
+
+    /// <summary>
+    /// Relaunches the application with elevation to install the service.
+    /// This is more reliable than trying to elevate sc.exe directly.
+    /// </summary>
+    private ServiceOperationResult InstallServiceWithElevation()
+    {
+        try
+        {
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = Process.GetCurrentProcess().MainModule?.FileName ?? "Redball.UI.WPF.exe",
+                Arguments = "--install-service",
+                UseShellExecute = true,
+                Verb = "runas"
+            };
+
+            try
+            {
+                using var process = Process.Start(processInfo);
+                if (process == null)
+                {
+                    var err = "Failed to start elevated process.";
+                    Logger.Error("MainViewModel", err);
+                    return new ServiceOperationResult(false, false, err);
+                }
+
+                // Wait with 60-second timeout to prevent hanging
+                if (!process.WaitForExit(60000))
+                {
+                    Logger.Warning("MainViewModel", "Elevated service install process timed out after 60 seconds");
+                    try { process.Kill(); }
+                    catch (Exception ex)
+                    {
+                        Logger.Debug("MainViewModel", $"Failed to kill timed out install process: {ex.Message}");
+                    }
+                    return new ServiceOperationResult(false, false, "Installation timed out. The elevated process did not complete in time.");
+                }
+
+                var exitCode = process.ExitCode;
+                if (exitCode == 0)
+                {
+                    return new ServiceOperationResult(true, false, string.Empty);
+                }
+                else
+                {
+                    var err = $"Installation failed with exit code {exitCode}. Check logs for details.";
+                    Logger.Error("MainViewModel", err);
+                    return new ServiceOperationResult(false, false, err);
+                }
+            }
+            catch (Win32Exception ex) when (ex.NativeErrorCode == 1223) // ERROR_CANCELLED
+            {
+                Logger.Info("MainViewModel", "User cancelled UAC elevation for service install");
+                return new ServiceOperationResult(false, true, string.Empty);
+            }
+            catch (Win32Exception ex)
+            {
+                Logger.Error("MainViewModel", "Win32Exception during elevated service install", ex);
+                return new ServiceOperationResult(false, false, $"Elevation failed: {ex.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainViewModel", "Service elevation installation failed", ex);
+            return new ServiceOperationResult(false, false, $"Unexpected error: {ex.Message}");
+        }
     }
 
     private static string ResolveServiceExecutablePath()
@@ -710,7 +783,7 @@ public class MainViewModel : ViewModelBase
         return candidates[0];
     }
 
-    private static (bool Success, int ExitCode, string Error) RunProcessElevated(string fileName, string arguments)
+    private static (bool Success, int ExitCode, string Error, bool UserCancelled) RunProcessElevated(string fileName, string arguments)
     {
         try
         {
@@ -726,19 +799,26 @@ public class MainViewModel : ViewModelBase
             using var process = Process.Start(psi);
             if (process == null)
             {
-                return (false, -1, "Failed to start elevated process.");
+                return (false, -1, "Failed to start elevated process.", false);
             }
 
             process.WaitForExit();
-            return (true, process.ExitCode, string.Empty);
+            return (true, process.ExitCode, string.Empty, false);
+        }
+        catch (Win32Exception ex) when (ex.NativeErrorCode == 1223) // ERROR_CANCELLED - user cancelled UAC
+        {
+            Logger.Info("MainViewModel", "User cancelled UAC elevation");
+            return (false, -1, ex.Message, true);
         }
         catch (Win32Exception ex)
         {
-            return (false, -1, ex.Message);
+            Logger.Error("MainViewModel", $"Win32Exception during elevated process: {ex.Message}", ex);
+            return (false, -1, ex.Message, false);
         }
         catch (Exception ex)
         {
-            return (false, -1, ex.Message);
+            Logger.Error("MainViewModel", $"Exception during elevated process: {ex.Message}", ex);
+            return (false, -1, ex.Message, false);
         }
     }
 

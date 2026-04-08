@@ -1,7 +1,7 @@
 {
   "fromVersion": "2.1.466",
   "toVersion": "2.1.467",
-  "generatedAt": "2026-04-08T15:39:12.810Z",
+  "generatedAt": "2026-04-08T16:13:42.674Z",
   "patches": [
     {
       "file": "binaries/Redball.Service.dll",
@@ -38,9 +38,9 @@
     {
       "file": "patches/patch-manifest.json",
       "patchFile": "patch-manifest.json.patch",
-      "patchSize": 498,
+      "patchSize": 499,
       "originalSize": 2076,
-      "savings": 1578,
+      "savings": 1577,
       "savingsPercent": "76.0%"
     }
   ],
@@ -81,6 +81,6 @@
       "reason": "too_small"
     }
   ],
-  "totalSavings": 2466870,
-  "totalOriginalSize": 84112555
+  "totalSavings": 2466869,
+  "totalOriginalSize": 84112556
 }
