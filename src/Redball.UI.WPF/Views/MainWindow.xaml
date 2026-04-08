@@ -1,1047 +1,740 @@
 <Window x:Class="Redball.UI.Views.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:tb="http://www.hardcodet.net/taskbar"
-        xmlns:vm="clr-namespace:Redball.UI.ViewModels"
-        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        xmlns:views="clr-namespace:Redball.UI.Views"
-        Title="Redball" Height="780" Width="1100"
-        WindowStartupLocation="CenterScreen"
-        ShowInTaskbar="True"
-        Style="{DynamicResource ModernWindow}"
-        Background="{DynamicResource BackgroundBrush}"
-        Foreground="{DynamicResource ForegroundBrush}"
-        WindowStyle="None"
-        ResizeMode="CanResize"
-        AllowsTransparency="False">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:tb="http://www.hardcodet.net/taskbar"
+    xmlns:vm="clr-namespace:Redball.UI.ViewModels"
+    xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+    xmlns:views="clr-namespace:Redball.UI.Views" Title="Redball" Height="780" Width="1100" WindowStartupLocation="CenterScreen" ShowInTaskbar="True" Style="{DynamicResource ModernWindow}" Background="{DynamicResource BackgroundBrush}" Foreground="{DynamicResource ForegroundBrush}" WindowStyle="None" ResizeMode="CanResize" AllowsTransparency="False">
 
     <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="0"
-                            ResizeBorderThickness="8"
-                            CornerRadius="16"
-                            GlassFrameThickness="1"
-                            UseAeroCaptionButtons="False"/>
+        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="8" CornerRadius="16" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
     </shell:WindowChrome.WindowChrome>
 
-    <Border Margin="8"
-            CornerRadius="18"
-            Background="{DynamicResource BackgroundBrush}"
-            BorderBrush="{DynamicResource BorderBrush}"
-            BorderThickness="1"
-            SnapsToDevicePixels="True">
+    <Border Margin="8" CornerRadius="18" Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" SnapsToDevicePixels="True">
         <Border.Effect>
             <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="#55000000" Opacity="0.45"/>
         </Border.Effect>
 
-    <Grid ClipToBounds="True">
-        <!-- Tray Icon (primary UI for v3.0) -->
-        <tb:TaskbarIcon x:Name="TrayIcon"
-                       LeftClickCommand="{Binding ShowWindowCommand}"
-                       DoubleClickCommand="{Binding ShowWindowCommand}"
-                       Visibility="Visible">
-            <tb:TaskbarIcon.ContextMenu>
-                <ContextMenu Style="{DynamicResource ModernContextMenu}">
-                    <!-- Status Header -->
-                    <MenuItem Style="{StaticResource StatusMenuItem}">
-                        <MenuItem.Header>
-                            <StackPanel>
-                                <TextBlock Text="Redball" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding StatusText}" FontSize="12" Opacity="0.8"/>
+        <Grid ClipToBounds="True">
+            <!-- Tray Icon (primary UI for v3.0) -->
+            <tb:TaskbarIcon x:Name="TrayIcon" LeftClickCommand="{Binding ShowWindowCommand}" DoubleClickCommand="{Binding ShowWindowCommand}" Visibility="Visible">
+                <tb:TaskbarIcon.ContextMenu>
+                    <ContextMenu Style="{DynamicResource ModernContextMenu}">
+                        <!-- Status Header -->
+                        <MenuItem Style="{StaticResource StatusMenuItem}">
+                            <MenuItem.Header>
+                                <StackPanel>
+                                    <TextBlock Text="Redball" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding StatusText}" FontSize="12" Opacity="0.8"/>
+                                </StackPanel>
+                            </MenuItem.Header>
+                        </MenuItem>
+                        <Separator/>
+
+                        <!-- Toggle Action -->
+                        <MenuItem Header="Pause Keep-Awake" Command="{Binding PauseKeepAwakeCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE769;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator/>
+
+                        <!-- Quick Settings -->
+                        <MenuItem Header="Prevent Display Sleep" IsCheckable="True" IsChecked="{Binding PreventDisplaySleep, Mode=OneWay}" Command="{Binding ToggleDisplaySleepCommand}"/>
+                        <MenuItem Header="Use F15 Heartbeat" IsCheckable="True" IsChecked="{Binding UseHeartbeat, Mode=OneWay}" Command="{Binding ToggleHeartbeatCommand}"/>
+                        <Separator/>
+
+                        <!-- TypeThing -->
+                        <MenuItem Header="TypeThing (Paste as Typing)" Command="{Binding TypeThingCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE8D2;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator/>
+
+                        <MenuItem Header="Open Logs" Command="{Binding OpenLogsCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE8A5;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator/>
+
+                        <!-- Main Actions -->
+                        <MenuItem Header="Mini Widget" Command="{Binding ShowMiniWidgetCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE737;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Reset Mini Widget Position" Command="{Binding ResetMiniWidgetPositionCommand}" Visibility="{Binding IsMiniWidgetVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Check for Updates" Command="{Binding CheckForUpdatesCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE895;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Settings..." Command="{Binding OpenSettingsCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Exit" Command="{Binding ExitCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE7E8;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </tb:TaskbarIcon.ContextMenu>
+
+                <tb:TaskbarIcon.TrayToolTip>
+                    <Grid Margin="12,10">
+                        <TextBlock Text="{Binding ElementName=TrayIcon, Path=ToolTipText}" FontWeight="SemiBold" FontSize="13"/>
+                    </Grid>
+                </tb:TaskbarIcon.TrayToolTip>
+            </tb:TaskbarIcon>
+
+            <Grid Margin="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="68"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" CornerRadius="18,18,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0">
+                            <Border Width="38" Height="38" CornerRadius="12" Background="{DynamicResource AccentBrush}" Margin="0,0,12,0">
+                                <TextBlock Text="R" Foreground="White" FontWeight="Bold" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Redball" FontSize="20" FontWeight="Bold"/>
+                                    <Border Background="{DynamicResource CardBrush}" CornerRadius="10" Margin="10,2,0,0" Padding="8,2,8,2" VerticalAlignment="Center" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                        <TextBlock Text="Desktop Control Center" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Keep-awake controls, automation, and diagnostics in one place" FontSize="11.5" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                             </StackPanel>
-                        </MenuItem.Header>
-                    </MenuItem>
-                    <Separator/>
-
-                    <!-- Toggle Action -->
-                    <MenuItem Header="Pause Keep-Awake" Command="{Binding PauseKeepAwakeCommand}">
-                        <MenuItem.Icon>
-                            <TextBlock Text="&#xE769;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <Separator/>
-
-                    <!-- Quick Settings -->
-                    <MenuItem Header="Prevent Display Sleep" IsCheckable="True" IsChecked="{Binding PreventDisplaySleep, Mode=OneWay}" Command="{Binding ToggleDisplaySleepCommand}"/>
-                    <MenuItem Header="Use F15 Heartbeat" IsCheckable="True" IsChecked="{Binding UseHeartbeat, Mode=OneWay}" Command="{Binding ToggleHeartbeatCommand}"/>
-                    <Separator/>
-
-                    <!-- TypeThing -->
-                    <MenuItem Header="TypeThing (Paste as Typing)" Command="{Binding TypeThingCommand}">
-                        <MenuItem.Icon>
-                            <TextBlock Text="&#xE8D2;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <Separator/>
-
-                    <MenuItem Header="Open Logs" Command="{Binding OpenLogsCommand}">
-                        <MenuItem.Icon>
-                            <TextBlock Text="&#xE8A5;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <Separator/>
-
-                    <!-- Main Actions -->
-                    <MenuItem Header="Mini Widget" Command="{Binding ShowMiniWidgetCommand}">
-                        <MenuItem.Icon>
-                            <TextBlock Text="&#xE737;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Header="Reset Mini Widget Position" Command="{Binding ResetMiniWidgetPositionCommand}"
-                              Visibility="{Binding IsMiniWidgetVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <MenuItem.Icon>
-                            <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Header="Check for Updates" Command="{Binding CheckForUpdatesCommand}">
-                        <MenuItem.Icon>
-                            <TextBlock Text="&#xE895;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Header="Settings..." Command="{Binding OpenSettingsCommand}">
-                        <MenuItem.Icon>
-                            <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Header="Exit" Command="{Binding ExitCommand}">
-                        <MenuItem.Icon>
-                            <TextBlock Text="&#xE7E8;" FontFamily="Segoe Fluent Icons" FontSize="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                </ContextMenu>
-            </tb:TaskbarIcon.ContextMenu>
-
-            <tb:TaskbarIcon.TrayToolTip>
-                <Grid Margin="12,10">
-                    <TextBlock Text="{Binding ElementName=TrayIcon, Path=ToolTipText}" 
-                             FontWeight="SemiBold"
-                             FontSize="13"/>
-                </Grid>
-            </tb:TaskbarIcon.TrayToolTip>
-        </tb:TaskbarIcon>
-
-        <Grid Margin="0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="68"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <Border Grid.Row="0"
-                    Background="{DynamicResource SurfaceBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}"
-                    BorderThickness="0,0,0,1"
-                    CornerRadius="18,18,0,0"
-                    MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0">
-                        <Border Width="38" Height="38" CornerRadius="12" Background="{DynamicResource AccentBrush}" Margin="0,0,12,0">
-                            <TextBlock Text="R" Foreground="White" FontWeight="Bold" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <StackPanel VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Redball" FontSize="20" FontWeight="Bold"/>
-                                <Border Background="{DynamicResource CardBrush}" CornerRadius="10" Margin="10,2,0,0" Padding="8,2,8,2" VerticalAlignment="Center" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                                    <TextBlock Text="Desktop Control Center" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                </Border>
-                            </StackPanel>
-                            <TextBlock Text="Keep-awake controls, automation, and diagnostics in one place"
-                                       FontSize="11.5"
-                                       Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                         </StackPanel>
-                    </StackPanel>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button x:Name="MinimizeWindowButton"
-                                Content="—"
-                                Click="MinimizeWindowButton_Click"
-                                FontSize="16"
-                                ToolTipService.ShowDuration="12000"
-                                Style="{StaticResource TitleBarButtonStyle}">
-                            <Button.ToolTip>
-                                <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Minimize Redball to the taskbar."/>
-                            </Button.ToolTip>
-                        </Button>
-                        <Button x:Name="MaximizeWindowButton"
-                                Content="□"
-                                Click="MaximizeWindowButton_Click"
-                                ToolTipService.ShowDuration="12000"
-                                Style="{StaticResource TitleBarButtonStyle}">
-                            <Button.ToolTip>
-                                <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Maximize or restore the Redball window."/>
-                            </Button.ToolTip>
-                        </Button>
-                        <Button x:Name="CloseWindowButton"
-                                Content="✕"
-                                Click="CloseWindowButton_Click"
-                                ToolTipService.ShowDuration="12000"
-                                Style="{StaticResource TitleBarCloseButtonStyle}">
-                            <Button.ToolTip>
-                                <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Hide Redball back to tray mode."/>
-                            </Button.ToolTip>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <Border Grid.Row="1" Style="{DynamicResource CardStyle}" Margin="24,20,24,20">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Current Status" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                        <TextBlock Text="{Binding StatusText}" FontSize="20" FontWeight="SemiBold" Margin="0,4,0,0"/>
-                    </StackPanel>
-
-                    <Button Grid.Column="1"
-                            Content="Pause / Resume"
-                            Command="{Binding PauseKeepAwakeCommand}"
-                            Style="{DynamicResource PrimaryButton}"
-                            AutomationProperties.AutomationId="ToggleButton">
-                        <Button.ToolTip>
-                            <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Pause or resume the keep-awake engine without leaving the dashboard."/>
-                        </Button.ToolTip>
-                    </Button>
-                </Grid>
-            </Border>
-
-            <Grid Grid.Row="2" Margin="24,0,24,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="220"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <Border Grid.Column="0" Style="{DynamicResource CardStyle}" Margin="0,0,16,0">
-                    <StackPanel>
-                        <RadioButton x:Name="HomeNavButton" Content="Home" IsChecked="True" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Overview of the main Redball sections and shortcuts."/>
-                        <RadioButton x:Name="AnalyticsNavButton" Content="Analytics" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="View session counts, usage patterns, and tracked activity."/>
-                        <RadioButton x:Name="SloDashboardNavButton" Content="SLO Dashboard" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="View service level objective metrics and performance indicators."/>
-                        <RadioButton x:Name="DiagnosticsNavButton" Content="Diagnostics" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Review runtime state, logging paths, and app health."/>
-                        <RadioButton x:Name="SettingsNavButton" Content="Settings" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="General application settings such as theme, notifications, and logging." AutomationProperties.AutomationId="SettingsButton"/>
-                        <RadioButton x:Name="BehaviorNavButton" Content="Behavior" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Control display sleep prevention, heartbeat key, and default run duration."/>
-                        <RadioButton x:Name="SmartFeaturesNavButton" Content="Smart Features" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Tune battery, network, idle, presentation, and scheduled behavior."/>
-                        <RadioButton x:Name="TypeThingNavButton" Content="TypeThing" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Configure TypeThing hotkeys, speed, and typing behavior."/>
-                        <RadioButton x:Name="UpdatesNavButton" Content="Updates" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Manage update channels and check for new releases."/>
-                    </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button x:Name="MinimizeWindowButton" Content="—" Click="MinimizeWindowButton_Click" FontSize="16" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarButtonStyle}">
+                                <Button.ToolTip>
+                                    <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Minimize Redball to the taskbar."/>
+                                </Button.ToolTip>
+                            </Button>
+                            <Button x:Name="MaximizeWindowButton" Content="□" Click="MaximizeWindowButton_Click" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarButtonStyle}">
+                                <Button.ToolTip>
+                                    <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Maximize or restore the Redball window."/>
+                                </Button.ToolTip>
+                            </Button>
+                            <Button x:Name="CloseWindowButton" Content="✕" Click="CloseWindowButton_Click" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarCloseButtonStyle}">
+                                <Button.ToolTip>
+                                    <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Hide Redball back to tray mode."/>
+                                </Button.ToolTip>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
                 </Border>
 
-                <Border Grid.Column="1" Style="{DynamicResource CardStyle}">
+                <Border Grid.Row="1" Style="{DynamicResource CardStyle}" Margin="24,20,24,20">
                     <Grid>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel Margin="4">
-                                <views:HomeSectionView x:Name="HomePanel" Visibility="Visible"/>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                                <StackPanel x:Name="AnalyticsPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Analytics" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Track how you use Redball over time. View session counts, total usage hours, and which features you use most. You can also export your data as CSV or JSON for your own records." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
-                                    <UniformGrid Columns="3" Margin="0,0,0,16">
-                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Total Sessions" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                                <TextBlock x:Name="AnalyticsSessionsText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                        </Border>
-                                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,8,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Usage Time" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                                <TextBlock x:Name="AnalyticsUsageText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                        </Border>
-                                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Tracked Events" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                                <TextBlock x:Name="AnalyticsEventsText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </UniformGrid>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Current Status" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                            <TextBlock Text="{Binding StatusText}" FontSize="20" FontWeight="SemiBold" Margin="0,4,0,0"/>
+                        </StackPanel>
 
-                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
-                                        <StackPanel>
-                                            <TextBlock Text="Top Product Areas" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                                            <TextBlock x:Name="AnalyticsTopAreasText" TextWrapping="Wrap"/>
+                        <Button Grid.Column="1" Content="Pause / Resume" Command="{Binding PauseKeepAwakeCommand}" Style="{DynamicResource PrimaryButton}" AutomationProperties.AutomationId="ToggleButton">
+                            <Button.ToolTip>
+                                <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Pause or resume the keep-awake engine without leaving the dashboard."/>
+                            </Button.ToolTip>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="2" Margin="24,0,24,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{DynamicResource CardStyle}" Margin="0,0,16,0">
+                        <StackPanel>
+                            <RadioButton x:Name="HomeNavButton" Content="Home" IsChecked="True" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Overview of the main Redball sections and shortcuts."/>
+                            <RadioButton x:Name="AnalyticsNavButton" Content="Analytics" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="View session counts, usage patterns, and tracked activity."/>
+                            <RadioButton x:Name="DiagnosticsNavButton" Content="Diagnostics" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Review runtime state, logging paths, and app health."/>
+                            <RadioButton x:Name="SettingsNavButton" Content="Settings" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="General application settings such as theme, notifications, and logging." AutomationProperties.AutomationId="SettingsButton"/>
+                            <RadioButton x:Name="BehaviorNavButton" Content="Behavior" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Control display sleep prevention, heartbeat key, and default run duration."/>
+                            <RadioButton x:Name="SmartFeaturesNavButton" Content="Smart Features" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Tune battery, network, idle, presentation, and scheduled behavior."/>
+                            <RadioButton x:Name="TypeThingNavButton" Content="TypeThing" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Configure TypeThing hotkeys, speed, and typing behavior."/>
+                            <RadioButton x:Name="UpdatesNavButton" Content="Updates" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Manage update channels and check for new releases."/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="1" Style="{DynamicResource CardStyle}">
+                        <Grid>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="4">
+                                    <views:HomeSectionView x:Name="HomePanel" Visibility="Visible"/>
+
+                                    <StackPanel x:Name="AnalyticsPanel" Visibility="Collapsed">
+                                        <TextBlock Text="Analytics" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Track how you use Redball over time. View session counts, total usage hours, and which features you use most. You can also export your data as CSV or JSON for your own records." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+                                        <UniformGrid Columns="3" Margin="0,0,0,16">
+                                            <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
+                                                <StackPanel>
+                                                    <TextBlock Text="Total Sessions" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                    <TextBlock x:Name="AnalyticsSessionsText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Style="{DynamicResource CardStyle}" Margin="8,0,8,8">
+                                                <StackPanel>
+                                                    <TextBlock Text="Usage Time" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                    <TextBlock x:Name="AnalyticsUsageText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
+                                                <StackPanel>
+                                                    <TextBlock Text="Tracked Events" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                                    <TextBlock x:Name="AnalyticsEventsText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </UniformGrid>
+
+                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
+                                            <StackPanel>
+                                                <TextBlock Text="Top Product Areas" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                                <TextBlock x:Name="AnalyticsTopAreasText" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Style="{DynamicResource CardStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Session Trend" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                                <TextBlock x:Name="AnalyticsTrendText" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                            <Button Content="Export CSV" Style="{DynamicResource ModernButton}" Margin="0,0,8,0" Click="AnalyticsExportCsv_Click" ToolTip="Export analytics data as a CSV file for spreadsheet import"/>
+                                            <Button Content="Export JSON" Style="{DynamicResource ModernButton}" Margin="0,0,8,0" Click="AnalyticsExportJson_Click" ToolTip="Export analytics data as JSON"/>
                                         </StackPanel>
-                                    </Border>
+                                    </StackPanel>
 
-                                    <Border Style="{DynamicResource CardStyle}">
-                                        <StackPanel>
-                                            <TextBlock Text="Session Trend" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                                            <TextBlock x:Name="AnalyticsTrendText" TextWrapping="Wrap"/>
-                                        </StackPanel>
-                                    </Border>
-                                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                                        <Button Content="Export CSV" Style="{DynamicResource ModernButton}" Margin="0,0,8,0" Click="AnalyticsExportCsv_Click" ToolTip="Export analytics data as a CSV file for spreadsheet import"/>
-                                        <Button Content="Export JSON" Style="{DynamicResource ModernButton}" Margin="0,0,8,0" Click="AnalyticsExportJson_Click" ToolTip="Export analytics data as JSON"/>
+                                    <StackPanel x:Name="DiagnosticsPanel" Visibility="Collapsed">
+                                        <TextBlock Text="Diagnostics" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Troubleshooting and system health information. Check your current configuration, runtime state, log output, hardware details, and session statistics. Useful if something isn't working as expected." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+                                        <UniformGrid Columns="2" Margin="0,0,0,12">
+                                            <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
+                                                <StackPanel>
+                                                    <TextBlock Text="Configuration" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                    <TextBlock x:Name="DiagnosticsConfigText" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
+                                                <StackPanel>
+                                                    <TextBlock Text="Runtime" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                    <TextBlock x:Name="DiagnosticsRuntimeText" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </UniformGrid>
+
+                                        <UniformGrid Columns="2" Margin="0,0,0,12">
+                                            <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
+                                                <StackPanel>
+                                                    <TextBlock Text="Logging" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                    <TextBlock x:Name="DiagnosticsLoggingText" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
+                                                <StackPanel>
+                                                    <TextBlock Text="Analytics Health" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                    <TextBlock x:Name="DiagnosticsAnalyticsText" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </UniformGrid>
+
+                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
+                                            <StackPanel>
+                                                <TextBlock Text="Session Statistics" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                <TextBlock x:Name="SessionStatsText" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
+                                            <StackPanel>
+                                                <TextBlock Text="Hardware" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                <TextBlock x:Name="DiagnosticsTempText" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Style="{DynamicResource CardStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Recent Log Output" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                <TextBox x:Name="DiagnosticsRecentLogText" Height="220" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="SettingsPanel" Visibility="Collapsed">
+                                        <TextBlock Text="Settings" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBlock Text="General application settings. Choose your theme, control notifications, manage configuration profiles, toggle logging, and enable the local web API for remote control from scripts." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+                                        <Grid Margin="0,0,0,16">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="SettingsSearchBox" Grid.Column="0" Style="{DynamicResource ModernTextBox}" TextChanged="SettingsSearchBox_TextChanged" Tag="Search settings..." ToolTip="Type to filter settings by keyword"/>
+                                            <Button Grid.Column="1" Content="Undo" Style="{DynamicResource ModernButton}" Margin="8,0,0,0" Click="SettingsUndoButton_Click" ToolTip="Undo the last settings change"/>
+                                            <Button Grid.Column="2" Content="Reset" Style="{DynamicResource ModernButton}" Margin="8,0,0,0" Click="SettingsResetButton_Click" ToolTip="Reset all settings to defaults"/>
+                                        </Grid>
+                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
+                                            <StackPanel>
+                                                <TextBlock Text="Profiles" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                <TextBlock Text="Save and load named configuration profiles." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
+                                                <Grid Margin="0,0,0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <ComboBox x:Name="ProfileCombo" Grid.Column="0" Style="{DynamicResource ModernComboBox}" ToolTip="Select a saved profile to load"/>
+                                                    <Button Grid.Column="1" Content="Load" Style="{DynamicResource ModernButton}" Margin="8,0,0,0" Click="ProfileLoad_Click" ToolTip="Load the selected profile"/>
+                                                    <Button Grid.Column="2" Content="Save" Style="{DynamicResource PrimaryButton}" Margin="8,0,0,0" Click="ProfileSave_Click" ToolTip="Save current settings as a new profile"/>
+                                                    <Button Grid.Column="3" Content="Delete" Style="{DynamicResource ModernButton}" Margin="8,0,0,0" Click="ProfileDelete_Click" ToolTip="Delete the selected profile"/>
+                                                </Grid>
+                                                <TextBlock x:Name="ProfileActiveText" Text="" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
+                                            <StackPanel>
+                                                <TextBlock Text="General" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                <TextBlock Text="Theme" FontWeight="Medium" Margin="0,0,0,8"/>
+                                                <ComboBox x:Name="MainThemeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Choose the visual theme for the Redball window.">
+                                                    <ComboBoxItem Content="System Default"/>
+                                                    <ComboBoxItem Content="Dark Mode"/>
+                                                    <ComboBoxItem Content="Light Mode"/>
+                                                    <ComboBoxItem Content="Midnight Blue"/>
+                                                    <ComboBoxItem Content="Forest Green"/>
+                                                    <ComboBoxItem Content="Ocean Blue"/>
+                                                    <ComboBoxItem Content="Sunset Orange"/>
+                                                    <ComboBoxItem Content="Royal Purple"/>
+                                                    <ComboBoxItem Content="Slate Gray"/>
+                                                    <ComboBoxItem Content="Rose Gold"/>
+                                                    <ComboBoxItem Content="Cyberpunk"/>
+                                                    <ComboBoxItem Content="Coffee"/>
+                                                    <ComboBoxItem Content="Arctic Frost"/>
+                                                </ComboBox>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12" ToolTip="Live preview of the current theme colors">
+                                                    <Border Width="36" Height="20" CornerRadius="4" Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,4,0"/>
+                                                    <Border Width="36" Height="20" CornerRadius="4" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,4,0"/>
+                                                    <Border Width="36" Height="20" CornerRadius="4" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,4,0"/>
+                                                    <Border Width="36" Height="20" CornerRadius="4" Background="{DynamicResource AccentBrush}" Margin="0,0,4,0"/>
+                                                    <Border Width="36" Height="20" CornerRadius="4" Background="{DynamicResource ForegroundBrush}" Margin="0,0,4,0"/>
+                                                    <TextBlock Text="Theme preview" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                                                </StackPanel>
+                                                <CheckBox x:Name="MainMinimizeToTrayCheck" Content="Minimize to tray on start" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Start Redball minimized so it lives in the tray instead of opening on screen."/>
+                                                <CheckBox x:Name="MainStartWithWindowsCheck" Content="Start with Windows" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Automatically launch Redball when you sign in to Windows."/>
+                                                <TextBlock x:Name="MainStartWithWindowsStatusText" Text="Startup status: Disabled" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,8"/>
+                                                <CheckBox x:Name="MainShowNotificationsCheck" Content="Show notifications" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainShowNotificationsCheck_Checked" Unchecked="MainShowNotificationsCheck_Unchecked" ToolTipService.ShowDuration="12000" ToolTip="Enable or disable toast notifications from Redball."/>
+                                                <CheckBox x:Name="MainSoundNotificationsCheck" Content="Play sound with notifications" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Play a system sound alongside visual notifications."/>
+                                                <TextBlock x:Name="MainNotificationModeLabel" Text="Notification Mode" FontWeight="Medium" Margin="0,8,0,8"/>
+                                                <ComboBox x:Name="MainNotificationModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Choose how chatty Redball should be when sending notifications.">
+                                                    <ComboBoxItem Content="All events"/>
+                                                    <ComboBoxItem Content="Important only"/>
+                                                    <ComboBoxItem Content="Errors only"/>
+                                                    <ComboBoxItem Content="Silent"/>
+                                                </ComboBox>
+                                                <CheckBox x:Name="MainVerboseLoggingCheck" Content="Enable verbose logging" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Turn on detailed logging for troubleshooting. Logs are saved to the file system."/>
+                                                <Border Style="{DynamicResource CardStyle}" Margin="0,16,0,0">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Advanced" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                        <TextBlock Text="Privacy, telemetry, and advanced runtime behavior." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
+                                                        <CheckBox x:Name="MainConfirmOnExitCheck" Content="Confirm on exit" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Show a confirmation dialog when closing Redball to prevent accidental exits. Useful if you rely on Redball running in the background."/>
+                                                        <CheckBox x:Name="MainEncryptConfigCheck" Content="Encrypt config with DPAPI" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Encrypt sensitive configuration data using Windows Data Protection API (DPAPI). Protects your settings from other users on this machine."/>
+                                                        <CheckBox x:Name="MainEnableTelemetryCheck" Content="Enable analytics" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Track session counts, usage time, and feature usage locally. Data stays on your device and can be exported anytime."/>
+                                                        <CheckBox x:Name="MainEnablePerformanceMetricsCheck" Content="Enable performance metrics" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Collect performance data like CPU and memory usage for the analytics dashboard. Helps identify resource impact of keep-awake operations."/>
+                                                        <CheckBox x:Name="MainProcessIsolationCheck" Content="Enable process isolation" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Run TypeThing operations in a separate process for increased stability. If TypeThing crashes, it won't bring down the main application."/>
+
+                                                        <TextBlock Text="Max Log Size (MB)" FontWeight="Medium" Margin="0,8,0,4"/>
+                                                        <Slider x:Name="MainMaxLogSizeSlider" Minimum="1" Maximum="1024" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainMaxLogSizeSlider_ValueChanged"/>
+                                                        <TextBlock x:Name="MainMaxLogSizeText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                                        <TextBlock Text="Mini Widget" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,8"/>
+                                                        <ComboBox x:Name="MainMiniWidgetPresetCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged">
+                                                            <ComboBoxItem Content="Custom"/>
+                                                            <ComboBoxItem Content="Focus"/>
+                                                            <ComboBoxItem Content="Meeting"/>
+                                                            <ComboBoxItem Content="Battery Safe"/>
+                                                        </ComboBox>
+                                                        <Button Content="Apply Preset" Style="{DynamicResource ModernButton}" Margin="0,0,0,8" Click="MainMiniWidgetApplyPresetButton_Click"/>
+                                                        <CheckBox x:Name="MainMiniWidgetAlwaysOnTopCheck" Content="Always on top" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <Slider x:Name="MainMiniWidgetOpacitySlider" Minimum="35" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainMiniWidgetOpacitySlider_ValueChanged"/>
+                                                        <TextBlock x:Name="MainMiniWidgetOpacityText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,6"/>
+                                                        <CheckBox x:Name="MainMiniWidgetShowQuickActionsCheck" Content="Show quick actions" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <CheckBox x:Name="MainMiniWidgetShowStatusIconsCheck" Content="Show status icons" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <CheckBox x:Name="MainMiniWidgetDoubleClickDashboardCheck" Content="Double-click opens dashboard" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <CheckBox x:Name="MainMiniWidgetOpenOnStartupCheck" Content="Open on startup" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <CheckBox x:Name="MainMiniWidgetLockPositionCheck" Content="Lock position" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <CheckBox x:Name="MainMiniWidgetSnapToEdgesCheck" Content="Snap to screen edges" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <CheckBox x:Name="MainMiniWidgetKeyboardShortcutsCheck" Content="Enable keyboard shortcuts" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <Slider x:Name="MainMiniWidgetCustomQuickMinutesSlider" Minimum="1" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainMiniWidgetCustomQuickMinutesSlider_ValueChanged"/>
+                                                        <TextBlock x:Name="MainMiniWidgetCustomQuickMinutesText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,6"/>
+                                                        <CheckBox x:Name="MainMiniWidgetConfirmCloseWhenActiveCheck" Content="Confirm close when active" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <Button Content="Open Logs Folder" Style="{DynamicResource ModernButton}" Margin="0,8,0,0" Click="OpenLogsFolderButton_Click" ToolTip="Open the folder containing Redball log files"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="BehaviorPanel" Visibility="Collapsed">
+                                        <TextBlock Text="Behavior" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Configure display sleep prevention, heartbeat key, and default run duration settings." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+                                        <Border Style="{DynamicResource CardStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Core Behavior" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                                                <CheckBox x:Name="MainPreventDisplaySleepCheck" Content="Prevent display sleep" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" AutomationProperties.AutomationId="PreventDisplaySleepCheckBox"/>
+
+                                                <TextBlock Text="Heartbeat Input Mode" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <ComboBox x:Name="MainHeartbeatInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,10" SelectionChanged="MainComboSettingChanged" AutomationProperties.AutomationId="UseHeartbeatCheckBox">
+                                                    <ComboBoxItem Content="Disabled"/>
+                                                    <ComboBoxItem Content="F13"/>
+                                                    <ComboBoxItem Content="F14"/>
+                                                    <ComboBoxItem Content="F15"/>
+                                                    <ComboBoxItem Content="F16"/>
+                                                </ComboBox>
+
+                                                <TextBlock Text="Default Duration (minutes)" FontWeight="Medium" Margin="0,2,0,6" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <Slider x:Name="MainDurationSlider" Minimum="1" Maximum="1440" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainDurationSlider_ValueChanged" AutomationProperties.AutomationId="HeartbeatIntervalTextBox"/>
+                                                <TextBox x:Name="MainDurationCustomBox" Style="{DynamicResource ModernTextBox}" Margin="0,8,0,8" TextChanged="MainDurationCustomBox_TextChanged" AutomationProperties.AutomationId="DurationTextBox"/>
+
+                                                <CheckBox x:Name="MainAutoExitOnCompleteCheck" Content="Auto-exit when timed session completes" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,10" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                                <TextBlock Text="Keep Awake Until" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox x:Name="MainKeepAwakeUntilBox" Grid.Column="0" Style="{DynamicResource ModernTextBox}" ToolTip="Enter time in HH:mm format"/>
+                                                    <Button Grid.Column="1" Content="Set" Style="{DynamicResource PrimaryButton}" Margin="8,0,0,0" Click="MainKeepAwakeUntilSet_Click"/>
+                                                    <Button Grid.Column="2" Content="Clear" Style="{DynamicResource ModernButton}" Margin="8,0,0,0" Click="MainKeepAwakeUntilClear_Click"/>
+                                                </Grid>
+                                                <TextBlock x:Name="MainKeepAwakeUntilStatus" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,8,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="SmartFeaturesPanel" Visibility="Collapsed">
+                                        <TextBlock Text="Smart Features" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Tune battery, network, idle, presentation, and scheduled behavior." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+                                        <Border Style="{DynamicResource CardStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Automation Conditions" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="{DynamicResource ForegroundBrush}"/>
+
+                                                <CheckBox x:Name="MainBatteryAwareCheck" Content="Battery-aware mode" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                <Slider x:Name="MainBatteryThresholdSlider" Minimum="1" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainBatteryThresholdSlider_ValueChanged"/>
+                                                <TextBlock x:Name="MainBatteryThresholdText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,10"/>
+
+                                                <CheckBox x:Name="MainNetworkAwareCheck" Content="Network-aware mode" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                                <CheckBox x:Name="MainIdleDetectionCheck" Content="Idle detection" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                <Slider x:Name="MainIdleThresholdSlider" Minimum="1" Maximum="240" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainIdleThresholdSlider_ValueChanged"/>
+                                                <TextBlock x:Name="MainIdleThresholdText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,10"/>
+
+                                                <CheckBox x:Name="MainPresentationModeCheck" Content="Presentation mode detection" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                                <CheckBox x:Name="MainGamingModeEnabledCheck" Content="Enable gaming mode detection" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                                <CheckBox x:Name="MainMeetingAwareCheck" Content="Enable meeting detection (Teams/Zoom)" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                                <CheckBox x:Name="MainThermalProtectionEnabledCheck" Content="Enable thermal protection" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                <TextBlock Text="CPU Temperature Threshold (°C)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <Slider x:Name="MainThermalThresholdSlider" Minimum="50" Maximum="105" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainThermalThresholdSlider_ValueChanged"/>
+                                                <TextBlock x:Name="MainThermalThresholdText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,10"/>
+
+                                                <CheckBox x:Name="MainScheduledOperationCheck" Content="Scheduled operation" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainScheduledOperationCheck_Checked" Unchecked="MainScheduledOperationCheck_Unchecked"/>
+
+                                                <StackPanel x:Name="MainScheduleDetailsPanel" Margin="24,0,0,10">
+                                                    <TextBlock Text="Start Time (HH:mm)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                    <TextBox x:Name="MainScheduleStartTimeBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,6" LostFocus="MainSettingChanged"/>
+                                                    <TextBlock Text="Stop Time (HH:mm)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                    <TextBox x:Name="MainScheduleStopTimeBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8" LostFocus="MainSettingChanged"/>
+
+                                                    <TextBlock Text="Active Days" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                    <WrapPanel>
+                                                        <CheckBox x:Name="MainScheduleMonCheck" Content="Mon" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <CheckBox x:Name="MainScheduleTueCheck" Content="Tue" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <CheckBox x:Name="MainScheduleWedCheck" Content="Wed" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <CheckBox x:Name="MainScheduleThuCheck" Content="Thu" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <CheckBox x:Name="MainScheduleFriCheck" Content="Fri" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <CheckBox x:Name="MainScheduleSatCheck" Content="Sat" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                        <CheckBox x:Name="MainScheduleSunCheck" Content="Sun" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                    </WrapPanel>
+                                                </StackPanel>
+
+                                                <CheckBox x:Name="MainPauseOnScreenLockCheck" Content="Pause on screen lock" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                <CheckBox x:Name="MainVpnAutoKeepAwakeCheck" Content="Enable VPN auto keep-awake" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+
+                                                <CheckBox x:Name="MainAppRulesEnabledCheck" Content="Enable app-specific keep-awake/pause rules" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                <TextBlock Text="Keep Awake Apps (one per line)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <TextBox x:Name="MainKeepAwakeAppsBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8" AcceptsReturn="True" Height="60" LostFocus="MainAppRulesBox_LostFocus"/>
+                                                <TextBlock Text="Pause Apps (one per line)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <TextBox x:Name="MainPauseAppsBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,10" AcceptsReturn="True" Height="60" LostFocus="MainAppRulesBox_LostFocus"/>
+
+                                                <CheckBox x:Name="MainPowerPlanAutoSwitchCheck" Content="Auto-switch Windows power plan" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                <TextBlock x:Name="MainPowerPlanText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,8"/>
+
+                                                <CheckBox x:Name="MainWifiProfileSwitchCheck" Content="Enable WiFi profile switching" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                <TextBox x:Name="MainWifiProfileMappingsBox" Style="{DynamicResource ModernTextBox}" Margin="24,0,0,10" AcceptsReturn="True" Height="60" TextWrapping="Wrap" ToolTip="Format: WiFiName=ProfileName (one per line)" LostFocus="MainAppRulesBox_LostFocus"/>
+
+                                                <CheckBox x:Name="MainRestartReminderCheck" Content="Enable restart reminders" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                <Slider x:Name="MainRestartReminderDaysSlider" Minimum="1" Maximum="365" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainRestartReminderDaysSlider_ValueChanged"/>
+                                                <TextBlock x:Name="MainRestartReminderDaysText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,6"/>
+                                                <CheckBox x:Name="MainAutoRestartCheck" Content="Auto-restart when reminder threshold is reached" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
+                                                <TextBlock x:Name="MainUptimeStatusText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,10"/>
+
+                                                <TextBlock Text="Process Watcher" FontWeight="SemiBold" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <Grid Margin="0,0,0,6">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox x:Name="ProcessWatcherTargetBox" Grid.Column="0" Style="{DynamicResource ModernTextBox}" ToolTip="Example: obs64, chrome, teams"/>
+                                                    <Button Grid.Column="1" Content="Start" Style="{DynamicResource PrimaryButton}" Margin="8,0,0,0" Click="ProcessWatcherStart_Click"/>
+                                                    <Button Grid.Column="2" Content="Stop" Style="{DynamicResource ModernButton}" Margin="8,0,0,0" Click="ProcessWatcherStop_Click"/>
+                                                </Grid>
+                                                <TextBlock x:Name="ProcessWatcherStatusText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="TypeThingPanel" Visibility="Collapsed">
+                                        <TextBlock Text="TypeThing" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Configure TypeThing hotkeys, speed, and typing behavior." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+
+                                        <!-- Clipboard History Section -->
+                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
+                                            <StackPanel>
+                                                <TextBlock Text="Clipboard History" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                                <TextBlock Text="Recently typed clipboard content. Click reveal to view (auto-hides for privacy)." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,12"/>
+
+                                                <!-- Reveal Duration Slider -->
+                                                <TextBlock Text="Reveal Duration" FontWeight="Medium" Margin="0,0,0,4"/>
+                                                <Slider x:Name="ClipboardRevealDurationSlider" Minimum="1" Maximum="60" Value="10" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" Margin="0,0,0,4" ValueChanged="ClipboardRevealDurationSlider_ValueChanged"/>
+                                                <TextBlock x:Name="ClipboardRevealDurationText" Text="Reveal for: 10 seconds" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,12"/>
+
+                                                <!-- History List -->
+                                                <ListBox x:Name="TypeThingHistoryList" Height="200" Style="{DynamicResource ModernListBox}">
+                                                    <ListBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,4">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <!-- Blurred Text Display -->
+                                                                <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="4" Padding="8,4">
+                                                                    <Grid>
+                                                                        <!-- Blurred version (default visible) -->
+                                                                        <TextBlock x:Name="BlurredText" Text="{Binding BlurredText}" Foreground="{DynamicResource ForegroundSecondaryBrush}" FontFamily="Consolas" FontSize="12" Visibility="{Binding IsRevealed, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                                                                        <!-- Clear version (visible when revealed) -->
+                                                                        <TextBlock x:Name="ClearText" Text="{Binding DisplayText}" Foreground="{DynamicResource ForegroundBrush}" FontFamily="Consolas" FontSize="12" Visibility="{Binding IsRevealed, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                                    </Grid>
+                                                                </Border>
+
+                                                                <!-- Reveal Button -->
+                                                                <Button Grid.Column="1" x:Name="RevealBtn" Content="&#xE8D1;" FontFamily="Segoe Fluent Icons" FontSize="12" Style="{DynamicResource IconButtonStyle}" Width="28" Height="28" Margin="4,0" Click="TypeThingHistoryReveal_Click" Tag="{Binding}" ToolTip="Reveal for 10 seconds"/>
+
+                                                                <!-- Retype Button -->
+                                                                <Button Grid.Column="2" Content="&#xE8D2;" FontFamily="Segoe Fluent Icons" FontSize="12" Style="{DynamicResource IconButtonStyle}" Width="28" Height="28" Click="TypeThingHistoryRetype_Click" Tag="{Binding}" ToolTip="Retype this content"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ListBox.ItemTemplate>
+                                                </ListBox>
+
+                                                <!-- Clear History Button -->
+                                                <Button Content="Clear History" Style="{DynamicResource ModernButton}" HorizontalAlignment="Right" Margin="0,8,0,0" Click="TypeThingHistoryClear_Click"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
+                                            <StackPanel>
+                                                <TextBlock Text="Templates" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                                <TextBlock Text="Save and reuse frequently typed content." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,12"/>
+
+                                                <!-- Template Selection and Preview -->
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <ComboBox x:Name="TemplateCombo" Grid.Column="0" Style="{DynamicResource ModernComboBox}" Margin="0,0,8,0" SelectionChanged="TemplateCombo_SelectionChanged"/>
+
+                                                    <Button Grid.Column="1" Content="Type" Style="{DynamicResource ModernButton}" Margin="0,0,4,0" Click="TemplateType_Click"/>
+
+                                                    <Button Grid.Column="2" Content="Save Current" Style="{DynamicResource ModernButton}" Margin="0,0,4,0" Click="TemplateSave_Click"/>
+
+                                                    <Button Grid.Column="3" Content="Delete" Style="{DynamicResource ModernButton}" Click="TemplateDelete_Click"/>
+                                                </Grid>
+
+                                                <!-- Template Preview Area -->
+                                                <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="4" Margin="0,12,0,0" Padding="8" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Template Preview" FontWeight="Medium" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,4"/>
+                                                        <ScrollViewer MaxHeight="100" VerticalScrollBarVisibility="Auto">
+                                                            <TextBlock x:Name="TemplatePreviewText" Text="Select a template to preview its content..." FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                        </ScrollViewer>
+                                                        <TextBlock x:Name="TemplatePreviewStats" Text="" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,0" HorizontalAlignment="Right"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Style="{DynamicResource CardStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="TypeThing Configuration" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="{DynamicResource ForegroundBrush}"/>
+
+                                                <CheckBox x:Name="MainEnableTypeThingCheck" Content="Enable TypeThing" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Enable the TypeThing feature to paste clipboard content as typed keystrokes. When enabled, you can use hotkeys to type text instead of pasting."/>
+                                                <CheckBox x:Name="MainUseLowLevelHotkeyCheck" Content="Use low-level hotkey registration" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Register hotkeys at the system level for better reliability. Required for global hotkeys to work when app is not focused. May trigger antivirus warnings due to low-level keyboard hook."/>
+
+                                                <TextBlock Text="Input Mode" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <ComboBox x:Name="MainTypeThingInputModeCombo" Grid.Column="0" Style="{DynamicResource ModernComboBox}" Margin="0,0,8,10" SelectionChanged="MainComboSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Select input method: SendInput (standard Windows API) or Service (works over RDP).">
+                                                        <ComboBoxItem Content="SendInput" ToolTip="Standard Windows input - works everywhere"/>
+                                                        <ComboBoxItem Content="Service" ToolTip="Windows Service input - works over RDP, requires service installation"/>
+                                                    </ComboBox>
+                                                    <WrapPanel Grid.Column="1" Orientation="Horizontal">
+                                                        <Button x:Name="MainInstallServiceBtn" Content="Install Service" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainInstallServiceBtn_Click"/>
+                                                        <Button x:Name="MainUninstallServiceBtn" Content="Uninstall Service" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainUninstallServiceBtn_Click"/>
+                                                    </WrapPanel>
+                                                </Grid>
+
+                                                <TextBlock x:Name="MainServiceAdminHintText" Text="Administrator approval (UAC) is required to install or uninstall the Input Service." FontSize="12" Foreground="{DynamicResource WarningBrush}" Margin="0,4,0,8" TextWrapping="Wrap" Visibility="Collapsed"/>
+
+                                                <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="Global hotkey to start TypeThing typing. Click the box and press your desired key combination. Works even when Redball is not focused."/>
+                                                <TextBox x:Name="MainStartHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8" PreviewKeyDown="MainHotkeyBox_PreviewKeyDown" GotFocus="MainStartHotkeyBox_GotFocus" LostFocus="MainHotkeyBox_LostFocus" Tag="Click here and press your desired hotkey combination..." ToolTipService.ShowDuration="12000" ToolTip="Press your desired hotkey combination to set the start hotkey."/>
+                                                <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="Global hotkey to immediately stop TypeThing typing. Useful if typing goes wrong or you need to abort. Click and press your key combination."/>
+                                                <TextBox x:Name="MainStopHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,10" PreviewKeyDown="MainHotkeyBox_PreviewKeyDown" GotFocus="MainStopHotkeyBox_GotFocus" LostFocus="MainHotkeyBox_LostFocus" Tag="Click here and press your desired hotkey combination..." ToolTipService.ShowDuration="12000" ToolTip="Press your desired hotkey combination to set the stop hotkey."/>
+
+                                                <TextBlock Text="Typing Speed (max delay ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="Maximum milliseconds between keystrokes. Lower = faster typing. 1-50ms is very fast, 100-200ms is natural human speed, 300-500ms is slow/deliberate."/>
+                                                <Slider x:Name="MainTypingSpeedSlider" Minimum="1" Maximum="500" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypingSpeedSlider_ValueChanged"/>
+                                                <TextBlock x:Name="MainTypingSpeedText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                                <TextBlock Text="Minimum Delay (ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="Minimum milliseconds between keystrokes. TypeThing randomly picks delays between min and max for human-like variation. Keep close to max for consistent speed."/>
+                                                <Slider x:Name="MainTypeThingMinDelaySlider" Minimum="1" Maximum="500" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypeThingMinDelaySlider_ValueChanged"/>
+                                                <TextBlock x:Name="MainTypeThingMinDelayText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                                <TextBlock Text="Start Countdown (seconds)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="Seconds to wait after pressing Start hotkey before typing begins. Gives you time to switch to the target window. Countdown shows in notification."/>
+                                                <Slider x:Name="MainTypeThingStartDelaySlider" Minimum="1" Maximum="30" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypeThingStartDelaySlider_ValueChanged"/>
+                                                <TextBlock x:Name="MainTypeThingStartDelayText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                                <CheckBox x:Name="MainAddRandomPausesCheck" Content="Add random pauses" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Occasionally insert longer pauses between keystrokes to mimic human typing patterns. Makes typed text appear more natural and less robotic."/>
+
+                                                <TextBlock Text="Random Pause Chance (%)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="Percentage chance that a random pause will occur between any two keystrokes. Higher values = more frequent pauses. 10-20% is subtle, 30-50% is very human-like."/>
+                                                <Slider x:Name="MainTypeThingPauseChanceSlider" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypeThingPauseChanceSlider_ValueChanged"/>
+                                                <TextBlock x:Name="MainTypeThingPauseChanceText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                                <TextBlock Text="Random Pause Max (ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="Maximum duration of random pauses in milliseconds. When a random pause occurs, it will be between 50ms and this value. 500-1000ms mimics a human thinking pause."/>
+                                                <Slider x:Name="MainTypeThingPauseMaxSlider" Minimum="0" Maximum="5000" TickFrequency="10" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainTypeThingPauseMaxSlider_ValueChanged"/>
+                                                <TextBlock x:Name="MainTypeThingPauseMaxText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                                <CheckBox x:Name="MainTypeNewlinesCheck" Content="Type newline characters" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Convert line breaks in clipboard text to Enter key presses. Disable this if you want multi-line text typed as a single line."/>
+                                                <CheckBox x:Name="MainTypeThingNotificationsCheck" Content="Show TypeThing notifications" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Display toast notifications for TypeThing events: countdown start, typing progress, completion, and errors. Useful for knowing when typing begins/ends."/>
+                                                <CheckBox x:Name="MainTypeThingTtsCheck" Content="Enable TypeThing text-to-speech" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,12" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Read clipboard content aloud using Windows text-to-speech when TypeThing starts. Useful for accessibility or verifying what will be typed before it begins."/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="UpdatesPanel" Visibility="Collapsed">
+                                        <TextBlock Text="Updates" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Manage update channels and check for new releases." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+                                        <Border Style="{DynamicResource CardStyle}">
+                                            <StackPanel>
+                                                <Grid Margin="0,0,0,10">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="Update Settings" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
+                                                    <Button Grid.Column="1" x:Name="MainSaveSettingsButton" Content="Save Settings" Style="{DynamicResource PrimaryButton}" Click="MainSaveSettingsButton_Click" IsEnabled="False"/>
+                                                </Grid>
+                                                <CheckBox x:Name="MainAutoUpdateCheckEnabledCheck" Content="Check for updates automatically" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Automatically check for new Redball versions at the interval below. Downloads are manual - you'll be notified when updates are available."/>
+
+                                                <TextBlock Text="Update Channel" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="Which release channel to check: Stable (tested releases), Beta (early access with new features), or Disabled (no update checks)."/>
+                                                <ComboBox x:Name="MainUpdateChannelCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged">
+                                                    <ComboBoxItem Content="Stable" ToolTip="Tested, stable releases suitable for daily use"/>
+                                                    <ComboBoxItem Content="Beta" ToolTip="Early access releases with latest features but may have bugs"/>
+                                                    <ComboBoxItem Content="Disabled" ToolTip="Do not check for updates automatically"/>
+                                                </ComboBox>
+
+                                                <CheckBox x:Name="MainVerifyUpdateSignatureCheck" Content="Verify update signatures" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Cryptographically verify that updates are signed by the Redball developer. Strongly recommended - disabling this allows potentially malicious updates to be installed."/>
+
+                                                <TextBlock Text="Auto-check Interval (minutes)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="How often to check for updates when automatic checking is enabled. 60 minutes = hourly, 1440 minutes = daily."/>
+                                                <Slider x:Name="MainAutoUpdateIntervalSlider" Minimum="30" Maximum="1440" TickFrequency="30" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainAutoUpdateIntervalSlider_ValueChanged"/>
+                                                <TextBlock x:Name="MainAutoUpdateIntervalText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
+
+                                                <TextBlock x:Name="MainCurrentVersionText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
+                                                <Button Content="Check Now" Style="{DynamicResource ModernButton}" Click="MainCheckUpdatesButton_Click"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="CompatibilityControlsPanel" Visibility="Collapsed">
+                                        <Grid x:Name="CompatibilityNoopAnchor"/>
+
+
+                                        <Border x:Name="TypeThingProgressOverlay" Visibility="Collapsed">
+                                            <StackPanel>
+                                                <ProgressBar x:Name="TypeThingProgressBar" Minimum="0" Maximum="100" Value="0"/>
+                                                <TextBlock x:Name="TypeThingProgressText" Foreground="{DynamicResource ForegroundBrush}"/>
+                                            </StackPanel>
+                                        </Border>
                                     </StackPanel>
                                 </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
 
-                                <StackPanel x:Name="SloDashboardPanel" Visibility="Collapsed">
-                                    <TextBlock Text="SLO Dashboard" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Service Level Objective metrics and performance indicators. Track app uptime, keep-awake reliability, and system health." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
-                                    <UniformGrid Columns="2" Margin="0,0,0,12">
-                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                                            <StackPanel>
-                                                <TextBlock Text="App Uptime" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                                <TextBlock x:Name="SloUptimeText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
-                                                <TextBlock x:Name="SloUptimeStatusText" FontSize="11" Opacity="0.7"/>
-                                            </StackPanel>
-                                        </Border>
-                                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Keep-Awake Success" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                                <TextBlock x:Name="SloKeepAwakeSuccessText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
-                                                <TextBlock x:Name="SloKeepAwakeStatusText" FontSize="11" Opacity="0.7"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </UniformGrid>
-                                    <UniformGrid Columns="2" Margin="0,0,0,12">
-                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                                            <StackPanel>
-                                                <TextBlock Text="CPU Temperature" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                                <TextBlock x:Name="SloTempText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
-                                                <TextBlock x:Name="SloTempStatusText" FontSize="11" Opacity="0.7"/>
-                                            </StackPanel>
-                                        </Border>
-                                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Service Status" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                                <TextBlock x:Name="SloServiceStatusText" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
-                                                <TextBlock x:Name="SloServiceDetailsText" FontSize="11" Opacity="0.7"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </UniformGrid>
-                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
-                                        <StackPanel>
-                                            <TextBlock Text="Session &amp; Feature Metrics" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                                            <TextBlock x:Name="SloMetricsText" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"/>
-                                        </StackPanel>
-                                    </Border>
-                                    <Button Content="Refresh Metrics" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left" Click="SloRefreshButton_Click"/>
-                                </StackPanel>
-
-                                <StackPanel x:Name="DiagnosticsPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Diagnostics" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Troubleshooting and system health information. Check your current configuration, runtime state, log output, hardware details, and session statistics. Useful if something isn't working as expected." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
-                                    <UniformGrid Columns="2" Margin="0,0,0,12">
-                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Configuration" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                                <TextBlock x:Name="DiagnosticsConfigText" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </Border>
-                                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Runtime" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                                <TextBlock x:Name="DiagnosticsRuntimeText" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </UniformGrid>
-
-                                    <UniformGrid Columns="2" Margin="0,0,0,12">
-                                        <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Logging" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                                <TextBlock x:Name="DiagnosticsLoggingText" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </Border>
-                                        <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,8">
-                                            <StackPanel>
-                                                <TextBlock Text="Analytics Health" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                                <TextBlock x:Name="DiagnosticsAnalyticsText" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </UniformGrid>
-
-                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
-                                        <StackPanel>
-                                            <TextBlock Text="Session Statistics" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                            <TextBlock x:Name="SessionStatsText" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"/>
-                                        </StackPanel>
-                                    </Border>
-
-                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
-                                        <StackPanel>
-                                            <TextBlock Text="Hardware" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                            <TextBlock x:Name="DiagnosticsTempText" TextWrapping="Wrap"/>
-                                        </StackPanel>
-                                    </Border>
-
-                                    <Border Style="{DynamicResource CardStyle}">
-                                        <StackPanel>
-                                            <TextBlock Text="Recent Log Output" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                            <TextBox x:Name="DiagnosticsRecentLogText"
-                                                     Height="220"
-                                                     IsReadOnly="True"
-                                                     AcceptsReturn="True"
-                                                     TextWrapping="Wrap"
-                                                     VerticalScrollBarVisibility="Auto"
-                                                     HorizontalScrollBarVisibility="Auto"/>
-                                        </StackPanel>
-                                    </Border>
-                                </StackPanel>
-
-                                <StackPanel x:Name="SettingsPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Settings" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="General application settings. Choose your theme, control notifications, manage configuration profiles, toggle logging, and enable the local web API for remote control from scripts." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
-                                    <Grid Margin="0,0,0,16">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBox x:Name="SettingsSearchBox" Grid.Column="0" Style="{DynamicResource ModernTextBox}"
-                                                 TextChanged="SettingsSearchBox_TextChanged"
-                                                 Tag="Search settings..."
-                                                 ToolTip="Type to filter settings by keyword"/>
-                                        <Button Grid.Column="1" Content="Undo" Style="{DynamicResource ModernButton}" Margin="8,0,0,0" Click="SettingsUndoButton_Click" ToolTip="Undo the last settings change"/>
-                                        <Button Grid.Column="2" Content="Reset" Style="{DynamicResource ModernButton}" Margin="8,0,0,0" Click="SettingsResetButton_Click" ToolTip="Reset all settings to defaults"/>
-                                    </Grid>
-                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
-                                        <StackPanel>
-                                            <TextBlock Text="Profiles" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                            <TextBlock Text="Save and load named configuration profiles." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
-                                            <Grid Margin="0,0,0,8">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <ComboBox x:Name="ProfileCombo" Grid.Column="0" Style="{DynamicResource ModernComboBox}" ToolTip="Select a saved profile to load"/>
-                                                <Button Grid.Column="1" Content="Load" Style="{DynamicResource ModernButton}" Margin="8,0,0,0" Click="ProfileLoad_Click" ToolTip="Load the selected profile"/>
-                                                <Button Grid.Column="2" Content="Save" Style="{DynamicResource PrimaryButton}" Margin="8,0,0,0" Click="ProfileSave_Click" ToolTip="Save current settings as a new profile"/>
-                                                <Button Grid.Column="3" Content="Delete" Style="{DynamicResource ModernButton}" Margin="8,0,0,0" Click="ProfileDelete_Click" ToolTip="Delete the selected profile"/>
-                                            </Grid>
-                                            <TextBlock x:Name="ProfileActiveText" Text="" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                        </StackPanel>
-                                    </Border>
-                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
-                                        <StackPanel>
-                                            <TextBlock Text="General" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                            <TextBlock Text="Theme" FontWeight="Medium" Margin="0,0,0,8"/>
-                                            <ComboBox x:Name="MainThemeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Choose the visual theme for the Redball window.">
-                                                <ComboBoxItem Content="System Default"/>
-                                                <ComboBoxItem Content="Dark Mode"/>
-                                                <ComboBoxItem Content="Light Mode"/>
-                                                <ComboBoxItem Content="Midnight Blue"/>
-                                                <ComboBoxItem Content="Forest Green"/>
-                                                <ComboBoxItem Content="Ocean Blue"/>
-                                                <ComboBoxItem Content="Sunset Orange"/>
-                                                <ComboBoxItem Content="Royal Purple"/>
-                                                <ComboBoxItem Content="Slate Gray"/>
-                                                <ComboBoxItem Content="Rose Gold"/>
-                                                <ComboBoxItem Content="Cyberpunk"/>
-                                                <ComboBoxItem Content="Coffee"/>
-                                                <ComboBoxItem Content="Arctic Frost"/>
-                                            </ComboBox>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12" ToolTip="Live preview of the current theme colors">
-                                                <Border Width="36" Height="20" CornerRadius="4" Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,4,0"/>
-                                                <Border Width="36" Height="20" CornerRadius="4" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,4,0"/>
-                                                <Border Width="36" Height="20" CornerRadius="4" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,4,0"/>
-                                                <Border Width="36" Height="20" CornerRadius="4" Background="{DynamicResource AccentBrush}" Margin="0,0,4,0"/>
-                                                <Border Width="36" Height="20" CornerRadius="4" Background="{DynamicResource ForegroundBrush}" Margin="0,0,4,0"/>
-                                                <TextBlock Text="Theme preview" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center" Margin="4,0,0,0"/>
-                                            </StackPanel>
-                                            <CheckBox x:Name="MainMinimizeToTrayCheck" Content="Minimize to tray on start" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Start Redball minimized so it lives in the tray instead of opening on screen."/>
-                                            <CheckBox x:Name="MainStartWithWindowsCheck" Content="Start with Windows" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Automatically launch Redball when you sign in to Windows."/>
-                                            <TextBlock x:Name="MainStartWithWindowsStatusText" Text="Startup status: Disabled" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,8"/>
-                                            <CheckBox x:Name="MainShowNotificationsCheck" Content="Show notifications" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainShowNotificationsCheck_Checked" Unchecked="MainShowNotificationsCheck_Unchecked" ToolTipService.ShowDuration="12000" ToolTip="Enable or disable toast notifications from Redball."/>
-                                            <CheckBox x:Name="MainSoundNotificationsCheck" Content="Play sound with notifications" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Play a system sound alongside visual notifications."/>
-                                            <TextBlock x:Name="MainNotificationModeLabel" Text="Notification Mode" FontWeight="Medium" Margin="0,8,0,8"/>
-                                            <ComboBox x:Name="MainNotificationModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Choose how chatty Redball should be when sending notifications.">
-                                                <ComboBoxItem Content="All events"/>
-                                                <ComboBoxItem Content="Important only"/>
-                                                <ComboBoxItem Content="Errors only"/>
-                                                <ComboBoxItem Content="Silent"/>
-                                            </ComboBox>
-                                            <CheckBox x:Name="MainVerboseLoggingCheck" Content="Enable verbose logging" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Turn on detailed logging for troubleshooting. Logs are saved to the file system."/>
-                                            <Border Style="{DynamicResource CardStyle}" Margin="0,16,0,0">
-                                                <StackPanel>
-                                                    <TextBlock Text="Advanced" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                                    <TextBlock Text="Privacy, telemetry, and advanced runtime behavior." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
-                                                    <CheckBox x:Name="MainConfirmOnExitCheck" Content="Confirm on exit" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                              ToolTipService.ShowDuration="12000"
-                                                              ToolTip="Show a confirmation dialog when closing Redball to prevent accidental exits. Useful if you rely on Redball running in the background."/>
-                                                    <CheckBox x:Name="MainEncryptConfigCheck" Content="Encrypt config with DPAPI" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                              ToolTipService.ShowDuration="12000"
-                                                              ToolTip="Encrypt sensitive configuration data using Windows Data Protection API (DPAPI). Protects your settings from other users on this machine."/>
-                                                    <CheckBox x:Name="MainEnableTelemetryCheck" Content="Enable analytics" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Track session counts, usage time, and feature usage locally. Data stays on your device and can be exported anytime."/>
-                                                    <CheckBox x:Name="MainEnablePerformanceMetricsCheck" Content="Enable performance metrics" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                              ToolTipService.ShowDuration="12000"
-                                                              ToolTip="Collect performance data like CPU and memory usage for the analytics dashboard. Helps identify resource impact of keep-awake operations."/>
-                                                    <CheckBox x:Name="MainProcessIsolationCheck" Content="Enable process isolation" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                              ToolTipService.ShowDuration="12000"
-                                                              ToolTip="Run TypeThing operations in a separate process for increased stability. If TypeThing crashes, it won't bring down the main application."/>
-
-                                                    <TextBlock Text="Max Log Size (MB)" FontWeight="Medium" Margin="0,8,0,4"/>
-                                                    <Slider x:Name="MainMaxLogSizeSlider" Minimum="1" Maximum="1024" TickFrequency="1"
-                                                            IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
-                                                            ValueChanged="MainMaxLogSizeSlider_ValueChanged"/>
-                                                    <TextBlock x:Name="MainMaxLogSizeText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
-
-                                                    <TextBlock Text="Mini Widget" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,8"/>
-                                                    <ComboBox x:Name="MainMiniWidgetPresetCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged">
-                                                        <ComboBoxItem Content="Custom"/>
-                                                        <ComboBoxItem Content="Focus"/>
-                                                        <ComboBoxItem Content="Meeting"/>
-                                                        <ComboBoxItem Content="Battery Safe"/>
-                                                    </ComboBox>
-                                                    <Button Content="Apply Preset" Style="{DynamicResource ModernButton}" Margin="0,0,0,8" Click="MainMiniWidgetApplyPresetButton_Click"/>
-                                                    <CheckBox x:Name="MainMiniWidgetAlwaysOnTopCheck" Content="Always on top" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <Slider x:Name="MainMiniWidgetOpacitySlider" Minimum="35" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainMiniWidgetOpacitySlider_ValueChanged"/>
-                                                    <TextBlock x:Name="MainMiniWidgetOpacityText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,6"/>
-                                                    <CheckBox x:Name="MainMiniWidgetShowQuickActionsCheck" Content="Show quick actions" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainMiniWidgetShowStatusIconsCheck" Content="Show status icons" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainMiniWidgetDoubleClickDashboardCheck" Content="Double-click opens dashboard" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainMiniWidgetOpenOnStartupCheck" Content="Open on startup" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainMiniWidgetLockPositionCheck" Content="Lock position" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainMiniWidgetSnapToEdgesCheck" Content="Snap to screen edges" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainMiniWidgetKeyboardShortcutsCheck" Content="Enable keyboard shortcuts" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <Slider x:Name="MainMiniWidgetCustomQuickMinutesSlider" Minimum="1" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainMiniWidgetCustomQuickMinutesSlider_ValueChanged"/>
-                                                    <TextBlock x:Name="MainMiniWidgetCustomQuickMinutesText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,6"/>
-                                                    <CheckBox x:Name="MainMiniWidgetConfirmCloseWhenActiveCheck" Content="Confirm close when active" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <Button Content="Open Logs Folder" Style="{DynamicResource ModernButton}" Margin="0,8,0,0" Click="OpenLogsFolderButton_Click" ToolTip="Open the folder containing Redball log files"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </StackPanel>
-                                    </Border>
-                                </StackPanel>
-
-                                <StackPanel x:Name="BehaviorPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Behavior" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Configure display sleep prevention, heartbeat key, and default run duration settings." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
-                                    <Border Style="{DynamicResource CardStyle}">
-                                        <StackPanel>
-                                            <TextBlock Text="Core Behavior" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-
-                                            <CheckBox x:Name="MainPreventDisplaySleepCheck" Content="Prevent display sleep"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                      AutomationProperties.AutomationId="PreventDisplaySleepCheckBox"/>
-
-                                            <TextBlock Text="Heartbeat Input Mode" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
-                                            <ComboBox x:Name="MainHeartbeatInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,10"
-                                                      SelectionChanged="MainComboSettingChanged"
-                                                      AutomationProperties.AutomationId="UseHeartbeatCheckBox">
-                                                <ComboBoxItem Content="Disabled"/>
-                                                <ComboBoxItem Content="F13"/>
-                                                <ComboBoxItem Content="F14"/>
-                                                <ComboBoxItem Content="F15"/>
-                                                <ComboBoxItem Content="F16"/>
-                                            </ComboBox>
-
-                                            <TextBlock Text="Default Duration (minutes)" FontWeight="Medium" Margin="0,2,0,6" Foreground="{DynamicResource ForegroundBrush}"/>
-                                            <Slider x:Name="MainDurationSlider" Minimum="1" Maximum="1440" TickFrequency="1"
-                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
-                                                    ValueChanged="MainDurationSlider_ValueChanged"
-                                                    AutomationProperties.AutomationId="HeartbeatIntervalTextBox"/>
-                                            <TextBox x:Name="MainDurationCustomBox" Style="{DynamicResource ModernTextBox}" Margin="0,8,0,8"
-                                                     TextChanged="MainDurationCustomBox_TextChanged"
-                                                     AutomationProperties.AutomationId="DurationTextBox"/>
-
-                                            <CheckBox x:Name="MainAutoExitOnCompleteCheck" Content="Auto-exit when timed session completes"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,10"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-
-                                            <TextBlock Text="Keep Awake Until" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBox x:Name="MainKeepAwakeUntilBox" Grid.Column="0" Style="{DynamicResource ModernTextBox}"
-                                                         ToolTip="Enter time in HH:mm format"/>
-                                                <Button Grid.Column="1" Content="Set" Style="{DynamicResource PrimaryButton}" Margin="8,0,0,0"
-                                                        Click="MainKeepAwakeUntilSet_Click"/>
-                                                <Button Grid.Column="2" Content="Clear" Style="{DynamicResource ModernButton}" Margin="8,0,0,0"
-                                                        Click="MainKeepAwakeUntilClear_Click"/>
-                                            </Grid>
-                                            <TextBlock x:Name="MainKeepAwakeUntilStatus" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,8,0,0"/>
-                                        </StackPanel>
-                                    </Border>
-                                </StackPanel>
-
-                                <StackPanel x:Name="SmartFeaturesPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Smart Features" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Tune battery, network, idle, presentation, and scheduled behavior." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
-                                    <Border Style="{DynamicResource CardStyle}">
-                                        <StackPanel>
-                                            <TextBlock Text="Automation Conditions" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="{DynamicResource ForegroundBrush}"/>
-
-                                            <CheckBox x:Name="MainBatteryAwareCheck" Content="Battery-aware mode"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                            <Slider x:Name="MainBatteryThresholdSlider" Minimum="1" Maximum="100" TickFrequency="1"
-                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
-                                                    ValueChanged="MainBatteryThresholdSlider_ValueChanged"/>
-                                            <TextBlock x:Name="MainBatteryThresholdText" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,10"/>
-
-                                            <CheckBox x:Name="MainNetworkAwareCheck" Content="Network-aware mode"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-
-                                            <CheckBox x:Name="MainIdleDetectionCheck" Content="Idle detection"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                            <Slider x:Name="MainIdleThresholdSlider" Minimum="1" Maximum="240" TickFrequency="1"
-                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
-                                                    ValueChanged="MainIdleThresholdSlider_ValueChanged"/>
-                                            <TextBlock x:Name="MainIdleThresholdText" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,10"/>
-
-                                            <CheckBox x:Name="MainPresentationModeCheck" Content="Presentation mode detection"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-
-                                            <CheckBox x:Name="MainGamingModeEnabledCheck" Content="Enable gaming mode detection"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-
-                                            <CheckBox x:Name="MainMeetingAwareCheck" Content="Enable meeting detection (Teams/Zoom)"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-
-                                            <CheckBox x:Name="MainThermalProtectionEnabledCheck" Content="Enable thermal protection"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                            <TextBlock Text="CPU Temperature Threshold (°C)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
-                                            <Slider x:Name="MainThermalThresholdSlider" Minimum="50" Maximum="105" TickFrequency="1"
-                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
-                                                    ValueChanged="MainThermalThresholdSlider_ValueChanged"/>
-                                            <TextBlock x:Name="MainThermalThresholdText" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,10"/>
-
-                                            <CheckBox x:Name="MainScheduledOperationCheck" Content="Scheduled operation"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainScheduledOperationCheck_Checked" Unchecked="MainScheduledOperationCheck_Unchecked"/>
-
-                                            <StackPanel x:Name="MainScheduleDetailsPanel" Margin="24,0,0,10">
-                                                <TextBlock Text="Start Time (HH:mm)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
-                                                <TextBox x:Name="MainScheduleStartTimeBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,6"
-                                                         LostFocus="MainSettingChanged"/>
-                                                <TextBlock Text="Stop Time (HH:mm)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
-                                                <TextBox x:Name="MainScheduleStopTimeBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"
-                                                         LostFocus="MainSettingChanged"/>
-
-                                                <TextBlock Text="Active Days" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
-                                                <WrapPanel>
-                                                    <CheckBox x:Name="MainScheduleMonCheck" Content="Mon" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainScheduleTueCheck" Content="Tue" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainScheduleWedCheck" Content="Wed" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainScheduleThuCheck" Content="Thu" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainScheduleFriCheck" Content="Fri" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainScheduleSatCheck" Content="Sat" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                    <CheckBox x:Name="MainScheduleSunCheck" Content="Sun" Style="{DynamicResource ModernCheckBox}" Margin="0,0,8,4" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                                </WrapPanel>
-                                            </StackPanel>
-
-                                            <CheckBox x:Name="MainPauseOnScreenLockCheck" Content="Pause on screen lock"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                            <CheckBox x:Name="MainVpnAutoKeepAwakeCheck" Content="Enable VPN auto keep-awake"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-
-                                            <CheckBox x:Name="MainAppRulesEnabledCheck" Content="Enable app-specific keep-awake/pause rules"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                            <TextBlock Text="Keep Awake Apps (one per line)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
-                                            <TextBox x:Name="MainKeepAwakeAppsBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"
-                                                     AcceptsReturn="True" Height="60" LostFocus="MainAppRulesBox_LostFocus"/>
-                                            <TextBlock Text="Pause Apps (one per line)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}"/>
-                                            <TextBox x:Name="MainPauseAppsBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,10"
-                                                     AcceptsReturn="True" Height="60" LostFocus="MainAppRulesBox_LostFocus"/>
-
-                                            <CheckBox x:Name="MainPowerPlanAutoSwitchCheck" Content="Auto-switch Windows power plan"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                            <TextBlock x:Name="MainPowerPlanText" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,8"/>
-
-                                            <CheckBox x:Name="MainWifiProfileSwitchCheck" Content="Enable WiFi profile switching"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                            <TextBox x:Name="MainWifiProfileMappingsBox" Style="{DynamicResource ModernTextBox}" Margin="24,0,0,10"
-                                                     AcceptsReturn="True" Height="60" TextWrapping="Wrap"
-                                                     ToolTip="Format: WiFiName=ProfileName (one per line)" LostFocus="MainAppRulesBox_LostFocus"/>
-
-                                            <CheckBox x:Name="MainRestartReminderCheck" Content="Enable restart reminders"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                            <Slider x:Name="MainRestartReminderDaysSlider" Minimum="1" Maximum="365" TickFrequency="1"
-                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
-                                                    ValueChanged="MainRestartReminderDaysSlider_ValueChanged"/>
-                                            <TextBlock x:Name="MainRestartReminderDaysText" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,6"/>
-                                            <CheckBox x:Name="MainAutoRestartCheck" Content="Auto-restart when reminder threshold is reached"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,4"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>
-                                            <TextBlock x:Name="MainUptimeStatusText" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,10"/>
-
-                                            <TextBlock Text="Process Watcher" FontWeight="SemiBold" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
-                                            <Grid Margin="0,0,0,6">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBox x:Name="ProcessWatcherTargetBox" Grid.Column="0" Style="{DynamicResource ModernTextBox}"
-                                                         ToolTip="Example: obs64, chrome, teams"/>
-                                                <Button Grid.Column="1" Content="Start" Style="{DynamicResource PrimaryButton}" Margin="8,0,0,0"
-                                                        Click="ProcessWatcherStart_Click"/>
-                                                <Button Grid.Column="2" Content="Stop" Style="{DynamicResource ModernButton}" Margin="8,0,0,0"
-                                                        Click="ProcessWatcherStop_Click"/>
-                                            </Grid>
-                                            <TextBlock x:Name="ProcessWatcherStatusText" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                        </StackPanel>
-                                    </Border>
-                                </StackPanel>
-
-                                <StackPanel x:Name="TypeThingPanel" Visibility="Collapsed">
-                                    <TextBlock Text="TypeThing" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Configure TypeThing hotkeys, speed, and typing behavior." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
-                                    
-                                    <!-- Clipboard History Section -->
-                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
-                                        <StackPanel>
-                                            <TextBlock Text="Clipboard History" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                            <TextBlock Text="Recently typed clipboard content. Click reveal to view (auto-hides for privacy)." 
-                                                       TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,12"/>
-                                            
-                                            <!-- Reveal Duration Slider -->
-                                            <TextBlock Text="Reveal Duration" FontWeight="Medium" Margin="0,0,0,4"/>
-                                            <Slider x:Name="ClipboardRevealDurationSlider" Minimum="1" Maximum="60" Value="10" TickFrequency="1"
-                                                   IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" Margin="0,0,0,4"
-                                                   ValueChanged="ClipboardRevealDurationSlider_ValueChanged"/>
-                                            <TextBlock x:Name="ClipboardRevealDurationText" Text="Reveal for: 10 seconds" FontSize="12" 
-                                                      Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,12"/>
-                                            
-                                            <!-- History List -->
-                                            <ListBox x:Name="TypeThingHistoryList" Height="200" Style="{DynamicResource ModernListBox}">
-                                                <ListBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Grid Margin="0,4">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                            </Grid.ColumnDefinitions>
-                                                            
-                                                            <!-- Blurred Text Display -->
-                                                            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="4" Padding="8,4">
-                                                                <Grid>
-                                                                    <!-- Blurred version (default visible) -->
-                                                                    <TextBlock x:Name="BlurredText" Text="{Binding BlurredText}" 
-                                                                              Foreground="{DynamicResource ForegroundSecondaryBrush}"
-                                                                              FontFamily="Consolas" FontSize="12"
-                                                                              Visibility="{Binding IsRevealed, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
-                                                                    <!-- Clear version (visible when revealed) -->
-                                                                    <TextBlock x:Name="ClearText" Text="{Binding DisplayText}" 
-                                                                              Foreground="{DynamicResource ForegroundBrush}"
-                                                                              FontFamily="Consolas" FontSize="12"
-                                                                              Visibility="{Binding IsRevealed, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                                                </Grid>
-                                                            </Border>
-                                                            
-                                                            <!-- Reveal Button -->
-                                                            <Button Grid.Column="1" x:Name="RevealBtn" Content="&#xE8D1;" 
-                                                                   FontFamily="Segoe Fluent Icons" FontSize="12"
-                                                                   Style="{DynamicResource IconButtonStyle}" 
-                                                                   Width="28" Height="28" Margin="4,0"
-                                                                   Click="TypeThingHistoryReveal_Click"
-                                                                   Tag="{Binding}"
-                                                                   ToolTip="Reveal for 10 seconds"/>
-                                                            
-                                                            <!-- Retype Button -->
-                                                            <Button Grid.Column="2" Content="&#xE8D2;" 
-                                                                   FontFamily="Segoe Fluent Icons" FontSize="12"
-                                                                   Style="{DynamicResource IconButtonStyle}" 
-                                                                   Width="28" Height="28"
-                                                                   Click="TypeThingHistoryRetype_Click"
-                                                                   Tag="{Binding}"
-                                                                   ToolTip="Retype this content"/>
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ListBox.ItemTemplate>
-                                            </ListBox>
-                                            
-                                            <!-- Clear History Button -->
-                                            <Button Content="Clear History" Style="{DynamicResource ModernButton}" 
-                                                   HorizontalAlignment="Right" Margin="0,8,0,0"
-                                                   Click="TypeThingHistoryClear_Click"/>
-                                        </StackPanel>
-                                    </Border>
-                                    
-                                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">
-                                        <StackPanel>
-                                            <TextBlock Text="Templates" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                            <TextBlock Text="Save and reuse frequently typed content." 
-                                                       TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,12"/>
-                                            
-                                            <!-- Template Selection and Preview -->
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                
-                                                <ComboBox x:Name="TemplateCombo" Grid.Column="0" 
-                                                         Style="{DynamicResource ModernComboBox}" 
-                                                         Margin="0,0,8,0"
-                                                         SelectionChanged="TemplateCombo_SelectionChanged"/>
-                                                
-                                                <Button Grid.Column="1" Content="Type" 
-                                                       Style="{DynamicResource ModernButton}" 
-                                                       Margin="0,0,4,0"
-                                                       Click="TemplateType_Click"/>
-                                                
-                                                <Button Grid.Column="2" Content="Save Current" 
-                                                       Style="{DynamicResource ModernButton}" 
-                                                       Margin="0,0,4,0"
-                                                       Click="TemplateSave_Click"/>
-                                                
-                                                <Button Grid.Column="3" Content="Delete" 
-                                                       Style="{DynamicResource ModernButton}" 
-                                                       Click="TemplateDelete_Click"/>
-                                            </Grid>
-                                            
-                                            <!-- Template Preview Area -->
-                                            <Border Background="{DynamicResource SurfaceBrush}" 
-                                                   CornerRadius="4" 
-                                                   Margin="0,12,0,0"
-                                                   Padding="8"
-                                                   BorderBrush="{DynamicResource BorderBrush}"
-                                                   BorderThickness="1">
-                                                <StackPanel>
-                                                    <TextBlock Text="Template Preview" 
-                                                              FontWeight="Medium" 
-                                                              FontSize="12"
-                                                              Foreground="{DynamicResource ForegroundSecondaryBrush}"
-                                                              Margin="0,0,0,4"/>
-                                                    <ScrollViewer MaxHeight="100" 
-                                                                 VerticalScrollBarVisibility="Auto">
-                                                        <TextBlock x:Name="TemplatePreviewText" 
-                                                                  Text="Select a template to preview its content..."
-                                                                  FontFamily="Consolas"
-                                                                  FontSize="11"
-                                                                  TextWrapping="Wrap"
-                                                                  Foreground="{DynamicResource ForegroundBrush}"/>
-                                                    </ScrollViewer>
-                                                    <TextBlock x:Name="TemplatePreviewStats" 
-                                                              Text=""
-                                                              FontSize="10"
-                                                              Foreground="{DynamicResource ForegroundSecondaryBrush}"
-                                                              Margin="0,4,0,0"
-                                                              HorizontalAlignment="Right"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </StackPanel>
-                                    </Border>
-                                    
-                                    <Border Style="{DynamicResource CardStyle}">
-                                        <StackPanel>
-                                            <TextBlock Text="TypeThing Configuration" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="{DynamicResource ForegroundBrush}"/>
-
-                                            <CheckBox x:Name="MainEnableTypeThingCheck" Content="Enable TypeThing"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                      ToolTipService.ShowDuration="12000"
-                                                      ToolTip="Enable the TypeThing feature to paste clipboard content as typed keystrokes. When enabled, you can use hotkeys to type text instead of pasting."/>
-                                            <CheckBox x:Name="MainUseLowLevelHotkeyCheck" Content="Use low-level hotkey registration"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                      ToolTipService.ShowDuration="12000"
-                                                      ToolTip="Register hotkeys at the system level for better reliability. Required for global hotkeys to work when app is not focused. May trigger antivirus warnings due to low-level keyboard hook."/>
-
-                                            <TextBlock Text="Input Mode" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <ComboBox x:Name="MainTypeThingInputModeCombo" Grid.Column="0" Style="{DynamicResource ModernComboBox}" Margin="0,0,8,10"
-                                                          SelectionChanged="MainComboSettingChanged"
-                                                          ToolTipService.ShowDuration="12000"
-                                                          ToolTip="Select input method: SendInput (standard Windows API) or Service (works over RDP).">
-                                                    <ComboBoxItem Content="SendInput" ToolTip="Standard Windows input - works everywhere"/>
-                                                    <ComboBoxItem Content="Service" ToolTip="Windows Service input - works over RDP, requires service installation"/>
-                                                </ComboBox>
-                                                <WrapPanel Grid.Column="1" Orientation="Horizontal">
-                                                    <Button x:Name="MainInstallServiceBtn" Content="Install Service" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainInstallServiceBtn_Click"/>
-                                                    <Button x:Name="MainUninstallServiceBtn" Content="Uninstall Service" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainUninstallServiceBtn_Click"/>
-                                                </WrapPanel>
-                                            </Grid>
-
-                                            <TextBlock x:Name="MainServiceAdminHintText"
-                                                       Text="Administrator approval (UAC) is required to install or uninstall the Input Service."
-                                                       FontSize="12"
-                                                       Foreground="{DynamicResource WarningBrush}"
-                                                       Margin="0,4,0,8"
-                                                       TextWrapping="Wrap"
-                                                       Visibility="Collapsed"/>
-
-                                            <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
-                                                       ToolTip="Global hotkey to start TypeThing typing. Click the box and press your desired key combination. Works even when Redball is not focused."/>
-                                            <TextBox x:Name="MainStartHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8"
-                                                     PreviewKeyDown="MainHotkeyBox_PreviewKeyDown" GotFocus="MainStartHotkeyBox_GotFocus" LostFocus="MainHotkeyBox_LostFocus"
-                                                     Tag="Click here and press your desired hotkey combination..."
-                                                     ToolTipService.ShowDuration="12000"
-                                                     ToolTip="Press your desired hotkey combination to set the start hotkey."/>
-                                            <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
-                                                       ToolTip="Global hotkey to immediately stop TypeThing typing. Useful if typing goes wrong or you need to abort. Click and press your key combination."/>
-                                            <TextBox x:Name="MainStopHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,10"
-                                                     PreviewKeyDown="MainHotkeyBox_PreviewKeyDown" GotFocus="MainStopHotkeyBox_GotFocus" LostFocus="MainHotkeyBox_LostFocus"
-                                                     Tag="Click here and press your desired hotkey combination..."
-                                                     ToolTipService.ShowDuration="12000"
-                                                     ToolTip="Press your desired hotkey combination to set the stop hotkey."/>
-
-                                            <TextBlock Text="Typing Speed (max delay ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
-                                                       ToolTip="Maximum milliseconds between keystrokes. Lower = faster typing. 1-50ms is very fast, 100-200ms is natural human speed, 300-500ms is slow/deliberate."/>
-                                            <Slider x:Name="MainTypingSpeedSlider" Minimum="1" Maximum="500" TickFrequency="1"
-                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
-                                                    ValueChanged="MainTypingSpeedSlider_ValueChanged"/>
-                                            <TextBlock x:Name="MainTypingSpeedText" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
-
-                                            <TextBlock Text="Minimum Delay (ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
-                                                       ToolTip="Minimum milliseconds between keystrokes. TypeThing randomly picks delays between min and max for human-like variation. Keep close to max for consistent speed."/>
-                                            <Slider x:Name="MainTypeThingMinDelaySlider" Minimum="1" Maximum="500" TickFrequency="1"
-                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
-                                                    ValueChanged="MainTypeThingMinDelaySlider_ValueChanged"/>
-                                            <TextBlock x:Name="MainTypeThingMinDelayText" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
-
-                                            <TextBlock Text="Start Countdown (seconds)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
-                                                       ToolTip="Seconds to wait after pressing Start hotkey before typing begins. Gives you time to switch to the target window. Countdown shows in notification."/>
-                                            <Slider x:Name="MainTypeThingStartDelaySlider" Minimum="1" Maximum="30" TickFrequency="1"
-                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
-                                                    ValueChanged="MainTypeThingStartDelaySlider_ValueChanged"/>
-                                            <TextBlock x:Name="MainTypeThingStartDelayText" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
-
-                                            <CheckBox x:Name="MainAddRandomPausesCheck" Content="Add random pauses"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                      ToolTipService.ShowDuration="12000"
-                                                      ToolTip="Occasionally insert longer pauses between keystrokes to mimic human typing patterns. Makes typed text appear more natural and less robotic."/>
-
-                                            <TextBlock Text="Random Pause Chance (%)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
-                                                       ToolTip="Percentage chance that a random pause will occur between any two keystrokes. Higher values = more frequent pauses. 10-20% is subtle, 30-50% is very human-like."/>
-                                            <Slider x:Name="MainTypeThingPauseChanceSlider" Minimum="0" Maximum="100" TickFrequency="1"
-                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
-                                                    ValueChanged="MainTypeThingPauseChanceSlider_ValueChanged"/>
-                                            <TextBlock x:Name="MainTypeThingPauseChanceText" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
-
-                                            <TextBlock Text="Random Pause Max (ms)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
-                                                       ToolTip="Maximum duration of random pauses in milliseconds. When a random pause occurs, it will be between 50ms and this value. 500-1000ms mimics a human thinking pause."/>
-                                            <Slider x:Name="MainTypeThingPauseMaxSlider" Minimum="0" Maximum="5000" TickFrequency="10"
-                                                    IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}"
-                                                    ValueChanged="MainTypeThingPauseMaxSlider_ValueChanged"/>
-                                            <TextBlock x:Name="MainTypeThingPauseMaxText" FontSize="12"
-                                                       Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
-
-                                            <CheckBox x:Name="MainTypeNewlinesCheck" Content="Type newline characters"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                      ToolTipService.ShowDuration="12000"
-                                                      ToolTip="Convert line breaks in clipboard text to Enter key presses. Disable this if you want multi-line text typed as a single line."/>
-                                            <CheckBox x:Name="MainTypeThingNotificationsCheck" Content="Show TypeThing notifications"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,6"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                      ToolTipService.ShowDuration="12000"
-                                                      ToolTip="Display toast notifications for TypeThing events: countdown start, typing progress, completion, and errors. Useful for knowing when typing begins/ends."/>
-                                            <CheckBox x:Name="MainTypeThingTtsCheck" Content="Enable TypeThing text-to-speech"
-                                                      Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,12"
-                                                      Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                      ToolTipService.ShowDuration="12000"
-                                                      ToolTip="Read clipboard content aloud using Windows text-to-speech when TypeThing starts. Useful for accessibility or verifying what will be typed before it begins."/>
-                                        </StackPanel>
-                                    </Border>
-                                </StackPanel>
-
-                                <StackPanel x:Name="UpdatesPanel" Visibility="Collapsed">
-                                    <TextBlock Text="Updates" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Manage update channels and check for new releases." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
-                                    <Border Style="{DynamicResource CardStyle}">
-                                        <StackPanel>
-                                            <Grid Margin="0,0,0,10">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="Update Settings" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
-                                                <Button Grid.Column="1" x:Name="MainSaveSettingsButton" Content="Save Settings" Style="{DynamicResource PrimaryButton}" Click="MainSaveSettingsButton_Click" IsEnabled="False"/>
-                                            </Grid>
-                                            <CheckBox x:Name="MainAutoUpdateCheckEnabledCheck" Content="Check for updates automatically" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                      ToolTipService.ShowDuration="12000"
-                                                      ToolTip="Automatically check for new Redball versions at the interval below. Downloads are manual - you'll be notified when updates are available."/>
-
-                                            <TextBlock Text="Update Channel" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
-                                                       ToolTip="Which release channel to check: Stable (tested releases), Beta (early access with new features), or Disabled (no update checks)."/>
-                                            <ComboBox x:Name="MainUpdateChannelCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged">
-                                                <ComboBoxItem Content="Stable" ToolTip="Tested, stable releases suitable for daily use"/>
-                                                <ComboBoxItem Content="Beta" ToolTip="Early access releases with latest features but may have bugs"/>
-                                                <ComboBoxItem Content="Disabled" ToolTip="Do not check for updates automatically"/>
-                                            </ComboBox>
-
-                                            <CheckBox x:Name="MainVerifyUpdateSignatureCheck" Content="Verify update signatures" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged"
-                                                      ToolTipService.ShowDuration="12000"
-                                                      ToolTip="Cryptographically verify that updates are signed by the Redball developer. Strongly recommended - disabling this allows potentially malicious updates to be installed."/>
-
-                                            <TextBlock Text="Auto-check Interval (minutes)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000"
-                                                       ToolTip="How often to check for updates when automatic checking is enabled. 60 minutes = hourly, 1440 minutes = daily."/>
-                                            <Slider x:Name="MainAutoUpdateIntervalSlider" Minimum="30" Maximum="1440" TickFrequency="30" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainAutoUpdateIntervalSlider_ValueChanged"/>
-                                            <TextBlock x:Name="MainAutoUpdateIntervalText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
-
-                                            <TextBlock x:Name="MainCurrentVersionText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
-                                            <Button Content="Check Now" Style="{DynamicResource ModernButton}" Click="MainCheckUpdatesButton_Click"/>
-                                        </StackPanel>
-                                    </Border>
-                                </StackPanel>
-
-                                <StackPanel x:Name="CompatibilityControlsPanel" Visibility="Collapsed">
-                                    <Grid x:Name="CompatibilityNoopAnchor"/>
-
-
-                                    <Border x:Name="TypeThingProgressOverlay" Visibility="Collapsed">
-                                        <StackPanel>
-                                            <ProgressBar x:Name="TypeThingProgressBar" Minimum="0" Maximum="100" Value="0"/>
-                                            <TextBlock x:Name="TypeThingProgressText" Foreground="{DynamicResource ForegroundBrush}"/>
-                                        </StackPanel>
-                                    </Border>
-                                </StackPanel>
-                            </StackPanel>
-                        </ScrollViewer>
+                <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" CornerRadius="0,0,18,18">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Redball - Keep-awake controls, automation, and diagnostics in one place." FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,0" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="♥ Donate" Style="{DynamicResource TextButtonStyle}" Command="{Binding DonateCommand}" ToolTip="Support the development of Redball!" Margin="0,0,24,0" VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
             </Grid>
-
-            <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" CornerRadius="0,0,18,18">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Redball - Keep-awake controls, automation, and diagnostics in one place." FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,0" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" Content="♥ Donate" Style="{DynamicResource TextButtonStyle}" Command="{Binding DonateCommand}" ToolTip="Support the development of Redball!" Margin="0,0,24,0" VerticalAlignment="Center"/>
-                </Grid>
-            </Border>
         </Grid>
-    </Grid>
     </Border>
 </Window>

@@ -11,7 +11,6 @@ This document provides context and guidelines for AI agents working on the Redba
 - **Keep-Awake Engine**: Uses `SetThreadExecutionState` Windows API to prevent system sleep
 - **Heartbeat System**: Sends invisible F13-F16 keypresses via `SendInput` to prevent idle detection
 - **Smart Monitoring**: Battery, network, idle, schedule, presentation mode, thermal protection, process watching, VPN detection
-- **Pomodoro Timer**: Built-in focus/break cycle timer
 - **TypeThing**: Clipboard typer with human-like keystroke simulation and optional TTS
 - **14 Custom Themes**: From System/Dark/Light to Cyberpunk, Rose Gold, High Contrast
 - **Mini Widget**: Floating quick-access window with customizable presets
@@ -72,20 +71,19 @@ Redball/
 
 ### Key Services (in `src/Redball.UI.WPF/Services/`)
 
-| Service | Purpose |
-|---------|---------|
-| `KeepAwakeService` | Core engine using `SetThreadExecutionState` |
-| `BatteryMonitorService` | WMI-based battery level monitoring |
-| `NetworkMonitorService` | Network connectivity detection |
-| `IdleDetectionService` | `GetLastInputInfo` idle detection |
-| `ScheduleService` | Time/day-based auto activation |
-| `PomodoroService` | Focus/break cycle timer |
-| `ProcessWatcherService` | Process-based auto-activation |
-| `ConfigService` | JSON settings with validation |
-| `UpdateService` | GitHub Release auto-updater |
-| `HotkeyService` | Global hotkey registration |
-| `NotificationService` | Tray/toast notifications |
-| `InterceptionInputService` | Driver-level HID input simulation |
+| Service                    | Purpose                                     |
+| -------------------------- | ------------------------------------------- |
+| `KeepAwakeService`         | Core engine using `SetThreadExecutionState` |
+| `BatteryMonitorService`    | WMI-based battery level monitoring          |
+| `NetworkMonitorService`    | Network connectivity detection              |
+| `IdleDetectionService`     | `GetLastInputInfo` idle detection           |
+| `ScheduleService`          | Time/day-based auto activation              |
+| `ProcessWatcherService`    | Process-based auto-activation               |
+| `ConfigService`            | JSON settings with validation               |
+| `UpdateService`            | GitHub Release auto-updater                 |
+| `HotkeyService`            | Global hotkey registration                  |
+| `NotificationService`      | Tray/toast notifications                    |
+| `InterceptionInputService` | Driver-level HID input simulation           |
 
 ## Coding Standards
 
@@ -160,11 +158,11 @@ dotnet run --project tests/Redball.Benchmarks --configuration Release
 
 ## Key Files for Agents
 
-| File | Purpose |
-|------|---------|
-| `src/Redball.UI.WPF/Services/KeepAwakeService.cs` | Core keep-awake engine |
-| `src/Redball.UI.WPF/Models/RedballConfig.cs` | Configuration schema |
-| `src/Redball.UI.WPF/Services/ConfigService.cs` | Settings persistence |
-| `src/Redball.UI.WPF/Views/MainWindow.xaml.cs` | Main window logic |
-| `src/Redball.UI.WPF/Interop/NativeMethods.cs` | Win32 P/Invoke |
-| `Directory.Build.props` | Global MSBuild properties |
+| File                                              | Purpose                   |
+| ------------------------------------------------- | ------------------------- |
+| `src/Redball.UI.WPF/Services/KeepAwakeService.cs` | Core keep-awake engine    |
+| `src/Redball.UI.WPF/Models/RedballConfig.cs`      | Configuration schema      |
+| `src/Redball.UI.WPF/Services/ConfigService.cs`    | Settings persistence      |
+| `src/Redball.UI.WPF/Views/MainWindow.xaml.cs`     | Main window logic         |
+| `src/Redball.UI.WPF/Interop/NativeMethods.cs`     | Win32 P/Invoke            |
+| `Directory.Build.props`                           | Global MSBuild properties |

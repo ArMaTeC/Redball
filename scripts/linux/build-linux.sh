@@ -378,7 +378,7 @@ Description: Keep your system awake with TypeThing automation
  from going to sleep while you're working. Features include:
   - Keep-awake engine with idle detection
   - TypeThing automatic typing simulation
-  - Pomodoro timer for productivity
+  - Smart scheduling and automation
   - Battery-aware operation
   - System notifications
 EOF

@@ -256,7 +256,7 @@ public class CriticalPathTests
     [Category("CriticalPath")]
     public void CP07_NavigateAllSections_ShouldWork()
     {
-        var sections = new[] { "Home", "Analytics", "SLO Dashboard", "Diagnostics", "Settings", "Behavior", "Smart Features", "TypeThing", "Updates" };
+        var sections = new[] { "Home", "Analytics", "Diagnostics", "Settings", "Behavior", "Smart Features", "TypeThing", "Updates" };
         
         foreach (var section in sections)
         {

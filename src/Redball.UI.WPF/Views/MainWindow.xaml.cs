@@ -35,8 +35,6 @@ public partial class MainWindow : Window
     private bool _isExiting;
     private DispatcherTimer? _typeThingCountdownTimer;
     private DispatcherTimer? _typeThingTimer;
-    private DispatcherTimer? _sloDashboardRefreshTimer;
-
     public MainWindow()
     {
         Logger.Info("MainWindow", "Constructor called");
@@ -196,9 +194,6 @@ public partial class MainWindow : Window
 
             _trayIconRefreshTimer?.Stop();
             _trayIconRefreshTimer = null;
-
-            _sloDashboardRefreshTimer?.Stop();
-            _sloDashboardRefreshTimer = null;
 
             if (_windowHwndSource != null)
             {

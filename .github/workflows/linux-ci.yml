@@ -262,7 +262,7 @@ jobs:
         ## Features
         - Keep-awake engine with idle detection
         - TypeThing automatic typing simulation
-        - Pomodoro timer for productivity
+        - Smart scheduling and automation
         - System tray integration (AppIndicator)
         - Battery-aware operation
         - GNOME/KDE desktop integration

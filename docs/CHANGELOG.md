@@ -23,12 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Eliminates false-positive critical resource violation warnings.
   - Updated in `src/Redball.UI.WPF/Services/ResourceBudgetService.cs`.
 
-- **SLO Dashboard: Auto-Refresh Timer**: Fixed SLO Dashboard not auto-refreshing when navigating to the dashboard.
-  - Added `StartSloDashboardRefreshTimer()` call when SLO Dashboard nav button is checked.
-  - Added `StopSloDashboardRefreshTimer()` calls when navigating away from SLO Dashboard.
-  - Dashboard now refreshes every 5 seconds when visible, stops when navigating to other sections.
-  - Updated in `src/Redball.UI.WPF/Views/MainWindow.Navigation.cs`.
-
 ### Removed (Unreleased)
 
 - **Pomodoro Timer Feature**: Removed entire Pomodoro timer functionality as it was not being used.
@@ -38,7 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed Pomodoro validation logic from `ConfigService`.
   - Removed `OpenPomodoroCommand` from `MainViewModel`.
   - Removed Pomodoro tests from test suite.
+  - Updated installer images to remove Pomodoro references.
   - Updated documentation to remove all Pomodoro references.
+
+- **SLO Dashboard Feature**: Removed SLO Dashboard as it was not providing value.
+  - Deleted `SloDashboardPage.xaml` and `SloDashboardPage.xaml.cs`.
+  - Removed SLO Dashboard nav button and panel from `MainWindow.xaml`.
+  - Removed SLO Dashboard refresh timer and all related methods from `MainWindow.Navigation.cs` and `MainWindow.xaml.cs`.
+  - Removed SLO Dashboard command from `CommandPaletteIndex.cs`.
+  - Removed from e2e navigation tests.
+  - Updated documentation to remove all SLO Dashboard references.
 
 ### Fixed (Unreleased 2)
 
@@ -413,8 +416,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `src/Redball.UI.WPF/Services/FocusAssistService.cs` for Windows Focus Assist detection.
     - Monitors registry for Focus Assist state changes (Off, Priority Only, Alarms Only).
     - Detects when Focus Assist is active to suppress non-critical notifications.
-    - Respects user focus preferences during Pomodoro sessions.
-  - Config properties: `FocusAssistIntegration`, `FocusModeDuringPomodoro`.
+    - Respects user focus preferences during focus sessions.
+  - Config properties: `FocusAssistIntegration`.
 
 - **2025: Advanced Analytics (ROADMAP)**: Implemented comprehensive usage analytics and productivity insights.
   - New `src/Redball.UI.WPF/Services/AdvancedAnalyticsService.cs` for advanced reporting.
@@ -440,8 +443,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `src/Redball.UI.WPF/Services/FocusAssistService.cs` for Windows Focus Assist detection.
     - Monitors registry for Focus Assist state changes (Off, Priority Only, Alarms Only).
     - Detects when Focus Assist is active to suppress non-critical notifications.
-    - Respects user focus preferences during Pomodoro sessions.
-  - Config properties: `FocusAssistIntegration`, `FocusModeDuringPomodoro`.
+    - Respects user focus preferences during focus sessions.
+  - Config properties: `FocusAssistIntegration`.
 
 - **2025: Advanced Analytics (ROADMAP)**: Implemented comprehensive usage analytics and productivity insights.
   - New `src/Redball.UI.WPF/Services/AdvancedAnalyticsService.cs` for advanced reporting.
@@ -465,7 +468,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `GestureDetectionService.cs` - Camera input processing for gesture control.
     - Multiple camera support with auto-discovery.
     - Real-time gesture recognition framework.
-    - Supported gestures: ThumbsUp (start), ThumbsDown (stop), OpenPalm (status), Fist (widget), PeaceSign (Pomodoro).
+    - Supported gestures: ThumbsUp (start), ThumbsDown (stop), OpenPalm (status), Fist (widget), PeaceSign (focus mode).
     - Configurable gesture cooldown period.
     - Privacy-focused local processing.
 
@@ -650,11 +653,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Build Script Fix (MSI Custom Action Path)**: Fixed broken MSI installer build caused by incorrect custom action DLL path.
   - Fixed `installer/Build-MSI-v2.ps1` line 44: corrected path from `bin\Release\net472\Redball.Installer.CustomActions.CA.dll` to `installer\Redball.Installer.CustomActions\bin\Release\net472\Redball.Installer.CustomActions.dll`.
   - Build script now runs clean end-to-end (04:15 duration) producing working MSI artifacts.
-  - Added hidden compatibility control definitions for missing `x:Name` references used by `MainWindow.Settings.cs`, `MainWindow.TypeThing.cs`, and `MainWindow.Pomodoro.cs`.
+  - Added hidden compatibility control definitions for missing `x:Name` references used by `MainWindow.Settings.cs` and `MainWindow.TypeThing.cs`.
   - Added missing click handlers for `OpenLogsFolderButton_Click` and `MainCheckUpdatesButton_Click`.
-  - Restored `PomodoroService` implementation and re-added `PomodoroSectionView.xaml` so generated `InitializeComponent` bindings compile again.
   - Added `RedballConfig.WebApiPort` and `NativeMethods.IsUserAnAdmin` to satisfy existing config validation and admin-check call sites.
-  - Fixed navigation compile issues by removing duplicate `SloDashboard` switch case and adding `ShowMetrics` / `ShowPomodoro` methods used by `MainViewModel`.
+  - Fixed navigation compile issues by adding `ShowMetrics` method used by `MainViewModel`.
 
 - **Self-Contained MSI Installer v2.0**: Completely redesigned MSI installer that is now fully self-contained with no external script dependencies.
   - Native C# custom action DLL (`Redball.Installer.CustomActions.dll`) for all installer operations.
@@ -802,7 +804,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Regression detection comparing current startup to 7-day baseline.
   - `AdaptiveIntervalPolicy` for dynamic monitor frequency based on battery/CPU/user-idle state.
   - `SharedScheduler` for coalescing monitor ticks and reducing timer churn.
-  - SLO dashboard UI (`SloDashboardPage`) with health indicators and export capability.
+  - ~~SLO dashboard UI (`SloDashboardPage`) with health indicators and export capability.~~ (removed in v3.0)
   - *Comment*: Completes improve_me.txt item E - guarantees predictable startup and long-session efficiency.
 - **Resource Budgets (perf-2)**: Implemented per-service CPU/RAM budgets and periodic conformance checks:
   - `ResourceBudgetService` singleton for monitoring resource usage against defined budgets.
@@ -810,7 +812,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Default budgets for 10 core services (KeepAwake, HID, Analytics, Update, Config, etc.).
   - `BudgetConformanceReport` with service usage statistics and violation tracking.
   - Periodic monitoring every 30 seconds with 24-hour history retention.
-  - Visual budget status in SLO Dashboard with per-service CPU/RAM indicators.
+  - Visual budget status in Diagnostics with per-service CPU/RAM indicators.
   - Critical service violations trigger enhanced logging.
   - *Comment*: Completes perf-2 from improve_me.txt - enables proactive resource management and prevents runaway service consumption.
 - **Memory Pressure Handler (perf-5)**: Implemented memory monitoring with graceful feature degradation:
@@ -819,7 +821,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 6 degradation actions: Reduce animations, disable effects, reduce polling, clear caches, disable features, prompt user.
   - Automatic GC and working set trimming at critical pressure.
   - Integration with `AdaptiveIntervalPolicy` for emergency polling reduction.
-  - Real-time memory status in SLO Dashboard with color-coded pressure levels.
+  - Real-time memory status in Diagnostics with color-coded pressure levels.
   - Event-driven architecture for pressure changes and degradation recommendations.
   - *Comment*: Completes perf-5 from improve_me.txt - ensures app remains responsive under memory pressure.
 - **Continuous Performance Test Suite (perf-6)**: Implemented automated performance testing framework:
@@ -831,7 +833,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic pass/fail determination with configurable thresholds.
   - Test results storage with 100-result retention per test type.
   - JSON export for CI/CD integration and historical analysis.
-  - "Run Tests" button in SLO Dashboard for manual test execution.
+  - "Run Tests" button in Diagnostics for manual test execution.
   - Event-driven completion notifications for real-time monitoring.
   - *Comment*: Completes perf-6 from improve_me.txt - enables continuous performance validation and regression detection.
 - **Product Strategy Framework (strat-1, strat-5)**: Implemented user personas and north-star metric:
@@ -852,7 +854,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Job 1: Deploy Power Policy at Scale (Enterprise Admin) - Target: 5 minutes.
     - Steps: Open Settings → Navigate Policies → Configure Rules → Export Config → Deploy.
   - Job 2: Start Focused Work Session (Remote Worker) - Target: 30 seconds.
-    - Steps: Activate → Configure Duration → Enable Pomodoro → Minimize to Tray.
+    - Steps: Activate → Configure Duration → Minimize to Tray.
   - Job 3: Troubleshoot Sleep Issue (Enterprise Admin) - Target: 3 minutes.
     - Steps: Open Diagnostics → View Logs → Check History → Identify Issue → Apply Fix.
   - Job 4: Type Content with TypeThing (Remote Worker) - Target: 45 seconds.
@@ -920,7 +922,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - URI protocol: `redball://` scheme handler with routing.
   - Toast activator: COM server registration for notification activation.
   - Integration status reporting (startup, jump list, protocol, notifications).
-  - URI activation routing (activate, settings, typething, pomodoro commands).
+  - URI activation routing (activate, settings, typething commands).
   - Full registration/unregistration for install/uninstall.
   - Shell integration health check with `IsFullyIntegrated` status.
   - *Comment*: Completes os-1 from improve_me.txt - native Windows shell integration across all touchpoints.
@@ -1141,7 +1143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Documentation Refresh (README, ROADMAP, API Docs)**: Updated all documentation to reflect .NET 10 migration and comprehensive feature set.
   - `README.md`: Updated .NET 8→10, added Design System, Command Palette, Accessibility, Adaptive Layouts, Mini Widget, Security, and Performance sections. Added 25+ new services to Architecture section. Updated default settings (`EncryptConfig: true`, `VerifyUpdateSignature: true`).
-  - `docs/ROADMAP.md`: Marked Q2 2024 features as completed (High Contrast, Auto Theme Switching, Performance Optimization with SLOs, Resource Budgets, Memory Pressure, Continuous Testing). Added comprehensive Key Services table with 14 new services.
+  - `docs/ROADMAP.md`: Marked Q2 2024 features as completed (High Contrast, Auto Theme Switching, Performance Optimization, Resource Budgets, Memory Pressure, Continuous Testing). Added comprehensive Key Services table with 14 new services.
   - `docs/index.md`: Updated to .NET 10, added Redball.Core namespace, added Key Services table covering Security, Performance, Staged Rollouts, and Offline Sync services.
   - *Comment*: All documentation now accurately reflects the v3.x .NET 10 codebase with complete security framework, performance monitoring, and enterprise features.
 
@@ -1160,7 +1162,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (Unreleased 1)
 
-- **Missing Animation Assets**: Restored Lottie animation JSON files (`ram_usage.json`, `engine_toggle.json`, `typething_launch.json`, `pomodoro_timer.json`) to `Assets/Animations` and ensured they are included in the build output. Fixes `XamlParseException` / `DirectoryNotFoundException` on app startup.
+- **Missing Animation Assets**: Restored Lottie animation JSON files (`ram_usage.json`, `engine_toggle.json`, `typething_launch.json`) to `Assets/Animations` and ensured they are included in the build output. Fixes `XamlParseException` / `DirectoryNotFoundException` on app startup.
 - **Settings Reset Regression**: Prevented startup UI event handlers from overwriting loaded settings by ensuring initialization gating is active during control wiring.
   - *Comment*: Fixes a high-impact regression where defaults could silently overwrite saved user settings.
 - **Config Loss During Upgrades**: Fixed MSI-upgrade-related settings loss by separating user data from installer-managed directories and adding migration from legacy locations.

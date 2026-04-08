@@ -8,15 +8,17 @@
 #   ./scripts/build.sh [COMMAND] [OPTIONS]
 #
 # DEFAULT BEHAVIOR (no command specified):
-#   Runs FULL AUTO-RELEASE workflow:
-#   1. Build everything (Windows, Linux, update-server)
-#   2. Build website
-#   3. Check/start update-server if not running
-#   4. Publish to update-server
-#   5. Publish to GitHub Releases
+#   Runs FULL AUTO-RELEASE workflow (builds + publishes everything):
+#   1. Build Windows artifacts (WPF, Service, Setup, ZIP)
+#   2. Build Linux artifacts (GTK app, packages)
+#   3. Build/validate update-server
+#   4. Build website
+#   5. Publish to update-server
+#   6. Publish to GitHub Releases
 #
 # Commands:
 #   all             Build everything (no publish)
+#   auto-release    Build + publish everything [DEFAULT]
 #   windows         Build Windows artifacts (WPF, Service, Setup, ZIP)
 #   linux           Build Linux artifacts (GTK app, packages)
 #   update-server   Build/validate update-server

@@ -167,7 +167,7 @@ public class UpdateService : IUpdateService
         
         // GitHub API certificate pins (SHA-256 hashes of SPKI)
         // These are the expected public key hashes for GitHub's TLS certificates
-        // Pins verified against DigiCert, Sectigo, and Let's Encrypt root CAs
+        // Pins verified against DigiCert, Sectigo, Let's Encrypt, and Google Trust Services root CAs
         var pinnedHashes = new[]
         {
             // DigiCert High Assurance EV Root CA (legacy GitHub root)
@@ -184,6 +184,10 @@ public class UpdateService : IUpdateService
             "EdsvlytFf4a/O+hCPwBXFFi46RKXqivCAF+mO7s+5Ng=",
             // Sectigo Public Server Authentication CA DV E36 (intermediate)
             "VqePxH3EcFwZuYK3CCOMz5HKMoeIZpZcEyBf4diPGSA=",
+            // Google Trust Services Root R4 (update-server: certrunnerx.com)
+            "YSoUL4CBzo5aJ/ES9gSZTsavsgtHsiLLnTG+BKUdork=",
+            // Google Trust Services WE1 Intermediate CA
+            "H7AMYAvicN2+UcFPBz3kJXCDmGrTItZh4ujUBK8hoWg=",
         };
 
         handler.ServerCertificateCustomValidationCallback = (request, cert, chain, errors) =>
@@ -696,9 +700,9 @@ public class UpdateService : IUpdateService
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "powershell.exe",
-                    Arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\"",
-                    UseShellExecute = true,
-                    CreateNoWindow = false
+                    Arguments = $"-ExecutionPolicy Bypass -WindowStyle Hidden -File \"{scriptPath}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 });
                 return true;
             }
@@ -775,9 +779,9 @@ public class UpdateService : IUpdateService
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "powershell.exe",
-                    Arguments = $"-ExecutionPolicy Bypass -File \"{installerScriptPath}\"",
-                    UseShellExecute = true,
-                    CreateNoWindow = false
+                    Arguments = $"-ExecutionPolicy Bypass -WindowStyle Hidden -File \"{installerScriptPath}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 });
                 return true;
             }
@@ -791,9 +795,9 @@ public class UpdateService : IUpdateService
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "powershell.exe",
-                    Arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\"",
-                    UseShellExecute = true,
-                    CreateNoWindow = false
+                    Arguments = $"-ExecutionPolicy Bypass -WindowStyle Hidden -File \"{scriptPath}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 });
                 return true;
             }

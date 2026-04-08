@@ -1045,6 +1045,70 @@
         }
       ],
       "totalDownloads": 0
+    },
+    {
+      "version": "2.1.468",
+      "notes": "",
+      "channel": "stable",
+      "date": "2026-04-08T09:18:26.069Z",
+      "files": [
+        {
+          "name": "Redball-2.1.468-Setup.exe",
+          "size": 68499486,
+          "hash": "2f924371ad72612b4a18fba9d1d2a137265ad2cab0302b3082e87502e3858dc5",
+          "downloads": 0,
+          "uploadedAt": "2026-04-08T09:18:26.026Z"
+        },
+        {
+          "name": "Redball-2.1.468.exe",
+          "size": 373760,
+          "hash": "5951bf3654dbd34ad3b79d98943ef4a794a42d711fd5b4e47b8fe4eff09d6cb3",
+          "downloads": 0,
+          "uploadedAt": "2026-04-08T09:18:26.047Z"
+        },
+        {
+          "name": "Redball-2.1.468.zip",
+          "size": 10000009,
+          "hash": "d57c3e685d5ae9f976349c6e3d57511c87a5550f2e0b743b723e26f518a76de9",
+          "downloads": 0,
+          "uploadedAt": "2026-04-08T09:18:26.065Z"
+        },
+        {
+          "name": "Redball.Service.dll.patch",
+          "size": 118613,
+          "hash": "81429f47039b657aba5305142cba5ef7e78106f54f1b508b12f69ce48ad81c1a",
+          "downloads": 0,
+          "uploadedAt": "2026-04-08T09:18:26.065Z"
+        },
+        {
+          "name": "Redball.Service.exe.patch",
+          "size": 377,
+          "hash": "4e813b357b7442af1e9a65e50f381ed7edde0738038392003b1378ae66d38075",
+          "downloads": 0,
+          "uploadedAt": "2026-04-08T09:18:26.066Z"
+        },
+        {
+          "name": "Redball.UI.WPF.dll.patch",
+          "size": 1191999,
+          "hash": "1d2443b823f692a4635bd221e1e7ca0fd37e30291e990440c97d5721c152ea6f",
+          "downloads": 0,
+          "uploadedAt": "2026-04-08T09:18:26.069Z"
+        },
+        {
+          "name": "Redball.UI.WPF.exe.patch",
+          "size": 378,
+          "hash": "7db5888e11dca08447a78e6e6de7412970a8e2dcb889d361113e340cfe6b41bd",
+          "downloads": 0,
+          "uploadedAt": "2026-04-08T09:18:26.069Z"
+        }
+      ],
+      "totalDownloads": 0,
+      "patchInfo": {
+        "fromVersion": "2.1.467",
+        "generatedAt": "2026-04-08T09:16:28.816Z",
+        "totalPatches": 4,
+        "totalSavings": 2465657
+      }
     }
   ]
 }
