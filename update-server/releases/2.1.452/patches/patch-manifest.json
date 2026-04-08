@@ -1,7 +1,7 @@
 {
   "fromVersion": "2.1.450",
   "toVersion": "2.1.452",
-  "generatedAt": "2026-04-08T09:16:07.663Z",
+  "generatedAt": "2026-04-08T11:49:58.538Z",
   "patches": [
     {
       "file": "patches/patch-manifest.json",

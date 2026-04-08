@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+# Redball launcher script
+import sys
+import os
+
+# Add the package directory to Python path
+pkglibdir = '/app/lib64/redball'
+sys.path.insert(0, pkglibdir)
+
+# Set environment for localization
+os.environ['LOCALEDIR'] = 'share/locale'
+os.environ['PKGDATADIR'] = 'share/redball'
+
+# Import and run
+from redball.main import main
+
+if __name__ == '__main__':
+    sys.exit(main('2.1.471'))
