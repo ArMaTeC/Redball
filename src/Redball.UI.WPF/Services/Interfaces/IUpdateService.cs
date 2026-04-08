@@ -5,6 +5,21 @@ using System.Threading.Tasks;
 namespace Redball.UI.Services;
 
 /// <summary>
+/// Update pipeline stages shown in the progress window.
+/// </summary>
+public enum UpdateStage
+{
+    Checking,
+    Downloading,
+    Patching,
+    Verifying,
+    Staging,
+    Applying,
+    Complete,
+    Failed
+}
+
+/// <summary>
 /// Interface for update checking and installation.
 /// </summary>
     public interface IUpdateService
@@ -23,4 +38,25 @@ namespace Redball.UI.Services;
         public long BytesReceived { get; set; }
         public long TotalBytes { get; set; }
         public string? StatusText { get; set; }
+        public UpdateStage Stage { get; set; } = UpdateStage.Downloading;
+        /// <summary>
+        /// Optional log line to append to the update log window.
+        /// </summary>
+        public string? LogEntry { get; set; }
+        /// <summary>
+        /// Current file index when processing multiple files (1-based).
+        /// </summary>
+        public int CurrentFile { get; set; }
+        /// <summary>
+        /// Total number of files being processed.
+        /// </summary>
+        public int TotalFiles { get; set; }
+        /// <summary>
+        /// Name of the file currently being processed.
+        /// </summary>
+        public string? CurrentFileName { get; set; }
+        /// <summary>
+        /// Whether this update is a delta/differential update.
+        /// </summary>
+        public bool IsDelta { get; set; }
     }

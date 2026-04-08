@@ -11,7 +11,7 @@ namespace Redball.UI.WPF.Services;
 /// <summary>
 /// Stage of the update lifecycle.
 /// </summary>
-public enum UpdateStage
+public enum UpdateLifecycleStage
 {
     CheckRequested,
     UpdateAvailable,
@@ -38,7 +38,7 @@ public class UpdateEvent
     public string EventId { get; set; } = Guid.NewGuid().ToString("N")[..8];
     public string UpdateVersion { get; set; } = "";
     public string FromVersion { get; set; } = "";
-    public UpdateStage Stage { get; set; }
+    public UpdateLifecycleStage Stage { get; set; }
     public DateTime Timestamp { get; set; }
     public string? ErrorMessage { get; set; }
     public Dictionary<string, string> Metadata { get; set; } = new();
@@ -65,12 +65,12 @@ public class UpdateSession
         : null;
     public string? FailureReason { get; set; }
 
-    public UpdateEvent? GetLatestEvent(UpdateStage stage)
+    public UpdateEvent? GetLatestEvent(UpdateLifecycleStage stage)
     {
         return Events.LastOrDefault(e => e.Stage == stage);
     }
 
-    public TimeSpan? GetStageDuration(UpdateStage fromStage, UpdateStage toStage)
+    public TimeSpan? GetStageDuration(UpdateLifecycleStage fromStage, UpdateLifecycleStage toStage)
     {
         var from = Events.FirstOrDefault(e => e.Stage == fromStage)?.Timestamp;
         var to = Events.FirstOrDefault(e => e.Stage == toStage)?.Timestamp;
@@ -92,7 +92,7 @@ public class UpdateMetrics
     public TimeSpan AverageTotalTime { get; set; }
     public double SuccessRate { get; set; }
     public double RollbackRate { get; set; }
-    public Dictionary<UpdateStage, int> StageFailureCounts { get; set; } = new();
+    public Dictionary<UpdateLifecycleStage, int> StageFailureCounts { get; set; } = new();
     public List<string> CommonFailureReasons { get; set; } = new();
 }
 
@@ -136,7 +136,7 @@ public class UpdateObservabilityService
         }
 
         // Record initial event
-        RecordEvent(UpdateStage.CheckRequested);
+        RecordEvent(UpdateLifecycleStage.CheckRequested);
 
         Logger.Info("UpdateObservabilityService", $"Update session started: {fromVersion} -> {toVersion}");
 
@@ -146,7 +146,7 @@ public class UpdateObservabilityService
     /// <summary>
     /// Records an update event.
     /// </summary>
-    public void RecordEvent(UpdateStage stage, string? errorMessage = null, Dictionary<string, string>? metadata = null)
+    public void RecordEvent(UpdateLifecycleStage stage, string? errorMessage = null, Dictionary<string, string>? metadata = null)
     {
         if (_activeSession == null) return;
 
@@ -175,9 +175,9 @@ public class UpdateObservabilityService
         UpdateEventRecorded?.Invoke(this, updateEvent);
 
         // Auto-complete session on terminal stages
-        if (stage == UpdateStage.RestartComplete || stage == UpdateStage.RollbackComplete || stage == UpdateStage.Failed)
+        if (stage == UpdateLifecycleStage.RestartComplete || stage == UpdateLifecycleStage.RollbackComplete || stage == UpdateLifecycleStage.Failed)
         {
-            CompleteSession(stage == UpdateStage.Failed);
+            CompleteSession(stage == UpdateLifecycleStage.Failed);
         }
     }
 
@@ -192,7 +192,7 @@ public class UpdateObservabilityService
         {
             UpdateVersion = _activeSession.TargetVersion,
             FromVersion = _activeSession.SourceVersion,
-            Stage = UpdateStage.DownloadProgress,
+            Stage = UpdateLifecycleStage.DownloadProgress,
             Timestamp = DateTime.Now,
             BytesTransferred = bytesTransferred,
             TotalBytes = totalBytes,
@@ -207,7 +207,7 @@ public class UpdateObservabilityService
         lock (_lock)
         {
             // Replace last progress event if exists
-            var lastProgress = _activeSession.Events.LastOrDefault(e => e.Stage == UpdateStage.DownloadProgress);
+            var lastProgress = _activeSession.Events.LastOrDefault(e => e.Stage == UpdateLifecycleStage.DownloadProgress);
             if (lastProgress != null)
             {
                 _activeSession.Events.Remove(lastProgress);
@@ -229,7 +229,7 @@ public class UpdateObservabilityService
         {
             UpdateVersion = _activeSession.TargetVersion,
             FromVersion = _activeSession.SourceVersion,
-            Stage = UpdateStage.InstallProgress,
+            Stage = UpdateLifecycleStage.InstallProgress,
             Timestamp = DateTime.Now,
             Metadata = new Dictionary<string, string>
             {
@@ -239,7 +239,7 @@ public class UpdateObservabilityService
 
         lock (_lock)
         {
-            var lastProgress = _activeSession.Events.LastOrDefault(e => e.Stage == UpdateStage.InstallProgress);
+            var lastProgress = _activeSession.Events.LastOrDefault(e => e.Stage == UpdateLifecycleStage.InstallProgress);
             if (lastProgress != null)
             {
                 _activeSession.Events.Remove(lastProgress);
@@ -266,7 +266,7 @@ public class UpdateObservabilityService
             metadata["failure_reason"] = failureReason ?? "Verification failed";
         }
 
-        RecordEvent(UpdateStage.VerificationComplete, failureReason, metadata);
+        RecordEvent(UpdateLifecycleStage.VerificationComplete, failureReason, metadata);
     }
 
     /// <summary>
@@ -349,7 +349,7 @@ public class UpdateObservabilityService
         {
             // Calculate average times
             var downloadTimes = completedSessions
-                .Select(s => s.GetStageDuration(UpdateStage.DownloadStarted, UpdateStage.DownloadComplete))
+                .Select(s => s.GetStageDuration(UpdateLifecycleStage.DownloadStarted, UpdateLifecycleStage.DownloadComplete))
                 .Where(d => d.HasValue)
                 .Select(d => d!.Value)
                 .ToList();
@@ -361,7 +361,7 @@ public class UpdateObservabilityService
             }
 
             var installTimes = completedSessions
-                .Select(s => s.GetStageDuration(UpdateStage.InstallStarted, UpdateStage.InstallComplete))
+                .Select(s => s.GetStageDuration(UpdateLifecycleStage.InstallStarted, UpdateLifecycleStage.InstallComplete))
                 .Where(d => d.HasValue)
                 .Select(d => d!.Value)
                 .ToList();
@@ -418,13 +418,13 @@ public class UpdateObservabilityService
     {
         if (_activeSession == null) return null;
 
-        var lastDownload = _activeSession.Events.LastOrDefault(e => e.Stage == UpdateStage.DownloadProgress);
-        var lastInstall = _activeSession.Events.LastOrDefault(e => e.Stage == UpdateStage.InstallProgress);
+        var lastDownload = _activeSession.Events.LastOrDefault(e => e.Stage == UpdateLifecycleStage.DownloadProgress);
+        var lastInstall = _activeSession.Events.LastOrDefault(e => e.Stage == UpdateLifecycleStage.InstallProgress);
 
         return new UpdateProgress
         {
             TargetVersion = _activeSession.TargetVersion,
-            CurrentStage = _activeSession.Events.LastOrDefault()?.Stage ?? UpdateStage.CheckRequested,
+            CurrentStage = _activeSession.Events.LastOrDefault()?.Stage ?? UpdateLifecycleStage.CheckRequested,
             DownloadProgress = lastDownload?.Metadata.TryGetValue("progress_percent", out var dp) == true
                 ? double.Parse(dp)
                 : 0,
@@ -526,7 +526,7 @@ public class UpdateObservabilityService
 public class UpdateProgress
 {
     public string TargetVersion { get; set; } = "";
-    public UpdateStage CurrentStage { get; set; }
+    public UpdateLifecycleStage CurrentStage { get; set; }
     public double DownloadProgress { get; set; }
     public double InstallProgress { get; set; }
     public long BytesTransferred { get; set; }
@@ -534,11 +534,11 @@ public class UpdateProgress
     public TimeSpan ElapsedTime { get; set; }
     public double TotalProgress => CurrentStage switch
     {
-        UpdateStage.DownloadStarted or UpdateStage.DownloadProgress => DownloadProgress * 0.4,
-        UpdateStage.DownloadComplete or UpdateStage.VerificationStarted or UpdateStage.VerificationComplete => 40,
-        UpdateStage.InstallStarted or UpdateStage.InstallProgress => 40 + InstallProgress * 0.5,
-        UpdateStage.InstallComplete => 90,
-        UpdateStage.RestartRequested or UpdateStage.RestartComplete => 100,
+        UpdateLifecycleStage.DownloadStarted or UpdateLifecycleStage.DownloadProgress => DownloadProgress * 0.4,
+        UpdateLifecycleStage.DownloadComplete or UpdateLifecycleStage.VerificationStarted or UpdateLifecycleStage.VerificationComplete => 40,
+        UpdateLifecycleStage.InstallStarted or UpdateLifecycleStage.InstallProgress => 40 + InstallProgress * 0.5,
+        UpdateLifecycleStage.InstallComplete => 90,
+        UpdateLifecycleStage.RestartRequested or UpdateLifecycleStage.RestartComplete => 100,
         _ => 0
     };
 }

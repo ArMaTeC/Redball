@@ -414,6 +414,13 @@ main() {
             upload_files+=("$versioned_exe")
         fi
         
+        # Add manifest.json for differential updates
+        local manifest_json="$windows_dist/wpf-publish/manifest.json"
+        if [[ -f "$manifest_json" ]]; then
+            upload_files+=("$manifest_json")
+            log_info "Including manifest.json for differential updates"
+        fi
+        
         if [[ $release_exists -eq 1 ]]; then
             log_warn "Release $TAG already exists. Updating artifacts..."
             for file in "${upload_files[@]}"; do

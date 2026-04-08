@@ -1,86 +1,159 @@
 <Window x:Class="Redball.UI.Views.UpdateProgressWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Downloading Update" 
-        Height="180" Width="440"
-        WindowStartupLocation="CenterScreen"
-        WindowStyle="None"
-        AllowsTransparency="True"
-        Background="Transparent"
-        Topmost="True">
-    
-    <Border BorderBrush="{DynamicResource BorderBrush}"
-            BorderThickness="1.5"
-            CornerRadius="16"
-            ClipToBounds="True">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Updating Redball" Height="420" Width="520" WindowStartupLocation="CenterScreen" WindowStyle="None" AllowsTransparency="True" Background="Transparent" Topmost="True" MouseLeftButtonDown="Window_MouseLeftButtonDown">
+
+    <Window.Resources>
+        <!-- Stage indicator style (inactive) -->
+        <Style x:Key="StageIndicator" TargetType="Border">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Background" Value="#33555555"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <!-- Stage label style -->
+        <Style x:Key="StageLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="Foreground" Value="#77AAAAAA"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+        </Style>
+        <!-- Connector line between stages -->
+        <Style x:Key="StageConnector" TargetType="Border">
+            <Setter Property="Height" Value="2"/>
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Background" Value="#33555555"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1.5" CornerRadius="16" ClipToBounds="True">
         <Border.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#FB202020" Offset="0"/>
-                <GradientStop Color="#F02D2D2D" Offset="1"/>
+                <GradientStop Color="#FB1A1A1A" Offset="0"/>
+                <GradientStop Color="#F0242424" Offset="1"/>
             </LinearGradientBrush>
         </Border.Background>
         <Border.Effect>
             <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.6" Color="Black"/>
         </Border.Effect>
 
-        <Grid Margin="24,20">
+        <Grid Margin="24,20,24,16">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <!-- Title row -->
                 <RowDefinition Height="Auto"/>
+                <!-- Stage pipeline -->
+                <RowDefinition Height="Auto"/>
+                <!-- Status text -->
+                <RowDefinition Height="Auto"/>
+                <!-- Progress bar + stats -->
                 <RowDefinition Height="*"/>
+                <!-- Log area -->
                 <RowDefinition Height="Auto"/>
+                <!-- Footer -->
             </Grid.RowDefinitions>
-            
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" 
-                           Foreground="{DynamicResource AccentBrush}" 
-                           FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <TextBlock x:Name="StatusLabel" Text="Downloading update..." 
-                           Foreground="{DynamicResource ForegroundBrush}" FontSize="15" FontWeight="SemiBold"
-                           VerticalAlignment="Center"/>
+
+            <!-- Row 0: Title -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource AccentBrush}" FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBlock x:Name="TitleLabel" Text="Updating Redball" Foreground="{DynamicResource ForegroundBrush}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBlock x:Name="PercentLabel" Text="" Foreground="{DynamicResource AccentBrush}" FontSize="14" FontWeight="Medium" VerticalAlignment="Center" Margin="10,0,0,0"/>
             </StackPanel>
 
-            <Grid Grid.Row="1" Margin="0,0,0,8">
-                <TextBlock x:Name="SizeLabel" Text="0 MB / 0 MB" 
-                           Foreground="{DynamicResource ForegroundSecondaryBrush}" FontSize="11" HorizontalAlignment="Left"/>
-                <TextBlock x:Name="SpeedLabel" Text="0 KB/s" 
-                           Foreground="{DynamicResource AccentBrush}" FontSize="11" FontWeight="Medium" 
-                           HorizontalAlignment="Right"/>
-            </Grid>
-            
-            <ProgressBar x:Name="ProgressBar"
-                         Grid.Row="2"
-                         Height="10"
-                         VerticalAlignment="Top"
-                         Minimum="0"
-                         Maximum="100"
-                         Value="0"
-                         Background="{DynamicResource HoverBrush}"
-                         Foreground="{DynamicResource AccentBrush}"
-                         BorderThickness="0">
-                <ProgressBar.Template>
-                    <ControlTemplate TargetType="ProgressBar">
-                        <Grid x:Name="TemplateRoot">
-                            <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroup x:Name="CommonStates">
-                                    <VisualState x:Name="Determinate"/>
-                                    <VisualState x:Name="Indeterminate"/>
-                                </VisualStateGroup>
-                            </VisualStateManager.VisualStateGroups>
-                            <Border Background="{TemplateBinding Background}" CornerRadius="5"/>
-                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="5" Background="{TemplateBinding Foreground}">
-                                <Border.Effect>
-                                    <DropShadowEffect Color="{Binding Color, Source={StaticResource AccentBrush}}" BlurRadius="10" ShadowDepth="0" Opacity="0.6"/>
-                                </Border.Effect>
-                            </Border>
-                        </Grid>
-                    </ControlTemplate>
-                </ProgressBar.Template>
-            </ProgressBar>
+            <!-- Row 1: Stage pipeline indicators -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,14">
+                <!-- Checking -->
+                <StackPanel>
+                    <Border x:Name="StageChecking" Style="{StaticResource StageIndicator}">
+                        <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#77AAAAAA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Style="{StaticResource StageLabel}" Text="Check"/>
+                </StackPanel>
+                <Border x:Name="Connector1" Style="{StaticResource StageConnector}"/>
+                <!-- Downloading -->
+                <StackPanel>
+                    <Border x:Name="StageDownloading" Style="{StaticResource StageIndicator}">
+                        <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#77AAAAAA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Style="{StaticResource StageLabel}" Text="Download"/>
+                </StackPanel>
+                <Border x:Name="Connector2" Style="{StaticResource StageConnector}"/>
+                <!-- Patching -->
+                <StackPanel>
+                    <Border x:Name="StagePatching" Style="{StaticResource StageIndicator}">
+                        <TextBlock Text="&#xE90F;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#77AAAAAA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Style="{StaticResource StageLabel}" Text="Patch"/>
+                </StackPanel>
+                <Border x:Name="Connector3" Style="{StaticResource StageConnector}"/>
+                <!-- Verifying -->
+                <StackPanel>
+                    <Border x:Name="StageVerifying" Style="{StaticResource StageIndicator}">
+                        <TextBlock Text="&#xE8FB;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#77AAAAAA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Style="{StaticResource StageLabel}" Text="Verify"/>
+                </StackPanel>
+                <Border x:Name="Connector4" Style="{StaticResource StageConnector}"/>
+                <!-- Applying -->
+                <StackPanel>
+                    <Border x:Name="StageApplying" Style="{StaticResource StageIndicator}">
+                        <TextBlock Text="&#xE74B;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#77AAAAAA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Style="{StaticResource StageLabel}" Text="Apply"/>
+                </StackPanel>
+            </StackPanel>
 
-            <TextBlock x:Name="EtaLabel" Grid.Row="3" 
-                       Text="Calculating remaining time..." 
-                       Foreground="{DynamicResource ForegroundSecondaryBrush}" FontSize="10" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+            <!-- Row 2: Status text -->
+            <TextBlock x:Name="StatusLabel" Grid.Row="2" Text="Preparing update..." Foreground="{DynamicResource ForegroundBrush}" FontSize="13" FontWeight="Medium" Margin="0,0,0,8" TextTrimming="CharacterEllipsis"/>
+
+            <!-- Row 3: Progress bar + speed/size stats -->
+            <Grid Grid.Row="3" Margin="0,0,0,4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <ProgressBar x:Name="ProgressBar" Height="8" Minimum="0" Maximum="100" Value="0" Background="#22555555" Foreground="{DynamicResource AccentBrush}" BorderThickness="0">
+                    <ProgressBar.Template>
+                        <ControlTemplate TargetType="ProgressBar">
+                            <Grid x:Name="TemplateRoot">
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Determinate"/>
+                                        <VisualState x:Name="Indeterminate"/>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                                <Border Background="{TemplateBinding Background}" CornerRadius="4"/>
+                                <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="4" Background="{TemplateBinding Foreground}">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="8" ShadowDepth="0" Opacity="0.5" Color="{Binding Color, Source={StaticResource AccentBrush}}"/>
+                                    </Border.Effect>
+                                </Border>
+                            </Grid>
+                        </ControlTemplate>
+                    </ProgressBar.Template>
+                </ProgressBar>
+
+                <Grid Grid.Row="1" Margin="0,5,0,0">
+                    <TextBlock x:Name="SizeLabel" Text="" Foreground="{DynamicResource ForegroundSecondaryBrush}" FontSize="10.5" HorizontalAlignment="Left"/>
+                    <TextBlock x:Name="SpeedLabel" Text="" Foreground="{DynamicResource AccentBrush}" FontSize="10.5" FontWeight="Medium" HorizontalAlignment="Right"/>
+                </Grid>
+            </Grid>
+
+            <!-- Row 4: Scrollable update log -->
+            <Border Grid.Row="4" Background="#11FFFFFF" CornerRadius="8" Margin="0,8,0,0" Padding="0">
+                <ScrollViewer x:Name="LogScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="10,8">
+                    <TextBlock x:Name="LogTextBlock" Foreground="#AACCCCCC" FontFamily="Cascadia Mono,Consolas,Courier New" FontSize="10.5" TextWrapping="Wrap" LineHeight="17"/>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Row 5: Footer -->
+            <Grid Grid.Row="5" Margin="0,6,0,0">
+                <TextBlock x:Name="EtaLabel" Text="" Foreground="{DynamicResource ForegroundSecondaryBrush}" FontSize="10" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <TextBlock x:Name="FileCountLabel" Text="" Foreground="{DynamicResource ForegroundSecondaryBrush}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            </Grid>
         </Grid>
     </Border>
 </Window>
