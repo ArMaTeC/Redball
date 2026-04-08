@@ -606,6 +606,64 @@ step_build_zip() {
     fi
 }
 
+generate_manifest() {
+    local version
+    if [[ -f "$PROJECT_ROOT/scripts/version.txt" ]]; then
+        version=$(cat "$PROJECT_ROOT/scripts/version.txt" | tr -d '[:space:]')
+    else
+        version=$(grep -oP '<Version>\K[\d.]+' "$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" || echo "2.1.0")
+    fi
+
+    log_step "Generating manifest.json for differential updates..."
+    
+    local manifest_path="$WPF_PUBLISH_DIR/manifest.json"
+    local timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+    local temp_entries="$(mktemp)"
+    
+    # Generate file entries
+    find "$WPF_PUBLISH_DIR" -type f ! -name "manifest.json" ! -name "*.nsi" ! -name "nsis-*.bmp" -print0 | while IFS= read -r -d '' file; do
+        local rel_path="${file#$WPF_PUBLISH_DIR/}"
+        local hash=$(sha256sum "$file" | cut -d' ' -f1)
+        local size=$(stat -c%s "$file")
+        printf '%s\t%s\t%s\n' "$rel_path" "$hash" "$size"
+    done > "$temp_entries"
+    
+    # Build JSON
+    {
+        echo "{"
+        echo "  \"version\": \"$version\","
+        echo "  \"timestamp\": \"$timestamp\","
+        echo '  "files": ['
+        
+        local first=true
+        while IFS=$'\t' read -r rel_path hash size; do
+            if [[ "$first" == "true" ]]; then
+                first=false
+            else
+                echo ","
+            fi
+            echo "    {"
+            echo "      \"name\": \"$rel_path\","
+            echo "      \"hash\": \"$hash\","
+            echo "      \"size\": $size"
+            echo -n "    }"
+        done < "$temp_entries"
+        
+        echo ""
+        echo "  ]"
+        echo "}"
+    } > "$manifest_path"
+    
+    rm -f "$temp_entries"
+    
+    if [[ -f "$manifest_path" ]]; then
+        local file_count=$(grep -c '"name":' "$manifest_path" || echo "0")
+        log_success "Manifest generated with $file_count files: $manifest_path"
+    else
+        log_warn "Failed to generate manifest.json"
+    fi
+}
+
 generate_checksums() {
     local version
     if [[ -f "$PROJECT_ROOT/scripts/version.txt" ]]; then
@@ -657,6 +715,7 @@ main() {
     step_restore
     step_build_wpf
     step_build_service
+    generate_manifest
     step_build_zip
 
     if ! $WPF_ONLY; then

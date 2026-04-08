@@ -400,6 +400,7 @@ public class UpdateService : IUpdateService
             if (manifestAsset != null)
             {
                 Logger.Info("UpdateService", "Found update manifest, checking for differential updates...");
+                Logger.Debug("UpdateService", $"Manifest URL: {manifestAsset.DownloadUrl}");
                 var manifestJson = await _httpClient.GetStringAsync(manifestAsset.DownloadUrl, cancellationToken);
                 var manifest = JsonSerializer.Deserialize<UpdateManifest>(manifestJson);
                 
@@ -497,6 +498,7 @@ public class UpdateService : IUpdateService
                             !a.Name.Contains("debug", StringComparison.OrdinalIgnoreCase));
                         
                         Logger.Info("UpdateService", $"Differential update available: {filesToUpdate.Count}/{manifest.Files.Count} files need updating (ZIP fallback: {(zipAsset != null ? "available" : "none")}).");
+                        Logger.Info("UpdateService", $"Total size to download: {FormatBytes(filesToUpdate.Sum(f => f.PatchUrl != null ? f.PatchSize : f.Size))}");
                         _consecutiveFailures = 0;
                         return new UpdateInfo
                         {
@@ -510,6 +512,12 @@ public class UpdateService : IUpdateService
                         };
                     }
                 }
+            }
+            else
+            {
+                Logger.Warning("UpdateService", "No manifest.json found in release assets. Available assets: " + 
+                    string.Join(", ", latestRelease.Assets.Select(a => a.Name)));
+                Logger.Warning("UpdateService", "Falling back to full installer download. Differential updates require manifest.json.");
             }
 
             // Fallback to full asset (MSI/ZIP)
