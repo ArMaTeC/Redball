@@ -1,14 +1,14 @@
 {
   "fromVersion": "2.1.450",
   "toVersion": "2.1.452",
-  "generatedAt": "2026-04-08T06:36:59.211Z",
+  "generatedAt": "2026-04-08T07:49:18.596Z",
   "patches": [
     {
       "file": "patches/patch-manifest.json",
       "patchFile": "patch-manifest.json.patch",
-      "patchSize": 1103,
+      "patchSize": 1105,
       "originalSize": 8437,
-      "savings": 7334,
+      "savings": 7332,
       "savingsPercent": "86.9%"
     }
   ],
@@ -343,6 +343,6 @@
       "reason": "too_small"
     }
   ],
-  "totalSavings": 7334,
-  "totalOriginalSize": 103101168
+  "totalSavings": 7332,
+  "totalOriginalSize": 103101170
 }
