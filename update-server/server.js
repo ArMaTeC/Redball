@@ -21,7 +21,7 @@ let githubCache = {
   lastFetch: 0
 };
 
-// GitHub API fetch with caching
+// GitHub API fetch with caching - merged with local patch data
 async function fetchGitHubReleases() {
   const now = Date.now();
   if (githubCache.releases && (now - githubCache.lastFetch) < GITHUB_CACHE_TTL) {
@@ -33,23 +33,46 @@ async function fetchGitHubReleases() {
     if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
 
     const ghReleases = await response.json();
+    const db = loadDB();
 
-    // Transform GitHub format to our format
-    const releases = ghReleases.map(r => ({
-      version: r.tag_name.replace(/^v/, ''),
-      channel: r.prerelease ? 'beta' : 'stable',
-      date: r.published_at,
-      notes: r.body || '',
-      files: r.assets.map(a => ({
+    // Transform GitHub format to our format and merge with local patch data
+    const releases = ghReleases.map(r => {
+      const version = r.tag_name.replace(/^v/, '');
+      const localRelease = db.releases.find(lr => lr.version === version);
+
+      // Start with GitHub assets
+      const files = r.assets.map(a => ({
         name: a.name,
         size: a.size,
         hash: '', // GitHub doesn't provide hashes in the API
         downloads: a.download_count,
         url: a.browser_download_url
-      })),
-      totalDownloads: r.assets.reduce((sum, a) => sum + a.download_count, 0),
-      githubUrl: r.html_url
-    }));
+      }));
+
+      // Merge with local patch files if available
+      if (localRelease?.files) {
+        const patchFiles = localRelease.files.filter(f => f.name.endsWith('.patch'));
+        for (const patch of patchFiles) {
+          const existing = files.findIndex(f => f.name === patch.name);
+          if (existing >= 0) {
+            files[existing] = { ...files[existing], ...patch };
+          } else {
+            files.push(patch);
+          }
+        }
+      }
+
+      return {
+        version,
+        channel: r.prerelease ? 'beta' : 'stable',
+        date: r.published_at,
+        notes: r.body || '',
+        files,
+        totalDownloads: r.assets.reduce((sum, a) => sum + a.download_count, 0),
+        githubUrl: r.html_url,
+        patchInfo: localRelease?.patchInfo || null
+      };
+    });
 
     githubCache = {
       releases,
@@ -230,14 +253,22 @@ app.get('/api/github/releases', async (req, res) => {
       prerelease: r.channel !== 'stable',
       published_at: r.date,
       assets: (r.files || [])
-        .filter(f => !f.name.endsWith('.msi') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS')
-        .map(f => ({
-          name: f.name,
-          size: f.size,
-          browser_download_url: f.url || `${req.protocol}://${req.get('host')}/downloads/${r.version}/${f.name}`,
-          content_type: guessMimeType(f.name),
-          download_count: f.downloads || 0
-        })),
+        .filter(f => !f.name.endsWith('.msi') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS' && !f.name.startsWith('patches/'))
+        .map(f => {
+          // Patch files are in the patches subdirectory
+          const isPatch = f.name.endsWith('.patch');
+          const downloadUrl = isPatch
+            ? `${req.protocol}://${req.get('host')}/downloads/${r.version}/patches/${f.name}`
+            : (f.url || `${req.protocol}://${req.get('host')}/downloads/${r.version}/${f.name}`);
+          return {
+            name: f.name,
+            size: f.size,
+            browser_download_url: downloadUrl,
+            content_type: guessMimeType(f.name),
+            downloads: f.downloads || 0,
+            patch_for: f.patchFor || null  // Include patch metadata if available
+          };
+        }),
       html_url: r.githubUrl
     }));
     res.json(ghReleases);
