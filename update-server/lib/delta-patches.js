@@ -130,6 +130,45 @@ async function applyPatch(oldData, patchData) {
 }
 
 /**
+ * Find matching file in old version for versioned filenames
+ * Handles patterns like Redball-2.1.450-Setup.exe -> Redball-2.1.452-Setup.exe
+ */
+function findMatchingOldFile(oldVersionDir, newVersionDir, newFilePath) {
+  const newFileName = path.basename(newFilePath);
+
+  // Check for exact match first
+  const exactMatch = path.join(oldVersionDir, path.relative(newVersionDir, newFilePath));
+  if (fs.existsSync(exactMatch)) {
+    return exactMatch;
+  }
+
+  // Pattern: Redball-X.Y.Z-Setup.exe -> Redball-A.B.C-Setup.exe
+  // Extract base name by removing version pattern
+  const versionPattern = /Redball-\d+\.\d+\.\d+(-Setup\.exe|-[a-zA-Z]+\.zip|\.exe)$/;
+
+  if (versionPattern.test(newFileName)) {
+    // Get the file type suffix (e.g., -Setup.exe, .zip)
+    const suffixMatch = newFileName.match(/-\d+\.\d+\.\d+(-.*)$/);
+    if (suffixMatch) {
+      const suffix = suffixMatch[1]; // e.g., -Setup.exe
+
+      // Get all files in old version
+      const oldFiles = getAllFiles(oldVersionDir);
+
+      for (const oldFile of oldFiles) {
+        const oldFileName = path.basename(oldFile);
+        // Check if old file ends with same suffix
+        if (oldFileName.endsWith(suffix)) {
+          return oldFile;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * Generate patches between two release versions
  */
 async function generatePatches(oldVersionDir, newVersionDir, patchesDir, options = {}) {
@@ -169,14 +208,18 @@ async function generatePatches(oldVersionDir, newVersionDir, patchesDir, options
         continue;
       }
 
-      // If old file doesn't exist, full download required
+      // If old file doesn't exist at exact path, try to find matching versioned file
+      let actualOldFile = oldFile;
       if (!fs.existsSync(oldFile)) {
-        results.skipped.push({ file: relativePath, reason: 'new_file' });
-        continue;
+        actualOldFile = findMatchingOldFile(oldVersionDir, newVersionDir, newFile);
+        if (!actualOldFile) {
+          results.skipped.push({ file: relativePath, reason: 'new_file' });
+          continue;
+        }
       }
 
       // ASYNC: Use non-blocking file read for old data too
-      const oldData = await fsp.readFile(oldFile);
+      const oldData = await fsp.readFile(actualOldFile);
 
       // Check if files are identical
       if (computeHash(oldData) === computeHash(newData)) {
