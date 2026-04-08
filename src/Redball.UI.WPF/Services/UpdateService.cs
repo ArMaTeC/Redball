@@ -511,6 +511,10 @@ public class UpdateService : IUpdateService
                             FileName = zipAsset?.Name ?? ""
                         };
                     }
+                    else
+                    {
+                        Logger.Info("UpdateService", $"All {manifest.Files.Count} files match manifest - but version differs. Falling back to full installer.");
+                    }
                 }
             }
             else
@@ -870,26 +874,48 @@ public class UpdateService : IUpdateService
                 updateInfo.TrustValidation = trustResult;
             }
 
+            Logger.Debug("UpdateService", $"Checking installer type for: {updateInfo.FileName}");
+            
             if (updateInfo.FileName.EndsWith(".msi", StringComparison.OrdinalIgnoreCase) ||
                 updateInfo.FileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
             {
                 ReportProgress(progress, UpdateStage.Applying, 95, "Launching installer...",
                     logEntry: $"Launching installer: {updateInfo.FileName}");
                 
+                Logger.Info("UpdateService", $"Creating installer launch script for: {downloadPath}");
                 var installerScriptPath = CreateInstallerLaunchScript(downloadPath, updateInfo.FileName);
-                if (installerScriptPath == null) return false;
-
-                Process.Start(new ProcessStartInfo
+                if (installerScriptPath == null) 
                 {
-                    FileName = "powershell.exe",
-                    Arguments = $"-ExecutionPolicy Bypass -WindowStyle Hidden -File \"{installerScriptPath}\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                });
+                    Logger.Error("UpdateService", "Failed to create installer launch script");
+                    return false;
+                }
                 
-                ReportProgress(progress, UpdateStage.Complete, 100, "Installer launched — closing app...",
-                    logEntry: "Installer launched. Application will close for update.");
-                return true;
+                Logger.Info("UpdateService", $"Starting PowerShell with script: {installerScriptPath}");
+
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = $"-ExecutionPolicy Bypass -WindowStyle Hidden -File \"{installerScriptPath}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                    
+                    ReportProgress(progress, UpdateStage.Complete, 100, "Installer launched — closing app...",
+                        logEntry: "Installer launched. Application will close for update.");
+                    Logger.Info("UpdateService", "Installer launched successfully");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("UpdateService", "Failed to start installer process", ex);
+                    return false;
+                }
+            }
+            else
+            {
+                Logger.Warning("UpdateService", $"Unknown installer type: {updateInfo.FileName}. Cannot launch.");
             }
 
             // ZIP extraction fallback
