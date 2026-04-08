@@ -387,17 +387,24 @@ public class UpdateService : IUpdateService
             if (currentVersion == null)
             {
                 Logger.Warning("UpdateService", "Could not get current assembly version");
+                ReportCheckProgress(progress, UpdateCheckStage.Failed, 0, "Failed to get current version");
                 return null;
             }
+
+            var currentNormalized = new Version(currentVersion.Major, currentVersion.Minor, currentVersion.Build);
+            ReportCheckProgress(progress, UpdateCheckStage.FetchingReleases, 10, $"Current version: {currentNormalized}");
             
             // Get all releases and find the highest version
-            ReportCheckProgress(progress, UpdateCheckStage.FetchingReleases, 20, "Fetching release information...");
+            ReportCheckProgress(progress, UpdateCheckStage.FetchingReleases, 20, "Connecting to GitHub API...");
             var allReleases = await GetAllReleasesAsync(cancellationToken);
+            
+            ReportCheckProgress(progress, UpdateCheckStage.FetchingReleases, 35, $"Found {allReleases.Count} releases");
             var latestRelease = FindHighestVersionRelease(allReleases);
             
             if (latestRelease == null)
             {
                 Logger.Warning("UpdateService", "Could not find any valid release");
+                ReportCheckProgress(progress, UpdateCheckStage.Failed, 0, "No valid releases found");
                 return null;
             }
 
@@ -406,20 +413,23 @@ public class UpdateService : IUpdateService
             if (!Version.TryParse(tagName, out var latestVersion))
             {
                 Logger.Error("UpdateService", $"Failed to parse version from tag: {tagName}");
+                ReportCheckProgress(progress, UpdateCheckStage.Failed, 0, $"Invalid version tag: {tagName}");
                 return null;
             }
             
             // Normalize versions
-            var currentNormalized = new Version(currentVersion.Major, currentVersion.Minor, currentVersion.Build);
             var latestNormalized = new Version(latestVersion.Major, latestVersion.Minor, latestVersion.Build);
             
-            ReportCheckProgress(progress, UpdateCheckStage.ComparingVersions, 40, $"Comparing versions (current: {currentNormalized}, latest: {latestNormalized})...");
+            ReportCheckProgress(progress, UpdateCheckStage.ComparingVersions, 40, $"Comparing v{currentNormalized} → v{latestNormalized}");
             
             if (latestNormalized <= currentNormalized)
             {
                 Logger.Info("UpdateService", $"Up to date (current: {currentNormalized}, latest: {latestNormalized})");
+                ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, "You're on the latest version!");
                 return null;
             }
+
+            ReportCheckProgress(progress, UpdateCheckStage.ComparingVersions, 50, $"Update available: v{latestNormalized}");
 
             // Check for manifest.json for differential updates
             var manifestAsset = latestRelease.Assets.Find(a => a.Name.Equals("manifest.json", StringComparison.OrdinalIgnoreCase));
@@ -441,23 +451,21 @@ public class UpdateService : IUpdateService
                     int filesHashed = 0;
                     int totalFiles = manifest.Files.Count;
                     int processedFiles = 0;
+                    int filesUpToDate = 0;
+                    int filesNeedUpdate = 0;
                     
-                    ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, 60, $"Checking {totalFiles} files for changes...", 0, totalFiles);
+                    ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, 55, $"Scanning {totalFiles} files for changes...", 0, totalFiles);
                     
                     foreach (var file in manifest.Files)
                     {
                         processedFiles++;
                         var normalizedName = NormalizeRelativeUpdatePath(file.Name);
                         var localPath = Path.Combine(appDir, normalizedName);
+                        var fileName = Path.GetFileName(normalizedName);
                         bool needsUpdate = true;
                         
-                        // Report progress every 5 files
-                        if (processedFiles % 5 == 0)
-                        {
-                            int progressPct = 60 + (processedFiles * 25 / totalFiles);
-                            ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
-                                $"Checking {totalFiles} files... ({processedFiles}/{totalFiles})", filesHashed, totalFiles);
-                        }
+                        // Report progress every file with detailed status
+                        int progressPct = 55 + (processedFiles * 30 / totalFiles);
                         
                         if (File.Exists(localPath))
                         {
@@ -469,10 +477,14 @@ public class UpdateService : IUpdateService
                             {
                                 localHash = cachedHash.ToUpper();
                                 cachedHashesUsed++;
+                                ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
+                                    $"✓ {fileName} (cached)", processedFiles, totalFiles);
                             }
                             else
                             {
                                 // Calculate hash and cache it
+                                ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
+                                    $"Hashing {fileName}...", processedFiles, totalFiles);
                                 localHash = (await CalculateHashAsync(localPath)).ToUpper();
                                 hashCache.StoreHash(localPath, localHash);
                                 filesHashed++;
@@ -481,7 +493,22 @@ public class UpdateService : IUpdateService
                             if (localHash == file.Hash.ToUpper())
                             {
                                 needsUpdate = false;
+                                filesUpToDate++;
+                                ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
+                                    $"✓ {fileName} up to date", processedFiles, totalFiles);
                             }
+                            else
+                            {
+                                filesNeedUpdate++;
+                                ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
+                                    $"✗ {fileName} needs update", processedFiles, totalFiles);
+                            }
+                        }
+                        else
+                        {
+                            filesNeedUpdate++;
+                            ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
+                                $"✗ {fileName} missing", processedFiles, totalFiles);
                         }
                         
                         if (needsUpdate)
@@ -529,8 +556,18 @@ public class UpdateService : IUpdateService
                         }
                     }
                     
-                    Logger.Info("UpdateService", $"Differential check complete: {filesHashed} files hashed, {cachedHashesUsed} cached hashes used");
-                    ReportCheckProgress(progress, UpdateCheckStage.CalculatingDiff, 90, $"Found {filesToUpdate.Count} files to update...");
+                    Logger.Info("UpdateService", $"Differential check complete: {filesUpToDate} up to date, {filesNeedUpdate} need update, {filesHashed} hashed, {cachedHashesUsed} cached");
+                    
+                    if (filesToUpdate.Count > 0)
+                    {
+                        ReportCheckProgress(progress, UpdateCheckStage.CalculatingDiff, 90, 
+                            $"Found {filesToUpdate.Count} files to update ({filesUpToDate} up to date)");
+                    }
+                    else
+                    {
+                        ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, 
+                            $"All files up to date! ({filesUpToDate}/{totalFiles} files)");
+                    }
                     
                     if (filesToUpdate.Count > 0)
                     {

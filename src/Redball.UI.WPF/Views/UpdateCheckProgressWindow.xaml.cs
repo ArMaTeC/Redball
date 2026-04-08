@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Redball.UI.Services;
+using System.Windows.Resources;
 
 namespace Redball.UI.Views;
 
@@ -50,6 +51,17 @@ public partial class UpdateCheckProgressWindow : Window
             StatusText.Text = progress.StatusText;
         }
 
+        // Show file counter during hashing stage
+        if (progress.Stage == UpdateCheckStage.HashingFiles && progress.TotalFilesToHash > 0)
+        {
+            CurrentFileText.Visibility = Visibility.Visible;
+            CurrentFileText.Text = $"File {progress.FilesHashed} of {progress.TotalFilesToHash}";
+        }
+        else
+        {
+            CurrentFileText.Visibility = Visibility.Collapsed;
+        }
+
         // Update stage display
         if (progress.Stage != _currentStage)
         {
@@ -60,9 +72,10 @@ public partial class UpdateCheckProgressWindow : Window
 
     private void UpdateStageDisplay(UpdateCheckStage stage)
     {
-        var activeColor = new SolidColorBrush(Color.FromRgb(0x4F, 0xC3, 0xF7));
-        var completedColor = new SolidColorBrush(Color.FromRgb(0x4C, 0xAF, 0x50));
-        var pendingColor = new SolidColorBrush(Color.FromRgb(0x66, 0x66, 0x66));
+        // Get colors from theme resources
+        var activeBrush = TryFindResource("AccentBrush") as SolidColorBrush ?? new SolidColorBrush(Color.FromRgb(0xDC, 0x35, 0x45));
+        var completedBrush = TryFindResource("SuccessBrush") as SolidColorBrush ?? new SolidColorBrush(Color.FromRgb(0x28, 0xA7, 0x45));
+        var pendingBrush = TryFindResource("ForegroundDisabledBrush") as SolidColorBrush ?? new SolidColorBrush(Color.FromRgb(0x80, 0x80, 0x80));
 
         int activeIndex = stage switch
         {
@@ -77,11 +90,11 @@ public partial class UpdateCheckProgressWindow : Window
         for (int i = 0; i < _stageIndicators.Length; i++)
         {
             if (i < activeIndex)
-                _stageIndicators[i].Fill = completedColor;
+                _stageIndicators[i].Fill = completedBrush;
             else if (i == activeIndex)
-                _stageIndicators[i].Fill = activeColor;
+                _stageIndicators[i].Fill = activeBrush;
             else
-                _stageIndicators[i].Fill = pendingColor;
+                _stageIndicators[i].Fill = pendingBrush;
         }
 
         StageLabel.Text = stage switch

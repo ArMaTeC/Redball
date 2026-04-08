@@ -491,12 +491,15 @@ step_build_nsis() {
     local installer_dir="$PROJECT_ROOT/installer"
     
     # Use ImageMagick to resize if available, otherwise copy existing
+    # NSIS requires 24-bit BMPs with Windows 3.x format (BMP3), not Windows 98/2000 format
     if command -v convert &>/dev/null; then
-        # Header image (150x57 for NSIS)
-        convert "$installer_dir/banner.bmp" -resize 150x57! "$installer_dir/nsis-header.bmp" 2>/dev/null || \
+        # Header image (150x57 for NSIS) - force BMP3 format for NSIS compatibility
+        convert "$installer_dir/banner.bmp" -resize 150x57! -depth 24 -compress none -type TrueColor \
+            -define bmp:format=bmp3 "$installer_dir/nsis-header.bmp" 2>/dev/null || \
             cp "$installer_dir/banner.bmp" "$installer_dir/nsis-header.bmp"
-        # Welcome image (164x314 for NSIS)
-        convert "$installer_dir/dialog.bmp" -resize 164x314! "$installer_dir/nsis-welcome.bmp" 2>/dev/null || \
+        # Welcome image (164x314 for NSIS) - force BMP3 format for NSIS compatibility
+        convert "$installer_dir/dialog.bmp" -resize 164x314! -depth 24 -compress none -type TrueColor \
+            -define bmp:format=bmp3 "$installer_dir/nsis-welcome.bmp" 2>/dev/null || \
             cp "$installer_dir/dialog.bmp" "$installer_dir/nsis-welcome.bmp"
     else
         # Just copy existing images
