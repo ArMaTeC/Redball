@@ -2,44 +2,56 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--
-        Redball v3.0 Dark Theme
-        Fluent Design System with acrylic/glass effects
+        Redball v3.0 Dark Theme — Cyberpunk Dashboard Edition
+        Deep dark backgrounds with neon red/cyan accents and glassmorphism panels
     -->
 
-    <!-- Background colors -->
-    <SolidColorBrush x:Key="BackgroundBrush" Color="#01202020"/> <!-- Transparent to allow Mica show through -->
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#802D2D2D"/>
-    <SolidColorBrush x:Key="CardBrush" Color="#703C3C3C"/>
+    <!-- Background colors — ultra-dark with subtle blue undertones -->
+    <SolidColorBrush x:Key="BackgroundBrush" Color="#FF080A12"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#C00D1019"/>
+    <SolidColorBrush x:Key="CardBrush" Color="#B0141822"/>
 
     <!-- Foreground colors -->
-    <SolidColorBrush x:Key="ForegroundBrush" Color="#FFE0E0E0"/>
-    <SolidColorBrush x:Key="ForegroundSecondaryBrush" Color="#FFB0B0B0"/>
-    <SolidColorBrush x:Key="ForegroundDisabledBrush" Color="#FF808080"/>
+    <SolidColorBrush x:Key="ForegroundBrush" Color="#FFE8ECF0"/>
+    <SolidColorBrush x:Key="ForegroundSecondaryBrush" Color="#FF7A8899"/>
+    <SolidColorBrush x:Key="ForegroundDisabledBrush" Color="#FF3D4B5C"/>
 
-    <Color x:Key="AccentColor">#FFDC3545</Color>
-    <Color x:Key="AccentDarkColor">#FFB52B3A</Color>
+    <!-- Accent: Neon Red -->
+    <Color x:Key="AccentColor">#FFFF003C</Color>
+    <Color x:Key="AccentDarkColor">#FFCC0030</Color>
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
-    <SolidColorBrush x:Key="AccentLightBrush" Color="#FFE34B5C"/>
+    <SolidColorBrush x:Key="AccentLightBrush" Color="#FFFF3366"/>
     <SolidColorBrush x:Key="AccentDarkBrush" Color="{StaticResource AccentDarkColor}"/>
 
-    <!-- State colors -->
-    <SolidColorBrush x:Key="ActiveBrush" Color="#FFDC3545"/>
-    <SolidColorBrush x:Key="TimedBrush" Color="#FFFD7E14"/>
-    <SolidColorBrush x:Key="PausedBrush" Color="#FF6C757D"/>
-    <SolidColorBrush x:Key="SuccessBrush" Color="#FF28A745"/>
-    <SolidColorBrush x:Key="WarningBrush" Color="#FFFFC107"/>
-    <SolidColorBrush x:Key="ErrorBrush" Color="#FFDC3545"/>
+    <!-- Secondary: Neon Cyan -->
+    <SolidColorBrush x:Key="NeonCyanBrush" Color="#FF00E5FF"/>
+    <SolidColorBrush x:Key="NeonCyanDimBrush" Color="#FF007A99"/>
 
-    <!-- Border colors -->
-    <SolidColorBrush x:Key="BorderBrush" Color="#60404040"/>
-    <SolidColorBrush x:Key="BorderLightBrush" Color="#80505050"/>
-    <SolidColorBrush x:Key="HoverBrush" Color="#40646464"/>
+    <!-- State colors -->
+    <SolidColorBrush x:Key="ActiveBrush" Color="#FFFF003C"/>
+    <SolidColorBrush x:Key="TimedBrush" Color="#FFFD7E14"/>
+    <SolidColorBrush x:Key="PausedBrush" Color="#FF4A5568"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#FF39FF14"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#FFFFEE00"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#FFFF003C"/>
+
+    <!-- Border colors — subtle glow edges -->
+    <SolidColorBrush x:Key="BorderBrush" Color="#30FFFFFF"/>
+    <SolidColorBrush x:Key="BorderLightBrush" Color="#40FFFFFF"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#2000E5FF"/>
+
+    <!-- Panel borders with neon tints -->
+    <SolidColorBrush x:Key="PanelBorderRedBrush" Color="#60FF003C"/>
+    <SolidColorBrush x:Key="PanelBorderCyanBrush" Color="#6000E5FF"/>
+    <SolidColorBrush x:Key="PanelGlassBrush" Color="#18FFFFFF"/>
 
     <!-- Window and Panel backgrounds -->
-    <SolidColorBrush x:Key="WindowBackground" Color="#FF202020"/>
-    <SolidColorBrush x:Key="PanelBackground" Color="#A02D2D2D"/>
+    <SolidColorBrush x:Key="WindowBackground" Color="#FF060810"/>
+    <SolidColorBrush x:Key="PanelBackground" Color="#C00E1220"/>
 
     <!-- Visual Effects -->
-    <DropShadowEffect x:Key="ShadowEffect" BlurRadius="15" ShadowDepth="0" Color="#44000000" Opacity="0.4"/>
+    <DropShadowEffect x:Key="ShadowEffect" BlurRadius="20" ShadowDepth="0" Color="#44000000" Opacity="0.6"/>
+    <DropShadowEffect x:Key="NeonRedGlow" BlurRadius="15" ShadowDepth="0" Color="#FFFF003C" Opacity="0.3"/>
+    <DropShadowEffect x:Key="NeonCyanGlow" BlurRadius="15" ShadowDepth="0" Color="#FF00E5FF" Opacity="0.3"/>
 
 </ResourceDictionary>

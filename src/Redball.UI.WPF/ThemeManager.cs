@@ -132,20 +132,20 @@ public static class ThemeManager
         switch (theme)
         {
             case Theme.Dark:
-                // Dark theme - match DarkTheme.xaml values
-                SetBrush(res, "BackgroundBrush", 32, 32, 32);
-                SetBrush(res, "SurfaceBrush", 0x80, 45, 45, 45);
-                SetBrush(res, "CardBrush", 0x70, 60, 60, 60);
-                SetBrush(res, "ForegroundBrush", 224, 224, 224);
-                SetBrush(res, "ForegroundSecondaryBrush", 176, 176, 176);
-                SetBrush(res, "ForegroundDisabledBrush", 128, 128, 128);
-                SetBrush(res, "AccentBrush", 220, 53, 69); // Bootstrap Danger Red
-                SetBrush(res, "AccentForegroundBrush", 255, 255, 255); // White on Red
-                SetBrush(res, "AccentLightBrush", 227, 75, 92);
-                SetBrush(res, "AccentDarkBrush", 181, 43, 58);
-                SetBrush(res, "BorderBrush", 0x60, 64, 64, 64);
-                SetBrush(res, "BorderLightBrush", 0x80, 80, 80, 80);
-                SetBrush(res, "HoverBrush", 0x40, 100, 100, 100);
+                // Dark theme — Cyberpunk Dashboard with neon red/cyan accents
+                SetBrush(res, "BackgroundBrush", 8, 10, 18);
+                SetBrush(res, "SurfaceBrush", 0xC0, 13, 16, 25);
+                SetBrush(res, "CardBrush", 0xB0, 20, 24, 34);
+                SetBrush(res, "ForegroundBrush", 232, 236, 240);
+                SetBrush(res, "ForegroundSecondaryBrush", 122, 136, 153);
+                SetBrush(res, "ForegroundDisabledBrush", 61, 75, 92);
+                SetBrush(res, "AccentBrush", 255, 0, 60);   // Neon Red
+                SetBrush(res, "AccentForegroundBrush", 255, 255, 255);
+                SetBrush(res, "AccentLightBrush", 255, 51, 102);
+                SetBrush(res, "AccentDarkBrush", 204, 0, 48);
+                SetBrush(res, "BorderBrush", 0x30, 255, 255, 255);
+                SetBrush(res, "BorderLightBrush", 0x40, 255, 255, 255);
+                SetBrush(res, "HoverBrush", 0x20, 0, 229, 255);
                 break;
 
             case Theme.Light:

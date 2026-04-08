@@ -12,6 +12,7 @@
                 <!-- Existing style/animation dictionaries -->
                 <ResourceDictionary Source="/Themes/Controls.xaml"/>
                 <ResourceDictionary Source="/Themes/Animations.xaml"/>
+                <ResourceDictionary Source="/Themes/AcrylicEffects.xaml"/>
                 <ResourceDictionary Source="/Themes/MainWindowStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 

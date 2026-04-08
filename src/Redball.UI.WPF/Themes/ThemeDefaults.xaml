@@ -3,31 +3,47 @@
     <!-- Design-time / fallback brushes used by controls and styles.
          ThemeManager still overrides these at runtime. -->
 
-    <!-- Base Colors -->
-    <Color x:Key="AccentColor">#FFDC3545</Color>
-    <Color x:Key="AccentDarkColor">#FFB52B3A</Color>
+    <!-- Base Colors — Cyberpunk Neon Red -->
+    <Color x:Key="AccentColor">#FFFF003C</Color>
+    <Color x:Key="AccentDarkColor">#FFCC0030</Color>
 
-    <!-- Brushes -->
-    <SolidColorBrush x:Key="BackgroundBrush" Color="#FF202020"/>
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#802D2D2D"/>
-    <SolidColorBrush x:Key="CardBrush" Color="#703C3C3C"/>
+    <!-- Brushes — Ultra-dark backgrounds -->
+    <SolidColorBrush x:Key="BackgroundBrush" Color="#FF080A12"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#C00D1019"/>
+    <SolidColorBrush x:Key="CardBrush" Color="#B0141822"/>
 
-    <SolidColorBrush x:Key="ForegroundBrush" Color="#FFE0E0E0"/>
-    <SolidColorBrush x:Key="ForegroundSecondaryBrush" Color="#FFB0B0B0"/>
-    <SolidColorBrush x:Key="ForegroundDisabledBrush" Color="#FF808080"/>
+    <SolidColorBrush x:Key="ForegroundBrush" Color="#FFE8ECF0"/>
+    <SolidColorBrush x:Key="ForegroundSecondaryBrush" Color="#FF7A8899"/>
+    <SolidColorBrush x:Key="ForegroundDisabledBrush" Color="#FF3D4B5C"/>
 
-    <SolidColorBrush x:Key="AccentBrush" Color="#FFDC3545"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#FFFF003C"/>
     <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFFFF"/>
     <SolidColorBrush x:Key="AccentForegroundSecondaryBrush" Color="#FFE0E0E0"/>
-    <SolidColorBrush x:Key="AccentLightBrush" Color="#FFE34B5C"/>
-    <SolidColorBrush x:Key="AccentDarkBrush" Color="#FFB52B3A"/>
-    <SolidColorBrush x:Key="AccentSurfaceBrush" Color="#80DC3545"/>
+    <SolidColorBrush x:Key="AccentLightBrush" Color="#FFFF3366"/>
+    <SolidColorBrush x:Key="AccentDarkBrush" Color="#FFCC0030"/>
+    <SolidColorBrush x:Key="AccentSurfaceBrush" Color="#40FF003C"/>
 
-    <SolidColorBrush x:Key="BorderBrush" Color="#60606060"/>
-    <SolidColorBrush x:Key="BorderLightBrush" Color="#80808080"/>
-    <SolidColorBrush x:Key="HoverBrush" Color="#40646464"/>
+    <!-- Neon Cyan secondary accent -->
+    <SolidColorBrush x:Key="NeonCyanBrush" Color="#FF00E5FF"/>
+    <SolidColorBrush x:Key="NeonCyanDimBrush" Color="#FF007A99"/>
+
+    <SolidColorBrush x:Key="BorderBrush" Color="#30FFFFFF"/>
+    <SolidColorBrush x:Key="BorderLightBrush" Color="#40FFFFFF"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#2000E5FF"/>
+
+    <!-- State colors -->
+    <SolidColorBrush x:Key="ActiveBrush" Color="#FFFF003C"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#FF39FF14"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#FFFFEE00"/>
+
+    <!-- Panel glass effects -->
+    <SolidColorBrush x:Key="PanelBorderRedBrush" Color="#60FF003C"/>
+    <SolidColorBrush x:Key="PanelBorderCyanBrush" Color="#6000E5FF"/>
+    <SolidColorBrush x:Key="PanelGlassBrush" Color="#18FFFFFF"/>
 
     <!-- Effects -->
     <DropShadowEffect x:Key="ShadowEffect" BlurRadius="20" ShadowDepth="0" Color="#55000000" Opacity="0.45"/>
     <DropShadowEffect x:Key="DropShadowEffect" BlurRadius="20" ShadowDepth="0" Color="#55000000" Opacity="0.45"/>
+    <DropShadowEffect x:Key="NeonRedGlow" BlurRadius="15" ShadowDepth="0" Color="#FFFF003C" Opacity="0.3"/>
+    <DropShadowEffect x:Key="NeonCyanGlow" BlurRadius="15" ShadowDepth="0" Color="#FF00E5FF" Opacity="0.3"/>
 </ResourceDictionary>

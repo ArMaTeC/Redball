@@ -4,13 +4,13 @@
     xmlns:tb="http://www.hardcodet.net/taskbar"
     xmlns:vm="clr-namespace:Redball.UI.ViewModels"
     xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-    xmlns:views="clr-namespace:Redball.UI.Views" Title="Redball" Height="780" Width="1100" WindowStartupLocation="CenterScreen" ShowInTaskbar="True" Style="{DynamicResource ModernWindow}" Background="{DynamicResource BackgroundBrush}" Foreground="{DynamicResource ForegroundBrush}" WindowStyle="None" ResizeMode="CanResize" AllowsTransparency="False">
+    xmlns:views="clr-namespace:Redball.UI.Views" Title="Redball" Height="780" Width="1200" WindowStartupLocation="CenterScreen" ShowInTaskbar="True" Style="{DynamicResource ModernWindow}" Background="{DynamicResource BackgroundBrush}" Foreground="{DynamicResource ForegroundBrush}" WindowStyle="None" ResizeMode="CanResize" AllowsTransparency="False">
 
     <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="8" CornerRadius="16" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
+        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="8" CornerRadius="14" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
     </shell:WindowChrome.WindowChrome>
 
-    <Border Margin="8" CornerRadius="18" Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" SnapsToDevicePixels="True">
+    <Border Margin="8" CornerRadius="14" Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" SnapsToDevicePixels="True">
         <Border.Effect>
             <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="#55000000" Opacity="0.45"/>
         </Border.Effect>
@@ -97,46 +97,54 @@
 
             <Grid Margin="0">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="68"/>
+                    <RowDefinition Height="48"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" CornerRadius="18,18,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                    <Grid>
+                <!-- Cyberpunk Title Bar -->
+                <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" CornerRadius="14,14,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                    <Grid Margin="14,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>  <!-- Traffic lights -->
+                            <ColumnDefinition Width="*"/>     <!-- Center logo -->
+                            <ColumnDefinition Width="Auto"/>  <!-- Window controls -->
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0">
-                            <Border Width="38" Height="38" CornerRadius="12" Background="{DynamicResource AccentBrush}" Margin="0,0,12,0">
-                                <TextBlock Text="R" Foreground="White" FontWeight="Bold" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel VerticalAlignment="Center">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Redball" FontSize="20" FontWeight="Bold"/>
-                                    <Border Background="{DynamicResource CardBrush}" CornerRadius="10" Margin="10,2,0,0" Padding="8,2,8,2" VerticalAlignment="Center" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                                        <TextBlock Text="Desktop Control Center" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                    </Border>
-                                </StackPanel>
-                                <TextBlock Text="Keep-awake controls, automation, and diagnostics in one place" FontSize="11.5" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                            </StackPanel>
+                        <!-- Traffic Light Dots (macOS-inspired) -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse Width="12" Height="12" Fill="#FFFF5F56" Margin="0,0,6,0" Cursor="Hand"/>
+                            <Ellipse Width="12" Height="12" Fill="#FFFFBD2E" Margin="0,0,6,0" Cursor="Hand"/>
+                            <Ellipse Width="12" Height="12" Fill="#FF27C93F" Cursor="Hand"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button x:Name="MinimizeWindowButton" Content="—" Click="MinimizeWindowButton_Click" FontSize="16" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarButtonStyle}">
+                        <!-- Centered Logo + Branding -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <!-- Diamond Logo -->
+                            <Border Width="22" Height="22" Margin="0,0,8,0">
+                                <Border Width="16" Height="16" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                                    <Border.RenderTransform>
+                                        <RotateTransform Angle="45"/>
+                                    </Border.RenderTransform>
+                                </Border>
+                            </Border>
+                            <TextBlock Text="Redball" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}"/>
+                        </StackPanel>
+
+                        <!-- Window Controls -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="MinimizeWindowButton" Content="—" Click="MinimizeWindowButton_Click" FontSize="12" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarButtonStyle}">
                                 <Button.ToolTip>
                                     <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Minimize Redball to the taskbar."/>
                                 </Button.ToolTip>
                             </Button>
-                            <Button x:Name="MaximizeWindowButton" Content="□" Click="MaximizeWindowButton_Click" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarButtonStyle}">
+                            <Button x:Name="MaximizeWindowButton" Content="□" Click="MaximizeWindowButton_Click" FontSize="12" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarButtonStyle}">
                                 <Button.ToolTip>
                                     <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Maximize or restore the Redball window."/>
                                 </Button.ToolTip>
                             </Button>
-                            <Button x:Name="CloseWindowButton" Content="✕" Click="CloseWindowButton_Click" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarCloseButtonStyle}">
+                            <Button x:Name="CloseWindowButton" Content="✕" Click="CloseWindowButton_Click" FontSize="12" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarCloseButtonStyle}">
                                 <Button.ToolTip>
                                     <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Hide Redball back to tray mode."/>
                                 </Button.ToolTip>
@@ -145,46 +153,81 @@
                     </Grid>
                 </Border>
 
-                <Border Grid.Row="1" Style="{DynamicResource CardStyle}" Margin="24,20,24,20">
+                <!-- Status Strip (compact) -->
+                <Border Grid.Row="1" Margin="0" Padding="16,6" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
                     <Grid>
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Current Status" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                            <TextBlock Text="{Binding StatusText}" FontSize="20" FontWeight="SemiBold" Margin="0,4,0,0"/>
+                        <!-- Status indicator with neon pulse dot -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="{DynamicResource SuccessBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding StatusText}" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center"/>
                         </StackPanel>
 
-                        <Button Grid.Column="1" Content="Pause / Resume" Command="{Binding PauseKeepAwakeCommand}" Style="{DynamicResource PrimaryButton}" AutomationProperties.AutomationId="ToggleButton">
+                        <!-- Centered subtitle -->
+                        <TextBlock Grid.Column="1" Text="Desktop Control Center" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                        <!-- Quick toggle -->
+                        <Button Grid.Column="2" Content="⏸ Pause" Command="{Binding PauseKeepAwakeCommand}" Style="{DynamicResource PrimaryButton}" FontSize="11" Padding="12,4" MinHeight="26" AutomationProperties.AutomationId="ToggleButton">
                             <Button.ToolTip>
-                                <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Pause or resume the keep-awake engine without leaving the dashboard."/>
+                                <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Pause or resume the keep-awake engine."/>
                             </Button.ToolTip>
                         </Button>
                     </Grid>
                 </Border>
 
-                <Grid Grid.Row="2" Margin="24,0,24,0">
+                <Grid Grid.Row="2" Margin="0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="56"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0" Style="{DynamicResource CardStyle}" Margin="0,0,16,0">
-                        <StackPanel>
-                            <RadioButton x:Name="HomeNavButton" Content="Home" IsChecked="True" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Overview of the main Redball sections and shortcuts."/>
-                            <RadioButton x:Name="AnalyticsNavButton" Content="Analytics" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="View session counts, usage patterns, and tracked activity."/>
-                            <RadioButton x:Name="DiagnosticsNavButton" Content="Diagnostics" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Review runtime state, logging paths, and app health."/>
-                            <RadioButton x:Name="SettingsNavButton" Content="Settings" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="General application settings such as theme, notifications, and logging." AutomationProperties.AutomationId="SettingsButton"/>
-                            <RadioButton x:Name="BehaviorNavButton" Content="Behavior" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Control display sleep prevention, heartbeat key, and default run duration."/>
-                            <RadioButton x:Name="SmartFeaturesNavButton" Content="Smart Features" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Tune battery, network, idle, presentation, and scheduled behavior."/>
-                            <RadioButton x:Name="TypeThingNavButton" Content="TypeThing" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Configure TypeThing hotkeys, speed, and typing behavior."/>
-                            <RadioButton x:Name="UpdatesNavButton" Content="Updates" Style="{DynamicResource NavRadioButton}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Manage update channels and check for new releases."/>
-                        </StackPanel>
+                    <!-- Icon-Only Sidebar -->
+                    <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0" Padding="4,12">
+                        <DockPanel>
+                            <!-- Top navigation icons -->
+                            <StackPanel DockPanel.Dock="Top">
+                                <RadioButton x:Name="HomeNavButton" IsChecked="True" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Home">
+                                    <TextBlock Text="&#xE80F;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
+                                </RadioButton>
+                                <RadioButton x:Name="AnalyticsNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Analytics">
+                                    <TextBlock Text="&#xE9D2;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
+                                </RadioButton>
+                                <RadioButton x:Name="TypeThingNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="TypeThing">
+                                    <TextBlock Text="&#xE8D2;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
+                                </RadioButton>
+                                <RadioButton x:Name="DiagnosticsNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Diagnostics">
+                                    <TextBlock Text="&#xE9D9;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
+                                </RadioButton>
+                                <RadioButton x:Name="BehaviorNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Behavior">
+                                    <TextBlock Text="&#xE771;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
+                                </RadioButton>
+                                <RadioButton x:Name="SmartFeaturesNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Smart Features">
+                                    <TextBlock Text="&#xEA80;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
+                                </RadioButton>
+                            </StackPanel>
+
+                            <!-- Bottom icons: Settings + Updates -->
+                            <StackPanel DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
+                                <RadioButton x:Name="SettingsNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Settings" AutomationProperties.AutomationId="SettingsButton">
+                                    <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
+                                </RadioButton>
+                                <RadioButton x:Name="UpdatesNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Updates">
+                                    <TextBlock Text="&#xE895;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
+                                </RadioButton>
+                            </StackPanel>
+
+                            <!-- Spacer -->
+                            <Border/>
+                        </DockPanel>
                     </Border>
 
-                    <Border Grid.Column="1" Style="{DynamicResource CardStyle}">
+                    <!-- Main Content Area -->
+                    <Border Grid.Column="1" Padding="16" Margin="0">
                         <Grid>
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel Margin="4">
@@ -724,14 +767,15 @@
                     </Border>
                 </Grid>
 
-                <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" CornerRadius="0,0,18,18">
+                <!-- Minimal Footer -->
+                <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" CornerRadius="0,0,14,14" Padding="16,4">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Redball - Keep-awake controls, automation, and diagnostics in one place." FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="24,0,0,0" VerticalAlignment="Center"/>
-                        <Button Grid.Column="1" Content="♥ Donate" Style="{DynamicResource TextButtonStyle}" Command="{Binding DonateCommand}" ToolTip="Support the development of Redball!" Margin="0,0,24,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="0" Text="ENC_STATUS: ACTIVE  ▪  SYSCALL: STABLE" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" FontFamily="Consolas" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="♥ Support" Style="{DynamicResource TextButtonStyle}" Command="{Binding DonateCommand}" ToolTip="Support the development of Redball!" VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
             </Grid>
