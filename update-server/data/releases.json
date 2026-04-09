@@ -1109,6 +1109,29 @@
         "totalPatches": 4,
         "totalSavings": 2465657
       }
+    },
+    {
+      "version": "2.1.498",
+      "notes": "Release 2.1.498",
+      "channel": "stable",
+      "date": "2026-04-09T20:29:13.262Z",
+      "files": [
+        {
+          "name": "redball-2.1.498-linux.tar.gz",
+          "size": 252561,
+          "hash": "64594fa1954f8ac043f08052445a6caaafc905fa40ce5794e65cb667babc6ee5",
+          "downloads": 0,
+          "uploadedAt": "2026-04-09T20:29:13.329Z"
+        },
+        {
+          "name": "redball-2.1.498.flatpak",
+          "size": 360872,
+          "hash": "13a6e40c6b1c55f906e9ebe9007a82407f0724b632768d1b23e05c175fb3fbe8",
+          "downloads": 0,
+          "uploadedAt": "2026-04-09T20:29:13.369Z"
+        }
+      ],
+      "totalDownloads": 0
     }
   ]
 }

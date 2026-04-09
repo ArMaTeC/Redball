@@ -336,6 +336,9 @@ step_build_wpf() {
     log_debug "Wine prefix:   $WINE_PREFIX"
     log_debug "Wine .NET:     $WINE_DOTNET_ROOT/dotnet.exe"
 
+    # Ensure Wine prefix is initialized (needed even with --skip-setup)
+    init_wine_prefix
+
     mkdir -p "$WPF_PUBLISH_DIR"
 
     # Build all projects first so intermediate DLLs + artifacts exist
