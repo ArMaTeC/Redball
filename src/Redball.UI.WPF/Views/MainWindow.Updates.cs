@@ -180,9 +180,9 @@ public partial class MainWindow
         try
         {
             // Delegate to the embedded UpdatesSectionView for integrated UI experience
-            if (UpdatesSection != null)
+            if (UpdatesPanel is Views.UpdatesSectionView updatesSection)
             {
-                await UpdatesSection.StartUpdateCheckFromExternalAsync();
+                await updatesSection.StartUpdateCheckFromExternalAsync();
             }
             else
             {

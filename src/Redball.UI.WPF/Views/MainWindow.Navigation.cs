@@ -77,9 +77,9 @@ public partial class MainWindow
     private async void MainCheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
     {
         // Use the embedded UpdatesSectionView for integrated progress UI
-        if (UpdatesSection != null)
+        if (UpdatesPanel is UpdatesSectionView updatesSection)
         {
-            await UpdatesSection.StartUpdateCheckFromExternalAsync();
+            await updatesSection.StartUpdateCheckFromExternalAsync();
         }
         else
         {
@@ -90,9 +90,9 @@ public partial class MainWindow
     public async Task CheckForUpdatesAsync()
     {
         // If we're on the Updates tab, use the embedded UI
-        if (UpdatesSection != null && _currentSection == "Updates")
+        if (UpdatesPanel is UpdatesSectionView updatesSection && _currentSection == "Updates")
         {
-            await UpdatesSection.StartUpdateCheckFromExternalAsync();
+            await updatesSection.StartUpdateCheckFromExternalAsync();
             return;
         }
 
@@ -445,6 +445,13 @@ public partial class MainWindow
             if (!IsVisible) Show();
             WindowState = WindowState.Normal;
             LoadEmbeddedSettings();
+
+            // Ensure UpdatesPanel is ready before showing
+            if (UpdatesPanel is Views.UpdatesSectionView updatesSection)
+            {
+                updatesSection.Visibility = Visibility.Visible;
+            }
+
             ShowSection("Updates");
             Activate();
             Focus();

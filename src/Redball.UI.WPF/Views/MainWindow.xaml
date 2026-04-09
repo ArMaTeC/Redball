@@ -719,9 +719,7 @@
                                         </Border>
                                     </StackPanel>
 
-                                    <StackPanel x:Name="UpdatesPanel" Visibility="Collapsed">
-                                        <views:UpdatesSectionView x:Name="UpdatesSection"/>
-                                    </StackPanel>
+                                    <views:UpdatesSectionView x:Name="UpdatesPanel" Visibility="Collapsed"/>
 
                                     <StackPanel x:Name="CompatibilityControlsPanel" Visibility="Collapsed">
                                         <Grid x:Name="CompatibilityNoopAnchor"/>

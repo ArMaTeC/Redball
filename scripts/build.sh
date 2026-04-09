@@ -648,6 +648,35 @@ build_all() {
             log_error "[3/4] Windows FAILED"
             failed+=("windows")
         fi
+        
+        # Publish to update-server for patch generation
+        log_info "Publishing to update-server..."
+        local version=$(get_version)
+        local update_server_release_dir="$UPDATE_SERVER_DIR/releases/$version"
+        mkdir -p "$update_server_release_dir/binaries"
+        
+        # Copy installer, zip, and standalone exe
+        [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] && cp "$DIST_DIR/Redball-${version}-Setup.exe" "$update_server_release_dir/"
+        [[ -f "$DIST_DIR/Redball-${version}.zip" ]] && cp "$DIST_DIR/Redball-${version}.zip" "$update_server_release_dir/"
+        [[ -f "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" ]] && cp "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" "$update_server_release_dir/Redball-${version}.exe"
+        
+        # Copy binaries for delta patching
+        for file in Redball.UI.WPF.exe Redball.UI.WPF.dll Redball.Service.exe Redball.Service.dll; do
+            [[ -f "$DIST_DIR/wpf-publish/$file" ]] && cp "$DIST_DIR/wpf-publish/$file" "$update_server_release_dir/binaries/"
+        done
+        [[ -d "$DIST_DIR/wpf-publish/dll" ]] && cp "$DIST_DIR/wpf-publish/dll"/*.dll "$update_server_release_dir/binaries/" 2>/dev/null || true
+        
+        log_success "Published to update-server: $update_server_release_dir"
+        
+        # Generate delta patches after Windows build completes
+        log_info "Generating delta patches..."
+        local patch_script="$UPDATE_SERVER_DIR/scripts/generate-patches.js"
+        if [[ -f "$patch_script" ]]; then
+            node "$patch_script" 2>&1 | while IFS= read -r line; do log_detail "$line"; done
+            log_success "Delta patches generated"
+        else
+            log_warn "Patch generation script not found: $patch_script"
+        fi
     else
         log_info "[3/4] Windows — SKIPPED (--skip-windows)"
     fi

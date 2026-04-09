@@ -1,10 +1,9 @@
 <UserControl x:Class="Redball.UI.Views.HomeSectionView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:lottie="clr-namespace:LottieSharp.WPF;assembly=LottieSharp"
-             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:lottie="clr-namespace:LottieSharp.WPF;assembly=LottieSharp" mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid Margin="0,0,0,16">
             <Grid.RowDefinitions>
@@ -26,7 +25,9 @@
                         <!-- Header -->
                         <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
                             <TextBlock Text="TypeThing Stats" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}"/>
-                            <TextBlock Text="•••" HorizontalAlignment="Right" FontSize="14" Foreground="{DynamicResource ForegroundSecondaryBrush}" Cursor="Hand"/>
+                            <Button Style="{DynamicResource BorderlessButton}" HorizontalAlignment="Right" Command="{Binding OpenTypeThingCommand}">
+                                <TextBlock Text="Open →" FontSize="12" Foreground="{DynamicResource AccentBrush}" Cursor="Hand"/>
+                            </Button>
                         </Grid>
 
                         <!-- Stats Grid -->
@@ -59,11 +60,9 @@
                                     <!-- Visual chart representation -->
                                     <Canvas Grid.Row="1" Height="60">
                                         <!-- Red line -->
-                                        <Polyline Points="0,45 30,30 60,35 90,20 120,25 150,15 180,30 210,20 240,28 270,10" 
-                                                  Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" Opacity="0.8"/>
+                                        <Polyline Points="0,45 30,30 60,35 90,20 120,25 150,15 180,30 210,20 240,28 270,10" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" Opacity="0.8"/>
                                         <!-- Cyan line -->
-                                        <Polyline Points="0,50 30,40 60,42 90,35 120,38 150,30 180,38 210,32 240,35 270,22" 
-                                                  Stroke="{DynamicResource NeonCyanBrush}" StrokeThickness="2" Opacity="0.6"/>
+                                        <Polyline Points="0,50 30,40 60,42 90,35 120,38 150,30 180,38 210,32 240,35 270,22" Stroke="{DynamicResource NeonCyanBrush}" StrokeThickness="2" Opacity="0.6"/>
                                     </Canvas>
                                 </Grid>
                             </Border>
@@ -96,27 +95,29 @@
                 <Border Grid.Column="1" Style="{DynamicResource NeonCyanPanelStyle}">
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Top" Text="Keep-Awake" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,16"/>
-                        
-                        <!-- Central Power Button -->
-                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <!-- Outer ring glow -->
-                            <Ellipse Width="90" Height="90" StrokeThickness="3" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <Ellipse.Stroke>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                        <GradientStop Color="#FF00E5FF" Offset="0"/>
-                                        <GradientStop Color="#4000E5FF" Offset="0.5"/>
-                                        <GradientStop Color="#FF00E5FF" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Ellipse.Stroke>
-                                <Ellipse.Effect>
-                                    <DropShadowEffect BlurRadius="15" ShadowDepth="0" Color="#FF00E5FF" Opacity="0.3"/>
-                                </Ellipse.Effect>
-                            </Ellipse>
-                            <!-- Inner circle -->
-                            <Ellipse Width="70" Height="70" Fill="#1800E5FF" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                            <!-- Power icon -->
-                            <TextBlock Text="&#xE7E8;" FontFamily="Segoe Fluent Icons" FontSize="28" Foreground="{DynamicResource NeonCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Grid>
+
+                        <!-- Central Power Button - Clickable -->
+                        <Button Style="{DynamicResource BorderlessButton}" VerticalAlignment="Center" HorizontalAlignment="Center" Command="{Binding ToggleActiveCommand}">
+                            <Grid>
+                                <!-- Outer ring glow -->
+                                <Ellipse Width="90" Height="90" StrokeThickness="3" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <Ellipse.Stroke>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#FF00E5FF" Offset="0"/>
+                                            <GradientStop Color="#4000E5FF" Offset="0.5"/>
+                                            <GradientStop Color="#FF00E5FF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Ellipse.Stroke>
+                                    <Ellipse.Effect>
+                                        <DropShadowEffect BlurRadius="15" ShadowDepth="0" Color="#FF00E5FF" Opacity="0.3"/>
+                                    </Ellipse.Effect>
+                                </Ellipse>
+                                <!-- Inner circle -->
+                                <Ellipse Width="70" Height="70" Fill="#1800E5FF" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <!-- Power icon -->
+                                <TextBlock Text="&#xE7E8;" FontFamily="Segoe Fluent Icons" FontSize="28" Foreground="{DynamicResource NeonCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
 
                         <!-- Status with nav arrows at bottom -->
                         <Grid DockPanel.Dock="Bottom" Margin="0,12,0,0">
@@ -128,92 +129,66 @@
                 <!-- Settings Quick Panel (glass effect) -->
                 <Border Grid.Column="2" Style="{DynamicResource GlassSettingsPanelStyle}">
                     <DockPanel>
-                        <!-- Header with close icon -->
+                        <!-- Header -->
                         <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
-                            <TextBlock Text="Settings" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}"/>
-                            <TextBlock Text="✕" HorizontalAlignment="Right" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Cursor="Hand"/>
+                            <TextBlock Text="Quick Settings" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}"/>
+                            <Button Style="{DynamicResource BorderlessButton}" HorizontalAlignment="Right" Command="{Binding OpenSettingsCommand}">
+                                <TextBlock Text="Full Settings →" FontSize="12" Foreground="{DynamicResource AccentBrush}" Cursor="Hand"/>
+                            </Button>
                         </Grid>
 
                         <StackPanel>
-                            <!-- Toggle switches row -->
+                            <!-- Quick toggles -->
                             <Grid Margin="0,4,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Ellipse Width="8" Height="8" Fill="{DynamicResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <ToggleButton Grid.Column="1" Style="{DynamicResource AnimatedToggleSwitch}" IsChecked="True"/>
+                                <TextBlock Text="Keep-Awake Active" FontSize="12" Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center"/>
+                                <ToggleButton Grid.Column="1" Style="{DynamicResource AnimatedToggleSwitch}" IsChecked="{Binding IsActive, Mode=TwoWay}"/>
                             </Grid>
 
-                            <!-- Slider controls -->
-                            <StackPanel Margin="0,4">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                    <TextBlock Text="&#xE706;" FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <Border Background="{DynamicResource HoverBrush}" CornerRadius="2" Height="4" Width="120"/>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                    <TextBlock Text="&#xECAD;" FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <Border Background="{DynamicResource HoverBrush}" CornerRadius="2" Height="4" Width="120">
-                                        <Border Background="{DynamicResource AccentBrush}" CornerRadius="2" Height="4" Width="50" HorizontalAlignment="Left"/>
-                                    </Border>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                    <TextBlock Text="&#xE799;" FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <Border Background="{DynamicResource HoverBrush}" CornerRadius="2" Height="4" Width="120">
-                                        <Border Background="{DynamicResource NeonCyanBrush}" CornerRadius="2" Height="4" Width="80" HorizontalAlignment="Left"/>
-                                    </Border>
-                                </StackPanel>
-                            </StackPanel>
+                            <Grid Margin="0,4,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Prevent Sleep" FontSize="12" Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center"/>
+                                <ToggleButton Grid.Column="1" Style="{DynamicResource AnimatedToggleSwitch}" IsChecked="{Binding PreventDisplaySleep, Mode=TwoWay}"/>
+                            </Grid>
 
-                            <!-- Icon buttons grid -->
+                            <Grid Margin="0,4,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Use Heartbeat" FontSize="12" Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center"/>
+                                <ToggleButton Grid.Column="1" Style="{DynamicResource AnimatedToggleSwitch}" IsChecked="{Binding UseHeartbeat, Mode=TwoWay}"/>
+                            </Grid>
+
+                            <!-- Quick action buttons -->
                             <UniformGrid Columns="4" Margin="0,8,0,12">
-                                <Border Background="#15FFFFFF" CornerRadius="8" Padding="8" Margin="2" Cursor="Hand">
-                                    <TextBlock Text="&#xE912;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource NeonCyanBrush}" HorizontalAlignment="Center"/>
-                                </Border>
-                                <Border Background="#15FFFFFF" CornerRadius="8" Padding="8" Margin="2" Cursor="Hand">
-                                    <TextBlock Text="&#xE771;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource ForegroundSecondaryBrush}" HorizontalAlignment="Center"/>
-                                </Border>
-                                <Border Background="#15FFFFFF" CornerRadius="8" Padding="8" Margin="2" Cursor="Hand">
-                                    <TextBlock Text="&#xE9D9;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource ForegroundSecondaryBrush}" HorizontalAlignment="Center"/>
-                                </Border>
-                                <Border Background="#15FFFFFF" CornerRadius="8" Padding="8" Margin="2" Cursor="Hand">
-                                    <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource ForegroundSecondaryBrush}" HorizontalAlignment="Center"/>
-                                </Border>
+                                <Button Style="{DynamicResource BorderlessButton}" Command="{Binding OpenSmartFeaturesCommand}" ToolTip="Smart Features">
+                                    <Border Background="#15FFFFFF" CornerRadius="8" Padding="8" Margin="2" Cursor="Hand">
+                                        <TextBlock Text="&#xEA80;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource NeonCyanBrush}" HorizontalAlignment="Center"/>
+                                    </Border>
+                                </Button>
+                                <Button Style="{DynamicResource BorderlessButton}" Command="{Binding OpenBehaviorCommand}" ToolTip="Behavior">
+                                    <Border Background="#15FFFFFF" CornerRadius="8" Padding="8" Margin="2" Cursor="Hand">
+                                        <TextBlock Text="&#xE771;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource ForegroundSecondaryBrush}" HorizontalAlignment="Center"/>
+                                    </Border>
+                                </Button>
+                                <Button Style="{DynamicResource BorderlessButton}" Command="{Binding OpenDiagnosticsCommand}" ToolTip="Diagnostics">
+                                    <Border Background="#15FFFFFF" CornerRadius="8" Padding="8" Margin="2" Cursor="Hand">
+                                        <TextBlock Text="&#xE9D9;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource ForegroundSecondaryBrush}" HorizontalAlignment="Center"/>
+                                    </Border>
+                                </Button>
+                                <Button Style="{DynamicResource BorderlessButton}" Command="{Binding OpenSettingsCommand}" ToolTip="Settings">
+                                    <Border Background="#15FFFFFF" CornerRadius="8" Padding="8" Margin="2" Cursor="Hand">
+                                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource ForegroundSecondaryBrush}" HorizontalAlignment="Center"/>
+                                    </Border>
+                                </Button>
                             </UniformGrid>
-
-                            <!-- Menu items -->
-                            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,8,0,0">
-                                <StackPanel>
-                                    <Grid Margin="0,4" Cursor="Hand">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                            <TextBlock Text="Configure" FontSize="12" Foreground="{DynamicResource ForegroundBrush}"/>
-                                        </StackPanel>
-                                        <TextBlock Text="›" HorizontalAlignment="Right" FontSize="14" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                    </Grid>
-                                    <Grid Margin="0,4" Cursor="Hand">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="&#xE8C8;" FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                            <TextBlock Text="Menus" FontSize="12" Foreground="{DynamicResource ForegroundBrush}"/>
-                                        </StackPanel>
-                                        <TextBlock Text="›" HorizontalAlignment="Right" FontSize="14" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                    </Grid>
-                                    <Grid Margin="0,4" Cursor="Hand">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                            <TextBlock Text="Settings" FontSize="12" Foreground="{DynamicResource ForegroundBrush}"/>
-                                        </StackPanel>
-                                        <TextBlock Text="›" HorizontalAlignment="Right" FontSize="14" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                    </Grid>
-                                    <Grid Margin="0,4" Cursor="Hand">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="&#xE8A5;" FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                            <TextBlock Text="Log" FontSize="12" Foreground="{DynamicResource ForegroundBrush}"/>
-                                        </StackPanel>
-                                        <TextBlock Text="›" HorizontalAlignment="Right" FontSize="14" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
                         </StackPanel>
                     </DockPanel>
                 </Border>
@@ -230,7 +205,7 @@
                 <Border Grid.Column="0" Style="{DynamicResource CardStyle}">
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Top" Text="Activity Monitor" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,12"/>
-                        
+
                         <!-- Chart area with dual lines -->
                         <Grid>
                             <Grid.RowDefinitions>
@@ -240,11 +215,9 @@
 
                             <Canvas Grid.Row="0" Height="80" Margin="0,0,0,8">
                                 <!-- Red activity line -->
-                                <Polyline Points="0,60 40,50 80,55 120,30 160,45 200,25 240,40 280,20 320,35 360,15 400,30" 
-                                          Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" Opacity="0.7"/>
+                                <Polyline Points="0,60 40,50 80,55 120,30 160,45 200,25 240,40 280,20 320,35 360,15 400,30" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" Opacity="0.7"/>
                                 <!-- Cyan usage line -->
-                                <Polyline Points="0,65 40,55 80,60 120,40 160,50 200,35 240,45 280,30 320,40 360,25 400,38" 
-                                          Stroke="{DynamicResource NeonCyanBrush}" StrokeThickness="2" Opacity="0.5"/>
+                                <Polyline Points="0,65 40,55 80,60 120,40 160,50 200,35 240,45 280,30 320,40 360,25 400,38" Stroke="{DynamicResource NeonCyanBrush}" StrokeThickness="2" Opacity="0.5"/>
                                 <!-- Grid lines -->
                                 <Line X1="0" Y1="20" X2="400" Y2="20" Stroke="{DynamicResource BorderBrush}" StrokeThickness="0.5"/>
                                 <Line X1="0" Y1="40" X2="400" Y2="40" Stroke="{DynamicResource BorderBrush}" StrokeThickness="0.5"/>
@@ -270,7 +243,7 @@
                 <Border Grid.Column="1" Style="{DynamicResource CardStyle}">
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Top" Text="Quick Actions" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,12"/>
-                        
+
                         <StackPanel>
                             <!-- Action items with neon indicators -->
                             <Border Background="#10FF003C" CornerRadius="8" Padding="10" Margin="0,0,0,6" Cursor="Hand">
