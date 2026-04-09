@@ -400,6 +400,11 @@ step_build_wpf() {
         log_warn "Some critical assemblies missing - application may crash"
     fi
 
+    # Obfuscation temporarily disabled - Wine obfuscation causes hangs
+    # To enable: Uncomment and fix Wine .NET SDK first
+    log_step "Obfuscation: SKIPPED (disabled to prevent Wine hangs)"
+    log_info "  Run 'dotnet restore' and ensure ~/.wine-dotnet is working to enable"
+
     # Copy Assets
     local assets_src="$PROJECT_ROOT/src/Redball.UI.WPF/Assets"
     local assets_dst="$WPF_PUBLISH_DIR/Assets"
@@ -775,7 +780,8 @@ main() {
     echo ""
     
     log_info "Full artifact listing:"
-    find "$DIST_DIR" -type f -exec ls -lh {} \; 2>/dev/null | while IFS= read -r line; do log_detail "$line"; done
+    # Use maxdepth to prevent deep recursion, and timeout to prevent hangs
+    timeout 10s find "$DIST_DIR" -maxdepth 1 -type f -exec ls -lh {} \; 2>/dev/null | head -20 | while IFS= read -r line; do log_detail "$line"; done || true
     echo ""
 }
 

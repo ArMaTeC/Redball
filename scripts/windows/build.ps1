@@ -758,7 +758,55 @@ function Step-BuildWpfApp {
         Write-HostSafe "  Unblocking InputInterceptor.dll..." -ForegroundColor Gray
         Unblock-File -Path $interceptorFile -ErrorAction SilentlyContinue
     }
+
+    # Run Obfuscar obfuscation
+    Write-BuildStep "Running Obfuscar obfuscation..."
+    $obfuscarConfig = Join-Path $projectRoot "src\Redball.UI.WPF\obfuscar.xml"
+    $obfuscarTool = Join-Path $env:USERPROFILE ".nuget\packages\obfuscar\2.2.40\tools\Obfuscar.Console.exe"
     
+    if (Test-Path $obfuscarTool) {
+        if (Test-Path $obfuscarConfig) {
+            # Copy config to publish dir and run from there
+            Copy-Item -Path $obfuscarConfig -Destination $publishDir -Force
+            $obfuscarOutput = Join-Path $publishDir "obfuscated"
+            
+            try {
+                & $obfuscarTool (Join-Path $publishDir "obfuscar.xml") 2>&1 | ForEach-Object { 
+                    Write-HostSafe "  $_" -ForegroundColor Gray 
+                }
+                
+                if (Test-Path $obfuscarOutput) {
+                    # Copy obfuscated assemblies back
+                    $obfuscatedDll = Join-Path $obfuscarOutput "Redball.UI.WPF.dll"
+                    if (Test-Path $obfuscatedDll) {
+                        Copy-Item -Path $obfuscatedDll -Destination $publishDir -Force
+                        Write-BuildSuccess "Obfuscated Redball.UI.WPF.dll"
+                    }
+                    
+                    # Copy obfuscated Core dll if present
+                    $obfuscatedCore = Join-Path $obfuscarOutput "Redball.Core.dll"
+                    if (Test-Path $obfuscatedCore) {
+                        Copy-Item -Path $obfuscatedCore -Destination $dllDir -Force
+                        Write-BuildSuccess "Obfuscated Redball.Core.dll"
+                    }
+                    
+                    # Clean up obfuscated folder
+                    Remove-Item -Path $obfuscarOutput -Recurse -Force -ErrorAction SilentlyContinue
+                }
+            }
+            catch {
+                Write-Warning "Obfuscation failed: $_"
+                Write-HostSafe "  Continuing with unobfuscated build..." -ForegroundColor Yellow
+            }
+        }
+        else {
+            Write-Warning "Obfuscar config not found at $obfuscarConfig"
+        }
+    }
+    else {
+        Write-Warning "Obfuscar tool not found. Run 'dotnet restore' first."
+    }
+
     # Create logs folder placeholder
     $logsDir = Join-Path $publishDir "logs"
     if (-not (Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir -Force | Out-Null }

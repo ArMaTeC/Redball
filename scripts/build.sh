@@ -486,8 +486,17 @@ build_windows() {
     
     log_debug "Running: $win_script"
     log_debug "Passing --skip-setup flag (setup should be done already)"
-    "$win_script" --skip-setup 2>&1 | while IFS= read -r line; do log_detail "$line"; done
+    # Run with timeout to prevent indefinite hangs
+    timeout 600s "$win_script" --skip-setup 2>&1 | while IFS= read -r -t 5 line || [[ -n "$line" ]]; do 
+        [[ -n "$line" ]] && log_detail "$line"
+    done
     local win_exit=${PIPESTATUS[0]}
+    
+    # Handle timeout case
+    if [[ $win_exit -eq 124 ]]; then
+        log_error "Windows build timed out after 10 minutes"
+        return 1
+    fi
     
     local win_end=$(date +%s)
     local win_dur=$((win_end - win_start))
@@ -496,7 +505,7 @@ build_windows() {
         log_success "Windows build completed in ${win_dur}s"
         # List produced artifacts
         log_debug "Windows artifacts:"
-        ls -lh "$DIST_DIR"/*.exe "$DIST_DIR"/*.zip "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" 2>/dev/null | while IFS= read -r line; do log_detail "$line"; done
+        ls -lh "$DIST_DIR"/*.exe "$DIST_DIR"/*.zip "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" 2>/dev/null | head -10 | while IFS= read -r line; do log_detail "$line"; done
     else
         log_error "Windows build FAILED (exit code: $win_exit, took ${win_dur}s)"
         return 1

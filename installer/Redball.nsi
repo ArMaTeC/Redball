@@ -409,9 +409,9 @@ Section "Uninstall"
     ReadRegDWORD $0 HKCU "${PRODUCT_REGISTRY_KEY}" "ServiceInstalled"
     ${If} $0 == 1
         DetailPrint "Stopping service..."
-        nsExec::Exec 'sc stop RedballService'
-        Sleep 2000
-        nsExec::Exec 'sc delete RedballService'
+        nsExec::Exec 'sc stop "Redball Input Service"'
+        Sleep 3000
+        nsExec::Exec 'sc delete "Redball Input Service"'
         Sleep 1000
     ${EndIf}
     
@@ -432,14 +432,21 @@ Section "Uninstall"
         Delete "$DESKTOP\${PRODUCT_NAME}.lnk"
     ${EndIf}
     
-    ; Stop running process (simplified)
+    ; Stop running process
     DetailPrint "Stopping ${PRODUCT_NAME}..."
-    ; Just try to delete - if running it will fail
-    Delete "$INSTDIR\Redball.UI.WPF.exe"
-    ${If} ${Errors}
-        DetailPrint "Could not delete executable - may still be running"
-        ClearErrors
+    
+    ; Try graceful close via window message first
+    System::Call 'user32::FindWindowW(i 0, w "Redball") i .r1'
+    ${If} $1 != 0
+        DetailPrint "Found Redball window, sending close message..."
+        System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
+        Sleep 2000
     ${EndIf}
+    
+    ; Force kill if still running
+    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'
+    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
+    Sleep 2000
     
     ; Remove files
     DetailPrint "Removing files..."
@@ -525,17 +532,25 @@ retry_check:
         
 kill_process:
             DetailPrint "Attempting to close ${PRODUCT_NAME}..."
-            ; Try graceful close first (WPF window class)
-            System::Call 'user32::FindWindowW(w "HwndWrapper*[DefaultGray]*", i 0) i .r1'
+            ; Try graceful close first (find by window title)
+            System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r1'
             ${If} $1 != 0
+                DetailPrint "Found ${PRODUCT_NAME} window, sending close message..."
                 System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0' ; WM_CLOSE = 16
                 Sleep 2000
+            ${EndIf}
+            
+            ; Also try to find and close Settings window
+            System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME} Settings") i .r1'
+            ${If} $1 != 0
+                System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
+                Sleep 1000
             ${EndIf}
             
             ; Force kill if still running
             nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'
             nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
-            Sleep 1500
+            Sleep 2000
             
             ; Check again
             Goto retry_check
@@ -561,17 +576,25 @@ FunctionEnd
 Function KillAllRedballProcesses
     DetailPrint "Stopping Redball processes..."
     
-    ; Try graceful close first (WPF window class only)
-    System::Call 'user32::FindWindowW(w "HwndWrapper*[DefaultGray]*", i 0) i .r1'
+    ; Try graceful close first (by window title)
+    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r1'
     ${If} $1 != 0
+        DetailPrint "Found ${PRODUCT_NAME} window, sending close..."
         System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0' ; WM_CLOSE = 16
+        Sleep 1500
+    ${EndIf}
+    
+    ; Try closing Settings window if open
+    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME} Settings") i .r1'
+    ${If} $1 != 0
+        System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
         Sleep 1000
     ${EndIf}
     
     ; Force kill
     nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'
     nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
-    Sleep 1500
+    Sleep 2000
     
     DetailPrint "Processes stopped"
 FunctionEnd
@@ -635,9 +658,9 @@ Function un.onInit
     ReadRegDWORD $0 HKCU "${PRODUCT_REGISTRY_KEY}" "ServiceInstalled"
     ${If} $0 == 1
         DetailPrint "Stopping background service..."
-        nsExec::Exec 'sc stop RedballInputService'
-        Sleep 2000
-        nsExec::Exec 'sc delete RedballInputService'
+        nsExec::Exec 'sc stop "Redball Input Service"'
+        Sleep 3000
+        nsExec::Exec 'sc delete "Redball Input Service"'
         Sleep 1000
     ${EndIf}
     
@@ -649,23 +672,24 @@ FunctionEnd
 Function un.KillAllRedballProcesses
     DetailPrint "Stopping Redball processes..."
     
-    ; Try graceful close first
+    ; Try graceful close first (by window title)
     System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r1'
     ${If} $1 != 0
+        DetailPrint "Found ${PRODUCT_NAME} window, sending close..."
         System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0' ; WM_CLOSE = 16
         Sleep 1500
     ${EndIf}
     
-    ; Try closing any WPF windows by class
-    System::Call 'user32::FindWindowW(w "HwndWrapper*[DefaultGray]*", i 0) i .r1'
+    ; Try closing Settings window if open
+    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME} Settings") i .r1'
     ${If} $1 != 0
         System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
-        Sleep 1500
+        Sleep 1000
     ${EndIf}
     
     ; Force kill if still running
-    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
-    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
+    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'
+    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
     Sleep 2000
     
     DetailPrint "Processes stopped"

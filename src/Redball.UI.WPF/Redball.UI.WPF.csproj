@@ -37,11 +37,16 @@
     <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.4" />
     <PackageReference Include="LottieSharp" Version="2.4.3" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.142" />
     <PackageReference Include="System.Management" Version="10.0.5" />
     <PackageReference Include="System.Speech" Version="10.0.5" />
     <PackageReference Include="InputInterceptor" Version="2.2.1" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.5" />
+    <PackageReference Include="Obfuscar" Version="2.2.40">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -90,5 +95,13 @@
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml" />
   </ItemGroup>
+
+  <!-- Obfuscar configuration -->
+  <Target Name="ObfuscateAfterPublish" AfterTargets="Publish">
+    <PropertyGroup>
+      <ObfuscarConfig>$(MSBuildProjectDirectory)\obfuscar.xml</ObfuscarConfig>
+    </PropertyGroup>
+    <Exec Command="$(NuGetPackageRoot)obfuscar\2.2.40\tools\Obfuscar.Console.exe $(ObfuscarConfig)" WorkingDirectory="$(PublishDir)" Condition="Exists('$(ObfuscarConfig)')" />
+  </Target>
 
 </Project>
