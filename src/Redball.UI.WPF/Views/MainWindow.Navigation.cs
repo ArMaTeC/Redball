@@ -76,11 +76,27 @@ public partial class MainWindow
 
     private async void MainCheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
     {
-        await CheckForUpdatesAsync();
+        // Use the embedded UpdatesSectionView for integrated progress UI
+        if (UpdatesSection != null)
+        {
+            await UpdatesSection.StartUpdateCheckFromExternalAsync();
+        }
+        else
+        {
+            await CheckForUpdatesAsync();
+        }
     }
 
     public async Task CheckForUpdatesAsync()
     {
+        // If we're on the Updates tab, use the embedded UI
+        if (UpdatesSection != null && _currentSection == "Updates")
+        {
+            await UpdatesSection.StartUpdateCheckFromExternalAsync();
+            return;
+        }
+
+        // Otherwise use the fallback separate window approach
         EnsureUpdateService();
 
         if (_updateService == null)
@@ -96,12 +112,12 @@ public partial class MainWindow
 
         var progress = new Progress<UpdateCheckProgress>(p => progressWindow.UpdateProgress(p));
         var updateInfo = await _updateService.CheckForUpdateAsync(progress);
-        
+
         progressWindow.Close();
-        
+
         if (updateInfo == null)
         {
-            NotificationWindow.Show("Up to Date", "You're running the latest version of Redball.", "\uE73E"); 
+            NotificationWindow.Show("Up to Date", "You're running the latest version of Redball.", "\uE73E");
             return;
         }
 

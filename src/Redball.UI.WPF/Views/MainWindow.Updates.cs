@@ -179,22 +179,31 @@ public partial class MainWindow
     {
         try
         {
-            EnsureUpdateService();
-            if (_updateService == null)
+            // Delegate to the embedded UpdatesSectionView for integrated UI experience
+            if (UpdatesSection != null)
             {
-                NotificationService.Instance.ShowError("Updates", "Update service is not available.");
-                return;
+                await UpdatesSection.StartUpdateCheckFromExternalAsync();
             }
-
-            _analytics.TrackFeature("update.manual_check");
-            var updateInfo = await _updateService.CheckForUpdateAsync();
-            if (updateInfo == null)
+            else
             {
-                NotificationService.Instance.ShowInfo("Updates", "You are already on the latest version.");
-                return;
-            }
+                // Fallback if UpdatesSection is not initialized
+                EnsureUpdateService();
+                if (_updateService == null)
+                {
+                    NotificationService.Instance.ShowError("Updates", "Update service is not available.");
+                    return;
+                }
 
-            await ShowUpdateAvailableDialogAsync(updateInfo);
+                _analytics.TrackFeature("update.manual_check");
+                var updateInfo = await _updateService.CheckForUpdateAsync();
+                if (updateInfo == null)
+                {
+                    NotificationService.Instance.ShowInfo("Updates", "You are already on the latest version.");
+                    return;
+                }
+
+                await ShowUpdateAvailableDialogAsync(updateInfo);
+            }
         }
         catch (Exception ex)
         {

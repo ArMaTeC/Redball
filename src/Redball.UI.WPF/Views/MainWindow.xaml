@@ -107,9 +107,12 @@
                 <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" CornerRadius="14,14,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                     <Grid Margin="14,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>  <!-- Traffic lights -->
-                            <ColumnDefinition Width="*"/>     <!-- Center logo -->
-                            <ColumnDefinition Width="Auto"/>  <!-- Window controls -->
+                            <ColumnDefinition Width="Auto"/>
+                            <!-- Traffic lights -->
+                            <ColumnDefinition Width="*"/>
+                            <!-- Center logo -->
+                            <ColumnDefinition Width="Auto"/>
+                            <!-- Window controls -->
                         </Grid.ColumnDefinitions>
 
                         <!-- Traffic Light Dots (macOS-inspired) -->
@@ -717,37 +720,7 @@
                                     </StackPanel>
 
                                     <StackPanel x:Name="UpdatesPanel" Visibility="Collapsed">
-                                        <TextBlock Text="Updates" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBlock Text="Manage update channels and check for new releases." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
-                                        <Border Style="{DynamicResource CardStyle}">
-                                            <StackPanel>
-                                                <Grid Margin="0,0,0,10">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" Text="Update Settings" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundBrush}"/>
-                                                    <Button Grid.Column="1" x:Name="MainSaveSettingsButton" Content="Save Settings" Style="{DynamicResource PrimaryButton}" Click="MainSaveSettingsButton_Click" IsEnabled="False"/>
-                                                </Grid>
-                                                <CheckBox x:Name="MainAutoUpdateCheckEnabledCheck" Content="Check for updates automatically" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Automatically check for new Redball versions at the interval below. Downloads are manual - you'll be notified when updates are available."/>
-
-                                                <TextBlock Text="Update Channel" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="Which release channel to check: Stable (tested releases), Beta (early access with new features), or Disabled (no update checks)."/>
-                                                <ComboBox x:Name="MainUpdateChannelCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,8" SelectionChanged="MainComboSettingChanged">
-                                                    <ComboBoxItem Content="Stable" ToolTip="Tested, stable releases suitable for daily use"/>
-                                                    <ComboBoxItem Content="Beta" ToolTip="Early access releases with latest features but may have bugs"/>
-                                                    <ComboBoxItem Content="Disabled" ToolTip="Do not check for updates automatically"/>
-                                                </ComboBox>
-
-                                                <CheckBox x:Name="MainVerifyUpdateSignatureCheck" Content="Verify update signatures" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Cryptographically verify that updates are signed by the Redball developer. Strongly recommended - disabling this allows potentially malicious updates to be installed."/>
-
-                                                <TextBlock Text="Auto-check Interval (minutes)" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="How often to check for updates when automatic checking is enabled. 60 minutes = hourly, 1440 minutes = daily."/>
-                                                <Slider x:Name="MainAutoUpdateIntervalSlider" Minimum="30" Maximum="1440" TickFrequency="30" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainAutoUpdateIntervalSlider_ValueChanged"/>
-                                                <TextBlock x:Name="MainAutoUpdateIntervalText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,4,0,8"/>
-
-                                                <TextBlock x:Name="MainCurrentVersionText" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
-                                                <Button Content="Check Now" Style="{DynamicResource ModernButton}" Click="MainCheckUpdatesButton_Click"/>
-                                            </StackPanel>
-                                        </Border>
+                                        <views:UpdatesSectionView x:Name="UpdatesSection"/>
                                     </StackPanel>
 
                                     <StackPanel x:Name="CompatibilityControlsPanel" Visibility="Collapsed">

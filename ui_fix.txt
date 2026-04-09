@@ -1,0 +1,43 @@
+# UI Fix Plan - Update Section Integration
+
+## Current State Analysis
+1. **UpdatesSectionView.xaml** exists as a UserControl but is NOT used
+2. **UpdatesPanel** in MainWindow.xaml contains inline update settings (wired up)
+3. **"Check Now" button** in UpdatesPanel calls `MainCheckUpdatesButton_Click` - working
+4. **Update check progress** shows in separate `UpdateCheckProgressWindow` - needs embedding
+5. **Update download/install progress** shows in `UpdateProgressWindow` - needs embedding
+
+## Issues to Fix
+1. UpdatesSectionView.xaml has NO command bindings - buttons do nothing
+2. Update progress is shown in separate windows instead of embedded in the Updates tab
+3. The Updates tab doesn't show update check/download progress inline
+
+## Implementation Plan
+
+### Phase 1: Fix UpdatesSectionView.xaml Commands
+- [ ] Add x:Name to Check for Updates button
+- [ ] Add Click handler reference to MainCheckUpdatesButton_Click
+- [ ] Add proper DataContext binding for ViewModel commands
+
+### Phase 2: Replace UpdatesPanel with UpdatesSectionView
+- [ ] Remove inline UpdatesPanel from MainWindow.xaml
+- [ ] Add UpdatesSectionView reference to MainWindow.xaml
+- [ ] Wire up UpdatesSectionView to use MainWindow's update methods
+
+### Phase 3: Embed Progress in Updates Tab
+- [ ] Modify UpdatesSectionView.xaml to include progress indicators
+- [ ] Create embedded progress UI within the Updates tab
+- [ ] Route update check/download progress to embedded UI instead of separate windows
+- [ ] Add state management (Idle/Checking/Downloading/Installing)
+
+### Phase 4: Wire Everything Together
+- [ ] Ensure CheckForUpdatesCommand works from ViewModel
+- [ ] Ensure manual check button works from Updates tab
+- [ ] Ensure progress updates flow to embedded UI
+- [ ] Add visibility states for progress vs settings view
+
+### Phase 5: Testing & Polish
+- [ ] Test check for updates flow
+- [ ] Test download/install flow
+- [ ] Test state transitions
+- [ ] Ensure proper cleanup after update complete

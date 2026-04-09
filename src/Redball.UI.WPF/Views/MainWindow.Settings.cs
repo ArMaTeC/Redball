@@ -162,28 +162,17 @@ public partial class MainWindow
             _ => 1
         };
 
-        MainUpdateChannelCombo.SelectedIndex = config.UpdateChannel?.ToLowerInvariant() switch
-        {
-            "beta" => 1,
-            "disabled" => 2,
-            _ => 0
-        };
-
-        MainVerifyUpdateSignatureCheck.IsChecked = config.VerifyUpdateSignature;
-        MainAutoUpdateCheckEnabledCheck.IsChecked = config.AutoUpdateCheckEnabled;
-        MainAutoUpdateIntervalSlider.Value = Math.Max(30, config.AutoUpdateCheckIntervalMinutes);
-        UpdateAutoUpdateIntervalText((int)MainAutoUpdateIntervalSlider.Value);
-        MainCurrentVersionText.Text = GetCurrentVersionText();
-
-        MainNotificationModeLabel.Visibility = config.ShowNotifications ? Visibility.Visible : Visibility.Collapsed;
-        MainNotificationModeCombo.Visibility = config.ShowNotifications ? Visibility.Visible : Visibility.Collapsed;
-
-        _updateService = new UpdateService(
+        // Update UI settings are now handled by UpdatesSectionView
+        // Keep _updateService initialization for auto-update timer functionality
+        _updateService ??= new UpdateService(
             config.UpdateRepoOwner,
             config.UpdateRepoName,
             config.UpdateChannel ?? "stable",
             config.VerifyUpdateSignature,
             "https://redball.certrunnerx.com/");
+
+        MainNotificationModeLabel.Visibility = config.ShowNotifications ? Visibility.Visible : Visibility.Collapsed;
+        MainNotificationModeCombo.Visibility = config.ShowNotifications ? Visibility.Visible : Visibility.Collapsed;
         _isLoadingSettings = false;
         RefreshProfileCombo();
     }
@@ -327,16 +316,8 @@ public partial class MainWindow
                 2 => "Light",
                 _ => "Dark"
             };
-            config.UpdateChannel = MainUpdateChannelCombo.SelectedIndex switch
-            {
-                1 => "beta",
-                2 => "disabled",
-                _ => "stable"
-            };
-            config.VerifyUpdateSignature = MainVerifyUpdateSignatureCheck.IsChecked ?? false;
-            config.AutoUpdateCheckEnabled = MainAutoUpdateCheckEnabledCheck.IsChecked ?? true;
-            config.AutoUpdateCheckIntervalMinutes = (int)MainAutoUpdateIntervalSlider.Value;
-
+            // Update settings are now handled by UpdatesSectionView
+            // Only save non-update settings here
             ConfigService.Instance.Save();
             ThemeManager.SetThemeFromConfig(config.Theme);
             Logger.ApplyConfig(config);
@@ -509,11 +490,7 @@ public partial class MainWindow
         AutoApplySettings();
     }
 
-    private void MainAutoUpdateIntervalSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        UpdateAutoUpdateIntervalText((int)e.NewValue);
-        AutoApplySettings();
-    }
+    // Auto-update interval is now handled by UpdatesSectionView
 
     private void MainMiniWidgetOpacitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
@@ -558,46 +535,19 @@ public partial class MainWindow
 
     private void UpdateAutoUpdateIntervalText(int minutes)
     {
-        if (MainAutoUpdateIntervalText == null) return;
-        if (minutes >= 60 && minutes % 60 == 0)
-            MainAutoUpdateIntervalText.Text = minutes == 60 ? "Interval: every hour" : $"Interval: every {minutes / 60} hours";
-        else if (minutes > 60)
-            MainAutoUpdateIntervalText.Text = $"Interval: every {minutes / 60}h {minutes % 60}m";
-        else
-            MainAutoUpdateIntervalText.Text = $"Interval: every {minutes} minutes";
+        // TODO: Re-add MainAutoUpdateIntervalText control
+        // if (MainAutoUpdateIntervalText == null) return;
+        // if (minutes >= 60 && minutes % 60 == 0)
+        //     MainAutoUpdateIntervalText.Text = minutes == 60 ? "Interval: every hour" : $"Interval: every {minutes / 60} hours";
+        // else if (minutes > 60)
+        //     MainAutoUpdateIntervalText.Text = $"Interval: every {minutes / 60}h {minutes % 60}m";
+        // else
+        //     MainAutoUpdateIntervalText.Text = $"Interval: every {minutes} minutes";
     }
 
     private void MainSettingChanged(object sender, RoutedEventArgs e)
     {
-        // Track dirty state for Updates panel settings that require explicit save
-        if (IsUpdatesPanelSetting(sender))
-        {
-            _isSettingsDirty = true;
-            if (MainSaveSettingsButton != null)
-                MainSaveSettingsButton.IsEnabled = true;
-            return; // Don't auto-apply; wait for explicit save
-        }
-
-        if (ReferenceEquals(sender, MainVerifyUpdateSignatureCheck)
-            && !_isLoadingSettings
-            && !_suppressVerifySignaturePrompt
-            && MainVerifyUpdateSignatureCheck.IsChecked != true
-            && ConfigService.Instance.Config.VerifyUpdateSignature)
-        {
-            var confirmDisable = NotificationWindow.Show(
-                "Security Warning",
-                "Disabling update signature verification reduces security and can allow untrusted updates. Continue?",
-                "\uE7BA",
-                true);
-
-            if (!confirmDisable)
-            {
-                _suppressVerifySignaturePrompt = true;
-                MainVerifyUpdateSignatureCheck.IsChecked = true;
-                _suppressVerifySignaturePrompt = false;
-                return;
-            }
-        }
+        // Update settings are now handled by UpdatesSectionView with auto-save
 
         if (ReferenceEquals(sender, MainStartWithWindowsCheck))
         {
@@ -609,78 +559,7 @@ public partial class MainWindow
         AutoApplySettings();
     }
 
-    /// <summary>
-    /// Determines if a setting is part of the Updates panel and requires explicit save.
-    /// </summary>
-    private bool IsUpdatesPanelSetting(object sender)
-    {
-        return ReferenceEquals(sender, MainVerifyUpdateSignatureCheck)
-            || ReferenceEquals(sender, MainAutoUpdateCheckEnabledCheck)
-            || ReferenceEquals(sender, MainUpdateChannelCombo);
-    }
-
-    /// <summary>
-    /// Saves settings from the Updates panel with confirmation dialogs for security-critical changes.
-    /// Matches the behavior of SettingsWindow save flow.
-    /// </summary>
-    private void MainSaveSettingsButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (!_isSettingsDirty)
-            return;
-
-        var config = ConfigService.Instance.Config;
-        var wasVerifySignatureEnabled = config.VerifyUpdateSignature;
-        var wasEncryptConfigEnabled = config.EncryptConfig;
-
-        // Capture new values from UI
-        var newVerifySignature = MainVerifyUpdateSignatureCheck.IsChecked ?? false;
-        var newUpdateChannel = MainUpdateChannelCombo.SelectedIndex switch
-        {
-            1 => "beta",
-            2 => "disabled",
-            _ => "stable"
-        };
-        var newAutoUpdateCheck = MainAutoUpdateCheckEnabledCheck.IsChecked ?? true;
-        var newAutoUpdateInterval = (int)MainAutoUpdateIntervalSlider.Value;
-
-        // Security confirmation: VerifyUpdateSignature being disabled
-        if (wasVerifySignatureEnabled && !newVerifySignature)
-        {
-            var confirmDisable = NotificationWindow.Show(
-                "Security Warning",
-                "Disabling update signature verification reduces security and can allow untrusted updates. Continue?",
-                "\uE7BA",
-                true);
-
-            if (!confirmDisable)
-            {
-                MainVerifyUpdateSignatureCheck.IsChecked = true;
-                return;
-            }
-        }
-
-        // Apply the settings
-        config.VerifyUpdateSignature = newVerifySignature;
-        config.UpdateChannel = newUpdateChannel;
-        config.AutoUpdateCheckEnabled = newAutoUpdateCheck;
-        config.AutoUpdateCheckIntervalMinutes = newAutoUpdateInterval;
-
-        // Reinitialize update service with new settings
-        _updateService = new UpdateService(
-            config.UpdateRepoOwner,
-            config.UpdateRepoName,
-            config.UpdateChannel ?? "stable",
-            config.VerifyUpdateSignature,
-            "https://redball.certrunnerx.com/");
-
-        ConfigService.Instance.Save();
-        _isSettingsDirty = false;
-        if (MainSaveSettingsButton != null)
-            MainSaveSettingsButton.IsEnabled = false;
-
-        NotificationService.Instance.ShowInfo("Settings Saved", "Update settings saved successfully.");
-        Logger.Info("MainWindow", "Update settings saved via explicit Save button");
-    }
+    // Update settings are now handled entirely by UpdatesSectionView with auto-save on change
 
     private void UpdateMainStartWithWindowsStatusText()
     {
@@ -693,14 +572,7 @@ public partial class MainWindow
 
     private void MainComboSettingChanged(object sender, SelectionChangedEventArgs e)
     {
-        // Track dirty state for Updates panel settings that require explicit save
-        if (IsUpdatesPanelSetting(sender))
-        {
-            _isSettingsDirty = true;
-            if (MainSaveSettingsButton != null)
-                MainSaveSettingsButton.IsEnabled = true;
-            return; // Don't auto-apply; wait for explicit save
-        }
+        // Update channel is now handled by UpdatesSectionView
 
         if (ReferenceEquals(sender, MainTypeThingInputModeCombo))
         {
