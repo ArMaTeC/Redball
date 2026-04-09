@@ -6,7 +6,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/ArMaTeC/Redball/ci.yml?label=CI)](https://github.com/ArMaTeC/Redball/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/actions/workflow/status/ArMaTeC/Redball/release.yml?label=Release)](https://github.com/ArMaTeC/Redball/actions/workflows/release.yml)
 [![VirusTotal](https://img.shields.io/github/actions/workflow/status/ArMaTeC/Redball/virustotal.yml?label=VirusTotal&logo=virustotal&color=green)](https://github.com/ArMaTeC/Redball/actions/workflows/virustotal.yml)
-[![Signed](https://img.shields.io/badge/Code_Signed-SHA256-success.svg)](#code-signing)
+[![Signed](<https://img.shields.io/badge/Code_Signed-SHA256-success.svg>)](#code-signing)
 
 > A professional clipboard typer that keeps your computer awake — type anything, anywhere.
 
@@ -37,7 +37,7 @@ The flagship feature of Redball. TypeThing reads text from your clipboard and ty
 
 ### Modern WPF Desktop Application (.NET 10)
 
-- **Native WPF UI** — Built with .NET 10 WPF, self-contained single-file EXE (~3.3MB compressed)
+- **Native WPF UI** — Built with .NET 10 WPF, single-file EXE (~3.3MB compressed) — requires .NET 10 Runtime
 - **14 Custom Themes** — System (auto-detect), Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost, High Contrast
 - **Design System** — Tokenized spacing, typography, colors, elevation, and motion with full Material Design color roles
 - **Adaptive Layouts** — DPI-aware responsive layouts supporting 100%-300% DPI range across multi-monitor setups
@@ -102,7 +102,7 @@ A secondary feature that prevents Windows from sleeping using the `SetThreadExec
 ### Prerequisites
 
 - **Windows 10** or later
-- **.NET 10 Runtime** (included in the self-contained WPF EXE — no separate install needed)
+- **.NET 10 Runtime** (required — not included, must be installed separately)
 
 ### Option A — NSIS Installer (Recommended)
 
@@ -142,40 +142,41 @@ TypeThing is the fastest way to use Redball:
 ### TypeThing Settings
 
 Access TypeThing settings via:
+
 - **Tray Menu → TypeThing → TypeThing Settings...**
 - **Main Window → TypeThing tab**
 
-| Setting | Default | Description |
-| ------- | ------- | ----------- |
-| `TypeThingEnabled` | `true` | Master switch for the TypeThing feature |
-| `TypeThingMinDelayMs` | `30` | Minimum delay between keystrokes (ms) |
-| `TypeThingMaxDelayMs` | `120` | Maximum delay between keystrokes (ms) |
-| `TypeThingStartDelaySec` | `3` | Countdown seconds before typing begins |
-| `TypeThingStartHotkey` | `Ctrl+Shift+V` | Global hotkey to start typing |
-| `TypeThingStopHotkey` | `Ctrl+Shift+X` | Global hotkey to stop typing |
-| `TypeThingTypeNewlines` | `true` | Press Enter when a newline is encountered |
-| `TypeThingTtsEnabled` | `false` | Enable text-to-speech while typing |
-| `TypeThingInputMode` | `SendInput` | Input method (`SendInput` or `Interception`) |
+| Setting                  | Default        | Description                                  |
+| ------------------------ | -------------- | -------------------------------------------- |
+| `TypeThingEnabled`       | `true`         | Master switch for the TypeThing feature      |
+| `TypeThingMinDelayMs`    | `30`           | Minimum delay between keystrokes (ms)        |
+| `TypeThingMaxDelayMs`    | `120`          | Maximum delay between keystrokes (ms)        |
+| `TypeThingStartDelaySec` | `3`            | Countdown seconds before typing begins       |
+| `TypeThingStartHotkey`   | `Ctrl+Shift+V` | Global hotkey to start typing                |
+| `TypeThingStopHotkey`    | `Ctrl+Shift+X` | Global hotkey to stop typing                 |
+| `TypeThingTypeNewlines`  | `true`         | Press Enter when a newline is encountered    |
+| `TypeThingTtsEnabled`    | `false`        | Enable text-to-speech while typing           |
+| `TypeThingInputMode`     | `SendInput`    | Input method (`SendInput` or `Interception`) |
 
 ### Typing Speed Reference
 
 | Min Delay | Max Delay | Approx WPM |
-| --------- | --------- | ----------- |
-| 10 ms | 50 ms | ~400 WPM |
-| 30 ms | 120 ms | ~160 WPM |
-| 50 ms | 200 ms | ~96 WPM |
-| 100 ms | 300 ms | ~60 WPM |
+| --------- | --------- | ---------- |
+| 10 ms     | 50 ms     | ~400 WPM   |
+| 30 ms     | 120 ms    | ~160 WPM   |
+| 50 ms     | 200 ms    | ~96 WPM    |
+| 100 ms    | 300 ms    | ~60 WPM    |
 
 ## Keep-Awake Configuration
 
 The keep-awake feature is secondary and disabled by default. Enable it from the tray menu or settings:
 
-| Setting | Description | Default |
-| ------- | ----------- | ------- |
-| `HeartbeatSeconds` | Interval for keep-awake heartbeat | 59 |
-| `PreventDisplaySleep` | Keep display awake while active | true |
-| `UseHeartbeatKeypress` | Send invisible F15 keypress | true |
-| `DefaultDuration` | Default timer duration (minutes) | 60 |
+| Setting                | Description                       | Default |
+| ---------------------- | --------------------------------- | ------- |
+| `HeartbeatSeconds`     | Interval for keep-awake heartbeat | 59      |
+| `PreventDisplaySleep`  | Keep display awake while active   | true    |
+| `UseHeartbeatKeypress` | Send invisible F15 keypress       | true    |
+| `DefaultDuration`      | Default timer duration (minutes)  | 60      |
 
 See the [Keep-Awake documentation](https://github.com/ArMaTeC/Redball/wiki/KeepAwake) for full smart monitoring features.
 
@@ -378,7 +379,7 @@ dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 - [x] Modern WPF desktop application (.NET 10)
 - [x] 14 custom UI themes (Midnight Blue, Cyberpunk, Rose Gold, High Contrast, etc.)
 - [x] P/Invoke SendInput (replaced WinForms SendKeys)
-- [x] Self-contained compressed EXE (~3.3MB)
+- [x] Compressed EXE (~3.3MB) — requires .NET 10 Runtime
 - [x] Branded MSI installer UI (custom banner/dialog images)
 - [x] Automated code signing (EXE + MSI) in CI
 - [x] Comprehensive build system (`build.ps1`)
@@ -410,6 +411,16 @@ dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 **Manufacturer:** ArMaTeC
+
+## Code Signing
+
+Redball executables and installers are digitally signed with a SHA-256 code signing certificate. This ensures:
+
+- **Authenticity** — Verify the software comes from ArMaTeC
+- **Integrity** — Confirm the binary hasn't been tampered with
+- **Trust** — Windows SmartScreen warnings are reduced/eliminated
+
+The signing process is automated via GitHub Actions using `signtool.exe` from the Windows SDK.
 
 ## Acknowledgments
 

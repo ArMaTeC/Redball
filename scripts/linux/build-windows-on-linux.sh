@@ -364,16 +364,41 @@ step_build_wpf() {
     local dll_dir="$WPF_PUBLISH_DIR/dll"
     mkdir -p "$dll_dir"
 
-    for dll in "$WPF_PUBLISH_DIR"/*.dll; do
-        [[ -f "$dll" ]] || continue
-        local filename
-        filename=$(basename "$dll")
-        # Keep main WPF DLL in root, move everything else to dll/
-        if [[ "$filename" != "Redball.UI.WPF.dll" ]]; then
+    # Count and log what we're moving
+    local moved_count=0
+    local critical_assemblies=("Microsoft.Extensions.DependencyInjection.Abstractions.dll" "Microsoft.Extensions.DependencyInjection.dll")
+
+    # Get list of DLLs to move (exclude main WPF DLL) and process with while read
+    find "$WPF_PUBLISH_DIR" -maxdepth 1 -name "*.dll" -type f ! -name "Redball.UI.WPF.dll" -print0 2>/dev/null | while IFS= read -r -d '' dll; do
+        if [[ -f "$dll" ]]; then
+            local filename
+            filename=$(basename "$dll")
             mv "$dll" "$dll_dir/"
+            log_debug "Moved $filename to dll/"
         fi
     done
-    log_success "DLLs organized into dll/ subfolder"
+
+    # Count what was moved
+    moved_count=$(find "$dll_dir" -maxdepth 1 -name "*.dll" -type f 2>/dev/null | wc -l)
+
+    log_success "DLLs organized into dll/ subfolder ($moved_count files moved)"
+
+    # Verify critical assemblies are present
+    log_step "Verifying critical assemblies..."
+    local missing_critical=()
+    for asm in "${critical_assemblies[@]}"; do
+        if [[ ! -f "$dll_dir/$asm" ]]; then
+            missing_critical+=("$asm")
+            log_warn "Missing critical assembly: $asm"
+        else
+            log_debug "Found critical assembly: $asm"
+        fi
+    done
+    if [[ ${#missing_critical[@]} -eq 0 ]]; then
+        log_success "All critical assemblies present"
+    else
+        log_warn "Some critical assemblies missing - application may crash"
+    fi
 
     # Copy Assets
     local assets_src="$PROJECT_ROOT/src/Redball.UI.WPF/Assets"
@@ -409,18 +434,18 @@ step_build_service() {
     local service_dir="$DIST_DIR/Redball.Service"
     mkdir -p "$service_dir"
 
-    # Service is self-contained — build as framework-dependent to avoid
-    # runtime pack version mismatch between Linux and Wine SDK versions.
+    # Service is published as single-file to bundle all dependencies into the executable.
+    # Compression is disabled because compression requires self-contained=true.
     # The Windows runtime is expected to be present on target machines.
     wine_dotnet publish "Z:$PROJECT_ROOT/src/Redball.Service/Redball.Service.csproj" \
         --configuration "$CONFIGURATION" \
         --output "Z:$service_dir" \
         --self-contained false \
         --runtime win-x64 \
-        -p:PublishSingleFile=false \
+        -p:PublishSingleFile=true \
         --no-restore
 
-    # Copy service files to WPF publish dir
+    # Copy service files to WPF publish dir (only main files, dependencies are bundled)
     for f in "$service_dir"/Redball.Service*; do
         [[ -f "$f" ]] && cp "$f" "$WPF_PUBLISH_DIR/"
     done

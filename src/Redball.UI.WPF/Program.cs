@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -24,15 +25,28 @@ public static class Program
         var appBaseDir = AppContext.BaseDirectory;
         var dllDir = Path.Combine(appBaseDir, "dll");
 
+        // Preload critical assemblies to avoid JIT compilation issues
+        PreloadCriticalAssemblies(dllDir);
+
         // .NET Core/8 primary mechanism: AssemblyLoadContext.Default.Resolving
         AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
         {
-            // Try to find the assembly in the dll subfolder
             var candidatePath = Path.Combine(dllDir, assemblyName.Name + ".dll");
             if (File.Exists(candidatePath))
             {
+                Debug.WriteLine($"[AssemblyResolver] Loading '{assemblyName.Name}' from dll folder");
                 return context.LoadFromAssemblyPath(candidatePath);
             }
+
+            // Fallback: try base directory
+            candidatePath = Path.Combine(appBaseDir, assemblyName.Name + ".dll");
+            if (File.Exists(candidatePath))
+            {
+                Debug.WriteLine($"[AssemblyResolver] Loading '{assemblyName.Name}' from base directory");
+                return context.LoadFromAssemblyPath(candidatePath);
+            }
+
+            Debug.WriteLine($"[AssemblyResolver] Failed to find '{assemblyName.Name}' in any search path");
             return null;
         };
 
@@ -43,8 +57,18 @@ public static class Program
             var candidatePath = Path.Combine(dllDir, assemblyName.Name + ".dll");
             if (File.Exists(candidatePath))
             {
+                Debug.WriteLine($"[AppDomain.AssemblyResolve] Loading '{assemblyName.Name}' from dll folder");
                 return Assembly.LoadFrom(candidatePath);
             }
+
+            // Fallback: try base directory
+            candidatePath = Path.Combine(appBaseDir, assemblyName.Name + ".dll");
+            if (File.Exists(candidatePath))
+            {
+                Debug.WriteLine($"[AppDomain.AssemblyResolve] Loading '{assemblyName.Name}' from base directory");
+                return Assembly.LoadFrom(candidatePath);
+            }
+
             return null;
         };
 
@@ -67,5 +91,48 @@ public static class Program
         var app = new App();
         app.InitializeComponent();
         app.Run();
+    }
+
+    /// <summary>
+    /// Preloads critical assemblies that are needed early in startup to avoid
+    /// race conditions during JIT compilation.
+    /// </summary>
+    private static void PreloadCriticalAssemblies(string dllDir)
+    {
+        string[] criticalAssemblies = new[]
+        {
+            "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Microsoft.Extensions.DependencyInjection",
+        };
+
+        foreach (var assemblyName in criticalAssemblies)
+        {
+            var dllPath = Path.Combine(dllDir, assemblyName + ".dll");
+            if (File.Exists(dllPath))
+            {
+                try
+                {
+                    Assembly.LoadFrom(dllPath);
+                    Debug.WriteLine($"[Preload] Successfully preloaded '{assemblyName}'");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[Preload] Failed to preload '{assemblyName}': {ex.Message}");
+                }
+            }
+            else
+            {
+                // Try loading by name (might be in base directory or GAC)
+                try
+                {
+                    Assembly.Load(assemblyName);
+                    Debug.WriteLine($"[Preload] Assembly '{assemblyName}' loaded by name");
+                }
+                catch
+                {
+                    Debug.WriteLine($"[Preload] Assembly '{assemblyName}' not found at '{dllPath}'");
+                }
+            }
+        }
     }
 }

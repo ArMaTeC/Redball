@@ -1,105 +1,111 @@
 # Building & CI/CD
 
-## MSI Installer
+## NSIS Installer
 
-The MSI is built with [WiX Toolset v4](https://wixtoolset.org/).
+The installer is built with [NSIS (Nullsoft Scriptable Install System)](https://nsis.sourceforge.io/) v3.0+.
 
 ### Build Scripts
 
+**Unified Build Script (Windows - PowerShell):**
+
 ```powershell
-# Full deploy pipeline (MSI via WiX, with code signing)
-.\installer\Deploy-Redball.ps1
+# Full deploy pipeline (builds everything)
+.\scripts\build.ps1 all
 
-# Recommended local build pipeline
-.\scripts\build.ps1
+# Build Windows artifacts only (WPF, Service, Setup, ZIP)
+.\scripts\build.ps1 windows
 
-# Build MSI only
-.\installer\Build-MSI.ps1 -Version "3.0.0"
-
-# Build with specific WiX path
-.\installer\Build-MSI.ps1 -WixBinPath "C:\Tools\wix"
+# Build with specific channel
+.\scripts\build.ps1 all -Channel beta
 ```
+
+**Unified Build Script (Linux - Bash):**
+
+```bash
+# Full auto-release workflow (builds + publishes everything)
+./scripts/build.sh
+
+# Build everything (no publish)
+./scripts/build.sh all
+
+# Build specific targets
+./scripts/build.sh windows    # Windows artifacts
+./scripts/build.sh linux      # Linux artifacts (GTK app, packages)
+./scripts/build.sh update-server  # Update server
+./scripts/build.sh website    # Website validation
+```
+
+### Build Commands
+
+| Command         | Description                          |
+| --------------- | ------------------------------------ |
+| `all`           | Build everything (no publish)        |
+| `auto-release`  | Build + publish everything [DEFAULT] |
+| `windows`       | Build Windows artifacts              |
+| `linux`         | Build Linux artifacts                |
+| `update-server` | Build/validate update-server         |
+| `website`       | Build website                        |
+| `clean`         | Clean all build artifacts            |
+| `publish`       | Publish release to update-server     |
+| `serve`         | Start update-server locally          |
+| `status`        | Show build status                    |
 
 ### Build Script Release Behavior
 
-For release builds (when MSI is enabled), `scripts/build.ps1` commits and pushes the version bump before calling `scripts/release.ps1` so GitHub release notes always include commit history.
+For release builds, the build script commits and pushes the version bump before creating GitHub releases so release notes always include commit history.
 
 ```powershell
-# Release build with default release commit message
-.\scripts\build.ps1
+# Release build with specific version
+.\scripts\build.ps1 publish -Version "2.1.500"
 
-# Override release commit message
-.\scripts\build.ps1 -ReleaseMessage "chore(release): v3.1.0 + service improvements"
-
-# Opt out of auto release commit/push behavior
-.\scripts\build.ps1 -SkipReleaseCommit
-.\scripts\build.ps1 -SkipReleasePush
+# Beta release
+.\scripts\build.ps1 publish -Beta
 ```
 
 ### Deploy Pipeline
 
-`Deploy-Redball.ps1` automatically:
+The build script automatically:
 
-1. Increments the build number (stored in `scripts/version.txt`)
-2. Builds the WPF application via `dotnet publish`
-3. Builds an MSI via WiX
-4. Signs both artifacts with a code-signing certificate (creates a self-signed cert if none exists)
-
-`scripts/build.ps1` also builds the WPF application and generates the MSI installer.
+1. Builds the WPF application via `dotnet publish`
+2. Builds the Windows Service (`Redball.Service`)
+3. Creates an NSIS installer (`Redball-{version}-Setup.exe`)
+4. Creates a portable ZIP archive
+5. Builds Linux artifacts (Flatpak, DEB, tarball) if on Linux or WSL available
+6. Validates the update-server
+7. Signs artifacts with a code-signing certificate (creates self-signed cert if none exists)
 
 ### Installer Features
 
-The MSI provides:
+The NSIS installer provides:
 
 - Per-user installation to `%LocalAppData%\Redball`
 - Start Menu and Desktop shortcuts
-- Optional "Start with Windows" shortcut
-- Optional default behavior features via registry defaults:
-  - Battery-Aware Mode
-  - Network-Aware Mode
-  - Idle Detection
-  - Start Minimized
-  - Exit on Timer Complete
+- Optional "Start with Windows" option
+- Service installation for input injection
+- Auto-launch after install
+- Silent install support (`/S`)
+- Optional default behavior features via registry defaults
 - "Launch Redball" checkbox on the finish page
 
-### MSI Theme Generation
+### Installer Theme
 
-The installer uses modern dark-themed graphics generated programmatically:
+The installer uses modern dark-themed graphics:
 
-```powershell
-# Generate theme images manually (optional - build.ps1 does this automatically)
-.\installer\Generate-InstallerTheme.ps1
-```
-
-**Generated Images:**
-
-- `banner.bmp` (493x58) — Dark gradient header with Redball branding
-- `dialog.bmp` (493x312) — Dark gradient background with sidebar accent
-
-**Features:**
-
+- `nsis-header.bmp` — Dark gradient header with Redball branding
+- `nsis-welcome.bmp` — Dark gradient background for welcome/finish pages
 - Professional dark theme matching Redball's UI
-- Anti-aliased Segoe UI typography
-- Red accent bar with decorative circle elements
-- Automatically regenerated during `build.ps1` MSI builds
+- Windows 10/11 styled Modern UI 2
 
 ### Installer Files
 
-| File | Description |
-| ---- | ----------- |
-| `installer/Build-MSI.ps1` | WiX MSI build script (legacy v1) |
-| `installer/Build-MSI-v2.ps1` | WiX MSI build script (modern v2 with WixUI_InstallDir) |
-| `installer/Deploy-Redball.ps1` | Full deploy pipeline (WPF + MSI + signing) |
-| `installer/Generate-InstallerTheme.ps1` | PowerShell theme generator for MSI banner/dialog images |
-| `installer/Launch-Redball.vbs` | Hidden-window launcher for MSI post-install |
-| `installer/Redball.wxs` | WiX v4 installer definition (legacy) |
-| `installer/Redball.v2.wxs` | WiX v4 installer definition (modern UI) |
-| `installer/banner.bmp` | MSI installer banner image (493x58) |
-| `installer/dialog.bmp` | MSI installer dialog image (493x312) |
-| `installer/Redball.ico` | Application icon |
-| `installer/Redball-License.rtf` | License for installer UI |
-| `installer/redball.png` | Readme icon image |
-| `installer/signpath.json` | Code signing configuration |
+| File                           | Description                             |
+| ------------------------------ | --------------------------------------- |
+| `installer/Redball.nsi`        | Main NSIS installer script              |
+| `installer/Redball.ico`        | Application icon                        |
+| `installer/nsis-header.bmp`    | NSIS header image                       |
+| `installer/nsis-welcome.bmp`   | NSIS welcome/finish image               |
+| `installer/Launch-Redball.vbs` | Hidden-window launcher for post-install |
+| `installer/signpath.json`      | Code signing configuration              |
 
 ---
 
@@ -107,45 +113,71 @@ The installer uses modern dark-themed graphics generated programmatically:
 
 ### Release Workflow (`release.yml`)
 
-**Trigger:** Push to `main` branch
+**Trigger:** Push to `main` branch with version tag
 
 **Steps:**
 
 1. Check out repository
-2. Extract version from `src/Redball.UI.WPF/Redball.UI.WPF.csproj`
+2. Extract version from `Directory.Build.props`
 3. Create a Git tag for the version
 4. Build the WPF application on `windows-latest`
-5. Build the MSI on `windows-latest`
-6. Create a GitHub Release with the MSI attached
+5. Build the NSIS installer on `windows-latest`
+6. Create a GitHub Release with the installer attached
 
 ### CI Workflow (`ci.yml`)
 
-**Trigger:** Push or pull request to any branch
+**Trigger:** Push or pull request to `main` or `develop` branches
 
 **Steps:**
 
-1. **WPF Build** — Build the .NET 10 WPF application
-2. **Unit Tests** — Run MSTest suite
-3. **JSON Validation** — Validate `Redball.json` and `locales.json`
-4. **PSScriptAnalyzer** — Lint build scripts
-5. **Security Scan** — Basic security checks
+1. **Lint** — Run PSScriptAnalyzer on PowerShell scripts
+2. **JSON Validation** — Validate all JSON files
+3. **Security Scan** — Check for common security issues
+4. **WPF Build** — Build the .NET 10 WPF application (via Wine on Linux runner)
+5. **Unit Tests** — Run MSTest suite
+
+### Linux CI Workflow (`linux-ci.yml`)
+
+**Trigger:** Push or pull request affecting Linux-related files
+
+**Steps:**
+
+1. **Build Linux** — Build the GTK application on Ubuntu
+2. **Build Packages** — Create Flatpak, DEB, and tarball packages
+3. **Test** — Run Linux-specific tests
+
+### Other Workflows
+
+| Workflow         | Purpose                                 |
+| ---------------- | --------------------------------------- |
+| `security.yml`   | Security scanning and dependency checks |
+| `e2e.yml`        | End-to-end testing                      |
+| `virustotal.yml` | VirusTotal scanning for releases        |
+| `cleanup.yml`    | Artifact cleanup                        |
+| `docs.yml`       | Documentation validation                |
 
 ### Build Output
 
 Build artifacts are placed in the `dist/` directory:
 
-| File | Description |
-| ---- | ----------- |
-| `Redball.UI.WPF.exe` | Self-contained WPF executable |
-| `Redball-{version}.msi` | WiX MSI installer |
+| File                          | Description                         |
+| ----------------------------- | ----------------------------------- |
+| `Redball.UI.WPF.exe`          | WPF executable                      |
+| `Redball.Service.exe`         | Windows Service for input injection |
+| `Redball-{version}-Setup.exe` | NSIS installer                      |
+| `redball-portable.zip`        | Portable ZIP archive                |
+| `redball-linux.tar.gz`        | Linux tarball                       |
+| `redball.deb`                 | Debian package                      |
+| `redball.flatpak`             | Flatpak bundle                      |
 
 ---
 
 ## Version Management
 
-The version is stored in two places:
+The version is centralized in `Directory.Build.props`:
 
-1. `src/Redball.UI.WPF/Redball.UI.WPF.csproj` — the canonical version
-2. `scripts/version.txt` — auto-incremented build number used by the deploy pipeline
+```xml
+<Version>2.1.492</Version>
+```
 
-The CI release workflow reads the version from the project file to create the Git tag and GitHub Release.
+This version is shared across all projects in the solution. The CI release workflow reads the version from this file to create the Git tag and GitHub Release.

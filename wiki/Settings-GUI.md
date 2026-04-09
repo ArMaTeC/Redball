@@ -12,19 +12,19 @@ The settings are organized into dedicated sections accessible via the left navig
 
 The TypeThing tab contains all settings for the clipboard typing feature.
 
-| Control | Type | Config Key | Description |
-| ------- | ---- | ---------- | ----------- |
-| Enable TypeThing | CheckBox | `TypeThingEnabled` | Master switch for clipboard typer |
-| Start Hotkey | Hotkey capture | `TypeThingStartHotkey` | Key combination to start typing |
-| Stop Hotkey | Hotkey capture | `TypeThingStopHotkey` | Key combination to stop typing |
-| Typing Speed (ms per char) | Slider (10–500) | `TypeThingMinDelayMs` / `TypeThingMaxDelayMs` | Character typing delay range |
-| Add random pauses | CheckBox | `TypeThingAddRandomPauses` | Insert natural-feeling random delays |
-| Type newlines as Enter key | CheckBox | `TypeThingTypeNewlines` | Send Enter key for line breaks |
-| Text-to-Speech | CheckBox | `TypeThingTtsEnabled` | Read text aloud while typing |
-| Input Method | Dropdown | `TypeThingInputMode` | Standard (SendInput) or Service |
-| Service Mode | CheckBox | `TypeThingServiceMode` | Use Windows Service for input injection |
-| Install Input Service | Button | — | Install Redball Input Service |
-| Service Status | Visual + Text | — | Live status indicator |
+| Control                    | Type            | Config Key                                    | Description                             |
+| -------------------------- | --------------- | --------------------------------------------- | --------------------------------------- |
+| Enable TypeThing           | CheckBox        | `TypeThingEnabled`                            | Master switch for clipboard typer       |
+| Start Hotkey               | Hotkey capture  | `TypeThingStartHotkey`                        | Key combination to start typing         |
+| Stop Hotkey                | Hotkey capture  | `TypeThingStopHotkey`                         | Key combination to stop typing          |
+| Typing Speed (ms per char) | Slider (10–500) | `TypeThingMinDelayMs` / `TypeThingMaxDelayMs` | Character typing delay range            |
+| Add random pauses          | CheckBox        | `TypeThingAddRandomPauses`                    | Insert natural-feeling random delays    |
+| Type newlines as Enter key | CheckBox        | `TypeThingTypeNewlines`                       | Send Enter key for line breaks          |
+| Text-to-Speech             | CheckBox        | `TypeThingTtsEnabled`                         | Read text aloud while typing            |
+| Input Method               | Dropdown        | `TypeThingInputMode`                          | Standard (SendInput) or Service         |
+| Service Mode               | CheckBox        | `TypeThingServiceMode`                        | Use Windows Service for input injection |
+| Install Input Service      | Button          | —                                             | Install Redball Input Service           |
+| Service Status             | Visual + Text   | —                                             | Live status indicator                   |
 
 #### TypeThing Service Features
 
@@ -34,50 +34,50 @@ The TypeThing tab contains all settings for the clipboard typing feature.
 
 ### General Tab
 
-| Control | Type | Config Key | Description |
-| ------- | ---- | ---------- | ----------- |
-| Theme | Dropdown (14 options) | `Theme` | Visual theme: System, Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost, High Contrast |
-| Minimize to tray on start | CheckBox | `MinimizeOnStart` | Start without visible window |
-| Show notifications | CheckBox | `ShowBalloonOnStart` | Tray notifications on startup and events |
-| Notification Mode | Dropdown | `NotificationMode` | All events, Important only, Errors only, or Silent |
-| Enable verbose logging | CheckBox | `VerboseLogging` | Record extra diagnostic details |
-| Max Log Size (MB) | Slider (1–100) | `MaxLogSizeMB` | Log rotation threshold |
+| Control                   | Type                  | Config Key           | Description                                                                                                                                                                    |
+| ------------------------- | --------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Theme                     | Dropdown (14 options) | `Theme`              | Visual theme: System, Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost, High Contrast |
+| Minimize to tray on start | CheckBox              | `MinimizeOnStart`    | Start without visible window                                                                                                                                                   |
+| Show notifications        | CheckBox              | `ShowBalloonOnStart` | Tray notifications on startup and events                                                                                                                                       |
+| Notification Mode         | Dropdown              | `NotificationMode`   | All events, Important only, Errors only, or Silent                                                                                                                             |
+| Enable verbose logging    | CheckBox              | `VerboseLogging`     | Record extra diagnostic details                                                                                                                                                |
+| Max Log Size (MB)         | Slider (1–100)        | `MaxLogSizeMB`       | Log rotation threshold                                                                                                                                                         |
 
 ### Behavior Tab (Keep-Awake)
 
 Settings for the secondary keep-awake feature.
 
-| Control | Type | Config Key | Description |
-| ------- | ---- | ---------- | ----------- |
-| Prevent Display Sleep | CheckBox | `PreventDisplaySleep` | Keep display awake while active |
-| Heartbeat Input | Dropdown (F13–F16) | `HeartbeatInputMode` | Invisible function key for idle prevention |
-| Default Duration (minutes) | Slider (1–720) | `DefaultDuration` | Default timer duration for timed sessions |
-| Auto-exit after duration completes | CheckBox | `AutoExitOnComplete` | Exit when timed session finishes |
+| Control                            | Type               | Config Key            | Description                                |
+| ---------------------------------- | ------------------ | --------------------- | ------------------------------------------ |
+| Prevent Display Sleep              | CheckBox           | `PreventDisplaySleep` | Keep display awake while active            |
+| Heartbeat Input                    | Dropdown (F13–F16) | `HeartbeatInputMode`  | Invisible function key for idle prevention |
+| Default Duration (minutes)         | Slider (1–720)     | `DefaultDuration`     | Default timer duration for timed sessions  |
+| Auto-exit after duration completes | CheckBox           | `AutoExitOnComplete`  | Exit when timed session finishes           |
 
 ### Smart Features Tab (Keep-Awake)
 
 Smart monitoring features for the keep-awake utility.
 
-| Control | Type | Config Key | Description |
-| ------- | ---- | ---------- | ----------- |
-| Battery-aware mode | CheckBox | `BatteryAware` | Auto-pause when battery is low |
-| Pause threshold (%) | Slider (5–50) | `BatteryThreshold` | Battery % below which to auto-pause |
-| Network-aware mode | CheckBox | `NetworkAware` | Auto-pause when network disconnects |
-| Idle detection | CheckBox | `IdleDetection` | Auto-pause after user inactivity |
-| Idle threshold (minutes) | Slider (5–120) | `IdleThreshold` | Minutes of inactivity before auto-pause |
-| Presentation mode detection | CheckBox | `PresentationModeDetection` | Auto-activate for PowerPoint/Teams |
-| Scheduled operation | CheckBox | `ScheduleEnabled` | Enable daily scheduled activation |
+| Control                     | Type           | Config Key                  | Description                             |
+| --------------------------- | -------------- | --------------------------- | --------------------------------------- |
+| Battery-aware mode          | CheckBox       | `BatteryAware`              | Auto-pause when battery is low          |
+| Pause threshold (%)         | Slider (5–50)  | `BatteryThreshold`          | Battery % below which to auto-pause     |
+| Network-aware mode          | CheckBox       | `NetworkAware`              | Auto-pause when network disconnects     |
+| Idle detection              | CheckBox       | `IdleDetection`             | Auto-pause after user inactivity        |
+| Idle threshold (minutes)    | Slider (5–120) | `IdleThreshold`             | Minutes of inactivity before auto-pause |
+| Presentation mode detection | CheckBox       | `PresentationModeDetection` | Auto-activate for PowerPoint/Teams      |
+| Scheduled operation         | CheckBox       | `ScheduleEnabled`           | Enable daily scheduled activation       |
 
 ### Updates Tab
 
-| Control | Type | Config Key | Description |
-| ------- | ---- | ---------- | ----------- |
-| Auto-check for updates | CheckBox | `AutoUpdateCheckEnabled` | Enable background update checks |
-| Check interval (minutes) | Slider | `AutoUpdateCheckIntervalMinutes` | How often to check automatically |
-| Update Channel | Dropdown (stable/beta) | `UpdateChannel` | Release channel preference |
-| Verify update signatures | CheckBox | `VerifyUpdateSignature` | Require valid digital signature on updates |
-| Check for Updates Now | Button | — | Query update service immediately |
-| Current Version | Label | — | Display installed version |
+| Control                  | Type                   | Config Key                       | Description                                |
+| ------------------------ | ---------------------- | -------------------------------- | ------------------------------------------ |
+| Auto-check for updates   | CheckBox               | `AutoUpdateCheckEnabled`         | Enable background update checks            |
+| Check interval (minutes) | Slider                 | `AutoUpdateCheckIntervalMinutes` | How often to check automatically           |
+| Update Channel           | Dropdown (stable/beta) | `UpdateChannel`                  | Release channel preference                 |
+| Verify update signatures | CheckBox               | `VerifyUpdateSignature`          | Require valid digital signature on updates |
+| Check for Updates Now    | Button                 | —                                | Query update service immediately           |
+| Current Version          | Label                  | —                                | Display installed version                  |
 
 ### Actions Section (General Tab)
 
@@ -137,11 +137,11 @@ This is a dedicated, themed dialog with grouped controls:
 
 The dialog supports three visual themes:
 
-| Theme | Background | Text | Accent | Font |
-| ----- | ---------- | ---- | ------ | ---- |
-| `light` | #F5F5F5 | #1A1A1A | #0078D7 | Segoe UI |
-| `dark` | #1E1E1E | #E0E0E0 | #4FC3F7 | Segoe UI |
-| `hacker` | #0A0A0A | #00FF00 | #00FF41 | Consolas |
+| Theme    | Background | Text    | Accent  | Font     |
+| -------- | ---------- | ------- | ------- | -------- |
+| `light`  | #F5F5F5    | #1A1A1A | #0078D7 | Segoe UI |
+| `dark`   | #1E1E1E    | #E0E0E0 | #4FC3F7 | Segoe UI |
+| `hacker` | #0A0A0A    | #00FF00 | #00FF41 | Consolas |
 
 Switching themes applies instantly.
 
@@ -160,19 +160,18 @@ The main Redball window features a modern custom chrome design:
 
 ### Navigation Panel
 
-Left-side navigation with ten sections:
+Left-side navigation with eight sections:
 
-| Section | Description |
-| ------- | ----------- |
-| **Home** | Overview dashboard with quick access cards |
-| **Analytics** | Session counts, usage patterns, feature events with CSV/JSON export |
-| **Metrics** | Feature adoption rates, retention, and product usage metrics |
-| **Diagnostics** | Runtime state, logging paths, temperature, session stats, app health |
-| **Settings** | General application settings (theme, notifications, logging) |
-| **TypeThing** | Typing automation hotkeys, speed, and behavior (primary feature) |
-| **Behavior** | Keep-awake controls (display sleep, heartbeat key, duration) |
+| Section            | Description                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| **Home**           | Overview dashboard with quick access cards                                                             |
+| **Analytics**      | Session counts, total usage hours, and feature usage statistics with CSV/JSON export                   |
+| **Diagnostics**    | Runtime state, logging paths, temperature, session stats, app health                                   |
+| **Behavior**       | Keep-awake controls (display sleep, heartbeat key, duration, auto-exit)                                |
 | **Smart Features** | Battery, network, idle, schedule, presentation, process watcher, VPN, thermal, session lock, app rules |
-| **Updates** | Update channels, auto-check, and version management |
+| **TypeThing**      | Typing automation hotkeys, speed, and behavior (primary feature)                                       |
+| **Settings**       | General application settings (theme, notifications, logging)                                           |
+| **Updates**        | Update channels, auto-check, and version management                                                    |
 
 Click any navigation item to switch the content area. All navigation items show descriptive tooltips on hover.
 

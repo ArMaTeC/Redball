@@ -2,7 +2,7 @@
 
 > A professional clipboard typer that keeps your computer awake — type anything, anywhere.
 
-Welcome to the Redball wiki — the complete documentation for the TypeThing clipboard automation tool and its companion keep-awake utility.
+Welcome to the Redball wiki — the complete documentation for the TypeThing clipboard automation tool and its companion keep-awake utility. Cross-platform support for Windows and Linux.
 
 ## Quick Start
 
@@ -55,6 +55,7 @@ TypeThing reads text from your clipboard and types it character-by-character usi
 - Any application where standard paste doesn't work
 
 **Default Hotkeys:**
+
 - `Ctrl+Shift+V` — Start typing clipboard contents
 - `Ctrl+Shift+X` — Emergency stop typing
 
@@ -68,14 +69,14 @@ A smart utility that prevents Windows from sleeping using `SetThreadExecutionSta
 
 ## Quick Links
 
-| Topic | Description |
-| ----- | ----------- |
-| [Getting Started](Getting-Started) | Installation and first run |
-| [TypeThing](TypeThing) | Clipboard typing feature |
-| [KeepAwake](KeepAwake) | Keep-awake utility |
-| [Configuration](Configuration) | Registry + local config storage reference |
-| [CHANGELOG.md](https://github.com/ArMaTeC/Redball/blob/main/docs/CHANGELOG.md) | Version history |
-| [LICENSE](https://github.com/ArMaTeC/Redball/blob/main/LICENSE) | MIT License |
+| Topic                                                                          | Description                               |
+| ------------------------------------------------------------------------------ | ----------------------------------------- |
+| [Getting Started](Getting-Started)                                             | Installation and first run                |
+| [TypeThing](TypeThing)                                                         | Clipboard typing feature                  |
+| [KeepAwake](KeepAwake)                                                         | Keep-awake utility                        |
+| [Configuration](Configuration)                                                 | Registry + local config storage reference |
+| [CHANGELOG.md](https://github.com/ArMaTeC/Redball/blob/main/docs/CHANGELOG.md) | Version history                           |
+| [LICENSE](https://github.com/ArMaTeC/Redball/blob/main/LICENSE)                | MIT License                               |
 
 ## Version
 

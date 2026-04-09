@@ -25,11 +25,24 @@ dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 # Run unit tests
 dotnet test
 
-# Full build pipeline (build, test, lint, MSI)
-pwsh -File scripts/build.ps1
+# Full build pipeline (build, test, lint, NSIS installer)
+pwsh -File scripts/build.ps1 all
 
-# Build installer locally
-.\installer\Deploy-Redball.ps1 -BuildMsi
+# Build Windows artifacts only
+pwsh -File scripts/build.ps1 windows
+```
+
+**Linux/macOS Setup:**
+
+```bash
+# Build everything (including Windows artifacts via Wine)
+./scripts/build.sh all
+
+# Build Linux artifacts only
+./scripts/build.sh linux
+
+# Build Windows artifacts (requires Wine + .NET SDK setup)
+./scripts/build.sh windows
 ```
 
 ## Code Style

@@ -1,6 +1,6 @@
 # Architecture
 
-> **v3.0** — Pure C# WPF architecture. All functionality runs natively in the WPF application with no PowerShell dependency.
+> **v2.1.492** — Pure C# WPF architecture with cross-platform support. All functionality runs natively with no PowerShell dependency.
 
 ## Project Structure
 
@@ -8,73 +8,93 @@
 Redball/
 ├── .github/workflows/
 │   ├── ci.yml                       # CI pipeline (build, test, lint, security)
-│   └── release.yml                  # Release pipeline (tag, build MSI, publish)
-├── src/Redball.UI.WPF/              # WPF application (.NET 10)
-│   ├── Interop/
-│   │   └── NativeMethods.cs         # All Win32 P/Invoke declarations
-│   ├── Models/
-│   │   └── RedballConfig.cs         # Strongly-typed configuration model
-│   ├── Services/                    # 40+ singleton services
-│   │   ├── KeepAwakeService.cs      # Core keep-awake engine
-│   │   ├── BatteryMonitorService.cs # Battery monitoring + auto-pause
-│   │   ├── NetworkMonitorService.cs # Network monitoring + auto-pause
-│   │   ├── IdleDetectionService.cs  # Idle detection + auto-pause
-│   │   ├── ScheduleService.cs       # Scheduled activation
-│   │   ├── PresentationModeService.cs # Presentation detection
-│   │   ├── CalendarIntegrationService.cs # Calendar auto-activation
-│   │   ├── ProcessWatcherService.cs # Process-based auto-activation
-│   │   ├── SessionLockService.cs    # Screen lock detection
-│   │   ├── TemperatureMonitorService.cs # CPU thermal protection
-│   │   ├── PowerPlanService.cs      # Windows power plan switching
-│   │   ├── ScheduledRestartService.cs # Uptime restart reminders
-│   │   ├── AnalyticsService.cs      # Local analytics + feature tracking
-│   │   ├── CloudAnalyticsService.cs # Remote opt-in analytics
-│   │   ├── DataExportService.cs     # User data bundling (GDPR)
-│   │   ├── SessionStateService.cs   # Session save/restore
-│   │   ├── SessionStatsService.cs   # Session statistics
-│   │   ├── StartupService.cs        # Windows startup registration
-│   │   ├── SingletonService.cs      # Named mutex singleton
-│   │   ├── CrashRecoveryService.cs  # Crash flag detection
-│   │   ├── NotificationService.cs   # Tray/toast notifications
-│   │   ├── LocalizationService.cs   # i18n (en, es, fr, de, bl)
-│   │   ├── ConfigService.cs         # Registry-first config load/save/export/import
-│   │   ├── HotkeyService.cs         # Global hotkey registration
-│   │   ├── UpdateService.cs         # GitHub release auto-updater
-│   │   ├── HealthCheckService.cs    # App self-monitoring
-│   │   ├── PluginService.cs         # Plugin loading + management
-│   │   ├── WebApiService.cs         # Local REST API
-│   │   ├── ProfileService.cs        # WiFi-based config profiles
-│   │   ├── ServiceInputProvider.cs  # Service-based input for RDP/UAC
-│   │   ├── ForegroundAppService.cs  # Foreground app tracking
-│   │   ├── TextToSpeechService.cs   # TTS for TypeThing
-│   │   ├── TemplateService.cs       # Named text templates
-│   │   ├── SecurityService.cs       # Security + integrity checks
-│   │   ├── TelemetryService.cs      # Opt-in local telemetry
-│   │   ├── ServiceLocator.cs        # DI Container management
-│   │   └── Logger.cs                # Structured logging with rotation
-│   ├── ViewModels/
-│   │   └── MainViewModel.cs         # MVVM state + commands
-│   ├── Views/
-│   │   ├── MainWindow.xaml/.cs      # Main window (partial classes)
-│   │   ├── MainWindow.Navigation.cs # Section switching
-│   │   ├── MainWindow.Settings.cs   # Embedded settings
-│   │   ├── MainWindow.TrayIcon.cs   # Tray icon setup/recovery
-│   │   ├── MainWindow.TypeThing.cs  # TypeThing integration
-│   │   ├── MainWindow.Updates.cs    # Update management
-│   │   ├── AboutWindow.xaml/.cs     # Version info + update check
-│   │   ├── MiniWidgetWindow.xaml/.cs # Floating mini widget
-│   │   ├── OnboardingWindow.xaml/.cs # First-run tutorial
-│   │   ├── ToastNotification.xaml/.cs # Toast notification UI
-│   │   └── QuickSettingsPopup.xaml/.cs # Quick settings
-│   ├── Themes/                      # Dark/Light base XAML + Controls
-│   ├── Converters/                  # WPF value converters
-│   ├── Assets/redball.ico           # Application icon
-│   ├── ThemeManager.cs              # 14-theme switching engine
-│   ├── App.xaml / App.xaml.cs       # Application entry point
-│   └── Redball.UI.WPF.csproj       # Project file
-├── installer/                       # WiX MSI installer
-├── scripts/                         # Build helper scripts
+│   ├── linux-ci.yml                 # Linux CI pipeline
+│   ├── release.yml                  # Release pipeline (tag, build, publish)
+│   └── security.yml                 # Security scanning
+├── src/
+│   ├── Redball.UI.WPF/              # WPF application (.NET 10) - Windows
+│   │   ├── Interop/
+│   │   │   └── NativeMethods.cs     # All Win32 P/Invoke declarations
+│   │   ├── Models/
+│   │   │   └── RedballConfig.cs     # Strongly-typed configuration model
+│   │   ├── Services/                # 60+ singleton services
+│   │   │   ├── KeepAwakeService.cs      # Core keep-awake engine
+│   │   │   ├── BatteryMonitorService.cs # Battery monitoring + auto-pause
+│   │   │   ├── NetworkMonitorService.cs # Network monitoring + auto-pause
+│   │   │   ├── IdleDetectionService.cs  # Idle detection + auto-pause
+│   │   │   ├── ScheduleService.cs       # Scheduled activation
+│   │   │   ├── CalendarIntegrationService.cs # Calendar auto-activation
+│   │   │   ├── ProcessWatcherService.cs # Process-based auto-activation
+│   │   │   ├── SessionLockService.cs    # Screen lock detection
+│   │   │   ├── TemperatureMonitorService.cs # CPU thermal protection
+│   │   │   ├── PowerPlanService.cs      # Windows power plan switching
+│   │   │   ├── ScheduledRestartService.cs # Uptime restart reminders
+│   │   │   ├── AnalyticsService.cs      # Local analytics + feature tracking
+│   │   │   ├── CloudAnalyticsService.cs # Remote opt-in analytics
+│   │   │   ├── DataExportService.cs     # User data bundling (GDPR)
+│   │   │   ├── SessionStateService.cs   # Session save/restore
+│   │   │   ├── SessionStatsService.cs   # Session statistics
+│   │   │   ├── StartupService.cs        # Windows startup registration
+│   │   │   ├── SingletonService.cs      # Named mutex singleton
+│   │   │   ├── CrashRecoveryService.cs  # Crash flag detection
+│   │   │   ├── NotificationService.cs   # Tray/toast notifications
+│   │   │   ├── LocalizationService.cs   # i18n (en, es, fr, de, bl)
+│   │   │   ├── ConfigService.cs         # Registry-first config load/save/export/import
+│   │   │   ├── HotkeyService.cs         # Global hotkey registration
+│   │   │   ├── UpdateService.cs         # GitHub release auto-updater
+│   │   │   ├── HealthCheckService.cs    # App self-monitoring
+│   │   │   ├── PluginService.cs         # Plugin loading + management
+│   │   │   ├── WebApiService.cs         # Local REST API
+│   │   │   ├── ProfileService.cs        # WiFi-based config profiles
+│   │   │   ├── ServiceInputProvider.cs  # Service-based input for RDP/UAC
+│   │   │   ├── ForegroundAppService.cs  # Foreground app tracking
+│   │   │   ├── TextToSpeechService.cs   # TTS for TypeThing
+│   │   │   ├── TemplateService.cs       # Named text templates
+│   │   │   ├── SecurityService.cs       # Security + integrity checks
+│   │   │   ├── TelemetryService.cs      # Opt-in local telemetry
+│   │   │   ├── ServiceLocator.cs        # DI Container management
+│   │   │   └── ... (many more services)
+│   │   ├── ViewModels/
+│   │   │   └── MainViewModel.cs     # MVVM state + commands
+│   │   ├── Views/
+│   │   │   ├── MainWindow.xaml/.cs      # Main window (partial classes)
+│   │   │   ├── MainWindow.Navigation.cs # Section switching
+│   │   │   ├── MainWindow.Settings.cs   # Embedded settings
+│   │   │   ├── MainWindow.TrayIcon.cs   # Tray icon setup/recovery
+│   │   │   ├── MainWindow.TypeThing.cs  # TypeThing integration
+│   │   │   ├── MainWindow.Updates.cs    # Update management
+│   │   │   ├── AboutWindow.xaml/.cs     # Version info + update check
+│   │   │   └── ... (additional windows)
+│   │   ├── Themes/                  # Dark/Light base XAML + Controls
+│   │   ├── Converters/              # WPF value converters
+│   │   ├── Assets/redball.ico       # Application icon
+│   │   ├── ThemeManager.cs          # 14-theme switching engine
+│   │   ├── App.xaml / App.xaml.cs   # Application entry point
+│   │   └── Redball.UI.WPF.csproj    # Project file
+│   │
+│   ├── Redball.Core/                # Shared core library
+│   │   ├── Logger.cs                # Structured logging with rotation
+│   │   ├── Cryptography/            # Encryption utilities
+│   │   ├── Performance/             # Performance monitoring
+│   │   ├── Sync/                    # Synchronization primitives
+│   │   └── Telemetry/               # Core telemetry
+│   │
+│   ├── Redball.Service/             # Windows Service for input injection
+│   │   ├── InputInjectionService.cs
+│   │   ├── InputInjectionEngine.cs
+│   │   └── IpcServer.cs
+│   │
+│   ├── Redball.Linux/               # Linux GTK application
+│   │   └── (GTK-based Linux port)
+│   │
+│   └── Redball.macOS/               # macOS application (future)
+│
+├── installer/                       # NSIS installer (not WiX)
+├── scripts/                         # Build scripts (build.ps1, build.sh)
 ├── tests/                           # Unit test suite
+├── tests-e2e/                       # E2E tests
+├── tests-integration/               # Integration tests
+├── tests-ui-automation/             # UI automation tests
 ├── wiki/                            # Documentation
 └── locales.json                     # External locale overrides
 ```
@@ -162,12 +182,12 @@ App.xaml.cs (entry point)
 
 All P/Invoke declarations are centralized in `Interop/NativeMethods.cs`:
 
-| API | DLL | Purpose |
-| --- | --- | ------- |
-| `SetThreadExecutionState` | kernel32.dll | Prevent system/display sleep |
-| `SendInput` | user32.dll | F15 heartbeat + TypeThing character input |
-| `GetLastInputInfo` | user32.dll | Idle time detection |
-| `RegisterHotKey` / `UnregisterHotKey` | user32.dll | Global hotkeys (in HotkeyService) |
+| API                                   | DLL          | Purpose                                   |
+| ------------------------------------- | ------------ | ----------------------------------------- |
+| `SetThreadExecutionState`             | kernel32.dll | Prevent system/display sleep              |
+| `SendInput`                           | user32.dll   | F15 heartbeat + TypeThing character input |
+| `GetLastInputInfo`                    | user32.dll   | Idle time detection                       |
+| `RegisterHotKey` / `UnregisterHotKey` | user32.dll   | Global hotkeys (in HotkeyService)         |
 
 ## State Management
 

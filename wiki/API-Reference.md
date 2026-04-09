@@ -1,8 +1,8 @@
 # API Reference
 
-Complete reference for Redball v3.0 C# services.
+Complete reference for Redball v2.1.492 C# services.
 
-> **Note:** Redball v3.0 is a pure C# WPF application. The legacy PowerShell API has been archived in `legacy/Redball-v2.1.19-legacy.zip`.
+> **Note:** Redball is a pure C# application with cross-platform support. The architecture uses a modular design with separate projects for Windows (WPF), Linux (GTK), and shared Core functionality.
 
 ## Service Architecture
 
@@ -24,34 +24,34 @@ The main keep-awake engine. Manages `SetThreadExecutionState`, F15 heartbeat, an
 
 **Properties:**
 
-| Property | Type | Description |
-| --- | --- | --- |
-| `Instance` | KeepAwakeService | Singleton instance |
-| `IsActive` | bool | Current keep-awake state |
-| `Until` | DateTime? | Timer expiration (null if indefinite) |
-| `PreventDisplaySleep` | bool | Keep display awake |
-| `UseHeartbeat` | bool | Send F15 keypresses |
-| `AutoPausedBattery` | bool | Auto-paused due to low battery |
-| `AutoPausedNetwork` | bool | Auto-paused due to disconnect |
-| `AutoPausedIdle` | bool | Auto-paused due to idle |
-| `AutoPausedSchedule` | bool | Auto-paused by schedule |
+| Property              | Type             | Description                           |
+| --------------------- | ---------------- | ------------------------------------- |
+| `Instance`            | KeepAwakeService | Singleton instance                    |
+| `IsActive`            | bool             | Current keep-awake state              |
+| `Until`               | DateTime?        | Timer expiration (null if indefinite) |
+| `PreventDisplaySleep` | bool             | Keep display awake                    |
+| `UseHeartbeat`        | bool             | Send F15 keypresses                   |
+| `AutoPausedBattery`   | bool             | Auto-paused due to low battery        |
+| `AutoPausedNetwork`   | bool             | Auto-paused due to disconnect         |
+| `AutoPausedIdle`      | bool             | Auto-paused due to idle               |
+| `AutoPausedSchedule`  | bool             | Auto-paused by schedule               |
 
 **Methods:**
 
-| Method | Parameters | Description |
-| --- | --- | --- |
-| `SetActive(bool active)` | `active` | Enable/disable keep-awake |
-| `Toggle()` | - | Toggle active state |
-| `StartTimedAwake(TimeSpan duration)` | `duration` | Start timed session |
-| `ReloadConfig()` | - | Reload settings from ConfigService |
+| Method                               | Parameters | Description                        |
+| ------------------------------------ | ---------- | ---------------------------------- |
+| `SetActive(bool active)`             | `active`   | Enable/disable keep-awake          |
+| `Toggle()`                           | -          | Toggle active state                |
+| `StartTimedAwake(TimeSpan duration)` | `duration` | Start timed session                |
+| `ReloadConfig()`                     | -          | Reload settings from ConfigService |
 
 **Events:**
 
-| Event | Description |
-| --- | --- |
-| `ActiveStateChanged` | Fired when active state changes |
-| `TimedAwakeExpired` | Fired when timed session expires |
-| `HeartbeatTick` | Fired on each heartbeat interval |
+| Event                | Description                      |
+| -------------------- | -------------------------------- |
+| `ActiveStateChanged` | Fired when active state changes  |
+| `TimedAwakeExpired`  | Fired when timed session expires |
+| `HeartbeatTick`      | Fired on each heartbeat interval |
 
 ---
 
@@ -61,20 +61,20 @@ JSON configuration management with validation and export/import.
 
 **Properties:**
 
-| Property | Type | Description |
-| --- | --- | --- |
-| `Instance` | ConfigService | Singleton instance |
-| `Config` | RedballConfig | Current configuration |
+| Property   | Type          | Description           |
+| ---------- | ------------- | --------------------- |
+| `Instance` | ConfigService | Singleton instance    |
+| `Config`   | RedballConfig | Current configuration |
 
 **Methods:**
 
-| Method | Parameters | Description |
-| --- | --- | --- |
-| `Load(string? path)` | `path` | Load config from file |
-| `Save()` | - | Save current config |
-| `Export(string path)` | `path` | Export to backup file |
-| `Import(string path)` | `path` | Import from backup file |
-| `Validate()` | - | Validate config values |
+| Method                | Parameters | Description             |
+| --------------------- | ---------- | ----------------------- |
+| `Load(string? path)`  | `path`     | Load config from file   |
+| `Save()`              | -          | Save current config     |
+| `Export(string path)` | `path`     | Export to backup file   |
+| `Import(string path)` | `path`     | Import from backup file |
+| `Validate()`          | -          | Validate config values  |
 
 ---
 
@@ -84,10 +84,10 @@ WMI-based battery monitoring with caching.
 
 **Methods:**
 
-| Method | Returns | Description |
-| --- | --- | --- |
-| `CheckAndUpdate(KeepAwakeService service)` | void | Check battery and update state |
-| `GetBatteryStatus()` | BatteryStatus | Get current battery info |
+| Method                                     | Returns       | Description                    |
+| ------------------------------------------ | ------------- | ------------------------------ |
+| `CheckAndUpdate(KeepAwakeService service)` | void          | Check battery and update state |
+| `GetBatteryStatus()`                       | BatteryStatus | Get current battery info       |
 
 ---
 
@@ -97,10 +97,10 @@ Network connectivity monitoring.
 
 **Methods:**
 
-| Method | Returns | Description |
-| --- | --- | --- |
-| `CheckAndUpdate(KeepAwakeService service)` | void | Check network and update state |
-| `IsNetworkAvailable()` | bool | Check if any network is connected |
+| Method                                     | Returns | Description                       |
+| ------------------------------------------ | ------- | --------------------------------- |
+| `CheckAndUpdate(KeepAwakeService service)` | void    | Check network and update state    |
+| `IsNetworkAvailable()`                     | bool    | Check if any network is connected |
 
 ---
 
@@ -110,10 +110,10 @@ User idle detection via `GetLastInputInfo`.
 
 **Methods:**
 
-| Method | Returns | Description |
-| --- | --- | --- |
-| `CheckAndUpdate(KeepAwakeService service)` | void | Check idle time and update state |
-| `GetIdleTime()` | TimeSpan | Get current idle duration |
+| Method                                     | Returns  | Description                      |
+| ------------------------------------------ | -------- | -------------------------------- |
+| `CheckAndUpdate(KeepAwakeService service)` | void     | Check idle time and update state |
+| `GetIdleTime()`                            | TimeSpan | Get current idle duration        |
 
 ---
 
@@ -123,10 +123,10 @@ Save/restore session state across restarts.
 
 **Methods:**
 
-| Method | Parameters | Description |
-| --- | --- | --- |
-| `Save()` | - | Save current session state |
-| `Restore(KeepAwakeService service)` | `service` | Restore previous session |
+| Method                              | Parameters | Description                |
+| ----------------------------------- | ---------- | -------------------------- |
+| `Save()`                            | -          | Save current session state |
+| `Restore(KeepAwakeService service)` | `service`  | Restore previous session   |
 
 ---
 
@@ -136,9 +136,9 @@ Tray balloon notifications with mode filtering.
 
 **Methods:**
 
-| Method | Parameters | Description |
-| --- | --- | --- |
-| `ShowNotification(string title, string message)` | `title`, `message` | Show notification |
+| Method                                                                  | Parameters                 | Description           |
+| ----------------------------------------------------------------------- | -------------------------- | --------------------- |
+| `ShowNotification(string title, string message)`                        | `title`, `message`         | Show notification     |
 | `ShowNotification(string title, string message, NotificationMode mode)` | `title`, `message`, `mode` | Show with mode filter |
 
 ---
@@ -149,11 +149,11 @@ Internationalization with built-in and external locales.
 
 **Methods:**
 
-| Method | Parameters | Returns | Description |
-| --- | --- | --- | --- |
-| `GetString(string key)` | `key` | string | Get localized string |
-| `SetLocale(string locale)` | `locale` | void | Change locale |
-| `GetAvailableLocales()` | - | string[] | List available locales |
+| Method                     | Parameters | Returns  | Description            |
+| -------------------------- | ---------- | -------- | ---------------------- |
+| `GetString(string key)`    | `key`      | string   | Get localized string   |
+| `SetLocale(string locale)` | `locale`   | void     | Change locale          |
+| `GetAvailableLocales()`    | -          | string[] | List available locales |
 
 ---
 
@@ -163,10 +163,10 @@ Windows startup registration via Registry Run key.
 
 **Methods:**
 
-| Method | Parameters | Returns | Description |
-| --- | --- | --- | --- |
-| `IsStartupEnabled()` | - | bool | Check if startup is enabled |
-| `SetStartup(bool enabled)` | `enabled` | void | Enable/disable startup |
+| Method                     | Parameters | Returns | Description                 |
+| -------------------------- | ---------- | ------- | --------------------------- |
+| `IsStartupEnabled()`       | -          | bool    | Check if startup is enabled |
+| `SetStartup(bool enabled)` | `enabled`  | void    | Enable/disable startup      |
 
 ---
 
@@ -176,10 +176,10 @@ Named mutex for single instance enforcement.
 
 **Methods:**
 
-| Method | Returns | Description |
-| --- | --- | --- |
-| `TryAcquire()` | bool | Try to acquire mutex (false if another instance running) |
-| `Dispose()` | - | Release mutex on exit |
+| Method         | Returns | Description                                              |
+| -------------- | ------- | -------------------------------------------------------- |
+| `TryAcquire()` | bool    | Try to acquire mutex (false if another instance running) |
+| `Dispose()`    | -       | Release mutex on exit                                    |
 
 ---
 
@@ -189,11 +189,11 @@ Crash detection and safe recovery.
 
 **Methods:**
 
-| Method | Returns | Description |
-| --- | --- | --- |
-| `CheckAndRecover()` | bool | Check for previous crash and recover |
-| `SetCrashFlag()` | void | Set crash flag for this session |
-| `ClearCrashFlag()` | void | Clear flag on clean exit |
+| Method              | Returns | Description                          |
+| ------------------- | ------- | ------------------------------------ |
+| `CheckAndRecover()` | bool    | Check for previous crash and recover |
+| `SetCrashFlag()`    | void    | Set crash flag for this session      |
+| `ClearCrashFlag()`  | void    | Clear flag on clean exit             |
 
 ---
 
@@ -203,9 +203,9 @@ Auto-activate when a target process is running.
 
 **Methods:**
 
-| Method | Returns | Description |
-| --- | --- | --- |
-| `CheckAndUpdate(KeepAwakeService service)` | void | Check for target process and update state |
+| Method                                     | Returns | Description                               |
+| ------------------------------------------ | ------- | ----------------------------------------- |
+| `CheckAndUpdate(KeepAwakeService service)` | void    | Check for target process and update state |
 
 ---
 
@@ -215,9 +215,9 @@ CPU thermal protection monitoring.
 
 **Methods:**
 
-| Method | Returns | Description |
-| --- | --- | --- |
-| `GetStatusText()` | string | Get current temperature status text |
+| Method            | Returns | Description                         |
+| ----------------- | ------- | ----------------------------------- |
+| `GetStatusText()` | string  | Get current temperature status text |
 
 ---
 
@@ -227,12 +227,12 @@ Local analytics and feature tracking.
 
 **Methods:**
 
-| Method | Parameters | Returns | Description |
-| --- | --- | --- | --- |
-| `TrackFeature(string feature)` | `feature` | void | Record a feature usage event |
-| `GetSummary()` | - | AnalyticsSummary | Get analytics summary |
-| `ExportToCsv()` | - | string | Export analytics as CSV |
-| `Export()` | - | string | Export analytics as JSON |
+| Method                         | Parameters | Returns          | Description                  |
+| ------------------------------ | ---------- | ---------------- | ---------------------------- |
+| `TrackFeature(string feature)` | `feature`  | void             | Record a feature usage event |
+| `GetSummary()`                 | -          | AnalyticsSummary | Get analytics summary        |
+| `ExportToCsv()`                | -          | string           | Export analytics as CSV      |
+| `Export()`                     | -          | string           | Export analytics as JSON     |
 
 ---
 
@@ -264,20 +264,20 @@ Provides service-based keyboard input injection for RDP and elevated process com
 
 **Properties:**
 
-| Property | Type | Description |
-| --- | --- | --- |
-| `IsServiceInstalled` | bool | Whether the Redball Input Service is installed |
-| `IsReady` | bool | Whether service is ready to send keystrokes |
-| `LastErrorSummary` | string | Last initialization or runtime error |
+| Property             | Type   | Description                                    |
+| -------------------- | ------ | ---------------------------------------------- |
+| `IsServiceInstalled` | bool   | Whether the Redball Input Service is installed |
+| `IsReady`            | bool   | Whether service is ready to send keystrokes    |
+| `LastErrorSummary`   | string | Last initialization or runtime error           |
 
 **Methods:**
 
-| Method | Parameters | Description |
-| --- | --- | --- |
-| `RefreshServiceInstalledState()` | - | Check if service is installed and running |
-| `GetDetailedServiceState()` | - | Get detailed service status information |
-| `InstallService()` | - | Install the Redball Input Service (requires admin) |
-| `UninstallService()` | - | Uninstall the service |
+| Method                           | Parameters | Description                                        |
+| -------------------------------- | ---------- | -------------------------------------------------- |
+| `RefreshServiceInstalledState()` | -          | Check if service is installed and running          |
+| `GetDetailedServiceState()`      | -          | Get detailed service status information            |
+| `InstallService()`               | -          | Install the Redball Input Service (requires admin) |
+| `UninstallService()`             | -          | Uninstall the service                              |
 
 ---
 
@@ -287,10 +287,10 @@ Auto-activates during meetings based on local JSON calendar data.
 
 **Methods:**
 
-| Method | Returns | Description |
-| --- | --- | --- |
-| `LoadEvents()` | void | Reload events from `calendar.json` |
-| `GetStatusText()` | string | Get current meeting or next event info |
+| Method            | Returns | Description                            |
+| ----------------- | ------- | -------------------------------------- |
+| `LoadEvents()`    | void    | Reload events from `calendar.json`     |
+| `GetStatusText()` | string  | Get current meeting or next event info |
 
 ---
 
@@ -306,9 +306,9 @@ GDPR-style data bundling.
 
 **Methods:**
 
-| Method | Parameters | Description |
-| --- | --- | --- |
-| `ExportAll(string path)` | `path` | Bundle all data into a ZIP archive |
+| Method                   | Parameters | Description                        |
+| ------------------------ | ---------- | ---------------------------------- |
+| `ExportAll(string path)` | `path`     | Bundle all data into a ZIP archive |
 
 ---
 
@@ -330,10 +330,10 @@ Provides application integrity checks, Authenticode verification, and SBOM gener
 
 **Methods:**
 
-| Method | Parameters | Description |
-| --- | --- | --- |
-| `VerifyAuthenticodeSignature(string path)` | `path` | Verify file digital signature |
-| `GenerateSBOM()` | - | Generate SPDX 2.3 SBOM |
+| Method                                     | Parameters | Description                   |
+| ------------------------------------------ | ---------- | ----------------------------- |
+| `VerifyAuthenticodeSignature(string path)` | `path`     | Verify file digital signature |
+| `GenerateSBOM()`                           | -          | Generate SPDX 2.3 SBOM        |
 
 ---
 
@@ -367,12 +367,12 @@ KeepAwakeService.Instance.ActiveStateChanged += (s, e) =>
 
 Native methods are in `Interop/NativeMethods.cs`:
 
-| Method | DLL | Purpose |
-| --- | --- | --- |
-| `SetThreadExecutionState` | kernel32 | Prevent sleep/display off |
-| `SendInput` | user32 | F15 heartbeat, TypeThing input |
-| `GetLastInputInfo` | user32 | Idle detection |
-| `RegisterHotKey` | user32 | Global hotkeys |
+| Method                    | DLL      | Purpose                        |
+| ------------------------- | -------- | ------------------------------ |
+| `SetThreadExecutionState` | kernel32 | Prevent sleep/display off      |
+| `SendInput`               | user32   | F15 heartbeat, TypeThing input |
+| `GetLastInputInfo`        | user32   | Idle detection                 |
+| `RegisterHotKey`          | user32   | Global hotkeys                 |
 
 ---
 

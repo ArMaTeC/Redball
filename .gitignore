@@ -102,3 +102,4 @@ package.json
 update-server/node_modules/
 src/Redball.Linux/.flatpak-builder/cache/
 update-server/releases/
+src/Redball.Linux/flatpak/repo/

@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redball — Clipboard Typer & Keep-Awake for Windows</title>
-    <meta name="description" content="Redball: A professional clipboard typer and keep-awake utility for Windows. Type anything anywhere with TypeThing, keep your system awake with smart monitoring, and customize with 14 themes. Open source, .NET 10 WPF.">
-    <meta name="keywords" content="clipboard typer, keep awake, TypeThing, Windows automation, WPF, .NET 10, clipboard automation, Redball">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23e8443a'/><stop offset='100%' stop-color='%23ff6b5a'/></linearGradient></defs><circle cx='50' cy='50' r='45' fill='url(%23g)'/><path d='M35 30 L65 30 L70 35 L70 55 L50 70 L30 55 L30 35Z' fill='white' opacity='0.9'/></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <meta name="description"
+        content="Redball: A professional clipboard typer and keep-awake utility for Windows. Type anything anywhere with TypeThing, keep your system awake with smart monitoring, and customize with 14 themes. Open source, .NET 10 WPF.">
+    <meta name="keywords"
+        content="clipboard typer, keep awake, TypeThing, Windows automation, WPF, .NET 10, clipboard automation, Redball">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23e8443a'/><stop offset='100%' stop-color='%23ff6b5a'/></linearGradient></defs><circle cx='50' cy='50' r='45' fill='url(%23g)'/><path d='M35 30 L65 30 L70 35 L70 55 L50 70 L30 55 L30 35Z' fill='white' opacity='0.9'/></svg>">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
     <style>
         /* ============================================
            DESIGN SYSTEM — Redball
@@ -72,7 +78,9 @@
         /* ============================================
            RESET & BASE
            ============================================ */
-        *, *::before, *::after {
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -93,8 +101,15 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        a { color: inherit; text-decoration: none; }
-        img { max-width: 100%; display: block; }
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
 
         /* ============================================
            UTILITY CLASSES
@@ -110,21 +125,36 @@
             transform: translateY(40px);
             transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
         }
+
         .reveal.visible {
             opacity: 1;
             transform: translateY(0);
         }
-        .reveal-delay-1 { transition-delay: 0.1s; }
-        .reveal-delay-2 { transition-delay: 0.2s; }
-        .reveal-delay-3 { transition-delay: 0.3s; }
-        .reveal-delay-4 { transition-delay: 0.4s; }
+
+        .reveal-delay-1 {
+            transition-delay: 0.1s;
+        }
+
+        .reveal-delay-2 {
+            transition-delay: 0.2s;
+        }
+
+        .reveal-delay-3 {
+            transition-delay: 0.3s;
+        }
+
+        .reveal-delay-4 {
+            transition-delay: 0.4s;
+        }
 
         /* ============================================
            STICKY HEADER
            ============================================ */
         .header {
             position: fixed;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: var(--header-h);
             z-index: 1000;
             transition: background var(--transition-med), box-shadow var(--transition-med), backdrop-filter var(--transition-med);
@@ -133,7 +163,7 @@
         .header.scrolled {
             background: rgba(8, 12, 20, 0.92);
             backdrop-filter: blur(20px) saturate(1.5);
-            box-shadow: 0 1px 0 var(--border-subtle), 0 8px 32px rgba(0,0,0,0.4);
+            box-shadow: 0 1px 0 var(--border-subtle), 0 8px 32px rgba(0, 0, 0, 0.4);
         }
 
         .header-inner {
@@ -158,7 +188,8 @@
         }
 
         .logo-mark {
-            width: 38px; height: 38px;
+            width: 38px;
+            height: 38px;
             background: var(--grad-primary);
             border-radius: 10px;
             display: flex;
@@ -175,7 +206,8 @@
         }
 
         .logo-mark svg {
-            width: 20px; height: 20px;
+            width: 20px;
+            height: 20px;
             fill: white;
         }
 
@@ -204,7 +236,7 @@
 
         .nav-link:hover {
             color: var(--text-primary);
-            background: rgba(255,255,255,0.04);
+            background: rgba(255, 255, 255, 0.04);
         }
 
         .nav-link.active {
@@ -241,7 +273,8 @@
         }
 
         .menu-toggle svg {
-            width: 24px; height: 24px;
+            width: 24px;
+            height: 24px;
         }
 
         /* ============================================
@@ -259,12 +292,16 @@
 
         .hero-bg {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 0;
         }
 
         .hero-bg img {
-            width: 100%; height: 100%;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             opacity: 0.2;
         }
@@ -272,20 +309,24 @@
         .hero-bg::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: linear-gradient(180deg,
-                rgba(8,12,20,0.3) 0%,
-                rgba(8,12,20,0.1) 30%,
-                rgba(8,12,20,0.5) 70%,
-                rgba(8,12,20,1) 100%
-            );
+                    rgba(8, 12, 20, 0.3) 0%,
+                    rgba(8, 12, 20, 0.1) 30%,
+                    rgba(8, 12, 20, 0.5) 70%,
+                    rgba(8, 12, 20, 1) 100%);
         }
 
         /* Particle Canvas */
         #particle-canvas {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 1;
             pointer-events: none;
         }
@@ -293,7 +334,8 @@
         /* Cursor glow */
         .cursor-glow {
             position: fixed;
-            width: 400px; height: 400px;
+            width: 400px;
+            height: 400px;
             background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
             border-radius: 50%;
             pointer-events: none;
@@ -333,20 +375,35 @@
         }
 
         .hero-badge-dot {
-            width: 8px; height: 8px;
+            width: 8px;
+            height: 8px;
             background: var(--primary);
             border-radius: 50%;
             animation: pulse-dot 2s ease infinite;
         }
 
         @keyframes pulse-dot {
-            0%, 100% { box-shadow: 0 0 0 0 var(--primary-glow); }
-            50% { box-shadow: 0 0 0 6px transparent; }
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 var(--primary-glow);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px transparent;
+            }
         }
 
         @keyframes float-in {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .hero-title {
@@ -415,8 +472,11 @@
         .btn-primary::after {
             content: '';
             position: absolute;
-            top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
             transition: left 0.5s;
         }
 
@@ -432,13 +492,14 @@
         }
 
         .btn-outline:hover {
-            background: rgba(255,255,255,0.05);
-            border-color: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
         }
 
         .btn svg {
-            width: 18px; height: 18px;
+            width: 18px;
+            height: 18px;
         }
 
         /* ============================================
@@ -460,7 +521,7 @@
             background: var(--glass-border);
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
         }
 
         .stat-item {
@@ -527,7 +588,8 @@
 
         .section-tag::before {
             content: '';
-            width: 24px; height: 2px;
+            width: 24px;
+            height: 2px;
             background: var(--primary);
             border-radius: 1px;
         }
@@ -573,7 +635,9 @@
         .value-card::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 3px;
             background: var(--grad-primary);
             transform: scaleX(0);
@@ -589,11 +653,12 @@
             border-color: var(--border-hover);
             background: var(--bg-card-hover);
             transform: translateY(-6px);
-            box-shadow: 0 20px 48px rgba(0,0,0,0.35);
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35);
         }
 
         .value-icon {
-            width: 52px; height: 52px;
+            width: 52px;
+            height: 52px;
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -667,7 +732,7 @@
         }
 
         .solution-tab:hover {
-            background: rgba(255,255,255,0.04);
+            background: rgba(255, 255, 255, 0.04);
             color: var(--text-primary);
         }
 
@@ -675,7 +740,7 @@
             background: var(--bg-card);
             border-color: var(--border-hover);
             color: var(--primary-light);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         }
 
         .solution-panels {
@@ -696,8 +761,15 @@
         }
 
         @keyframes panel-in {
-            from { opacity: 0; transform: translateX(30px); }
-            to { opacity: 1; transform: translateX(0); }
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .solution-info h3 {
@@ -732,7 +804,8 @@
         }
 
         .solution-features li .check-icon {
-            width: 22px; height: 22px;
+            width: 22px;
+            height: 22px;
             border-radius: 6px;
             background: var(--emerald-glow);
             display: flex;
@@ -742,7 +815,8 @@
         }
 
         .solution-features li .check-icon svg {
-            width: 14px; height: 14px;
+            width: 14px;
+            height: 14px;
             fill: var(--emerald);
         }
 
@@ -805,7 +879,8 @@
         }
 
         .process-num {
-            width: 52px; height: 52px;
+            width: 52px;
+            height: 52px;
             border-radius: 14px;
             background: var(--bg-card);
             border: 2px solid var(--border-hover);
@@ -964,9 +1039,17 @@
             transition: all var(--transition-fast);
         }
 
-        .timeline-item:nth-child(2)::before { border-color: var(--accent); }
-        .timeline-item:nth-child(3)::before { border-color: var(--emerald); }
-        .timeline-item:nth-child(4)::before { border-color: var(--gold); }
+        .timeline-item:nth-child(2)::before {
+            border-color: var(--accent);
+        }
+
+        .timeline-item:nth-child(3)::before {
+            border-color: var(--emerald);
+        }
+
+        .timeline-item:nth-child(4)::before {
+            border-color: var(--gold);
+        }
 
         .timeline-item:hover::before {
             transform: scale(1.4);
@@ -1020,8 +1103,10 @@
         .download-card::after {
             content: '';
             position: absolute;
-            top: 0; right: 0;
-            width: 120px; height: 120px;
+            top: 0;
+            right: 0;
+            width: 120px;
+            height: 120px;
             background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
             opacity: 0;
             transition: opacity var(--transition-med);
@@ -1030,7 +1115,7 @@
         .download-card:hover {
             border-color: var(--border-hover);
             transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
         }
 
         .download-card:hover::after {
@@ -1089,7 +1174,8 @@
         }
 
         .download-meta svg {
-            width: 14px; height: 14px;
+            width: 14px;
+            height: 14px;
             opacity: 0.6;
         }
 
@@ -1119,7 +1205,8 @@
         }
 
         .btn-download svg {
-            width: 18px; height: 18px;
+            width: 18px;
+            height: 18px;
         }
 
         /* ============================================
@@ -1136,7 +1223,7 @@
             border: 1px solid var(--border-subtle);
             border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
         }
 
         .terminal-header {
@@ -1144,18 +1231,27 @@
             align-items: center;
             gap: 8px;
             padding: 14px 20px;
-            background: rgba(255,255,255,0.03);
+            background: rgba(255, 255, 255, 0.03);
             border-bottom: 1px solid var(--border-subtle);
         }
 
         .terminal-dot {
-            width: 12px; height: 12px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
         }
 
-        .dot-red { background: #ff5f56; }
-        .dot-yellow { background: #ffbd2e; }
-        .dot-green { background: #27c93f; }
+        .dot-red {
+            background: #ff5f56;
+        }
+
+        .dot-yellow {
+            background: #ffbd2e;
+        }
+
+        .dot-green {
+            background: #27c93f;
+        }
 
         .terminal-title {
             flex: 1;
@@ -1266,7 +1362,7 @@
             border: 1px solid var(--border-subtle);
             border-radius: 20px;
             padding: 48px;
-            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
         }
 
         .cta-form h4 {
@@ -1295,7 +1391,7 @@
         .form-group select {
             width: 100%;
             padding: 12px 16px;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border-subtle);
             border-radius: 10px;
             color: var(--text-primary);
@@ -1427,7 +1523,8 @@
         }
 
         .footer-social a {
-            width: 36px; height: 36px;
+            width: 36px;
+            height: 36px;
             border-radius: 8px;
             border: 1px solid var(--border-subtle);
             display: flex;
@@ -1445,60 +1542,148 @@
         }
 
         .footer-social a svg {
-            width: 16px; height: 16px;
+            width: 16px;
+            height: 16px;
         }
 
         /* ============================================
            RESPONSIVE
            ============================================ */
         @media (max-width: 1024px) {
-            .value-grid { grid-template-columns: repeat(2, 1fr); }
-            .impact-grid { grid-template-columns: repeat(2, 1fr); }
-            .process-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; }
-            .process-grid::before { display: none; }
-            .about-grid { grid-template-columns: 1fr; gap: 48px; }
-            .cta-grid { grid-template-columns: 1fr; gap: 40px; }
-            .footer-grid { grid-template-columns: repeat(2, 1fr); }
-            .solution-panel.active { grid-template-columns: 1fr; gap: 36px; }
+            .value-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .impact-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .process-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 32px;
+            }
+
+            .process-grid::before {
+                display: none;
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 48px;
+            }
+
+            .cta-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .solution-panel.active {
+                grid-template-columns: 1fr;
+                gap: 36px;
+            }
         }
 
         @media (max-width: 768px) {
-            .nav { display: none; }
-            .nav.open { 
+            .nav {
+                display: none;
+            }
+
+            .nav.open {
                 display: flex;
                 flex-direction: column;
                 position: absolute;
                 top: var(--header-h);
-                left: 0; right: 0;
+                left: 0;
+                right: 0;
                 background: rgba(8, 12, 20, 0.97);
                 backdrop-filter: blur(20px);
                 padding: 16px 24px 24px;
                 border-bottom: 1px solid var(--border-subtle);
                 gap: 4px;
             }
-            .nav.open .nav-cta { margin-left: 0; width: 100%; text-align: center; }
-            .menu-toggle { display: block; }
 
-            .stats-bar-inner { grid-template-columns: repeat(2, 1fr); }
-            .value-grid { grid-template-columns: 1fr; }
-            .impact-grid { grid-template-columns: repeat(2, 1fr); }
-            .process-grid { grid-template-columns: 1fr; }
-            .downloads-grid { grid-template-columns: 1fr; }
-            .footer-grid { grid-template-columns: 1fr; }
-            .form-row { grid-template-columns: 1fr; }
+            .nav.open .nav-cta {
+                margin-left: 0;
+                width: 100%;
+                text-align: center;
+            }
 
-            .hero-title { font-size: 2.4rem; }
-            .hero-subtitle { font-size: 1rem; }
-            .section { padding: 80px 0; }
-            .section-title { font-size: 1.8rem; }
+            .menu-toggle {
+                display: block;
+            }
+
+            .stats-bar-inner {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .value-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .impact-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .process-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .downloads-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-title {
+                font-size: 2.4rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .section {
+                padding: 80px 0;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
         }
 
         @media (max-width: 480px) {
-            .stats-bar-inner { grid-template-columns: 1fr; }
-            .impact-grid { grid-template-columns: 1fr; }
-            .hero-actions { flex-direction: column; align-items: center; }
-            .hero-actions .btn { width: 100%; max-width: 300px; justify-content: center; }
-            .cta-form { padding: 28px 20px; }
+            .stats-bar-inner {
+                grid-template-columns: 1fr;
+            }
+
+            .impact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+
+            .cta-form {
+                padding: 28px 20px;
+            }
         }
 
         /* ============================================
@@ -1533,8 +1718,13 @@
         }
 
         @keyframes marquee-scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
         }
 
         .marquee-item {
@@ -1556,9 +1746,10 @@
         }
 
         .marquee-item .m-icon {
-            width: 28px; height: 28px;
+            width: 28px;
+            height: 28px;
             border-radius: 6px;
-            background: rgba(255,255,255,0.06);
+            background: rgba(255, 255, 255, 0.06);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1592,7 +1783,7 @@
         .testimonial-card:hover {
             border-color: var(--border-hover);
             transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
         }
 
         .testimonial-stars {
@@ -1627,7 +1818,8 @@
         }
 
         .testimonial-avatar {
-            width: 44px; height: 44px;
+            width: 44px;
+            height: 44px;
             border-radius: 12px;
             background: var(--grad-primary);
             display: flex;
@@ -1640,8 +1832,13 @@
             flex-shrink: 0;
         }
 
-        .testimonial-avatar.blue { background: var(--grad-accent); }
-        .testimonial-avatar.green { background: linear-gradient(135deg, #10b981, #34d399); }
+        .testimonial-avatar.blue {
+            background: var(--grad-accent);
+        }
+
+        .testimonial-avatar.green {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
 
         .testimonial-name {
             font-weight: 600;
@@ -1660,7 +1857,8 @@
             position: fixed;
             bottom: 32px;
             right: 32px;
-            width: 48px; height: 48px;
+            width: 48px;
+            height: 48px;
             border-radius: 14px;
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
@@ -1674,7 +1872,7 @@
             transform: translateY(20px);
             pointer-events: none;
             transition: all var(--transition-med);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
         }
 
         .back-to-top.visible {
@@ -1692,7 +1890,8 @@
         }
 
         .back-to-top svg {
-            width: 20px; height: 20px;
+            width: 20px;
+            height: 20px;
         }
 
         /* ============================================
@@ -1709,13 +1908,16 @@
         ::-webkit-scrollbar {
             width: 8px;
         }
+
         ::-webkit-scrollbar-track {
             background: var(--bg-deep);
         }
+
         ::-webkit-scrollbar-thumb {
             background: rgba(148, 163, 184, 0.15);
             border-radius: 4px;
         }
+
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(148, 163, 184, 0.3);
         }
@@ -1724,14 +1926,19 @@
            RESPONSIVE ADDITIONS
            ============================================ */
         @media (max-width: 1024px) {
-            .testimonials-grid { grid-template-columns: 1fr 1fr; }
+            .testimonials-grid {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         @media (max-width: 768px) {
-            .testimonials-grid { grid-template-columns: 1fr; }
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
+
 <body>
     <!-- Cursor Glow Effect -->
     <div class="cursor-glow" id="cursor-glow"></div>
@@ -1741,7 +1948,10 @@
         <div class="header-inner">
             <a href="#" class="logo" id="site-logo">
                 <div class="logo-mark">
-                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L20 9v6l-8 4-8-4V9l8-4.82z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L20 9v6l-8 4-8-4V9l8-4.82z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
                 </div>
                 Redball
             </a>
@@ -1754,10 +1964,11 @@
                 <a href="#downloads" class="nav-cta" id="nav-cta">Download</a>
             </nav>
             <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation menu">
-                <svg id="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <line x1="3" y1="6" x2="21" y2="6"/>
-                    <line x1="3" y1="12" x2="21" y2="12"/>
-                    <line x1="3" y1="18" x2="21" y2="18"/>
+                <svg id="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
                 </svg>
             </button>
         </div>
@@ -1779,16 +1990,22 @@
                 <span class="gradient-text">Anywhere</span>
             </h1>
             <p class="hero-subtitle">
-                A professional clipboard typer that keeps your computer awake. Redball types clipboard content character-by-character into any application — perfect for systems that block Ctrl+V. Built with .NET 10 WPF, open source, and code signed.
+                A professional clipboard typer that keeps your computer awake. Redball types clipboard content
+                character-by-character into any application — perfect for systems that block Ctrl+V. Built with .NET 10
+                WPF, open source, and code signed.
             </p>
             <div class="hero-actions">
                 <a href="#downloads" class="btn btn-primary" id="hero-cta-demo">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                    </svg>
                     Download Now
                 </a>
                 <a href="#features" class="btn btn-outline" id="hero-cta-explore">
                     Explore Features
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
                 </a>
             </div>
         </div>
@@ -1802,7 +2019,8 @@
                 <div class="stat-label">Total Downloads</div>
             </div>
             <div class="stat-item">
-                <div class="stat-value blue" id="stat-releases-count"><span class="counter" data-target="0">0</span></div>
+                <div class="stat-value blue" id="stat-releases-count"><span class="counter" data-target="0">0</span>
+                </div>
                 <div class="stat-label">Releases Published</div>
             </div>
             <div class="stat-item">
@@ -1845,38 +2063,47 @@
             <div class="section-header reveal">
                 <div class="section-tag">Key Features</div>
                 <h2 class="section-title">Everything You Need, Nothing You Don't</h2>
-                <p class="section-desc">Redball packs powerful clipboard automation and system management into a lightweight, self-contained Windows app.</p>
+                <p class="section-desc">Redball packs powerful clipboard automation and system management into a
+                    lightweight Windows app.</p>
             </div>
             <div class="value-grid">
                 <div class="value-card reveal reveal-delay-1">
                     <div class="value-icon red">⌨️</div>
                     <h3>TypeThing — Clipboard Typer</h3>
-                    <p>Types clipboard content character-by-character using the Windows SendInput API with KEYEVENTF_UNICODE. Works in apps that block Ctrl+V — remote desktops, secure terminals, VMs, and web forms.</p>
+                    <p>Types clipboard content character-by-character using the Windows SendInput API with
+                        KEYEVENTF_UNICODE. Works in apps that block Ctrl+V — remote desktops, secure terminals, VMs, and
+                        web forms.</p>
                 </div>
                 <div class="value-card reveal reveal-delay-2">
                     <div class="value-icon blue">💤</div>
                     <h3>Smart Keep-Awake</h3>
-                    <p>Prevents Windows from sleeping using SetThreadExecutionState with configurable heartbeat keypresses (F13–F16). Battery-aware, network-aware, idle detection, and scheduled operation built in.</p>
+                    <p>Prevents Windows from sleeping using SetThreadExecutionState with configurable heartbeat
+                        keypresses (F13–F16). Battery-aware, network-aware, idle detection, and scheduled operation
+                        built in.</p>
                 </div>
                 <div class="value-card reveal reveal-delay-3">
                     <div class="value-icon green">📊</div>
                     <h3>Built-in Analytics</h3>
-                    <p>Session tracking, feature adoption metrics, and usage statistics viewable in an built-in analytics dashboard. Export data to CSV or JSON at any time.</p>
+                    <p>Session tracking, feature adoption metrics, and usage statistics viewable in an built-in
+                        analytics dashboard. Export data to CSV or JSON at any time.</p>
                 </div>
                 <div class="value-card reveal reveal-delay-1">
                     <div class="value-icon gold">🎨</div>
                     <h3>14 Custom Themes</h3>
-                    <p>Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost, High Contrast, and auto-detect System theme.</p>
+                    <p>Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray,
+                        Rose Gold, Cyberpunk, Coffee, Arctic Frost, High Contrast, and auto-detect System theme.</p>
                 </div>
                 <div class="value-card reveal reveal-delay-2">
                     <div class="value-icon red">🔄</div>
                     <h3>Delta Sync Updates</h3>
-                    <p>Binary delta patching downloads only changed bytes between releases, significantly reducing update sizes. Auto-update checks in the background with configurable intervals.</p>
+                    <p>Binary delta patching downloads only changed bytes between releases, significantly reducing
+                        update sizes. Auto-update checks in the background with configurable intervals.</p>
                 </div>
                 <div class="value-card reveal reveal-delay-3">
                     <div class="value-icon blue">🔒</div>
                     <h3>Code Signed & Secure</h3>
-                    <p>EXE and installer signed with SHA-256 certificate via signtool in CI. VirusTotal scanned on every release. Tamper detection and Windows Credential Manager integration.</p>
+                    <p>EXE and installer signed with SHA-256 certificate via signtool in CI. VirusTotal scanned on every
+                        release. Tamper detection and Windows Credential Manager integration.</p>
                 </div>
             </div>
         </div>
@@ -1888,7 +2115,8 @@
             <div class="section-header reveal">
                 <div class="section-tag">Deep Dive</div>
                 <h2 class="section-title">Powerful Tools, Zero Complexity</h2>
-                <p class="section-desc">Explore Redball's core capabilities — each built as a native C# service with no external dependencies.</p>
+                <p class="section-desc">Explore Redball's core capabilities — each built as a native C# service with no
+                    external dependencies.</p>
             </div>
             <div class="solutions-tabs reveal" id="solution-tabs">
                 <button class="solution-tab active" data-panel="automation">TypeThing</button>
@@ -1900,12 +2128,26 @@
                 <div class="solution-panel active" id="panel-automation">
                     <div class="solution-info">
                         <h3>TypeThing — Clipboard Typer</h3>
-                        <p>The flagship feature of Redball. TypeThing reads text from your clipboard and types it character-by-character using the Windows SendInput API with KEYEVENTF_UNICODE, making it compatible with virtually any application and character set.</p>
+                        <p>The flagship feature of Redball. TypeThing reads text from your clipboard and types it
+                            character-by-character using the Windows SendInput API with KEYEVENTF_UNICODE, making it
+                            compatible with virtually any application and character set.</p>
                         <ul class="solution-features">
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Human-like typing with random delays (10–500ms)</li>
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Global hotkeys: Ctrl+Shift+V to start, Ctrl+Shift+X to stop</li>
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Full Unicode support via KEYEVENTF_UNICODE</li>
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Optional text-to-speech while typing</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Human-like typing with random delays (10–500ms)</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Global hotkeys: Ctrl+Shift+V to start, Ctrl+Shift+X to stop</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Full Unicode support via KEYEVENTF_UNICODE</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Optional text-to-speech while typing</li>
                         </ul>
                         <a href="#downloads" class="btn btn-primary">Get Started</a>
                     </div>
@@ -1916,12 +2158,26 @@
                 <div class="solution-panel" id="panel-monitoring">
                     <div class="solution-info">
                         <h3>Keep-Awake — System Monitor</h3>
-                        <p>Prevents Windows from sleeping using the SetThreadExecutionState API with configurable heartbeat keypresses. Includes intelligent monitoring that reacts to system conditions automatically.</p>
+                        <p>Prevents Windows from sleeping using the SetThreadExecutionState API with configurable
+                            heartbeat keypresses. Includes intelligent monitoring that reacts to system conditions
+                            automatically.</p>
                         <ul class="solution-features">
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Timed sessions (15, 30, 60, 120 min or indefinite)</li>
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Invisible F13–F16 heartbeat keypresses</li>
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Display sleep control option</li>
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Toast notification system</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Timed sessions (15, 30, 60, 120 min or indefinite)</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Invisible F13–F16 heartbeat keypresses</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Display sleep control option</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Toast notification system</li>
                         </ul>
                         <a href="#downloads" class="btn btn-primary">Download</a>
                     </div>
@@ -1932,14 +2188,28 @@
                 <div class="solution-panel" id="panel-reporting">
                     <div class="solution-info">
                         <h3>Smart Monitoring & Automation</h3>
-                        <p>Redball automatically adapts to system conditions with 10+ built-in monitoring services, all configurable from the settings UI or JSON config file.</p>
+                        <p>Redball automatically adapts to system conditions with 10+ built-in monitoring services, all
+                            configurable from the settings UI or JSON config file.</p>
                         <ul class="solution-features">
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Battery-aware mode (auto-pause on low charge)</li>
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Network-aware, idle detection, VPN detection</li>
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Scheduled operation (start/stop times & days)</li>
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Thermal protection & process watcher</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Battery-aware mode (auto-pause on low charge)</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Network-aware, idle detection, VPN detection</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Scheduled operation (start/stop times & days)</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Thermal protection & process watcher</li>
                         </ul>
-                        <a href="https://github.com/ArMaTeC/Redball/wiki" target="_blank" class="btn btn-primary">View Docs</a>
+                        <a href="https://github.com/ArMaTeC/Redball/wiki" target="_blank" class="btn btn-primary">View
+                            Docs</a>
                     </div>
                     <div class="solution-visual">
                         <div class="visual-icon">🔍</div>
@@ -1948,12 +2218,26 @@
                 <div class="solution-panel" id="panel-integration">
                     <div class="solution-info">
                         <h3>Modern Desktop Platform</h3>
-                        <p>Built as a native .NET 10 WPF application. Self-contained single-file EXE (~3.3MB compressed). Supports multiple installation methods and includes a local REST API for remote control.</p>
+                        <p>Built as a native .NET 10 WPF application. Single-file EXE (~3.3MB compressed). Requires .NET
+                            10 Runtime. Supports multiple installation methods and includes a local REST API for remote
+                            control.</p>
                         <ul class="solution-features">
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Winget, Scoop, Chocolatey, NSIS installer</li>
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Local REST API for remote control</li>
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Auto-update with delta binary patching</li>
-                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Plugin system & localization (en, es, fr, de)</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Winget, Scoop, Chocolatey, NSIS installer</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Local REST API for remote control</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Auto-update with delta binary patching</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16">
+                                        <path
+                                            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                                    </svg></span> Plugin system & localization (en, es, fr, de)</li>
                         </ul>
                         <a href="#install" class="btn btn-primary">Install Now</a>
                     </div>
@@ -1977,22 +2261,26 @@
                 <div class="process-step reveal reveal-delay-1">
                     <div class="process-num">1</div>
                     <h4>Install</h4>
-                    <p>Download the latest release or install via your preferred package manager. One command is all it takes.</p>
+                    <p>Download the latest release or install via your preferred package manager. One command is all it
+                        takes.</p>
                 </div>
                 <div class="process-step reveal reveal-delay-2">
                     <div class="process-num">2</div>
                     <h4>Configure</h4>
-                    <p>Set up your workflow preferences, choose a theme, and define your automation parameters in an intuitive interface.</p>
+                    <p>Set up your workflow preferences, choose a theme, and define your automation parameters in an
+                        intuitive interface.</p>
                 </div>
                 <div class="process-step reveal reveal-delay-3">
                     <div class="process-num">3</div>
                     <h4>Use</h4>
-                    <p>Press Ctrl+Shift+V to start typing clipboard content. Redball simulates human-like keystrokes in any application.</p>
+                    <p>Press Ctrl+Shift+V to start typing clipboard content. Redball simulates human-like keystrokes in
+                        any application.</p>
                 </div>
                 <div class="process-step reveal reveal-delay-4">
                     <div class="process-num">4</div>
                     <h4>Customize</h4>
-                    <p>Choose from 14 themes, enable smart monitoring features, and configure hotkeys to match your workflow perfectly.</p>
+                    <p>Choose from 14 themes, enable smart monitoring features, and configure hotkeys to match your
+                        workflow perfectly.</p>
                 </div>
             </div>
         </div>
@@ -2007,19 +2295,23 @@
             </div>
             <div class="impact-grid">
                 <div class="impact-card reveal reveal-delay-1">
-                    <div class="impact-number"><span class="counter" data-target="40">0</span><span class="suffix">+</span></div>
+                    <div class="impact-number"><span class="counter" data-target="40">0</span><span
+                            class="suffix">+</span></div>
                     <div class="impact-label">Singleton Services</div>
                 </div>
                 <div class="impact-card reveal reveal-delay-2">
-                    <div class="impact-number"><span class="counter" data-target="14">0</span><span class="suffix"></span></div>
+                    <div class="impact-number"><span class="counter" data-target="14">0</span><span
+                            class="suffix"></span></div>
                     <div class="impact-label">Built-in Themes</div>
                 </div>
                 <div class="impact-card reveal reveal-delay-3">
-                    <div class="impact-number"><span class="counter" data-target="5">0</span><span class="suffix"></span></div>
+                    <div class="impact-number"><span class="counter" data-target="5">0</span><span
+                            class="suffix"></span></div>
                     <div class="impact-label">Languages (i18n)</div>
                 </div>
                 <div class="impact-card reveal reveal-delay-4">
-                    <div class="impact-number"><span class="counter" data-target="100">0</span><span class="suffix">%</span></div>
+                    <div class="impact-number"><span class="counter" data-target="100">0</span><span
+                            class="suffix">%</span></div>
                     <div class="impact-label">Open Source (MIT)</div>
                 </div>
             </div>
@@ -2032,39 +2324,50 @@
             <div class="section-header reveal">
                 <div class="section-tag">Open Source</div>
                 <h2 class="section-title">Join the Community</h2>
-                <p class="section-desc">Redball is fully open source under the MIT license. Contribute, report issues, or fork it for your own needs.</p>
+                <p class="section-desc">Redball is fully open source under the MIT license. Contribute, report issues,
+                    or fork it for your own needs.</p>
             </div>
             <div class="testimonials-grid">
                 <div class="testimonial-card reveal reveal-delay-1">
                     <div class="testimonial-stars"><span>📖</span></div>
-                    <p class="testimonial-quote" style="font-style:normal; border-left-color:var(--accent-glow)">Full documentation available on the GitHub Wiki covering every feature, configuration option, and troubleshooting guide.</p>
+                    <p class="testimonial-quote" style="font-style:normal; border-left-color:var(--accent-glow)">Full
+                        documentation available on the GitHub Wiki covering every feature, configuration option, and
+                        troubleshooting guide.</p>
                     <div class="testimonial-author">
                         <div class="testimonial-avatar blue">📖</div>
                         <div>
                             <div class="testimonial-name">Documentation</div>
-                            <div class="testimonial-role"><a href="https://github.com/ArMaTeC/Redball/wiki" target="_blank" style="color:var(--accent-light)">View Wiki →</a></div>
+                            <div class="testimonial-role"><a href="https://github.com/ArMaTeC/Redball/wiki"
+                                    target="_blank" style="color:var(--accent-light)">View Wiki →</a></div>
                         </div>
                     </div>
                 </div>
                 <div class="testimonial-card reveal reveal-delay-2">
                     <div class="testimonial-stars"><span>🐛</span></div>
-                    <p class="testimonial-quote" style="font-style:normal; border-left-color:var(--emerald-glow)">Found a bug or have a feature request? Open an issue on GitHub. We review and respond to every submission.</p>
+                    <p class="testimonial-quote" style="font-style:normal; border-left-color:var(--emerald-glow)">Found
+                        a bug or have a feature request? Open an issue on GitHub. We review and respond to every
+                        submission.</p>
                     <div class="testimonial-author">
                         <div class="testimonial-avatar green">🐛</div>
                         <div>
                             <div class="testimonial-name">Issue Tracker</div>
-                            <div class="testimonial-role"><a href="https://github.com/ArMaTeC/Redball/issues" target="_blank" style="color:var(--emerald)">Report Issue →</a></div>
+                            <div class="testimonial-role"><a href="https://github.com/ArMaTeC/Redball/issues"
+                                    target="_blank" style="color:var(--emerald)">Report Issue →</a></div>
                         </div>
                     </div>
                 </div>
                 <div class="testimonial-card reveal reveal-delay-3">
                     <div class="testimonial-stars"><span>💻</span></div>
-                    <p class="testimonial-quote" style="font-style:normal; border-left-color:var(--primary-glow)">Contributions of all kinds are welcome — code, documentation, design, testing, and feature suggestions. See CONTRIBUTING.md to get started.</p>
+                    <p class="testimonial-quote" style="font-style:normal; border-left-color:var(--primary-glow)">
+                        Contributions of all kinds are welcome — code, documentation, design, testing, and feature
+                        suggestions. See CONTRIBUTING.md to get started.</p>
                     <div class="testimonial-author">
                         <div class="testimonial-avatar">💻</div>
                         <div>
                             <div class="testimonial-name">Contribute</div>
-                            <div class="testimonial-role"><a href="https://github.com/ArMaTeC/Redball/blob/main/CONTRIBUTING.md" target="_blank" style="color:var(--primary-light)">Get Started →</a></div>
+                            <div class="testimonial-role"><a
+                                    href="https://github.com/ArMaTeC/Redball/blob/main/CONTRIBUTING.md" target="_blank"
+                                    style="color:var(--primary-light)">Get Started →</a></div>
                         </div>
                     </div>
                 </div>
@@ -2079,35 +2382,47 @@
                 <div class="about-content reveal">
                     <div class="section-tag">Our Story</div>
                     <h2 class="section-title" style="text-align:left">Built by Engineers,<br>for Engineers</h2>
-                    <p>Redball started as a simple internal tool to solve a common frustration: applications that block clipboard paste. The TypeThing feature was born — typing clipboard content character-by-character using the Windows SendInput API.</p>
-                    <p>Today, Redball is a full-featured .NET 10 WPF desktop application with 40+ services, 14 themes, smart keep-awake monitoring, a plugin system, analytics, and code-signed releases. Open source under the MIT license.</p>
+                    <p>Redball started as a simple internal tool to solve a common frustration: applications that block
+                        clipboard paste. The TypeThing feature was born — typing clipboard content
+                        character-by-character using the Windows SendInput API.</p>
+                    <p>Today, Redball is a full-featured .NET 10 WPF desktop application with 40+ services, 14 themes,
+                        smart keep-awake monitoring, a plugin system, analytics, and code-signed releases. Open source
+                        under the MIT license.</p>
                     <div style="margin-top:32px">
                         <a href="https://github.com/ArMaTeC/Redball" target="_blank" class="btn btn-outline">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                                <path
+                                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                            </svg>
                             View on GitHub
                         </a>
                     </div>
                 </div>
                 <div class="timeline reveal">
                     <div class="timeline-item">
-                        <div class="timeline-year">2024 — Foundation</div>
-                        <div class="timeline-title">Project Inception</div>
-                        <div class="timeline-desc">Initial concept and first prototype built as an internal tool for clipboard automation.</div>
+                        <div class="timeline-year">Mar 2026 — Inception</div>
+                        <div class="timeline-title">Project Foundation</div>
+                        <div class="timeline-desc">Initial commit and KMDF driver development. Built build automation,
+                            version management, and HID input filter driver foundation.</div>
                     </div>
                     <div class="timeline-item">
-                        <div class="timeline-year">2025 — Growth</div>
-                        <div class="timeline-title">Open Source Launch</div>
-                        <div class="timeline-desc">Redball goes public with multi-theme support, keep-awake technology, and community contributions.</div>
+                        <div class="timeline-year">Mar 2026 — WPF Birth</div>
+                        <div class="timeline-title">Native WPF Application</div>
+                        <div class="timeline-desc">Complete WPF UI with 14 themes, MVVM architecture, TypeThing engine,
+                            and P/Invoke SendInput. Reduced EXE from 150MB to 69MB with compression.</div>
                     </div>
                     <div class="timeline-item">
-                        <div class="timeline-year">2025 — Innovation</div>
-                        <div class="timeline-title">Delta Update System</div>
-                        <div class="timeline-desc">Binary delta patching system reduces update download sizes. Self-contained EXE compressed to ~3.3MB.</div>
+                        <div class="timeline-year">Mar 2026 — Services</div>
+                        <div class="timeline-title">Service Mode & Analytics</div>
+                        <div class="timeline-desc">TypeThing Service input method for elevated environments. Analytics
+                            dashboard with session tracking, feature usage statistics, and 60+ singleton services.</div>
                     </div>
                     <div class="timeline-item">
-                        <div class="timeline-year">2026 — Today</div>
-                        <div class="timeline-title">Redball v3 — .NET 10 WPF</div>
-                        <div class="timeline-desc">Complete rewrite as native WPF app with 14 themes, 40+ services, smart monitoring, plugin system, analytics dashboard, and CI/CD pipeline.</div>
+                        <div class="timeline-year">Apr 2026 — Today</div>
+                        <div class="timeline-title">Package Manager Era</div>
+                        <div class="timeline-desc">Delta update system, Winget/Scoop/Chocolatey publishing, NSIS
+                            installer
+                            with .NET 10 runtime embedding, and automated CI/CD releases.</div>
                     </div>
                 </div>
             </div>
@@ -2120,26 +2435,35 @@
             <div class="section-header reveal">
                 <div class="section-tag">Get Started</div>
                 <h2 class="section-title">Download Redball</h2>
-                <p class="section-desc">Choose your preferred installation method. All packages are SHA-256 verified and digitally signed.</p>
+                <p class="section-desc">Choose your preferred installation method. All packages are SHA-256 verified and
+                    digitally signed.</p>
             </div>
             <div class="downloads-grid">
                 <div class="download-card reveal reveal-delay-1">
                     <div class="download-card-type">Recommended</div>
                     <h4>Installer Package</h4>
                     <span class="download-version" id="dl-ver-exe">v3.x.x</span>
-                    <p>Full installation with system integration, start menu shortcuts, and automatic update configuration. Best for most users.</p>
+                    <p>Full installation with system integration, start menu shortcuts, and automatic update
+                        configuration. Best for most users.</p>
                     <div class="download-meta">
                         <span>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <path d="M9 3v18M3 9h18" />
+                            </svg>
                             .EXE Setup
                         </span>
                         <span>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            </svg>
                             Signed Binary
                         </span>
                     </div>
                     <a href="https://github.com/ArMaTeC/Redball/releases/latest" class="btn-download" id="dl-btn-exe">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                        </svg>
                         Download Installer
                     </a>
                 </div>
@@ -2147,19 +2471,28 @@
                     <div class="download-card-type">Portable</div>
                     <h4>ZIP Archive</h4>
                     <span class="download-version" id="dl-ver-zip">v3.x.x</span>
-                    <p>Portable binary package — no installation required. Extract and run. Perfect for USB drives, ephemeral environments, and testing.</p>
+                    <p>Portable binary package — no installation required. Extract and run. Perfect for USB drives,
+                        ephemeral environments, and testing.</p>
                     <div class="download-meta">
                         <span>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 8v13H3V8M1 3h22v5H1z" />
+                                <path d="M10 12h4" />
+                            </svg>
                             .ZIP Archive
                         </span>
                         <span>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
+                            </svg>
                             SHA-256 Verified
                         </span>
                     </div>
                     <a href="https://github.com/ArMaTeC/Redball/releases/latest" class="btn-download" id="dl-btn-zip">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                        </svg>
                         Download ZIP
                     </a>
                 </div>
@@ -2173,7 +2506,8 @@
             <div class="section-header reveal">
                 <div class="section-tag">Quick Install</div>
                 <h2 class="section-title">Install via Command Line</h2>
-                <p class="section-desc">Prefer the terminal? Install Redball with your favorite package manager in seconds.</p>
+                <p class="section-desc">Prefer the terminal? Install Redball with your favorite package manager in
+                    seconds.</p>
             </div>
             <div class="terminal reveal">
                 <div class="terminal-header">
@@ -2213,39 +2547,63 @@
                 <div class="cta-text reveal">
                     <div class="section-tag">Get Involved</div>
                     <h3>Ready to Try Redball?</h3>
-                    <p>Redball is free, open source, and ready to download. Whether you need clipboard typing for secure terminals or a smart keep-awake for long sessions — we've got you covered.</p>
+                    <p>Redball is free, open source, and ready to download. Whether you need clipboard typing for secure
+                        terminals or a smart keep-awake for long sessions — we've got you covered.</p>
                     <div style="display:flex; flex-direction:column; gap:16px; margin-top:12px">
-                        <div style="display:flex; align-items:center; gap:12px; color:var(--text-secondary); font-size:0.9rem">
+                        <div
+                            style="display:flex; align-items:center; gap:12px; color:var(--text-secondary); font-size:0.9rem">
                             <span style="color:var(--emerald)">✓</span> 100% free and open source (MIT license)
                         </div>
-                        <div style="display:flex; align-items:center; gap:12px; color:var(--text-secondary); font-size:0.9rem">
+                        <div
+                            style="display:flex; align-items:center; gap:12px; color:var(--text-secondary); font-size:0.9rem">
                             <span style="color:var(--emerald)">✓</span> Code-signed EXE and installer
                         </div>
-                        <div style="display:flex; align-items:center; gap:12px; color:var(--text-secondary); font-size:0.9rem">
+                        <div
+                            style="display:flex; align-items:center; gap:12px; color:var(--text-secondary); font-size:0.9rem">
                             <span style="color:var(--emerald)">✓</span> VirusTotal scanned on every release
                         </div>
-                        <div style="display:flex; align-items:center; gap:12px; color:var(--text-secondary); font-size:0.9rem">
-                            <span style="color:var(--emerald)">✓</span> Self-contained — no .NET install required
+                        <div
+                            style="display:flex; align-items:center; gap:12px; color:var(--text-secondary); font-size:0.9rem">
+                            <span style="color:var(--emerald)">✓</span> Requires .NET 10 Runtime
                         </div>
                     </div>
                 </div>
                 <div class="cta-form reveal reveal-delay-2" id="demo-form-card">
                     <h4>Quick Links</h4>
                     <div style="display:flex; flex-direction:column; gap:16px">
-                        <a href="https://github.com/ArMaTeC/Redball/releases/latest" target="_blank" class="btn-submit" style="display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        <a href="https://github.com/ArMaTeC/Redball/releases/latest" target="_blank" class="btn-submit"
+                            style="display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:18px;height:18px">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                            </svg>
                             Download Latest Release
                         </a>
-                        <a href="https://github.com/ArMaTeC/Redball" target="_blank" class="btn-submit" style="display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none; background:var(--grad-accent)">
-                            <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                        <a href="https://github.com/ArMaTeC/Redball" target="_blank" class="btn-submit"
+                            style="display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none; background:var(--grad-accent)">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px">
+                                <path
+                                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                            </svg>
                             View on GitHub
                         </a>
-                        <a href="https://github.com/ArMaTeC/Redball/wiki" target="_blank" class="btn-submit" style="display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none; background:linear-gradient(135deg, #10b981, #34d399)">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+                        <a href="https://github.com/ArMaTeC/Redball/wiki" target="_blank" class="btn-submit"
+                            style="display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none; background:linear-gradient(135deg, #10b981, #34d399)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:18px;height:18px">
+                                <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" />
+                                <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
+                            </svg>
                             Read Documentation
                         </a>
-                        <a href="https://github.com/ArMaTeC/Redball/issues" target="_blank" class="btn-submit" style="display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none; background:linear-gradient(135deg, #f59e0b, #fbbf24)">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <a href="https://github.com/ArMaTeC/Redball/issues" target="_blank" class="btn-submit"
+                            style="display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none; background:linear-gradient(135deg, #f59e0b, #fbbf24)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width:18px;height:18px">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
                             Report a Bug
                         </a>
                     </div>
@@ -2256,7 +2614,10 @@
 
     <!-- Back to Top Button -->
     <button class="back-to-top" id="back-to-top" aria-label="Back to top">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15" />
+        </svg>
     </button>
 
     <!-- ====== FOOTER ====== -->
@@ -2266,11 +2627,15 @@
                 <div class="footer-brand">
                     <a href="#" class="logo" style="margin-bottom:4px">
                         <div class="logo-mark" style="width:32px;height:32px">
-                            <svg viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L20 9v6l-8 4-8-4V9l8-4.82z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg viewBox="0 0 24 24" style="width:16px;height:16px">
+                                <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L20 9v6l-8 4-8-4V9l8-4.82z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
                         </div>
                         Redball
                     </a>
-                    <p>A professional clipboard typer and keep-awake utility for Windows. Open source, code signed, built with .NET 10 WPF.</p>
+                    <p>A professional clipboard typer and keep-awake utility for Windows. Open source, code signed,
+                        built with .NET 10 WPF.</p>
                 </div>
                 <div class="footer-col">
                     <h5>Product</h5>
@@ -2283,13 +2648,15 @@
                     <h5>Resources</h5>
                     <a href="https://github.com/ArMaTeC/Redball/wiki" target="_blank">Documentation</a>
                     <a href="https://github.com/ArMaTeC/Redball/issues" target="_blank">Issue Tracker</a>
-                    <a href="https://github.com/ArMaTeC/Redball/blob/main/CONTRIBUTING.md" target="_blank">Contributing</a>
+                    <a href="https://github.com/ArMaTeC/Redball/blob/main/CONTRIBUTING.md"
+                        target="_blank">Contributing</a>
                     <a href="#contact">Support</a>
                 </div>
                 <div class="footer-col">
                     <h5>Legal</h5>
                     <a href="https://github.com/ArMaTeC/Redball/blob/main/LICENSE" target="_blank">MIT License</a>
-                    <a href="https://github.com/ArMaTeC/Redball/blob/main/SECURITY.md" target="_blank">Security Policy</a>
+                    <a href="https://github.com/ArMaTeC/Redball/blob/main/SECURITY.md" target="_blank">Security
+                        Policy</a>
                     <a href="#">Privacy Policy</a>
                     <a href="#">Terms of Service</a>
                 </div>
@@ -2298,13 +2665,23 @@
                 <p class="footer-copyright">© 2026 Redball. All rights reserved. Built with .NET 10.</p>
                 <div class="footer-social">
                     <a href="https://github.com/ArMaTeC/Redball" target="_blank" aria-label="GitHub">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                        </svg>
                     </a>
                     <a href="https://github.com/ArMaTeC/Redball/issues" target="_blank" aria-label="Issues">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
                     </a>
                     <a href="#" aria-label="Twitter/X">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                        </svg>
                     </a>
                 </div>
             </div>
@@ -2316,7 +2693,7 @@
         // ============================
         // PARTICLE SYSTEM
         // ============================
-        (function() {
+        (function () {
             const canvas = document.getElementById('particle-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
@@ -2415,7 +2792,7 @@
         // ============================
         // CURSOR GLOW
         // ============================
-        (function() {
+        (function () {
             const glow = document.getElementById('cursor-glow');
             let showing = false;
             document.addEventListener('mousemove', (e) => {
@@ -2432,7 +2809,7 @@
         // ============================
         // HEADER SCROLL
         // ============================
-        (function() {
+        (function () {
             const header = document.getElementById('header');
             let ticking = false;
             window.addEventListener('scroll', () => {
@@ -2449,7 +2826,7 @@
         // ============================
         // MOBILE MENU
         // ============================
-        (function() {
+        (function () {
             const toggle = document.getElementById('menu-toggle');
             const nav = document.getElementById('main-nav');
             toggle.addEventListener('click', () => {
@@ -2464,7 +2841,7 @@
         // ============================
         // SCROLL REVEAL
         // ============================
-        (function() {
+        (function () {
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -2494,7 +2871,7 @@
             requestAnimationFrame(update);
         }
 
-        (function() {
+        (function () {
             const counterObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting && !entry.target.dataset.animated) {
@@ -2513,7 +2890,7 @@
         // ============================
         // SOLUTION TABS
         // ============================
-        (function() {
+        (function () {
             const tabs = document.querySelectorAll('.solution-tab');
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -2636,7 +3013,7 @@
         // SMOOTH SCROLL FOR NAV
         // ============================
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
+            anchor.addEventListener('click', function (e) {
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
                     e.preventDefault();
@@ -2652,7 +3029,7 @@
         // ============================
         // BACK TO TOP BUTTON
         // ============================
-        (function() {
+        (function () {
             const btn = document.getElementById('back-to-top');
             let scrollTick = false;
             window.addEventListener('scroll', () => {
@@ -2672,7 +3049,7 @@
         // ============================
         // ACTIVE NAV HIGHLIGHTING
         // ============================
-        (function() {
+        (function () {
             const sections = document.querySelectorAll('section[id]');
             const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
             const observer = new IntersectionObserver((entries) => {
@@ -2691,7 +3068,7 @@
         // ============================
         // PARALLAX HERO
         // ============================
-        (function() {
+        (function () {
             const heroBg = document.querySelector('.hero-bg');
             const heroContent = document.querySelector('.hero-content');
             let rafPending = false;
@@ -2714,4 +3091,5 @@
         })();
     </script>
 </body>
+
 </html>
