@@ -2024,7 +2024,7 @@ public class UpdateService : IUpdateService
             var packageDir = Path.GetDirectoryName(installerPath) ?? scriptDir;
             var installerCommand = fileName.EndsWith(".msi", StringComparison.OrdinalIgnoreCase)
                 ? "$process = Start-Process -FilePath 'msiexec.exe' -ArgumentList '/i \"" + installerPath.Replace("'", "''") + "\" /passive /norestart' -Wait -PassThru"
-                : "$process = Start-Process -FilePath '" + installerPath.Replace("'", "''") + "' -ArgumentList '/quiet /norestart' -Wait -PassThru";
+                : "$process = Start-Process -FilePath '" + installerPath.Replace("'", "''") + "' -ArgumentList '/S' -Wait -PassThru";
 
             var script = $@"
 $ErrorActionPreference = 'Stop'
