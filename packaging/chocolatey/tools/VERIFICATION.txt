@@ -1,0 +1,46 @@
+VERIFICATION
+============
+
+This package is published by ArMaTeC, the original author and maintainer of Redball.
+
+## Source Code
+
+The source code for Redball is available at:
+https://github.com/ArMaTeC/Redball
+
+## Installer Verification
+
+The installer executable included in this package can be verified:
+
+1. Download the installer from the official GitHub releases page:
+   https://github.com/ArMaTeC/Redball/releases
+
+2. Verify the SHA256 checksum matches the one listed in the release notes
+
+3. The installer is digitally signed by ArMaTeC
+
+## Checksums
+
+For the current version (2.1.455):
+- Installer: Redball-2.1.455-Setup.exe
+- SHA256: See the GitHub release page for the official checksum
+
+## Build Reproducibility
+
+The build process is fully automated via GitHub Actions:
+https://github.com/ArMaTeC/Redball/blob/main/.github/workflows/release.yml
+
+You can verify the build yourself by:
+1. Cloning the repository
+2. Running the build script: `bash scripts/build.sh all`
+3. Comparing the output checksums
+
+## Security
+
+All releases are:
+- Digitally signed with a code signing certificate
+- SHA-256 verified
+- Built from open source code via transparent CI/CD pipeline
+
+For security concerns, please open an issue at:
+https://github.com/ArMaTeC/Redball/issues

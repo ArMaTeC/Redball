@@ -1,7 +1,7 @@
 {
   "fromVersion": "2.1.479",
   "toVersion": "2.1.481",
-  "generatedAt": "2026-04-09T05:31:05.477Z",
+  "generatedAt": "2026-04-09T05:51:30.263Z",
   "patches": [
     {
       "file": "binaries/Redball.Service.dll",
@@ -34,6 +34,14 @@
       "originalSize": 373760,
       "savings": 373383,
       "savingsPercent": "99.9%"
+    },
+    {
+      "file": "patches/patch-manifest.json",
+      "patchFile": "patch-manifest.json.patch",
+      "patchSize": 407,
+      "originalSize": 1344,
+      "savings": 937,
+      "savingsPercent": "69.7%"
     }
   ],
   "skipped": [
@@ -49,8 +57,26 @@
     {
       "file": "Redball-2.1.481.zip",
       "reason": "new_file"
+    },
+    {
+      "file": "patches/Redball.Service.dll.patch",
+      "reason": "not_worthwhile",
+      "savings": "0.0%"
+    },
+    {
+      "file": "patches/Redball.Service.exe.patch",
+      "reason": "too_small"
+    },
+    {
+      "file": "patches/Redball.UI.WPF.dll.patch",
+      "reason": "not_worthwhile",
+      "savings": "0.5%"
+    },
+    {
+      "file": "patches/Redball.UI.WPF.exe.patch",
+      "reason": "too_small"
     }
   ],
-  "totalSavings": 2475978,
-  "totalOriginalSize": 82831639
+  "totalSavings": 2476915,
+  "totalOriginalSize": 84151437
 }

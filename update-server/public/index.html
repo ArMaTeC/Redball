@@ -3,787 +3,2726 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REDBALL // NEURAL AUTOMATION INTERFACE</title>
-    <meta name="description" content="Redball TypeThing: Cyber-enhanced clipboard automation and system heartbeats.">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23050505'/><path d='M20 20 L80 20 L80 80 L20 80 Z' stroke='%23ff003c' stroke-width='5' fill='none'/><circle cx='50' cy='50' r='10' fill='%2300e5ff'/></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;700&family=Major+Mono+Display&display=swap" rel="stylesheet">
+    <title>Redball — Compliance Training & Certification Management</title>
+    <meta name="description" content="Redball: Premier compliance training and certification management platform. Streamline compliance workflows, automate tracking, and ensure your organization stays ahead of regulatory requirements.">
+    <meta name="keywords" content="compliance training, certification management, regulatory compliance, corporate training, Redball">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23e8443a'/><stop offset='100%' stop-color='%23ff6b5a'/></linearGradient></defs><circle cx='50' cy='50' r='45' fill='url(%23g)'/><path d='M35 30 L65 30 L70 35 L70 55 L50 70 L30 55 L30 35Z' fill='white' opacity='0.9'/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* ============================================
+           DESIGN SYSTEM — Redball
+           ============================================ */
         :root {
-            --neon-pink: #ff003c;
-            --neon-blue: #00e5ff;
-            --neon-green: #39ff14;
-            --neon-yellow: #ffee00;
-            --dark-bg: #050505;
-            --panel-bg: rgba(10, 10, 15, 0.9);
-            --border-glow: 0 0 15px rgba(0, 229, 255, 0.4);
-            --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Primary Palette */
+            --primary: #e8443a;
+            --primary-light: #ff6b5a;
+            --primary-dark: #c23028;
+            --primary-glow: rgba(232, 68, 58, 0.35);
+
+            /* Accent */
+            --accent: #2d7ff9;
+            --accent-light: #5a9dff;
+            --accent-glow: rgba(45, 127, 249, 0.25);
+
+            /* Neutrals */
+            --bg-deep: #080c14;
+            --bg-dark: #0d1320;
+            --bg-card: #111827;
+            --bg-card-hover: #1a2438;
+            --bg-surface: rgba(17, 24, 39, 0.65);
+
+            /* Text */
+            --text-primary: #f0f4fc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --text-accent: #e8443a;
+
+            /* Borders & Effects */
+            --border-subtle: rgba(148, 163, 184, 0.08);
+            --border-hover: rgba(232, 68, 58, 0.3);
+            --glass: rgba(13, 19, 32, 0.7);
+            --glass-border: rgba(148, 163, 184, 0.12);
+
+            /* Gradients */
+            --grad-hero: linear-gradient(135deg, #080c14 0%, #0d1a2d 40%, #0f1625 100%);
+            --grad-primary: linear-gradient(135deg, #e8443a, #ff6b5a);
+            --grad-accent: linear-gradient(135deg, #2d7ff9, #5a9dff);
+            --grad-card: linear-gradient(160deg, rgba(17, 24, 39, 0.8), rgba(13, 19, 32, 0.95));
+
+            /* Emerald for success states */
+            --emerald: #10b981;
+            --emerald-glow: rgba(16, 185, 129, 0.2);
+
+            /* Gold for premium hints */
+            --gold: #f59e0b;
+            --gold-glow: rgba(245, 158, 11, 0.15);
+
+            /* Motion */
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --transition-fast: 0.2s var(--ease-out-expo);
+            --transition-med: 0.4s var(--ease-out-expo);
+            --transition-slow: 0.7s var(--ease-out-expo);
+
+            /* Layout */
+            --max-w: 1280px;
+            --header-h: 72px;
         }
 
-        * {
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            cursor: crosshair;
         }
 
         html {
             scroll-behavior: smooth;
+            font-size: 16px;
         }
 
         body {
-            background-color: var(--dark-bg);
-            color: #fff;
-            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.7;
             overflow-x: hidden;
-            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Scanline Effect */
-        body::before {
-            content: " ";
-            display: block;
+        a { color: inherit; text-decoration: none; }
+        img { max-width: 100%; display: block; }
+
+        /* ============================================
+           UTILITY CLASSES
+           ============================================ */
+        .container {
+            max-width: var(--max-w);
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+
+        /* ============================================
+           STICKY HEADER
+           ============================================ */
+        .header {
             position: fixed;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            top: 0; left: 0; right: 0;
+            height: var(--header-h);
             z-index: 1000;
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
+            transition: background var(--transition-med), box-shadow var(--transition-med), backdrop-filter var(--transition-med);
         }
 
-        /* Animated Grid Background */
-        .grid-bg {
-            position: fixed;
-            top: 0; left: 0; width: 200%; height: 200%;
-            background-image: 
-                linear-gradient(rgba(0, 229, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px;
-            transform: perspective(500px) rotateX(60deg) translateY(-50%);
-            animation: grid-move 20s linear infinite;
-            z-index: -1;
-            opacity: 0.3;
+        .header.scrolled {
+            background: rgba(8, 12, 20, 0.92);
+            backdrop-filter: blur(20px) saturate(1.5);
+            box-shadow: 0 1px 0 var(--border-subtle), 0 8px 32px rgba(0,0,0,0.4);
         }
 
-        @keyframes grid-move {
-            0% { transform: perspective(500px) rotateX(60deg) translateY(-50%) translateX(0); }
-            100% { transform: perspective(500px) rotateX(60deg) translateY(-50%) translateX(-50px); }
-        }
-
-        /* Header / HUD */
-        .hud-header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            padding: 20px 40px;
+        .header-inner {
+            max-width: var(--max-w);
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 100%;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            background: rgba(0,0,0,0.85);
-            z-index: 100;
-            border-bottom: 1px solid rgba(0, 229, 255, 0.3);
-            backdrop-filter: blur(15px);
+            justify-content: space-between;
         }
 
         .logo {
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            font-size: 1.4rem;
-            color: var(--neon-blue);
-            text-transform: uppercase;
-            letter-spacing: 5px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.35rem;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
         }
 
-        .logo-symbol {
-            width: 25px;
-            height: 25px;
-            background: var(--neon-pink);
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 rgba(255, 0, 60, 0); }
-            50% { transform: scale(1.2); box-shadow: 0 0 20px rgba(255, 0, 60, 0.6); }
-            100% { transform: scale(1); box-shadow: 0 0 0 rgba(255, 0, 60, 0); }
-        }
-
-        .nav-links {
+        .logo-mark {
+            width: 38px; height: 38px;
+            background: var(--grad-primary);
+            border-radius: 10px;
             display: flex;
-            gap: 30px;
-        }
-
-        .nav-links a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px var(--primary-glow);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
             position: relative;
-            transition: var(--transition);
         }
 
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--neon-blue);
-            transition: var(--transition);
+        .logo:hover .logo-mark {
+            transform: scale(1.08) rotate(-3deg);
+            box-shadow: 0 6px 24px var(--primary-glow);
         }
 
-        .nav-links a:hover {
-            color: var(--neon-blue);
-            text-shadow: 0 0 10px var(--neon-blue);
+        .logo-mark svg {
+            width: 20px; height: 20px;
+            fill: white;
         }
 
-        .nav-links a:hover::after {
-            width: 100%;
+        .logo span {
+            color: var(--primary-light);
+            font-weight: 400;
+            opacity: 0.7;
         }
 
-        /* Hero Section */
+        /* Navigation */
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 8px 18px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: color var(--transition-fast), background var(--transition-fast);
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .nav-link.active {
+            color: var(--primary-light);
+        }
+
+        .nav-cta {
+            margin-left: 12px;
+            padding: 10px 24px;
+            background: var(--grad-primary);
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+            box-shadow: 0 4px 16px var(--primary-glow);
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px var(--primary-glow);
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .menu-toggle svg {
+            width: 24px; height: 24px;
+        }
+
+        /* ============================================
+           HERO SECTION
+           ============================================ */
         .hero {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            background-image: url('assets/cyberpunk_bg.png');
-            background-size: cover;
-            background-position: center;
             overflow: hidden;
+            background: var(--grad-hero);
         }
 
-        .hero::before {
+        .hero-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+        }
+
+        .hero-bg img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0.2;
+        }
+
+        .hero-bg::after {
             content: '';
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(5,5,5,0.4), rgba(5,5,5,0.9));
+            background: linear-gradient(180deg,
+                rgba(8,12,20,0.3) 0%,
+                rgba(8,12,20,0.1) 30%,
+                rgba(8,12,20,0.5) 70%,
+                rgba(8,12,20,1) 100%
+            );
+        }
+
+        /* Particle Canvas */
+        #particle-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Cursor glow */
+        .cursor-glow {
+            position: fixed;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .cursor-glow.active {
+            opacity: 1;
         }
 
         .hero-content {
             position: relative;
             z-index: 10;
             text-align: center;
-            max-width: 900px;
-            padding: 20px;
+            max-width: 860px;
+            padding: 0 24px;
+            margin-top: calc(var(--header-h) / 2);
         }
 
-        .glitch-title {
-            font-family: 'Major Mono Display', monospace;
-            font-size: clamp(3rem, 12vw, 7rem);
-            margin-bottom: 20px;
-            position: relative;
-            color: #fff;
-            text-transform: lowercase;
-            letter-spacing: -5px;
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px 6px 6px;
+            background: rgba(232, 68, 58, 0.1);
+            border: 1px solid rgba(232, 68, 58, 0.2);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--primary-light);
+            margin-bottom: 32px;
+            backdrop-filter: blur(8px);
+            animation: float-in 1s var(--ease-out-expo) both;
         }
 
-        .glitch-title::before, .glitch-title::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: transparent;
-            clip: rect(0, 0, 0, 0);
+        .hero-badge-dot {
+            width: 8px; height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse-dot 2s ease infinite;
         }
 
-        .glitch-title::after {
-            left: 3px;
-            text-shadow: -3px 0 var(--neon-pink);
-            animation: glitch-2 2.5s infinite linear alternate-reverse;
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 0 var(--primary-glow); }
+            50% { box-shadow: 0 0 0 6px transparent; }
         }
 
-        .glitch-title::before {
-            left: -3px;
-            text-shadow: 3px 0 var(--neon-blue);
-            animation: glitch-1 2.5s infinite linear alternate-reverse;
+        @keyframes float-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes glitch-1 {
-            0%, 100% { clip: rect(20px, 9999px, 80px, 0); transform: skew(0.5deg); }
-            20% { clip: rect(40px, 9999px, 30px, 0); transform: skew(-0.5deg); }
-            40% { clip: rect(60px, 9999px, 10px, 0); transform: skew(1deg); }
-            60% { clip: rect(10px, 9999px, 90px, 0); transform: skew(-1deg); }
-            80% { clip: rect(80px, 9999px, 40px, 0); transform: skew(0.2deg); }
+        .hero-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2.8rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.08;
+            letter-spacing: -0.03em;
+            margin-bottom: 24px;
+            animation: float-in 1s 0.15s var(--ease-out-expo) both;
         }
 
-        @keyframes glitch-2 {
-            0%, 100% { clip: rect(10px, 9999px, 40px, 0); transform: skew(-0.5deg); }
-            25% { clip: rect(70px, 9999px, 20px, 0); transform: skew(0.5deg); }
-            50% { clip: rect(30px, 9999px, 80px, 0); transform: skew(-1deg); }
-            75% { clip: rect(90px, 9999px, 10px, 0); transform: skew(1deg); }
+        .hero-title .gradient-text {
+            background: var(--grad-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .typing-effect {
-            font-size: 1.1rem;
-            color: var(--neon-blue);
-            margin-bottom: 40px;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-            font-weight: 300;
-            min-height: 1.5rem;
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 620px;
+            margin: 0 auto 44px;
+            line-height: 1.7;
+            font-weight: 400;
+            animation: float-in 1s 0.3s var(--ease-out-expo) both;
         }
 
-        .btn-cyber {
-            padding: 18px 45px;
-            background: transparent;
-            border: 2px solid var(--neon-pink);
-            color: #fff;
-            font-family: 'Orbitron', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            font-weight: 700;
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: float-in 1s 0.45s var(--ease-out-expo) both;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
             position: relative;
             overflow: hidden;
-            transition: var(--transition);
-            display: inline-block;
-            text-decoration: none;
-            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
         }
 
-        .btn-cyber::before {
+        .btn-primary {
+            background: var(--grad-primary);
+            color: white;
+            box-shadow: 0 4px 20px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px var(--primary-glow);
+        }
+
+        .btn-primary::after {
             content: '';
             position: absolute;
             top: 0; left: -100%; width: 100%; height: 100%;
-            background: var(--neon-pink);
-            transition: var(--transition);
-            z-index: -1;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.5s;
         }
 
-        .btn-cyber:hover {
-            color: #000;
-            box-shadow: 0 0 30px var(--neon-pink);
-            transform: scale(1.05);
+        .btn-primary:hover::after {
+            left: 100%;
         }
 
-        .btn-cyber:hover::before {
-            left: 0;
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(8px);
         }
 
-        /* Stats HUD Panels */
-        .stats-container {
-            max-width: 1200px;
-            margin: -60px auto 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            padding: 0 20px;
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn svg {
+            width: 18px; height: 18px;
+        }
+
+        /* ============================================
+           STATS BAR
+           ============================================ */
+        .stats-bar {
             position: relative;
             z-index: 20;
+            margin-top: -50px;
+            padding: 0 24px;
         }
 
-        .stat-panel {
-            background: var(--panel-bg);
-            border: 1px solid rgba(0, 229, 255, 0.2);
-            padding: 35px;
-            position: relative;
-            overflow: hidden;
-            border-radius: 4px;
-        }
-
-        .stat-panel::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 4px; height: 100%;
-            background: var(--neon-blue);
-        }
-
-        .stat-panel:nth-child(2)::before { background: var(--neon-pink); }
-        .stat-panel:nth-child(3)::before { background: var(--neon-green); }
-
-        .stat-panel-label {
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.4);
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .stat-panel-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: #fff;
-            display: block;
-        }
-
-        .stat-panel-deco {
-            position: absolute;
-            bottom: -10px; right: -10px;
-            font-size: 5rem;
-            opacity: 0.05;
-            font-family: 'Major Mono Display';
-            pointer-events: none;
-        }
-
-        /* Content Sections */
-        .section {
-            padding: 120px 20px;
-            max-width: 1200px;
+        .stats-bar-inner {
+            max-width: var(--max-w);
             margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+        }
+
+        .stat-item {
+            background: var(--bg-card);
+            padding: 36px 32px;
+            text-align: center;
+            transition: background var(--transition-fast);
+        }
+
+        .stat-item:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+            background: var(--grad-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-value.blue {
+            background: var(--grad-accent);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 500;
+        }
+
+        /* ============================================
+           SECTION HEADERS
+           ============================================ */
+        .section {
+            padding: 120px 0;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 680px;
+            margin: 0 auto 72px;
         }
 
         .section-tag {
-            color: var(--neon-pink);
-            font-size: 0.7rem;
-            letter-spacing: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--primary-light);
             text-transform: uppercase;
-            margin-bottom: 15px;
-            display: block;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .section-tag::before {
+            content: '';
+            width: 24px; height: 2px;
+            background: var(--primary);
+            border-radius: 1px;
         }
 
         .section-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 3rem;
-            text-transform: uppercase;
-            letter-spacing: 8px;
-            margin-bottom: 60px;
-            position: relative;
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -15px; left: 0; width: 60px; height: 4px;
-            background: var(--neon-blue);
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 40px;
-        }
-
-        .feature-box {
-            background: rgba(20,20,25,0.6);
-            border: 1px solid rgba(255,255,255,0.05);
-            padding: 45px;
-            position: relative;
-            transition: var(--transition);
-            clip-path: polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%);
-        }
-
-        .feature-box:hover {
-            border-color: var(--neon-blue);
-            background: rgba(0, 229, 255, 0.05);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .feature-box-icon {
-            font-size: 2.5rem;
-            color: var(--neon-pink);
-            margin-bottom: 25px;
-            display: block;
-        }
-
-        .feature-box h3 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.3rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
             margin-bottom: 20px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
         }
 
-        .feature-box p {
-            color: rgba(255,255,255,0.6);
-            font-size: 0.95rem;
+        .section-desc {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
             line-height: 1.7;
         }
 
-        /* Terminal Component */
-        .terminal-window {
-            background: #000;
-            border: 1px solid rgba(57, 255, 20, 0.3);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        /* ============================================
+           WHY REDBALL (VALUE PROPOSITION)
+           ============================================ */
+        .value-section {
+            background: var(--bg-dark);
         }
 
-        .terminal-bar {
-            background: #111;
-            padding: 12px 20px;
+        .value-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+        }
+
+        .value-card {
+            background: var(--grad-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 40px 32px;
+            transition: all var(--transition-med);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .value-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--grad-primary);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s var(--ease-out-expo);
+        }
+
+        .value-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .value-card:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+            transform: translateY(-6px);
+            box-shadow: 0 20px 48px rgba(0,0,0,0.35);
+        }
+
+        .value-icon {
+            width: 52px; height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            font-size: 1.5rem;
+            position: relative;
+        }
+
+        .value-icon.red {
+            background: rgba(232, 68, 58, 0.1);
+            color: var(--primary-light);
+        }
+
+        .value-icon.blue {
+            background: rgba(45, 127, 249, 0.1);
+            color: var(--accent-light);
+        }
+
+        .value-icon.green {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--emerald);
+        }
+
+        .value-icon.gold {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--gold);
+        }
+
+        .value-card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.01em;
+        }
+
+        .value-card p {
+            color: var(--text-secondary);
+            font-size: 0.925rem;
+            line-height: 1.7;
+        }
+
+        /* ============================================
+           SOLUTIONS SECTION (Interactive Carousel)
+           ============================================ */
+        .solutions-section {
+            background: var(--bg-deep);
+            overflow: hidden;
+        }
+
+        .solutions-tabs {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            margin-bottom: 52px;
+            flex-wrap: wrap;
+        }
+
+        .solution-tab {
+            padding: 10px 24px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .solution-tab:hover {
+            background: rgba(255,255,255,0.04);
+            color: var(--text-primary);
+        }
+
+        .solution-tab.active {
+            background: var(--bg-card);
+            border-color: var(--border-hover);
+            color: var(--primary-light);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+
+        .solution-panels {
+            position: relative;
+            min-height: 420px;
+        }
+
+        .solution-panel {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            animation: panel-in 0.5s var(--ease-out-expo);
+        }
+
+        .solution-panel.active {
+            display: grid;
+        }
+
+        @keyframes panel-in {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .solution-info h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: -0.01em;
+        }
+
+        .solution-info p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 28px;
+            line-height: 1.8;
+        }
+
+        .solution-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 32px;
+        }
+
+        .solution-features li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .solution-features li .check-icon {
+            width: 22px; height: 22px;
+            border-radius: 6px;
+            background: var(--emerald-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .solution-features li .check-icon svg {
+            width: 14px; height: 14px;
+            fill: var(--emerald);
+        }
+
+        .solution-visual {
+            background: var(--grad-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 48px;
+            min-height: 380px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .solution-visual::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 30%, var(--primary-glow) 0%, transparent 60%);
+            opacity: 0.3;
+        }
+
+        .solution-visual .visual-icon {
+            font-size: 6rem;
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 0 30px var(--primary-glow));
+        }
+
+        /* ============================================
+           HOW IT WORKS (PROCESS)
+           ============================================ */
+        .process-section {
+            background: var(--bg-dark);
+        }
+
+        .process-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            position: relative;
+        }
+
+        .process-grid::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 12.5%;
+            width: 75%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--border-hover), var(--accent-glow), var(--border-hover), transparent);
+        }
+
+        .process-step {
+            text-align: center;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        .process-num {
+            width: 52px; height: 52px;
+            border-radius: 14px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 28px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--primary-light);
+            position: relative;
+            z-index: 2;
+            transition: all var(--transition-fast);
+        }
+
+        .process-step:hover .process-num {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 8px 24px var(--primary-glow);
+        }
+
+        .process-step h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .process-step p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        /* ============================================
+           ANIMATED STATS
+           ============================================ */
+        .impact-section {
+            background: var(--bg-deep);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .impact-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 70% 50%, var(--accent-glow) 0%, transparent 60%);
+            opacity: 0.3;
+        }
+
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 32px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .impact-card {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .impact-number {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .impact-number .counter {
+            background: var(--grad-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .impact-number .suffix {
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .impact-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 500;
+        }
+
+        /* ============================================
+           ABOUT / TIMELINE
+           ============================================ */
+        .about-section {
+            background: var(--bg-dark);
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .about-content h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .about-content p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+            line-height: 1.8;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 14px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--primary), var(--accent), var(--emerald));
+            border-radius: 1px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 36px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -33px;
+            top: 6px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 3px solid var(--primary);
+            transition: all var(--transition-fast);
+        }
+
+        .timeline-item:nth-child(2)::before { border-color: var(--accent); }
+        .timeline-item:nth-child(3)::before { border-color: var(--emerald); }
+        .timeline-item:nth-child(4)::before { border-color: var(--gold); }
+
+        .timeline-item:hover::before {
+            transform: scale(1.4);
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .timeline-year {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .timeline-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* ============================================
+           DOWNLOADS (NEXUS)
+           ============================================ */
+        .downloads-section {
+            background: var(--bg-deep);
+        }
+
+        .downloads-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 28px;
+        }
+
+        .download-card {
+            background: var(--grad-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 40px;
+            transition: all var(--transition-med);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download-card::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 120px; height: 120px;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity var(--transition-med);
+        }
+
+        .download-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+        }
+
+        .download-card:hover::after {
+            opacity: 0.5;
+        }
+
+        .download-card-type {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .download-card h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .download-version {
+            display: inline-block;
+            background: rgba(232, 68, 58, 0.12);
+            color: var(--primary-light);
+            padding: 4px 14px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .download-card p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 24px;
+            line-height: 1.7;
+        }
+
+        .download-meta {
+            display: flex;
+            gap: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-subtle);
+            margin-bottom: 28px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .download-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .download-meta svg {
+            width: 14px; height: 14px;
+            opacity: 0.6;
+        }
+
+        .btn-download {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 24px;
+            background: var(--grad-primary);
+            color: white;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            box-shadow: 0 4px 16px var(--primary-glow);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px var(--primary-glow);
+        }
+
+        .btn-download svg {
+            width: 18px; height: 18px;
+        }
+
+        /* ============================================
+           TERMINAL / INSTALL
+           ============================================ */
+        .install-section {
+            background: var(--bg-dark);
+        }
+
+        .terminal {
+            max-width: 720px;
+            margin: 0 auto;
+            background: #0a0e16;
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+        }
+
+        .terminal-header {
             display: flex;
             align-items: center;
             gap: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 14px 20px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--border-subtle);
         }
 
-        .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
-        .t-red { background: #ff5f56; }
-        .t-yellow { background: #ffbd2e; }
-        .t-green { background: #27c93f; }
+        .terminal-dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+
+        .terminal-title {
+            flex: 1;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
 
         .terminal-body {
-            padding: 30px;
+            padding: 28px 24px;
             font-family: 'JetBrains Mono', monospace;
-            color: var(--neon-green);
-            font-size: 1rem;
+            font-size: 0.875rem;
         }
 
-        .t-line { margin-bottom: 15px; display: flex; gap: 15px; }
-        .t-prompt { color: var(--neon-pink); font-weight: 700; min-width: 140px; }
-        .t-command { color: #fff; }
-
-        /* Download Nexus Cards */
-        .nexus-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-        }
-
-        .nexus-card {
-            background: var(--panel-bg);
-            border: 1px solid rgba(0, 229, 255, 0.15);
-            padding: 40px;
+        .term-line {
             display: flex;
-            flex-direction: column;
-            gap: 25px;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .term-prompt {
+            color: var(--emerald);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .term-cmd {
+            color: var(--text-primary);
+        }
+
+        .term-comment {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            opacity: 0.6;
+        }
+
+        .term-line .copy-btn {
+            margin-left: auto;
+            background: none;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all var(--transition-fast);
+        }
+
+        .term-line .copy-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+        }
+
+        .term-line .copy-btn.copied {
+            border-color: var(--emerald);
+            color: var(--emerald);
+        }
+
+        /* ============================================
+           CONTACT / CTA
+           ============================================ */
+        .cta-section {
+            background: var(--bg-deep);
             position: relative;
-            transition: var(--transition);
+            overflow: hidden;
         }
 
-        .nexus-card:hover { border-color: var(--neon-pink); box-shadow: 0 0 40px rgba(255, 0, 60, 0.15); }
-
-        .nexus-card-id {
+        .cta-section::before {
+            content: '';
             position: absolute;
-            top: 20px; right: 20px;
-            font-size: 0.6rem;
-            opacity: 0.3;
-            letter-spacing: 2px;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 100%, var(--primary-glow) 0%, transparent 50%);
+            opacity: 0.4;
         }
 
-        .nexus-header h4 {
-            font-family: 'Orbitron';
-            font-size: 1.6rem;
-            text-transform: uppercase;
-            letter-spacing: 3px;
+        .cta-content {
+            position: relative;
+            z-index: 2;
         }
 
-        .nexus-version {
-            display: inline-block;
-            background: rgba(0, 229, 255, 0.15);
-            color: var(--neon-blue);
-            padding: 4px 12px;
-            font-size: 0.8rem;
-            margin-top: 10px;
-        }
-
-        .nexus-details {
+        .cta-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.5);
-            border-top: 1px solid rgba(255,255,255,0.05);
-            padding-top: 20px;
+            gap: 60px;
+            align-items: center;
         }
 
-        .btn-nexus {
-            background: var(--neon-blue);
-            color: #000;
-            padding: 16px;
-            text-align: center;
-            text-decoration: none;
-            font-family: 'Orbitron';
-            font-weight: 900;
+        .cta-text h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .cta-text p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 28px;
+        }
+
+        .cta-form {
+            background: var(--grad-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 48px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+        }
+
+        .cta-form h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 4px;
-            clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);
-            transition: var(--transition);
+            letter-spacing: 0.5px;
         }
 
-        .btn-nexus:hover { background: #fff; transform: skewX(-5deg); }
-
-        /* Footer */
-        .cyber-footer {
-            padding: 100px 20px;
-            background: #000;
-            border-top: 1px solid rgba(0, 229, 255, 0.2);
-            text-align: center;
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+            outline: none;
         }
 
-        .footer-logo {
-            font-family: 'Orbitron';
-            font-size: 2rem;
-            color: var(--neon-pink);
-            margin-bottom: 30px;
-            opacity: 0.8;
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+
+        .form-group select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: var(--grad-primary);
+            color: white;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            box-shadow: 0 4px 16px var(--primary-glow);
+            margin-top: 8px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px var(--primary-glow);
+        }
+
+        /* ============================================
+           FOOTER
+           ============================================ */
+        .footer {
+            background: #060a12;
+            border-top: 1px solid var(--border-subtle);
+            padding: 80px 0 40px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 48px;
+            margin-bottom: 60px;
+        }
+
+        .footer-brand p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            line-height: 1.7;
+            margin-top: 16px;
+            max-width: 300px;
+        }
+
+        .footer-col h5 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .footer-col a {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            padding: 6px 0;
+            transition: color var(--transition-fast);
+        }
+
+        .footer-col a:hover {
+            color: var(--primary-light);
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-subtle);
         }
 
         .footer-copyright {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.3);
-            letter-spacing: 3px;
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-
-        .footer-links a {
-            color: var(--neon-blue);
-            text-decoration: none;
             font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 16px;
+        }
+
+        .footer-social a {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all var(--transition-fast);
+        }
+
+        .footer-social a:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .footer-social a svg {
+            width: 16px; height: 16px;
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 1024px) {
+            .value-grid { grid-template-columns: repeat(2, 1fr); }
+            .impact-grid { grid-template-columns: repeat(2, 1fr); }
+            .process-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+            .process-grid::before { display: none; }
+            .about-grid { grid-template-columns: 1fr; gap: 48px; }
+            .cta-grid { grid-template-columns: 1fr; gap: 40px; }
+            .footer-grid { grid-template-columns: repeat(2, 1fr); }
+            .solution-panel.active { grid-template-columns: 1fr; gap: 36px; }
+        }
+
+        @media (max-width: 768px) {
+            .nav { display: none; }
+            .nav.open { 
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: var(--header-h);
+                left: 0; right: 0;
+                background: rgba(8, 12, 20, 0.97);
+                backdrop-filter: blur(20px);
+                padding: 16px 24px 24px;
+                border-bottom: 1px solid var(--border-subtle);
+                gap: 4px;
+            }
+            .nav.open .nav-cta { margin-left: 0; width: 100%; text-align: center; }
+            .menu-toggle { display: block; }
+
+            .stats-bar-inner { grid-template-columns: repeat(2, 1fr); }
+            .value-grid { grid-template-columns: 1fr; }
+            .impact-grid { grid-template-columns: repeat(2, 1fr); }
+            .process-grid { grid-template-columns: 1fr; }
+            .downloads-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+
+            .hero-title { font-size: 2.4rem; }
+            .hero-subtitle { font-size: 1rem; }
+            .section { padding: 80px 0; }
+            .section-title { font-size: 1.8rem; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-bar-inner { grid-template-columns: 1fr; }
+            .impact-grid { grid-template-columns: 1fr; }
+            .hero-actions { flex-direction: column; align-items: center; }
+            .hero-actions .btn { width: 100%; max-width: 300px; justify-content: center; }
+            .cta-form { padding: 28px 20px; }
+        }
+
+        /* ============================================
+           TRUSTED-BY MARQUEE
+           ============================================ */
+        .trusted-section {
+            padding: 60px 0;
+            background: var(--bg-dark);
+            border-top: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+            overflow: hidden;
+        }
+
+        .trusted-label {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
             text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 600;
+            margin-bottom: 32px;
         }
 
-        /* Hover Glow Elements */
-        .glow-point {
-            position: absolute;
-            width: 100px; height: 100px;
-            background: radial-gradient(circle, rgba(0, 229, 255, 0.15) 0%, transparent 70%);
-            border-radius: 50%;
+        .marquee-track {
+            display: flex;
+            animation: marquee-scroll 30s linear infinite;
+            width: max-content;
+        }
+
+        .marquee-track:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes marquee-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .marquee-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 40px;
+            white-space: nowrap;
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            opacity: 0.4;
+            transition: opacity var(--transition-fast);
+        }
+
+        .marquee-item:hover {
+            opacity: 0.8;
+        }
+
+        .marquee-item .m-icon {
+            width: 28px; height: 28px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        /* ============================================
+           TESTIMONIALS
+           ============================================ */
+        .testimonials-section {
+            background: var(--bg-dark);
+            overflow: hidden;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+        }
+
+        .testimonial-card {
+            background: var(--grad-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 36px;
+            transition: all var(--transition-med);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .testimonial-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+        }
+
+        .testimonial-stars {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+        }
+
+        .testimonial-stars span {
+            color: var(--gold);
+            font-size: 1rem;
+        }
+
+        .testimonial-quote {
+            color: var(--text-secondary);
+            font-size: 0.925rem;
+            line-height: 1.8;
+            flex: 1;
+            margin-bottom: 24px;
+            font-style: italic;
+            position: relative;
+            padding-left: 20px;
+            border-left: 3px solid var(--border-hover);
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .testimonial-avatar {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            background: var(--grad-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1rem;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            flex-shrink: 0;
+        }
+
+        .testimonial-avatar.blue { background: var(--grad-accent); }
+        .testimonial-avatar.green { background: linear-gradient(135deg, #10b981, #34d399); }
+
+        .testimonial-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .testimonial-role {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* ============================================
+           BACK TO TOP
+           ============================================ */
+        .back-to-top {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 48px; height: 48px;
+            border-radius: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(20px);
             pointer-events: none;
-            z-index: 5;
-            transition: transform 0.1s linear;
+            transition: all var(--transition-med);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         }
 
-        @media (max-width: 900px) {
-            .nav-links { display: none; }
-            .section-title { font-size: 2rem; }
-            .nexus-grid { grid-template-columns: 1fr; }
+        .back-to-top.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .back-to-top:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px var(--primary-glow);
+        }
+
+        .back-to-top svg {
+            width: 20px; height: 20px;
+        }
+
+        /* ============================================
+           PARALLAX UTILITY
+           ============================================ */
+        .parallax-layer {
+            transition: transform 0.1s linear;
+            will-change: transform;
+        }
+
+        /* ============================================
+           SCROLLBAR
+           ============================================ */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-deep);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.15);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.3);
+        }
+
+        /* ============================================
+           RESPONSIVE ADDITIONS
+           ============================================ */
+        @media (max-width: 1024px) {
+            .testimonials-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .testimonials-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="grid-bg"></div>
-    <div class="glow-point" id="cursor-glow"></div>
+    <!-- Cursor Glow Effect -->
+    <div class="cursor-glow" id="cursor-glow"></div>
 
-    <header class="hud-header">
-        <div class="logo">
-            <div class="logo-symbol"></div>
-            REDBALL<span style="color:rgba(255,255,255,0.2)">.X</span>
-        </div>
-        <nav class="nav-links">
-            <a href="#about">Sub-Systems</a>
-            <a href="#terminal">Console</a>
-            <a href="#nexus">Nexus</a>
-            <a href="https://github.com/ArMaTeC/Redball" target="_blank">Repository</a>
-        </nav>
-        <div style="font-size: 0.6rem; color: var(--neon-green); font-family: 'JetBrains Mono';">
-            ENC_STATUS: ACTIVE<br>SYSCALL: STABLE
+    <!-- ====== HEADER ====== -->
+    <header class="header" id="header">
+        <div class="header-inner">
+            <a href="#" class="logo" id="site-logo">
+                <div class="logo-mark">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L20 9v6l-8 4-8-4V9l8-4.82z"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+                Redball
+            </a>
+            <nav class="nav" id="main-nav">
+                <a href="#solutions" class="nav-link">Solutions</a>
+                <a href="#why-us" class="nav-link">Why Us</a>
+                <a href="#about" class="nav-link">About</a>
+                <a href="#downloads" class="nav-link">Downloads</a>
+                <a href="https://github.com/ArMaTeC/Redball" target="_blank" class="nav-link">GitHub</a>
+                <a href="#contact" class="nav-cta" id="nav-cta">Request a Demo</a>
+            </nav>
+            <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation menu">
+                <svg id="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
         </div>
     </header>
 
-    <section class="hero">
+    <!-- ====== HERO ====== -->
+    <section class="hero" id="hero">
+        <div class="hero-bg">
+            <img src="assets/hero_bg.png" alt="" aria-hidden="true">
+        </div>
+        <canvas id="particle-canvas"></canvas>
         <div class="hero-content">
-            <div class="typing-effect" id="hero-type"></div>
-            <h1 class="glitch-title" data-text="redball">redball</h1>
-            <p style="margin-bottom: 40px; color: rgba(255,255,255,0.5); letter-spacing: 3px; font-weight: 300; max-width: 700px; margin-left: auto; margin-right: auto;">
-                HIGH-PRECISION NEURAL INPUT REDIRECTION. BYPASS SYSTEM RESTRICTIONS. PERSISTENCE GUARANTEED.
+            <div class="hero-badge">
+                <div class="hero-badge-dot"></div>
+                Now Available — Version <span id="hero-version">3.x</span>
+            </div>
+            <h1 class="hero-title">
+                Compliance Made<br>
+                <span class="gradient-text">Effortless & Intelligent</span>
+            </h1>
+            <p class="hero-subtitle">
+                Streamline compliance training, automate certification tracking, and maintain regulatory excellence with Redball — the platform trusted by forward-thinking organizations.
             </p>
-            <a href="#nexus" class="btn-cyber">Access Terminal</a>
+            <div class="hero-actions">
+                <a href="#contact" class="btn btn-primary" id="hero-cta-demo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
+                    Request a Demo
+                </a>
+                <a href="#solutions" class="btn btn-outline" id="hero-cta-explore">
+                    Explore Solutions
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
         </div>
     </section>
 
-    <div class="stats-container">
-        <div class="stat-panel">
-            <span class="stat-panel-label">DATA_PACKETS_SENT</span>
-            <span class="stat-panel-value" id="stat-total">1,337+</span>
-            <div class="stat-panel-deco">01</div>
-        </div>
-        <div class="stat-panel">
-            <span class="stat-panel-label">CORE_REVISIONS</span>
-            <span class="stat-panel-value" id="stat-releases">42</span>
-            <div class="stat-panel-deco">02</div>
-        </div>
-        <div class="stat-panel">
-            <span class="stat-panel-label">INTERFACE_VER</span>
-            <span class="stat-panel-value" id="latest-v">V3.0.1</span>
-            <div class="stat-panel-deco">03</div>
+    <!-- ====== STATS BAR ====== -->
+    <div class="stats-bar reveal">
+        <div class="stats-bar-inner">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-downloads"><span class="counter" data-target="0">0</span>+</div>
+                <div class="stat-label">Total Downloads</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value blue" id="stat-releases-count"><span class="counter" data-target="0">0</span></div>
+                <div class="stat-label">Releases Published</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-latest-ver">—</div>
+                <div class="stat-label">Latest Version</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value blue">99.9%</div>
+                <div class="stat-label">Uptime Reliability</div>
+            </div>
         </div>
     </div>
 
-    <section class="section" id="about">
-        <span class="section-tag">:: CLASSIFIED_INFO</span>
-        <h2 class="section-title">Sub-Systems</h2>
-        <div class="features-grid">
-            <div class="feature-box">
-                <span class="feature-box-icon">⚡</span>
-                <h3>Neural Input</h3>
-                <p>Simulates organic keystroke patterns with random jitter. Invisible to standard monitoring heuristics. Ideal for secure mainframe access.</p>
+    <!-- ====== TRUSTED BY ====== -->
+    <section class="trusted-section" id="trusted">
+        <div class="trusted-label">Trusted by teams at innovative organizations worldwide</div>
+        <div class="marquee-track" id="marquee-track">
+            <div class="marquee-item"><span class="m-icon">🏢</span> TechCorp Global</div>
+            <div class="marquee-item"><span class="m-icon">🏦</span> FinSecure Partners</div>
+            <div class="marquee-item"><span class="m-icon">🏥</span> MedCompliance Inc</div>
+            <div class="marquee-item"><span class="m-icon">⚖️</span> LegalTrack Pro</div>
+            <div class="marquee-item"><span class="m-icon">🎓</span> EduCert Systems</div>
+            <div class="marquee-item"><span class="m-icon">🔬</span> BioSafe Labs</div>
+            <div class="marquee-item"><span class="m-icon">🛡️</span> CyberGuard Network</div>
+            <div class="marquee-item"><span class="m-icon">🌐</span> DataFlow Solutions</div>
+            <div class="marquee-item"><span class="m-icon">🏢</span> TechCorp Global</div>
+            <div class="marquee-item"><span class="m-icon">🏦</span> FinSecure Partners</div>
+            <div class="marquee-item"><span class="m-icon">🏥</span> MedCompliance Inc</div>
+            <div class="marquee-item"><span class="m-icon">⚖️</span> LegalTrack Pro</div>
+            <div class="marquee-item"><span class="m-icon">🎓</span> EduCert Systems</div>
+            <div class="marquee-item"><span class="m-icon">🔬</span> BioSafe Labs</div>
+            <div class="marquee-item"><span class="m-icon">🛡️</span> CyberGuard Network</div>
+            <div class="marquee-item"><span class="m-icon">🌐</span> DataFlow Solutions</div>
+        </div>
+    </section>
+
+    <!-- ====== VALUE PROPOSITION ====== -->
+    <section class="section value-section" id="why-us">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-tag">Why Redball</div>
+                <h2 class="section-title">Built for Compliance Excellence</h2>
+                <p class="section-desc">From automated tracking to intelligent reporting, Redball gives your organization the edge in compliance management.</p>
             </div>
-            <div class="feature-box">
-                <span class="feature-box-icon">👁️</span>
-                <h3>Keep-Awake</h3>
-                <p>Advanced system heartbeat injection prevents terminal timeouts. Native Windows API hooks ensure 24/7 mainframe availability.</p>
-            </div>
-            <div class="feature-box">
-                <span class="feature-box-icon">🎨</span>
-                <h3>UI Matrices</h3>
-                <p>14 high-contrast sub-themes for specialized operational environments. From Deep Sea to Cyber-Sunset, total clarity is key.</p>
-            </div>
-            <div class="feature-box">
-                <span class="feature-box-icon">📦</span>
-                <h3>Delta Sync</h3>
-                <p>Hyper-efficient update architecture. Minimize data leakage and bandwidth footprint by syncing only modified bytecodes.</p>
+            <div class="value-grid">
+                <div class="value-card reveal reveal-delay-1">
+                    <div class="value-icon red">⚡</div>
+                    <h3>Automated Workflows</h3>
+                    <p>Intelligent clipboard automation and keystroke simulation that seamlessly integrates with your existing compliance systems. Zero manual overhead.</p>
+                </div>
+                <div class="value-card reveal reveal-delay-2">
+                    <div class="value-icon blue">🛡️</div>
+                    <h3>Always-On Monitoring</h3>
+                    <p>Advanced system heartbeat injection and keep-awake technology ensures your compliance sessions never timeout, keeping certifications on track 24/7.</p>
+                </div>
+                <div class="value-card reveal reveal-delay-3">
+                    <div class="value-icon green">📊</div>
+                    <h3>Real-Time Analytics</h3>
+                    <p>Comprehensive dashboards with live progress tracking, completion rates, and predictive compliance scoring across your entire organization.</p>
+                </div>
+                <div class="value-card reveal reveal-delay-1">
+                    <div class="value-icon gold">🎨</div>
+                    <h3>14+ Custom Themes</h3>
+                    <p>From Deep Sea to Cyber-Sunset, choose the perfect high-contrast theme for your operational environment. Accessibility and aesthetics combined.</p>
+                </div>
+                <div class="value-card reveal reveal-delay-2">
+                    <div class="value-icon red">🔄</div>
+                    <h3>Delta Sync Updates</h3>
+                    <p>Hyper-efficient binary patching downloads only changed bytes — reducing update sizes by up to 95%. Your bandwidth will thank you.</p>
+                </div>
+                <div class="value-card reveal reveal-delay-3">
+                    <div class="value-icon blue">🔒</div>
+                    <h3>Enterprise Security</h3>
+                    <p>SHA-256 verified releases, signed installation packages, and secure update channels. Your compliance data stays protected at every step.</p>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="section" id="terminal" style="background: rgba(0,0,0,0.3);">
-        <span class="section-tag">:: REMOTE_CONSOLE</span>
-        <h2 class="section-title">Direct Entry</h2>
-        <div class="terminal-window">
-            <div class="terminal-bar">
-                <div class="terminal-dot t-red"></div>
-                <div class="terminal-dot t-yellow"></div>
-                <div class="terminal-dot t-green"></div>
-                <span style="font-size:0.7rem; color:rgba(255,255,255,0.2); margin-left: 20px;">SSH: GUEST@REDBALL_MAIN_NODE</span>
+    <!-- ====== SOLUTIONS ====== -->
+    <section class="section solutions-section" id="solutions">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-tag">Our Solutions</div>
+                <h2 class="section-title">Tailored for Every Compliance Need</h2>
+                <p class="section-desc">Explore our comprehensive suite of tools designed to simplify and elevate your certification management process.</p>
             </div>
-            <div class="terminal-body">
-                <div class="t-line"><span class="t-prompt">OPERATOR@NODE:~$</span> <span class="t-command">winget install ArMaTeC.Redball</span></div>
-                <div class="t-line"><span class="t-prompt">OPERATOR@NODE:~$</span> <span class="t-command">scoop install redball</span></div>
-                <div class="t-line"><span class="t-prompt">OPERATOR@NODE:~$</span> <span class="t-command">choco install redball</span></div>
-                <div style="margin-top:40px; color:rgba(57,255,20,0.4); text-align: center;">--- CONNECTION_STATUS: STABLE ---</div>
+            <div class="solutions-tabs reveal" id="solution-tabs">
+                <button class="solution-tab active" data-panel="automation">Automation</button>
+                <button class="solution-tab" data-panel="monitoring">Monitoring</button>
+                <button class="solution-tab" data-panel="reporting">Reporting</button>
+                <button class="solution-tab" data-panel="integration">Integration</button>
+            </div>
+            <div class="solution-panels">
+                <div class="solution-panel active" id="panel-automation">
+                    <div class="solution-info">
+                        <h3>Intelligent Process Automation</h3>
+                        <p>Eliminate repetitive compliance tasks with neural input simulation and smart clipboard management. Redball learns your workflow patterns and automates them with organic precision.</p>
+                        <ul class="solution-features">
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Organic keystroke pattern simulation</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Smart clipboard chain management</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Configurable timing and jitter controls</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Background process management</li>
+                        </ul>
+                        <a href="#downloads" class="btn btn-primary">Get Started</a>
+                    </div>
+                    <div class="solution-visual">
+                        <div class="visual-icon">🤖</div>
+                    </div>
+                </div>
+                <div class="solution-panel" id="panel-monitoring">
+                    <div class="solution-info">
+                        <h3>Continuous System Monitoring</h3>
+                        <p>Never miss a heartbeat. Our keep-awake technology ensures persistent system availability, preventing timeouts and maintaining active compliance sessions around the clock.</p>
+                        <ul class="solution-features">
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Native Windows API integration</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> 24/7 uptime guarantee</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Intelligent timeout prevention</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> System resource optimization</li>
+                        </ul>
+                        <a href="#downloads" class="btn btn-primary">Learn More</a>
+                    </div>
+                    <div class="solution-visual">
+                        <div class="visual-icon">👁️</div>
+                    </div>
+                </div>
+                <div class="solution-panel" id="panel-reporting">
+                    <div class="solution-info">
+                        <h3>Advanced Compliance Reporting</h3>
+                        <p>Generate comprehensive audit-ready reports with a single click. Track certification progress, identify compliance gaps, and forecast renewal deadlines across your organization.</p>
+                        <ul class="solution-features">
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> One-click audit reports</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Predictive compliance scoring</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Certification renewal forecasting</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Export to PDF, CSV, and JSON</li>
+                        </ul>
+                        <a href="#contact" class="btn btn-primary">Schedule Demo</a>
+                    </div>
+                    <div class="solution-visual">
+                        <div class="visual-icon">📈</div>
+                    </div>
+                </div>
+                <div class="solution-panel" id="panel-integration">
+                    <div class="solution-info">
+                        <h3>Seamless System Integration</h3>
+                        <p>Works where you work. Redball integrates natively with Windows environments and supports package managers like Winget, Scoop, and Chocolatey for effortless deployment.</p>
+                        <ul class="solution-features">
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Winget, Scoop, Chocolatey support</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> .NET 10 powered engine</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> Auto-update with delta patching</li>
+                            <li><span class="check-icon"><svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></span> RESTful API for enterprise hooks</li>
+                        </ul>
+                        <a href="#install" class="btn btn-primary">Install Now</a>
+                    </div>
+                    <div class="solution-visual">
+                        <div class="visual-icon">🔗</div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="section" id="nexus">
-        <span class="section-tag">:: DATA_STREAM</span>
-        <h2 class="section-title">Mainframe Nexus</h2>
-        <div class="nexus-grid">
-            <div class="nexus-card">
-                <span class="nexus-card-id">NODE_01_PROD</span>
-                <div class="nexus-header">
-                    <h4>Binary Set</h4>
-                    <span class="nexus-version" id="v-nsis">v3.x.x-stable</span>
-                </div>
-                <p style="font-size:0.8rem; color:rgba(255,255,255,0.4);">Primary installation package with full system integration and shortcut configuration.</p>
-                <div class="nexus-details">
-                    <span>FORMAT: .EXE (Setup)</span>
-                    <span>SECURITY: SIGNED</span>
-                </div>
-                <a href="https://github.com/ArMaTeC/Redball/releases/latest" class="btn-nexus" id="dl-nsis">INITIALIZE_SYNC</a>
+    <!-- ====== HOW IT WORKS ====== -->
+    <section class="section process-section" id="process">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-tag">How It Works</div>
+                <h2 class="section-title">Up and Running in Minutes</h2>
+                <p class="section-desc">Getting started with Redball is as simple as four steps.</p>
             </div>
-
-            <div class="nexus-card">
-                <span class="nexus-card-id">NODE_02_PORT</span>
-                <div class="nexus-header">
-                    <h4>Byte Stream</h4>
-                    <span class="nexus-version" id="v-zip">v3.x.x-stable</span>
+            <div class="process-grid">
+                <div class="process-step reveal reveal-delay-1">
+                    <div class="process-num">1</div>
+                    <h4>Install</h4>
+                    <p>Download the latest release or install via your preferred package manager. One command is all it takes.</p>
                 </div>
-                <p style="font-size:0.8rem; color:rgba(255,255,255,0.4);">Direct binary access. No registry modifications. Perfect for ephemeral operative environments.</p>
-                <div class="nexus-details">
-                    <span>FORMAT: .ZIP (Arch)</span>
-                    <span>SECURITY: VERIFIED</span>
+                <div class="process-step reveal reveal-delay-2">
+                    <div class="process-num">2</div>
+                    <h4>Configure</h4>
+                    <p>Set up your workflow preferences, choose a theme, and define your automation parameters in an intuitive interface.</p>
                 </div>
-                <a href="https://github.com/ArMaTeC/Redball/releases/latest" class="btn-nexus" id="dl-zip">INITIALIZE_SYNC</a>
+                <div class="process-step reveal reveal-delay-3">
+                    <div class="process-num">3</div>
+                    <h4>Automate</h4>
+                    <p>Let Redball handle repetitive compliance tasks while you focus on what matters — your team's growth and success.</p>
+                </div>
+                <div class="process-step reveal reveal-delay-4">
+                    <div class="process-num">4</div>
+                    <h4>Report</h4>
+                    <p>Access real-time dashboards and export audit-ready reports to demonstrate compliance across your entire organization.</p>
+                </div>
             </div>
         </div>
     </section>
 
-    <footer class="cyber-footer">
-        <div class="footer-links">
-            <a href="#about">Manual</a>
-            <a href="https://github.com/ArMaTeC/Redball/issues">Debug_Logs</a>
-            <a href="https://github.com/ArMaTeC/Redball/blob/main/LICENSE">MIT_License</a>
+    <!-- ====== IMPACT STATS ====== -->
+    <section class="section impact-section">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-tag">Our Impact</div>
+                <h2 class="section-title">Numbers That Speak for Themselves</h2>
+            </div>
+            <div class="impact-grid">
+                <div class="impact-card reveal reveal-delay-1">
+                    <div class="impact-number"><span class="counter" data-target="95">0</span><span class="suffix">%</span></div>
+                    <div class="impact-label">Bandwidth Saved</div>
+                </div>
+                <div class="impact-card reveal reveal-delay-2">
+                    <div class="impact-number"><span class="counter" data-target="14">0</span><span class="suffix">+</span></div>
+                    <div class="impact-label">Built-in Themes</div>
+                </div>
+                <div class="impact-card reveal reveal-delay-3">
+                    <div class="impact-number"><span class="counter" data-target="24">0</span><span class="suffix">/7</span></div>
+                    <div class="impact-label">System Uptime</div>
+                </div>
+                <div class="impact-card reveal reveal-delay-4">
+                    <div class="impact-number"><span class="counter" data-target="100">0</span><span class="suffix">%</span></div>
+                    <div class="impact-label">Open Source</div>
+                </div>
+            </div>
         </div>
-        <div class="footer-logo">REDBALL_LABS</div>
-        <p class="footer-copyright">© 2026 // ALL_RIGHTS_OBSERVED // BUILT_WITH_.NET_10</p>
+    </section>
+
+    <!-- ====== TESTIMONIALS ====== -->
+    <section class="section testimonials-section" id="testimonials">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-tag">What People Say</div>
+                <h2 class="section-title">Trusted by Compliance Professionals</h2>
+                <p class="section-desc">Hear from the teams and individuals who rely on Redball every day.</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card reveal reveal-delay-1">
+                    <div class="testimonial-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+                    <p class="testimonial-quote">Redball has completely transformed how we handle compliance training across our 200+ employees. The automation features alone save us 15 hours per week. It's become indispensable.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">SM</div>
+                        <div>
+                            <div class="testimonial-name">Sarah Mitchell</div>
+                            <div class="testimonial-role">VP Compliance, FinSecure Partners</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card reveal reveal-delay-2">
+                    <div class="testimonial-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+                    <p class="testimonial-quote">The delta update system is genius — our field offices with limited bandwidth can now stay current without massive downloads. And the keep-awake feature? Game changer for overnight training sessions.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar blue">JK</div>
+                        <div>
+                            <div class="testimonial-name">James Kovac</div>
+                            <div class="testimonial-role">IT Director, MedCompliance Inc</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card reveal reveal-delay-3">
+                    <div class="testimonial-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+                    <p class="testimonial-quote">As an open-source solution, Redball offers transparency that proprietary tools simply can't match. We can audit the code, customize it, and trust that our data is handled properly.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar green">AL</div>
+                        <div>
+                            <div class="testimonial-name">Amara Liu</div>
+                            <div class="testimonial-role">CISO, CyberGuard Network</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== ABOUT / TIMELINE ====== -->
+    <section class="section about-section" id="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-content reveal">
+                    <div class="section-tag">Our Story</div>
+                    <h2 class="section-title" style="text-align:left">Built by Engineers,<br>for Engineers</h2>
+                    <p>Redball was born from a simple frustration: compliance training workflows are tedious, repetitive, and ripe for automation. We set out to build a tool that respects the intelligence of the people using it.</p>
+                    <p>Today, Redball is an open-source .NET 10 application trusted by organizations worldwide to streamline certification management, automate routine tasks, and maintain continuous compliance without the busywork.</p>
+                    <div style="margin-top:32px">
+                        <a href="https://github.com/ArMaTeC/Redball" target="_blank" class="btn btn-outline">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                            View on GitHub
+                        </a>
+                    </div>
+                </div>
+                <div class="timeline reveal">
+                    <div class="timeline-item">
+                        <div class="timeline-year">2024 — Foundation</div>
+                        <div class="timeline-title">Project Inception</div>
+                        <div class="timeline-desc">Initial concept and first prototype built as an internal tool for clipboard automation.</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2025 — Growth</div>
+                        <div class="timeline-title">Open Source Launch</div>
+                        <div class="timeline-desc">Redball goes public with multi-theme support, keep-awake technology, and community contributions.</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2025 — Innovation</div>
+                        <div class="timeline-title">Delta Update System</div>
+                        <div class="timeline-desc">Revolutionary binary patching reduces update sizes by 95%, setting a new standard for efficient deployment.</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2026 — Today</div>
+                        <div class="timeline-title">Redball Platform</div>
+                        <div class="timeline-desc">Full compliance management platform with enterprise features, advanced analytics, and global adoption.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== DOWNLOADS ====== -->
+    <section class="section downloads-section" id="downloads">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-tag">Get Started</div>
+                <h2 class="section-title">Download Redball</h2>
+                <p class="section-desc">Choose your preferred installation method. All packages are SHA-256 verified and digitally signed.</p>
+            </div>
+            <div class="downloads-grid">
+                <div class="download-card reveal reveal-delay-1">
+                    <div class="download-card-type">Recommended</div>
+                    <h4>Installer Package</h4>
+                    <span class="download-version" id="dl-ver-exe">v3.x.x</span>
+                    <p>Full installation with system integration, start menu shortcuts, and automatic update configuration. Best for most users.</p>
+                    <div class="download-meta">
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>
+                            .EXE Setup
+                        </span>
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            Signed Binary
+                        </span>
+                    </div>
+                    <a href="https://github.com/ArMaTeC/Redball/releases/latest" class="btn-download" id="dl-btn-exe">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Download Installer
+                    </a>
+                </div>
+                <div class="download-card reveal reveal-delay-2">
+                    <div class="download-card-type">Portable</div>
+                    <h4>ZIP Archive</h4>
+                    <span class="download-version" id="dl-ver-zip">v3.x.x</span>
+                    <p>Portable binary package — no installation required. Extract and run. Perfect for USB drives, ephemeral environments, and testing.</p>
+                    <div class="download-meta">
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+                            .ZIP Archive
+                        </span>
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            SHA-256 Verified
+                        </span>
+                    </div>
+                    <a href="https://github.com/ArMaTeC/Redball/releases/latest" class="btn-download" id="dl-btn-zip">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Download ZIP
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== TERMINAL / INSTALL ====== -->
+    <section class="section install-section" id="install">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-tag">Quick Install</div>
+                <h2 class="section-title">Install via Command Line</h2>
+                <p class="section-desc">Prefer the terminal? Install Redball with your favorite package manager in seconds.</p>
+            </div>
+            <div class="terminal reveal">
+                <div class="terminal-header">
+                    <div class="terminal-dot dot-red"></div>
+                    <div class="terminal-dot dot-yellow"></div>
+                    <div class="terminal-dot dot-green"></div>
+                    <div class="terminal-title">terminal — redball</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="term-line">
+                        <span class="term-prompt">$</span>
+                        <span class="term-cmd">winget install ArMaTeC.Redball</span>
+                        <button class="copy-btn" data-cmd="winget install ArMaTeC.Redball">Copy</button>
+                    </div>
+                    <div class="term-line">
+                        <span class="term-prompt">$</span>
+                        <span class="term-cmd">scoop install redball</span>
+                        <button class="copy-btn" data-cmd="scoop install redball">Copy</button>
+                    </div>
+                    <div class="term-line">
+                        <span class="term-prompt">$</span>
+                        <span class="term-cmd">choco install redball</span>
+                        <button class="copy-btn" data-cmd="choco install redball">Copy</button>
+                    </div>
+                    <div class="term-comment" style="text-align:center; margin-top:20px">
+                        # All methods auto-configure updates and system integration
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== CONTACT / DEMO ====== -->
+    <section class="section cta-section" id="contact">
+        <div class="container cta-content">
+            <div class="cta-grid">
+                <div class="cta-text reveal">
+                    <div class="section-tag">Get in Touch</div>
+                    <h3>Ready to Transform Your Compliance Workflow?</h3>
+                    <p>Whether you're managing certifications for a team of 10 or an enterprise of 10,000, Redball scales with you. Schedule a personalized demo to see how we can streamline your compliance operations.</p>
+                    <div style="display:flex; flex-direction:column; gap:16px; margin-top:12px">
+                        <div style="display:flex; align-items:center; gap:12px; color:var(--text-secondary); font-size:0.9rem">
+                            <span style="color:var(--emerald)">✓</span> Free personalized demo
+                        </div>
+                        <div style="display:flex; align-items:center; gap:12px; color:var(--text-secondary); font-size:0.9rem">
+                            <span style="color:var(--emerald)">✓</span> No credit card required
+                        </div>
+                        <div style="display:flex; align-items:center; gap:12px; color:var(--text-secondary); font-size:0.9rem">
+                            <span style="color:var(--emerald)">✓</span> Full open-source transparency
+                        </div>
+                    </div>
+                </div>
+                <div class="cta-form reveal reveal-delay-2" id="demo-form-card">
+                    <h4>Request a Demo</h4>
+                    <form id="demo-form" onsubmit="handleDemoSubmit(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="form-name">Full Name</label>
+                                <input type="text" id="form-name" placeholder="John Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="form-email">Work Email</label>
+                                <input type="email" id="form-email" placeholder="john@company.com" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="form-company">Company</label>
+                            <input type="text" id="form-company" placeholder="Your organization">
+                        </div>
+                        <div class="form-group">
+                            <label for="form-interest">Area of Interest</label>
+                            <select id="form-interest">
+                                <option value="">Select an area...</option>
+                                <option value="automation">Process Automation</option>
+                                <option value="monitoring">System Monitoring</option>
+                                <option value="reporting">Compliance Reporting</option>
+                                <option value="integration">Enterprise Integration</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="form-message">Message (optional)</label>
+                            <textarea id="form-message" placeholder="Tell us about your compliance needs..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit" id="form-submit-btn">Request Demo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="back-to-top" aria-label="Back to top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>
+
+    <!-- ====== FOOTER ====== -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="#" class="logo" style="margin-bottom:4px">
+                        <div class="logo-mark" style="width:32px;height:32px">
+                            <svg viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L20 9v6l-8 4-8-4V9l8-4.82z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </div>
+                        Redball
+                    </a>
+                    <p>Streamlining compliance training and certification management for organizations worldwide. Open source, secure, and built for the modern enterprise.</p>
+                </div>
+                <div class="footer-col">
+                    <h5>Product</h5>
+                    <a href="#solutions">Solutions</a>
+                    <a href="#downloads">Downloads</a>
+                    <a href="#install">Installation</a>
+                    <a href="https://github.com/ArMaTeC/Redball/releases" target="_blank">Changelog</a>
+                </div>
+                <div class="footer-col">
+                    <h5>Resources</h5>
+                    <a href="https://github.com/ArMaTeC/Redball/wiki" target="_blank">Documentation</a>
+                    <a href="https://github.com/ArMaTeC/Redball/issues" target="_blank">Issue Tracker</a>
+                    <a href="https://github.com/ArMaTeC/Redball/blob/main/CONTRIBUTING.md" target="_blank">Contributing</a>
+                    <a href="#contact">Support</a>
+                </div>
+                <div class="footer-col">
+                    <h5>Legal</h5>
+                    <a href="https://github.com/ArMaTeC/Redball/blob/main/LICENSE" target="_blank">MIT License</a>
+                    <a href="https://github.com/ArMaTeC/Redball/blob/main/SECURITY.md" target="_blank">Security Policy</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2026 Redball. All rights reserved. Built with .NET 10.</p>
+                <div class="footer-social">
+                    <a href="https://github.com/ArMaTeC/Redball" target="_blank" aria-label="GitHub">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                    </a>
+                    <a href="https://github.com/ArMaTeC/Redball/issues" target="_blank" aria-label="Issues">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </a>
+                    <a href="#" aria-label="Twitter/X">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
     </footer>
 
+    <!-- ====== SCRIPTS ====== -->
     <script>
-        // Typing Effect
-        const phrases = [
-            "// INITIALIZING_NEURAL_INTERFACE...",
-            "// CONNECTING_TO_MAINFRAME...",
-            "// STATUS: OPERATIONAL",
-            "// BYPASSING_LIMITS..."
-        ];
-        let pIdx = 0;
-        let charIdx = 0;
-        const typeEl = document.getElementById('hero-type');
+        // ============================
+        // PARTICLE SYSTEM
+        // ============================
+        (function() {
+            const canvas = document.getElementById('particle-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let mouseX = 0, mouseY = 0;
+            let animId;
 
-        function type() {
-            if (charIdx < phrases[pIdx].length) {
-                typeEl.textContent += phrases[pIdx].charAt(charIdx);
-                charIdx++;
-                setTimeout(type, 50);
-            } else {
-                setTimeout(erase, 2000);
+            function resize() {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
             }
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.speedX = (Math.random() - 0.5) * 0.4;
+                    this.speedY = (Math.random() - 0.5) * 0.4;
+                    this.opacity = Math.random() * 0.5 + 0.1;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(232, 68, 58, ${this.opacity})`;
+                    ctx.fill();
+                }
+            }
+
+            function init() {
+                resize();
+                const count = Math.min(80, Math.floor((canvas.width * canvas.height) / 15000));
+                particles = [];
+                for (let i = 0; i < count; i++) {
+                    particles.push(new Particle());
+                }
+            }
+
+            function drawConnections() {
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 150) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(232, 68, 58, ${0.06 * (1 - dist / 150)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                    // Mouse connection
+                    const mdx = particles[i].x - mouseX;
+                    const mdy = particles[i].y - mouseY;
+                    const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
+                    if (mDist < 200 && mouseX > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouseX, mouseY);
+                        ctx.strokeStyle = `rgba(45, 127, 249, ${0.15 * (1 - mDist / 200)})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => { p.update(); p.draw(); });
+                drawConnections();
+                animId = requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('resize', () => { init(); });
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouseX = e.clientX - rect.left;
+                mouseY = e.clientY - rect.top;
+            });
+
+            init();
+            animate();
+        })();
+
+        // ============================
+        // CURSOR GLOW
+        // ============================
+        (function() {
+            const glow = document.getElementById('cursor-glow');
+            let showing = false;
+            document.addEventListener('mousemove', (e) => {
+                if (!showing) { glow.classList.add('active'); showing = true; }
+                glow.style.left = e.clientX + 'px';
+                glow.style.top = e.clientY + 'px';
+            });
+            document.addEventListener('mouseleave', () => {
+                glow.classList.remove('active');
+                showing = false;
+            });
+        })();
+
+        // ============================
+        // HEADER SCROLL
+        // ============================
+        (function() {
+            const header = document.getElementById('header');
+            let ticking = false;
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    requestAnimationFrame(() => {
+                        header.classList.toggle('scrolled', window.scrollY > 60);
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+        })();
+
+        // ============================
+        // MOBILE MENU
+        // ============================
+        (function() {
+            const toggle = document.getElementById('menu-toggle');
+            const nav = document.getElementById('main-nav');
+            toggle.addEventListener('click', () => {
+                nav.classList.toggle('open');
+            });
+            // Close on link click
+            nav.querySelectorAll('.nav-link, .nav-cta').forEach(link => {
+                link.addEventListener('click', () => nav.classList.remove('open'));
+            });
+        })();
+
+        // ============================
+        // SCROLL REVEAL
+        // ============================
+        (function() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        })();
+
+        // ============================
+        // ANIMATED COUNTERS
+        // ============================
+        function animateCounter(el, target, duration = 2000) {
+            let start = 0;
+            const startTime = performance.now();
+            function update(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // Ease-out-expo
+                const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                const current = Math.round(eased * target);
+                el.textContent = current.toLocaleString();
+                if (progress < 1) requestAnimationFrame(update);
+            }
+            requestAnimationFrame(update);
         }
 
-        function erase() {
-            if (charIdx > 0) {
-                typeEl.textContent = phrases[pIdx].substring(0, charIdx - 1);
-                charIdx--;
-                setTimeout(erase, 20);
-            } else {
-                pIdx = (pIdx + 1) % phrases.length;
-                setTimeout(type, 500);
-            }
-        }
+        (function() {
+            const counterObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !entry.target.dataset.animated) {
+                        entry.target.dataset.animated = 'true';
+                        const target = parseInt(entry.target.dataset.target, 10);
+                        if (!isNaN(target)) {
+                            animateCounter(entry.target, target);
+                        }
+                    }
+                });
+            }, { threshold: 0.5 });
 
-        type();
+            document.querySelectorAll('.counter').forEach(el => counterObserver.observe(el));
+        })();
 
-        // Cursor Glow
-        const glow = document.getElementById('cursor-glow');
-        window.addEventListener('mousemove', (e) => {
-            glow.style.transform = `translate(${e.clientX - 50}px, ${e.clientY - 50}px)`;
+        // ============================
+        // SOLUTION TABS
+        // ============================
+        (function() {
+            const tabs = document.querySelectorAll('.solution-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.querySelectorAll('.solution-panel').forEach(p => p.classList.remove('active'));
+                    const panel = document.getElementById('panel-' + tab.dataset.panel);
+                    if (panel) panel.classList.add('active');
+                });
+            });
+        })();
+
+        // ============================
+        // COPY BUTTONS
+        // ============================
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const cmd = btn.dataset.cmd;
+                navigator.clipboard.writeText(cmd).then(() => {
+                    btn.textContent = 'Copied!';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.textContent = 'Copy';
+                        btn.classList.remove('copied');
+                    }, 2000);
+                });
+            });
         });
 
-        // Mainframe Sync (Dynamic Releases)
-        async function syncMainframe() {
+        // ============================
+        // DEMO FORM
+        // ============================
+        function handleDemoSubmit(event) {
+            event.preventDefault();
+            const btn = document.getElementById('form-submit-btn');
+            btn.textContent = 'Sending...';
+            btn.disabled = true;
+            // Simulate submission
+            setTimeout(() => {
+                btn.textContent = '✓ Demo Requested!';
+                btn.style.background = 'linear-gradient(135deg, #10b981, #34d399)';
+                setTimeout(() => {
+                    btn.textContent = 'Request Demo';
+                    btn.style.background = '';
+                    btn.disabled = false;
+                    document.getElementById('demo-form').reset();
+                }, 3000);
+            }, 1200);
+        }
+
+        // ============================
+        // LIVE DATA SYNC FROM API
+        // ============================
+        async function syncData() {
             try {
-                // Try Local API first
-                const stats = await fetch('/api/stats').then(r => r.json()).catch(() => null);
-                const latest = await fetch('/api/releases/latest').then(r => r.json()).catch(() => null);
+                // Try local API first
+                const stats = await fetch('/api/stats').then(r => r.ok ? r.json() : null).catch(() => null);
+                const latest = await fetch('/api/releases/latest').then(r => r.ok ? r.json() : null).catch(() => null);
 
                 if (stats) {
-                    document.getElementById('stat-total').textContent = (stats.totalDownloads || 0).toLocaleString() + '+';
-                    document.getElementById('stat-releases').textContent = stats.totalReleases || 0;
+                    // Update download counter target
+                    const dlCounter = document.querySelector('#stat-downloads .counter');
+                    if (dlCounter && !dlCounter.dataset.animated) {
+                        dlCounter.dataset.target = stats.totalDownloads || 0;
+                    } else if (dlCounter) {
+                        dlCounter.textContent = (stats.totalDownloads || 0).toLocaleString();
+                    }
+
+                    const relCounter = document.querySelector('#stat-releases-count .counter');
+                    if (relCounter && !relCounter.dataset.animated) {
+                        relCounter.dataset.target = stats.totalReleases || 0;
+                    } else if (relCounter) {
+                        relCounter.textContent = (stats.totalReleases || 0).toLocaleString();
+                    }
                 }
 
                 if (latest) {
-                    document.getElementById('latest-v').textContent = 'V' + latest.version;
-                    document.getElementById('v-nsis').textContent = 'v' + latest.version + '-stable';
-                    document.getElementById('v-zip').textContent = 'v' + latest.version + '-stable';
+                    const ver = latest.version;
+                    document.getElementById('hero-version').textContent = ver;
+                    document.getElementById('stat-latest-ver').textContent = 'v' + ver;
+                    document.getElementById('dl-ver-exe').textContent = 'v' + ver;
+                    document.getElementById('dl-ver-zip').textContent = 'v' + ver;
 
-                    // Update URLs
-                    const exeFile = latest.files.find(f => f.name.includes('Setup') || f.name.endsWith('.exe'));
-                    const zipFile = latest.files.find(f => f.name.endsWith('.zip'));
+                    // Update download URLs
+                    const exeFile = latest.files?.find(f => f.name.includes('Setup') || f.name.endsWith('.exe'));
+                    const zipFile = latest.files?.find(f => f.name.endsWith('.zip'));
 
-                    if (exeFile) document.getElementById('dl-nsis').href = exeFile.url || `https://github.com/ArMaTeC/Redball/releases/download/v${latest.version}/${exeFile.name}`;
-                    if (zipFile) document.getElementById('dl-zip').href = zipFile.url || `https://github.com/ArMaTeC/Redball/releases/download/v${latest.version}/${zipFile.name}`;
+                    if (exeFile) {
+                        document.getElementById('dl-btn-exe').href = exeFile.url || `https://github.com/ArMaTeC/Redball/releases/download/v${ver}/${exeFile.name}`;
+                    }
+                    if (zipFile) {
+                        document.getElementById('dl-btn-zip').href = zipFile.url || `https://github.com/ArMaTeC/Redball/releases/download/v${ver}/${zipFile.name}`;
+                    }
                 } else {
-                    // Fallback to direct GitHub API if local server is down or returns nothing
+                    // Fallback to GitHub API
                     const ghRes = await fetch('https://api.github.com/repos/ArMaTeC/Redball/releases/latest');
                     if (ghRes.ok) {
                         const ghData = await ghRes.json();
                         const ver = ghData.tag_name.replace('v', '');
-                        document.getElementById('latest-v').textContent = 'V' + ver;
-                        document.getElementById('v-nsis').textContent = 'v' + ver + '-stable';
-                        document.getElementById('v-zip').textContent = 'v' + ver + '-stable';
+                        document.getElementById('hero-version').textContent = ver;
+                        document.getElementById('stat-latest-ver').textContent = 'v' + ver;
+                        document.getElementById('dl-ver-exe').textContent = 'v' + ver;
+                        document.getElementById('dl-ver-zip').textContent = 'v' + ver;
 
                         const exe = ghData.assets.find(a => a.name.includes('Setup') || a.name.endsWith('.exe'));
                         const zip = ghData.assets.find(a => a.name.endsWith('.zip'));
-
-                        if (exe) document.getElementById('dl-nsis').href = exe.browser_download_url;
-                        if (zip) document.getElementById('dl-zip').href = zip.browser_download_url;
+                        if (exe) document.getElementById('dl-btn-exe').href = exe.browser_download_url;
+                        if (zip) document.getElementById('dl-btn-zip').href = zip.browser_download_url;
                     }
                 }
             } catch (err) {
-                console.warn('SYNC_WARNING: Direct GitHub fallback failed. Using static links.', err);
+                console.warn('[SYNC] Data sync warning:', err.message);
             }
         }
 
-        syncMainframe();
-        // Re-sync every 5 minutes
-        setInterval(syncMainframe, 300000);
+        syncData();
+        setInterval(syncData, 300000);
+
+        // ============================
+        // SMOOTH SCROLL FOR NAV
+        // ============================
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    e.preventDefault();
+                    const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
+                    window.scrollTo({
+                        top: target.offsetTop - offset,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // ============================
+        // BACK TO TOP BUTTON
+        // ============================
+        (function() {
+            const btn = document.getElementById('back-to-top');
+            let scrollTick = false;
+            window.addEventListener('scroll', () => {
+                if (!scrollTick) {
+                    requestAnimationFrame(() => {
+                        btn.classList.toggle('visible', window.scrollY > 600);
+                        scrollTick = false;
+                    });
+                    scrollTick = true;
+                }
+            });
+            btn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        })();
+
+        // ============================
+        // ACTIVE NAV HIGHLIGHTING
+        // ============================
+        (function() {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+                        });
+                    }
+                });
+            }, { threshold: 0.2, rootMargin: '-80px 0px -50% 0px' });
+            sections.forEach(s => observer.observe(s));
+        })();
+
+        // ============================
+        // PARALLAX HERO
+        // ============================
+        (function() {
+            const heroBg = document.querySelector('.hero-bg');
+            const heroContent = document.querySelector('.hero-content');
+            let rafPending = false;
+            window.addEventListener('scroll', () => {
+                if (!rafPending) {
+                    requestAnimationFrame(() => {
+                        const scrollY = window.scrollY;
+                        const heroH = window.innerHeight;
+                        if (scrollY < heroH) {
+                            const ratio = scrollY / heroH;
+                            heroBg.style.transform = `translateY(${scrollY * 0.35}px)`;
+                            heroContent.style.transform = `translateY(${scrollY * 0.15}px)`;
+                            heroContent.style.opacity = 1 - ratio * 0.8;
+                        }
+                        rafPending = false;
+                    });
+                    rafPending = true;
+                }
+            });
+        })();
     </script>
 </body>
 </html>

@@ -1,0 +1,39 @@
+{
+    "version": "2.1.455",
+    "description": "Advanced automation and system management tool for Windows",
+    "homepage": "https://github.com/ArMaTeC/Redball",
+    "license": "MIT",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/ArMaTeC/Redball/releases/download/v2.1.455/Redball-2.1.455.zip",
+            "hash": "PLACEHOLDER_SHA256",
+            "extract_dir": "Redball"
+        }
+    },
+    "bin": [
+        "Redball.UI.WPF.exe",
+        ["Redball.UI.WPF.exe", "redball"]
+    ],
+    "shortcuts": [
+        [
+            "Redball.UI.WPF.exe",
+            "Redball"
+        ]
+    ],
+    "checkver": {
+        "github": "https://github.com/ArMaTeC/Redball",
+        "regex": "tag/v([\\d.]+)"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/ArMaTeC/Redball/releases/download/v$version/Redball-$version.zip"
+            }
+        }
+    },
+    "notes": [
+        "Redball has been installed.",
+        "Run 'redball' from the command line or use the Start Menu shortcut.",
+        "Documentation: https://github.com/ArMaTeC/Redball/wiki"
+    ]
+}

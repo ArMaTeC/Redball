@@ -1,0 +1,225 @@
+name: Package Manager Publishing
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 2.1.456)'
+        required: true
+      dry_run:
+        description: 'Dry run (do not actually publish)'
+        type: boolean
+        default: true
+
+jobs:
+  # =============================================================================
+  # Job 1: Update Package Manifests
+  # =============================================================================
+  update-manifests:
+    name: Update Package Manager Manifests
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.REDBALL_GITHUB_TOKEN }}
+
+    - name: Get version
+      id: version
+      shell: bash
+      run: |
+        if [ "${{ github.event.inputs.version }}" != "" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION=${GITHUB_REF#refs/tags/v}
+        fi
+        echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "Publishing version: $VERSION"
+
+    - name: Fetch SHA256 from release
+      id: hashes
+      shell: bash
+      run: |
+        VERSION="${{ steps.version.outputs.VERSION }}"
+        
+        # Fetch release assets
+        RELEASE_DATA=$(curl -s \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/tags/v${VERSION}")
+        
+        # Get Setup.exe hash
+        SETUP_HASH=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith("Setup.exe")) | .name' | head -1 | xargs -I{} curl -sL "https://github.com/${{ github.repository }}/releases/download/v${VERSION}/{}" | sha256sum | cut -d' ' -f1)
+        
+        # Get ZIP hash
+        ZIP_HASH=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".zip")) | .name' | head -1 | xargs -I{} curl -sL "https://github.com/${{ github.repository }}/releases/download/v${VERSION}/{}" | sha256sum | cut -d' ' -f1)
+        
+        echo "SETUP_HASH=$SETUP_HASH" >> "$GITHUB_OUTPUT"
+        echo "ZIP_HASH=$ZIP_HASH" >> "$GITHUB_OUTPUT"
+        echo "Setup SHA256: $SETUP_HASH"
+        echo "ZIP SHA256: $ZIP_HASH"
+
+    - name: Update manifests
+      run: |
+        chmod +x scripts/packaging/update-package-managers.sh
+        ./scripts/packaging/update-package-managers.sh \
+          -v "${{ steps.version.outputs.VERSION }}" \
+          --sha256-setup "${{ steps.hashes.outputs.SETUP_HASH }}" \
+          --sha256-zip "${{ steps.hashes.outputs.ZIP_HASH }}"
+
+    - name: Commit and push manifest updates
+      if: github.event.inputs.dry_run != 'true'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add packaging/
+        git diff --staged --quiet || git commit -m "Update package manager manifests for v${{ steps.version.outputs.VERSION }}"
+        git push
+
+    - name: Upload manifests as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: package-manifests
+        path: |
+          packaging/winget/
+          packaging/scoop/
+          packaging/chocolatey/
+
+  # =============================================================================
+  # Job 2: Publish to Chocolatey
+  # =============================================================================
+  publish-chocolatey:
+    name: Publish to Chocolatey
+    runs-on: windows-latest
+    needs: update-manifests
+    if: github.event.inputs.dry_run != 'true'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download manifests
+      uses: actions/download-artifact@v4
+      with:
+        name: package-manifests
+        path: packaging/
+
+    - name: Install Chocolatey
+      shell: powershell
+      run: |
+        if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+        }
+        choco --version
+
+    - name: Build and publish Chocolatey package
+      shell: powershell
+      env:
+        CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
+      run: |
+        cd packaging/chocolatey
+        
+        # Build package
+        choco pack redball.nuspec
+        
+        # Verify package exists
+        $nupkg = Get-ChildItem -Filter "redball.*.nupkg" | Select-Object -First 1
+        if (!$nupkg) {
+          Write-Error "Package file not found"
+          exit 1
+        }
+        
+        Write-Host "Built package: $($nupkg.Name)"
+        
+        # Push to Chocolatey
+        choco push $nupkg.Name --source https://push.chocolatey.org/ --api-key $env:CHOCO_API_KEY
+
+  # =============================================================================
+  # Job 3: Create Winget PR
+  # =============================================================================
+  publish-winget:
+    name: Create Winget PR
+    runs-on: ubuntu-latest
+    needs: update-manifests
+    if: github.event.inputs.dry_run != 'true'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download manifests
+      uses: actions/download-artifact@v4
+      with:
+        name: package-manifests
+        path: packaging/
+
+    - name: Install winget-create
+      run: |
+        # Download winget-create
+        curl -L -o winget-create "https://aka.ms/wingetcreate/latest/self-contained/wingetcreate_Linux_x64"
+        chmod +x winget-create
+        ./winget-create --version
+
+    - name: Submit winget manifest
+      env:
+        WINGET_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
+      run: |
+        VERSION="${{ needs.update-manifests.outputs.version }}"
+        
+        # Submit to winget-pkgs using wingetcreate
+        ./wingetcreate submit \
+          --token "$WINGET_TOKEN" \
+          packaging/winget/
+
+  # =============================================================================
+  # Job 4: Update Scoop Bucket
+  # =============================================================================
+  publish-scoop:
+    name: Update Scoop Bucket
+    runs-on: ubuntu-latest
+    needs: update-manifests
+    if: github.event.inputs.dry_run != 'true'
+    
+    steps:
+    - name: Checkout scoop-bucket repository
+      uses: actions/checkout@v4
+      with:
+        repository: ArMaTeC/scoop-bucket
+        token: ${{ secrets.REDBALL_GITHUB_TOKEN }}
+        path: scoop-bucket
+
+    - name: Download manifests
+      uses: actions/download-artifact@v4
+      with:
+        name: package-manifests
+        path: packaging/
+
+    - name: Update Scoop bucket
+      run: |
+        VERSION="${{ needs.update-manifests.outputs.version }}"
+        
+        # Copy updated manifest to bucket
+        cp packaging/scoop/redball.json scoop-bucket/bucket/
+        
+        # Commit and push
+        cd scoop-bucket
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add bucket/redball.json
+        git diff --staged --quiet || git commit -m "Update redball to v$VERSION"
+        git push
+
+    - name: Verify Scoop manifest
+      run: |
+        # Install scoop if needed (Linux alternative)
+        # This is just validation, actual install is Windows-only
+        cat scoop-bucket/bucket/redball.json | jq empty
+        echo "Scoop manifest is valid JSON"

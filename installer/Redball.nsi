@@ -476,49 +476,110 @@ Section "Uninstall"
 SectionEnd
 
 ; ============================================================================
-; Kill All Project EXEs Function
+; Check if Redball is running and offer to kill it
 ; ============================================================================
-Function KillAllRedballProcesses
-    DetailPrint "Checking for running Redball processes..."
+Function CheckAndKillRedball
+    Push $R0
+    Push $R1
     
-    ; Kill Redball.UI.WPF.exe using taskkill
-    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
-    Pop $0
-    ${If} $0 == 0
-        DetailPrint "Stopped Redball.UI.WPF.exe"
-        Sleep 500
+retry_check:
+    ; Check by window title
+    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r0'
+    StrCpy $R0 $0
+    
+    ; Check by window class
+    ${If} $R0 == 0
+        System::Call 'user32::FindWindowW(w "HwndWrapper*[DefaultGray]*", i 0) i .r0'
+        StrCpy $R0 $0
     ${EndIf}
     
-    ; Kill Redball.Service.exe using taskkill
-    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
-    Pop $0
-    ${If} $0 == 0
-        DetailPrint "Stopped Redball.Service.exe"
-        Sleep 500
-    ${EndIf}
-    
-    ; Alternative method using WMIC if taskkill didn't work
-    nsExec::Exec 'wmic process where "name='"'"'Redball.UI.WPF.exe'"'"'" delete'
-    nsExec::Exec 'wmic process where "name='"'"'Redball.Service.exe'"'"'" delete'
-    
-    ; Wait a moment for processes to fully terminate
-    Sleep 1000
-    
-    ; Check if still running by trying to rename file
-    ${If} ${FileExists} "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe"
-        Rename "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe" "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe.check"
-        ${If} ${Errors}
-            ClearErrors
-            MessageBox MB_YESNO|MB_ICONQUESTION "${PRODUCT_NAME} is still running and could not be closed automatically.$\r$\n$\r$\nWould you like to continue anyway? (Installation may fail if files are locked)" IDYES continue IDNO abort
-            abort:
-                Abort
-            continue:
-        ${Else}
-            Rename "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe.check" "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe"
+    ; Check by process enumeration
+    ${If} $R0 == 0
+        nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.UI.WPF.exe" /NH'
+        Pop $0
+        Pop $1
+        ${If} $0 == 0
+            ${If} $1 != ""
+                StrCpy $R0 1
+            ${EndIf}
         ${EndIf}
     ${EndIf}
     
-    DetailPrint "Process check complete"
+    ; Check by file lock
+    ${If} $R0 == 0
+        ${If} ${FileExists} "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe"
+            Rename "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe" "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe.check"
+            ${If} ${Errors}
+                ClearErrors
+                StrCpy $R0 1
+            ${Else}
+                Rename "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe.check" "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe"
+            ${EndIf}
+        ${EndIf}
+    ${EndIf}
+    
+    ; If running, ask user what to do
+    ${If} $R0 != 0
+        MessageBox MB_YESNOCANCEL|MB_ICONQUESTION "${PRODUCT_NAME} is currently running.$\r$\n$\r$\nWould you like to close it and continue with the installation?$\r$\n$\r$\nYes = Close Redball and continue$\r$\nNo = Continue without closing (may fail)$\r$\nCancel = Abort installation" IDYES kill_process IDNO continue_install IDCANCEL abort_install
+        
+kill_process:
+            DetailPrint "Attempting to close ${PRODUCT_NAME}..."
+            ; Try graceful close first (close main window)
+            System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r1'
+            ${If} $1 != 0
+                System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0' ; WM_CLOSE = 16
+                Sleep 2000
+            ${EndIf}
+            
+            ; Try closing any HwndWrapper windows
+            System::Call 'user32::FindWindowW(w "HwndWrapper*[DefaultGray]*", i 0) i .r1'
+            ${If} $1 != 0
+                System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
+                Sleep 2000
+            ${EndIf}
+            
+            ; Force kill if still running
+            nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
+            nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
+            Sleep 1500
+            
+            ; Check again
+            Goto retry_check
+            
+continue_install:
+            DetailPrint "Continuing without closing ${PRODUCT_NAME} (may fail if files locked)"
+            Goto done
+            
+abort_install:
+            DetailPrint "Installation aborted by user"
+            Abort
+    ${EndIf}
+    
+done:
+    DetailPrint "Process check complete - ${PRODUCT_NAME} is not running"
+    Pop $R1
+    Pop $R0
+FunctionEnd
+
+; ============================================================================
+; Kill All Project EXEs Function (legacy, used by uninstaller)
+; ============================================================================
+Function KillAllRedballProcesses
+    DetailPrint "Stopping Redball processes..."
+    
+    ; Try graceful close first
+    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r1'
+    ${If} $1 != 0
+        System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0' ; WM_CLOSE = 16
+        Sleep 1000
+    ${EndIf}
+    
+    ; Force kill
+    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
+    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
+    Sleep 1500
+    
+    DetailPrint "Processes stopped"
 FunctionEnd
 
 Function .onInit
@@ -527,9 +588,6 @@ Function .onInit
     StrCpy $DotNetDownloaded 0
     StrCpy $ServiceInstalled 0
     
-    ; Kill all Redball processes before starting installation
-    Call KillAllRedballProcesses
-    
     ; Check if installer is already running
     System::Call 'kernel32::CreateMutexW(i 0, i 0, w "${PRODUCT_NAME}Setup") i .r0'
     ${If} $0 == 0
@@ -537,30 +595,8 @@ Function .onInit
         Abort
     ${EndIf}
     
-    ; Check if Redball is already running - try to find window first
-    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r0'
-    ${If} $0 != 0
-        MessageBox MB_OK|MB_ICONEXCLAMATION "${PRODUCT_NAME} is currently running. Please close it before installing."
-        Abort
-    ${EndIf}
-    
-    ; Also check by window class
-    System::Call 'user32::FindWindowW(w "HwndWrapper*", w "${PRODUCT_NAME}") i .r0'
-    ${If} $0 != 0
-        MessageBox MB_OK|MB_ICONEXCLAMATION "${PRODUCT_NAME} is currently running. Please close it before installing."
-        Abort
-    ${EndIf}
-    
-    ; Check common install locations for locked files
-    ${If} ${FileExists} "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe"
-        Rename "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe" "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe.check"
-        ${If} ${Errors}
-            ClearErrors
-            MessageBox MB_OK|MB_ICONEXCLAMATION "${PRODUCT_NAME} is currently running (detected in AppData). Please close it before installing."
-            Abort
-        ${EndIf}
-        Rename "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe.check" "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe"
-    ${EndIf}
+    ; Check if Redball is running and offer to kill it
+    Call CheckAndKillRedball
     
     ; Check .NET runtime status
     Call CheckDotNet
@@ -601,11 +637,44 @@ Function un.onInit
         Abort
     continue:
     
-    ; Kill all Redball processes during uninstall
-    DetailPrint "Stopping all Redball processes..."
+    ; Stop service first if installed
+    ReadRegDWORD $0 HKCU "${PRODUCT_REGISTRY_KEY}" "ServiceInstalled"
+    ${If} $0 == 1
+        DetailPrint "Stopping background service..."
+        nsExec::Exec 'sc stop RedballInputService'
+        Sleep 2000
+        nsExec::Exec 'sc delete RedballInputService'
+        Sleep 1000
+    ${EndIf}
+    
+    ; Kill all Redball processes during uninstall (with graceful close first)
+    Call un.KillAllRedballProcesses
+FunctionEnd
+
+; Uninstaller process kill function
+Function un.KillAllRedballProcesses
+    DetailPrint "Stopping Redball processes..."
+    
+    ; Try graceful close first
+    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r1'
+    ${If} $1 != 0
+        System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0' ; WM_CLOSE = 16
+        Sleep 1500
+    ${EndIf}
+    
+    ; Try closing any WPF windows by class
+    System::Call 'user32::FindWindowW(w "HwndWrapper*[DefaultGray]*", i 0) i .r1'
+    ${If} $1 != 0
+        System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
+        Sleep 1500
+    ${EndIf}
+    
+    ; Force kill if still running
     nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
     nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
-    Sleep 1500
+    Sleep 2000
+    
+    DetailPrint "Processes stopped"
 FunctionEnd
 
 ; ============================================================================
