@@ -27,7 +27,7 @@
     "autoupdate": {
         "architecture": {
             "64bit": {
-                "url": "https://github.com/ArMaTeC/Redball/releases/download/v$version/Redball-$version.zip"
+                "url": "https://github.com/ArMaTeC/Redball/releases/download/v2.1.455/Redball-2.1.455.zip"
             }
         }
     },

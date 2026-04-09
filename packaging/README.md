@@ -16,7 +16,7 @@ This directory contains the package manifests and automation for distributing Re
 
 ## Directory Structure
 
-```
+```text
 packaging/
 ├── README.md                          # This file
 ├── winget/
@@ -54,6 +54,7 @@ Updates all package manifests when a new version is released:
 ```
 
 This script automatically:
+
 - Fetches the current version from `Directory.Build.props`
 - Calculates SHA256 hashes for release artifacts
 - Updates all manifest files with new version and hashes
@@ -82,11 +83,11 @@ The `.github/workflows/package-managers.yml` workflow automatically publishes to
 
 Configure these in your GitHub repository settings:
 
-| Secret                 | Description                                                      | Used For                 |
-| ---------------------- | ---------------------------------------------------------------- | ------------------------ |
-| `CHOCO_API_KEY`        | Chocolatey API key from https://community.chocolatey.org/account | Publishing to Chocolatey |
-| `WINGET_GITHUB_TOKEN`  | Personal access token with `public_repo` scope                   | Creating winget-pkgs PR  |
-| `REDBALL_GITHUB_TOKEN` | GitHub token for repository access                               | Updating Scoop bucket    |
+| Secret                 | Description                                                        | Used For                 |
+| ---------------------- | ------------------------------------------------------------------ | ------------------------ |
+| `CHOCO_API_KEY`        | Chocolatey API key from <https://community.chocolatey.org/account> | Publishing to Chocolatey |
+| `WINGET_GITHUB_TOKEN`  | Personal access token with `public_repo` scope                     | Creating winget-pkgs PR  |
+| `REDBALL_GITHUB_TOKEN` | GitHub token for repository access                                 | Updating Scoop bucket    |
 
 ## Manual Setup Guide
 
@@ -108,6 +109,7 @@ Winget uses the community-driven [microsoft/winget-pkgs](https://github.com/micr
 ```
 
 This script automatically:
+
 1. Creates a fork of `microsoft/winget-pkgs` (if needed)
 2. Validates the manifests
 3. Creates the proper directory structure
@@ -117,7 +119,7 @@ This script automatically:
 
 If you prefer manual submission:
 
-1. Fork https://github.com/microsoft/winget-pkgs
+1. Fork <https://github.com/microsoft/winget-pkgs>
 2. Create directory: `manifests/a/ArMaTeC/Redball/2.1.455/`
 3. Copy the three YAML files from `packaging/winget/`
 4. Submit PR to microsoft/winget-pkgs
@@ -134,9 +136,11 @@ Scoop requires a "bucket" repository to host manifests.
 
 1. Create repository `ArMaTeC/scoop-bucket`
 2. Add this repository as a Scoop bucket:
+
    ```powershell
    scoop bucket add redball https://github.com/ArMaTeC/scoop-bucket
    ```
+
 3. Copy `packaging/scoop/redball.json` to `bucket/redball.json`
 
 **Automated updates:**
@@ -147,8 +151,8 @@ The GitHub Action automatically pushes manifest updates to the bucket repository
 
 **Prerequisites:**
 
-1. Create account at https://community.chocolatey.org/
-2. Get API key from https://community.chocolatey.org/account
+1. Create account at <https://community.chocolatey.org/>
+2. Get API key from <https://community.chocolatey.org/account>
 3. Store API key in `CHOCO_API_KEY` secret
 
 **First-time publish:**
@@ -165,7 +169,7 @@ The GitHub Action automatically builds and pushes new versions.
 
 ## Testing Packages Locally
 
-### Winget
+### Winget1
 
 ```powershell
 # Install manifest locally
@@ -175,7 +179,7 @@ winget install --manifest packaging/winget/
 winget validate --manifest packaging/winget/
 ```
 
-### Scoop
+### Scoop1
 
 ```powershell
 # Install from local manifest
@@ -185,7 +189,7 @@ scoop install packaging/scoop/redball.json
 scoop update redball
 ```
 
-### Chocolatey
+### Chocolatey1
 
 ```powershell
 cd packaging/chocolatey
@@ -202,13 +206,14 @@ choco uninstall redball
 
 ## Manifest Maintenance
 
-### When releasing a new version:
+### When releasing a new version
 
 1. **Automatic** (recommended):
    - Create GitHub release
    - GitHub Actions automatically updates manifests and publishes
 
 2. **Semi-automatic**:
+
    ```bash
    # Run the update script
    ./scripts/packaging/update-package-managers.sh -v 2.1.456
@@ -245,11 +250,13 @@ Example: `2.1.455`
 If you get SHA256 hash mismatches:
 
 1. Download the actual release artifact:
+
    ```bash
    curl -L -o setup.exe https://github.com/ArMaTeC/Redball/releases/download/v2.1.455/Redball-2.1.455-Setup.exe
    ```
 
 2. Calculate hash:
+
    ```bash
    sha256sum setup.exe
    ```
@@ -276,9 +283,10 @@ winget validate --manifest packaging/winget/
 
 For package-specific issues:
 
-- **Winget**: https://github.com/microsoft/winget-pkgs/issues
-- **Scoop**: https://github.com/ScoopInstaller/Scoop/issues
-- **Chocolatey**: https://github.com/chocolatey/choco/issues
+- **Winget**: <https://github.com/microsoft/winget-pkgs/issues>
+- **Scoop**: <https://github.com/ScoopInstaller/Scoop/issues>
+- **Chocolatey**: <https://github.com/chocolatey/choco/issues>
 
 For Redball-specific issues:
-- https://github.com/ArMaTeC/Redball/issues
+
+- <https://github.com/ArMaTeC/Redball/issues>
