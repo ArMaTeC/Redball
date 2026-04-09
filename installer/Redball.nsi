@@ -346,10 +346,8 @@ Section /o "Background Service" SecService
     DetailPrint "Installing Background Service..."
     SetOutPath "$INSTDIR"
     
-    ; Copy service files
+    ; Copy service files (single-file published, no separate DLL)
     File "Redball.Service.exe"
-    File "Redball.Service.dll"
-    File "Redball.Service.runtimeconfig.json"
     
     ; Install service (requires admin - skip if not elevated)
     UserInfo::GetAccountType
@@ -450,8 +448,6 @@ Section "Uninstall"
     Delete "$INSTDIR\Redball.UI.WPF.deps.json"
     Delete "$INSTDIR\Redball.UI.WPF.runtimeconfig.json"
     Delete "$INSTDIR\Redball.Service.exe"
-    Delete "$INSTDIR\Redball.Service.dll"
-    Delete "$INSTDIR\Redball.Service.runtimeconfig.json"
     Delete "$INSTDIR\README.txt"
     Delete "$INSTDIR\uninstall.exe"
     

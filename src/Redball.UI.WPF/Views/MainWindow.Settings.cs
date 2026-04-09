@@ -19,8 +19,6 @@ namespace Redball.UI.Views;
 public partial class MainWindow
 {
     private readonly Stack<string> _settingsUndoStack = new(20);
-    private bool _suppressVerifySignaturePrompt;
-    private bool _isSettingsDirty;
 
     private void LoadEmbeddedSettings()
     {

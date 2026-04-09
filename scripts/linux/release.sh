@@ -494,8 +494,8 @@ publish_to_update_server() {
             # Create binaries subdirectory
             mkdir -p "$update_server_dir/binaries"
             
-            # Copy main executables and their DLLs
-            for file in Redball.UI.WPF.exe Redball.UI.WPF.dll Redball.Service.exe Redball.Service.dll; do
+            # Copy main executables (Service is single-file, no separate DLL)
+            for file in Redball.UI.WPF.exe Redball.UI.WPF.dll Redball.Service.exe; do
                 if [[ -f "$wpf_publish/$file" ]]; then
                     cp "$wpf_publish/$file" "$update_server_dir/binaries/"
                     log_debug "  Copied binary: $file"
