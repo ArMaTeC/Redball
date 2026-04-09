@@ -483,37 +483,41 @@ Function CheckAndKillRedball
     Push $R1
     
 retry_check:
-    ; Check by window title
-    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r0'
-    StrCpy $R0 $0
+    StrCpy $R0 0
     
-    ; Check by window class
-    ${If} $R0 == 0
-        System::Call 'user32::FindWindowW(w "HwndWrapper*[DefaultGray]*", i 0) i .r0'
-        StrCpy $R0 $0
-    ${EndIf}
-    
-    ; Check by process enumeration
-    ${If} $R0 == 0
-        nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.UI.WPF.exe" /NH'
-        Pop $0
-        Pop $1
-        ${If} $0 == 0
+    ; Check by process enumeration (most reliable - only checks for actual app process)
+    nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.UI.WPF.exe" /NH 2>nul'
+    Pop $0
+    Pop $1
+    ${If} $0 == 0
+        ${If} $1 != ""
+            ; Check that it's not just empty/no process found output
+            nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.UI.WPF.exe" /NH /FO CSV 2>nul'
+            Pop $0
+            Pop $1
             ${If} $1 != ""
                 StrCpy $R0 1
             ${EndIf}
         ${EndIf}
     ${EndIf}
     
-    ; Check by file lock
+    ; Secondary check: window class (WPF app windows)
     ${If} $R0 == 0
-        ${If} ${FileExists} "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe"
-            Rename "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe" "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe.check"
+        System::Call 'user32::FindWindowW(w "HwndWrapper*[DefaultGray]*", i 0) i .r0'
+        ${If} $0 != 0
+            StrCpy $R0 1
+        ${EndIf}
+    ${EndIf}
+    
+    ; Check by file lock (only if installed)
+    ${If} $R0 == 0
+        ${If} ${FileExists} "$INSTDIR\Redball.UI.WPF.exe"
+            Rename "$INSTDIR\Redball.UI.WPF.exe" "$INSTDIR\Redball.UI.WPF.exe.check"
             ${If} ${Errors}
                 ClearErrors
                 StrCpy $R0 1
             ${Else}
-                Rename "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe.check" "$LOCALAPPDATA\Redball\Redball.UI.WPF.exe"
+                Rename "$INSTDIR\Redball.UI.WPF.exe.check" "$INSTDIR\Redball.UI.WPF.exe"
             ${EndIf}
         ${EndIf}
     ${EndIf}
@@ -525,23 +529,16 @@ retry_check:
         
 kill_process:
             DetailPrint "Attempting to close ${PRODUCT_NAME}..."
-            ; Try graceful close first (close main window)
-            System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r1'
+            ; Try graceful close first (WPF window class)
+            System::Call 'user32::FindWindowW(w "HwndWrapper*[DefaultGray]*", i 0) i .r1'
             ${If} $1 != 0
                 System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0' ; WM_CLOSE = 16
                 Sleep 2000
             ${EndIf}
             
-            ; Try closing any HwndWrapper windows
-            System::Call 'user32::FindWindowW(w "HwndWrapper*[DefaultGray]*", i 0) i .r1'
-            ${If} $1 != 0
-                System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
-                Sleep 2000
-            ${EndIf}
-            
             ; Force kill if still running
-            nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
-            nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
+            nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'
+            nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
             Sleep 1500
             
             ; Check again
@@ -568,16 +565,16 @@ FunctionEnd
 Function KillAllRedballProcesses
     DetailPrint "Stopping Redball processes..."
     
-    ; Try graceful close first
-    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r1'
+    ; Try graceful close first (WPF window class only)
+    System::Call 'user32::FindWindowW(w "HwndWrapper*[DefaultGray]*", i 0) i .r1'
     ${If} $1 != 0
         System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0' ; WM_CLOSE = 16
         Sleep 1000
     ${EndIf}
     
     ; Force kill
-    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
-    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
+    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'
+    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
     Sleep 1500
     
     DetailPrint "Processes stopped"
