@@ -381,6 +381,10 @@ public class UpdateService : IUpdateService
     {
         try
         {
+            Logger.Info("UpdateService", "=== UPDATE CHECK STARTED ===");
+            Logger.Info("UpdateService", $"[CONFIG] Update server: {_updateServerUrl ?? "(not configured - using GitHub)"}");
+            Logger.Info("UpdateService", $"[CONFIG] Repository: {_repoOwner}/{_repoName}, Channel: {_updateChannel}, Verify signature: {_verifySignature}");
+            
             var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
             Logger.Debug("UpdateService", $"Current assembly version: {currentVersion}");
             
@@ -645,10 +649,15 @@ public class UpdateService : IUpdateService
             }
 
             // Fallback to full asset (MSI/ZIP)
+            Logger.Info("UpdateService", "[FALLBACK] Delta patching not available or not applicable. Using full installer.");
             var bestAsset = FindBestAsset(latestRelease);
             if (bestAsset == null)
+            {
+                Logger.Error("UpdateService", "[FALLBACK] No suitable installer asset found");
                 return null;
+            }
 
+            Logger.Info("UpdateService", $"[FALLBACK] Selected installer: {bestAsset.Name} ({FormatBytes(bestAsset.Size)})");
             _consecutiveFailures = 0;
             return new UpdateInfo
             {

@@ -103,8 +103,8 @@ public sealed class DeltaUpdateService
         Logger.Debug("DeltaUpdateService", "[PATCH] ✓ Old file hash verified");
 
         // Decompress patch
-        Logger.Debug("DeltaUpdateService", $"[PATCH] Decompressing patch data: {patch.Data.Length} bytes");
-        var decompressed = await DecompressAsync(patch.Data, ct);
+        Logger.Debug("DeltaUpdateService", $"[PATCH] Decompressing patch data: {patch.Data?.Length ?? 0} bytes");
+        var decompressed = await DecompressAsync(patch.Data ?? Array.Empty<byte>(), ct);
         Logger.Debug("DeltaUpdateService", $"[PATCH] Decompressed to: {decompressed.Length} bytes");
 
         using var ms = new MemoryStream(decompressed);
