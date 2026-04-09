@@ -8,11 +8,11 @@ This directory contains the package manifests and automation for distributing Re
 
 ## Quick Reference
 
-| Package Manager | Install Command | Status |
-|----------------|-----------------|--------|
-| Winget | `winget install ArMaTeC.Redball` | ⏳ Pending first submission |
-| Scoop | `scoop install redball` | ⏳ Pending bucket setup |
-| Chocolatey | `choco install redball` | ⏳ Pending first push |
+| Package Manager | Install Command                  | Status                     |
+| --------------- | -------------------------------- | -------------------------- |
+| Winget          | `winget install ArMaTeC.Redball` | ⏳ Pending first submission |
+| Scoop           | `scoop install redball`          | ⏳ Pending bucket setup     |
+| Chocolatey      | `choco install redball`          | ⏳ Pending first push       |
 
 ## Directory Structure
 
@@ -82,11 +82,11 @@ The `.github/workflows/package-managers.yml` workflow automatically publishes to
 
 Configure these in your GitHub repository settings:
 
-| Secret | Description | Used For |
-|--------|-------------|----------|
-| `CHOCO_API_KEY` | Chocolatey API key from https://community.chocolatey.org/account | Publishing to Chocolatey |
-| `WINGET_GITHUB_TOKEN` | Personal access token with `public_repo` scope | Creating winget-pkgs PR |
-| `REDBALL_GITHUB_TOKEN` | GitHub token for repository access | Updating Scoop bucket |
+| Secret                 | Description                                                      | Used For                 |
+| ---------------------- | ---------------------------------------------------------------- | ------------------------ |
+| `CHOCO_API_KEY`        | Chocolatey API key from https://community.chocolatey.org/account | Publishing to Chocolatey |
+| `WINGET_GITHUB_TOKEN`  | Personal access token with `public_repo` scope                   | Creating winget-pkgs PR  |
+| `REDBALL_GITHUB_TOKEN` | GitHub token for repository access                               | Updating Scoop bucket    |
 
 ## Manual Setup Guide
 
@@ -94,7 +94,28 @@ Configure these in your GitHub repository settings:
 
 Winget uses the community-driven [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) repository.
 
-**First-time submission:**
+**First-time submission (automated):**
+
+```bash
+# Run the automated submission script
+./scripts/packaging/publish-winget.sh
+
+# Or with specific version
+./scripts/packaging/publish-winget.sh -v 2.1.456
+
+# Dry run to validate without submitting
+./scripts/packaging/publish-winget.sh --dry-run
+```
+
+This script automatically:
+1. Creates a fork of `microsoft/winget-pkgs` (if needed)
+2. Validates the manifests
+3. Creates the proper directory structure
+4. Submits a PR to microsoft/winget-pkgs
+
+**First-time submission (manual):**
+
+If you prefer manual submission:
 
 1. Fork https://github.com/microsoft/winget-pkgs
 2. Create directory: `manifests/a/ArMaTeC/Redball/2.1.455/`
@@ -103,7 +124,7 @@ Winget uses the community-driven [microsoft/winget-pkgs](https://github.com/micr
 
 **Subsequent updates:**
 
-The GitHub Action will automatically submit updates using `wingetcreate`.
+The GitHub Action will automatically submit updates using the same script.
 
 ### Scoop
 

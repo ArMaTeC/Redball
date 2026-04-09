@@ -1,7 +1,7 @@
 {
   "fromVersion": "2.1.471",
   "toVersion": "2.1.472",
-  "generatedAt": "2026-04-09T08:41:24.033Z",
+  "generatedAt": "2026-04-09T10:57:28.268Z",
   "patches": [
     {
       "file": "binaries/Redball.Service.dll",

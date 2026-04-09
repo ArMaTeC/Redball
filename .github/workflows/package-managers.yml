@@ -154,6 +154,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Download manifests
       uses: actions/download-artifact@v4
@@ -161,23 +163,26 @@ jobs:
         name: package-manifests
         path: packaging/
 
-    - name: Install winget-create
+    - name: Configure Git
       run: |
-        # Download winget-create
-        curl -L -o winget-create "https://aka.ms/wingetcreate/latest/self-contained/wingetcreate_Linux_x64"
-        chmod +x winget-create
-        ./winget-create --version
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-    - name: Submit winget manifest
+    - name: Authenticate GitHub CLI
       env:
         WINGET_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
       run: |
-        VERSION="${{ needs.update-manifests.outputs.version }}"
-        
-        # Submit to winget-pkgs using wingetcreate
-        ./wingetcreate submit \
-          --token "$WINGET_TOKEN" \
-          packaging/winget/
+        echo "$WINGET_TOKEN" | gh auth login --with-token
+        gh auth status
+
+    - name: Submit to Winget
+      env:
+        WINGET_GITHUB_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
+      run: |
+        chmod +x scripts/packaging/publish-winget.sh
+        ./scripts/packaging/publish-winget.sh \
+          -v "${{ needs.update-manifests.outputs.version }}" \
+          --token "$WINGET_GITHUB_TOKEN"
 
   # =============================================================================
   # Job 4: Update Scoop Bucket
