@@ -101,3 +101,4 @@ build_errors.txt
 package.json
 update-server/node_modules/
 src/Redball.Linux/.flatpak-builder/cache/
+update-server/releases/

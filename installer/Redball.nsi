@@ -520,7 +520,7 @@ retry_check:
     
     ; If running, ask user what to do
     ${If} $R0 != 0
-        MessageBox MB_YESNOCANCEL|MB_ICONQUESTION "${PRODUCT_NAME} is currently running.$\r$\n$\r$\nWould you like to close it and continue with the installation?$\r$\n$\r$\nYes = Close Redball and continue$\r$\nNo = Continue without closing (may fail)$\r$\nCancel = Abort installation" IDYES kill_process IDNO continue_install IDCANCEL abort_install
+        MessageBox MB_YESNOCANCEL|MB_ICONQUESTION "${PRODUCT_NAME} is currently running. Would you like to close it and continue with installation? (Yes=Close, No=Continue, Cancel=Abort)" IDYES kill_process IDNO continue_install IDCANCEL abort_install
         
 kill_process:
             DetailPrint "Attempting to close ${PRODUCT_NAME}..."
