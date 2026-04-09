@@ -433,10 +433,18 @@ public class UpdateService : IUpdateService
 
             // Check for manifest.json for differential updates
             var manifestAsset = latestRelease.Assets.Find(a => a.Name.Equals("manifest.json", StringComparison.OrdinalIgnoreCase));
+            
+            // DEBUG: Log all available assets
+            Logger.Info("UpdateService", $"Available release assets ({latestRelease.Assets.Count}): {string.Join(", ", latestRelease.Assets.Select(a => a.Name))}");
+            
+            // DEBUG: Check for any .patch files
+            var patchAssets = latestRelease.Assets.Where(a => a.Name.EndsWith(".patch", StringComparison.OrdinalIgnoreCase)).ToList();
+            Logger.Info("UpdateService", $"Found {patchAssets.Count} patch assets in release: {string.Join(", ", patchAssets.Select(p => $"{p.Name}({p.Size}bytes)"))}");
+            
             if (manifestAsset != null)
             {
-                Logger.Info("UpdateService", "Found update manifest, checking for differential updates...");
-                Logger.Debug("UpdateService", $"Manifest URL: {manifestAsset.DownloadUrl}");
+                Logger.Info("UpdateService", "[DELTA] Found update manifest, checking for differential updates...");
+                Logger.Debug("UpdateService", $"[DELTA] Manifest URL: {manifestAsset.DownloadUrl}");
                 ReportCheckProgress(progress, UpdateCheckStage.ParsingManifest, 50, "Reading update manifest...");
                 
                 var manifestJson = await _httpClient.GetStringAsync(manifestAsset.DownloadUrl, cancellationToken);
@@ -456,6 +464,8 @@ public class UpdateService : IUpdateService
                     
                     ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, 55, $"Scanning {totalFiles} files for changes...", 0, totalFiles);
                     
+                    Logger.Info("UpdateService", $"[DELTA] Processing {manifest.Files.Count} files from manifest...");
+                    
                     foreach (var file in manifest.Files)
                     {
                         processedFiles++;
@@ -463,6 +473,8 @@ public class UpdateService : IUpdateService
                         var localPath = Path.Combine(appDir, normalizedName);
                         var fileName = Path.GetFileName(normalizedName);
                         bool needsUpdate = true;
+                        
+                        Logger.Debug("UpdateService", $"[DELTA] Checking file {processedFiles}/{totalFiles}: {normalizedName}");
                         
                         // Report progress every file with detailed status
                         int progressPct = 55 + (processedFiles * 30 / totalFiles);
@@ -538,17 +550,38 @@ public class UpdateService : IUpdateService
                             if (asset != null)
                             {
                                 fileInfo.DownloadUrl = asset.DownloadUrl;
+                                Logger.Debug("UpdateService", $"[DELTA] Found full file asset for {normalizedName}: {asset.Size} bytes");
+                            }
+                            else
+                            {
+                                Logger.Debug("UpdateService", $"[DELTA] No full file asset found for {normalizedName}");
+                            }
+                            
+                            // Check if binary delta patch is available (preferred for bandwidth)
+                            var expectedPatchName = Path.GetFileName(file.Name) + ".patch";
+                            Logger.Debug("UpdateService", $"[DELTA] Looking for patch: {expectedPatchName}");
+                            
+                            var patchAsset = latestRelease.Assets.Find(a => 
+                                a.Name.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
+                            
+                            if (patchAsset != null)
+                            {
+                                Logger.Info("UpdateService", $"[DELTA] Found patch asset for {normalizedName}: {patchAsset.Name} ({patchAsset.Size} bytes)");
                                 
-                                // Check if binary delta patch is available (preferred for bandwidth)
-                                var patchAsset = latestRelease.Assets.Find(a => 
-                                    a.Name.Equals(Path.GetFileName(file.Name) + ".patch", StringComparison.OrdinalIgnoreCase));
-                                
-                                if (patchAsset != null && patchAsset.Size > 0 && patchAsset.Size < file.Size)
+                                if (patchAsset.Size > 0 && patchAsset.Size < file.Size)
                                 {
                                     fileInfo.PatchUrl = patchAsset.DownloadUrl;
                                     fileInfo.PatchSize = patchAsset.Size;
-                                    Logger.Debug("UpdateService", $"Using delta patch for {normalizedName}: {patchAsset.Size} bytes vs {file.Size} bytes full file");
+                                    Logger.Info("UpdateService", $"[DELTA] ✓ Using delta patch for {normalizedName}: {FormatBytes(patchAsset.Size)} vs {FormatBytes(file.Size)} full file (saves {FormatBytes(file.Size - patchAsset.Size)})");
                                 }
+                                else
+                                {
+                                    Logger.Warning("UpdateService", $"[DELTA] ✗ Patch for {normalizedName} rejected: size={patchAsset.Size} (file.Size={file.Size})");
+                                }
+                            }
+                            else
+                            {
+                                Logger.Debug("UpdateService", $"[DELTA] No patch found for {normalizedName} (looked for: {expectedPatchName})");
                             }
                             // If no individual asset, we'll use ZIP extraction during download
                             
@@ -569,6 +602,13 @@ public class UpdateService : IUpdateService
                             $"All files up to date! ({filesUpToDate}/{totalFiles} files)");
                     }
                     
+                    var filesWithPatches = filesToUpdate.Count(f => !string.IsNullOrEmpty(f.PatchUrl));
+                    var totalPatchableSize = filesToUpdate.Where(f => !string.IsNullOrEmpty(f.PatchUrl)).Sum(f => f.PatchSize);
+                    var totalFullSize = filesToUpdate.Where(f => string.IsNullOrEmpty(f.PatchUrl)).Sum(f => f.Size);
+                    
+                    Logger.Info("UpdateService", $"[DELTA] Summary: {filesToUpdate.Count} files need update, {filesWithPatches} have patches available");
+                    Logger.Info("UpdateService", $"[DELTA] Download size: {FormatBytes(totalPatchableSize)} (patches) + {FormatBytes(totalFullSize)} (full files)");
+                    
                     if (filesToUpdate.Count > 0)
                     {
                         // Find the ZIP asset URL for ZIP-based differential extraction
@@ -576,8 +616,9 @@ public class UpdateService : IUpdateService
                             a.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) &&
                             !a.Name.Contains("debug", StringComparison.OrdinalIgnoreCase));
                         
-                        Logger.Info("UpdateService", $"Differential update available: {filesToUpdate.Count}/{manifest.Files.Count} files need updating (ZIP fallback: {(zipAsset != null ? "available" : "none")}).");
-                        Logger.Info("UpdateService", $"Total size to download: {FormatBytes(filesToUpdate.Sum(f => f.PatchUrl != null ? f.PatchSize : f.Size))}");
+                        Logger.Info("UpdateService", $"[DELTA] Differential update ready: {filesToUpdate.Count}/{manifest.Files.Count} files need updating");
+                        Logger.Info("UpdateService", $"[DELTA] ZIP fallback available: {(zipAsset != null ? "YES" : "NO")}");
+                        Logger.Info("UpdateService", $"[DELTA] Total download size: {FormatBytes(filesToUpdate.Sum(f => f.PatchUrl != null ? f.PatchSize : f.Size))}");
                         _consecutiveFailures = 0;
                         return new UpdateInfo
                         {
@@ -683,7 +724,7 @@ public class UpdateService : IUpdateService
             if (updateInfo.FilesToUpdate != null && updateInfo.FilesToUpdate.Count > 0)
             {
                 var totalFiles = updateInfo.FilesToUpdate.Count;
-                Logger.Info("UpdateService", $"Starting differential update of {totalFiles} files...");
+                Logger.Info("UpdateService", $"[DELTA-APPLY] Starting differential update of {totalFiles} files...");
                 int completed = 0;
                 long totalBytesSaved = 0;
                 var appDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -691,6 +732,9 @@ public class UpdateService : IUpdateService
                 // Check if any files have individual download URLs
                 bool hasIndividualAssets = updateInfo.FilesToUpdate.Any(f => !string.IsNullOrEmpty(f.DownloadUrl));
                 bool hasPatches = updateInfo.FilesToUpdate.Any(f => !string.IsNullOrEmpty(f.PatchUrl));
+                
+                Logger.Info("UpdateService", $"[DELTA-APPLY] hasIndividualAssets={hasIndividualAssets}, hasPatches={hasPatches}, zipUrl={!string.IsNullOrEmpty(updateInfo.DownloadUrl)}");
+                Logger.Info("UpdateService", $"[DELTA-APPLY] Patch breakdown: {updateInfo.FilesToUpdate.Count(f => !string.IsNullOrEmpty(f.PatchUrl))} with patches, {updateInfo.FilesToUpdate.Count(f => string.IsNullOrEmpty(f.PatchUrl) && !string.IsNullOrEmpty(f.DownloadUrl))} with full file URLs, {updateInfo.FilesToUpdate.Count(f => string.IsNullOrEmpty(f.PatchUrl) && string.IsNullOrEmpty(f.DownloadUrl))} with no source");
                 
                 // If no individual assets or patches, download ZIP once and extract changed files
                 string? extractedZipDir = null;
@@ -729,13 +773,17 @@ public class UpdateService : IUpdateService
                     var fileShortName = Path.GetFileName(normalizedName);
                     
                     // Try binary delta patch first if available
+                    Logger.Debug("UpdateService", $"[DELTA-APPLY] Processing file {completed}/{totalFiles}: {normalizedName}, PatchUrl={!string.IsNullOrEmpty(file.PatchUrl)}, PatchSize={file.PatchSize}, DownloadUrl={!string.IsNullOrEmpty(file.DownloadUrl)}");
+                    
                     if (!string.IsNullOrEmpty(file.PatchUrl) && file.PatchSize > 0)
                     {
+                        Logger.Info("UpdateService", $"[DELTA-APPLY] Attempting delta patch for {fileShortName} from {file.PatchUrl}");
                         try
                         {
                             var localFilePath = Path.Combine(appDir, normalizedName);
                             if (File.Exists(localFilePath))
                             {
+                                Logger.Info("UpdateService", $"[DELTA-APPLY] Local file exists for patching: {localFilePath}");
                                 ReportProgress(progress, UpdateStage.Downloading, 35 + (completed * 50 / totalFiles),
                                     $"Downloading patch {completed}/{totalFiles}: {fileShortName}",
                                     logEntry: $"  [{completed}/{totalFiles}] Downloading delta patch: {fileShortName}",
@@ -745,6 +793,7 @@ public class UpdateService : IUpdateService
                                 var patchDir2 = Path.GetDirectoryName(patchPath);
                                 if (patchDir2 != null && !Directory.Exists(patchDir2)) Directory.CreateDirectory(patchDir2);
                                 
+                                Logger.Info("UpdateService", $"[DELTA-APPLY] Downloading patch to: {patchPath}");
                                 if (await DownloadFileAsync(file.PatchUrl, patchPath, progress, cancellationToken))
                                 {
                                     ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
@@ -762,19 +811,23 @@ public class UpdateService : IUpdateService
                                         NewFileSize = file.Size
                                     };
                                     
+                                    Logger.Info("UpdateService", $"[DELTA-APPLY] Applying patch to {fileShortName}: oldData={oldData.Length} bytes, patch={patchData.Length} bytes");
                                     var newData = await DeltaUpdateService.Instance.ApplyPatchAsync(oldData, patch, cancellationToken);
+                                    Logger.Info("UpdateService", $"[DELTA-APPLY] Patch applied, newData={newData.Length} bytes, writing to {destPath}");
                                     await File.WriteAllBytesAsync(destPath, newData, cancellationToken);
                                     
                                     // Verify hash
                                     var actualHash = await CalculateHashAsync(destPath);
+                                    Logger.Info("UpdateService", $"[DELTA-APPLY] Hash verification: expected={file.Hash}, actual={actualHash}");
                                     if (!actualHash.Equals(file.Hash, StringComparison.OrdinalIgnoreCase))
                                     {
-                                        Logger.Warning("UpdateService", $"Patch result hash mismatch for {normalizedName}, falling back");
+                                        Logger.Warning("UpdateService", $"[DELTA-APPLY] Patch result hash mismatch for {normalizedName}, falling back");
                                         File.Delete(destPath);
                                         throw new InvalidOperationException("Patch hash mismatch");
                                     }
                                     
                                     totalBytesSaved += (file.Size - file.PatchSize);
+                                    Logger.Info("UpdateService", $"[DELTA-APPLY] ✓ Successfully patched {fileShortName}");
                                     ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
                                         $"Patched {completed}/{totalFiles}: {fileShortName}",
                                         logEntry: $"  [{completed}/{totalFiles}] ✓ Patched: {fileShortName} (saved {FormatBytes(file.Size - file.PatchSize)})",
@@ -787,7 +840,8 @@ public class UpdateService : IUpdateService
                         }
                         catch (Exception ex)
                         {
-                            Logger.Warning("UpdateService", $"Delta patch failed for {normalizedName}: {ex.Message}");
+                            Logger.Warning("UpdateService", $"[DELTA-APPLY] ✗ Delta patch failed for {normalizedName}: {ex.Message}");
+                            Logger.Debug("UpdateService", $"[DELTA-APPLY] Patch failure stack trace: {ex.StackTrace}");
                             ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
                                 $"Patch failed for {fileShortName}, using fallback...",
                                 logEntry: $"  [{completed}/{totalFiles}] ⚠ Patch failed: {fileShortName}, falling back",
@@ -852,9 +906,11 @@ public class UpdateService : IUpdateService
                     }
                 }
                 
+                Logger.Info("UpdateService", $"[DELTA-APPLY] Completed processing {completed} files, total bytes saved: {FormatBytes(totalBytesSaved)}");
+                
                 if (totalBytesSaved > 0)
                 {
-                    Logger.Info("UpdateService", $"Delta patching saved {FormatBytes(totalBytesSaved)} total");
+                    Logger.Info("UpdateService", $"[DELTA-APPLY] Delta patching saved {FormatBytes(totalBytesSaved)} total");
                     ReportProgress(progress, UpdateStage.Staging, 90, "Preparing to apply update...",
                         logEntry: $"Delta patching saved {FormatBytes(totalBytesSaved)} in bandwidth.", isDelta: true);
                 }

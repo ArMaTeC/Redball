@@ -90,28 +90,39 @@ public sealed class DeltaUpdateService
     /// </summary>
     public async Task<byte[]> ApplyPatchAsync(byte[] oldData, DeltaPatch patch, CancellationToken ct)
     {
+        Logger.Info("DeltaUpdateService", $"[PATCH] Starting patch application: oldData={oldData.Length} bytes, patchData={patch.Data?.Length ?? 0} bytes");
+        Logger.Debug("DeltaUpdateService", $"[PATCH] Expected old hash: {patch.OldFileHash}, new hash: {patch.NewFileHash}, new size: {patch.NewFileSize}");
+        
         // Verify old data hash
         var actualHash = ComputeHash(oldData);
         if (actualHash != patch.OldFileHash)
         {
+            Logger.Error("DeltaUpdateService", $"[PATCH] ✗ Old file hash mismatch! Expected: {patch.OldFileHash}, Actual: {actualHash}");
             throw new InvalidOperationException("Old file hash mismatch - cannot apply patch");
         }
+        Logger.Debug("DeltaUpdateService", "[PATCH] ✓ Old file hash verified");
 
         // Decompress patch
+        Logger.Debug("DeltaUpdateService", $"[PATCH] Decompressing patch data: {patch.Data.Length} bytes");
         var decompressed = await DecompressAsync(patch.Data, ct);
+        Logger.Debug("DeltaUpdateService", $"[PATCH] Decompressed to: {decompressed.Length} bytes");
 
         using var ms = new MemoryStream(decompressed);
         using var reader = new BinaryReader(ms);
 
         // Read header
+        Logger.Debug("DeltaUpdateService", "[PATCH] Reading patch header...");
         int oldSize = reader.ReadInt32();
         int newSize = reader.ReadInt32();
         int commonPrefix = reader.ReadInt32();
         int commonSuffix = reader.ReadInt32();
         int newDataLength = reader.ReadInt32();
+        
+        Logger.Debug("DeltaUpdateService", $"[PATCH] Header: oldSize={oldSize}, newSize={newSize}, commonPrefix={commonPrefix}, commonSuffix={commonSuffix}, newDataLength={newDataLength}");
 
         if (oldSize != oldData.Length)
         {
+            Logger.Error("DeltaUpdateService", $"[PATCH] ✗ Old file size mismatch: expected {oldSize}, got {oldData.Length}");
             throw new InvalidOperationException($"Old file size mismatch: expected {oldSize}, got {oldData.Length}");
         }
 
@@ -132,11 +143,14 @@ public sealed class DeltaUpdateService
 
         // Verify result
         var resultHash = ComputeHash(result);
+        Logger.Debug("DeltaUpdateService", $"[PATCH] Result hash: {resultHash}, expected: {patch.NewFileHash}");
         if (resultHash != patch.NewFileHash)
         {
+            Logger.Error("DeltaUpdateService", $"[PATCH] ✗ Hash mismatch! Expected: {patch.NewFileHash}, Actual: {resultHash}");
             throw new InvalidOperationException("Patch application failed: hash mismatch");
         }
 
+        Logger.Info("DeltaUpdateService", $"[PATCH] ✓ Patch applied successfully: {oldData.Length} bytes → {result.Length} bytes");
         return result;
     }
 
