@@ -345,6 +345,12 @@ Section /o "Background Service" SecService
     DetailPrint "Installing Background Service..."
     SetOutPath "$INSTDIR"
     
+    ; Stop existing service before copying files to prevent file lock
+    DetailPrint "Checking for existing service..."
+    nsExec::Exec 'sc stop "Redball Input Service" 2>nul'
+    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
+    Sleep 2000
+    
     ; Copy service files (single-file published, no separate DLL)
     File "Redball.Service.exe"
     
@@ -548,6 +554,11 @@ kill_process:
                 System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
                 Sleep 1000
             ${EndIf}
+            
+            ; Stop service first if installed (properly through SCM)
+            DetailPrint "Stopping background service..."
+            nsExec::Exec 'sc stop "Redball Input Service" 2>nul'
+            Sleep 3000
             
             ; Force kill if still running
             nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'
