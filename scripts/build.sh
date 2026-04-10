@@ -379,8 +379,9 @@ auto_release() {
                 "$DIST_DIR/Redball-${version}-Setup.exe" \
                 "$DIST_DIR/Redball-${version}.zip" \
                 --title "Redball v${version}" \
-                --notes "Release ${version}" \
-                --channel "$CHANNEL" 2>&1 | while IFS= read -r line; do log_detail "$line"; done; then
+                --notes "Release ${version} (${CHANNEL} channel)" \
+                $([[ "$CHANNEL" == "beta" ]] && echo "--prerelease" || true) \
+                2>&1 | while IFS= read -r line; do log_detail "$line"; done; then
                 log_success "Published to GitHub"
             else
                 log_warn "GitHub release may have failed"
