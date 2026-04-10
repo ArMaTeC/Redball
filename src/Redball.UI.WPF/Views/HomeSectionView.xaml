@@ -48,13 +48,13 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <!-- Mini stats -->
+                                    <!-- Mini stats: Chars typed today / TypeThing sessions -->
                                     <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left">
-                                        <Border Background="#20FF003C" CornerRadius="4" Padding="6,3" Margin="0,0,8,0">
-                                            <TextBlock Text="3,035" FontSize="11" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold"/>
+                                        <Border Background="#20FF003C" CornerRadius="4" Padding="6,3" Margin="0,0,8,0" ToolTip="Characters typed today">
+                                            <TextBlock Text="{Binding CharsTypedTodayText, FallbackValue=0}" FontSize="11" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold"/>
                                         </Border>
-                                        <Border Background="#2000E5FF" CornerRadius="4" Padding="6,3">
-                                            <TextBlock Text="2,057" FontSize="11" Foreground="{DynamicResource NeonCyanBrush}" FontWeight="SemiBold"/>
+                                        <Border Background="#2000E5FF" CornerRadius="4" Padding="6,3" ToolTip="TypeThing sessions today">
+                                            <TextBlock Text="{Binding TypeThingSessionsTodayText, FallbackValue=0}" FontSize="11" Foreground="{DynamicResource NeonCyanBrush}" FontWeight="SemiBold"/>
                                         </Border>
                                     </StackPanel>
                                     <!-- Visual chart representation -->
@@ -72,7 +72,7 @@
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <Ellipse Width="10" Height="10" Fill="{DynamicResource AccentBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="66" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}"/>
+                                        <TextBlock Text="{Binding TypeThingSessionsTodayText, FallbackValue=0}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}"/>
                                     </StackPanel>
                                     <TextBlock Text="Sessions today" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,2,0,0"/>
                                 </StackPanel>
@@ -82,7 +82,7 @@
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <Ellipse Width="10" Height="10" Fill="{DynamicResource NeonCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="50" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}"/>
+                                        <TextBlock Text="{Binding AvgCharsPerMinuteText, FallbackValue=50}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}"/>
                                     </StackPanel>
                                     <TextBlock Text="Chars/minute" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,2,0,0"/>
                                 </StackPanel>

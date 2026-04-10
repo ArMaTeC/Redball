@@ -624,6 +624,7 @@ public class UpdateService : IUpdateService
                         Logger.Info("UpdateService", $"[DELTA] ZIP fallback available: {(zipAsset != null ? "YES" : "NO")}");
                         Logger.Info("UpdateService", $"[DELTA] Total download size: {FormatBytes(filesToUpdate.Sum(f => f.PatchUrl != null ? f.PatchSize : f.Size))}");
                         _consecutiveFailures = 0;
+                        var totalBytes = filesToUpdate.Sum(f => f.DownloadSize);
                         return new UpdateInfo
                         {
                             CurrentVersion = currentNormalized,
@@ -632,7 +633,8 @@ public class UpdateService : IUpdateService
                             ReleaseNotes = latestRelease.Body,
                             ReleaseDate = latestRelease.PublishedAt,
                             DownloadUrl = zipAsset?.DownloadUrl ?? "",
-                            FileName = zipAsset?.Name ?? ""
+                            FileName = zipAsset?.Name ?? "",
+                            TotalDownloadBytes = totalBytes
                         };
                     }
                     else
@@ -666,7 +668,8 @@ public class UpdateService : IUpdateService
                 DownloadUrl = bestAsset.DownloadUrl,
                 FileName = bestAsset.Name,
                 ReleaseNotes = latestRelease.Body,
-                ReleaseDate = latestRelease.PublishedAt
+                ReleaseDate = latestRelease.PublishedAt,
+                TotalDownloadBytes = bestAsset.Size
             };
         }
         catch (Exception)
@@ -2085,12 +2088,22 @@ public class UpdateInfo
 
     public List<FileUpdateInfo>? FilesToUpdate { get; set; }
     public string VersionDisplay => $"v{LatestVersion.Major}.{LatestVersion.Minor}.{LatestVersion.Build}";
-    
+
+    /// <summary>
+    /// Total size of files to download (0 if unknown).
+    /// </summary>
+    public long TotalDownloadBytes { get; set; }
+
+    /// <summary>
+    /// True if this is a differential/delta update (partial files).
+    /// </summary>
+    public bool IsDeltaUpdate => FilesToUpdate?.Count > 0 && FilesToUpdate.Any(f => f.IsPatch);
+
     /// <summary>
     /// Expected SHA256 hash from signed manifest for integrity verification (sec-3).
     /// </summary>
     public string? ManifestHash { get; set; }
-    
+
     /// <summary>
     /// Trust validation result after download (sec-3).
     /// </summary>
@@ -2118,6 +2131,16 @@ public class FileUpdateInfo
     public string DownloadUrl { get; set; } = "";
     public string? PatchUrl { get; set; }  // Binary delta patch URL (if available)
     public long PatchSize { get; set; }     // Size of patch file
+
+    /// <summary>
+    /// True if this file should be downloaded as a patch/delta instead of full file.
+    /// </summary>
+    public bool IsPatch => !string.IsNullOrEmpty(PatchUrl);
+
+    /// <summary>
+    /// Effective download size (patch size if available, otherwise full size).
+    /// </summary>
+    public long DownloadSize => IsPatch && PatchSize > 0 ? PatchSize : Size;
 }
 
 /// <summary>

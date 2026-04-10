@@ -289,9 +289,7 @@ public partial class UpdatesSectionView : UserControl
 
         try
         {
-            // TODO: DownloadAndInstallUpdateAsync doesn't exist on UpdateService - needs implementation
-            // var success = await _updateService.DownloadAndInstallUpdateAsync(updateInfo, progress, _cancellationTokenSource.Token);
-            var success = false;
+            var success = await _updateService.DownloadAndInstallAsync(updateInfo, progress, _cancellationTokenSource.Token);
 
             if (_cancellationTokenSource.IsCancellationRequested)
             {
@@ -512,11 +510,35 @@ public partial class UpdatesSectionView : UserControl
         ResultIcon.Text = "\uE896"; // Download icon
         ResultIcon.Foreground = (Brush)FindResource("AccentBrush");
         ResultTitleText.Text = "Update Available";
-        ResultMessageText.Text = $"A new version of Redball is ready to download.";
-        NewVersionText.Text = $"New version: {info.VersionDisplay}";
+        ResultMessageText.Text = $"A new version of Redball is ready to download and install.";
+
+        // Version comparison display
+        CurrentVersionCompareText.Text = GetCurrentVersionText();
+        NewVersionCompareText.Text = info.VersionDisplay;
+
+        // Update details
+        var totalBytes = info.TotalDownloadBytes;
+        if (totalBytes > 0)
+        {
+            var sizeText = totalBytes >= 1024 * 1024 * 1024
+                ? $"{totalBytes / 1024.0 / 1024.0 / 1024.0:F2} GB"
+                : totalBytes >= 1024 * 1024
+                    ? $"{totalBytes / 1024.0 / 1024.0:F1} MB"
+                    : $"{totalBytes / 1024.0:F0} KB";
+            UpdateSizeText.Text = $"Download size: {sizeText}";
+        }
+        else
+        {
+            UpdateSizeText.Text = "Download size: Calculating...";
+        }
+
+        UpdateTypeText.Text = info.IsDeltaUpdate ? "Update type: Differential (faster)" : "Update type: Full Update";
+
+        // Release notes with fallback
         ReleaseNotesText.Text = string.IsNullOrWhiteSpace(info.ReleaseNotes)
-            ? "No release notes available."
+            ? "No release notes available for this version."
             : info.ReleaseNotes;
+
         UpdateAvailablePanel.Visibility = Visibility.Visible;
         ShowResultPanel();
     }

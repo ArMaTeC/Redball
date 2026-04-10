@@ -26,7 +26,16 @@ public class MainViewModel : ViewModelBase
     private readonly KeepAwakeService _keepAwake;
     private readonly DispatcherTimer _statusBarTimer;
     private readonly BatteryMonitorService _batteryMonitor = new();
+    private readonly SessionStatsService _sessionStats = SessionStatsService.Instance;
+    private readonly DispatcherTimer _homeStatsTimer;
     private CommandPaletteViewModel? _palette;
+
+    // Home tab real stats
+    private int _typeThingSessionsToday;
+    private int _charsTypedToday;
+    private double _avgCharsPerMinute = 50; // Calculated from typing speed settings
+    private int _keepAwakeSessionsToday;
+    private TimeSpan _keepAwakeTimeToday;
     
     public DriverSelection TypeThingDriverSelection
     {
@@ -115,10 +124,82 @@ public class MainViewModel : ViewModelBase
         _statusBarTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
         _statusBarTimer.Tick += (_, _) => UpdateStatusBar();
         _statusBarTimer.Start();
+
+        // Home stats timer - updates every 30 seconds
+        _homeStatsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _homeStatsTimer.Tick += (_, _) => UpdateHomeStats();
+        _homeStatsTimer.Start();
+        UpdateHomeStats(); // Initial load
         
         InitializePalette();
         
         Logger.Info("MainViewModel", "Commands initialized");
+    }
+
+    /// <summary>
+    /// Updates the home tab statistics from SessionStatsService and calculates TypeThing stats.
+    /// </summary>
+    private void UpdateHomeStats()
+    {
+        try
+        {
+            // KeepAwake stats from SessionStatsService
+            KeepAwakeSessionsToday = _sessionStats.TotalSessions;
+            
+            var today = DateTime.Now.ToString("yyyy-MM-dd");
+            if (_sessionStats.DailyHours.TryGetValue(today, out var hours))
+            {
+                KeepAwakeTimeToday = TimeSpan.FromHours(hours);
+            }
+            else
+            {
+                KeepAwakeTimeToday = TimeSpan.Zero;
+            }
+
+            // TypeThing stats - calculate from typing speed settings
+            // Chars/min = 60000ms / avg delay per char
+            var config = ConfigService.Instance.Config;
+            var avgDelayMs = (config.TypeThingMinDelayMs + config.TypeThingMaxDelayMs) / 2.0;
+            if (avgDelayMs > 0)
+            {
+                AvgCharsPerMinute = 60000.0 / avgDelayMs;
+            }
+
+            // For now, TypeThing session count is tracked via analytics
+            // We could add a proper TypeThingStatsService in the future
+            // For now, estimate based on clipboard history size if available
+            // or just show placeholder that updates occasionally
+            if (TypeThingSessionsToday == 0)
+            {
+                // Will be populated from MainWindow.TypeThingHistory when available
+                TypeThingSessionsToday = 0; // Placeholder until real tracking added
+            }
+            if (CharsTypedToday == 0)
+            {
+                CharsTypedToday = 0; // Placeholder until real tracking added
+            }
+
+            // Notify property changes for formatted display strings
+            OnPropertyChanged(nameof(TypeThingSessionsTodayText));
+            OnPropertyChanged(nameof(CharsTypedTodayText));
+            OnPropertyChanged(nameof(AvgCharsPerMinuteText));
+            OnPropertyChanged(nameof(KeepAwakeSessionsTodayText));
+            OnPropertyChanged(nameof(KeepAwakeTimeTodayText));
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("MainViewModel", $"Failed to update home stats: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Called by MainWindow to report TypeThing usage for stats tracking.
+    /// </summary>
+    public void ReportTypeThingUsage(int charsTyped)
+    {
+        TypeThingSessionsToday++;
+        CharsTypedToday += charsTyped;
+        UpdateHomeStats();
     }
 
     public CommandPaletteViewModel? Palette
@@ -265,6 +346,44 @@ public class MainViewModel : ViewModelBase
         get => _uptimeText;
         set => SetProperty(ref _uptimeText, value);
     }
+
+    // Home tab statistics (real data)
+    public int TypeThingSessionsToday
+    {
+        get => _typeThingSessionsToday;
+        set => SetProperty(ref _typeThingSessionsToday, value);
+    }
+
+    public int CharsTypedToday
+    {
+        get => _charsTypedToday;
+        set => SetProperty(ref _charsTypedToday, value);
+    }
+
+    public double AvgCharsPerMinute
+    {
+        get => _avgCharsPerMinute;
+        set => SetProperty(ref _avgCharsPerMinute, value);
+    }
+
+    public int KeepAwakeSessionsToday
+    {
+        get => _keepAwakeSessionsToday;
+        set => SetProperty(ref _keepAwakeSessionsToday, value);
+    }
+
+    public TimeSpan KeepAwakeTimeToday
+    {
+        get => _keepAwakeTimeToday;
+        set => SetProperty(ref _keepAwakeTimeToday, value);
+    }
+
+    // Formatted display strings for XAML binding
+    public string TypeThingSessionsTodayText => $"{TypeThingSessionsToday}";
+    public string CharsTypedTodayText => CharsTypedToday.ToString("N0");
+    public string AvgCharsPerMinuteText => $"{AvgCharsPerMinute:F0}";
+    public string KeepAwakeSessionsTodayText => $"{KeepAwakeSessionsToday}";
+    public string KeepAwakeTimeTodayText => $"{KeepAwakeTimeToday.TotalHours:F1}h";
 
     private void ToggleActive()
     {

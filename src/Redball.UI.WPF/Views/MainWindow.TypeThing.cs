@@ -592,6 +592,10 @@ public partial class MainWindow
                 MarkTypeThingOperationFinished();
                 Logger.Info("MainWindow", "TypeThing: Typing complete");
                 _analytics.TrackFeature("typething.completed");
+                
+                // Report stats to ViewModel for home tab display
+                _viewModel?.ReportTypeThingUsage(text.Length);
+                
                 NotificationService.Instance.ShowInfo("TypeThing", $"Done! Typed {text.Length} characters.");
                 return;
             }
