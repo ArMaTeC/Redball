@@ -20,7 +20,7 @@ Keep-awake uses the Windows `SetThreadExecutionState` API to tell the OS that th
 
 1. Right-click the tray icon
 2. Select **Pause** (or press Space in the menu)
-3. The icon turns **dark red/gray** when paused
+3. The icon turns **dark red/grey** when paused
 
 ## Modes
 
@@ -59,7 +59,7 @@ All smart features are **disabled by default**. Enable them in Settings as neede
 
 Automatically pauses when battery drops below threshold.
 
-| Behavior    | Trigger                                          |
+| Behaviour    | Trigger                                          |
 | ----------- | ------------------------------------------------ |
 | Auto-pause  | Battery below `BatteryThreshold`% (default: 20%) |
 | Auto-resume | Charger connected or battery above threshold     |
@@ -72,7 +72,7 @@ Automatically pauses when battery drops below threshold.
 
 Automatically pauses when network disconnects.
 
-| Behavior    | Trigger                       |
+| Behaviour    | Trigger                       |
 | ----------- | ----------------------------- |
 | Auto-pause  | No network adapter connected  |
 | Auto-resume | Network adapter comes back up |
@@ -83,7 +83,7 @@ Automatically pauses when network disconnects.
 
 Automatically pauses after user inactivity.
 
-| Behavior    | Trigger                                            |
+| Behaviour    | Trigger                                            |
 | ----------- | -------------------------------------------------- |
 | Auto-pause  | No input for `IdleThreshold` minutes (default: 30) |
 | Auto-resume | Any user input detected                            |
@@ -119,7 +119,7 @@ Automatically activates when a presentation is detected.
 - Microsoft Teams screen sharing (window title contains "Sharing", "Presenting")
 - Windows Presentation Mode registry key
 
-**Behavior:**
+**Behaviour:**
 
 - Auto-activates when presentation detected
 - Does NOT auto-stop when presentation ends (user must pause manually)
@@ -130,7 +130,7 @@ Automatically activates when a presentation is detected.
 
 Automatically pauses when CPU temperature is high.
 
-| Behavior    | Trigger                                               |
+| Behaviour    | Trigger                                               |
 | ----------- | ----------------------------------------------------- |
 | Auto-pause  | CPU temp exceeds `ThermalThreshold`°C (default: 85°C) |
 | Auto-resume | Temperature drops below threshold                     |
@@ -145,7 +145,7 @@ Automatically activates when a specific process is running.
 
 - `ProcessWatcherTarget`: Process name (e.g., `code.exe`, `devenv.exe`)
 
-**Behavior:**
+**Behaviour:**
 
 - Auto-activates when target process detected
 - Auto-pauses when target process exits
@@ -215,7 +215,7 @@ Reminds user to restart after continuous uptime.
 | ------------- | ---------------------------------- |
 | Bright Red    | Active — keeping system awake      |
 | Orange/Red    | Timed mode — countdown in progress |
-| Dark Red/Gray | Paused / idle state                |
+| Dark Red/Grey | Paused / idle state                |
 
 ## Check Intervals
 

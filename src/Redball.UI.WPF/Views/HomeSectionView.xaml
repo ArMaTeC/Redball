@@ -173,7 +173,7 @@
                                         <TextBlock Text="&#xEA80;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource NeonCyanBrush}" HorizontalAlignment="Center"/>
                                     </Border>
                                 </Button>
-                                <Button Style="{DynamicResource BorderlessButton}" Command="{Binding OpenBehaviorCommand}" ToolTip="Behavior">
+                                <Button Style="{DynamicResource BorderlessButton}" Command="{Binding OpenBehaviorCommand}" ToolTip="Behaviour">
                                     <Border Background="#15FFFFFF" CornerRadius="8" Padding="8" Margin="2" Cursor="Hand">
                                         <TextBlock Text="&#xE771;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource ForegroundSecondaryBrush}" HorizontalAlignment="Center"/>
                                     </Border>

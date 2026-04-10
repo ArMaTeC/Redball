@@ -134,7 +134,7 @@ namespace Redball.Tests
 
             // Assert
             Assert.IsNotNull(results);
-            // Should detect contrast issue for low contrast colors
+            // Should detect contrast issue for low contrast colours
         }
 
         [TestMethod]

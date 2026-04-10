@@ -46,11 +46,29 @@ public class ServiceInputProvider : IDisposable
     [DllImport("user32.dll")]
     private static extern uint MapVirtualKeyW(uint uCode, uint uMapType);
 
+    [DllImport("shell32.dll", SetLastError = true)]
+    private static extern bool IsUserAnAdmin();
+
     private const uint MAPVK_VK_TO_VSC = 0;
 
     private ServiceInputProvider()
     {
         Logger.Verbose("ServiceInputProvider", "Instance created");
+    }
+
+    /// <summary>
+    /// Checks if the current process is running with administrator privileges.
+    /// </summary>
+    private static bool IsRunningAsAdmin()
+    {
+        try
+        {
+            return IsUserAnAdmin();
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -67,10 +85,19 @@ public class ServiceInputProvider : IDisposable
             // Service is considered available only if it's running
             IsServiceInstalled = status == System.ServiceProcess.ServiceControllerStatus.Running;
             
-            // If installed but not running, try to start it using sc.exe (more reliable than ServiceController)
+            // If installed but not running, try to start it using sc.exe (requires admin rights)
             if (status == System.ServiceProcess.ServiceControllerStatus.Stopped)
             {
-                Logger.Info("ServiceInputProvider", "Service is installed but stopped, attempting to start via sc.exe...");
+                // Check if running as administrator - required to start services
+                if (!IsRunningAsAdmin())
+                {
+                    Logger.Info("ServiceInputProvider", "Service is installed but stopped. Administrator rights required to start the service automatically.");
+                    _lastErrorSummary = "Service stopped - run as Administrator to auto-start";
+                    IsServiceInstalled = false;
+                    return IsServiceInstalled;
+                }
+
+                Logger.Info("ServiceInputProvider", "Service is installed but stopped, attempting to start via sc.exe (admin rights confirmed)...");
                 try
                 {
                     var psi = new System.Diagnostics.ProcessStartInfo

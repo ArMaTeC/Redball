@@ -6,7 +6,7 @@ Redball provides a comprehensive settings dialog accessible from the main window
 
 Open via **Settings** in the main window navigation panel, or **Settings...** in the tray menu (or press **G**).
 
-The settings are organized into dedicated sections accessible via the left navigation panel:
+The settings are organised into dedicated sections accessible via the left navigation panel:
 
 ### TypeThing Tab (Primary Feature)
 
@@ -36,14 +36,14 @@ The TypeThing tab contains all settings for the clipboard typing feature.
 
 | Control                   | Type                  | Config Key           | Description                                                                                                                                                                    |
 | ------------------------- | --------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Theme                     | Dropdown (14 options) | `Theme`              | Visual theme: System, Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost, High Contrast |
+| Theme                     | Dropdown (14 options) | `Theme`              | Visual theme: System, Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Grey, Rose Gold, Cyberpunk, Coffee, Arctic Frost, High Contrast |
 | Minimize to tray on start | CheckBox              | `MinimizeOnStart`    | Start without visible window                                                                                                                                                   |
 | Show notifications        | CheckBox              | `ShowBalloonOnStart` | Tray notifications on startup and events                                                                                                                                       |
 | Notification Mode         | Dropdown              | `NotificationMode`   | All events, Important only, Errors only, or Silent                                                                                                                             |
 | Enable verbose logging    | CheckBox              | `VerboseLogging`     | Record extra diagnostic details                                                                                                                                                |
 | Max Log Size (MB)         | Slider (1–100)        | `MaxLogSizeMB`       | Log rotation threshold                                                                                                                                                         |
 
-### Behavior Tab (Keep-Awake)
+### Behaviour Tab (Keep-Awake)
 
 Settings for the secondary keep-awake feature.
 
@@ -167,9 +167,9 @@ Left-side navigation with eight sections:
 | **Home**           | Overview dashboard with quick access cards                                                             |
 | **Analytics**      | Session counts, total usage hours, and feature usage statistics with CSV/JSON export                   |
 | **Diagnostics**    | Runtime state, logging paths, temperature, session stats, app health                                   |
-| **Behavior**       | Keep-awake controls (display sleep, heartbeat key, duration, auto-exit)                                |
+| **Behaviour**       | Keep-awake controls (display sleep, heartbeat key, duration, auto-exit)                                |
 | **Smart Features** | Battery, network, idle, schedule, presentation, process watcher, VPN, thermal, session lock, app rules |
-| **TypeThing**      | Typing automation hotkeys, speed, and behavior (primary feature)                                       |
+| **TypeThing**      | Typing automation hotkeys, speed, and behaviour (primary feature)                                       |
 | **Settings**       | General application settings (theme, notifications, logging)                                           |
 | **Updates**        | Update channels, auto-check, and version management                                                    |
 
@@ -177,7 +177,7 @@ Click any navigation item to switch the content area. All navigation items show 
 
 ### Content Area
 
-The main content area displays the selected section's controls and information. Each section is organized into cards with consistent styling across all themes.
+The main content area displays the selected section's controls and information. Each section is organised into cards with consistent styling across all themes.
 
 ---
 

@@ -483,6 +483,13 @@ public partial class App : Application
             }
             Services.Logger.Info("App", "Service created successfully");
 
+            // Set service description (allows updating of currently installed services)
+            var descResult = RunProcessAsAdmin("sc.exe", "description RedballInputService \"Provides secure input injection for Redball keep-alive functionality. Supports automatic updates and can be safely upgraded while running.\"");
+            if (descResult.ExitCode != 0)
+            {
+                Services.Logger.Warning("App", $"Failed to set service description: {descResult.StdErr}");
+            }
+
             // Start the service
             var startResult = RunProcessAsAdmin("sc.exe", "start RedballInputService");
             if (startResult.ExitCode != 0)

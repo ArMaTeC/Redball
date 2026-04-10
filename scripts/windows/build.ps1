@@ -286,7 +286,7 @@ function Step-RunLinting {
     # Fix BOM encoding for all ps1 files in scripts directory before linting
     # This addresses the PSUseBOMForUnicodeEncodedFile rule warnings
     # Exclude the currently running script to avoid self-modification/file lock issues
-    Write-HostSafe "  Fixing UTF-8 BOM encoding for scripts..." -ForegroundColor Gray
+    Write-HostSafe "  Fixing UTF-8 BOM encoding for scripts..." -ForegroundColor Grey
     $scriptsToUpdate = Get-ChildItem -Path $lintRoot -Filter *.ps1 -Recurse | Where-Object { $_.FullName -ne $PSCommandPath }
     foreach ($scriptToUpdate in $scriptsToUpdate) {
         try {
@@ -318,7 +318,7 @@ function Step-RunLinting {
         foreach ($result in $results) {
             $color = if ($result.Severity -eq 'Error') { 'Red' } else { 'Yellow' }
             Write-HostSafe "  [$($result.Severity)] $($result.RuleName) at line $($result.Line)" -ForegroundColor $color
-            Write-HostSafe "    → $($result.Message)" -ForegroundColor Gray
+            Write-HostSafe "    → $($result.Message)" -ForegroundColor Grey
         }
         $errors = $results | Where-Object { $_.Severity -eq 'Error' }
         if ($errors) {
@@ -607,10 +607,10 @@ function Stop-LockingProcess {
         catch {
             Write-BuildError "File is still locked. Manual intervention required."
             Write-HostSafe "`n  Options to resolve:" -ForegroundColor Cyan
-            Write-HostSafe "    1. Run: handle.exe $FilePath  (from Sysinternals)" -ForegroundColor Gray
-            Write-HostSafe "    2. Close Visual Studio or other IDE instances" -ForegroundColor Gray
-            Write-HostSafe "    3. Restart Windows Explorer or logoff/login" -ForegroundColor Gray
-            Write-HostSafe "    4. Reboot computer" -ForegroundColor Gray
+            Write-HostSafe "    1. Run: handle.exe $FilePath  (from Sysinternals)" -ForegroundColor Grey
+            Write-HostSafe "    2. Close Visual Studio or other IDE instances" -ForegroundColor Grey
+            Write-HostSafe "    3. Restart Windows Explorer or logoff/login" -ForegroundColor Grey
+            Write-HostSafe "    4. Reboot computer" -ForegroundColor Grey
             return $false
         }
     }
@@ -755,7 +755,7 @@ function Step-BuildWpfApp {
     # Unblock InputInterceptor.dll (prevents Windows security blocks)
     $interceptorFile = Join-Path $dllDir "InputInterceptor.dll"
     if (Test-Path $interceptorFile) {
-        Write-HostSafe "  Unblocking InputInterceptor.dll..." -ForegroundColor Gray
+        Write-HostSafe "  Unblocking InputInterceptor.dll..." -ForegroundColor Grey
         Unblock-File -Path $interceptorFile -ErrorAction SilentlyContinue
     }
 
@@ -772,7 +772,7 @@ function Step-BuildWpfApp {
             
             try {
                 & $obfuscarTool (Join-Path $publishDir "obfuscar.xml") 2>&1 | ForEach-Object { 
-                    Write-HostSafe "  $_" -ForegroundColor Gray 
+                    Write-HostSafe "  $_" -ForegroundColor Grey 
                 }
                 
                 if (Test-Path $obfuscarOutput) {
@@ -883,7 +883,7 @@ function Step-BuildWpfApp {
     $exePath = Join-Path $publishDir 'Redball.UI.WPF.exe'
     if (Test-Path $exePath) {
         $fileInfo = Get-Item $exePath
-        Write-HostSafe "  Executable: $($fileInfo.Name) ($([math]::Round($fileInfo.Length / 1MB, 2)) MB)" -ForegroundColor Gray
+        Write-HostSafe "  Executable: $($fileInfo.Name) ($([math]::Round($fileInfo.Length / 1MB, 2)) MB)" -ForegroundColor Grey
     }
 
     # Verify build before proceeding to MSI
@@ -1005,7 +1005,7 @@ function Step-BuildWpfAppOptimized {
     $exePath = Join-Path $publishDir 'Redball.UI.WPF.exe'
     if (Test-Path $exePath) {
         $fileInfo = Get-Item $exePath
-        Write-HostSafe "  Optimized Executable: $($fileInfo.Name) ($([math]::Round($fileInfo.Length / 1MB, 2)) MB)" -ForegroundColor Gray
+        Write-HostSafe "  Optimized Executable: $($fileInfo.Name) ($([math]::Round($fileInfo.Length / 1MB, 2)) MB)" -ForegroundColor Grey
         Write-BuildSuccess "PGO build completed with ~30-40% startup improvement expected"
     }
     
@@ -1085,8 +1085,8 @@ function Step-BuildService {
         throw "Service executable not found after build"
     }
 
-    Write-HostSafe "  Install: .\scripts\Install-Service.ps1" -ForegroundColor Gray
-    Write-HostSafe "  Uninstall: .\scripts\Uninstall-Service.ps1" -ForegroundColor Gray
+    Write-HostSafe "  Install: .\scripts\Install-Service.ps1" -ForegroundColor Grey
+    Write-HostSafe "  Uninstall: .\scripts\Uninstall-Service.ps1" -ForegroundColor Grey
 }
 
 function Step-SignExecutable {
@@ -1211,7 +1211,7 @@ function Step-VerifyBuild {
     }
 
     # Start the process. We use a timeout to let it initialize.
-    # We pass a dummy argument to potentially trigger specific behavior or just run normally.
+    # We pass a dummy argument to potentially trigger specific behaviour or just run normally.
     $process = Start-Process -FilePath $exePath -ArgumentList "--smoke-test" -PassThru -WindowStyle Hidden
     
     Write-BuildStep "Waiting for initialization (5s)..."
@@ -1238,9 +1238,9 @@ function Step-VerifyBuild {
         $logContent = Get-Content $logFile -Raw
         if ($logContent -match "\[FTL\]" -or $logContent -match "\[ERR\].*XAML parse error") {
             Write-BuildError "Verification failed: Fatal errors detected in application log."
-            Write-HostSafe "--- LOG START ---" -ForegroundColor Gray
-            Write-HostSafe $logContent -ForegroundColor Gray
-            Write-HostSafe "--- LOG END ---" -ForegroundColor Gray
+            Write-HostSafe "--- LOG START ---" -ForegroundColor Grey
+            Write-HostSafe $logContent -ForegroundColor Grey
+            Write-HostSafe "--- LOG END ---" -ForegroundColor Grey
             throw "Build verification failed due to runtime errors. Fix assets/XAML and try again."
         }
     }
@@ -1277,11 +1277,11 @@ function Step-GenerateInstallerTheme {
             $dialogPath = Join-Path $installerDir 'dialog.bmp'
             if (Test-Path $bannerPath) {
                 $bannerInfo = Get-Item $bannerPath
-                Write-HostSafe "  Banner: $($bannerInfo.Name) ($([math]::Round($bannerInfo.Length / 1KB, 2)) KB)" -ForegroundColor Gray
+                Write-HostSafe "  Banner: $($bannerInfo.Name) ($([math]::Round($bannerInfo.Length / 1KB, 2)) KB)" -ForegroundColor Grey
             }
             if (Test-Path $dialogPath) {
                 $dialogInfo = Get-Item $dialogPath
-                Write-HostSafe "  Dialog: $($dialogInfo.Name) ($([math]::Round($dialogInfo.Length / 1KB, 2)) KB)" -ForegroundColor Gray
+                Write-HostSafe "  Dialog: $($dialogInfo.Name) ($([math]::Round($dialogInfo.Length / 1KB, 2)) KB)" -ForegroundColor Grey
             }
         }
     }
@@ -1389,11 +1389,11 @@ function Step-InstallMsiHelper {
     $installerCommand = "msiexec $installerArguments"
 
     Write-BuildStep "Use this command (absolute path, with logging):"
-    Write-HostSafe "  $installerCommand" -ForegroundColor Gray
+    Write-HostSafe "  $installerCommand" -ForegroundColor Grey
     
     if ($Silent) {
         Write-BuildStep "Enterprise deployment example:"
-        Write-HostSafe "  msiexec /i `"$resolvedMsiPath`" /qn REDBALL_SILENTINSTALL=1 REDBALL_STARTMINIMIZED=1 REDBALL_ENABLEBATTERYAWARE=1" -ForegroundColor Gray
+        Write-HostSafe "  msiexec /i `"$resolvedMsiPath`" /qn REDBALL_SILENTINSTALL=1 REDBALL_STARTMINIMIZED=1 REDBALL_ENABLEBATTERYAWARE=1" -ForegroundColor Grey
     }
 
     if (-not $LaunchInstaller) {
@@ -1422,8 +1422,8 @@ function Step-CreateReleasePackage {
     
     $msiInfo = Get-Item $msiPath
     Write-BuildSuccess "Release MSI ready: $($msiInfo.Name) ($([math]::Round($msiInfo.Length / 1MB, 2)) MB)"
-    Write-HostSafe "  Location: $msiPath" -ForegroundColor Gray
-    Write-HostSafe "  Contains: WPF Application, Core Services, Configuration" -ForegroundColor Gray
+    Write-HostSafe "  Location: $msiPath" -ForegroundColor Grey
+    Write-HostSafe "  Contains: WPF Application, Core Services, Configuration" -ForegroundColor Grey
 
     # Generate SHA256 hashes for all release artifacts
     Write-BuildStep "Generating SHA256 checksums..."
@@ -1456,7 +1456,7 @@ function Step-CreateReleasePackage {
         $hashContent = ($hashLines -join "`n") + "`n"
         [System.IO.File]::WriteAllText($hashFile, $hashContent, [System.Text.UTF8Encoding]::new($false))
         Write-BuildSuccess "Created SHA256SUMS with $($hashLines.Count) entries"
-        Write-HostSafe "  Location: $hashFile" -ForegroundColor Gray
+        Write-HostSafe "  Location: $hashFile" -ForegroundColor Grey
     }
 }
 
@@ -1619,7 +1619,7 @@ $script:LogsPath = Join-Path $script:ProjectRoot 'logs'
 if (-not (Test-Path $script:LogsPath)) { New-Item -ItemType Directory -Path $script:LogsPath -Force | Out-Null }
 $script:LogFile = Join-Path $script:LogsPath ("build_{0:yyyy-MM-dd_HH-mm-ss}.log" -f (Get-Date))
 Start-Transcript -Path $script:LogFile -IncludeInvocationHeader -Force | Out-Null
-Write-HostSafe "Logging to: $script:LogFile" -ForegroundColor Gray
+Write-HostSafe "Logging to: $script:LogFile" -ForegroundColor Grey
 $script:BuildStartTime = Get-Date
 
 # Main Build Process
@@ -1633,8 +1633,8 @@ try {
  |_|  \_\___|\__,_|_.__/ \__,_|_|_| |____/ \__,_|_|_|\__,_|
 '@
     Write-HostSafe "  Building Redball v$Version ($Configuration)`n" -ForegroundColor Cyan
-    Write-HostSafe "  Features: Keep-Awake Engine, TypeThing, Pomodoro, Mini-Widget" -ForegroundColor Gray
-    Write-HostSafe "  Safety: Health Checks, Retry Logic, Integrity Validation`n" -ForegroundColor Gray
+    Write-HostSafe "  Features: Keep-Awake Engine, TypeThing, Pomodoro, Mini-Widget" -ForegroundColor Grey
+    Write-HostSafe "  Safety: Health Checks, Retry Logic, Integrity Validation`n" -ForegroundColor Grey
     
     # Clean build if requested (default on, use -NoClean to skip)
     if (-not $NoClean) {
@@ -1745,7 +1745,7 @@ try {
         }
         else {
             Write-HostSafe "  release.ps1 not found. GitHub release not created." -ForegroundColor Yellow
-            Write-HostSafe "  Run manually: .\scripts\release.ps1 -Version $Version -Tag $releaseTag" -ForegroundColor Gray
+            Write-HostSafe "  Run manually: .\scripts\release.ps1 -Version $Version -Tag $releaseTag" -ForegroundColor Grey
         }
     }
     else {
@@ -1756,8 +1756,8 @@ try {
     Write-HostSafe "  BUILD SUCCEEDED" -ForegroundColor Green
     Write-HostSafe "══════════════════════════════════════════════════════════" -ForegroundColor Green
     $duration = (Get-Date) - $script:BuildStartTime
-    Write-HostSafe "  Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor Gray
-    Write-HostSafe "  Log: $script:LogFile" -ForegroundColor Gray
+    Write-HostSafe "  Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor Grey
+    Write-HostSafe "  Log: $script:LogFile" -ForegroundColor Grey
     Write-HostSafe "══════════════════════════════════════════════════════════`n" -ForegroundColor Green
     Stop-Transcript | Out-Null
     exit 0
@@ -1769,12 +1769,12 @@ catch {
     Write-HostSafe "  BUILD FAILED" -ForegroundColor Red
     Write-HostSafe "══════════════════════════════════════════════════════════" -ForegroundColor Red
     Write-HostSafe "  Error: $script:errorMessage" -ForegroundColor Red
-    Write-HostSafe "  Trace: $script:stackTrace" -ForegroundColor Gray
+    Write-HostSafe "  Trace: $script:stackTrace" -ForegroundColor Grey
     if ($script:BuildStartTime) {
         $duration = (Get-Date) - $script:BuildStartTime
-        Write-HostSafe "  Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor Gray
+        Write-HostSafe "  Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor Grey
     }
-    Write-HostSafe "  Log: $script:LogFile" -ForegroundColor Gray
+    Write-HostSafe "  Log: $script:LogFile" -ForegroundColor Grey
     Write-HostSafe "══════════════════════════════════════════════════════════`n" -ForegroundColor Red
     Stop-Transcript | Out-Null
     exit 1

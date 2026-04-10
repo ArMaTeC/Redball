@@ -385,7 +385,7 @@ step_build_wpf() {
     log_success "WPF application published to $WPF_PUBLISH_DIR ($(( wpf_end - wpf_start ))s)"
     log_debug "Published files: $(ls -1 "$WPF_PUBLISH_DIR" 2>/dev/null | wc -l) items"
 
-    # Organize DLLs into dll/ subfolder (matches installer WXS structure)
+    # Organise DLLs into dll/ subfolder (matches installer WXS structure)
     log_step "Organizing publish output..."
     local dll_dir="$WPF_PUBLISH_DIR/dll"
     mkdir -p "$dll_dir"
@@ -407,7 +407,7 @@ step_build_wpf() {
     # Count what was moved
     moved_count=$(find "$dll_dir" -maxdepth 1 -name "*.dll" -type f 2>/dev/null | wc -l)
 
-    log_success "DLLs organized into dll/ subfolder ($moved_count files moved)"
+    log_success "DLLs organised into dll/ subfolder ($moved_count files moved)"
 
     # Verify critical assemblies are present
     log_step "Verifying critical assemblies..."

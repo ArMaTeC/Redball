@@ -8,7 +8,7 @@ using Redball.UI.Services;
 namespace Redball.UI.Views;
 
 /// <summary>
-/// A sleek, centered overlay HUD for visual feedback on hotkeys and status changes.
+/// A sleek, centred overlay HUD for visual feedback on hotkeys and status changes.
 /// </summary>
 public partial class HUDWindow : Window
 {
@@ -18,7 +18,7 @@ public partial class HUDWindow : Window
     public HUDWindow()
     {
         InitializeComponent();
-        this.Owner = null; // Centered relative to screen, not a window
+        this.Owner = null; // Centred relative to screen, not a window
         this.ShowInTaskbar = false;
         this.Topmost = true;
     }
@@ -67,7 +67,7 @@ public partial class HUDWindow : Window
     {
         base.OnSourceInitialized(e);
         
-        // Final position adjustments to ensure true center on multi-monitor
+        // Final position adjustments to ensure true centre on multi-monitor
         var screenWidth = SystemParameters.PrimaryScreenWidth;
         var screenHeight = SystemParameters.PrimaryScreenHeight;
         this.Left = (screenWidth - this.Width) / 2;

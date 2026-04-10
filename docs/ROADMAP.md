@@ -212,7 +212,7 @@ We use the following criteria to prioritize features:
 
 Submit feature requests via [GitHub Issues](https://github.com/ArMaTeC/Redball/issues).
 
-Redball v3.x is implemented as a pure C# WPF application (.NET 10). The core functionality is organized into services across multiple namespaces:
+Redball v3.x is implemented as a pure C# WPF application (.NET 10). The core functionality is organised into services across multiple namespaces:
 
 ## Namespaces
 

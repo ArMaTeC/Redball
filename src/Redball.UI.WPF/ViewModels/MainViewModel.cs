@@ -797,6 +797,15 @@ public class MainViewModel : ViewModelBase
                         return new ServiceOperationResult(false, false, err);
                     }
                 }
+                else
+                {
+                    // Set service description for newly created service
+                    var descResult = RunProcess("sc.exe", "description RedballInputService \"Provides secure input injection for Redball keep-alive functionality. Supports automatic updates and can be safely upgraded while running.\"");
+                    if (descResult.ExitCode != 0)
+                    {
+                        Logger.Warning("MainViewModel", $"Failed to set service description: {descResult.StdErr}");
+                    }
+                }
 
                 var startResult = RunProcess("sc.exe", "start RedballInputService");
                 if (startResult.ExitCode != 0)

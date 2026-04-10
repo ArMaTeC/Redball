@@ -25,7 +25,7 @@ New to Redball? Start here:
 
 ### Configuration & Reference
 
-- **[Configuration](Configuration)** — Full settings reference and persistence behavior
+- **[Configuration](Configuration)** — Full settings reference and persistence behaviour
 - **[Monitoring & Smart Features](Monitoring-and-Smart-Features)** — Battery, network, idle, schedule, presentation, thermal, process watcher, VPN, session lock, and more
 - **[Keep-Awake Guide](KeepAwake)** — Dedicated guide for the keep-awake utility (secondary feature)
 

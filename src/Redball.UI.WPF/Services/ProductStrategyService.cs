@@ -290,7 +290,7 @@ public class ProductStrategyService
                 "Screen sleeping during important video calls",
                 "Lost work when stepping away briefly",
                 "Complex manual sleep settings in Windows",
-                "Inconsistent behavior with docking stations",
+                "Inconsistent behaviour with docking stations",
                 "No easy way to temporarily disable sleep"
             },
             JobsToBeDone = new()

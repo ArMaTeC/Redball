@@ -97,7 +97,7 @@ public class ThreatModelService
         {
             Id = "SEC-002",
             Title = "Configuration File Tampering",
-            Description = "Malicious software or users could modify the application's configuration file to change behavior or extract sensitive settings.",
+            Description = "Malicious software or users could modify the application's configuration file to change behaviour or extract sensitive settings.",
             Category = ThreatCategory.Tampering,
             Risk = RiskLevel.High,
             Mitigation = "DPAPI encryption enabled by default. Config files encrypted with CurrentUser scope. Integrity signatures verify config hasn't been modified.",

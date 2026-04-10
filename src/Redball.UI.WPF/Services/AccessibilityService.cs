@@ -142,7 +142,7 @@ public class AccessibilityService
                             Issue = $"Contrast ratio {ratio:F2} below {targetRatio:F1} requirement",
                             Severity = "Error",
                             WCAGCriterion = "1.4.3 Contrast (Minimum)",
-                            Recommendation = "Increase text/background color contrast"
+                            Recommendation = "Increase text/background colour contrast"
                         });
                     }
                 }

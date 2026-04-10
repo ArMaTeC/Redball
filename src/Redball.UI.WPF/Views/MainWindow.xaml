@@ -449,11 +449,11 @@
                                     </StackPanel>
 
                                     <StackPanel x:Name="BehaviorPanel" Visibility="Collapsed">
-                                        <TextBlock Text="Behavior" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Behaviour" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                         <TextBlock Text="Configure display sleep prevention, heartbeat key, and default run duration settings." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                         <Border Style="{DynamicResource CardStyle}">
                                             <StackPanel>
-                                                <TextBlock Text="Core Behavior" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                <TextBlock Text="Core Behaviour" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
                                                 <CheckBox x:Name="MainPreventDisplaySleepCheck" Content="Prevent display sleep" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" AutomationProperties.AutomationId="PreventDisplaySleepCheckBox"/>
 
@@ -575,7 +575,7 @@
 
                                     <StackPanel x:Name="TypeThingPanel" Visibility="Collapsed">
                                         <TextBlock Text="TypeThing" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBlock Text="Configure TypeThing hotkeys, speed, and typing behavior." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+                                        <TextBlock Text="Configure TypeThing hotkeys, speed, and typing behaviour." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
 
                                         <!-- Clipboard History Section -->
                                         <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,16">

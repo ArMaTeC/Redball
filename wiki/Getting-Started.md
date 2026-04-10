@@ -22,7 +22,7 @@ The installer provides:
 - Start Menu and Desktop shortcuts
 - Optional "Start with Windows" shortcut
 - Service installation for input injection
-- Optional default behavior features (battery-aware, network-aware, idle detection, etc.)
+- Optional default behaviour features (battery-aware, network-aware, idle detection, etc.)
 - "Launch Redball" checkbox on the finish page
 - Silent install support (`/S`)
 
@@ -100,7 +100,7 @@ Right-click the Redball tray icon to access all features:
 - **Type Clipboard** (Ctrl+Shift+V) — Start typing
 - **Stop Typing** (Ctrl+Shift+X) — Emergency stop
 - **Status: Idle** — Shows current progress when typing
-- **TypeThing Settings...** — Configure typing behavior
+- **TypeThing Settings...** — Configure typing behaviour
 
 ### Keep-Awake Controls (Secondary Feature)
 
@@ -173,7 +173,7 @@ On first run, Redball will:
 The main window opens with a modern custom chrome design featuring:
 
 - **Title bar** with app icon, title, and window controls (minimize, maximize, close)
-- **Left navigation panel** with sections: Home, Analytics, Diagnostics, Behavior, Smart Features, TypeThing, Settings, and Updates
+- **Left navigation panel** with sections: Home, Analytics, Diagnostics, Behaviour, Smart Features, TypeThing, Settings, and Updates
 - **Content area** showing the selected section's controls and information
 
 ## Next Steps

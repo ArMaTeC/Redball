@@ -12,7 +12,7 @@ namespace Redball.Tests.Chaos;
 
 /// <summary>
 /// Chaos engineering tests for fault injection and resilience validation.
-/// Tests system behavior under adverse conditions.
+/// Tests system behaviour under adverse conditions.
 /// </summary>
 [TestClass]
 public class ChaosEngineeringTests
@@ -267,7 +267,7 @@ public class ChaosEngineeringTests
 
     [TestMethod]
     [TestCategory("Chaos")]
-    [Description("Memory pool behavior under allocation stress")]
+    [Description("Memory pool behaviour under allocation stress")]
     public async Task MemoryPoolService_AllocationStress_MaintainsPerformance()
     {
         // Arrange

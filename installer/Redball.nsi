@@ -359,6 +359,10 @@ Section /o "Background Service" SecService
             StrCpy $ServiceInstalled 1
             WriteRegDWORD HKCU "${PRODUCT_REGISTRY_KEY}" "ServiceInstalled" 1
             DetailPrint "Service installed successfully"
+            
+            ; Set service description for Windows Services manager
+            DetailPrint "Setting service description..."
+            nsExec::Exec 'sc description "Redball Input Service" "Provides secure input injection for Redball keep-alive functionality. Supports automatic updates and can be safely upgraded while running."'
         ${Else}
             DetailPrint "Service installation failed (code: $0)"
         ${EndIf}

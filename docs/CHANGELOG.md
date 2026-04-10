@@ -133,7 +133,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `ServiceInputProvider.cs`: Added logging to 2 empty catch blocks (service status check, local unicode send).
   - `MainViewModel.cs`: Added logging to 2 empty catch blocks (service existence check, battery status check).
   - `AuditLogService.cs`: Added logging to empty catch block in `GetEntries` method (malformed log line parsing).
-  - These changes improve diagnostic capability without changing functional behavior.
+  - These changes improve diagnostic capability without changing functional behaviour.
 
 - **Fixed .NET 10 Compilation Errors in TeamSettingsService**: Resolved build failures after .NET 10 upgrade.
   - Added missing `AccentColor` and `FollowSystemTheme` properties to `RedballConfig.cs` model.
@@ -252,7 +252,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Shows security warning confirmation when disabling signature verification.
     - Reinitializes UpdateService with new settings after save.
     - Provides user feedback via NotificationService.
-  - Settings now require explicit Save button click, matching the behavior of standalone SettingsWindow.
+  - Settings now require explicit Save button click, matching the behaviour of standalone SettingsWindow.
   - **Banner (493x58)**: Dark professional gradient background (#14171a to #212529), "Redball" branding with Segoe UI Bold, red accent bar on left, decorative circle elements.
   - **Dialog (493x312)**: Dark gradient background with subtle grid pattern overlay, gradient red accent sidebar, decorative circle elements.
   - **UI Mode Upgrade**: Switched from `WixUI_Minimal` to `WixUI_InstallDir` providing full installer flow with Welcome, Installation Directory selection, and proper navigation.
@@ -260,7 +260,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All images use anti-aliased text rendering with modern Segoe UI typography.
 
 - **Settings UI Completion - Third Pass**: Finalized settings UI with complete config field coverage and theme fixes.
-  - Fixed theme text color issue: added `Foreground="{DynamicResource ForegroundBrush}"` to all TextBlock labels in Behavior, Smart Features, TypeThing, and Updates panels so text respects the selected theme instead of appearing dark on all themes.
+  - Fixed theme text color issue: added `Foreground="{DynamicResource ForegroundBrush}"` to all TextBlock labels in Behaviour, Smart Features, TypeThing, and Updates panels so text respects the selected theme instead of appearing dark on all themes.
   - Added missing UI controls for previously hidden but active config fields:
     - `MainGamingModeEnabledCheck`: Toggle for automatic gaming mode detection.
     - `MainMeetingAwareCheck`: Toggle for Teams/Zoom meeting detection.
@@ -275,18 +275,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `src/Redball.UI.WPF/Redball.UI.WPF.csproj`: removed `System.Text.Json`.
     - `src/Redball.Service/Redball.Service.csproj`: removed `System.IO.Pipes`.
   - Fixed Windows platform analyzer warning in `src/Redball.Core/Performance/AdaptiveIntervalPolicy.cs` by guarding registry access with `OperatingSystem.IsWindows()`.
-  - Centralized Authenticode certificate extraction in `src/Redball.UI.WPF/Services/SecurityService.cs` and scoped `SYSLIB0057` suppression to that helper to keep build output clean while preserving signed-file verification behavior.
+  - Centralized Authenticode certificate extraction in `src/Redball.UI.WPF/Services/SecurityService.cs` and scoped `SYSLIB0057` suppression to that helper to keep build output clean while preserving signed-file verification behaviour.
   - Reduced test analyzer noise by suppressing `MSTEST0032` in `tests/Redball.Tests.csproj`.
   - Updated `scripts/build.ps1` with `Test-WdkAvailable` and automatic KMDF driver-step skip when `ntddk.h` is not present.
 
-- **WPF theme contrast + TypeThing service admin flow polish**: Fixed dark-theme text contrast regressions and improved TypeThing service install UX + elevation behavior.
+- **WPF theme contrast + TypeThing service admin flow polish**: Fixed dark-theme text contrast regressions and improved TypeThing service install UX + elevation behaviour.
   - Removed the local `ForegroundSecondaryBrush` override from `src/Redball.UI.WPF/Views/MainWindow.xaml` that forced dark text (`#99000000`) even under dark themes.
   - Added explicit admin/UAC warning text in TypeThing install areas:
     - `src/Redball.UI.WPF/Views/MainWindow.xaml` (`MainServiceAdminHintText`, shown for Service mode only).
     - `src/Redball.UI.WPF/Views/TypeThingSectionView.xaml` (inline warning beneath install button).
   - Updated service install/uninstall flows to request UAC elevation when required instead of failing silently:
     - `src/Redball.UI.WPF/Views/MainWindow.Settings.cs` (`InstallServiceDirect`, `UninstallServiceDirect`) now uses elevated `sc.exe` execution with `Verb=runas` when not already admin.
-    - `src/Redball.UI.WPF/ViewModels/MainViewModel.cs` (`InstallServiceAsync`) now mirrors elevated service creation/start behavior.
+    - `src/Redball.UI.WPF/ViewModels/MainViewModel.cs` (`InstallServiceAsync`) now mirrors elevated service creation/start behaviour.
   - Hardened service executable resolution to support current naming (`Redball.Service.exe`) while keeping compatibility fallback (`Redball.Input.Service.exe`).
 
 - **UI automation harness stabilization + bounded theme sweep (net10)**: Hardened FlaUI test infrastructure for reliable WPF window attachment and fast theme validation runs.
@@ -296,26 +296,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Resolves `net10.0-windows` executable paths and prefers freshest output.
     - Uses process-scoped top-level window discovery with desktop fallback.
     - Adds deterministic helpers for radio-button nav selection, combo selection, and visibility waits.
-    - Forces process termination during teardown when tray-mode behavior prevents graceful test-host exit.
+    - Forces process termination during teardown when tray-mode behaviour prevents graceful test-host exit.
   - `tests-ui-automation/RedballUIAutomationTests.cs`:
     - Switched from per-test launch/teardown to class-level lifecycle to prevent multi-thousand-second runtimes.
-    - Added `ThemeSweep_AllThemes_RenderCoreSettingsAndTypeThingControls` to iterate all supported themes and validate core Settings/TypeThing control presence and service admin hint behavior.
+    - Added `ThemeSweep_AllThemes_RenderCoreSettingsAndTypeThingControls` to iterate all supported themes and validate core Settings/TypeThing control presence and service admin hint behaviour.
   - Validation: targeted `ThemeSweep` test now executes and passes in bounded runtime.
 
-- **TypeThing input mode persistence and HID-safe-mode behavior fix**: Corrected mode mapping discovered during theme sweep QA.
+- **TypeThing input mode persistence and HID-safe-mode behaviour fix**: Corrected mode mapping discovered during theme sweep QA.
   - `src/Redball.UI.WPF/Views/MainWindow.Settings.cs` now correctly maps TypeThing input mode index values for `SendInput` / `HID` / `Service` on both load and save paths.
   - HID Safe Mode now only forces fallback when `HID` is selected; `Service` mode is no longer incorrectly downgraded to `SendInput`.
 
 - **Theme consistency follow-up for secondary windows**: Replaced hardcoded foreground/surface colors with theme-aware resources in non-main WPF windows.
   - `src/Redball.UI.WPF/Views/UpdateProgressWindow.xaml`
-    - Replaced hardcoded `White`/gray text and progress background values with `ForegroundBrush`, `ForegroundSecondaryBrush`, and `HoverBrush`.
+    - Replaced hardcoded `White`/grey text and progress background values with `ForegroundBrush`, `ForegroundSecondaryBrush`, and `HoverBrush`.
   - `src/Redball.UI.WPF/Views/CommandPaletteWindow.xaml`
-    - Replaced hardcoded light container/header/footer and gray text values with `CardBrush`, `SurfaceBrush`, `BorderBrush`, `ForegroundBrush`, and `ForegroundSecondaryBrush`.
+    - Replaced hardcoded light container/header/footer and grey text values with `CardBrush`, `SurfaceBrush`, `BorderBrush`, `ForegroundBrush`, and `ForegroundSecondaryBrush`.
   - Validation: bounded theme sweep automation (`ThemeSweep_AllThemes_RenderCoreSettingsAndTypeThingControls`) reran successfully after these updates.
 
 - **Theme consistency follow-up for overlays and transient UI**: Applied theme-aware resource usage in command overlay and HUD surfaces.
   - `src/Redball.UI.WPF/Views/CommandPaletteView.xaml`
-    - Replaced hardcoded overlay/background values with themed resources (`BackgroundBrush`, `BorderLightBrush`) while preserving palette border animation behavior.
+    - Replaced hardcoded overlay/background values with themed resources (`BackgroundBrush`, `BorderLightBrush`) while preserving palette border animation behaviour.
   - `src/Redball.UI.WPF/Views/HUDWindow.xaml`
     - Replaced hardcoded HUD border/background/text colors with `SurfaceBrush`, `BorderLightBrush`, `ForegroundBrush`, and `ForegroundSecondaryBrush`.
   - Validation: bounded theme sweep automation (`ThemeSweep_AllThemes_RenderCoreSettingsAndTypeThingControls`) passed after these updates.
@@ -599,7 +599,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Unit Test Coverage Expansion (ROADMAP Q2)**: Added comprehensive test coverage for previously untested services.
   - New `tests/MiniWidgetPresetServiceTests.cs` with 19 tests covering preset normalization, application, and edge cases.
   - New `tests/SessionStatsServiceTests.cs` with 16 tests covering session tracking, statistics calculation, and persistence.
-  - New `tests/PluginServiceTests.cs` with 13 tests covering plugin lifecycle and singleton behavior.
+  - New `tests/PluginServiceTests.cs` with 13 tests covering plugin lifecycle and singleton behaviour.
   - New `tests/DataExportServiceTests.cs` with 6 tests covering GDPR export functionality.
   - New `tests/GamingModeServiceTests.cs` with 6 tests covering gaming detection and optimization.
   - New `tests/MeetingDetectionServiceTests.cs` with 5 tests covering meeting state detection.
@@ -639,7 +639,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `tests/Redball.Benchmarks/Redball.Benchmarks.csproj` → `net10.0-windows` for compatibility with WPF project references.
   - Updated key runtime packages to current .NET 10-compatible versions:
     - UI/Core/Service stack: `Microsoft.Extensions.*` packages to `10.0.5`, `Microsoft.Data.Sqlite` to `10.0.5`, `System.Management` / `System.Speech` / `System.ServiceProcess.ServiceController` / `System.Text.Json` to `10.0.5`.
-    - WPF ecosystem packages: `CommunityToolkit.Mvvm` `8.4.2`, `Hardcodet.NotifyIcon.Wpf` `2.0.1`, `Microsoft.Xaml.Behaviors.Wpf` `1.1.142`.
+    - WPF ecosystem packages: `CommunityToolkit.Mvvm` `8.4.2`, `Hardcodet.NotifyIcon.Wpf` `2.0.1`, `Microsoft.Xaml.Behaviours.Wpf` `1.1.142`.
     - Test tooling: `Microsoft.NET.Test.Sdk` `18.3.0`, MSTest adapter/framework `4.1.0`, `coverlet` `8.0.1`, `FlaUI` `5.0.0`, `NUnit` `4.5.1`, `NUnit3TestAdapter` `6.2.0`, `NUnit.Analyzers` `4.12.0`, `Appium.WebDriver` `8.1.0`, `Selenium.WebDriver` `4.41.0`, `Moq` `4.20.72`.
   - Validation status:
     - `dotnet restore` and `dotnet build -c Release` succeeded on `Redball.v3.sln`.
@@ -668,7 +668,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - *Comment*: The MSI is now the "one true source" for all install/upgrade/uninstall operations.
 - **Release Automation**: Added end-to-end release automation in `scripts/build.ps1` for version bumping, artifact packaging, optional release commit/push, and MSI-focused build flows.
   - *Comment*: This reduces manual release overhead and improves repeatability for shipping builds.
-- **Update Controls in UI**: Added explicit "Check for Updates" entry points in tray/menu and quick settings, with update-check behavior exposed through a public async path.
+- **Update Controls in UI**: Added explicit "Check for Updates" entry points in tray/menu and quick settings, with update-check behaviour exposed through a public async path.
   - *Comment*: Improves discoverability and gives users a direct way to validate update availability.
 - **Config Durability Layer**: Added `UserData` persistence path (`%LocalAppData%\Redball\UserData`) plus migration/recovery logic so settings survive MSI upgrades.
   - *Comment*: This addresses upgrade-related data loss and keeps user preferences stable between versions.
@@ -692,7 +692,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Driver Integrity Validation**: SHA256-based verification of driver files on disk to detect corruption.
   - **Layout Compatibility**: Diagnostic detection of non-standard keyboard layouts for improved input mapping.
   - **Windows Compatibility**: Integrated OS version checks to ensure HID driver compatibility.
-- **Enhanced Build Pipeline**: Updated `build.ps1` with detailed HID feature summaries and improved dependency handling for LottieSharp and Xaml.Behaviors.
+- **Enhanced Build Pipeline**: Updated `build.ps1` with detailed HID feature summaries and improved dependency handling for LottieSharp and Xaml.Behaviours.
 - **Localization Expansion**: Added broader language support in the WPF app (including the synchronized `bl` locale option).
 - **Mini Widget Presets**: Added Focus/Meeting/Battery Safe preset support with one-click apply actions in main settings and quick settings popup.
   - *Comment*: Adds fast, goal-based widget setup for common workflows.
@@ -914,7 +914,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Configurable retention (default 30 days) and max outbox size.
   - Conflict history tracking with resolution audit trail.
   - Visual offline mode indicator with optional notifications.
-  - *Comment*: Completes offline-6 from improve_me.txt - full user control over offline/sync behavior.
+  - *Comment*: Completes offline-6 from improve_me.txt - full user control over offline/sync behaviour.
 - **Windows Shell Integration (os-1)**: Implemented complete shell integration matrix:
   - `WindowsShellIntegrationService` with App User Model ID support.
   - Startup task: Registry Run key registration with enable/disable.
@@ -1118,24 +1118,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Installer Artifacts & Packaging**: Standardized release artifact naming and installer asset selection logic to prefer installer-focused outputs where applicable.
   - *Comment*: Predictable naming helps automation and reduces manual artifact selection mistakes.
-- **Documentation/Wiki Sync**: Updated core documentation and wiki pages to match current v3 WPF runtime behavior and build pipeline.
-  - *Comment*: This removes stale references and keeps operator/user guidance aligned with shipped behavior.
-- **MSI Launch Flow**: Refined MSI launch and post-install behavior, including VBScript launcher integration and launch control adjustments.
+- **Documentation/Wiki Sync**: Updated core documentation and wiki pages to match current v3 WPF runtime behaviour and build pipeline.
+  - *Comment*: This removes stale references and keeps operator/user guidance aligned with shipped behaviour.
+- **MSI Launch Flow**: Refined MSI launch and post-install behaviour, including VBScript launcher integration and launch control adjustments.
   - *Comment*: Improves post-install UX and reduces launch edge cases after setup completes.
 - **Build/Release Pipeline**: Updated build and release scripts to support force-rebuild scenarios, optional no-restart driver install paths, and clearer process/retry handling.
   - *Comment*: These changes make CI and local release execution more resilient to transient failures.
-- **Config/Update Defaults**: Added normalization for legacy update repository settings and improved startup/default-config save behavior.
+- **Config/Update Defaults**: Added normalization for legacy update repository settings and improved startup/default-config save behaviour.
   - *Comment*: Backward compatibility is improved for users carrying older config values.
-- **UI/UX Iterations**: Improved theme brush initialization/transparency behavior, expanded TypeThing/schedule settings surfaces, and removed redundant apply-step interactions through auto-apply.
+- **UI/UX Iterations**: Improved theme brush initialization/transparency behaviour, expanded TypeThing/schedule settings surfaces, and removed redundant apply-step interactions through auto-apply.
 - **Mini Widget Configuration Flow**: Extended mini widget settings to persist a named preset (`Custom`, `Focus`, `Meeting`, `BatterySafe`) alongside individual widget options.
   - *Comment*: This streamlines settings interaction and reduces friction in common configuration flows.
 - **Mini Widget Preset Revert Logic**: Manual edits to preset-managed mini widget controls now automatically switch the preset back to `Custom`.
   - *Comment*: Prevents stale preset labels when users intentionally diverge from preset defaults.
-- **Settings UI Completion (Main Dashboard)**: Replaced placeholder blocks in `Behavior`, `Smart Features`, and `TypeThing` panels with fully wired controls.
+- **Settings UI Completion (Main Dashboard)**: Replaced placeholder blocks in `Behaviour`, `Smart Features`, and `TypeThing` panels with fully wired controls.
   - Exposed existing configurable options already supported by `RedballConfig` / `MainWindow.Settings.cs`, including heartbeat mode, durations, scheduling days/times, app rules, WiFi profile mappings, restart reminders, process watcher controls, and full TypeThing/HID configuration.
   - Removed duplicated hidden compatibility declarations for moved controls to avoid `x:Name` collisions.
   - Added a second-pass UI expansion for previously hidden advanced settings: verbose logging, confirm-on-exit, DPAPI config encryption toggle, telemetry, performance metrics, process isolation, and max log size.
-  - Added visible mini widget configuration controls (preset, always-on-top, opacity, quick actions/status icons, dashboard behavior, startup/lock/snap/shortcut toggles, custom quick minutes, confirm-close).
+  - Added visible mini widget configuration controls (preset, always-on-top, opacity, quick actions/status icons, dashboard behaviour, startup/lock/snap/shortcut toggles, custom quick minutes, confirm-close).
   - Reworked Updates panel to use the fully wired controls (`MainAutoUpdateCheckEnabledCheck`, `MainUpdateChannelCombo`, `MainVerifyUpdateSignatureCheck`, `MainAutoUpdateIntervalSlider`) with current version display.
   - *Comment*: Main dashboard settings now provide real interactive controls instead of placeholder content, improving feature discoverability and reducing reliance on fallback settings surfaces.
 
@@ -1151,14 +1151,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - *Comment*: Matches the current durability implementation and avoids misleading reset/export guidance.
 - **Strategic Assessment Artifact**: Added `improve_me.txt` with an architecture/product scorecard, 10/10 requirement checklist, and implementation roadmap/snippets for priority improvements.
   - *Comment*: Captures actionable product and technical direction in a single planning reference for upcoming iterations.
-- **Settings UX Docs**: Updated settings guidance to reflect auto-apply behavior instead of legacy explicit apply-button flow.
+- **Settings UX Docs**: Updated settings guidance to reflect auto-apply behaviour instead of legacy explicit apply-button flow.
   - *Comment*: Prevents user confusion when following settings instructions in the current UI.
 - **Startup & CLI Docs**: Replaced outdated startup argument guidance with current maintenance arguments (`--install-driver`, `--install-driver-no-restart`).
   - *Comment*: Keeps launch/runtime docs accurate for support and troubleshooting.
-- **Build/Release Docs**: Added current `scripts/build.ps1` behavior details.
+- **Build/Release Docs**: Added current `scripts/build.ps1` behaviour details.
   - *Comment*: Improves release reproducibility and artifact discoverability.
-- **Security/Privacy/DPA Docs**: Updated supported versions, data storage locations, and update network behavior to current build.
-  - *Comment*: Aligns policy/operations docs with implemented runtime behavior.
+- **Security/Privacy/DPA Docs**: Updated supported versions, data storage locations, and update network behaviour to current build.
+  - *Comment*: Aligns policy/operations docs with implemented runtime behaviour.
 
 ### Fixed (Unreleased 1)
 
@@ -1171,12 +1171,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - *Comment*: Prevents keyboard lockup risk and improves safe recovery on hook initialization failures.
 - **Tray/Window Lifecycle Stability**: Fixed duplicate subscriptions and resource leaks in tray icon/window lifecycle paths, including safer icon handle disposal and central cleanup.
   - *Comment*: Lowers long-session instability risk and avoids resource leakage in tray-first usage.
-- **RDP/Hotkey Reliability**: Improved hotkey behavior in remote session scenarios.
+- **RDP/Hotkey Reliability**: Improved hotkey behaviour in remote session scenarios.
   - *Comment*: Helps keep shortcuts consistent for users running Redball over remote desktop.
 - **VirusTotal Artifact Filtering**: Fixed artifact name matching used in VirusTotal-related workflow filtering.
   - *Comment*: Ensures security scanning workflows target the intended release artifacts.
 - **Mini Widget Preset Validation**: Added config validation and self-healing normalization for invalid mini widget preset values.
-  - *Comment*: Prevents invalid preset values from breaking widget behavior after imports or manual edits.
+  - *Comment*: Prevents invalid preset values from breaking widget behaviour after imports or manual edits.
 
 ### CI (Unreleased)
 
@@ -1198,16 +1198,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Removed IPC Layer**: Eliminated named pipe communication between WPF UI and PowerShell backend. All state management now happens directly in C#.
   - *Comment*: Removing cross-process messaging simplifies state flow and reduces synchronization failure points.
 - **Direct Win32 API**: Keep-awake engine uses `SetThreadExecutionState` and `SendInput` (F15 heartbeat) via P/Invoke in `NativeMethods.cs`.
-  - *Comment*: Native calls provide tighter control and lower overhead for core keep-awake behavior.
+  - *Comment*: Native calls provide tighter control and lower overhead for core keep-awake behaviour.
 
 ### Added (3.0.0)
 
 - **KeepAwakeService**: Core keep-awake engine with `SetThreadExecutionState`, F15 heartbeat via `SendInput`, timed sessions, and auto-pause/resume tracking.
-  - *Comment*: Centralizing this logic enables consistent keep-awake behavior across UI and automation paths.
+  - *Comment*: Centralizing this logic enables consistent keep-awake behaviour across UI and automation paths.
 - **BatteryMonitorService**: WMI-based battery monitoring with configurable threshold and 60-second cache.
   - *Comment*: Cached reads reduce polling overhead while still supporting low-battery safeguards.
 - **NetworkMonitorService**: Network connectivity monitoring via `System.Net.NetworkInformation`.
-  - *Comment*: Connectivity state is now first-class for network-aware behavior and future policy rules.
+  - *Comment*: Connectivity state is now first-class for network-aware behaviour and future policy rules.
 - **IdleDetectionService**: User idle detection via `GetLastInputInfo` P/Invoke.
   - *Comment*: Enables idle-aware automation without relying on coarse timer-only assumptions.
 - **ScheduleService**: Time/day-based scheduled activation and deactivation.
@@ -1233,12 +1233,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Config Export/Import**: `ConfigService.Export()` and `ConfigService.Import()` for settings backup and restore.
   - *Comment*: Makes configuration portability and recovery easier for support and power users.
 - **ReloadConfig**: `KeepAwakeService.ReloadConfig()` called after settings save so monitors pick up changes immediately.
-  - *Comment*: Avoids stale runtime behavior after settings updates.
+  - *Comment*: Avoids stale runtime behaviour after settings updates.
 
 ### Removed (3.0.0)
 
 - **IpcClientService.cs**: Named pipe client for PowerShell communication (no longer needed).
-  - *Comment*: This became obsolete after consolidating behavior into the native WPF process.
+  - *Comment*: This became obsolete after consolidating behaviour into the native WPF process.
 - **System.IO.Pipes dependency**: Removed from project file.
   - *Comment*: Dependency removal reflects the IPC layer deprecation and reduces package surface area.
 - **PowerShell backend dependency**: The WPF application no longer requires `Redball.ps1` to be running.
@@ -1253,7 +1253,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Update Repo Validation**: `Get-RedballLatestRelease` validates repo owner/name against injection patterns and warns on non-default repos
   - *Comment*: Validation narrows the trusted update source and reduces misconfiguration risk.
 - **Renamed -Encrypt to -Obfuscate**: `Export-RedballSettings`/`Import-RedballSettings` parameters renamed to avoid misleading users about Base64 security
-  - *Comment*: The naming now accurately reflects behavior and avoids implying cryptographic protection.
+  - *Comment*: The naming now accurately reflects behaviour and avoids implying cryptographic protection.
 
 ### Fixed (2.1.1)
 
@@ -1262,7 +1262,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Locale Detection**: Replaced broken `$env:LANG` with `(Get-Culture).TwoLetterISOLanguageName` for reliable system locale detection
   - *Comment*: Locale detection now uses a Windows-consistent API for dependable language selection.
 - **Empty Catch Blocks**: All silent `catch {}` blocks now log to DEBUG/WARN level for diagnosability
-  - *Comment*: Error visibility is improved without changing user-facing behavior.
+  - *Comment*: Error visibility is improved without changing user-facing behaviour.
 - **Form Disposal**: `Show-RedballSettings` now disposes the form in a `finally` block to prevent GDI leaks on error
   - *Comment*: Ensures UI resources are released even on failure paths.
 - **Temp File Cleanup**: `Install-RedballUpdate` removes the downloaded temp file after installation
@@ -1270,7 +1270,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Path Consistency**: Replaced all `$PSScriptRoot` references in function bodies with `$script:AppRoot`
   - *Comment*: Standardized path resolution reduces context-dependent file lookup issues.
 - **Idle Detection Text**: Menu item and settings label now reflect actual threshold instead of hardcoded "30min"
-  - *Comment*: UI text now correctly reflects configured runtime behavior.
+  - *Comment*: UI text now correctly reflects configured runtime behaviour.
 
 ### Removed (2.1.1)
 
@@ -1294,7 +1294,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Named Hotkey Constants**: Replaced magic numbers `100`/`101` with `$script:HOTKEY_ID_TYPETHING_START`/`STOP`
   - *Comment*: Named constants improve readability and reduce hotkey ID misuse.
 - **Large Clipboard Threshold**: Configurable via `TypeThingLargeClipboardThreshold` instead of hardcoded `10000`
-  - *Comment*: Users can tune behavior for different clipboard sizes and workflows.
+  - *Comment*: Users can tune behaviour for different clipboard sizes and workflows.
 - **Runspace Hex Comment**: Documented `0x80000003` ES flags in keep-awake runspace
   - *Comment*: Adds technical clarity for maintainers touching execution-state logic.
 - **TypeThing Disabled Status**: Menu shows "Status: Disabled" when TypeThing is off
@@ -1329,7 +1329,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SECURITY.md**: Security policy with vulnerability reporting process, threat model, and security features documentation
   - *Comment*: Establishes a clear path for responsible disclosure and security practices.
 - **PRIVACY.md**: Privacy policy documenting local-only data handling, network requests, and user rights
-  - *Comment*: Increases transparency on data usage and storage behavior.
+  - *Comment*: Increases transparency on data usage and storage behaviour.
 - **CODE_OF_CONDUCT.md**: Contributor Covenant code of conduct for community standards
   - *Comment*: Sets collaboration expectations for community health.
 - **THIRD-PARTY-NOTICES.md**: Complete third-party license attribution for all dependencies
@@ -1353,7 +1353,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Input Sanitization**: All string config values are stripped of control characters on load
   - *Comment*: Reduces risk from malformed or maliciously crafted config content.
 - **Range Validation**: All numeric config values are clamped to safe ranges
-  - *Comment*: Prevents out-of-bound values from destabilizing runtime behavior.
+  - *Comment*: Prevents out-of-bound values from destabilizing runtime behaviour.
 - **Enum Validation**: UpdateChannel and TypeThingTheme values validated against allowed sets
   - *Comment*: Blocks invalid enum states from propagating into business logic.
 - **Schedule Format Validation**: ScheduleStartTime/ScheduleStopTime validated against HH:mm format
@@ -1371,13 +1371,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - *Comment*: State-specific iconography improves at-a-glance status recognition.
   - Active: Bright red ball (crimson/tomato gradient)
   - Timed: Orange/red ball (dark orange gradient)
-  - Paused: Dark red/gray ball (muted colors)
+  - Paused: Dark red/grey ball (muted colors)
 - **Configuration File Support**: JSON-based configuration with `Redball.json`
-  - *Comment*: Introduces persistent settings management for repeatable behavior.
+  - *Comment*: Introduces persistent settings management for repeatable behaviour.
 - **Structured Logging**: `Write-RedballLog` function with log rotation at 10MB
   - *Comment*: Enables maintainable diagnostics without unbounded log growth.
 - **Pester Tests**: Comprehensive test suite covering 40+ test cases
-  - *Comment*: Provides foundational regression coverage for core script behavior.
+  - *Comment*: Provides foundational regression coverage for core script behaviour.
 - **Graceful Shutdown**: Pipeline stop exception handling for Ctrl+C/terminal close
   - *Comment*: Improves reliability during forced or user-initiated termination.
 - **Error Handling**: `PipelineStoppedException` catches throughout all functions
@@ -1422,7 +1422,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security (2.0.0)
 
 - **Execution Policy**: Requires `-Version 5.1` and administrative privileges
-  - *Comment*: Enforces baseline runtime prerequisites for predictable behavior.
+  - *Comment*: Enforces baseline runtime prerequisites for predictable behaviour.
 - **Error Suppression**: Sensitive error details only logged, not displayed to user
   - *Comment*: Reduces inadvertent disclosure of sensitive runtime details.
 
@@ -1441,7 +1441,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Duration timer (15, 30, 60, 120 minutes)
   - *Comment*: Enables bounded sessions instead of only manual toggling.
 - Prevent display sleep toggle
-  - *Comment*: Gives users explicit control over monitor sleep behavior.
+  - *Comment*: Gives users explicit control over monitor sleep behaviour.
 - Basic context menu with pause/resume
   - *Comment*: Delivers the primary interaction model for the initial release.
 

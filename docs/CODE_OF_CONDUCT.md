@@ -6,7 +6,7 @@ We as members, contributors, and leaders pledge to make participation in our com
 
 ## Our Standards
 
-Examples of behavior that contributes to a positive environment:
+Examples of behaviour that contributes to a positive environment:
 
 - Using welcoming and inclusive language
 - Being respectful of differing viewpoints and experiences
@@ -14,7 +14,7 @@ Examples of behavior that contributes to a positive environment:
 - Focusing on what is best for the community
 - Showing empathy towards other community members
 
-Examples of unacceptable behavior:
+Examples of unacceptable behaviour:
 
 - The use of sexualized language or imagery and unwelcome sexual attention
 - Trolling, insulting or derogatory comments, and personal or political attacks
@@ -24,7 +24,7 @@ Examples of unacceptable behavior:
 
 ## Enforcement Responsibilities
 
-Community leaders are responsible for clarifying and enforcing our standards of acceptable behavior and will take appropriate and fair corrective action in response to any behavior that they deem inappropriate, threatening, offensive, or harmful.
+Community leaders are responsible for clarifying and enforcing our standards of acceptable behaviour and will take appropriate and fair corrective action in response to any behaviour that they deem inappropriate, threatening, offensive, or harmful.
 
 ## Scope
 
@@ -32,7 +32,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders at **conduct@gcinetworksolutions.com**.
+Instances of abusive, harassing, or otherwise unacceptable behaviour may be reported to the community leaders at **conduct@gcinetworksolutions.com**.
 
 All complaints will be reviewed and investigated promptly and fairly. All community leaders are obligated to respect the privacy and security of the reporter.
 

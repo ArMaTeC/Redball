@@ -2,7 +2,7 @@
 # ============================================================================
 # Redball Unified Build Script
 # ============================================================================
-# Orchestrates all build operations: Windows, Linux, Update Server, Website
+# Orchestrates all build operations: Windows, Update Server, Website
 #
 # Usage:
 #   ./scripts/build.sh [COMMAND] [OPTIONS]
@@ -10,21 +10,19 @@
 # DEFAULT BEHAVIOR (no command specified):
 #   Runs FULL AUTO-RELEASE workflow (builds + publishes everything):
 #   1. Build Windows artifacts (WPF, Service, Setup, ZIP)
-#   2. Build Linux artifacts (GTK app, packages)
-#   3. Build/validate update-server
-#   4. Build website
-#   5. Publish to update-server
-#   6. Publish to GitHub Releases
+#   2. Build/validate update-server
+#   3. Build website
+#   4. Publish to update-server
+#   5. Publish to GitHub Releases
 #
 # Commands:
 #   all             Build everything (no publish)
 #   auto-release    Build + publish everything [DEFAULT]
 #   windows         Build Windows artifacts (WPF, Service, Setup, ZIP)
-#   linux           Build Linux artifacts (GTK app, packages)
 #   update-server   Build/validate update-server
 #   website         Build website (currently static, validates files)
 #   clean           Clean all build artifacts
-#   publish         Publish release to update-server
+#   publish         Publish release to GitHub
 #   serve           Start update-server
 #   status          Show build status and available artifacts
 #
@@ -33,7 +31,6 @@
 #   --beta               Shortcut for --channel beta
 #   --version VERSION    Specify version for publish
 #   --skip-windows       Skip Windows build in 'all' command
-#   --skip-linux         Skip Linux build in 'all' command
 #   --dry-run            Show what would happen without making changes
 #   -h, --help           Show this help
 # ============================================================================
@@ -109,14 +106,13 @@ COMMAND=""
 CHANNEL="stable"
 VERSION=""
 SKIP_WINDOWS=false
-SKIP_LINUX=false
 DRY_RUN=false
 VERBOSE=true  # always verbose now
 
 # === Parse Arguments ===
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        all|auto-release|windows|linux|update-server|website|clean|publish|serve|status)
+        all|auto-release|windows|update-server|website|clean|publish|serve|status)
             COMMAND="$1"
             shift
             ;;
@@ -134,10 +130,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --skip-windows)
             SKIP_WINDOWS=true
-            shift
-            ;;
-        --skip-linux)
-            SKIP_LINUX=true
             shift
             ;;
         --dry-run)
@@ -254,21 +246,6 @@ auto_release() {
     
     local start_time=$(date +%s)
     
-    # 0. Auto-increment version number
-    log_step "Phase 0: Auto-incrementing version number..."
-    log_debug "Looking for bump script at: $SCRIPT_DIR/linux/bump-version.sh"
-    if [[ $DRY_RUN == true ]]; then
-        log_info "[DRY RUN] Would bump patch version"
-    else
-        if [[ -f "$SCRIPT_DIR/linux/bump-version.sh" ]]; then
-            log_debug "Running: bump-version.sh --patch --commit"
-            "$SCRIPT_DIR/linux/bump-version.sh" --patch --commit 2>&1 | while IFS= read -r line; do log_detail "$line"; done
-            log_success "Version bumped to: $(get_version)"
-        else
-            log_warn "bump-version.sh not found at $SCRIPT_DIR/linux/bump-version.sh, skipping version bump"
-        fi
-    fi
-    
     # 1. Build all components
     log_step "Phase 1: Building all components..."
     if ! build_all; then
@@ -334,13 +311,9 @@ auto_release() {
         log_info "[DRY RUN] Would publish to update-server"
     else
         export PUBLISH_TO_UPDATE_SERVER=1
-        if [[ -f "$SCRIPT_DIR/linux/release.sh" ]]; then
-            log_debug "Running: release.sh -v $(get_version) --channel $CHANNEL --skip-release"
-            "$SCRIPT_DIR/linux/release.sh" -v "$(get_version)" --channel "$CHANNEL" --skip-release 2>&1 | while IFS= read -r line; do log_detail "$line"; done
-            log_success "Published to update-server"
-        else
-            log_warn "release.sh not found at $SCRIPT_DIR/linux/release.sh"
-        fi
+        log_info "Publishing to update-server via API..."
+        # TODO: Implement direct API publishing to update-server
+        log_warn "Direct update-server publishing not implemented"
     fi
     
     # 5.5 Generate delta patches for differential updates
@@ -382,12 +355,21 @@ auto_release() {
             return 1
         fi
 
-        if [[ -f "$SCRIPT_DIR/linux/release.sh" ]]; then
-            log_debug "Running: release.sh -v $(get_version) --channel $CHANNEL --allow-dirty"
-            "$SCRIPT_DIR/linux/release.sh" -v "$(get_version)" --channel "$CHANNEL" --allow-dirty 2>&1 | while IFS= read -r line; do log_detail "$line"; done
-            log_success "Published to GitHub"
+        log_info "Publishing to GitHub via gh CLI..."
+        local version=$(get_version)
+        if command -v gh &>/dev/null; then
+            if gh release create "v${version}" \
+                "$DIST_DIR/Redball-${version}-Setup.exe" \
+                "$DIST_DIR/Redball-${version}.zip" \
+                --title "Redball v${version}" \
+                --notes "Release ${version}" \
+                --channel "$CHANNEL" 2>&1 | while IFS= read -r line; do log_detail "$line"; done; then
+                log_success "Published to GitHub"
+            else
+                log_warn "GitHub release may have failed"
+            fi
         else
-            log_warn "release.sh not found at $SCRIPT_DIR/linux/release.sh"
+            log_warn "gh CLI not found, skipping GitHub release"
         fi
     fi
     
@@ -456,26 +438,12 @@ check_dependencies() {
         fi
     done
     
-    # Check .NET SDKs
-    if [[ -f "/usr/share/dotnet/dotnet" ]]; then
-        log_debug "  ✓ Linux .NET SDK ($(/usr/share/dotnet/dotnet --version 2>/dev/null))"
-    else
-        log_debug "  ✗ Linux .NET SDK (NOT FOUND at /usr/share/dotnet)"
-        missing+=("linux-dotnet")
-    fi
-    
+    # Check .NET SDK in Wine
     if [[ -f "$HOME/.wine-dotnet/dotnet.exe" ]]; then
         log_debug "  ✓ Wine .NET SDK (at $HOME/.wine-dotnet/dotnet.exe)"
     else
         log_debug "  ✗ Wine .NET SDK (NOT FOUND at $HOME/.wine-dotnet/dotnet.exe)"
         missing+=("wine-dotnet")
-    fi
-    
-    # Check meson for linux build
-    if command -v meson &>/dev/null; then
-        log_debug "  ✓ meson ($(meson --version 2>/dev/null))"
-    else
-        log_debug "  ✗ meson (NOT FOUND — needed for Linux build)"
     fi
     
     if [[ ${#missing[@]} -gt 0 ]]; then
@@ -493,11 +461,11 @@ build_windows() {
     local win_start=$(date +%s)
     
     if [[ $DRY_RUN == true ]]; then
-        log_info "[DRY RUN] Would run: $SCRIPT_DIR/linux/build-windows-on-linux.sh"
+        log_info "[DRY RUN] Would run: $SCRIPT_DIR/build-windows.sh"
         return 0
     fi
     
-    local win_script="$SCRIPT_DIR/linux/build-windows-on-linux.sh"
+    local win_script="$SCRIPT_DIR/build-windows.sh"
     if [[ ! -f "$win_script" ]]; then
         log_error "Windows build script not found at: $win_script"
         return 1
@@ -540,37 +508,6 @@ build_windows() {
     fi
 }
 
-build_linux() {
-    log_step "Building Linux artifacts..."
-    local lin_start=$(date +%s)
-    
-    if [[ $DRY_RUN == true ]]; then
-        log_info "[DRY RUN] Would run: $SCRIPT_DIR/linux/build-linux.sh -a"
-        return 0
-    fi
-    
-    local lin_script="$SCRIPT_DIR/linux/build-linux.sh"
-    if [[ ! -f "$lin_script" ]]; then
-        log_error "Linux build script not found at: $lin_script"
-        return 1
-    fi
-    
-    log_debug "Running: $lin_script -a"
-    "$lin_script" -a 2>&1 | while IFS= read -r line; do log_detail "$line"; done
-    local lin_exit=${PIPESTATUS[0]}
-    
-    local lin_end=$(date +%s)
-    local lin_dur=$((lin_end - lin_start))
-    
-    if [[ $lin_exit -eq 0 ]]; then
-        log_success "Linux build completed in ${lin_dur}s"
-        log_debug "Linux artifacts:"
-        ls -lh "$DIST_DIR/linux"/ 2>/dev/null | while IFS= read -r line; do log_detail "$line"; done
-    else
-        log_error "Linux build FAILED (exit code: $lin_exit, took ${lin_dur}s)"
-        return 1
-    fi
-}
 
 build_update_server() {
     log_step "Building update-server..."
@@ -659,30 +596,30 @@ build_all() {
     local failed=()
     
     # Build update server first (needed for publishing)
-    log_info "[1/4] Update Server"
+    log_info "[1/3] Update Server"
     if build_update_server; then
-        log_success "[1/4] Update Server ✓"
+        log_success "[1/3] Update Server ✓"
     else
-        log_error "[1/4] Update Server FAILED"
+        log_error "[1/3] Update Server FAILED"
         failed+=("update-server")
     fi
     
     # Build website
-    log_info "[2/4] Website"
+    log_info "[2/3] Website"
     if build_website; then
-        log_success "[2/4] Website ✓"
+        log_success "[2/3] Website ✓"
     else
-        log_error "[2/4] Website FAILED"
+        log_error "[2/3] Website FAILED"
         failed+=("website")
     fi
     
     # Build Windows if not skipped
     if [[ $SKIP_WINDOWS == false ]]; then
-        log_info "[3/4] Windows"
+        log_info "[3/3] Windows"
         if build_windows; then
-            log_success "[3/4] Windows ✓"
+            log_success "[3/3] Windows ✓"
         else
-            log_error "[3/4] Windows FAILED"
+            log_error "[3/3] Windows FAILED"
             failed+=("windows")
         fi
         
@@ -715,21 +652,10 @@ build_all() {
             log_warn "Patch generation script not found: $patch_script"
         fi
     else
-        log_info "[3/4] Windows — SKIPPED (--skip-windows)"
+        log_info "[3/3] Windows — SKIPPED (--skip-windows)"
     fi
     
-    # Build Linux if not skipped
-    if [[ $SKIP_LINUX == false ]]; then
-        log_info "[4/4] Linux"
-        if build_linux; then
-            log_success "[4/4] Linux ✓"
-        else
-            log_error "[4/4] Linux FAILED"
-            failed+=("linux")
-        fi
-    else
-        log_info "[4/4] Linux — SKIPPED (--skip-linux)"
-    fi
+    # All components built
     
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
@@ -788,20 +714,42 @@ publish_release() {
     local version=$(get_version)
     
     if [[ $DRY_RUN == true ]]; then
-        log_info "[DRY RUN] Would run: $SCRIPT_DIR/linux/release.sh -v $version --channel $CHANNEL"
+        log_info "[DRY RUN] Would create GitHub release for v${version}"
         return 0
     fi
     
-    if [[ ! -f "$SCRIPT_DIR/linux/release.sh" ]]; then
-        log_error "Release script not found"
+    # Check for required artifacts
+    local missing=()
+    [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] || missing+=("Redball-${version}-Setup.exe")
+    [[ -f "$DIST_DIR/Redball-${version}.zip" ]] || missing+=("Redball-${version}.zip")
+    
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        log_error "Missing required artifacts for publish:"
+        for f in "${missing[@]}"; do
+            log_detail "  - $f"
+        done
         return 1
     fi
     
-    local args=("-v" "$version" "--channel" "$CHANNEL")
-    
-    "$SCRIPT_DIR/linux/release.sh" "${args[@]}"
-    
-    log_success "Release published: $version ($CHANNEL)"
+    # Publish to GitHub using gh CLI
+    if command -v gh &>/dev/null; then
+        log_info "Creating GitHub release v${version}..."
+        if gh release create "v${version}" \
+            "$DIST_DIR/Redball-${version}-Setup.exe" \
+            "$DIST_DIR/Redball-${version}.zip" \
+            --title "Redball v${version}" \
+            --notes "Release ${version} (${CHANNEL} channel)" \
+            $([[ "$CHANNEL" == "beta" ]] && echo "--prerelease" || true) \
+            2>&1 | while IFS= read -r line; do log_detail "$line"; done; then
+            log_success "Published to GitHub: v${version}"
+        else
+            log_error "GitHub release failed"
+            return 1
+        fi
+    else
+        log_warn "gh CLI not found, skipping GitHub release"
+        log_info "Artifacts available at: $DIST_DIR"
+    fi
 }
 
 serve_update_server() {
@@ -850,23 +798,6 @@ show_status() {
         [[ $found -eq 0 ]] && echo "    ✗ No Windows artifacts found"
     else
         echo "    ✗ No dist directory"
-    fi
-    echo ""
-    
-    # Check Linux artifacts
-    echo "  Linux Artifacts:"
-    if [[ -d "$DIST_DIR/linux" ]]; then
-        local found=0
-        for file in "$DIST_DIR/linux"/redball-*.{tar.gz,flatpak,deb}; do
-            if [[ -f "$file" ]]; then
-                local size=$(du -h "$file" 2>/dev/null | cut -f1)
-                echo "    ✓ $(basename "$file") ($size)"
-                found=1
-            fi
-        done
-        [[ $found -eq 0 ]] && echo "    ✗ No Linux artifacts found"
-    else
-        echo "    ✗ No Linux dist directory"
     fi
     echo ""
     
@@ -938,9 +869,6 @@ main() {
             ;;
         windows)
             build_windows
-            ;;
-        linux)
-            build_linux
             ;;
         update-server)
             build_update_server

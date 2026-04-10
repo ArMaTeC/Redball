@@ -116,8 +116,8 @@ public class IpcServer : IDisposable
         }
         catch (IdentityNotMappedException)
         {
-            // RedballUsers group doesn't exist - fall back to Interactive Users only
-            _logger.LogWarning("RedballUsers group not found. Falling back to Interactive Users for IPC access.");
+            // RedballUsers group doesn't exist on first run - this is expected, fall back to Interactive Users
+            _logger.LogInformation("RedballUsers group not found (expected on first run). Using Interactive Users for IPC access.");
             var interactiveRule = new PipeAccessRule(
                 new SecurityIdentifier(WellKnownSidType.InteractiveSid, null),
                 PipeAccessRights.ReadWrite,

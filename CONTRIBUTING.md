@@ -50,13 +50,13 @@ Invoke-ScriptAnalyzer -Path .\Redball.ps1 -Severity Warning,Error
 3. Include:
    - Windows version and PowerShell version
    - Steps to reproduce
-   - Expected vs. actual behavior
+   - Expected vs. actual behaviour
    - Log file contents (if relevant)
 
 ### Suggesting Features
 
 1. Open a [feature request](https://github.com/ArMaTeC/Redball/issues/new)
-2. Describe the use case and expected behavior
+2. Describe the use case and expected behaviour
 3. Explain why existing features don't cover it
 
 ### Submitting Code
@@ -118,7 +118,7 @@ Fixes #123
 ## Pull Request Process
 
 1. Ensure CI checks pass (tests, lint, security scan)
-2. Update documentation if behavior changes
+2. Update documentation if behaviour changes
 3. Add a CHANGELOG entry under `[Unreleased]`
 4. PRs require at least one approving review
 5. Squash-merge is preferred for clean history

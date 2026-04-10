@@ -22,7 +22,7 @@ namespace Redball.Tests
         public void FindFirstFocusableElement_SimpleControl_ReturnsElement()
         {
             // This test would require STA thread and WPF components
-            // Documenting the expected behavior
+            // Documenting the expected behaviour
             Assert.IsTrue(true, "FindFirstFocusableElement should return the first focusable element");
         }
 
@@ -30,7 +30,7 @@ namespace Redball.Tests
         public void SetAccessibilityProperties_SetsName()
         {
             // This would require WPF components in STA thread
-            // Documenting the expected behavior
+            // Documenting the expected behaviour
             Assert.IsTrue(true, "SetAccessibilityProperties should set automation name and help text");
         }
 
@@ -81,21 +81,21 @@ namespace Redball.Tests
         public void AccessibilityExtensions_WithAutomationName_SetsProperty()
         {
             // This would require WPF in STA thread
-            // Documenting fluent API behavior
+            // Documenting fluent API behaviour
             Assert.IsTrue(true, "WithAutomationName should set AutomationProperties.Name fluently");
         }
 
         [TestMethod]
         public void AccessibilityExtensions_WithAutomationHelp_SetsProperty()
         {
-            // Documenting fluent API behavior
+            // Documenting fluent API behaviour
             Assert.IsTrue(true, "WithAutomationHelp should set AutomationProperties.HelpText fluently");
         }
 
         [TestMethod]
         public void AccessibilityExtensions_AsLiveRegion_SetsProperty()
         {
-            // Documenting fluent API behavior
+            // Documenting fluent API behaviour
             Assert.IsTrue(true, "AsLiveRegion should set AutomationProperties.LiveSetting to Assertive");
         }
     }

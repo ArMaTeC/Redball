@@ -38,14 +38,14 @@ The flagship feature of Redball. TypeThing reads text from your clipboard and ty
 ### Modern WPF Desktop Application (.NET 10)
 
 - **Native WPF UI** — Built with .NET 10 WPF, single-file EXE (~3.3MB compressed) — requires .NET 10 Runtime
-- **14 Custom Themes** — System (auto-detect), Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Gray, Rose Gold, Cyberpunk, Coffee, Arctic Frost, High Contrast
-- **Design System** — Tokenized spacing, typography, colors, elevation, and motion with full Material Design color roles
+- **14 Custom Themes** — System (auto-detect), Dark, Light, Midnight Blue, Forest Green, Ocean Blue, Sunset Orange, Royal Purple, Slate Grey, Rose Gold, Cyberpunk, Coffee, Arctic Frost, High Contrast
+- **Design System** — Tokenised spacing, typography, colours, elevation, and motion with full Material Design colour roles
 - **Adaptive Layouts** — DPI-aware responsive layouts supporting 100%-300% DPI range across multi-monitor setups
 - **Accessibility Baseline** — WCAG AA compliance framework with contrast auditing, keyboard navigation, and screen reader support
-- **Custom Window Chrome** — Modern borderless window with custom title bar, minimize/maximize/close buttons, and rounded corners via `WindowChrome`
+- **Custom Window Chrome** — Modern borderless window with custom title bar, minimise/maximise/close buttons, and rounded corners via `WindowChrome`
 - **Command Palette** — Progressive disclosure UX with searchable command surface (Ctrl+K) for instant access to actions and settings
-- **Settings Window** — Tabbed settings with live slider value labels for duration and typing speed, organized into General, Behavior, Smart Features, TypeThing, Security, and Updates sections
-- **Mini Widget** — Floating mini widget window for quick status and controls with customizable presets (Focus, Meeting, BatterySafe)
+- **Settings Window** — Tabbed settings with live slider value labels for duration and typing speed, organised into General, Behaviour, Smart Features, TypeThing, Security, and Updates sections
+- **Mini Widget** — Floating mini widget window for quick status and controls with customisable presets (Focus, Meeting, BatterySafe)
 - **Onboarding Tutorial** — Interactive first-run tutorial for new users
 - **Theme QA Matrix** — 14-theme control readability testing across 12 control types with WCAG AA contrast validation
 - **Theme Persistence** — Selected theme saved to config and restored on startup
@@ -112,7 +112,7 @@ Download the latest **`Redball-Setup.exe`** from the [Releases](https://github.c
 - Per-user installation to `%LocalAppData%\Redball`
 - Start Menu, Desktop, and optional Startup shortcuts (all with Redball icon)
 - Branded installer UI with custom banner and dialog images
-- Optional default behavior features (battery-aware, network-aware, idle detection, etc.)
+- Optional default behaviour features (battery-aware, network-aware, idle detection, etc.)
 - .NET 10 Runtime detection and installation option
 - "Launch Redball" checkbox on the finish page
 - Full uninstaller that cleans registry and shortcuts

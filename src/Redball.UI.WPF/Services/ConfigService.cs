@@ -177,7 +177,7 @@ public class ConfigService : IConfigService
         {
             // Explicit path requested (common in tests/overrides).
             // We ONLY use this path and bypass discovery/migration scans
-            // to ensure strict isolation and predictable behavior.
+            // to ensure strict isolation and predictable behaviour.
             Logger.Info("ConfigService", $"Loading from explicit path: {path}");
             bestConfig = TryLoadFromFile(path) ?? TryRecoverFromFile(path);
             bestPath = path;
@@ -188,7 +188,7 @@ public class ConfigService : IConfigService
             // In test mode with no path, we just stick to defaults.
             // DO NOT scan AppData as it breaks isolation.
             Logger.Warning("ConfigService", "Load() called without path in TestMode; using memory-only defaults.");
-             ConfigPath = Path.Combine(Path.GetTempPath(), "redball_test_fallback.json");
+            ConfigPath = Path.Combine(Path.GetTempPath(), "redball_test_fallback.json");
         }
         else
         {

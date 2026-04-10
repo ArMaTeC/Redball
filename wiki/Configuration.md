@@ -20,7 +20,7 @@ Config is migrated automatically from legacy locations (install dir, old LocalAp
 | `UseHeartbeatKeypress` | bool | Send invisible keypresses to prevent app-level idle detection | `true` |
 | `HeartbeatInputMode` | string | Which function key to send (`F13`, `F14`, `F15`, `F16`) | `F15` |
 | `DefaultDuration` | int | Default timer duration in minutes | `60` |
-| `Theme` | string | UI theme (System, Dark, Light, MidnightBlue, ForestGreen, OceanBlue, SunsetOrange, RoyalPurple, SlateGray, RoseGold, Cyberpunk, Coffee, ArcticFrost, HighContrast) | `Dark` |
+| `Theme` | string | UI theme (System, Dark, Light, MidnightBlue, ForestGreen, OceanBlue, SunsetOrange, RoyalPurple, SlateGrey, RoseGold, Cyberpunk, Coffee, ArcticFrost, HighContrast) | `Dark` |
 | `Locale` | string | Display language (`en`, `es`, `fr`, `de`, `bl`) | `en` |
 | `MinimizeOnStart` | bool | Start minimized to system tray | `false` |
 | `MinimizeToTray` | bool | Minimize to tray instead of taskbar | `false` |

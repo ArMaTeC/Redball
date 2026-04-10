@@ -12,7 +12,7 @@ namespace Redball.Tests;
 
 /// <summary>
 /// End-to-end tests for TypeThing functionality.
-/// Tests actual typing behavior in real Notepad windows.
+/// Tests actual typing behaviour in real Notepad windows.
 /// Requires UI interaction permission.
 /// </summary>
 [TestClass]
@@ -173,7 +173,7 @@ public class TypeThingE2ETests
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("empty"))
         {
-            // Expected behavior
+            // Expected behaviour
         }
     }
 

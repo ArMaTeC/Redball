@@ -118,7 +118,7 @@ public partial class SettingsWindow : Window
         if (MaxLogSizeSlider != null) MaxLogSizeSlider.Value = cfg.MaxLogSizeMB;
         if (MaxLogSizeText != null) MaxLogSizeText.Text = $"Max log size: {cfg.MaxLogSizeMB} MB";
 
-        // Behavior settings
+        // Behaviour settings
         if (PreventDisplaySleepCheck != null) PreventDisplaySleepCheck.IsChecked = cfg.PreventDisplaySleep;
         if (UseHeartbeatCheck != null) UseHeartbeatCheck.IsChecked = cfg.UseHeartbeatKeypress;
         if (DurationSlider != null) DurationSlider.Value = cfg.DefaultDuration;
@@ -301,7 +301,7 @@ public partial class SettingsWindow : Window
         if (VerboseLoggingCheck != null) cfg.VerboseLogging = VerboseLoggingCheck.IsChecked ?? false;
         if (MaxLogSizeSlider != null) cfg.MaxLogSizeMB = (int)MaxLogSizeSlider.Value;
 
-        // Behavior settings
+        // Behaviour settings
         if (PreventDisplaySleepCheck != null) cfg.PreventDisplaySleep = PreventDisplaySleepCheck.IsChecked ?? true;
         if (UseHeartbeatCheck != null) cfg.UseHeartbeatKeypress = UseHeartbeatCheck.IsChecked ?? true;
         if (DurationSlider != null) cfg.DefaultDuration = (int)DurationSlider.Value;
@@ -468,6 +468,10 @@ public partial class SettingsWindow : Window
 
     private void Tab_Checked(object sender, RoutedEventArgs e)
     {
+        // Debug logging to diagnose tab switching issues
+        var senderName = sender is Control ctrl ? ctrl.Name : sender?.GetType().Name ?? "null";
+        Logger.Debug("SettingsWindow", $"Tab_Checked: sender={senderName}, UpdatesTab={(UpdatesTab?.Name ?? "null")}, TypeThingTab={(TypeThingTab?.Name ?? "null")}");
+
         // Hide all panels (null checks needed during XAML initialization)
         var panels = new[] { GeneralPanel, BehaviorPanel, FeaturesPanel, TypeThingPanel, UpdatesPanel, PrivacyPanel, CustomCommandsPanel, AboutPanel };
         foreach (var p in panels)
@@ -485,6 +489,12 @@ public partial class SettingsWindow : Window
         else if (sender == PrivacyTab) target = PrivacyPanel;
         else if (sender == CustomCommandsTab) target = CustomCommandsPanel;
         else if (sender == AboutTab) target = AboutPanel;
+        else
+        {
+            Logger.Warning("SettingsWindow", $"Tab_Checked: unknown sender {senderName}, no matching tab found");
+        }
+
+        Logger.Debug("SettingsWindow", $"Tab_Checked: target={(target?.Name ?? "null")}, UpdatesPanel={(UpdatesPanel?.Name ?? "null")}, TypeThingPanel={(TypeThingPanel?.Name ?? "null")}");
 
         // Show with fade-in animation
         if (target != null)

@@ -50,7 +50,7 @@ The installer is built with [NSIS (Nullsoft Scriptable Install System)](https://
 | `serve`         | Start update-server locally          |
 | `status`        | Show build status                    |
 
-### Build Script Release Behavior
+### Build Script Release Behaviour
 
 For release builds, the build script commits and pushes the version bump before creating GitHub releases so release notes always include commit history.
 
@@ -84,7 +84,7 @@ The NSIS installer provides:
 - Service installation for input injection
 - Auto-launch after install
 - Silent install support (`/S`)
-- Optional default behavior features via registry defaults
+- Optional default behaviour features via registry defaults
 - "Launch Redball" checkbox on the finish page
 
 ### Installer Theme

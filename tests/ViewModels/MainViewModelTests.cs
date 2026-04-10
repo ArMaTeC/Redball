@@ -184,7 +184,7 @@ namespace Redball.Tests.ViewModels
             try
             {
                 viewModel.SetMainWindow(null!);
-                // If we get here without exception, that's acceptable behavior
+                // If we get here without exception, that's acceptable behaviour
             }
             catch (ArgumentNullException)
             {

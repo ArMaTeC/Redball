@@ -98,6 +98,11 @@ public class ResourceBudgetService
     private bool _isMonitoring;
     private readonly TimeSpan _historyRetention = TimeSpan.FromHours(24);
 
+    // Thread-based tracking: service -> list of registered thread IDs
+    private readonly Dictionary<string, HashSet<int>> _serviceThreads = new();
+    // Thread CPU snapshots: thread ID -> (timestamp, processorTime)
+    private readonly Dictionary<int, (DateTime timestamp, TimeSpan processorTime)> _threadSnapshots = new();
+
     // Default budgets for known services
     // Note: RAM budgets reflect shared process memory - all services share the same process space
     private static readonly Dictionary<string, (double cpu, long ram, bool critical)> DefaultBudgets = new()
@@ -182,6 +187,53 @@ public class ResourceBudgetService
         _monitoringTimer = null;
 
         Logger.Info("ResourceBudgetService", "Stopped monitoring");
+    }
+
+    /// <summary>
+    /// Registers a thread as belonging to a specific service for CPU tracking.
+    /// </summary>
+    public void RegisterServiceThread(string serviceName, int threadId)
+    {
+        lock (_lock)
+        {
+            if (!_serviceThreads.ContainsKey(serviceName))
+                _serviceThreads[serviceName] = new HashSet<int>();
+
+            _serviceThreads[serviceName].Add(threadId);
+
+            // Initialize snapshot for this thread
+            if (!_threadSnapshots.ContainsKey(threadId))
+            {
+                _threadSnapshots[threadId] = (DateTime.Now, TimeSpan.Zero);
+            }
+
+            Logger.Debug("ResourceBudgetService", $"Registered thread {threadId} for {serviceName}");
+        }
+    }
+
+    /// <summary>
+    /// Unregisters a thread from a service (e.g., when thread terminates).
+    /// </summary>
+    public void UnregisterServiceThread(string serviceName, int threadId)
+    {
+        lock (_lock)
+        {
+            if (_serviceThreads.TryGetValue(serviceName, out var threads))
+            {
+                threads.Remove(threadId);
+            }
+            _threadSnapshots.Remove(threadId);
+
+            Logger.Debug("ResourceBudgetService", $"Unregistered thread {threadId} from {serviceName}");
+        }
+    }
+
+    /// <summary>
+    /// Registers the current thread for a service.
+    /// </summary>
+    public void RegisterCurrentThread(string serviceName)
+    {
+        RegisterServiceThread(serviceName, Thread.CurrentThread.ManagedThreadId);
     }
 
     /// <summary>
@@ -351,6 +403,9 @@ public class ResourceBudgetService
 
         try
         {
+            // Clean up dead thread registrations periodically
+            CleanupDeadThreads();
+
             var report = GenerateReport();
 
             // Log summary
@@ -382,27 +437,70 @@ public class ResourceBudgetService
         }
     }
 
+    /// <summary>
+    /// Removes thread registrations for threads that no longer exist.
+    /// </summary>
+    private void CleanupDeadThreads()
+    {
+        try
+        {
+            using var process = Process.GetCurrentProcess();
+            var aliveThreadIds = process.Threads.Cast<ProcessThread>().Select(t => t.Id).ToHashSet();
+
+            lock (_lock)
+            {
+                var deadThreadIds = _threadSnapshots.Keys.Where(id => !aliveThreadIds.Contains(id)).ToList();
+
+                foreach (var threadId in deadThreadIds)
+                {
+                    _threadSnapshots.Remove(threadId);
+
+                    // Also remove from service registrations
+                    foreach (var threads in _serviceThreads.Values)
+                    {
+                        threads.Remove(threadId);
+                    }
+                }
+
+                if (deadThreadIds.Count > 0)
+                {
+                    Logger.Debug("ResourceBudgetService", $"Cleaned up {deadThreadIds.Count} dead thread registrations");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("ResourceBudgetService", $"Error cleaning up dead threads: {ex.Message}");
+        }
+    }
+
     private ServiceResourceUsage? MeasureServiceUsage(string serviceName)
     {
         try
         {
-            // Get current process for self-monitoring
             using var process = Process.GetCurrentProcess();
 
-            // Measure CPU usage over a short interval
-            var startTime = DateTime.Now;
-            var startCpuUsage = process.TotalProcessorTime;
+            double cpuPercent;
+            HashSet<int>? serviceThreadIds = null;
 
-            Thread.Sleep(100); // Sample over 100ms
+            lock (_lock)
+            {
+                _serviceThreads.TryGetValue(serviceName, out serviceThreadIds);
+            }
 
-            var endTime = DateTime.Now;
-            var endCpuUsage = process.TotalProcessorTime;
+            if (serviceThreadIds != null && serviceThreadIds.Count > 0)
+            {
+                // Thread-based measurement: aggregate CPU across all service threads
+                cpuPercent = MeasureThreadBasedCpu(serviceThreadIds);
+            }
+            else
+            {
+                // Fallback: measure process-wide but scale down by number of active services
+                // This prevents false positives when no threads are explicitly registered
+                cpuPercent = MeasureProcessCpu() / Math.Max(1, _budgets.Count);
+            }
 
-            var cpuUsedMs = (endCpuUsage - startCpuUsage).TotalMilliseconds;
-            var totalMs = (endTime - startTime).TotalMilliseconds;
-            var cpuPercent = (cpuUsedMs / (Environment.ProcessorCount * totalMs)) * 100;
-
-            // Get memory usage
+            // Get memory usage (process-wide - shared memory space)
             process.Refresh();
             var ramBytes = process.WorkingSet64;
 
@@ -419,6 +517,78 @@ public class ResourceBudgetService
             Logger.Error("ResourceBudgetService", $"Failed to measure usage for {serviceName}", ex);
             return null;
         }
+    }
+
+    /// <summary>
+    /// Measures CPU usage for a set of threads by aggregating their individual CPU times.
+    /// </summary>
+    private double MeasureThreadBasedCpu(HashSet<int> threadIds)
+    {
+        var now = DateTime.Now;
+        double totalCpuPercent = 0;
+        int validThreads = 0;
+
+        // Get all process threads once
+        using var process = Process.GetCurrentProcess();
+        var processThreads = process.Threads.Cast<ProcessThread>().ToDictionary(t => t.Id);
+
+        lock (_lock)
+        {
+            foreach (var threadId in threadIds)
+            {
+                if (!processThreads.TryGetValue(threadId, out var thread))
+                    continue; // Thread no longer exists
+
+                try
+                {
+                    var currentProcessorTime = thread.TotalProcessorTime;
+
+                    if (_threadSnapshots.TryGetValue(threadId, out var snapshot))
+                    {
+                        var elapsedTime = (now - snapshot.timestamp).TotalMilliseconds;
+                        var cpuUsed = (currentProcessorTime - snapshot.processorTime).TotalMilliseconds;
+
+                        if (elapsedTime > 0)
+                        {
+                            var threadCpuPercent = (cpuUsed / (Environment.ProcessorCount * elapsedTime)) * 100;
+                            totalCpuPercent += threadCpuPercent;
+                            validThreads++;
+                        }
+                    }
+
+                    // Update snapshot for next measurement
+                    _threadSnapshots[threadId] = (now, currentProcessorTime);
+                }
+                catch (InvalidOperationException)
+                {
+                    // Thread may have exited between check and measurement
+                    _threadSnapshots.Remove(threadId);
+                }
+            }
+        }
+
+        return validThreads > 0 ? totalCpuPercent : 0;
+    }
+
+    /// <summary>
+    /// Measures total process CPU usage (fallback when no threads registered).
+    /// </summary>
+    private double MeasureProcessCpu()
+    {
+        using var process = Process.GetCurrentProcess();
+
+        var startTime = DateTime.Now;
+        var startCpuUsage = process.TotalProcessorTime;
+
+        Thread.Sleep(50); // Sample over 50ms (shorter since we're called multiple times)
+
+        var endTime = DateTime.Now;
+        var endCpuUsage = process.TotalProcessorTime;
+
+        var cpuUsedMs = (endCpuUsage - startCpuUsage).TotalMilliseconds;
+        var totalMs = (endTime - startTime).TotalMilliseconds;
+
+        return totalMs > 0 ? (cpuUsedMs / (Environment.ProcessorCount * totalMs)) * 100 : 0;
     }
 
     private void ThrottleService(string serviceName)

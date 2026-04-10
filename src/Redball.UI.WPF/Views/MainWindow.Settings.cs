@@ -1192,6 +1192,15 @@ public partial class MainWindow
                     return (false, false, err);
                 }
             }
+            else
+            {
+                // Set service description only when newly created
+                var descResult = RunProcess("sc.exe", "description RedballInputService \"Provides secure input injection for Redball keep-alive functionality. Supports automatic updates and can be safely upgraded while running.\"");
+                if (descResult.ExitCode != 0)
+                {
+                    Logger.Warning("MainWindow", $"Failed to set service description: {descResult.StdErr}");
+                }
+            }
 
             var startResult = RunProcess("sc.exe", "start RedballInputService");
             if (startResult.ExitCode != 0)

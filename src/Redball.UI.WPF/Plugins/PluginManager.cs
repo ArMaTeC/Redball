@@ -98,7 +98,7 @@ public class PluginManager : IDisposable
             }
         }
 
-        // Also look in subdirectories for organized plugins
+        // Also look in subdirectories for organised plugins
         var subdirectories = Directory.GetDirectories(_pluginDirectory);
         foreach (var dir in subdirectories)
         {

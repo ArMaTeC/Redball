@@ -8,7 +8,7 @@ Redball displays a 3D ball icon in the Windows system tray (notification area). 
 | ----- | ----- |
 | **Bright Red** (crimson/tomato gradient) | Keep-awake active — preventing sleep |
 | **Orange/Red** (dark orange gradient) | Keep-awake timed mode — countdown in progress |
-| **Dark Red/Gray** (muted colors) | Keep-awake paused / idle state |
+| **Dark Red/Grey** (muted colors) | Keep-awake paused / idle state |
 
 **Note:** TypeThing operates independently of the keep-awake state. The icon color only reflects keep-awake status.
 
