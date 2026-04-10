@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -241,7 +242,8 @@ public class SmartHomeIntegrationService
             // Use Philips Hue discovery endpoint
             // https://discovery.meethue.com/
             var response = await _httpClient.GetStringAsync("https://discovery.meethue.com/");
-            var hueBridges = JsonSerializer.Deserialize<List<HueBridgeInfo>>(response);
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            var hueBridges = SecureJsonSerializer.Deserialize<List<HueBridgeInfo>>(response);
 
             if (hueBridges != null)
             {
@@ -356,7 +358,8 @@ public class SmartHomeIntegrationService
                     if (hueResponse.IsSuccessStatusCode)
                     {
                         var hueJson = await hueResponse.Content.ReadAsStringAsync();
-                        var hueLights = JsonSerializer.Deserialize<Dictionary<string, HueLight>>(hueJson);
+                        // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                        var hueLights = SecureJsonSerializer.Deserialize<Dictionary<string, HueLight>>(hueJson);
                         
                         if (hueLights != null)
                         {
@@ -383,7 +386,8 @@ public class SmartHomeIntegrationService
                     if (haResponse.IsSuccessStatusCode)
                     {
                         var haJson = await haResponse.Content.ReadAsStringAsync();
-                        var haStates = JsonSerializer.Deserialize<List<HomeAssistantState>>(haJson);
+                        // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                        var haStates = SecureJsonSerializer.Deserialize<List<HomeAssistantState>>(haJson);
                         
                         if (haStates != null)
                         {

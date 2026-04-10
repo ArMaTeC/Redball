@@ -12,15 +12,18 @@ public static class ClipboardSanitiser
     /// <summary>Maximum clipboard length before a size warning is raised.</summary>
     public const int DefaultMaxSafeLength = 5000;
 
+    // SECURITY: Regex timeout prevents ReDoS attacks on crafted input
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(100);
+
     private static readonly (string Name, Regex Pattern)[] SensitivePatterns =
     {
-        ("Credit card number",   new Regex(@"\b(?:\d[ -]*?){13,19}\b", RegexOptions.Compiled)),
-        ("Social Security Number", new Regex(@"\b\d{3}-\d{2}-\d{4}\b", RegexOptions.Compiled)),
-        ("API key / secret",     new Regex(@"(?i)\b(?:api[_-]?key|secret|token|password)\s*[:=]\s*\S{8,}", RegexOptions.Compiled)),
-        ("Private key header",   new Regex(@"-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----", RegexOptions.Compiled)),
-        ("Bearer token",         new Regex(@"(?i)bearer\s+[a-z0-9\-_\.]{20,}", RegexOptions.Compiled)),
-        ("AWS access key",       new Regex(@"\bAKIA[0-9A-Z]{16}\b", RegexOptions.Compiled)),
-        ("Connection string",    new Regex(@"(?i)(?:server|data\s+source|host)\s*=\s*[^;]{3,}", RegexOptions.Compiled)),
+        ("Credit card number",   new Regex(@"\b(?:\d[ -]*?){13,19}\b", RegexOptions.Compiled, RegexTimeout)),
+        ("Social Security Number", new Regex(@"\b\d{3}-\d{2}-\d{4}\b", RegexOptions.Compiled, RegexTimeout)),
+        ("API key / secret",     new Regex(@"(?i)\b(?:api[_-]?key|secret|token|password)\s*[:=]\s*\S{8,}", RegexOptions.Compiled, RegexTimeout)),
+        ("Private key header",   new Regex(@"-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----", RegexOptions.Compiled, RegexTimeout)),
+        ("Bearer token",         new Regex(@"(?i)bearer\s+[a-z0-9\-_\.]{20,}", RegexOptions.Compiled, RegexTimeout)),
+        ("AWS access key",       new Regex(@"\bAKIA[0-9A-Z]{16}\b", RegexOptions.Compiled, RegexTimeout)),
+        ("Connection string",    new Regex(@"(?i)(?:server|data\s+source|host)\s*=\s*[^;]{3,}", RegexOptions.Compiled, RegexTimeout)),
     };
 
     /// <summary>

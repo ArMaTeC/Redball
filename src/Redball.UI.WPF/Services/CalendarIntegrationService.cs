@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -67,7 +68,8 @@ public class CalendarIntegrationService
             if (File.Exists(_calendarFile))
             {
                 var json = File.ReadAllText(_calendarFile);
-                _events = JsonSerializer.Deserialize<List<CalendarEvent>>(json) ?? new();
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                _events = SecureJsonSerializer.Deserialize<List<CalendarEvent>>(json) ?? new();
                 // Remove past events
                 _events = _events.Where(e => e.End > DateTime.Now).ToList();
                 Logger.Info("CalendarIntegrationService", $"Loaded {_events.Count} upcoming events");

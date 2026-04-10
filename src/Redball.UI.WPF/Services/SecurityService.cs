@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.IO;
 using System.Security.Cryptography;
@@ -33,6 +34,13 @@ public class SecurityService
     {
         try
         {
+            // SECURITY: Validate file path to prevent path traversal
+            if (!SecurePathValidator.IsValidFilePath(filePath))
+            {
+                Logger.Error("SecurityService", $"Invalid file path for verification: {filePath}");
+                return false;
+            }
+
             if (!File.Exists(filePath))
             {
                 Logger.Warning("SecurityService", $"File not found for verification: {filePath}");
@@ -193,6 +201,13 @@ public class SecurityService
     {
         try
         {
+            // SECURITY: Validate output path to prevent path traversal
+            if (!SecurePathValidator.IsValidFilePath(outputPath))
+            {
+                Logger.Error("SecurityService", $"Invalid output path for SBOM: {outputPath}");
+                return false;
+            }
+
             var sbom = GenerateSBOM();
             File.WriteAllText(outputPath, sbom);
             Logger.Info("SecurityService", $"SBOM saved to: {outputPath}");
@@ -212,6 +227,13 @@ public class SecurityService
     {
         try
         {
+            // SECURITY: Validate file path to prevent path traversal
+            if (!SecurePathValidator.IsValidFilePath(filePath))
+            {
+                Logger.Error("SecurityService", $"Invalid file path for hash computation: {filePath}");
+                return string.Empty;
+            }
+
             if (!File.Exists(filePath)) return string.Empty;
             using var stream = File.OpenRead(filePath);
             using var sha256 = SHA256.Create();
@@ -300,6 +322,13 @@ public class SecurityService
     public static TrustValidationResult ValidateUpdatePackage(string filePath, string? expectedManifestHash = null)
     {
         var result = new TrustValidationResult { FilePath = filePath };
+
+        // SECURITY: Validate file path to prevent path traversal
+        if (!SecurePathValidator.IsValidFilePath(filePath))
+        {
+            result.AddFailure("Invalid file path");
+            return result;
+        }
 
         try
         {

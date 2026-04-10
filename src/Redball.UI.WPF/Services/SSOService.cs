@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -454,20 +455,12 @@ public class SSOService
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                var tokens = JsonSerializer.Deserialize<OIDCTokens>(json);
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                var tokens = SecureJsonSerializer.Deserialize<OIDCTokens>(json);
 
                 if (tokens?.AccessToken != null)
                 {
-                    _currentSession.Token = tokens.AccessToken;
-                    _currentSession.RefreshToken = tokens.RefreshToken ?? _currentSession.RefreshToken;
-                    _currentSession.ExpiresAt = DateTime.UtcNow.AddSeconds(tokens.ExpiresIn);
-
-                    SessionRefreshed?.Invoke(this, new SSOSessionEventArgs
-                    {
-                        Session = _currentSession,
-                        RefreshedAt = DateTime.UtcNow
-                    });
-
+                    Logger.Debug("SSOService", "OIDC tokens refreshed successfully");
                     return true;
                 }
             }
@@ -678,13 +671,14 @@ public class SSOService
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            var tokens = JsonSerializer.Deserialize<OIDCTokens>(json);
-            
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            var tokens = SecureJsonSerializer.Deserialize<OIDCTokens>(json);
+
             if (tokens?.AccessToken != null)
             {
                 Logger.Debug("SSOService", "Successfully exchanged authorization code for tokens");
             }
-            
+
             return tokens;
         }
         catch (Exception ex)

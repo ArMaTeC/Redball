@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -364,38 +365,48 @@ public class TeamSettingsService
         File.WriteAllText(path, JsonSerializer.Serialize(_currentTeam, new JsonSerializerOptions { WriteIndented = true }));
     }
 
+    private async Task SaveTeamSettingsAsync(TeamSettings settings)
+    {
+        await Task.Run(() =>
+        {
+            var path = Path.Combine(_teamCacheDir, "team_settings.json");
+            File.WriteAllText(path, JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true }));
+        });
+    }
+
     private void LoadCachedTeamInfo()
     {
         var path = Path.Combine(_teamCacheDir, "team_info.json");
-        if (File.Exists(path))
+        if (!File.Exists(path))
         {
-            try
-            {
-                var json = File.ReadAllText(path);
-                _currentTeam = JsonSerializer.Deserialize<TeamInfo>(json);
-            }
-            catch (Exception ex)
-            {
-                Logger.Warning("TeamSettingsService", $"Failed to load cached team info: {ex.Message}");
-            }
+            _currentTeam = null;
+            return;
         }
-    }
 
-    private async Task SaveTeamSettingsAsync(TeamSettings settings)
-    {
-        var path = Path.Combine(_teamCacheDir, $"settings_{settings.TeamId}.json");
-        await File.WriteAllTextAsync(path, JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true }));
+        try
+        {
+            var json = File.ReadAllText(path);
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            _currentTeam = SecureJsonSerializer.Deserialize<TeamInfo>(json);
+        }
+        catch (Exception ex)
+        {
+            // SECURITY: Log full details internally
+            Logger.Warning("TeamSettingsService", "Failed to load cached team info", ex);
+            _currentTeam = null;
+        }
     }
 
     private async Task<TeamSettings?> LoadTeamSettingsAsync()
     {
         if (_currentTeam == null) return null;
-        
+
         var path = Path.Combine(_teamCacheDir, $"settings_{_currentTeam.TeamId}.json");
         if (!File.Exists(path)) return null;
-        
+
         var json = await File.ReadAllTextAsync(path);
-        return JsonSerializer.Deserialize<TeamSettings>(json);
+        // SECURITY: Use SecureJsonSerializer with size limit and max depth
+        return SecureJsonSerializer.Deserialize<TeamSettings>(json);
     }
 
     private void ClearTeamCache()

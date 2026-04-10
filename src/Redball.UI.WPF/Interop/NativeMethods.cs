@@ -27,7 +27,35 @@ internal static class NativeMethods
 
     // codeql[cs/dll-import-of-unmanaged-code] Required for keep-awake functionality via simulated input
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+    /// <summary>
+    /// SECURITY: Wrapper for SendInput with buffer size validation.
+    /// Validates input array before calling native method to prevent buffer issues.
+    /// </summary>
+    /// <param name="inputs">Array of INPUT structures (max 1000 elements for safety)</param>
+    /// <returns>Number of events successfully inserted</returns>
+    public static uint SendInputSafe(INPUT[] inputs)
+    {
+        // SECURITY: Validate input array
+        if (inputs == null)
+            throw new ArgumentNullException(nameof(inputs));
+
+        if (inputs.Length == 0)
+            return 0;
+
+        // SECURITY: Limit maximum inputs to prevent potential abuse (1000 is generous)
+        const int MaxInputs = 1000;
+        if (inputs.Length > MaxInputs)
+            throw new ArgumentException($"Input array exceeds maximum of {MaxInputs} elements", nameof(inputs));
+
+        // SECURITY: Validate cbSize matches expected struct size (28 bytes for INPUT on x64)
+        int cbSize = Marshal.SizeOf<INPUT>();
+        if (cbSize <= 0 || cbSize > 64)
+            throw new InvalidOperationException($"Unexpected INPUT struct size: {cbSize}");
+
+        return SendInput((uint)inputs.Length, inputs, cbSize);
+    }
 
     public const int INPUT_KEYBOARD = 1;
     public const uint KEYEVENTF_KEYUP = 0x0002;

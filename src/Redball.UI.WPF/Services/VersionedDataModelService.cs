@@ -1,9 +1,10 @@
+using Redball.Core.Security;
+using Redball.UI.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Redball.UI.Services;
 
 namespace Redball.UI.WPF.Services;
 
@@ -325,7 +326,8 @@ public class ConflictResolverService
             merged["checksum"] = null; // Will be recomputed
 
             var mergedJson = JsonSerializer.Serialize(merged);
-            return JsonSerializer.Deserialize<T>(mergedJson);
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            return SecureJsonSerializer.Deserialize<T>(mergedJson);
         }
         catch (Exception ex)
         {

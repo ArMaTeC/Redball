@@ -888,6 +888,20 @@ public partial class MainWindow
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
+    // SECURITY: Buffer-validated wrapper for SendInput
+    private static uint SendInputSafe(INPUT[] inputs)
+    {
+        if (inputs == null)
+            throw new ArgumentNullException(nameof(inputs));
+        if (inputs.Length == 0)
+            return 0;
+        if (inputs.Length > 1000)
+            throw new ArgumentException("Input array too large", nameof(inputs));
+
+        int cbSize = Marshal.SizeOf<INPUT>();
+        return SendInput((uint)inputs.Length, inputs, cbSize);
+    }
+
     [DllImport("user32.dll")]
     private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
@@ -991,7 +1005,8 @@ public partial class MainWindow
         inputs[1].u.ki.wVk = vk;
         inputs[1].u.ki.wScan = scan;
         inputs[1].u.ki.dwFlags = KEYEVENTF_KEYUP;
-        SendInput(2, inputs, Marshal.SizeOf<INPUT>());
+        // SECURITY: Use validated SendInput with buffer size check
+        SendInputSafe(inputs);
     }
 
     private void SendCharacter(char ch)
@@ -1043,7 +1058,8 @@ public partial class MainWindow
                 if (needShift) inputList.Add(MakeScanCodeInput((ushort)MapVirtualKeyW(VK_SHIFT, MAPVK_VK_TO_VSC), KEYEVENTF_KEYUP));
 
                 var inputs = inputList.ToArray();
-                SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
+                // SECURITY: Use validated SendInput with buffer size check
+                SendInputSafe(inputs);
                 return;
             }
         }
@@ -1056,7 +1072,8 @@ public partial class MainWindow
         uInputs[1].type = INPUT_KEYBOARD;
         uInputs[1].u.ki.wScan = (ushort)ch;
         uInputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
-        SendInput(2, uInputs, Marshal.SizeOf<INPUT>());
+        // SECURITY: Use validated SendInput with buffer size check
+        SendInputSafe(uInputs);
     }
 
     #endregion

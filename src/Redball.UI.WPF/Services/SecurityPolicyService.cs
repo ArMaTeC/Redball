@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -462,11 +463,13 @@ public class SecurityPolicyService
             try
             {
                 var json = File.ReadAllText(_policyCachePath);
-                _currentPolicy = JsonSerializer.Deserialize<SecurityPolicy>(json) ?? new SecurityPolicy();
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                _currentPolicy = SecureJsonSerializer.Deserialize<SecurityPolicy>(json) ?? new SecurityPolicy();
             }
             catch (Exception ex)
             {
-                Logger.Warning("SecurityPolicyService", $"Failed to load cached policy: {ex.Message}");
+                // SECURITY: Log full details internally
+                Logger.Warning("SecurityPolicyService", "Failed to load cached policy", ex);
                 _currentPolicy = new SecurityPolicy();
             }
         }

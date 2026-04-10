@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -97,7 +98,8 @@ public class MobileNotificationService
             if (response.IsSuccessStatusCode)
             {
                 var responseJson = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<FCMResponse>(responseJson);
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                var result = SecureJsonSerializer.Deserialize<FCMResponse>(responseJson);
 
                 if (result?.Success == 1)
                 {

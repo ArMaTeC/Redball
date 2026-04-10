@@ -1,3 +1,5 @@
+using Redball.Core.Security;
+using Redball.Core.Sync;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,7 +8,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Redball.Core.Sync;
 
 namespace Redball.UI.Services;
 
@@ -38,7 +39,8 @@ public static class AotCompatibility
         {
             var testConfig = new RedballConfig();
             var json = JsonSerializer.Serialize(testConfig, JsonOptions);
-            var _ = JsonSerializer.Deserialize<RedballConfig>(json, JsonOptions);
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            var _ = SecureJsonSerializer.Deserialize<RedballConfig>(json);
             
             Debug.WriteLine("[AotCompatibility] AOT JSON serialization verified");
         }
@@ -109,6 +111,9 @@ public static class AotCompatibility
     /// </summary>
     public static T? DeserializeJson<T>(string json)
     {
+        // SECURITY: Validate size before parsing
+        if (string.IsNullOrEmpty(json) || json.Length > 10 * 1024 * 1024) // 10MB limit
+            return default;
         return JsonSerializer.Deserialize<T>(json, JsonOptions);
     }
 }

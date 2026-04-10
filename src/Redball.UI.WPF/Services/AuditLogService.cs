@@ -1,8 +1,10 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Redball.UI.Services;
 
@@ -221,9 +223,10 @@ public class AuditLogService
                     {
                         try
                         {
-                            var entry = JsonSerializer.Deserialize<AuditLogEntry>(line);
-                            if (entry != null && 
-                                entry.Timestamp >= start && 
+                            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                            var entry = SecureJsonSerializer.Deserialize<AuditLogEntry>(line);
+                            if (entry != null &&
+                                entry.Timestamp >= start &&
                                 entry.Timestamp <= end &&
                                 (eventType == null || entry.EventType == eventType))
                             {

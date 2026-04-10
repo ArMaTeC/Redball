@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -250,7 +251,8 @@ public class AdminDashboardService
             if (File.Exists(_policyFile))
             {
                 var json = File.ReadAllText(_policyFile);
-                _activePolicy = JsonSerializer.Deserialize<AdminPolicy>(json) ?? new AdminPolicy();
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                _activePolicy = SecureJsonSerializer.Deserialize<AdminPolicy>(json) ?? new AdminPolicy();
             }
         }
         catch (Exception ex)

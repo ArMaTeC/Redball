@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -40,7 +41,8 @@ public class FileHashCache
         }
         catch (Exception ex)
         {
-            Logger.Warning("UpdateService", $"Failed to create cache directory: {ex.Message}");
+            // SECURITY: Log full details internally
+            Logger.Warning("UpdateService", "Failed to create cache directory", ex);
         }
         
         LoadCache();
@@ -53,7 +55,8 @@ public class FileHashCache
             if (File.Exists(_cacheFilePath))
             {
                 var json = File.ReadAllText(_cacheFilePath);
-                _cache = JsonSerializer.Deserialize<Dictionary<string, FileHashEntry>>(json) ?? new();
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                _cache = SecureJsonSerializer.Deserialize<Dictionary<string, FileHashEntry>>(json) ?? new();
             }
         }
         catch (Exception ex)
@@ -452,7 +455,8 @@ public class UpdateService : IUpdateService
                 ReportCheckProgress(progress, UpdateCheckStage.ParsingManifest, 50, "Reading update manifest...");
                 
                 var manifestJson = await _httpClient.GetStringAsync(manifestAsset.DownloadUrl, cancellationToken);
-                var manifest = JsonSerializer.Deserialize<UpdateManifest>(manifestJson);
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                var manifest = SecureJsonSerializer.Deserialize<UpdateManifest>(manifestJson);
                 
                 // Try to fetch update server manifest for patch information (primary source)
                 UpdateServerManifest? serverManifest = null;
@@ -464,7 +468,8 @@ public class UpdateService : IUpdateService
                         Logger.Info("UpdateService", $"[DELTA] Fetching patch manifest from update server: {serverManifestUrl}");
                         
                         var serverManifestJson = await _httpClient.GetStringAsync(serverManifestUrl, cancellationToken);
-                        serverManifest = JsonSerializer.Deserialize<UpdateServerManifest>(serverManifestJson);
+                        // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                        serverManifest = SecureJsonSerializer.Deserialize<UpdateServerManifest>(serverManifestJson);
                         
                         if (serverManifest?.Patches != null && serverManifest.Patches.Count > 0)
                         {
@@ -473,7 +478,8 @@ public class UpdateService : IUpdateService
                     }
                     catch (Exception ex)
                     {
-                        Logger.Warning("UpdateService", $"[DELTA] Could not fetch update server manifest: {ex.Message}");
+                        // SECURITY: Log full details internally
+                        Logger.Warning("UpdateService", "[DELTA] Could not fetch update server manifest", ex);
                     }
                 }
                 
@@ -1424,10 +1430,8 @@ public class UpdateService : IUpdateService
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                    var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(content, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
+                    // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                    var releases = SecureJsonSerializer.Deserialize<List<GitHubRelease>>(content);
                     
                     if (releases != null && releases.Count > 0)
                     {
@@ -1442,7 +1446,8 @@ public class UpdateService : IUpdateService
             }
             catch (Exception ex)
             {
-                Logger.Warning("UpdateService", $"Update-server failed: {ex.Message}, falling back to GitHub");
+                // SECURITY: Log full details internally
+                Logger.Warning("UpdateService", "Update-server failed, falling back to GitHub", ex);
             }
         }
 
@@ -1478,11 +1483,9 @@ public class UpdateService : IUpdateService
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             Logger.Debug("UpdateService", $"API response length: {content.Length} chars");
-            
-            var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(content, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            var releases = SecureJsonSerializer.Deserialize<List<GitHubRelease>>(content);
             
             _cachedReleases = releases ?? new List<GitHubRelease>();
             _cacheExpiry = DateTime.UtcNow + CacheDuration;

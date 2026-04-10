@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.IO;
 using System.Net.Http;
@@ -115,6 +116,9 @@ public class HealthCheckService : IHealthCheckService
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
+                // SECURITY: Validate size before parsing
+                if (content.Length > 1024 * 1024) // 1MB limit
+                    return HealthCheckResult.Degraded("Update API response too large");
                 var release = JsonSerializer.Deserialize<JsonElement>(content);
                 var latestVersion = release.GetProperty("tag_name").GetString();
                 

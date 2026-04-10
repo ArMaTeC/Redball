@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -196,6 +197,13 @@ public static class Logger
 
     public static string ExportDiagnostics(string destinationPath)
     {
+        // SECURITY: Validate destination path to prevent path traversal
+        if (!SecurePathValidator.IsValidFilePath(destinationPath))
+        {
+            Logger.Error("Logger", $"Invalid diagnostics export path: {destinationPath}");
+            return string.Empty;
+        }
+
         var diagnostics = new StringBuilder();
         diagnostics.AppendLine("Redball Diagnostics");
         diagnostics.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -281,6 +289,20 @@ public static class Logger
     public static void Warning(string component, string message)
     {
         if (_logLevel <= 3) Write("WRN", component, message);
+    }
+
+    /// <summary>
+    /// Log a warning with exception details
+    /// </summary>
+    public static void Warning(string component, string message, Exception ex)
+    {
+        if (_logLevel <= 3)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(message);
+            sb.AppendLine($"  Exception: {ex.GetType().Name}: {ex.Message}");
+            Write("WRN", component, sb.ToString().TrimEnd());
+        }
     }
 
     /// <summary>

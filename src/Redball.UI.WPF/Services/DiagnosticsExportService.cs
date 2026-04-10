@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -30,6 +31,13 @@ public sealed class DiagnosticsExportService
         var zipPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
             $"Redball_Diagnostics_{timestamp}.zip");
+
+        // SECURITY: Validate paths are within expected directories
+        var tempRoot = Path.GetTempPath();
+        if (!SecurePathValidator.IsWithinDirectory(tempDir, tempRoot))
+        {
+            return ExportResult.Err("Invalid temp directory path");
+        }
 
         try
         {

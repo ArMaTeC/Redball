@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -671,7 +672,8 @@ public class AnalyticsService : IAnalyticsService
         {
             _lock.EnterWriteLock();
             var json = File.ReadAllText(AnalyticsFile);
-            _data = JsonSerializer.Deserialize<AnalyticsData>(json) ?? new AnalyticsData();
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            _data = SecureJsonSerializer.Deserialize<AnalyticsData>(json) ?? new AnalyticsData();
             if (_data.FirstSeen == default)
                 _data.FirstSeen = DateTime.UtcNow;
 

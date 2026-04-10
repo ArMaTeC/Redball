@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -147,7 +148,8 @@ public class SessionStatsService
             if (File.Exists(_statsFile))
             {
                 var json = File.ReadAllText(_statsFile);
-                _data = JsonSerializer.Deserialize<SessionStatsData>(json) ?? new();
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                _data = SecureJsonSerializer.Deserialize<SessionStatsData>(json) ?? new();
             }
         }
         catch (Exception ex)

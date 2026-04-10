@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -75,8 +76,8 @@ public class LocalizationService : ILocalizationService
         try
         {
             var json = File.ReadAllText(filePath);
-            var external = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            var external = SecureJsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(json);
 
             if (external != null)
             {

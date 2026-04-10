@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -88,7 +89,8 @@ public class ProfileService
             }
 
             var json = File.ReadAllText(path);
-            var config = JsonSerializer.Deserialize<RedballConfig>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            var config = SecureJsonSerializer.Deserialize<RedballConfig>(json);
             if (config == null) return false;
 
             ConfigService.Instance.Config = config;

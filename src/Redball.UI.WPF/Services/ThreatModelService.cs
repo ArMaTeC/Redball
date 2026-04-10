@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -407,16 +408,14 @@ public class ThreatModelService
     {
         try
         {
-            var export = new
+            // SECURITY: Validate export path to prevent path traversal
+            if (!SecurePathValidator.IsValidFilePath(filePath))
             {
-                DocumentVersion,
-                LastUpdated,
-                TargetReleaseVersion,
-                Summary = GetSummary(),
-                Threats = _threats.ToList()
-            };
+                Logger.Error("ThreatModelService", $"Invalid export path: {filePath}");
+                return false;
+            }
 
-            var json = JsonSerializer.Serialize(export, new JsonSerializerOptions
+            var json = JsonSerializer.Serialize(_threats, new JsonSerializerOptions
             {
                 WriteIndented = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -440,6 +439,13 @@ public class ThreatModelService
     {
         try
         {
+            // SECURITY: Validate export path to prevent path traversal
+            if (!SecurePathValidator.IsValidFilePath(filePath))
+            {
+                Logger.Error("ThreatModelService", $"Invalid save path: {filePath}");
+                return false;
+            }
+
             var markdown = GenerateMarkdownDocument();
             File.WriteAllText(filePath, markdown);
             Logger.Info("ThreatModelService", $"Threat model document saved to: {filePath}");

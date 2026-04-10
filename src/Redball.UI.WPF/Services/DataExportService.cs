@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -22,6 +23,14 @@ public static class DataExportService
     {
         try
         {
+            // SECURITY: Validate destination path to prevent path traversal
+            var tempPath = Path.GetTempPath();
+            if (!SecurePathValidator.IsWithinDirectory(destinationZipPath, tempPath))
+            {
+                Logger.Error("DataExportService", $"Invalid export path (must be in temp directory): {destinationZipPath}");
+                return false;
+            }
+
             Logger.Info("DataExportService", $"Starting GDPR data export to: {destinationZipPath}");
 
             // Clean up any stale export temp dir

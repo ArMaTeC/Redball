@@ -74,7 +74,8 @@ class Program
             }
         };
 
-        var result = SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>());
+        // SECURITY: Use validated SendInput with buffer size check
+        var result = SendInputSafe(new[] { input });
         return result == 1;
     }
 
@@ -94,7 +95,8 @@ class Program
             }
         };
 
-        var result = SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>());
+        // SECURITY: Use validated SendInput with buffer size check
+        var result = SendInputSafe(new[] { input });
         return result == 1;
     }
 
@@ -104,6 +106,20 @@ class Program
     private const uint INPUT_KEYBOARD = 1;
     private const uint KEYEVENTF_KEYUP = 0x0002;
     private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
+
+    // SECURITY: Buffer-validated wrapper for SendInput
+    private static uint SendInputSafe(INPUT[] inputs)
+    {
+        if (inputs == null)
+            throw new ArgumentNullException(nameof(inputs));
+        if (inputs.Length == 0)
+            return 0;
+        if (inputs.Length > 1000)
+            throw new ArgumentException("Input array too large", nameof(inputs));
+
+        int cbSize = Marshal.SizeOf<INPUT>();
+        return SendInput((uint)inputs.Length, inputs, cbSize);
+    }
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);

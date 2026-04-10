@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -173,7 +174,8 @@ public class MobileCompanionApiService
                 {
                     using var sr = new StreamReader(req.InputStream);
                     var body = await sr.ReadToEndAsync();
-                    var tr = JsonSerializer.Deserialize<TimedSessionRequest>(body);
+                    // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                    var tr = SecureJsonSerializer.Deserialize<TimedSessionRequest>(body);
                     if (tr?.Minutes > 0) { KeepAwakeService.Instance.StartTimed(tr.Minutes); result = new { success = true, duration = tr.Minutes }; }
                     else { statusCode = 400; result = new { error = "Invalid duration" }; }
                 }
@@ -182,7 +184,8 @@ public class MobileCompanionApiService
             {
                 using var sr = new StreamReader(req.InputStream);
                 var body = await sr.ReadToEndAsync();
-                var di = JsonSerializer.Deserialize<ApiDeviceInfo>(body);
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                var di = SecureJsonSerializer.Deserialize<ApiDeviceInfo>(body);
                 var code = GeneratePairingCode();
                 Logger.Info("MobileCompanionApiService", $"Pairing request from {di?.Name ?? "Unknown"} - Code: {code}");
                 result = new { pairingCode = code, expiresAt = DateTime.UtcNow.AddMinutes(5) };
@@ -191,7 +194,8 @@ public class MobileCompanionApiService
             {
                 using var sr = new StreamReader(req.InputStream);
                 var body = await sr.ReadToEndAsync();
-                var pr = JsonSerializer.Deserialize<PairingCompleteRequest>(body);
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                var pr = SecureJsonSerializer.Deserialize<PairingCompleteRequest>(body);
                 if (string.IsNullOrEmpty(pr?.PairingCode)) { statusCode = 400; result = new { error = "Pairing code required" }; }
                 else
                 {
@@ -211,7 +215,8 @@ public class MobileCompanionApiService
                 {
                     using var sr = new StreamReader(req.InputStream);
                     var body = await sr.ReadToEndAsync();
-                    var ur = JsonSerializer.Deserialize<UnpairRequest>(body);
+                    // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                    var ur = SecureJsonSerializer.Deserialize<UnpairRequest>(body);
                     if (_pairedDevices.TryGetValue(ur?.DeviceId ?? "", out var d))
                     {
                         _apiKeys.Remove(d.ApiKey);
@@ -244,8 +249,13 @@ public class MobileCompanionApiService
         }
         catch (Exception ex)
         {
+            // SECURITY: Log full exception internally, return generic error externally
             Logger.Error("MobileCompanionApiService", "Request error", ex);
             resp.StatusCode = 500;
+            var errorJson = JsonSerializer.Serialize(new { error = "Internal server error" });
+            var errorBytes = Encoding.UTF8.GetBytes(errorJson);
+            resp.ContentLength64 = errorBytes.Length;
+            await resp.OutputStream.WriteAsync(errorBytes, 0, errorBytes.Length);
         }
         finally { resp.Close(); }
     }
@@ -268,7 +278,7 @@ public class MobileCompanionApiService
         }
         catch (Exception ex)
         {
-            Logger.Warning("MobileCompanionApiService", $"Error stopping API server: {ex.Message}");
+            Logger.Warning("MobileCompanionApiService", "Error stopping API server", ex);
         }
     }
 

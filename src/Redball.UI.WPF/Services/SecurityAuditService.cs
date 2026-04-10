@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -245,7 +246,8 @@ public class SecurityAuditService : IDisposable
                         
                         try
                         {
-                            var evt = JsonSerializer.Deserialize<SecurityAuditEvent>(line, _jsonOptions);
+                            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                            var evt = SecureJsonSerializer.Deserialize<SecurityAuditEvent>(line);
                             if (evt == null) continue;
                             
                             // Apply filters
@@ -283,6 +285,12 @@ public class SecurityAuditService : IDisposable
     {
         try
         {
+            // SECURITY: Validate export path to prevent path traversal
+            if (!SecurePathValidator.IsValidFilePath(exportPath))
+            {
+                Logger.Error("SecurityAuditService", $"Invalid audit log export path: {exportPath}");
+                return false;
+            }
             var events = QueryEvents(startTime, endTime, maxResults: int.MaxValue);
             var export = new AuditExport
             {

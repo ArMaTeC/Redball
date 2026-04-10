@@ -51,6 +51,9 @@ public class SecurityCIGatesService
     private static readonly Lazy<SecurityCIGatesService> _instance = new(() => new SecurityCIGatesService());
     public static SecurityCIGatesService Instance => _instance.Value;
 
+    // SECURITY: Regex timeout prevents ReDoS attacks on large files
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(500);
+
     private readonly List<string> _blockedSecretsPatterns = new()
     {
         // API keys and tokens
@@ -60,20 +63,20 @@ public class SecurityCIGatesService
         @"bearer\s+[a-zA-Z0-9_\-]{20,}",
         @"password\s*[=:]\s*\S{8,}",
         @"connection[_-]?string\s*[=:]\s*.*password",
-        
+
         // Private keys
         @"-----BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY-----",
         @"private[_-]?key\s*[=:]\s*[a-zA-Z0-9]{20,}",
-        
+
         // GitHub/GitLab tokens
         @"gh[pousr]_[A-Za-z0-9_]{36}",
         @"glpat-[A-Za-z0-9_\-]{20}",
-        
+
         // AWS/Azure/GCP keys
         @"AKIA[0-9A-Z]{16}",
         @"azure[_-]?key\s*[=:]\s*[a-zA-Z0-9]{20,}",
         @"gcp[_-]?key\s*[=:]\s*[a-zA-Z0-9]{20,}",
-        
+
         // Generic high-entropy strings that look like secrets
         @"[a-zA-Z0-9]{32,}[_-]?secret",
         @"secret[_-]?[a-zA-Z0-9]{32,}"
@@ -136,9 +139,10 @@ public class SecurityCIGatesService
                 {
                     var content = await File.ReadAllTextAsync(csproj);
                     
-                    // Parse package references (simplified)
-                    var packageMatches = Regex.Matches(content, 
-                        @"<PackageReference\s+Include=""([^""]+)""\s+Version=""([^""]+)""");
+                    // Parse package references (simplified) with timeout
+                    var packageMatches = Regex.Matches(content,
+                        @"<PackageReference\s+Include=""([^""]+)""\s+Version=""([^""]+)""",
+                        RegexOptions.None, RegexTimeout);
                     
                     foreach (Match match in packageMatches)
                     {
@@ -215,7 +219,7 @@ public class SecurityCIGatesService
 
                     foreach (var pattern in _blockedSecretsPatterns)
                     {
-                        var matches = Regex.Matches(content, pattern, RegexOptions.IgnoreCase);
+                        var matches = Regex.Matches(content, pattern, RegexOptions.IgnoreCase, RegexTimeout);
                         foreach (Match match in matches)
                         {
                             // Check if it's a false positive (variable name only, not actual secret)

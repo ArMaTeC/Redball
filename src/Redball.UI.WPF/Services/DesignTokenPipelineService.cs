@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,7 +50,8 @@ public sealed class DesignTokenPipelineService
             
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
-            var figmaFile = JsonSerializer.Deserialize<FigmaFile>(json);
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            var figmaFile = SecureJsonSerializer.Deserialize<FigmaFile>(json);
 
             if (figmaFile == null)
             {
@@ -146,7 +148,8 @@ public sealed class DesignTokenPipelineService
             }
 
             var json = await File.ReadAllTextAsync(manifestPath);
-            var tokens = JsonSerializer.Deserialize<DesignTokenCollection>(json);
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            var tokens = SecureJsonSerializer.Deserialize<DesignTokenCollection>(json);
 
             if (tokens == null)
             {

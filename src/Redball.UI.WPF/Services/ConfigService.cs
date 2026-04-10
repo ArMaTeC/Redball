@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -40,7 +41,9 @@ public class ConfigService : IConfigService
     {
         PropertyNameCaseInsensitive = true,
         ReadCommentHandling = JsonCommentHandling.Skip,
-        AllowTrailingCommas = true
+        AllowTrailingCommas = true,
+        MaxDepth = 32,  // SECURITY: Prevent deeply nested JSON DoS
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip
     };
 
     private static readonly JsonSerializerOptions WriteOptions = new()
@@ -355,7 +358,8 @@ public class ConfigService : IConfigService
         }
         catch (Exception ex)
         {
-            Logger.Warning("ConfigService", $"Failed to deserialize from {filePath}: {ex.Message}");
+            // SECURITY: Log full details internally, return safe message
+            Logger.Warning("ConfigService", $"Failed to deserialize from {filePath}", ex);
             return null;
         }
     }
@@ -658,6 +662,13 @@ public class ConfigService : IConfigService
         Logger.Info("ConfigService", $"Exporting config to: {exportPath}");
         try
         {
+            // SECURITY: Validate export path to prevent path traversal
+            if (!SecurePathValidator.IsValidFilePath(exportPath))
+            {
+                Logger.Error("ConfigService", $"Invalid export path: {exportPath}");
+                return false;
+            }
+
             var backup = new
             {
                 ExportedAt = DateTime.Now,
@@ -685,6 +696,13 @@ public class ConfigService : IConfigService
         Logger.Info("ConfigService", $"Importing config from: {importPath}");
         try
         {
+            // SECURITY: Validate import path to prevent path traversal
+            if (!SecurePathValidator.IsValidFilePath(importPath))
+            {
+                Logger.Error("ConfigService", $"Invalid import path: {importPath}");
+                return false;
+            }
+
             if (!File.Exists(importPath))
             {
                 Logger.Warning("ConfigService", "Import file not found");

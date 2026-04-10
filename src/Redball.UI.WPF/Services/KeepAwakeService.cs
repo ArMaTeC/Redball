@@ -441,7 +441,7 @@ public class KeepAwakeService : IKeepAwakeService
             inputs[1].u.ki.wVk = virtualKey;
             inputs[1].u.ki.dwFlags = NativeMethods.KEYEVENTF_KEYUP;
 
-            NativeMethods.SendInput(2, inputs, Marshal.SizeOf<NativeMethods.INPUT>());
+            NativeMethods.SendInputSafe(inputs);
             Logger.Verbose("KeepAwakeService", $"{_heartbeatInputMode} heartbeat sent");
         }
         catch (Exception ex)

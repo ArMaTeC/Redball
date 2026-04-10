@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -73,7 +74,8 @@ public class TemplateService
             if (File.Exists(_templatesFile))
             {
                 var json = File.ReadAllText(_templatesFile);
-                _templates = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new();
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                _templates = SecureJsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new();
             }
         }
         catch (Exception ex)

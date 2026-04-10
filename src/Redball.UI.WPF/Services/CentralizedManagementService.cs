@@ -149,7 +149,7 @@ public class CentralizedManagementService
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                var policy = JsonSerializer.Deserialize<ManagementPolicy>(json);
+                var policy = SecureJsonSerializer.Deserialize<ManagementPolicy>(json);
 
                 if (policy != null)
                 {
@@ -243,7 +243,8 @@ public class CentralizedManagementService
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                var commands = JsonSerializer.Deserialize<List<RemoteCommand>>(json);
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                var commands = SecureJsonSerializer.Deserialize<List<RemoteCommand>>(json);
                 return commands ?? new List<RemoteCommand>();
             }
         }
@@ -285,7 +286,8 @@ public class CentralizedManagementService
                 case "apply_policy":
                     if (command.Payload != null)
                     {
-                        var policy = JsonSerializer.Deserialize<ManagementPolicy>(command.Payload.ToString()!);
+                        // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                        var policy = SecureJsonSerializer.Deserialize<ManagementPolicy>(command.Payload.ToString()!);
                         if (policy != null)
                         {
                             await ApplyPolicyAsync(policy);
@@ -445,11 +447,13 @@ public class CentralizedManagementService
             try
             {
                 var json = File.ReadAllText(policyFile);
-                _cachedPolicy = JsonSerializer.Deserialize<ManagementPolicy>(json);
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                _cachedPolicy = SecureJsonSerializer.Deserialize<ManagementPolicy>(json);
             }
             catch (Exception ex)
             {
-                Logger.Warning("CentralizedManagementService", $"Failed to load cached policy: {ex.Message}");
+                // SECURITY: Log full details internally
+                Logger.Warning("CentralizedManagementService", "Failed to load cached policy", ex);
             }
         }
     }

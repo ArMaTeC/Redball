@@ -1,3 +1,5 @@
+using Redball.Core.Security;
+using Redball.UI.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,7 +8,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Redball.UI.Services;
 
 namespace Redball.UI.WPF.Services;
 
@@ -241,6 +242,13 @@ public class ReleaseGatesService
     /// </summary>
     public bool ExportChecklist(string filePath)
     {
+        // SECURITY: Validate export path to prevent path traversal
+        if (!SecurePathValidator.IsValidFilePath(filePath))
+        {
+            Logger.Error("ReleaseGatesService", $"Invalid checklist export path: {filePath}");
+            return false;
+        }
+
         if (_currentChecklist == null)
             return false;
 
@@ -288,6 +296,13 @@ public class ReleaseGatesService
     {
         if (_currentChecklist == null)
             throw new InvalidOperationException("No active checklist");
+
+        // SECURITY: Validate artifact path to prevent path traversal
+        if (!SecurePathValidator.IsValidFilePath(artifactPath))
+        {
+            Logger.Error("ReleaseGatesService", $"Invalid artifact path: {artifactPath}");
+            return false;
+        }
 
         if (!File.Exists(artifactPath))
         {

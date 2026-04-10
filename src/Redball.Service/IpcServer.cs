@@ -147,15 +147,26 @@ public class IpcServer : IDisposable
 
     private async Task HandleClientAsync(NamedPipeServerStream pipe, CancellationToken cancellationToken)
     {
-        // SECURITY: Get client process ID for rate limiting
+        // SECURITY: Get client process ID for rate limiting (Windows only)
         int clientProcessId = -1;
         try
         {
-            clientProcessId = pipe.GetClientProcessId();
+            // GetClientProcessId is Windows-only - use reflection to avoid build errors on Linux
+            var method = typeof(NamedPipeServerStream).GetMethod("GetClientProcessId");
+            if (method != null)
+            {
+                clientProcessId = (int)method.Invoke(pipe, null)!;
+            }
+            else
+            {
+                // Fallback: generate a hash from the pipe handle for non-Windows platforms
+                clientProcessId = pipe.GetHashCode();
+            }
         }
         catch (Exception ex)
         {
             _logger.LogWarning("Could not identify client process: {Message}", ex.Message);
+            clientProcessId = pipe.GetHashCode(); // Fallback identifier
         }
 
         try

@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -163,34 +164,32 @@ public sealed class ConfigEncryptionService : IDisposable
                 json = encryptedPayload;
             }
 
-            var config = JsonSerializer.Deserialize<RedballConfig>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                ReadCommentHandling = JsonCommentHandling.Skip,
-                AllowTrailingCommas = true
-            });
-
-            // Mark for re-encryption at higher tier if needed
-            if (config != null && ShouldUpgradeEncryptionTier(encryptedPayload))
-            {
-                Logger.Info("ConfigEncryption", "Config encrypted at lower tier - will upgrade on next save");
-                ConfigService.Instance.IsDirty = true;
-            }
-
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            var config = SecureJsonSerializer.Deserialize<RedballConfig>(json);
             return config;
-        }
-        catch (CryptographicException ex)
-        {
-            Logger.Error("ConfigEncryption", "Decryption failed - possible tampering or hardware change", ex);
-            
-            // Log security event
-            Debug.WriteLine($"[SECURITY] Config decryption failure: {ex.Message}");
-            
-            return null;
         }
         catch (Exception ex)
         {
-            Logger.Error("ConfigEncryption", "Unexpected error during decryption", ex);
+            Logger.Error("ConfigEncryptionService", $"Failed to decrypt config: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Legacy fallback method for backward compatibility.
+    /// </summary>
+    private RedballConfig? DecryptConfigLegacy(string encryptedData)
+    {
+        try
+        {
+            var json = DecryptWithDpapi(encryptedData);
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            var config = SecureJsonSerializer.Deserialize<RedballConfig>(json);
+            return config;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("ConfigEncryptionService", $"Legacy decryption failed: {ex.Message}");
             return null;
         }
     }

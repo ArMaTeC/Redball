@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.IO;
 using System.Text.Json;
@@ -19,6 +20,14 @@ public class SessionStateService : ISessionStateService
     public bool Save(KeepAwakeService keepAwake, string? path = null)
     {
         var statePath = path ?? ResolveStatePath();
+
+        // SECURITY: Validate state path to prevent path traversal if custom path provided
+        if (path != null && !SecurePathValidator.IsValidFilePath(statePath))
+        {
+            Logger.Error("SessionState", $"Invalid state file path: {statePath}");
+            return false;
+        }
+
         Logger.Debug("SessionState", $"Saving state to: {statePath}");
 
         try
@@ -57,6 +66,13 @@ public class SessionStateService : ISessionStateService
     {
         var statePath = path ?? ResolveStatePath();
 
+        // SECURITY: Validate state path to prevent path traversal if custom path provided
+        if (path != null && !SecurePathValidator.IsValidFilePath(statePath))
+        {
+            Logger.Error("SessionState", $"Invalid state file path: {statePath}");
+            return false;
+        }
+
         if (!File.Exists(statePath))
         {
             Logger.Debug("SessionState", "No saved state file found");
@@ -66,10 +82,8 @@ public class SessionStateService : ISessionStateService
         try
         {
             var json = File.ReadAllText(statePath);
-            var state = JsonSerializer.Deserialize<SessionState>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            // SECURITY: Use SecureJsonSerializer with size limit and max depth
+            var state = SecureJsonSerializer.Deserialize<SessionState>(json);
 
             if (state == null)
             {

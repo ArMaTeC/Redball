@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -459,7 +460,8 @@ public class UsageBasedLicensingService
             try
             {
                 var json = File.ReadAllText(_licenseCachePath);
-                _currentLicense = JsonSerializer.Deserialize<LicenseInfo>(json);
+                // SECURITY: Use SecureJsonSerializer with size limit and max depth
+                _currentLicense = SecureJsonSerializer.Deserialize<LicenseInfo>(json);
                 
                 // Validate cached license
                 if (_currentLicense?.ExpiresAt < DateTime.UtcNow)

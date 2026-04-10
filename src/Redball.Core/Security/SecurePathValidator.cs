@@ -77,6 +77,17 @@ public static class SecurePathValidator
     }
 
     /// <summary>
+    /// Validates that a file path is safe to use.
+    /// Combines null/whitespace check with traversal detection.
+    /// </summary>
+    /// <param name="path">The file path to validate.</param>
+    /// <returns>True if the path is valid and safe.</returns>
+    public static bool IsValidFilePath(string path)
+    {
+        return !string.IsNullOrWhiteSpace(path) && ContainsNoTraversal(path);
+    }
+
+    /// <summary>
     /// Sanitises a filename by removing or replacing dangerous characters.
     /// </summary>
     /// <param name="fileName">The filename to sanitise.</param>
