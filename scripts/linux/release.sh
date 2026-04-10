@@ -421,6 +421,26 @@ main() {
             log_info "Including manifest.json for differential updates"
         fi
 
+        # Add delta patch files for differential updates
+        local patches_dir="$PROJECT_ROOT/update-server/releases/$VERSION/patches"
+        if [[ -d "$patches_dir" ]]; then
+            local patch_count=0
+            for patch in "$patches_dir"/*.patch; do
+                if [[ -f "$patch" ]]; then
+                    upload_files+=("$patch")
+                    ((patch_count++))
+                fi
+            done
+            # Also include patch-manifest.json if it exists
+            if [[ -f "$patches_dir/patch-manifest.json" ]]; then
+                upload_files+=("$patches_dir/patch-manifest.json")
+                log_info "Including patch-manifest.json"
+            fi
+            if [[ $patch_count -gt 0 ]]; then
+                log_info "Including $patch_count delta patch files"
+            fi
+        fi
+
         local missing_windows=()
         [[ -f "$windows_dist/Redball-${VERSION}-Setup.exe" ]] || missing_windows+=("Redball-${VERSION}-Setup.exe")
         [[ -f "$windows_dist/Redball-${VERSION}.zip" ]] || missing_windows+=("Redball-${VERSION}.zip")

@@ -1,0 +1,76 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+    name: Test on Windows
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore tests/Redball.Tests.csproj
+
+    - name: Build
+      run: dotnet build tests/Redball.Tests.csproj --no-restore --configuration Release
+
+    - name: Test
+      run: |
+        dotnet test tests/Redball.Tests.csproj `
+          --no-build `
+          --verbosity normal `
+          --collect:"XPlat Code Coverage" `
+          --logger trx `
+          --results-directory TestResults
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: TestResults/
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: '**/coverage.cobertura.xml'
+        fail_ci_if_error: false
+
+  test-linux-build:
+    runs-on: ubuntu-latest
+    name: Build verification on Linux
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Build tests
+      run: |
+        export DOTNET_NUGET_SIGNATURE_VERIFICATION=false
+        dotnet build tests/Redball.Tests.csproj `
+          -p:EnableWindowsTargeting=true `
+          --configuration Release
+
+    - name: Count tests
+      run: |
+        $testCount = (Select-String -Path "tests/*.cs" -Pattern "\[TestMethod\]" | Measure-Object).Count
+        Write-Host "Total test methods found: $testCount"
+      shell: pwsh

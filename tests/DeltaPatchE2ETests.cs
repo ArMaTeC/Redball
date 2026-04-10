@@ -146,7 +146,6 @@ public class DeltaPatchE2ETests
     /// E2E Test 4: Patch verification with hash mismatch detection
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(InvalidOperationException))]
     public async Task E2E_PatchVerification_HashMismatch_Throws()
     {
         // Arrange
@@ -158,17 +157,22 @@ public class DeltaPatchE2ETests
         var corruptedOldData = oldData.ToArray();
         corruptedOldData[0] = (byte)(corruptedOldData[0] ^ 0xFF);
 
-        // Act - Should throw due to hash mismatch
-        await _deltaService.ApplyPatchAsync(corruptedOldData, patch, CancellationToken.None);
-
-        // Assert - Expected exception
+        // Act & Assert - Should throw due to hash mismatch
+        try
+        {
+            await _deltaService.ApplyPatchAsync(corruptedOldData, patch, CancellationToken.None);
+            Assert.Fail("Expected InvalidOperationException was not thrown");
+        }
+        catch (InvalidOperationException)
+        {
+            // Expected
+        }
     }
 
     /// <summary>
     /// E2E Test 5: Patch file size mismatch detection
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(InvalidOperationException))]
     public async Task E2E_PatchSizeMismatch_WrongOldFile_Throws()
     {
         // Arrange
@@ -179,10 +183,16 @@ public class DeltaPatchE2ETests
         // Wrong old data (different size)
         var wrongOldData = Encoding.UTF8.GetBytes("Wrong size");
 
-        // Act - Should throw due to size mismatch
-        await _deltaService.ApplyPatchAsync(wrongOldData, patch, CancellationToken.None);
-
-        // Assert - Expected exception
+        // Act & Assert - Should throw due to size mismatch
+        try
+        {
+            await _deltaService.ApplyPatchAsync(wrongOldData, patch, CancellationToken.None);
+            Assert.Fail("Expected InvalidOperationException was not thrown");
+        }
+        catch (InvalidOperationException)
+        {
+            // Expected
+        }
     }
 
     /// <summary>
@@ -440,7 +450,6 @@ public class DeltaPatchE2ETests
     /// E2E Test 14: Corrupted patch data detection
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(InvalidOperationException))]
     public async Task E2E_CorruptedPatchData_Throws()
     {
         // Arrange
@@ -457,15 +466,22 @@ public class DeltaPatchE2ETests
             NewFileSize = patch.NewFileSize
         };
 
-        // Act - Should throw during decompression or application
-        await _deltaService.ApplyPatchAsync(oldData, corruptedPatch, CancellationToken.None);
+        // Act & Assert - Should throw during decompression or application
+        try
+        {
+            await _deltaService.ApplyPatchAsync(oldData, corruptedPatch, CancellationToken.None);
+            Assert.Fail("Expected InvalidOperationException was not thrown");
+        }
+        catch (InvalidOperationException)
+        {
+            // Expected
+        }
     }
 
     /// <summary>
     /// E2E Test 15: Cancellation during patch creation
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(OperationCanceledException))]
     public async Task E2E_CancellationDuringPatchCreation_Throws()
     {
         // Arrange
@@ -478,8 +494,16 @@ public class DeltaPatchE2ETests
         // Cancel immediately
         cts.Cancel();
 
-        // Act - Should throw OperationCanceledException
-        await _deltaService.CreatePatchAsync(oldData, newData, cts.Token);
+        // Act & Assert - Should throw OperationCanceledException
+        try
+        {
+            await _deltaService.CreatePatchAsync(oldData, newData, cts.Token);
+            Assert.Fail("Expected OperationCanceledException was not thrown");
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected
+        }
     }
 
     #endregion

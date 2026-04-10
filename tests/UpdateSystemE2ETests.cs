@@ -561,7 +561,7 @@ Write-Host 'Update complete'
         // Act & Assert - should handle cancellation gracefully
         try
         {
-            await service.CheckForUpdateAsync(cts.Token);
+            await service.CheckForUpdateAsync(null, cts.Token);
             // Either returns null or throws OperationCanceledException - both are valid
             Assert.IsTrue(true);
         }
