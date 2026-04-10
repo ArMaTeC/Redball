@@ -399,8 +399,8 @@ main() {
         # Build upload file list
         local upload_files=()
         
-        # Add Linux artifacts
-        for file in "${DIST_DIR}"/redball-*.tar.gz "${DIST_DIR}"/redball-*.flatpak "${DIST_DIR}"/redball-*.deb; do
+        # Add Linux artifacts (from dist/linux/)
+        for file in "${DIST_DIR}/linux"/redball-*.tar.gz "${DIST_DIR}/linux"/redball-*.flatpak "${DIST_DIR}/linux"/redball-*.deb; do
             [[ -f "$file" ]] && upload_files+=("$file")
         done
         
@@ -433,7 +433,7 @@ main() {
             for patch in "$patches_dir"/*.patch; do
                 if [[ -f "$patch" ]]; then
                     upload_files+=("$patch")
-                    ((patch_count++))
+                    (( patch_count++ )) || true
                 fi
             done
             # Also include patch-manifest.json if it exists

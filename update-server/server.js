@@ -813,6 +813,102 @@ function guessMimeType(filename) {
   return types[ext] || 'application/octet-stream';
 }
 
+// --- Check for update with delta patch support and fallback to full installer ---
+app.get('/api/check-update', async (req, res) => {
+  const { currentVersion, channel = 'stable' } = req.query;
+
+  if (!currentVersion) {
+    return res.status(400).json({ error: 'currentVersion is required' });
+  }
+
+  try {
+    const releases = await fetchGitHubReleases();
+    const latest = releases.find(r => channel === 'all' || r.channel === channel);
+
+    if (!latest) {
+      return res.json({
+        updateAvailable: false,
+        message: 'No releases found for channel: ' + channel
+      });
+    }
+
+    // Check if update is needed
+    const versionCompare = compareVersions(latest.version, currentVersion);
+    if (versionCompare <= 0) {
+      return res.json({
+        updateAvailable: false,
+        currentVersion,
+        latestVersion: latest.version,
+        message: 'Already on latest version'
+      });
+    }
+
+    // Check if delta patch is available
+    const patchesDir = path.join(RELEASES_DIR, latest.version, 'patches');
+    const patchManifestPath = path.join(patchesDir, 'patch-manifest.json');
+    let patchAvailable = false;
+    let patchInfo = null;
+
+    if (fs.existsSync(patchManifestPath)) {
+      try {
+        const patchManifest = JSON.parse(fs.readFileSync(patchManifestPath, 'utf8'));
+        // Check if patch is from this specific version
+        if (patchManifest.fromVersion === currentVersion) {
+          patchAvailable = true;
+          patchInfo = {
+            fromVersion: patchManifest.fromVersion,
+            toVersion: patchManifest.toVersion,
+            totalSavings: patchManifest.totalSavings,
+            patches: patchManifest.patches
+          };
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
+
+    // Build response
+    const response = {
+      updateAvailable: true,
+      currentVersion,
+      latestVersion: latest.version,
+      channel: latest.channel,
+      releaseDate: latest.date,
+      releaseNotes: latest.notes,
+      downloadUrl: latest.files.find(f => f.name.endsWith('.exe') || f.name.endsWith('.zip'))?.url || null,
+      githubUrl: latest.githubUrl,
+      patchAvailable,
+      updateMethod: patchAvailable ? 'delta' : 'full',
+      message: patchAvailable
+        ? `Delta update available: ${currentVersion} → ${latest.version}`
+        : `Full installer update: ${currentVersion} → ${latest.version}`
+    };
+
+    if (patchAvailable && patchInfo) {
+      response.patchInfo = patchInfo;
+      response.patchDownloadUrl = `${req.protocol}://${req.get('host')}/downloads/${latest.version}/patches/`;
+    }
+
+    // Include full installer info as fallback for silent update
+    const installerFile = latest.files.find(f => f.name.includes('Setup.exe') || f.name.endsWith('.exe'));
+    if (installerFile) {
+      response.fullInstaller = {
+        name: installerFile.name,
+        size: installerFile.size,
+        url: installerFile.url,
+        hash: installerFile.hash || ''
+      };
+      response.silentUpdateSupported = installerFile.name.includes('Setup.exe');
+    }
+
+    res.json(response);
+
+  } catch (err) {
+    console.error('[API] Error checking for update:', err);
+    res.status(500).json({ error: 'Failed to check for updates' });
+  }
+});
+
 // === SPA fallback (catch-all for non-API routes) ===
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/') || req.path.startsWith('/downloads/')) {
@@ -820,6 +916,34 @@ app.use((req, res, next) => {
   }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// === Scheduled Cleanup Job ===
+const { cleanupReleases } = require('./scripts/cleanup-releases');
+
+// Run cleanup every 24 hours
+const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
+
+function scheduleCleanup() {
+  console.log('[SCHEDULER] Release cleanup scheduled (runs every 24 hours, keeps last 6 versions)');
+
+  // Run immediately on startup
+  setTimeout(() => {
+    try {
+      cleanupReleases();
+    } catch (err) {
+      console.error('[SCHEDULER] Cleanup failed:', err);
+    }
+  }, 5000); // 5 seconds after startup
+
+  // Schedule recurring cleanup
+  setInterval(() => {
+    try {
+      cleanupReleases();
+    } catch (err) {
+      console.error('[SCHEDULER] Scheduled cleanup failed:', err);
+    }
+  }, CLEANUP_INTERVAL);
+}
 
 // === Start ===
 app.listen(PORT, '0.0.0.0', () => {
@@ -829,4 +953,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`  ║  http://0.0.0.0:${PORT}                            ║`);
   console.log(`  ║  Releases: ${RELEASES_DIR}`);
   console.log(`  ╚══════════════════════════════════════════════════╝\n`);
+
+  // Start scheduled cleanup
+  scheduleCleanup();
 });
