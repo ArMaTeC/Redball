@@ -255,14 +255,19 @@ get_changelog() {
 build_if_needed() {
     local version="$1"
     
-    # Check for artifacts
+    # Check for Linux artifacts (in dist/linux/)
     local has_artifacts=0
-    for file in "${DIST_DIR}"/redball-*.tar.gz "${DIST_DIR}"/redball-*.flatpak "${DIST_DIR}"/redball-*.deb; do
+    for file in "${DIST_DIR}/linux"/redball-*.tar.gz "${DIST_DIR}/linux"/redball-*.flatpak "${DIST_DIR}/linux"/redball-*.deb; do
+        [[ -f "$file" ]] && has_artifacts=1 && break
+    done
+    
+    # Also check for Windows artifacts
+    for file in "${DIST_DIR}"/Redball-*-Setup.exe "${DIST_DIR}"/Redball-*.zip "${DIST_DIR}/wpf-publish"/Redball.UI.WPF.exe; do
         [[ -f "$file" ]] && has_artifacts=1 && break
     done
     
     if [[ $has_artifacts -eq 0 ]]; then
-        log_warn "No artifacts found in $DIST_DIR"
+        log_warn "No artifacts found in $DIST_DIR or $DIST_DIR/linux"
         
         if [[ $SKIP_AUTO_BUILD -eq 1 ]]; then
             log_error "Build required but --skip-auto-build specified. Run build first."
