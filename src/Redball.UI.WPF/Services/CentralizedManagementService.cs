@@ -1,3 +1,4 @@
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -314,8 +315,9 @@ public class CentralizedManagementService
         }
         catch (Exception ex)
         {
+            // SECURITY: Log full exception internally, return safe message to caller
             result.Success = false;
-            result.Error = ex.Message;
+            result.Error = SafeExceptionHandler.GetSafeErrorMessageForOperation("Command execution");
             Logger.Error("CentralizedManagementService", $"Command execution failed: {command.Type}", ex);
         }
 

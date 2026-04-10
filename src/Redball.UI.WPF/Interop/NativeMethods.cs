@@ -1,15 +1,20 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Security;
 
 namespace Redball.UI.Interop;
 
 /// <summary>
 /// Centralized P/Invoke declarations for Win32 API calls used throughout Redball.
+/// SECURITY: All methods in this class are SecurityCritical as they call native code.
+/// These are required for Windows system integration (power management, input injection).
 /// </summary>
+[SecurityCritical]
 internal static class NativeMethods
 {
     // --- Power Management (kernel32.dll) ---
 
+    // codeql[cs/dll-import-of-unmanaged-code] Required for Windows power management APIs
     [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern uint SetThreadExecutionState(uint esFlags);
 
@@ -20,6 +25,7 @@ internal static class NativeMethods
 
     // --- Keyboard Input (user32.dll) ---
 
+    // codeql[cs/dll-import-of-unmanaged-code] Required for keep-awake functionality via simulated input
     [DllImport("user32.dll", SetLastError = true)]
     public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
@@ -70,6 +76,7 @@ internal static class NativeMethods
 
     // --- Focus Assist / Do Not Disturb Detection ---
 
+    // codeql[cs/dll-import-of-unmanaged-code] Required for Windows Focus Assist detection via WNF state
     [DllImport("ntdll.dll")]
     public static extern int NtQueryWnfStateData(
         ref ulong stateName,
@@ -108,9 +115,11 @@ internal static class NativeMethods
 
     // --- Idle Detection (user32.dll) ---
 
+    // codeql[cs/dll-import-of-unmanaged-code] Required for user idle time detection
     [DllImport("user32.dll")]
     public static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
 
+    // codeql[cs/dll-import-of-unmanaged-code] Required for admin privilege check
     [DllImport("shell32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool IsUserAnAdmin();
@@ -124,6 +133,7 @@ internal static class NativeMethods
 
     // --- DWM Theming (dwmapi.dll) ---
 
+    // codeql[cs/dll-import-of-unmanaged-code] Required for Windows theming (Mica/Acrylic)
     [DllImport("dwmapi.dll")]
     public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int attrSize);
 
@@ -140,7 +150,8 @@ internal static class NativeMethods
     }
 
     // --- Code Integrity / Test Signing (ntdll.dll) ---
-    
+
+    // codeql[cs/dll-import-of-unmanaged-code] Required for detecting Windows Test Mode
     [DllImport("ntdll.dll")]
     private static extern int NtQuerySystemInformation(
         int SystemInformationClass,
@@ -199,6 +210,7 @@ internal static class NativeMethods
 
     // --- Memory Management (psapi.dll) ---
 
+    // codeql[cs/dll-import-of-unmanaged-code] Required for memory optimisation
     [DllImport("psapi.dll")]
     internal static extern bool EmptyWorkingSet(IntPtr hProcess);
 }

@@ -13,11 +13,24 @@ using System.Text.Json.Serialization;
 public class IpcServer : IDisposable
 {
     private const int DefaultPipeBufferSize = 4096; // 4KB buffer for IPC messages
+    private const int MaxMessageSize = 1024 * 1024; // 1MB max message size for DoS protection
+    private const int MaxMessagesPerMinute = 60; // Rate limit: 60 messages per minute per client
+
     private readonly ILogger<IpcServer> _logger;
     private readonly InputInjectionEngine _engine;
     private CancellationTokenSource? _cts;
     private Task? _listenerTask;
     private bool _disposed;
+
+    // SECURITY: Rate limiting tracking per client process
+    private readonly Dictionary<int, ClientRateLimit> _clientRateLimits = new();
+    private readonly object _rateLimitLock = new();
+
+    private class ClientRateLimit
+    {
+        public DateTime WindowStart { get; set; } = DateTime.UtcNow;
+        public int MessageCount { get; set; } = 0;
+    }
 
     public const string PipeName = "RedballInputService";
 
@@ -134,6 +147,17 @@ public class IpcServer : IDisposable
 
     private async Task HandleClientAsync(NamedPipeServerStream pipe, CancellationToken cancellationToken)
     {
+        // SECURITY: Get client process ID for rate limiting
+        int clientProcessId = -1;
+        try
+        {
+            clientProcessId = pipe.GetClientProcessId();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Could not identify client process: {Message}", ex.Message);
+        }
+
         try
         {
             using var reader = new StreamReader(pipe);
@@ -143,6 +167,30 @@ public class IpcServer : IDisposable
             {
                 var message = await reader.ReadLineAsync(cancellationToken);
                 if (message == null) break;
+
+                // SECURITY: Validate message size to prevent memory exhaustion
+                if (message.Length > MaxMessageSize)
+                {
+                    _logger.LogWarning("Rejected oversized message from client {ClientId}: {Size} bytes", clientProcessId, message.Length);
+                    await writer.WriteLineAsync(JsonSerializer.Serialize(new IpcResponse
+                    {
+                        Success = false,
+                        Error = "Message exceeds maximum size"
+                    }, _strictJsonOptions));
+                    continue;
+                }
+
+                // SECURITY: Rate limiting check
+                if (clientProcessId > 0 && !CheckRateLimit(clientProcessId))
+                {
+                    _logger.LogWarning("Rate limit exceeded for client {ClientId}", clientProcessId);
+                    await writer.WriteLineAsync(JsonSerializer.Serialize(new IpcResponse
+                    {
+                        Success = false,
+                        Error = "Rate limit exceeded"
+                    }, _strictJsonOptions));
+                    break;
+                }
 
                 var response = ProcessMessage(message);
                 await writer.WriteLineAsync(response);
@@ -155,6 +203,50 @@ public class IpcServer : IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error handling client");
+        }
+        finally
+        {
+            // Clean up rate limit entry for this client
+            if (clientProcessId > 0)
+            {
+                lock (_rateLimitLock)
+                {
+                    _clientRateLimits.Remove(clientProcessId);
+                }
+            }
+        }
+    }
+
+    // SECURITY: Rate limiting implementation
+    private bool CheckRateLimit(int clientProcessId)
+    {
+        lock (_rateLimitLock)
+        {
+            var now = DateTime.UtcNow;
+
+            if (!_clientRateLimits.TryGetValue(clientProcessId, out var limit))
+            {
+                limit = new ClientRateLimit { WindowStart = now, MessageCount = 1 };
+                _clientRateLimits[clientProcessId] = limit;
+                return true;
+            }
+
+            // Reset window if minute has passed
+            if ((now - limit.WindowStart).TotalMinutes >= 1)
+            {
+                limit.WindowStart = now;
+                limit.MessageCount = 1;
+                return true;
+            }
+
+            // Check limit
+            if (limit.MessageCount >= MaxMessagesPerMinute)
+            {
+                return false;
+            }
+
+            limit.MessageCount++;
+            return true;
         }
     }
 

@@ -25,13 +25,14 @@ class Program
     {
         if (args.Length == 0)
         {
-            Console.WriteLine("Usage: Redball.SessionHelper <json-input-data>");
+            Console.WriteLine("Usage: Redball.SessionHelper <base64-encoded-json>");
             return;
         }
 
         try
         {
-            var json = string.Join(" ", args);
+            // SECURITY: Decode Base64 argument to prevent command injection
+            var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(args[0]));
             var request = JsonSerializer.Deserialize<InjectionRequest>(json);
 
             if (request == null)

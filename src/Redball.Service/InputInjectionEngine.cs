@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Text.Json;
 
 /// <summary>
@@ -206,10 +207,14 @@ public class InputInjectionEngine
 
             try
             {
+                // SECURITY: Use Base64 encoding to prevent command injection via JSON special characters
+                var base64Json = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+                var commandLine = $"\"{helperPath}\" \"{base64Json}\"";
+
                 bool created = CreateProcessAsUser(
                     hToken,
                     helperPath,
-                    $"\"{helperPath}\" \"{json.Replace("\"", "\\\"")}\"",
+                    commandLine,
                     IntPtr.Zero,
                     IntPtr.Zero,
                     false,
@@ -266,21 +271,51 @@ public class InputInjectionEngine
 
     private static string GetHelperPath()
     {
-        // Look for helper next to service executable
+        // SECURITY: Validate helper executable path to prevent path traversal attacks
+        const string expectedFileName = "Redball.SessionHelper.exe";
         var serviceDir = AppContext.BaseDirectory;
-        var helperPath = Path.Combine(serviceDir, "Redball.SessionHelper.exe");
 
-        if (!File.Exists(helperPath))
+        // Normalize and validate service directory
+        var fullServiceDir = Path.GetFullPath(serviceDir);
+        var helperPath = Path.Combine(fullServiceDir, expectedFileName);
+        var fullHelperPath = Path.GetFullPath(helperPath);
+
+        // SECURITY: Verify the helper path is within the service directory (prevent path traversal)
+        if (!fullHelperPath.StartsWith(fullServiceDir, StringComparison.OrdinalIgnoreCase))
         {
-            // Fallback to sibling directory
-            var parentDir = Directory.GetParent(serviceDir ?? AppContext.BaseDirectory)?.Parent?.FullName;
+            throw new SecurityException($"Helper path escapes service directory: {helperPath}");
+        }
+
+        // SECURITY: Verify the filename matches expected (prevent file substitution)
+        if (!Path.GetFileName(fullHelperPath).Equals(expectedFileName, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new SecurityException($"Invalid helper executable name: {helperPath}");
+        }
+
+        if (!File.Exists(fullHelperPath))
+        {
+            // Fallback to sibling directory with same validation
+            var parentDir = Directory.GetParent(serviceDir)?.Parent?.FullName;
             if (parentDir != null)
             {
-                helperPath = Path.Combine(parentDir, "Redball.SessionHelper", "Redball.SessionHelper.exe");
+                var fallbackPath = Path.Combine(parentDir, "Redball.SessionHelper", expectedFileName);
+                var fullFallbackPath = Path.GetFullPath(fallbackPath);
+
+                // Validate fallback path is within parent directory
+                if (!fullFallbackPath.StartsWith(Path.GetFullPath(parentDir), StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new SecurityException($"Fallback helper path escapes parent directory: {fallbackPath}");
+                }
+
+                if (Path.GetFileName(fullFallbackPath).Equals(expectedFileName, StringComparison.OrdinalIgnoreCase) &&
+                    File.Exists(fullFallbackPath))
+                {
+                    return fullFallbackPath;
+                }
             }
         }
 
-        return helperPath;
+        return fullHelperPath;
     }
 
     private static uint GetCurrentSessionId()

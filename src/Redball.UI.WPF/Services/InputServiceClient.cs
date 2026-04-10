@@ -1,5 +1,6 @@
 namespace Redball.Core.Input;
 
+using Redball.Core.Security;
 using System.IO;
 using System.IO.Pipes;
 using System.Text.Json;
@@ -183,8 +184,10 @@ public class InputServiceClient : IDisposable
         }
         catch (Exception ex)
         {
-            OnError?.Invoke(this, $"Command failed: {ex.Message}");
-            return new IpcResponse { Success = false, Error = ex.Message };
+            // SECURITY: Log full details internally, return generic message to user
+            Logger.Error("InputServiceClient", "IPC command failed", ex);
+            OnError?.Invoke(this, "Command failed");
+            return new IpcResponse { Success = false, Error = "Service communication failed" };
         }
     }
 

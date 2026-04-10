@@ -4,6 +4,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const multer = require('multer');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 const { generatePatches, formatBytes } = require('./lib/delta-patches');
 
@@ -167,32 +168,101 @@ function sha256File(filePath) {
   });
 }
 
-// === Middleware ===
+// === Security Middleware ===
+// Rate limiting for API endpoints
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Stricter rate limiting for upload endpoints
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // limit each IP to 10 uploads per hour
+  message: { error: 'Too many uploads, please try again later' },
+});
+
 // Only use morgan logging if TTY is available (not in background)
 if (process.stdin.isTTY) {
   app.use(morgan('short'));
 }
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Limit JSON payload size
 app.use(express.static(path.join(__dirname, 'public')));
 
-// === Multer for file uploads ===
+// SECURITY: Validate file extensions for uploads
+const ALLOWED_EXTENSIONS = ['.zip', '.msi', '.exe', '.patch', '.json', '.md', '.txt'];
+const ALLOWED_MIME_TYPES = [
+  'application/zip',
+  'application/x-msi',
+  'application/x-msdownload',
+  'application/octet-stream',
+  'application/json',
+  'text/plain',
+  'text/markdown'
+];
+
+function validateFileUpload(file) {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    return { valid: false, error: `File extension not allowed: ${ext}` };
+  }
+  return { valid: true };
+}
+
+// === Multer for file uploads with security validation ===
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const version = req.params.version;
-    const dir = path.join(RELEASES_DIR, version);
+    // SECURITY: Sanitise version path to prevent path traversal
+    const sanitisedVersion = version.replace(/[^a-zA-Z0-9._-]/g, '');
+    if (sanitisedVersion !== version) {
+      return cb(new Error('Invalid version format'));
+    }
+    const dir = path.join(RELEASES_DIR, sanitisedVersion);
+    // SECURITY: Ensure path is within RELEASES_DIR
+    const resolvedPath = path.resolve(dir);
+    const resolvedReleasesDir = path.resolve(RELEASES_DIR);
+    if (!resolvedPath.startsWith(resolvedReleasesDir)) {
+      return cb(new Error('Path traversal detected'));
+    }
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    cb(null, file.originalname);
+    // SECURITY: Sanitise filename to prevent path traversal
+    const sanitisedName = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_');
+    cb(null, sanitisedName);
   }
 });
-const upload = multer({ storage, limits: { fileSize: 500 * 1024 * 1024 } }); // 500MB max
+
+// SECURITY: File filter to validate uploads
+const fileFilter = (req, file, cb) => {
+  const validation = validateFileUpload(file);
+  if (!validation.valid) {
+    return cb(new Error(validation.error), false);
+  }
+  cb(null, true);
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 500 * 1024 * 1024, // 500MB max
+    files: 5 // max 5 files per upload
+  }
+});
 
 // ============================================================
 // API Routes
 // ============================================================
+
+// Apply API rate limiting to all API routes
+app.use('/api/', apiLimiter);
 
 // --- List all releases (from GitHub with cache) ---
 app.get('/api/releases', async (req, res) => {
@@ -386,7 +456,7 @@ app.post('/api/releases', (req, res) => {
 });
 
 // --- Upload files to a release ---
-app.post('/api/releases/:version/upload', upload.array('files', 50), async (req, res) => {
+app.post('/api/releases/:version/upload', uploadLimiter, upload.array('files', 5), async (req, res) => {
   const db = loadDB();
   let release = db.releases.find(r => r.version === req.params.version);
 
@@ -460,7 +530,7 @@ app.patch('/api/releases/:version', (req, res) => {
 });
 
 // --- Publish from build output (used by build script) ---
-app.post('/api/publish', upload.array('files', 50), async (req, res) => {
+app.post('/api/publish', uploadLimiter, upload.array('files', 5), async (req, res) => {
   const version = req.body.version || req.query.version;
   if (!version) return res.status(400).json({ error: 'Version is required' });
 

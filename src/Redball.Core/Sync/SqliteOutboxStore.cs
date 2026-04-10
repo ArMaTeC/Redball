@@ -1,8 +1,11 @@
 namespace Redball.Core.Sync;
 
 using Microsoft.Data.Sqlite;
+using Redball.Core.Security;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,6 +27,17 @@ public sealed class SqliteOutboxStore : IOutboxStore, IDisposable
     public SqliteOutboxStore(string? dbPath = null)
     {
         _dbPath = dbPath ?? GetDefaultDbPath();
+
+        // SECURITY: Validate custom database path to prevent path traversal
+        if (dbPath != null)
+        {
+            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if (!SecurePathValidator.IsWithinDirectory(_dbPath, localAppData))
+            {
+                throw new SecurityException($"Database path must be within LocalAppData: {dbPath}");
+            }
+        }
+
         _connectionString = $"Data Source={_dbPath};Cache=Shared;Mode=ReadWriteCreate;Foreign Keys=True";
     }
 
