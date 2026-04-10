@@ -430,6 +430,15 @@ public class KeepAwakeService : IKeepAwakeService
                 return;
             }
 
+            // Skip heartbeat if user has been active recently (within last minute)
+            // User activity already keeps the system awake, no need for synthetic input
+            var idleMinutes = _idleDetection.GetIdleMinutes();
+            if (idleMinutes < 1.0)
+            {
+                Logger.Verbose("KeepAwakeService", "Heartbeat skipped: user active within last minute");
+                return;
+            }
+
             var virtualKey = GetHeartbeatVirtualKey();
             var inputs = new NativeMethods.INPUT[2];
 
@@ -442,7 +451,7 @@ public class KeepAwakeService : IKeepAwakeService
             inputs[1].u.ki.dwFlags = NativeMethods.KEYEVENTF_KEYUP;
 
             NativeMethods.SendInputSafe(inputs);
-            Logger.Verbose("KeepAwakeService", $"{_heartbeatInputMode} heartbeat sent");
+            Logger.Verbose("KeepAwakeService", $"{_heartbeatInputMode} heartbeat sent (user idle for {idleMinutes:F1} minutes)");
         }
         catch (Exception ex)
         {

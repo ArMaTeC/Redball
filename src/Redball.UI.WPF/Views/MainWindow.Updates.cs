@@ -116,7 +116,8 @@ public partial class MainWindow
             Logger.Info("MainWindow", $"Auto update check: new version available ({updateInfo.VersionDisplay})");
             _analytics.TrackFeature("update.auto_found");
 
-            await ShowUpdateAvailableDialogAsync(updateInfo);
+            // Show update in the Updates tab instead of popup dialog
+            await ShowUpdateInUpdatesSectionAsync(updateInfo);
         }
         catch (Exception ex)
         {
@@ -125,8 +126,41 @@ public partial class MainWindow
     }
 
     /// <summary>
+    /// Shows update available UI in the Updates section (non-intrusive, no popup).
+    /// Used by auto-check to show update without interrupting user.
+    /// </summary>
+    private async System.Threading.Tasks.Task ShowUpdateInUpdatesSectionAsync(UpdateInfo updateInfo)
+    {
+        await Dispatcher.InvokeAsync(() =>
+        {
+            try
+            {
+                // Navigate to Updates section
+                ShowUpdates();
+
+                // Pass the update info to the Updates section view
+                if (UpdatesPanel is Views.UpdatesSectionView updatesSection)
+                {
+                    updatesSection.ShowUpdateAvailableFromAutoCheck(updateInfo);
+                    Logger.Info("MainWindow", "Update available shown in Updates section");
+                }
+                else
+                {
+                    // Fallback to dialog if Updates section not available
+                    Logger.Warning("MainWindow", "Updates section not available, falling back to dialog");
+                    _ = ShowUpdateAvailableDialogAsync(updateInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MainWindow", "Failed to show update in section", ex);
+            }
+        });
+    }
+
+    /// <summary>
     /// Shows the update-available dialog with stacked changelogs.
-    /// Can be called from auto-check or manual check.
+    /// Can be called from manual check (kept for backward compatibility).
     /// </summary>
     internal async System.Threading.Tasks.Task ShowUpdateAvailableDialogAsync(UpdateInfo updateInfo)
     {

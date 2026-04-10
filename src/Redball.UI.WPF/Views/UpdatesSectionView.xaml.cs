@@ -608,4 +608,16 @@ public partial class UpdatesSectionView : UserControl
     {
         await StartUpdateCheckAsync();
     }
+
+    /// <summary>
+    /// Shows update available UI from auto-check without showing popup dialog.
+    /// Called by MainWindow when auto-check detects an update.
+    /// </summary>
+    public void ShowUpdateAvailableFromAutoCheck(UpdateInfo updateInfo)
+    {
+        _pendingUpdateInfo = updateInfo;
+        ShowUpdateAvailableResult(updateInfo);
+        // Ensure the update available panel is visible
+        UpdateAvailablePanel.Visibility = Visibility.Visible;
+    }
 }

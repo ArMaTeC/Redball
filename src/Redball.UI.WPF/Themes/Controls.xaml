@@ -1,5 +1,5 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--
         Redball v3.0 Common Control Styles
@@ -40,13 +40,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="4"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"/>
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -101,13 +96,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="4"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"/>
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -124,7 +114,7 @@
         </Setter>
     </Style>
 
-    <!-- Toggle Switch styling -->
+    <!-- Toggle Switch styling with animation -->
     <Style x:Key="ModernToggleSwitch" TargetType="ToggleButton">
         <Setter Property="Width" Value="44"/>
         <Setter Property="Height" Value="24"/>
@@ -132,23 +122,48 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Grid>
-                        <Border x:Name="Track"
-                                Background="{DynamicResource BorderBrush}"
-                                CornerRadius="12"
-                                Height="20"
-                                Width="40"/>
-                        <Ellipse x:Name="Thumb"
-                                Fill="White"
-                                Width="16"
-                                Height="16"
-                                HorizontalAlignment="Left"
-                                Margin="2,0,0,0"/>
+                        <Border x:Name="Track" Background="{DynamicResource BorderBrush}" CornerRadius="12" Height="20" Width="40">
+                            <Border.Resources>
+                                <Storyboard x:Key="TrackOn">
+                                    <ColorAnimation Storyboard.TargetProperty="Background.Color" From="{DynamicResource BorderColor}" To="{DynamicResource AccentColor}" Duration="0:0:0.2"/>
+                                </Storyboard>
+                                <Storyboard x:Key="TrackOff">
+                                    <ColorAnimation Storyboard.TargetProperty="Background.Color" From="{DynamicResource AccentColor}" To="{DynamicResource BorderColor}" Duration="0:0:0.2"/>
+                                </Storyboard>
+                            </Border.Resources>
+                        </Border>
+                        <Ellipse x:Name="Thumb" Fill="White" Width="16" Height="16" HorizontalAlignment="Left" Margin="2,0,0,0">
+                            <Ellipse.RenderTransform>
+                                <TranslateTransform x:Name="ThumbTransform" X="0"/>
+                            </Ellipse.RenderTransform>
+                            <Ellipse.Resources>
+                                <Storyboard x:Key="ThumbOn">
+                                    <DoubleAnimation Storyboard.TargetName="ThumbTransform" Storyboard.TargetProperty="X" To="20" Duration="0:0:0.2">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase EasingMode="EaseOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                                <Storyboard x:Key="ThumbOff">
+                                    <DoubleAnimation Storyboard.TargetName="ThumbTransform" Storyboard.TargetProperty="X" To="0" Duration="0:0:0.2">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase EasingMode="EaseOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </Ellipse.Resources>
+                        </Ellipse>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
-                            <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
-                            <Setter TargetName="Thumb" Property="Margin" Value="0,0,2,0"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard Storyboard="{StaticResource TrackOn}"/>
+                                <BeginStoryboard Storyboard="{StaticResource ThumbOn}"/>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard Storyboard="{StaticResource TrackOff}"/>
+                                <BeginStoryboard Storyboard="{StaticResource ThumbOff}"/>
+                            </Trigger.ExitActions>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -170,15 +185,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="4"
-                            Padding="{TemplateBinding Padding}">
-                        <ScrollViewer x:Name="PART_ContentHost"
-                                    Focusable="false"
-                                    HorizontalScrollBarVisibility="Hidden"
-                                    VerticalScrollBarVisibility="Hidden"/>
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                        <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -216,12 +224,8 @@
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
                     <Grid>
-                        <Border x:Name="AccentBar" Width="3" HorizontalAlignment="Left" 
-                                Background="{DynamicResource AccentBrush}" CornerRadius="0,2,2,0"
-                                Visibility="Collapsed"/>
-                        <Border x:Name="Border"
-                                Background="{TemplateBinding Background}"
-                                CornerRadius="10" Margin="4,0,4,0">
+                        <Border x:Name="AccentBar" Width="3" HorizontalAlignment="Left" Background="{DynamicResource AccentBrush}" CornerRadius="0,2,2,0" Visibility="Collapsed"/>
+                        <Border x:Name="Border" Background="{TemplateBinding Background}" CornerRadius="10" Margin="4,0,4,0">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </Grid>
@@ -254,46 +258,21 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
                     <Grid>
-                        <Border x:Name="Border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4">
+                        <Border x:Name="Border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
                             <Grid>
-                                <ToggleButton x:Name="ToggleButton"
-                                            Grid.Column="2"
-                                            Focusable="false"
-                                            IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                            ClickMode="Press">
+                                <ToggleButton x:Name="ToggleButton" Grid.Column="2" Focusable="false" IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" ClickMode="Press">
                                     <ToggleButton.Template>
                                         <ControlTemplate TargetType="ToggleButton">
-                                            <Border Background="Transparent"
-                                                    BorderThickness="0"
-                                                    Padding="12,0">
-                                                <TextBlock Text="&#xE70D;"
-                                                          FontFamily="Segoe Fluent Icons"
-                                                          FontSize="12"
-                                                          VerticalAlignment="Center"
-                                                          HorizontalAlignment="Right"
-                                                          Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                                            <Border Background="Transparent" BorderThickness="0" Padding="12,0">
+                                                <TextBlock Text="&#xE70D;" FontFamily="Segoe Fluent Icons" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                                             </Border>
                                         </ControlTemplate>
                                     </ToggleButton.Template>
                                 </ToggleButton>
-                                <ContentPresenter x:Name="ContentSite"
-                                                IsHitTestVisible="False"
-                                                Content="{TemplateBinding SelectionBoxItem}"
-                                                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                                ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                                Margin="{TemplateBinding Padding}"
-                                                VerticalAlignment="Center"
-                                                HorizontalAlignment="Left"/>
+                                <ContentPresenter x:Name="ContentSite" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                             </Grid>
                         </Border>
-                        <Popup x:Name="Popup"
-                               Placement="Bottom"
-                               IsOpen="{TemplateBinding IsDropDownOpen}"
-                               PopupAnimation="Fade">
+                        <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" PopupAnimation="Fade">
                             <Popup.Resources>
                                 <Style TargetType="ComboBoxItem">
                                     <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
@@ -321,12 +300,7 @@
                                     </Setter>
                                 </Style>
                             </Popup.Resources>
-                            <Border Background="{DynamicResource CardBrush}"
-                                    BorderBrush="{DynamicResource BorderLightBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="4"
-                                    MinWidth="{TemplateBinding ActualWidth}"
-                                    Margin="0,4,0,0">
+                            <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" CornerRadius="4" MinWidth="{TemplateBinding ActualWidth}" Margin="0,4,0,0">
                                 <Border.Effect>
                                     <DropShadowEffect ShadowDepth="4" Direction="270" Color="Black" Opacity="0.3" BlurRadius="12"/>
                                 </Border.Effect>
@@ -359,23 +333,10 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Border x:Name="CheckBorder"
-                                Width="20" Height="20"
-                                Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}"
-                                BorderThickness="2"
-                                CornerRadius="4">
-                            <Path x:Name="CheckMark"
-                                  Data="M 3 10 L 8 15 L 17 4"
-                                  Stroke="{DynamicResource AccentBrush}"
-                                  StrokeThickness="2"
-                                  StrokeStartLineCap="Round"
-                                  StrokeEndLineCap="Round"
-                                  Visibility="Collapsed"/>
+                        <Border x:Name="CheckBorder" Width="20" Height="20" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="2" CornerRadius="4">
+                            <Path x:Name="CheckMark" Data="M 3 10 L 8 15 L 17 4" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Visibility="Collapsed"/>
                         </Border>
-                        <ContentPresenter Grid.Column="1"
-                                        Margin="12,0,0,0"
-                                        VerticalAlignment="Center"/>
+                        <ContentPresenter Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center"/>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
@@ -400,9 +361,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Thumb">
-                    <Ellipse Fill="{DynamicResource ForegroundBrush}"
-                             Stroke="{DynamicResource AccentBrush}"
-                             StrokeThickness="2"/>
+                    <Ellipse Fill="{DynamicResource ForegroundBrush}" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"/>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -417,8 +376,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RepeatButton">
-                    <Border Height="4" CornerRadius="2"
-                            Background="{DynamicResource AccentBrush}"/>
+                    <Border Height="4" CornerRadius="2" Background="{DynamicResource AccentBrush}"/>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -433,8 +391,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RepeatButton">
-                    <Border Height="4" CornerRadius="2"
-                            Background="{DynamicResource BorderBrush}"/>
+                    <Border Height="4" CornerRadius="2" Background="{DynamicResource BorderBrush}"/>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -452,15 +409,13 @@
                     <Grid VerticalAlignment="Center">
                         <Track x:Name="PART_Track">
                             <Track.DecreaseRepeatButton>
-                                <RepeatButton Style="{StaticResource SliderDecreaseRepeatButton}"
-                                              Command="Slider.DecreaseLarge"/>
+                                <RepeatButton Style="{StaticResource SliderDecreaseRepeatButton}" Command="Slider.DecreaseLarge"/>
                             </Track.DecreaseRepeatButton>
                             <Track.Thumb>
                                 <Thumb Style="{StaticResource ModernSliderThumb}"/>
                             </Track.Thumb>
                             <Track.IncreaseRepeatButton>
-                                <RepeatButton Style="{StaticResource SliderIncreaseRepeatButton}"
-                                              Command="Slider.IncreaseLarge"/>
+                                <RepeatButton Style="{StaticResource SliderIncreaseRepeatButton}" Command="Slider.IncreaseLarge"/>
                             </Track.IncreaseRepeatButton>
                         </Track>
                     </Grid>
@@ -497,18 +452,11 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Gesture"/>
                                     </Grid.ColumnDefinitions>
-                                    
+
                                     <!-- Icon or Checkmark (Fixed width host for perfect alignment) -->
                                     <Grid x:Name="IconHost" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <ContentPresenter x:Name="Icon" ContentSource="Icon" Visibility="Visible"/>
-                                        <TextBlock x:Name="CheckMark" 
-                                                   Text="&#xE73E;" 
-                                                   FontFamily="Segoe Fluent Icons" 
-                                                   FontSize="14" 
-                                                   Foreground="{DynamicResource AccentBrush}"
-                                                   Visibility="Collapsed"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="CheckMark" Text="&#xE73E;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource AccentBrush}" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Grid>
 
                                     <ContentPresenter ContentSource="Header" Grid.Column="1" VerticalAlignment="Center" Margin="4,0,0,0">
@@ -518,13 +466,8 @@
                                             </Style>
                                         </ContentPresenter.Resources>
                                     </ContentPresenter>
-                                    
-                                    <TextBlock Text="{TemplateBinding InputGestureText}" 
-                                               Grid.Column="2" 
-                                               Margin="16,0,8,0" 
-                                               VerticalAlignment="Center" 
-                                               FontSize="11"
-                                               Opacity="0.5"/>
+
+                                    <TextBlock Text="{TemplateBinding InputGestureText}" Grid.Column="2" Margin="16,0,8,0" VerticalAlignment="Center" FontSize="11" Opacity="0.5"/>
                                 </Grid>
                             </Border>
                             <ControlTemplate.Triggers>
@@ -554,12 +497,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContextMenu">
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="10"
-                            Padding="{TemplateBinding Padding}"
-                            SnapsToDevicePixels="True">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="15" ShadowDepth="4" Opacity="0.35" Color="Black"/>
                         </Border.Effect>
@@ -609,12 +547,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToolTip">
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="6"
-                            Padding="{TemplateBinding Padding}"
-                            SnapsToDevicePixels="True">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.3" Color="Black"/>
                         </Border.Effect>

@@ -469,7 +469,7 @@ public partial class SettingsWindow : Window
     private void Tab_Checked(object sender, RoutedEventArgs e)
     {
         // Hide all panels (null checks needed during XAML initialization)
-        var panels = new[] { GeneralPanel, BehaviorPanel, FeaturesPanel, TypeThingPanel, UpdatesPanel, PrivacyPanel, AboutPanel };
+        var panels = new[] { GeneralPanel, BehaviorPanel, FeaturesPanel, TypeThingPanel, UpdatesPanel, PrivacyPanel, CustomCommandsPanel, AboutPanel };
         foreach (var p in panels)
         {
             if (p != null) p.Visibility = Visibility.Collapsed;
