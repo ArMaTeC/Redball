@@ -409,7 +409,7 @@
                                                 <Border Style="{DynamicResource CardStyle}" Margin="0,16,0,0">
                                                     <StackPanel>
                                                         <TextBlock Text="Advanced" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                                        <TextBlock Text="Privacy, telemetry, and advanced runtime behavior." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
+                                                        <TextBlock Text="Privacy, telemetry, and advanced runtime behaviour." FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,8"/>
                                                         <CheckBox x:Name="MainConfirmOnExitCheck" Content="Confirm on exit" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Show a confirmation dialog when closing Redball to prevent accidental exits. Useful if you rely on Redball running in the background."/>
                                                         <CheckBox x:Name="MainEncryptConfigCheck" Content="Encrypt config with DPAPI" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Encrypt sensitive configuration data using Windows Data Protection API (DPAPI). Protects your settings from other users on this machine."/>
                                                         <CheckBox x:Name="MainEnableTelemetryCheck" Content="Enable analytics" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Track session counts, usage time, and feature usage locally. Data stays on your device and can be exported anytime."/>
@@ -490,7 +490,7 @@
 
                                     <StackPanel x:Name="SmartFeaturesPanel" Visibility="Collapsed">
                                         <TextBlock Text="Smart Features" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBlock Text="Tune battery, network, idle, presentation, and scheduled behavior." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
+                                        <TextBlock Text="Tune battery, network, idle, presentation, and scheduled behaviour." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ForegroundSecondaryBrush}" Margin="0,0,0,16"/>
                                         <Border Style="{DynamicResource CardStyle}">
                                             <StackPanel>
                                                 <TextBlock Text="Automation Conditions" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="{DynamicResource ForegroundBrush}"/>

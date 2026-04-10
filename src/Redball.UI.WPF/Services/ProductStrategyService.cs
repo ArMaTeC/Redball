@@ -27,7 +27,7 @@ public class UserPersona
     public string Description { get; set; } = "";
 
     /// <summary>
-    /// Key characteristics and behaviors.
+    /// Key characteristics and behaviours.
     /// </summary>
     public List<string> Characteristics { get; set; } = new();
 
@@ -236,7 +236,7 @@ public class ProductStrategyService
             },
             PainPoints = new()
             {
-                "Inconsistent sleep behavior across devices",
+                "Inconsistent sleep behaviour across devices",
                 "Users complaining about lost work due to unexpected sleep",
                 "Difficulty diagnosing sleep/timeout issues remotely",
                 "Lack of visibility into actual power usage patterns",

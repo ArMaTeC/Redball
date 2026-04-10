@@ -101,7 +101,7 @@ namespace Redball.Tests
         public void AreCriticalNotificationsAllowed_WhenAlarmsOnly_ReturnsFalse()
         {
             // Note: We can't easily set the state directly, but we can verify the method exists and behaves
-            // This test documents the expected behavior
+            // This test documents the expected behaviour
             Assert.IsTrue(true, "When AlarmsOnly, critical notifications should not be allowed");
         }
 
@@ -149,7 +149,7 @@ namespace Redball.Tests
         [TestMethod]
         public void IsFocusModeActive_PriorityOnly_ReturnsTrue()
         {
-            // This test documents the behavior - PriorityOnly is a focus mode
+            // This test documents the behaviour - PriorityOnly is a focus mode
             // The property checks: CurrentState == PriorityOnly || CurrentState == AlarmsOnly
             Assert.IsTrue(true, "PriorityOnly state should be considered a focus mode");
         }
@@ -157,7 +157,7 @@ namespace Redball.Tests
         [TestMethod]
         public void IsFocusModeActive_AlarmsOnly_ReturnsTrue()
         {
-            // This test documents the behavior - AlarmsOnly is a focus mode
+            // This test documents the behaviour - AlarmsOnly is a focus mode
             Assert.IsTrue(true, "AlarmsOnly state should be considered a focus mode");
         }
     }

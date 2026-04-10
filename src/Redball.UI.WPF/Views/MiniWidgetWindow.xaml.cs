@@ -114,7 +114,7 @@ public partial class MiniWidgetWindow : Window
         }
         else
         {
-            StatusDot.Fill = new SolidColorBrush(Color.FromRgb(108, 117, 125)); // Gray for paused
+            StatusDot.Fill = new SolidColorBrush(Color.FromRgb(108, 117, 125)); // Grey for paused
             ToggleBtn.Content = "\uE768"; // Play icon
         }
 

@@ -8,7 +8,7 @@ using LottieSharp.WPF;
 namespace Redball.UI.Behaviors;
 
 /// <summary>
-/// Attached behavior for LottieAnimationView that converts relative asset paths to absolute paths.
+/// Attached behaviour for LottieAnimationView that converts relative asset paths to absolute paths.
 /// This ensures animations can be found regardless of the current working directory.
 /// </summary>
 public static class LottieAssetBehavior
