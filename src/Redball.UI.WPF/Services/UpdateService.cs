@@ -454,6 +454,29 @@ public class UpdateService : IUpdateService
                 var manifestJson = await _httpClient.GetStringAsync(manifestAsset.DownloadUrl, cancellationToken);
                 var manifest = JsonSerializer.Deserialize<UpdateManifest>(manifestJson);
                 
+                // Try to fetch update server manifest for patch information (primary source)
+                UpdateServerManifest? serverManifest = null;
+                if (!string.IsNullOrEmpty(_updateServerUrl))
+                {
+                    try
+                    {
+                        var serverManifestUrl = $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/manifest";
+                        Logger.Info("UpdateService", $"[DELTA] Fetching patch manifest from update server: {serverManifestUrl}");
+                        
+                        var serverManifestJson = await _httpClient.GetStringAsync(serverManifestUrl, cancellationToken);
+                        serverManifest = JsonSerializer.Deserialize<UpdateServerManifest>(serverManifestJson);
+                        
+                        if (serverManifest?.Patches != null && serverManifest.Patches.Count > 0)
+                        {
+                            Logger.Info("UpdateService", $"[DELTA] Found {serverManifest.Patches.Count} patches on update server (from v{serverManifest.FromVersion})");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning("UpdateService", $"[DELTA] Could not fetch update server manifest: {ex.Message}");
+                    }
+                }
+                
                 if (manifest != null)
                 {
                     var filesToUpdate = new List<FileUpdateInfo>();
@@ -562,32 +585,65 @@ public class UpdateService : IUpdateService
                             }
                             
                             // Check if binary delta patch is available (preferred for bandwidth)
+                            // PRIORITY: 1. Update server (primary), 2. GitHub release assets (fallback)
                             var expectedPatchName = Path.GetFileName(file.Name) + ".patch";
                             Logger.Debug("UpdateService", $"[DELTA] Looking for patch: {expectedPatchName}");
                             
-                            var patchAsset = latestRelease.Assets.Find(a => 
-                                a.Name.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
+                            bool patchFound = false;
                             
-                            if (patchAsset != null)
+                            // 1. Try update server first (primary source)
+                            if (serverManifest?.Patches != null)
                             {
-                                Logger.Info("UpdateService", $"[DELTA] Found patch asset for {normalizedName}: {patchAsset.Name} ({patchAsset.Size} bytes)");
+                                var serverPatch = serverManifest.Patches.Find(p => 
+                                    p.File.Equals(file.Name, StringComparison.OrdinalIgnoreCase) ||
+                                    p.PatchFile.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
                                 
-                                if (patchAsset.Size > 0 && patchAsset.Size < file.Size)
+                                if (serverPatch != null && !string.IsNullOrEmpty(_updateServerUrl))
                                 {
-                                    fileInfo.PatchUrl = patchAsset.DownloadUrl;
-                                    fileInfo.PatchSize = patchAsset.Size;
-                                    Logger.Info("UpdateService", $"[DELTA] ✓ Using delta patch for {normalizedName}: {FormatBytes(patchAsset.Size)} vs {FormatBytes(file.Size)} full file (saves {FormatBytes(file.Size - patchAsset.Size)})");
+                                    Logger.Info("UpdateService", $"[DELTA] Found patch on update server for {normalizedName}: {serverPatch.PatchFile} ({serverPatch.PatchSize} bytes)");
+                                    
+                                    if (serverPatch.PatchSize > 0 && serverPatch.PatchSize < file.Size)
+                                    {
+                                        // Construct update server patch URL
+                                        var patchUrl = $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/patches/{serverPatch.PatchFile}";
+                                        fileInfo.PatchUrl = patchUrl;
+                                        fileInfo.PatchSize = serverPatch.PatchSize;
+                                        patchFound = true;
+                                        Logger.Info("UpdateService", $"[DELTA] ✓ Using update server delta patch for {normalizedName}: {FormatBytes(serverPatch.PatchSize)} vs {FormatBytes(file.Size)} full file (saves {FormatBytes(serverPatch.Savings)})");
+                                    }
+                                    else
+                                    {
+                                        Logger.Warning("UpdateService", $"[DELTA] ✗ Update server patch for {normalizedName} rejected: size={serverPatch.PatchSize}");
+                                    }
+                                }
+                            }
+                            
+                            // 2. Fallback to GitHub release assets if update server doesn't have it
+                            if (!patchFound)
+                            {
+                                var patchAsset = latestRelease.Assets.Find(a => 
+                                    a.Name.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
+                                
+                                if (patchAsset != null)
+                                {
+                                    Logger.Info("UpdateService", $"[DELTA] Found patch asset on GitHub for {normalizedName}: {patchAsset.Name} ({patchAsset.Size} bytes) [FALLBACK]");
+                                    
+                                    if (patchAsset.Size > 0 && patchAsset.Size < file.Size)
+                                    {
+                                        fileInfo.PatchUrl = patchAsset.DownloadUrl;
+                                        fileInfo.PatchSize = patchAsset.Size;
+                                        Logger.Info("UpdateService", $"[DELTA] ✓ Using GitHub delta patch for {normalizedName}: {FormatBytes(patchAsset.Size)} vs {FormatBytes(file.Size)} full file");
+                                    }
+                                    else
+                                    {
+                                        Logger.Warning("UpdateService", $"[DELTA] ✗ GitHub patch for {normalizedName} rejected: size={patchAsset.Size}");
+                                    }
                                 }
                                 else
                                 {
-                                    Logger.Warning("UpdateService", $"[DELTA] ✗ Patch for {normalizedName} rejected: size={patchAsset.Size} (file.Size={file.Size})");
+                                    Logger.Debug("UpdateService", $"[DELTA] No patch found for {normalizedName} (looked for: {expectedPatchName})");
                                 }
                             }
-                            else
-                            {
-                                Logger.Debug("UpdateService", $"[DELTA] No patch found for {normalizedName} (looked for: {expectedPatchName})");
-                            }
-                            // If no individual asset, we'll use ZIP extraction during download
                             
                             filesToUpdate.Add(fileInfo);
                         }
