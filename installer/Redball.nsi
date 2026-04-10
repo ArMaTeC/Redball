@@ -283,17 +283,15 @@ Section "!${PRODUCT_NAME} Application" SecApp
     File "Redball.UI.WPF.deps.json"
     File "Redball.UI.WPF.runtimeconfig.json"
     
-    ; Copy DLL folder if exists
-    IfFileExists "dll\*.*" 0 +3
-        SetOutPath "$INSTDIR\dll"
-        File /r "dll\*.*"
-        SetOutPath "$INSTDIR"
+    ; Copy DLL folder (contains dependency assemblies resolved via dll/ subfolder)
+    SetOutPath "$INSTDIR\dll"
+    File /r "dll\*.*"
+    SetOutPath "$INSTDIR"
     
-    ; Copy Assets if exists
-    IfFileExists "Assets\*.*" 0 +3
-        SetOutPath "$INSTDIR\Assets"
-        File /r "Assets\*.*"
-        SetOutPath "$INSTDIR"
+    ; Copy Assets folder (animations, icons, themes)
+    SetOutPath "$INSTDIR\Assets"
+    File /r "Assets\*.*"
+    SetOutPath "$INSTDIR"
     
     ; Create logs directory
     CreateDirectory "$INSTDIR\logs"
