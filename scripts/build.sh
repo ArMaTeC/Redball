@@ -116,7 +116,7 @@ VERBOSE=true  # always verbose now
 # === Parse Arguments ===
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        all|windows|linux|update-server|website|clean|publish|serve|status)
+        all|auto-release|windows|linux|update-server|website|clean|publish|serve|status)
             COMMAND="$1"
             shift
             ;;
@@ -505,11 +505,20 @@ build_windows() {
     
     log_debug "Running: $win_script"
     log_debug "Passing --skip-setup flag (setup should be done already)"
-    # Run with timeout to prevent indefinite hangs
-    timeout 600s "$win_script" --skip-setup 2>&1 | while IFS= read -r -t 5 line || [[ -n "$line" ]]; do 
+    # Run with timeout; redirect to temp file to avoid pipe hangs from
+    # orphaned Wine MSBuild/VBCSCompiler daemon processes holding stdout open.
+    local win_log
+    win_log=$(mktemp /tmp/redball-win-build-XXXXXX.log)
+    timeout 600s "$win_script" --skip-setup > "$win_log" 2>&1
+    local win_exit=$?
+    # Stream the captured output through our logger
+    while IFS= read -r line; do
         [[ -n "$line" ]] && log_detail "$line"
-    done
-    local win_exit=${PIPESTATUS[0]}
+    done < "$win_log"
+    rm -f "$win_log"
+    # Kill any orphaned Wine build daemons
+    pkill -f "wine.*MSBuild.*nodemode" 2>/dev/null || true
+    pkill -f "wine.*VBCSCompiler" 2>/dev/null || true
     
     # Handle timeout case
     if [[ $win_exit -eq 124 ]]; then
