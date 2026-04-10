@@ -756,7 +756,25 @@ public partial class App : Application
         {
             try
             {
-                if (_mainWindow == null) return;
+                Services.Logger.Info("App", "OnShowWindowRequested invoked");
+
+                if (_mainWindow == null)
+                {
+                    Services.Logger.Warning("App", "MainWindow is null - attempting to recreate");
+                    try
+                    {
+                        _mainWindow = new Views.MainWindow();
+                        _mainWindow.Loaded += OnMainWindowLoaded;
+                        _mainWindow.Unloaded += OnMainWindowUnloaded;
+                        _mainWindow.Closed += OnMainWindowClosed;
+                        Services.Logger.Info("App", "MainWindow recreated successfully");
+                    }
+                    catch (Exception ex)
+                    {
+                        Services.Logger.Error("App", "Failed to recreate MainWindow", ex);
+                        return;
+                    }
+                }
 
                 Services.Logger.Info("App", "Showing main window as requested by another instance");
 
