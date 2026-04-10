@@ -246,6 +246,23 @@ auto_release() {
     
     local start_time=$(date +%s)
     
+    # 0. Bump patch version for each release
+    log_step "Phase 0: Bumping version number..."
+    if [[ $DRY_RUN == true ]]; then
+        log_info "[DRY RUN] Would bump version number"
+    else
+        if bash "$SCRIPT_DIR/bump-version.sh" patch; then
+            log_info "Version bumped to $(get_version)"
+        else
+            log_warning "Version bump failed, continuing with current version"
+        fi
+    fi
+    echo ""
+    
+    # Re-log version after bump (so build logs show correct version)
+    log_info "Building version: $(get_version)"
+    echo ""
+    
     # 1. Build all components
     log_step "Phase 1: Building all components..."
     if ! build_all; then
