@@ -551,7 +551,7 @@ publish_to_update_server() {
                 for dll in "$wpf_publish/dll"/*.dll; do
                     if [[ -f "$dll" ]]; then
                         cp "$dll" "$update_server_dir/binaries/"
-                        ((dll_count++))
+                        ((dll_count++)) || true
                     fi
                 done
                 log_info "Copied $dll_count DLLs for delta patching"

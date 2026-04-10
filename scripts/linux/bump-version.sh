@@ -110,16 +110,16 @@ PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
 # Calculate new version
 case "$COMPONENT" in
     major)
-        ((MAJOR++))
+        ((MAJOR++)) || true
         MINOR=0
         PATCH=0
         ;;
     minor)
-        ((MINOR++))
+        ((MINOR++)) || true
         PATCH=0
         ;;
     patch)
-        ((PATCH++))
+        ((PATCH++)) || true
         ;;
 esac
 
