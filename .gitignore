@@ -104,3 +104,11 @@ src/Redball.Linux/.flatpak-builder/cache/
 update-server/releases/
 src/Redball.Linux/flatpak/repo/
 src/Redball.Linux/.flatpak-builder/cache/
+
+# Flatpak build cache
+.flatpak-builder/
+build-dir/
+repo/
+*.flatpak
+src/Redball.Linux/.flatpak-builder/
+src/Redball.Linux/flatpak/repo/
