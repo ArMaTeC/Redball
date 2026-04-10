@@ -44,6 +44,7 @@ SetCompressorDictSize 32
 !include "Sections.nsh"
 !include "nsDialogs.nsh"
 !include "NSISdl.nsh"
+!include "WordFunc.nsh"
 
 ; ============================================================================
 ; .NET Runtime Settings
@@ -486,33 +487,32 @@ Function CheckAndKillRedball
 retry_check:
     StrCpy $R0 0
     
-    ; Check by process enumeration (most reliable - only checks for actual app process)
-    nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.UI.WPF.exe" /NH 2>nul'
-    Pop $0
-    Pop $1
-    ${If} $0 == 0
-        ${If} $1 != ""
-            ; Check that it's not just empty/no process found output
-            nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.UI.WPF.exe" /NH /FO CSV 2>nul'
-            Pop $0
-            Pop $1
-            ${If} $1 != ""
-                StrCpy $R0 1
-            ${EndIf}
-        ${EndIf}
-    ${EndIf}
+    ; Primary check: use tasklist CSV output and look for the actual EXE name in the output.
+    ; tasklist always outputs text — "INFO: No tasks..." when empty — so we must search
+    ; for the process name string, not just test for non-empty output.
+    nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.UI.WPF.exe" /FO CSV /NH'
+    Pop $0  ; exit code
+    Pop $1  ; stdout
+    ; $1 will contain "Redball.UI.WPF.exe" only if the process is actually running
+    ${WordFind} "$1" "Redball.UI.WPF.exe" "E+1{" $2
+    IfErrors 0 +2
+        Goto wpf_not_found
+    StrCpy $R0 1
+wpf_not_found:
+    ClearErrors
     
-    ; Secondary check: window class (WPF app windows)
+    ; Secondary check: find window by exact title "Redball" (main window)
     ${If} $R0 == 0
-        System::Call 'user32::FindWindowW(w "HwndWrapper*[DefaultGray]*", i 0) i .r0'
+        System::Call 'user32::FindWindowW(i 0, w "Redball") i .r0'
         ${If} $0 != 0
             StrCpy $R0 1
         ${EndIf}
     ${EndIf}
     
-    ; Check by file lock (only if installed)
+    ; Tertiary check: file lock on the EXE (only if previously installed)
     ${If} $R0 == 0
         ${If} ${FileExists} "$INSTDIR\Redball.UI.WPF.exe"
+            ClearErrors
             Rename "$INSTDIR\Redball.UI.WPF.exe" "$INSTDIR\Redball.UI.WPF.exe.check"
             ${If} ${Errors}
                 ClearErrors
@@ -568,34 +568,7 @@ done:
     Pop $R0
 FunctionEnd
 
-; ============================================================================
-; Kill All Project EXEs Function (legacy, used by uninstaller)
-; ============================================================================
-Function KillAllRedballProcesses
-    DetailPrint "Stopping Redball processes..."
-    
-    ; Try graceful close first (by window title)
-    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r1'
-    ${If} $1 != 0
-        DetailPrint "Found ${PRODUCT_NAME} window, sending close..."
-        System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0' ; WM_CLOSE = 16
-        Sleep 1500
-    ${EndIf}
-    
-    ; Try closing Settings window if open
-    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME} Settings") i .r1'
-    ${If} $1 != 0
-        System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
-        Sleep 1000
-    ${EndIf}
-    
-    ; Force kill
-    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'
-    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
-    Sleep 2000
-    
-    DetailPrint "Processes stopped"
-FunctionEnd
+; KillAllRedballProcesses removed — only the un. variant is needed (see un.KillAllRedballProcesses below)
 
 Function .onInit
     ; Initialize variables
