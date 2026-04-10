@@ -2118,6 +2118,49 @@ public class UpdateManifest
     public List<FileUpdateInfo> Files { get; set; } = new();
 }
 
+/// <summary>
+/// Update server manifest response with patch information.
+/// </summary>
+public class UpdateServerManifest
+{
+    [System.Text.Json.Serialization.JsonPropertyName("version")]
+    public string Version { get; set; } = "";
+    [System.Text.Json.Serialization.JsonPropertyName("files")]
+    public List<ManifestFileInfo> Files { get; set; } = new();
+    [System.Text.Json.Serialization.JsonPropertyName("fromVersion")]
+    public string FromVersion { get; set; } = "";
+    [System.Text.Json.Serialization.JsonPropertyName("patches")]
+    public List<PatchInfo> Patches { get; set; } = new();
+    [System.Text.Json.Serialization.JsonPropertyName("totalSavings")]
+    public long TotalSavings { get; set; }
+}
+
+public class ManifestFileInfo
+{
+    [System.Text.Json.Serialization.JsonPropertyName("name")]
+    public string Name { get; set; } = "";
+    [System.Text.Json.Serialization.JsonPropertyName("hash")]
+    public string Hash { get; set; } = "";
+    [System.Text.Json.Serialization.JsonPropertyName("size")]
+    public long Size { get; set; }
+    [System.Text.Json.Serialization.JsonPropertyName("signature")]
+    public string Signature { get; set; } = "";
+}
+
+public class PatchInfo
+{
+    [System.Text.Json.Serialization.JsonPropertyName("file")]
+    public string File { get; set; } = "";
+    [System.Text.Json.Serialization.JsonPropertyName("patchFile")]
+    public string PatchFile { get; set; } = "";
+    [System.Text.Json.Serialization.JsonPropertyName("patchSize")]
+    public long PatchSize { get; set; }
+    [System.Text.Json.Serialization.JsonPropertyName("originalSize")]
+    public long OriginalSize { get; set; }
+    [System.Text.Json.Serialization.JsonPropertyName("savings")]
+    public long Savings { get; set; }
+}
+
 public class FileUpdateInfo
 {
     [System.Text.Json.Serialization.JsonPropertyName("name")]
