@@ -271,7 +271,10 @@ auto_release() {
     
     # 1. Build all components
     log_step "Phase 1: Building all components..."
-    build_all
+    if ! build_all; then
+        log_error "Build phase failed. Aborting auto-release before publishing."
+        return 1
+    fi
     
     # 1.5 Commit any pending changes to git
     log_step "Phase 1.5: Committing changes to git..."
@@ -363,6 +366,22 @@ auto_release() {
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would create GitHub release"
     else
+        local version
+        version=$(get_version)
+        local missing_windows=()
+        
+        [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] || missing_windows+=("Redball-${version}-Setup.exe")
+        [[ -f "$DIST_DIR/Redball-${version}.zip" ]] || missing_windows+=("Redball-${version}.zip")
+        [[ -f "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" ]] || missing_windows+=("wpf-publish/Redball.UI.WPF.exe")
+
+        if [[ ${#missing_windows[@]} -gt 0 ]]; then
+            log_error "Missing Windows artifacts required for GitHub release. Aborting publish."
+            for file in "${missing_windows[@]}"; do
+                log_detail "Missing: $file"
+            done
+            return 1
+        fi
+
         if [[ -f "$SCRIPT_DIR/linux/release.sh" ]]; then
             log_debug "Running: release.sh -v $(get_version) --channel $CHANNEL --allow-dirty"
             "$SCRIPT_DIR/linux/release.sh" -v "$(get_version)" --channel "$CHANNEL" --allow-dirty 2>&1 | while IFS= read -r line; do log_detail "$line"; done
@@ -717,6 +736,7 @@ build_all() {
         echo "  Duration: ${minutes}m ${seconds}s"
         echo "  Failed:   ${failed[*]}"
         log_error "${#failed[@]} component(s) failed: ${failed[*]}"
+        return 1
     else
         echo "  ╔══════════════════════════════════════════════════╗"
         echo "  ║  BUILD COMPLETED SUCCESSFULLY                    ║"
@@ -725,6 +745,8 @@ build_all() {
         echo "  Duration: ${minutes}m ${seconds}s"
     fi
     echo ""
+
+    return 0
 }
 
 clean_all() {

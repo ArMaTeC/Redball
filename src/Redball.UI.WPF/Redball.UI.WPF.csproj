@@ -101,7 +101,7 @@
     <PropertyGroup>
       <ObfuscarConfig>$(MSBuildProjectDirectory)\obfuscar.xml</ObfuscarConfig>
     </PropertyGroup>
-    <Exec Command="$(NuGetPackageRoot)obfuscar\2.2.40\tools\Obfuscar.Console.exe $(ObfuscarConfig)" WorkingDirectory="$(PublishDir)" Condition="Exists('$(ObfuscarConfig)')" />
+    <Exec Command="$(NuGetPackageRoot)obfuscar\2.2.40\tools\Obfuscar.Console.exe $(ObfuscarConfig)" WorkingDirectory="$(PublishDir)" Condition="Exists('$(ObfuscarConfig)') and '$(RunObfuscar)' != 'false'" />
   </Target>
 
 </Project>

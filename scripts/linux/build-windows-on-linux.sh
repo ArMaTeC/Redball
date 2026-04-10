@@ -255,6 +255,20 @@ install_dotnet_in_wine() {
     log_success "Windows .NET SDK $version installed in Wine"
 }
 
+validate_wine_dotnet() {
+    if [[ ! -f "$WINE_DOTNET_ROOT/dotnet.exe" ]]; then
+        log_warn "Wine .NET SDK missing at $WINE_DOTNET_ROOT/dotnet.exe"
+        return 1
+    fi
+
+    if ! find "$WINE_DOTNET_ROOT" -name "System.Runtime.dll" -type f | grep -q .; then
+        log_warn "Wine .NET SDK appears incomplete: System.Runtime.dll not found"
+        return 1
+    fi
+
+    return 0
+}
+
 # === Setup: Import .NET SDK root certs into Wine's Windows cert store ===
 import_wine_certs() {
     log_step "Importing NuGet root certificates into Wine..."
@@ -339,6 +353,13 @@ step_build_wpf() {
     # Ensure Wine prefix is initialized (needed even with --skip-setup)
     init_wine_prefix
 
+    # Ensure Wine .NET SDK is actually present even when --skip-setup is used
+    if ! validate_wine_dotnet; then
+        log_step "Repairing missing/incomplete Wine .NET SDK..."
+        install_dotnet_in_wine
+        validate_wine_dotnet
+    fi
+
     mkdir -p "$WPF_PUBLISH_DIR"
 
     # Build all projects first so intermediate DLLs + artifacts exist
@@ -346,6 +367,7 @@ step_build_wpf() {
     wine_dotnet build "Z:$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" \
         --configuration "$CONFIGURATION" \
         --runtime win-x64 \
+        -p:RunObfuscar=false \
         --no-restore
 
     log_debug "Publishing WPF application..."
@@ -356,6 +378,7 @@ step_build_wpf() {
         --runtime win-x64 \
         -p:PublishSingleFile=false \
         -p:PublishTrimmed=false \
+        -p:RunObfuscar=false \
         --no-restore
 
     local wpf_end=$(date +%s)

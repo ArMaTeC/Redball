@@ -420,7 +420,25 @@ main() {
             upload_files+=("$manifest_json")
             log_info "Including manifest.json for differential updates"
         fi
-        
+
+        local missing_windows=()
+        [[ -f "$windows_dist/Redball-${VERSION}-Setup.exe" ]] || missing_windows+=("Redball-${VERSION}-Setup.exe")
+        [[ -f "$windows_dist/Redball-${VERSION}.zip" ]] || missing_windows+=("Redball-${VERSION}.zip")
+        [[ -f "$windows_dist/wpf-publish/Redball.UI.WPF.exe" ]] || missing_windows+=("wpf-publish/Redball.UI.WPF.exe")
+
+        if [[ ${#missing_windows[@]} -gt 0 ]]; then
+            log_error "Required Windows release artifacts are missing. Refusing to publish GitHub release."
+            for file in "${missing_windows[@]}"; do
+                log_detail "Missing: $file"
+            done
+            exit 1
+        fi
+
+        if [[ ${#upload_files[@]} -eq 0 ]]; then
+            log_error "No uploadable artifacts found. Refusing to create empty GitHub release."
+            exit 1
+        fi
+         
         if [[ $release_exists -eq 1 ]]; then
             log_warn "Release $TAG already exists. Updating artifacts..."
             for file in "${upload_files[@]}"; do

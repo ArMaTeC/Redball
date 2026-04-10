@@ -1132,6 +1132,29 @@
         }
       ],
       "totalDownloads": 0
+    },
+    {
+      "version": "2.1.499",
+      "notes": "Release 2.1.499",
+      "channel": "stable",
+      "date": "2026-04-09T21:00:52.919Z",
+      "files": [
+        {
+          "name": "redball-2.1.499-linux.tar.gz",
+          "size": 252553,
+          "hash": "d779d6bc36f00ceda8697bed1bd2547e183a2eebfab040a7d284f13adb7cd1a1",
+          "downloads": 0,
+          "uploadedAt": "2026-04-09T21:00:53.001Z"
+        },
+        {
+          "name": "redball-2.1.499.flatpak",
+          "size": 360792,
+          "hash": "7260efb1d5a67363ee0f5bd9ad8a3fd85aeaa32d973c2a8d43f681a0d8272f6f",
+          "downloads": 0,
+          "uploadedAt": "2026-04-09T21:00:53.036Z"
+        }
+      ],
+      "totalDownloads": 0
     }
   ]
 }
