@@ -345,17 +345,21 @@ auto_release() {
         else
             log_info "Uploading files to update-server..."
             local publish_response
-            publish_response=$(curl -s -w "\n%{http_code}" -X POST \
+            publish_response=$(curl -s --connect-timeout 10 --max-time 120 -w "\n%{http_code}" -X POST \
                 "http://localhost:3500/api/publish?version=${version}" \
                 -F "version=${version}" \
                 -F "notes=Release ${version} (${CHANNEL} channel)" \
                 ${channel_flag} \
                 "${curl_files[@]}" 2>&1)
+            local curl_exit_code=$?
             
             local http_code=$(echo "$publish_response" | tail -n1)
             local response_body=$(echo "$publish_response" | sed '$d')
             
-            if [[ "$http_code" == "201" ]]; then
+            if [[ $curl_exit_code -ne 0 ]]; then
+                log_warn "Failed to connect to update-server (curl exit code: $curl_exit_code)"
+                log_detail "Response: $response_body"
+            elif [[ "$http_code" == "201" ]]; then
                 log_success "Published to update-server (HTTP $http_code)"
                 log_detail "Response: $response_body"
             else

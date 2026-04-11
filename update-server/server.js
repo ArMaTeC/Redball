@@ -239,7 +239,11 @@ function validateFileUpload(file) {
 // === Multer for file uploads with security validation ===
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const version = req.params.version;
+    // Support both URL params (/api/releases/:version/upload) and body/query (/api/publish)
+    const version = req.params.version || req.body?.version || req.query?.version;
+    if (!version) {
+      return cb(new Error('Version is required'));
+    }
     // SECURITY: Sanitise version path to prevent path traversal
     const sanitisedVersion = version.replace(/[^a-zA-Z0-9._-]/g, '');
     if (sanitisedVersion !== version) {
@@ -553,7 +557,15 @@ app.patch('/api/releases/:version', (req, res) => {
 });
 
 // --- Publish from build output (used by build script) ---
-app.post('/api/publish', uploadLimiter, upload.array('files', 5), async (req, res) => {
+app.post('/api/publish', uploadLimiter, (req, res, next) => {
+  upload.array('files', 5)(req, res, (err) => {
+    if (err) {
+      console.error('[Upload Error]', err.message);
+      return res.status(400).json({ error: 'File upload failed: ' + err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
   const version = req.body.version || req.query.version;
   if (!version) return res.status(400).json({ error: 'Version is required' });
 
