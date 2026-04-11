@@ -419,17 +419,16 @@ const SystemConfigPanel: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem('token');
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   };
 
   const fetchConfig = useCallback(async () => {
     try {
-      const headers = getAuthHeaders();
       const [serverRes, configRes] = await Promise.all([
-        fetch('/api/system/config', { headers }),
-        fetch('/api/config', { headers })
+        fetch('/api/system/config', { headers: getAuthHeaders() }),
+        fetch('/api/config', { headers: getAuthHeaders() })
       ]);
       if (serverRes.ok) setServerInfo(await serverRes.json());
       if (configRes.ok) setConfig(await configRes.json());
@@ -449,7 +448,7 @@ const SystemConfigPanel: React.FC = () => {
     try {
       const res = await fetch('/api/config', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() } as Record<string, string>,
         body: JSON.stringify(config)
       });
       if (res.ok) {
@@ -484,14 +483,14 @@ const SystemConfigPanel: React.FC = () => {
       <div className="glass-card" style={{ padding: '24px' }}>
         <h3 style={{ marginBottom: '20px' }}>Server Information</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
-          <InfoItem label="Hostname" value={serverInfo?.hostname} />
-          <InfoItem label="Platform" value={serverInfo?.platform} />
-          <InfoItem label="Node.js Version" value={serverInfo?.nodeVersion} />
+          <InfoItem label="Hostname" value={serverInfo?.hostname ?? '-'} />
+          <InfoItem label="Platform" value={serverInfo?.platform ?? '-'} />
+          <InfoItem label="Node.js Version" value={serverInfo?.nodeVersion ?? '-'} />
           <InfoItem label="Uptime" value={formatUptime(serverInfo?.uptime)} />
-          <InfoItem label="Web Admin Port" value={serverInfo?.webPort} />
-          <InfoItem label="Update Server Port" value={serverInfo?.updatePort} />
-          <InfoItem label="Environment" value={serverInfo?.env} />
-          <InfoItem label="Release Count" value={serverInfo?.releaseCount} />
+          <InfoItem label="Web Admin Port" value={serverInfo?.webPort ?? '-'} />
+          <InfoItem label="Update Server Port" value={serverInfo?.updatePort ?? '-'} />
+          <InfoItem label="Environment" value={serverInfo?.env ?? '-'} />
+          <InfoItem label="Release Count" value={serverInfo?.releaseCount ?? '-'} />
         </div>
       </div>
 
@@ -857,7 +856,7 @@ const ConfigCheckboxInput: React.FC<{ label: string, checked: unknown, onChange:
   </div>
 );
 
-const formatUptime = (seconds: number): string => {
+const formatUptime = (seconds: number | undefined): string => {
   if (!seconds) return '-';
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);
