@@ -829,34 +829,80 @@
     </main>
 
     <script>
-        // Auth
-        const AUTH_KEY = 'redball_admin_auth';
-        const CORRECT_PASSWORD = 'redball2026'; // In production, use proper auth
+        // Auth - JWT Token based
+        const TOKEN_KEY = 'redball_admin_token';
+        let authToken = localStorage.getItem(TOKEN_KEY);
+        let currentUser = null;
 
-        function checkAuth() {
-            if (localStorage.getItem(AUTH_KEY) === 'true') {
-                document.getElementById('login-overlay').classList.add('hidden');
-                return true;
+        async function checkAuth() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (!token) return false;
+
+            try {
+                const res = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUser = data.user;
+                    document.getElementById('login-overlay').classList.add('hidden');
+                    return true;
+                }
+            } catch (e) {
+                console.error('Auth check failed:', e);
             }
+
+            // Token invalid, clear it
+            localStorage.removeItem(TOKEN_KEY);
             return false;
         }
 
-        function doLogin() {
+        async function doLogin() {
+            const username = 'admin';
             const password = document.getElementById('password-input').value;
-            if (password === CORRECT_PASSWORD) {
-                localStorage.setItem(AUTH_KEY, 'true');
-                document.getElementById('login-overlay').classList.add('hidden');
-                document.getElementById('login-error').classList.remove('show');
-                connectWS();
-            } else {
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.token) {
+                    localStorage.setItem(TOKEN_KEY, data.token);
+                    currentUser = data.user;
+                    document.getElementById('login-overlay').classList.add('hidden');
+                    document.getElementById('login-error').classList.remove('show');
+                    connectWS();
+                } else {
+                    document.getElementById('login-error').textContent = data.error || 'Invalid credentials';
+                    document.getElementById('login-error').classList.add('show');
+                    document.getElementById('password-input').value = '';
+                }
+            } catch (e) {
+                console.error('Login failed:', e);
+                document.getElementById('login-error').textContent = 'Login failed. Please try again.';
                 document.getElementById('login-error').classList.add('show');
-                document.getElementById('password-input').value = '';
             }
         }
 
         function doLogout() {
-            localStorage.removeItem(AUTH_KEY);
+            localStorage.removeItem(TOKEN_KEY);
+            authToken = null;
+            currentUser = null;
             location.reload();
+        }
+
+        // Helper for authenticated fetch
+        function authFetch(url, options = {}) {
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (token) {
+                options.headers = options.headers || {};
+                options.headers['Authorization'] = `Bearer ${token}`;
+            }
+            return fetch(url, options);
         }
 
         document.getElementById('password-input').addEventListener('keypress', (e) => {
@@ -921,6 +967,39 @@
 
         let lastWindowsProgress = 0;
         let windowsBuildStartTime = null;
+
+        // Deduplication: track recent messages to avoid duplicates
+        const recentMessages = new Map();
+        const DEDUP_WINDOW_MS = 2000; // 2 second window
+        const MAX_RECENT_SIZE = 50;
+
+        function isDuplicate(text) {
+            const now = Date.now();
+            const key = text.trim().substring(0, 100); // First 100 chars
+
+            // Clean old entries
+            for (const [k, v] of recentMessages) {
+                if (now - v > DEDUP_WINDOW_MS) {
+                    recentMessages.delete(k);
+                }
+            }
+
+            // Check if we've seen this recently
+            if (recentMessages.has(key)) {
+                return true;
+            }
+
+            // Add to recent
+            recentMessages.set(key, now);
+
+            // Limit size
+            if (recentMessages.size > MAX_RECENT_SIZE) {
+                const oldest = recentMessages.keys().next().value;
+                recentMessages.delete(oldest);
+            }
+
+            return false;
+        }
 
         function formatLine(line) {
             const clean = stripAnsi(line).trim();
@@ -1007,6 +1086,11 @@
             const formatted = formatLine(rawLine);
             if (!formatted) return;
 
+            // Check for duplicates
+            if (isDuplicate(formatted.text)) {
+                return;
+            }
+
             const term = document.getElementById('terminal-body');
             const div = document.createElement('div');
             div.className = 'terminal-line ' + formatted.class;
@@ -1058,9 +1142,10 @@
             document.getElementById('start-build-btn').disabled = true;
             document.getElementById('stop-build-btn').disabled = false;
             document.getElementById('terminal-body').innerHTML = '';
-            // Reset Windows build tracking
+            // Reset tracking
             lastWindowsProgress = 0;
             windowsBuildStartTime = null;
+            recentMessages.clear(); // Clear deduplication cache
             resetStages();
             updateUI();
         }
@@ -1094,20 +1179,42 @@
             el.textContent = buildState.status.charAt(0).toUpperCase() + buildState.status.slice(1);
         }
 
-        function startBuild() {
-            if (!checkAuth()) return;
+        async function startBuild() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (!token) {
+                alert('Please login first');
+                return;
+            }
+
             if (ws?.readyState === 1) {
                 ws.send(JSON.stringify({ action: 'start-build' }));
             } else {
-                fetch('/api/build/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'windows' }) });
+                try {
+                    const res = await authFetch('/api/build/start', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'windows' })
+                    });
+                    if (!res.ok) {
+                        const err = await res.json();
+                        alert('Failed to start build: ' + (err.error || 'Unknown error'));
+                    }
+                } catch (e) {
+                    console.error('Start build failed:', e);
+                    alert('Failed to start build');
+                }
             }
         }
 
-        function stopBuild() {
+        async function stopBuild() {
             if (ws?.readyState === 1) {
                 ws.send(JSON.stringify({ action: 'stop-build' }));
             } else {
-                fetch('/api/build/stop', { method: 'POST' });
+                try {
+                    await authFetch('/api/build/stop', { method: 'POST' });
+                } catch (e) {
+                    console.error('Stop build failed:', e);
+                }
             }
         }
 

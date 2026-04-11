@@ -4,6 +4,8 @@ const pty = require('node-pty');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const server = http.createServer(app);
@@ -14,20 +16,181 @@ const PROJECT_ROOT = path.join(__dirname, '..');
 const RELEASES_JSON = path.join(PROJECT_ROOT, 'update-server', 'data', 'releases.json');
 const RELEASES_DIR = path.join(PROJECT_ROOT, 'update-server', 'releases');
 const PUBLIC_DIR = path.join(__dirname, 'public');
+const BUILD_STATE_FILE = path.join(__dirname, 'logs', 'build-state.json');
+const BUILD_LOG_FILE = path.join(__dirname, 'logs', 'build.log');
+const AUTH_FILE = path.join(__dirname, 'logs', 'auth.json');
+
+// JWT Secret (generate random on first run)
+const JWT_SECRET = loadOrCreateJwtSecret();
+
+function loadOrCreateJwtSecret() {
+  const secretFile = path.join(__dirname, 'logs', '.jwt-secret');
+  try {
+    if (fs.existsSync(secretFile)) {
+      return fs.readFileSync(secretFile, 'utf8').trim();
+    }
+  } catch (e) { }
+
+  // Generate new secret
+  const secret = require('crypto').randomBytes(64).toString('hex');
+  try {
+    fs.writeFileSync(secretFile, secret, { mode: 0o600 });
+  } catch (e) {
+    console.error('[AUTH] Warning: Could not save JWT secret to file');
+  }
+  return secret;
+}
+
+// Load or create admin user
+function getAdminUser() {
+  const defaultUser = {
+    username: 'admin',
+    // Default password: 'redball2026' - change after first login
+    passwordHash: '$2b$10$NH.q4MEoGZUuC4kHmv8B2uLh4OXdPVwa2Q/CKp/ORwSMG2XvhGQ8e'
+  };
+
+  try {
+    if (fs.existsSync(AUTH_FILE)) {
+      const auth = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf8'));
+      return auth.admin || defaultUser;
+    }
+  } catch (e) {
+    console.error('[AUTH] Error loading auth file:', e.message);
+  }
+
+  // Save default user
+  saveAdminUser(defaultUser);
+  return defaultUser;
+}
+
+function saveAdminUser(user) {
+  try {
+    fs.writeFileSync(AUTH_FILE, JSON.stringify({ admin: user }, null, 2), { mode: 0o600 });
+  } catch (e) {
+    console.error('[AUTH] Error saving auth file:', e.message);
+  }
+}
+
+// Authentication middleware
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access denied. No token provided.' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  });
+}
 
 // Build state
-let buildState = {
-  status: 'idle',
-  stage: null,
-  progress: 0,
-  log: [],
-  pid: null,
-  startTime: null,
-  endTime: null
-};
+let buildState = loadBuildState();
+
+function loadBuildState() {
+  const defaultState = {
+    status: 'idle',
+    stage: null,
+    progress: 0,
+    log: [],
+    pid: null,
+    startTime: null,
+    endTime: null
+  };
+
+  try {
+    if (fs.existsSync(BUILD_STATE_FILE)) {
+      const saved = JSON.parse(fs.readFileSync(BUILD_STATE_FILE, 'utf8'));
+      // If build was running when server stopped, mark it as failed
+      if (saved.status === 'running') {
+        saved.status = 'failed';
+        saved.endTime = Date.now();
+      }
+      return { ...defaultState, ...saved };
+    }
+  } catch (e) {
+    console.error('[BUILD] Error loading build state:', e.message);
+  }
+  return defaultState;
+}
+
+function saveBuildState() {
+  try {
+    fs.writeFileSync(BUILD_STATE_FILE, JSON.stringify(buildState, null, 2));
+  } catch (e) {
+    console.error('[BUILD] Error saving build state:', e.message);
+  }
+}
 
 // Middleware
 app.use(express.json());
+
+// Auth endpoints
+app.post('/api/auth/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required' });
+  }
+
+  const admin = getAdminUser();
+
+  if (username !== admin.username) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  const validPassword = await bcrypt.compare(password, admin.passwordHash);
+  if (!validPassword) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  // Generate JWT token
+  const token = jwt.sign(
+    { username: admin.username, role: 'admin' },
+    JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+
+  res.json({
+    token,
+    user: { username: admin.username, role: 'admin' }
+  });
+});
+
+app.post('/api/auth/change-password', authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current and new password required' });
+  }
+
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  }
+
+  const admin = getAdminUser();
+
+  const validPassword = await bcrypt.compare(currentPassword, admin.passwordHash);
+  if (!validPassword) {
+    return res.status(401).json({ error: 'Current password is incorrect' });
+  }
+
+  // Hash new password
+  const newHash = await bcrypt.hash(newPassword, 10);
+  admin.passwordHash = newHash;
+  saveAdminUser(admin);
+
+  res.json({ success: true, message: 'Password changed successfully' });
+});
+
+app.get('/api/auth/me', authenticateToken, (req, res) => {
+  res.json({ user: req.user });
+});
 
 // API Routes
 app.get('/api/stats', (req, res) => {
@@ -47,7 +210,7 @@ app.get('/api/build/log', (req, res) => {
   res.json({ log: buildState.log });
 });
 
-app.post('/api/build/start', (req, res) => {
+app.post('/api/build/start', authenticateToken, (req, res) => {
   if (buildState.status === 'running') {
     return res.status(409).json({ error: 'Build already in progress' });
   }
@@ -55,7 +218,7 @@ app.post('/api/build/start', (req, res) => {
   res.json({ status: 'started' });
 });
 
-app.post('/api/build/stop', (req, res) => {
+app.post('/api/build/stop', authenticateToken, (req, res) => {
   if (buildState.pid) {
     try {
       process.kill(buildState.pid, 'SIGTERM');
@@ -235,6 +398,18 @@ function parseBuildStage(line) {
 }
 
 function startBuild(buildType = 'windows') {
+  // Check if another build is already running externally
+  if (buildState.status === 'running' && buildState.pid) {
+    try {
+      process.kill(buildState.pid, 0); // Check if process exists
+      console.log('[BUILD] Build already running with PID:', buildState.pid);
+      return; // Build is still running
+    } catch (e) {
+      // Process doesn't exist, reset state
+      console.log('[BUILD] Stale build detected, resetting state');
+    }
+  }
+
   buildState = {
     status: 'running',
     stage: 'setup',
@@ -244,6 +419,7 @@ function startBuild(buildType = 'windows') {
     startTime: Date.now(),
     endTime: null
   };
+  saveBuildState();
 
   broadcast({ type: 'build-started', data: buildState });
 
@@ -273,6 +449,11 @@ function startBuild(buildType = 'windows') {
 
         if (buildState.log.length > 5000) buildState.log = buildState.log.slice(-2500);
 
+        // Save state periodically (every ~5 seconds or on stage change)
+        if (buildState.log.length % 50 === 0 || stage) {
+          saveBuildState();
+        }
+
         broadcast({
           type: 'build-output',
           data: { line, stage: buildState.stage, progress: buildState.progress }
@@ -286,6 +467,7 @@ function startBuild(buildType = 'windows') {
     buildState.endTime = Date.now();
     buildState.progress = exitCode === 0 ? 100 : buildState.progress;
     buildState.pid = null;
+    saveBuildState();
 
     broadcast({
       type: 'build-complete',

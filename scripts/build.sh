@@ -427,9 +427,9 @@ auto_release() {
                 log_success "Update server started via PM2"
             fi
         elif [[ -f "$server_dir/server.js" ]]; then
-            # Try to find and kill existing node process, then restart
+            # Try to find and kill existing update-server process only (not web-admin)
             log_info "Restarting update server via node..."
-            pkill -f "node.*server.js" 2>/dev/null || true
+            pkill -f "node.*update-server/server.js" 2>/dev/null || true
             sleep 2
             
             # Start server with log file for debugging
@@ -443,8 +443,8 @@ auto_release() {
                 sleep 1
                 ((waited++))
                 
-                # Check if process is running
-                if pgrep -f "node.*server.js" > /dev/null; then
+                # Check if update-server process is running (specific to update-server dir)
+                if pgrep -f "node.*update-server/server.js" > /dev/null; then
                     # Check if server is responding on port 3500
                     if curl -s http://localhost:3500/api/health > /dev/null 2>&1; then
                         log_success "Update server restarted and responding on port 3500"
