@@ -307,6 +307,8 @@ export const AdminDashboard: React.FC = () => {
             )}
           </div>
         )}
+
+        {activeTab === 'config' && <SystemConfigPanel />}
       </main>
     </div>
   );
@@ -351,3 +353,437 @@ const LogItem: React.FC<{ type: 'success' | 'error' | 'info', msg: string, time:
     <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{time}</span>
   </div>
 );
+
+interface ServerInfo {
+  hostname?: string;
+  platform?: string;
+  nodeVersion?: string;
+  uptime?: number;
+  webPort?: number;
+  updatePort?: number;
+  env?: string;
+  releaseCount?: number;
+}
+
+interface Config {
+  [key: string]: unknown;
+}
+
+const SystemConfigPanel: React.FC = () => {
+  const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
+  const [config, setConfig] = useState<Config | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchConfig();
+  }, []);
+
+  const fetchConfig = async () => {
+    try {
+      const [serverRes, configRes] = await Promise.all([
+        fetch('/api/system/config'),
+        fetch('/api/config')
+      ]);
+      if (serverRes.ok) setServerInfo(await serverRes.json());
+      if (configRes.ok) setConfig(await configRes.json());
+    } catch (e) {
+      console.error('Failed to fetch config:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveConfig = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      });
+      if (res.ok) {
+        alert('Configuration saved successfully!');
+      } else {
+        alert('Failed to save configuration');
+      }
+    } catch {
+      alert('Error saving configuration');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateConfigField = (field: string, value: unknown) => {
+    setConfig((prev: Config | null) => prev ? { ...prev, [field]: value } : { [field]: value });
+  };
+
+  if (loading) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-dim)' }}>
+        Loading configuration...
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Server Info */}
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <h3 style={{ marginBottom: '20px' }}>Server Information</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+          <InfoItem label="Hostname" value={serverInfo?.hostname} />
+          <InfoItem label="Platform" value={serverInfo?.platform} />
+          <InfoItem label="Node.js Version" value={serverInfo?.nodeVersion} />
+          <InfoItem label="Uptime" value={formatUptime(serverInfo?.uptime)} />
+          <InfoItem label="Web Admin Port" value={serverInfo?.webPort} />
+          <InfoItem label="Update Server Port" value={serverInfo?.updatePort} />
+          <InfoItem label="Environment" value={serverInfo?.env} />
+          <InfoItem label="Release Count" value={serverInfo?.releaseCount} />
+        </div>
+      </div>
+
+      {/* Keep-Alive Settings */}
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <h3 style={{ marginBottom: '20px' }}>Keep-Alive Settings</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          <ConfigNumberInput
+            label="Heartbeat Interval (seconds)"
+            value={config?.HeartbeatSeconds}
+            onChange={(v) => updateConfigField('HeartbeatSeconds', v)}
+            min={1}
+            max={300}
+          />
+          <ConfigNumberInput
+            label="Default Duration (minutes)"
+            value={config?.DefaultDuration}
+            onChange={(v) => updateConfigField('DefaultDuration', v)}
+            min={1}
+            max={1440}
+          />
+          <ConfigSelectInput
+            label="Heartbeat Input Mode"
+            value={config?.HeartbeatInputMode}
+            onChange={(v) => updateConfigField('HeartbeatInputMode', v)}
+            options={[{ value: 'F15', label: 'F15 Key' }, { value: 'Shift', label: 'Shift Key' }, { value: 'Mouse', label: 'Mouse Move' }]}
+          />
+          <ConfigCheckboxInput
+            label="Prevent Display Sleep"
+            checked={config?.PreventDisplaySleep}
+            onChange={(v) => updateConfigField('PreventDisplaySleep', v)}
+          />
+          <ConfigCheckboxInput
+            label="Use Heartbeat Keypress"
+            checked={config?.UseHeartbeatKeypress}
+            onChange={(v) => updateConfigField('UseHeartbeatKeypress', v)}
+          />
+        </div>
+      </div>
+
+      {/* TypeThing Settings */}
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <h3 style={{ marginBottom: '20px' }}>TypeThing Settings</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          <ConfigCheckboxInput
+            label="Enable TypeThing"
+            checked={config?.TypeThingEnabled}
+            onChange={(v) => updateConfigField('TypeThingEnabled', v)}
+          />
+          <ConfigCheckboxInput
+            label="Show Notifications"
+            checked={config?.TypeThingNotifications}
+            onChange={(v) => updateConfigField('TypeThingNotifications', v)}
+          />
+          <ConfigNumberInput
+            label="Min Delay (ms)"
+            value={config?.TypeThingMinDelayMs}
+            onChange={(v) => updateConfigField('TypeThingMinDelayMs', v)}
+            min={10}
+            max={1000}
+          />
+          <ConfigNumberInput
+            label="Max Delay (ms)"
+            value={config?.TypeThingMaxDelayMs}
+            onChange={(v) => updateConfigField('TypeThingMaxDelayMs', v)}
+            min={10}
+            max={2000}
+          />
+          <ConfigSelectInput
+            label="Theme"
+            value={config?.TypeThingTheme}
+            onChange={(v) => updateConfigField('TypeThingTheme', v)}
+            options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }, { value: 'system', label: 'System' }]}
+          />
+        </div>
+      </div>
+
+      {/* Smart Features */}
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <h3 style={{ marginBottom: '20px' }}>Smart Features</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          <ConfigCheckboxInput
+            label="Battery Aware"
+            checked={config?.BatteryAware}
+            onChange={(v) => updateConfigField('BatteryAware', v)}
+          />
+          <ConfigNumberInput
+            label="Battery Threshold (%)"
+            value={config?.BatteryThreshold}
+            onChange={(v) => updateConfigField('BatteryThreshold', v)}
+            min={5}
+            max={50}
+          />
+          <ConfigCheckboxInput
+            label="Network Aware"
+            checked={config?.NetworkAware}
+            onChange={(v) => updateConfigField('NetworkAware', v)}
+          />
+          <ConfigCheckboxInput
+            label="Idle Detection"
+            checked={config?.IdleDetection}
+            onChange={(v) => updateConfigField('IdleDetection', v)}
+          />
+          <ConfigNumberInput
+            label="Idle Threshold (seconds)"
+            value={config?.IdleThreshold}
+            onChange={(v) => updateConfigField('IdleThreshold', v)}
+            min={10}
+            max={3600}
+          />
+          <ConfigCheckboxInput
+            label="Presentation Mode Detection"
+            checked={config?.PresentationModeDetection}
+            onChange={(v) => updateConfigField('PresentationModeDetection', v)}
+          />
+        </div>
+      </div>
+
+      {/* Update Settings */}
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <h3 style={{ marginBottom: '20px' }}>Update Settings</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          <ConfigTextInput
+            label="Repository Owner"
+            value={config?.UpdateRepoOwner}
+            onChange={(v) => updateConfigField('UpdateRepoOwner', v)}
+          />
+          <ConfigTextInput
+            label="Repository Name"
+            value={config?.UpdateRepoName}
+            onChange={(v) => updateConfigField('UpdateRepoName', v)}
+          />
+          <ConfigSelectInput
+            label="Update Channel"
+            value={config?.UpdateChannel}
+            onChange={(v) => updateConfigField('UpdateChannel', v)}
+            options={[{ value: 'stable', label: 'Stable' }, { value: 'beta', label: 'Beta' }, { value: 'dev', label: 'Development' }]}
+          />
+          <ConfigCheckboxInput
+            label="Verify Update Signatures"
+            checked={config?.VerifyUpdateSignature}
+            onChange={(v) => updateConfigField('VerifyUpdateSignature', v)}
+          />
+        </div>
+      </div>
+
+      {/* UI Settings */}
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <h3 style={{ marginBottom: '20px' }}>UI Settings</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          <ConfigSelectInput
+            label="Theme"
+            value={config?.Theme}
+            onChange={(v) => updateConfigField('Theme', v)}
+            options={[
+              { value: 'System', label: 'System Default' },
+              { value: 'Dark', label: 'Dark' },
+              { value: 'Light', label: 'Light' },
+              { value: 'Midnight Blue', label: 'Midnight Blue' },
+              { value: 'Forest Green', label: 'Forest Green' },
+              { value: 'Ocean Blue', label: 'Ocean Blue' },
+              { value: 'Sunset Orange', label: 'Sunset Orange' },
+              { value: 'Royal Purple', label: 'Royal Purple' },
+              { value: 'Slate Grey', label: 'Slate Grey' },
+              { value: 'Rose Gold', label: 'Rose Gold' },
+              { value: 'Cyberpunk', label: 'Cyberpunk' },
+              { value: 'Coffee', label: 'Coffee' },
+              { value: 'Arctic Frost', label: 'Arctic Frost' }
+            ]}
+          />
+          <ConfigSelectInput
+            label="Locale"
+            value={config?.Locale}
+            onChange={(v) => updateConfigField('Locale', v)}
+            options={[{ value: 'en', label: 'English' }, { value: 'en-GB', label: 'English (UK)' }]}
+          />
+          <ConfigCheckboxInput
+            label="Minimise to Tray"
+            checked={config?.MinimizeToTray}
+            onChange={(v) => updateConfigField('MinimizeToTray', v)}
+          />
+          <ConfigCheckboxInput
+            label="Minimise on Start"
+            checked={config?.MinimizeOnStart}
+            onChange={(v) => updateConfigField('MinimizeOnStart', v)}
+          />
+          <ConfigCheckboxInput
+            label="Show Notifications"
+            checked={config?.ShowNotifications}
+            onChange={(v) => updateConfigField('ShowNotifications', v)}
+          />
+          <ConfigCheckboxInput
+            label="Show Balloon on Start"
+            checked={config?.ShowBalloonOnStart}
+            onChange={(v) => updateConfigField('ShowBalloonOnStart', v)}
+          />
+        </div>
+      </div>
+
+      {/* Logging & Debug */}
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <h3 style={{ marginBottom: '20px' }}>Logging & Debug</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          <ConfigCheckboxInput
+            label="Verbose Logging"
+            checked={config?.VerboseLogging}
+            onChange={(v) => updateConfigField('VerboseLogging', v)}
+          />
+          <ConfigCheckboxInput
+            label="Enable Telemetry"
+            checked={config?.EnableTelemetry}
+            onChange={(v) => updateConfigField('EnableTelemetry', v)}
+          />
+          <ConfigCheckboxInput
+            label="Enable Performance Metrics"
+            checked={config?.EnablePerformanceMetrics}
+            onChange={(v) => updateConfigField('EnablePerformanceMetrics', v)}
+          />
+          <ConfigNumberInput
+            label="Max Log Size (MB)"
+            value={config?.MaxLogSizeMB}
+            onChange={(v) => updateConfigField('MaxLogSizeMB', v)}
+            min={1}
+            max={100}
+          />
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+        <button
+          className="btn-secondary"
+          onClick={fetchConfig}
+          disabled={saving}
+        >
+          Reset Changes
+        </button>
+        <button
+          className="btn-primary"
+          onClick={saveConfig}
+          disabled={saving}
+          style={{ minWidth: '140px' }}
+        >
+          {saving ? 'Saving...' : 'Save Configuration'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const InfoItem: React.FC<{ label: string, value: string | number }> = ({ label, value }) => (
+  <div>
+    <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '4px' }}>{label}</div>
+    <div style={{ fontSize: '1rem', fontWeight: 500 }}>{value || '-'}</div>
+  </div>
+);
+
+const ConfigTextInput: React.FC<{ label: string, value: unknown, onChange: (value: string) => void }> = ({ label, value, onChange }) => (
+  <div>
+    <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--text-dim)', marginBottom: '8px' }}>{label}</label>
+    <input
+      type="text"
+      value={String(value || '')}
+      onChange={(e) => onChange(e.target.value)}
+      style={{
+        width: '100%',
+        background: 'rgba(255,255,255,0.05)',
+        border: '1px solid var(--border-glass)',
+        borderRadius: '6px',
+        padding: '10px 12px',
+        color: 'white',
+        fontSize: '0.875rem',
+        outline: 'none'
+      }}
+    />
+  </div>
+);
+
+const ConfigNumberInput: React.FC<{ label: string, value: unknown, onChange: (value: number) => void, min?: number, max?: number }> = ({ label, value, onChange, min, max }) => (
+  <div>
+    <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--text-dim)', marginBottom: '8px' }}>{label}</label>
+    <input
+      type="number"
+      value={Number(value || 0)}
+      min={min}
+      max={max}
+      onChange={(e) => onChange(parseInt(e.target.value) || 0)}
+      style={{
+        width: '100%',
+        background: 'rgba(255,255,255,0.05)',
+        border: '1px solid var(--border-glass)',
+        borderRadius: '6px',
+        padding: '10px 12px',
+        color: 'white',
+        fontSize: '0.875rem',
+        outline: 'none'
+      }}
+    />
+  </div>
+);
+
+const ConfigSelectInput: React.FC<{ label: string, value: unknown, onChange: (value: string) => void, options: { value: string, label: string }[] }> = ({ label, value, onChange, options }) => (
+  <div>
+    <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--text-dim)', marginBottom: '8px' }}>{label}</label>
+    <select
+      value={String(value || '')}
+      onChange={(e) => onChange(e.target.value)}
+      style={{
+        width: '100%',
+        background: 'rgba(255,255,255,0.05)',
+        border: '1px solid var(--border-glass)',
+        borderRadius: '6px',
+        padding: '10px 12px',
+        color: 'white',
+        fontSize: '0.875rem',
+        outline: 'none',
+        cursor: 'pointer'
+      }}
+    >
+      {options.map(opt => (
+        <option key={opt.value} value={opt.value} style={{ background: '#1a1a1a' }}>{opt.label}</option>
+      ))}
+    </select>
+  </div>
+);
+
+const ConfigCheckboxInput: React.FC<{ label: string, checked: unknown, onChange: (checked: boolean) => void }> = ({ label, checked, onChange }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingTop: '24px' }}>
+    <input
+      type="checkbox"
+      checked={Boolean(checked)}
+      onChange={(e) => onChange(e.target.checked)}
+      style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+    />
+    <label style={{ fontSize: '0.875rem', color: 'var(--text-dim)', cursor: 'pointer' }}>{label}</label>
+  </div>
+);
+
+const formatUptime = (seconds: number): string => {
+  if (!seconds) return '-';
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  if (days > 0) return `${days}d ${hours}h ${mins}m`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+};
