@@ -344,11 +344,9 @@ step_build_wpf() {
     log_step "Building WPF Application ($CONFIGURATION)..."
     local wpf_start=$(date +%s)
     
-    log_debug "Configuration: $CONFIGURATION"
-    log_debug "Output dir:    $WPF_PUBLISH_DIR"
-    log_debug "Project:       $PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj"
-    log_debug "Wine prefix:   $WINE_PREFIX"
-    log_debug "Wine .NET:     $WINE_DOTNET_ROOT/dotnet.exe"
+    log_info "Configuration: $CONFIGURATION"
+    log_info "Output directory: $WPF_PUBLISH_DIR"
+    log_info "Wine prefix: $WINE_PREFIX"
 
     # Ensure Wine prefix is initialized (needed even with --skip-setup)
     init_wine_prefix
@@ -363,14 +361,16 @@ step_build_wpf() {
     mkdir -p "$WPF_PUBLISH_DIR"
 
     # Build all projects first so intermediate DLLs + artifacts exist
-    log_debug "Building entire WPF project graph via Wine (Release)..."
+    log_info "Compiling WPF project via Wine .NET SDK..."
+    log_info "→ Running: dotnet build (this may take 2-3 minutes)..."
     wine_dotnet build "Z:$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" \
         --configuration "$CONFIGURATION" \
         --runtime win-x64 \
         -p:RunObfuscar=false \
         --no-restore
+    log_info "→ Build completed successfully"
 
-    log_debug "Publishing WPF application..."
+    log_info "Publishing WPF application to output directory..."
     wine_dotnet publish "Z:$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" \
         --configuration "$CONFIGURATION" \
         --output "Z:$WPF_PUBLISH_DIR" \

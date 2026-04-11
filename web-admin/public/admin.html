@@ -1117,11 +1117,30 @@
 
             stages.forEach((s, i) => {
                 const el = document.querySelector(`.stage[data-stage="${s}"]`);
+                if (!el) return;
+
+                // Don't override completed stages
+                if (el.classList.contains('complete')) return;
+
                 el.classList.remove('active', 'complete');
 
                 if (i === idx) {
                     el.classList.add('active');
                     el.querySelector('.stage-status').textContent = 'Running...';
+
+                    // Add feedback to terminal when stage changes
+                    const stageNames = {
+                        'setup': '⚙️ Environment Setup',
+                        'version': '🏷️ Version Bump',
+                        'windows-build': '🔨 Windows Build',
+                        'update-server': '📦 Update Server',
+                        'publish': '☁️ Publish Release',
+                        'github': '🚀 GitHub Release',
+                        'restart': '🔄 Restart Services'
+                    };
+                    if (stageNames[s] && !isDuplicate(stageNames[s])) {
+                        addTerminalLine(`→ ${stageNames[s]} started...`, 'phase-start');
+                    }
                 } else if (i < idx) {
                     el.classList.add('complete');
                     el.querySelector('.stage-status').textContent = 'Complete';
@@ -1155,11 +1174,21 @@
             buildState.endTime = Date.now();
             document.getElementById('start-build-btn').disabled = false;
             document.getElementById('stop-build-btn').disabled = true;
-            addTerminalLine(data.status === 'success' ? 'Build completed successfully!' : 'Build failed!', data.status);
+            addTerminalLine(data.status === 'success' ? '✅ Build completed successfully!' : '❌ Build failed!', data.status);
             updateProgress(data.status === 'success' ? 100 : buildState.progress);
+
+            // Mark all stages as complete on success
             if (data.status === 'success') {
-                document.querySelectorAll('.stage').forEach(s => s.classList.add('complete'));
+                stages.forEach(s => {
+                    const el = document.querySelector(`.stage[data-stage="${s}"]`);
+                    if (el) {
+                        el.classList.remove('active', 'error');
+                        el.classList.add('complete');
+                        el.querySelector('.stage-status').textContent = 'Complete';
+                    }
+                });
             }
+
             updateUI();
             loadStats();
             loadReleases();
