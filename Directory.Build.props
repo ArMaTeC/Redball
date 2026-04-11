@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- Centralized Versioning -->
-    <Version>2.1.537</Version>
+    <Version>2.1.538</Version>
     <Authors>ArMaTeC</Authors>
     <Company>ArMaTeC</Company>
     <Product>Redball</Product>
