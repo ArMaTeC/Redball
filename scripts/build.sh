@@ -409,6 +409,40 @@ auto_release() {
         fi
     fi
     
+    # 7. Restart Update Server
+    log_step "Phase 7: Restarting update server..."
+    if [[ $DRY_RUN == true ]]; then
+        log_info "[DRY RUN] Would restart update server"
+    else
+        local server_dir="$PROJECT_ROOT/update-server"
+        if command -v pm2 &>/dev/null; then
+            # Check if already running with pm2
+            if pm2 list | grep -q "redball-update-server"; then
+                log_info "Restarting update server via PM2..."
+                pm2 restart redball-update-server 2>&1 | while IFS= read -r line; do log_detail "$line"; done
+                log_success "Update server restarted via PM2"
+            else
+                log_info "Starting update server via PM2..."
+                cd "$server_dir" && pm2 start server.js --name "redball-update-server" 2>&1 | while IFS= read -r line; do log_detail "$line"; done
+                log_success "Update server started via PM2"
+            fi
+        elif [[ -f "$server_dir/server.js" ]]; then
+            # Try to find and kill existing node process, then restart
+            log_info "Restarting update server via node..."
+            pkill -f "node.*update-server/server.js" 2>/dev/null || true
+            sleep 2
+            (cd "$server_dir" && nohup node server.js > /dev/null 2>&1 &)
+            sleep 2
+            if pgrep -f "node.*update-server/server.js" > /dev/null; then
+                log_success "Update server restarted"
+            else
+                log_warn "Update server may not have started properly"
+            fi
+        else
+            log_warn "Update server not found at $server_dir"
+        fi
+    fi
+    
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
     local minutes=$((duration / 60))
