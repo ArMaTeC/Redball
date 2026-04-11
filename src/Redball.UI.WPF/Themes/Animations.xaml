@@ -520,8 +520,16 @@
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="CheckMark" Storyboard.TargetProperty="(Path.RenderTransform).(ScaleTransform.ScaleX)" To="0" Duration="0:0:0.1"/>
-                                        <DoubleAnimation Storyboard.TargetName="CheckMark" Storyboard.TargetProperty="(Path.RenderTransform).(ScaleTransform.ScaleY)" To="0" Duration="0:0:0.1"/>
+                                        <DoubleAnimation Storyboard.TargetName="CheckMark" Storyboard.TargetProperty="(Path.RenderTransform).(ScaleTransform.ScaleX)" To="0" Duration="0:0:0.1">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseIn"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="CheckMark" Storyboard.TargetProperty="(Path.RenderTransform).(ScaleTransform.ScaleY)" To="0" Duration="0:0:0.1">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseIn"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
