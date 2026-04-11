@@ -556,6 +556,7 @@ check_dependencies() {
 
 build_windows() {
     log_step "Building Windows artifacts..."
+    log_info "This step takes 3-5 minutes. Streaming output in real-time..."
     local win_start=$(date +%s)
     
     if [[ $DRY_RUN == true ]]; then
@@ -569,19 +570,46 @@ build_windows() {
         return 1
     fi
     
-    log_debug "Running: $win_script"
-    log_debug "Passing --skip-setup flag (setup should be done already)"
-    # Run with timeout; redirect to temp file to avoid pipe hangs from
-    # orphaned Wine MSBuild/VBCSCompiler daemon processes holding stdout open.
-    local win_log
-    win_log=$(mktemp /tmp/redball-win-build-XXXXXX.log)
-    timeout 600s "$win_script" --skip-setup > "$win_log" 2>&1
+    log_info "Starting Windows build via Wine + .NET SDK..."
+    log_info "Build steps: WPF Compile → WPF Publish → Custom Actions → NSIS Installer"
+    
+    # Run with timeout - use stdbuf to force line buffering for real-time output
+    local win_log=$(mktemp /tmp/redball-win-XXXXXX.log)
+    timeout 600s stdbuf -oL "$win_script" --skip-setup > "$win_log" 2>&1 &
+    local win_pid=$!
+    
+    # Start background progress indicator
+    local progress_pid
+    (
+        local elapsed=0
+        while kill -0 $win_pid 2>/dev/null; do
+            sleep 30
+            elapsed=$((elapsed + 30))
+            local mins=$((elapsed / 60))
+            local secs=$((elapsed % 60))
+            log_info "⏱️  Build running... ${mins}m ${secs}s elapsed"
+            # Stream any new output
+            if [[ -f "$win_log" ]]; then
+                cat "$win_log"
+                > "$win_log"  # Clear the file after reading
+            fi
+        done
+    ) &
+    progress_pid=$!
+    
+    # Wait for build to complete
+    wait $win_pid
     local win_exit=$?
-    # Stream the captured output through our logger
-    while IFS= read -r line; do
-        [[ -n "$line" ]] && log_detail "$line"
-    done < "$win_log"
-    rm -f "$win_log"
+    
+    # Stop progress indicator
+    kill $progress_pid 2>/dev/null || true
+    
+    # Final output stream
+    if [[ -f "$win_log" ]]; then
+        cat "$win_log" 2>/dev/null
+        rm -f "$win_log"
+    fi
+    
     # Kill any orphaned Wine build daemons
     pkill -f "wine.*MSBuild.*nodemode" 2>/dev/null || true
     pkill -f "wine.*VBCSCompiler" 2>/dev/null || true
@@ -598,8 +626,8 @@ build_windows() {
     if [[ $win_exit -eq 0 ]]; then
         log_success "Windows build completed in ${win_dur}s"
         # List produced artifacts
-        log_debug "Windows artifacts:"
-        ls -lh "$DIST_DIR"/*.exe "$DIST_DIR"/*.zip "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" 2>/dev/null | head -10 | while IFS= read -r line; do log_detail "$line"; done
+        log_info "Windows artifacts created:"
+        ls -lh "$DIST_DIR"/*.exe "$DIST_DIR"/*.zip 2>/dev/null | head -5 | while IFS= read -r line; do log_detail "$line"; done
     else
         log_error "Windows build FAILED (exit code: $win_exit, took ${win_dur}s)"
         return 1

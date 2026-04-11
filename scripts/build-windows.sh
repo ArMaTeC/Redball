@@ -218,11 +218,18 @@ install_linux_dotnet() {
 
 # === Setup: Install Windows .NET SDK in Wine (for build/publish) ===
 install_dotnet_in_wine() {
-    if [[ -f "$WINE_DOTNET_ROOT/dotnet.exe" ]]; then
+    local force_install=${1:-false}
+    
+    if [[ -f "$WINE_DOTNET_ROOT/dotnet.exe" && "$force_install" != "true" ]]; then
         local installed_version
         installed_version=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all wine "$WINE_DOTNET_ROOT/dotnet.exe" --version 2>/dev/null || echo "unknown")
         log_success "Windows .NET SDK already installed in Wine: $installed_version"
         return 0
+    fi
+    
+    if [[ "$force_install" == "true" && -d "$WINE_DOTNET_ROOT" ]]; then
+        log_info "Removing incomplete Wine .NET SDK for reinstallation..."
+        rm -rf "$WINE_DOTNET_ROOT"
     fi
 
     log_step "Downloading Windows .NET SDK $WIN_DOTNET_VERSION..."
@@ -261,8 +268,24 @@ validate_wine_dotnet() {
         return 1
     fi
 
-    if ! find "$WINE_DOTNET_ROOT" -name "System.Runtime.dll" -type f | grep -q .; then
-        log_warn "Wine .NET SDK appears incomplete: System.Runtime.dll not found"
+    # Quick check for key files instead of slow find
+    local key_files=(
+        "$WINE_DOTNET_ROOT/shared/Microsoft.NETCore.App/*/System.Runtime.dll"
+        "$WINE_DOTNET_ROOT/sdk/*/Sdks/Microsoft.NET.Sdk/Sdk/Sdk.props"
+    )
+    
+    local found=0
+    for pattern in "${key_files[@]}"; do
+        for file in $pattern; do
+            if [[ -f "$file" ]]; then
+                found=1
+                break 2
+            fi
+        done
+    done
+    
+    if [[ $found -eq 0 ]]; then
+        log_warn "Wine .NET SDK appears incomplete: core files not found"
         return 1
     fi
 
@@ -354,8 +377,11 @@ step_build_wpf() {
     # Ensure Wine .NET SDK is actually present even when --skip-setup is used
     if ! validate_wine_dotnet; then
         log_step "Repairing missing/incomplete Wine .NET SDK..."
-        install_dotnet_in_wine
-        validate_wine_dotnet
+        install_dotnet_in_wine true  # Force reinstall
+        if ! validate_wine_dotnet; then
+            log_error "Wine .NET SDK validation failed after reinstall"
+            exit 1
+        fi
     fi
 
     mkdir -p "$WPF_PUBLISH_DIR"
@@ -490,6 +516,7 @@ step_build_service() {
 # === Build: Custom Actions DLL ===
 step_build_custom_actions() {
     log_step "Building Custom Actions DLL..."
+    log_info "→ Compiling installer custom actions..."
 
     local ca_csproj="$PROJECT_ROOT/installer/Redball.Installer.CustomActions/Redball.Installer.CustomActions.csproj"
     if [[ ! -f "$ca_csproj" ]]; then
@@ -498,13 +525,15 @@ step_build_custom_actions() {
     fi
 
     # Restore with Linux SDK first (avoids Wine cert issues)
+    log_info "→ Restoring NuGet packages..."
     linux_dotnet restore "$ca_csproj" --verbosity minimal
 
     # Build in Wine - explicitly disable fallback folders to avoid Windows path issues
+    log_info "→ Building Custom Actions DLL via Wine..."
     if wine_dotnet build "Z:$ca_csproj" --configuration "$CONFIGURATION" --verbosity minimal --no-restore -p:RestoreFallbackFolders="" 2>/dev/null; then
         local ca_dll="$PROJECT_ROOT/installer/Redball.Installer.CustomActions/bin/$CONFIGURATION/net8.0-windows/Redball.Installer.CustomActions.dll"
         if [[ -f "$ca_dll" ]]; then
-            log_success "Custom Actions DLL built: $ca_dll"
+            log_success "Custom Actions DLL built successfully"
         else
             log_warn "Custom Actions DLL not found after build - will build without custom actions"
         fi
@@ -522,8 +551,9 @@ step_build_nsis() {
     fi
 
     log_step "Building NSIS Installer (Modern EXE with features)..."
+    log_info "→ Creating Windows installer package..."
     local nsis_start=$(date +%s)
-    log_debug "NSIS version: $(makensis -VERSION 2>/dev/null)"
+    log_info "NSIS version: $(makensis -VERSION 2>/dev/null)"
 
     # Read version
     local version
@@ -543,7 +573,7 @@ step_build_nsis() {
     fi
 
     # Create NSIS bitmaps from existing BMPs (NSIS uses 150x57 header, 164x314 welcome)
-    log_step "Creating NSIS graphics..."
+    log_info "→ Creating NSIS installer graphics..."
     local installer_dir="$PROJECT_ROOT/installer"
     
     # Use ImageMagick to resize if available, otherwise copy existing
@@ -607,6 +637,7 @@ step_build_nsis() {
     sed -i 's|/root/Redball/LICENSE|LICENSE.txt|g' "$build_nsi"
 
     # Build NSIS installer from publish directory
+    log_info "→ Compiling NSIS installer script..."
     pushd "$WPF_PUBLISH_DIR" > /dev/null
     makensis -V2 "Redball.nsi"
     local nsis_exit=$?
@@ -806,8 +837,8 @@ main() {
     echo ""
     
     log_info "Full artifact listing:"
-    # Use maxdepth to prevent deep recursion, and timeout to prevent hangs
-    timeout 10s find "$DIST_DIR" -maxdepth 1 -type f -exec ls -lh {} \; 2>/dev/null | head -20 | while IFS= read -r line; do log_detail "$line"; done || true
+    # Simple ls instead of find to avoid hangs
+    ls -lh "$DIST_DIR"/* 2>/dev/null | head -20 | while IFS= read -r line; do log_detail "$line"; done || true
     echo ""
 }
 
