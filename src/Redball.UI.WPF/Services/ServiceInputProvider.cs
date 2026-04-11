@@ -94,6 +94,12 @@ public class ServiceInputProvider : IDisposable
                     Logger.Info("ServiceInputProvider", "Service is installed but stopped. Administrator rights required to start the service automatically.");
                     _lastErrorSummary = "Service stopped - run as Administrator to auto-start";
                     IsServiceInstalled = false;
+                    
+                    // Show user-visible notification about elevation requirement
+                    NotificationService.Instance.ShowWarning(
+                        "Redball Service", 
+                        "Input Service is installed but stopped. Administrator rights are required to start it. TypeThing may not work correctly without the service.");
+                    
                     return IsServiceInstalled;
                 }
 

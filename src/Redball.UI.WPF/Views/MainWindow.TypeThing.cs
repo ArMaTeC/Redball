@@ -617,6 +617,7 @@ public partial class MainWindow
                     SendKeyPress(0x0D); // VK_RETURN
                 }
                 // else: TypeThingTypeNewlines is false, skip silently
+                index++;
             }
             else if (ch == '\n')
             {
@@ -625,10 +626,12 @@ public partial class MainWindow
                     SendKeyPress(0x0D); // VK_RETURN
                 }
                 // else: skip silently (don't fall through to SendCharacter)
+                index++;
             }
             else if (ch == '\t')
             {
                 SendKeyPress(0x09); // VK_TAB
+                index++;
             }
             else
             {

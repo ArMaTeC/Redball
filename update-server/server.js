@@ -619,7 +619,7 @@ app.get('/api/stats', async (req, res) => {
     const totalFiles = releases.reduce((sum, r) => sum + (r.files?.length || 0), 0);
     const totalDownloads = releases.reduce((sum, r) => sum + (r.totalDownloads || 0), 0);
     const latestVersion = releases.length > 0 ? releases[0].version : 'none';
-    res.json({ totalReleases, totalFiles, totalDownloads, latestVersion });
+    res.json({ totalReleases, totalFiles, totalDownloads, latestVersion, releases });
   } catch (err) {
     console.error('[API] Error fetching stats:', err);
     res.status(500).json({ error: 'Failed to fetch stats' });

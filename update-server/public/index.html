@@ -2497,6 +2497,22 @@
                     </a>
                 </div>
             </div>
+
+            <!-- Version History -->
+            <div class="version-history" style="margin-top:60px">
+                <h3 class="version-history-title"
+                    style="font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:700;margin-bottom:24px;text-align:center">
+                    Recent Releases
+                </h3>
+                <div class="version-list" id="version-list"
+                    style="display:flex;flex-direction:column;gap:12px;max-width:800px;margin:0 auto">
+                    <!-- Populated by JavaScript -->
+                    <div class="version-item"
+                        style="background:var(--grad-card);border:1px solid var(--border-subtle);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+                        <span style="color:var(--text-muted)">Loading versions...</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -2964,6 +2980,47 @@
                         relCounter.dataset.target = stats.totalReleases || 0;
                     } else if (relCounter) {
                         relCounter.textContent = (stats.totalReleases || 0).toLocaleString();
+                    }
+
+                    // Update version history (last 6 versions)
+                    const versionList = document.getElementById('version-list');
+                    if (versionList && stats.releases && stats.releases.length > 0) {
+                        const recentReleases = stats.releases.slice(0, 6);
+                        versionList.innerHTML = recentReleases.map(release => {
+                            const date = new Date(release.date).toLocaleDateString('en-GB', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                            });
+                            const downloads = release.totalDownloads || 0;
+                            const setupFile = release.files?.find(f => f.name.includes('Setup') || f.name.endsWith('.exe'));
+                            const downloadUrl = setupFile ?
+                                (setupFile.url || `/releases/${release.version}/${setupFile.name}`) :
+                                `https://github.com/ArMaTeC/Redball/releases/download/v${release.version}/Redball-${release.version}-Setup.exe`;
+
+                            return `
+                                <a href="${downloadUrl}" class="version-item" style="background:var(--grad-card);border:1px solid var(--border-subtle);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;text-decoration:none;transition:all 0.3s ease" onmouseover="this.style.borderColor='var(--border-hover)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border-subtle)';this.style.transform='translateY(0)'">
+                                    <div style="display:flex;align-items:center;gap:16px">
+                                        <span style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:600;color:var(--primary-light)">v${release.version}</span>
+                                        <span style="color:var(--text-muted);font-size:0.85rem">${date}</span>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:20px">
+                                        <span style="color:var(--text-secondary);font-size:0.875rem;display:flex;align-items:center;gap:6px">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;opacity:0.6">
+                                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                            </svg>
+                                            ${downloads.toLocaleString()} downloads
+                                        </span>
+                                        <span style="color:var(--primary);font-size:0.875rem;font-weight:500;display:flex;align-items:center;gap:4px">
+                                            Download
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+                                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                                            </svg>
+                                        </span>
+                                    </div>
+                                </a>
+                            `;
+                        }).join('');
                     }
                 }
 
