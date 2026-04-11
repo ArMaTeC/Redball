@@ -297,21 +297,193 @@ Section "!${PRODUCT_NAME} Application" SecApp
     ; Create logs directory
     CreateDirectory "$INSTDIR\logs"
     
-    ; Create README
+    ; Create comprehensive README
     FileOpen $0 "$INSTDIR\README.txt" w
-    FileWrite $0 "${PRODUCT_NAME} ${PRODUCT_VERSION_SHORT}$\r$\n"
-    FileWrite $0 "=========================$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  ${PRODUCT_NAME} ${PRODUCT_VERSION_SHORT} - Keep Your Windows PC Awake$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
     FileWrite $0 "\r$\n"
-    FileWrite $0 "Thank you for installing ${PRODUCT_NAME}!$\r$\n"
+    FileWrite $0 "Thank you for installing ${PRODUCT_NAME}! This document will help you get$\r$\n"
+    FileWrite $0 "started with the application and discover all its features.$\r$\n"
     FileWrite $0 "\r$\n"
-    FileWrite $0 "Quick Start:$\r$\n"
-    FileWrite $0 "1. Launch ${PRODUCT_NAME} from Start Menu or Desktop$\r$\n"
-    FileWrite $0 "2. Right-click the system tray icon to access settings$\r$\n"
-    FileWrite $0 "3. Enable 'Keep Awake' to prevent Windows sleep$\r$\n"
-    FileWrite $0 "4. Use Ctrl+Shift+V for TypeThing clipboard typing$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  WHAT IS REDBALL?$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
     FileWrite $0 "\r$\n"
-    FileWrite $0 "For more information, visit:$\r$\n"
-    FileWrite $0 "${PRODUCT_WEB_SITE}$\r$\n"
+    FileWrite $0 "Redball is a modern, lightweight keep-awake utility for Windows that prevents$\r$\n"
+    FileWrite $0 "your screen from locking, sleeping, or going idle when you need your PC to$\r$\n"
+    FileWrite $0 "stay active. Perfect for presentations, long downloads, video rendering,$\r$\n"
+    FileWrite $0 "or any task that requires uninterrupted PC activity.$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  QUICK START$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "1. Launch Redball:$\r$\n"
+    FileWrite $0 "   - From the Start Menu: Start > Redball$\r$\n"
+    FileWrite $0 "   - From Desktop: Double-click the Redball icon$\r$\n"
+    FileWrite $0 "   - The app starts minimised to your system tray (notification area)$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "2. Control Redball:$\r$\n"
+    FileWrite $0 "   - Left-click the tray icon to open the main window$\r$\n"
+    FileWrite $0 "   - Right-click the tray icon for quick access menu$\r$\n"
+    FileWrite $0 "   - Use the toggle switch to enable/disable Keep Awake$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "3. The Keep Awake feature is active when the status shows 'Active'$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  KEY FEATURES$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Keep-Alive Engine$\r$\n"
+    FileWrite $0 "  -----------------$\r$\n"
+    FileWrite $0 "  - Prevents screen lock and sleep automatically$\r$\n"
+    FileWrite $0 "  - Optional display sleep prevention$\r$\n"
+    FileWrite $0 "  - Configurable F15 heartbeat for undetectable activity$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  TypeThing Clipboard Typing$\r$\n"
+    FileWrite $0 "  ---------------------------$\r$\n"
+    FileWrite $0 "  - Paste text as simulated keystrokes$\r$\n"
+    FileWrite $0 "  - Bypasses clipboard restrictions in remote sessions$\r$\n"
+    FileWrite $0 "  - Perfect for secure environments (RDP, Citrix, VMware)$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Session Timer$\r$\n"
+    FileWrite $0 "  --------------$\r$\n"
+    FileWrite $0 "  - Track how long your session stays active$\r$\n"
+    FileWrite $0 "  - Set automatic shut-off timers$\r$\n"
+    FileWrite $0 "  - Get notifications when timer expires$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Smart Power Management$\r$\n"
+    FileWrite $0 "  ----------------------$\r$\n"
+    FileWrite $0 "  - Temperature monitoring with thermal protection$\r$\n"
+    FileWrite $0 "  - CPU usage tracking$\r$\n"
+    FileWrite $0 "  - Automatic power plan switching$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Beautiful Themes$\r$\n"
+    FileWrite $0 "  ----------------$\r$\n"
+    FileWrite $0 "  - 14 custom themes: Dark, Light, Midnight Blue, Forest Green,$\r$\n"
+    FileWrite $0 "    Ocean Blue, Sunset Orange, Royal Purple, Slate Grey, Rose Gold,$\r$\n"
+    FileWrite $0 "    Cyberpunk, Coffee, and Arctic Frost$\r$\n"
+    FileWrite $0 "  - System theme detection$\r$\n"
+    FileWrite $0 "  - Mica material effects on Windows 11$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Advanced Features$\r$\n"
+    FileWrite $0 "  -----------------$\r$\n"
+    FileWrite $0 "  - Mini Widget: Floating status window with drag positioning$\r$\n"
+    FileWrite $0 "  - Smart Detection: Pause when battery is low or focus assist is on$\r$\n"
+    FileWrite $0 "  - Auto-Updates: Delta patches for fast, efficient updates$\r$\n"
+    FileWrite $0 "  - Windows 11 Widgets: System tray integration$\r$\n"
+    FileWrite $0 "  - Plugin System: Extend functionality with custom plugins$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  KEYBOARD SHORTCUTS$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Ctrl + Shift + V    Activate TypeThing (type clipboard as keystrokes)$\r$\n"
+    FileWrite $0 "  Ctrl + Shift + R    Refresh/redock the Mini Widget$\r$\n"
+    FileWrite $0 "  Ctrl + Shift + P    Pause/Resume Keep Awake$\r$\n"
+    FileWrite $0 "  Ctrl + Shift + O    Open main window$\r$\n"
+    FileWrite $0 "  Ctrl + Shift + T    Toggle Mini Widget visibility$\r$\n"
+    FileWrite $0 "  Ctrl + Shift + Q    Quick exit application$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Note: Shortcuts work even when the main window is closed/minimised.$\r$\n"
+    FileWrite $0 "        You can customise shortcuts in Settings > Hotkeys.$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  SYSTEM REQUIREMENTS$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Operating System:   Windows 10 (1809+) or Windows 11$\r$\n"
+    FileWrite $0 "  Architecture:       64-bit (x64)$\r$\n"
+    FileWrite $0 "  .NET Runtime:       .NET 10 Desktop Runtime (included in installer)$\r$\n"
+    FileWrite $0 "  Memory:             100 MB RAM minimum$\r$\n"
+    FileWrite $0 "  Disk Space:         50 MB free space$\r$\n"
+    FileWrite $0 "  Display:            Any display supported by Windows$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Optional Features:$\r$\n"
+    FileWrite $0 "  - Background Service: Requires administrator rights to install$\r$\n"
+    FileWrite $0 "  - Windows 11 Widgets: Requires Windows 11 22H2 or later$\r$\n"
+    FileWrite $0 "  - Mica Effects:       Requires Windows 11 22H2 or later$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  GETTING HELP$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Documentation:      ${PRODUCT_WEB_SITE}/wiki$\r$\n"
+    FileWrite $0 "  Report Issues:      ${PRODUCT_WEB_SITE}/issues$\r$\n"
+    FileWrite $0 "  Releases:           ${PRODUCT_WEB_SITE}/releases$\r$\n"
+    FileWrite $0 "  Discussions:        ${PRODUCT_WEB_SITE}/discussions$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  TROUBLESHOOTING$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  App won't start?$\r$\n"
+    FileWrite $0 "  - Check logs in: %LOCALAPPDATA%\Redball\logs\$\r$\n"
+    FileWrite $0 "  - Verify .NET 10 Runtime is installed$\r$\n"
+    FileWrite $0 "  - Try running as administrator (for service features)$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Keep Awake not working?$\r$\n"
+    FileWrite $0 "  - Check if Windows Focus Assist is blocking notifications$\r$\n"
+    FileWrite $0 "  - Verify 'Prevent Display Sleep' is enabled if needed$\r$\n"
+    FileWrite $0 "  - Some corporate policies may override keep-awake$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  TypeThing not working?$\r$\n"
+    FileWrite $0 "  - Some applications block simulated input$\r$\n"
+    FileWrite $0 "  - Try the background service option for elevated scenarios$\r$\n"
+    FileWrite $0 "  - Ensure the target window has input focus$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  High CPU or memory usage?$\r$\n"
+    FileWrite $0 "  - Check for update availability (updates fix known issues)$\r$\n"
+    FileWrite $0 "  - Disable unused features in Settings$\r$\n"
+    FileWrite $0 "  - Restart the application$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  UNINSTALLING REDBALL$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  1. Open Windows Settings > Apps > Installed apps$\r$\n"
+    FileWrite $0 "  2. Find 'Redball' in the list$\r$\n"
+    FileWrite $0 "  3. Click the three dots and select 'Uninstall'$\r$\n"
+    FileWrite $0 "  4. Follow the prompts to complete removal$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Or use the Start Menu shortcut:$\r$\n"
+    FileWrite $0 "  Start > Redball > Uninstall Redball$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "  Note: Your settings and logs are preserved in:$\r$\n"
+    FileWrite $0 "        %LOCALAPPDATA%\Redball\ (delete manually if desired)$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  PRIVACY & DATA COLLECTION$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "Redball respects your privacy:$\r$\n"
+    FileWrite $0 "- No telemetry or analytics data is collected$\r$\n"
+    FileWrite $0 "- No internet connection required (except for update checks)$\r$\n"
+    FileWrite $0 "- All configuration stored locally on your PC$\r$\n"
+    FileWrite $0 "- TypeThing clipboard data is never stored or transmitted$\r$\n"
+    FileWrite $0 "- Optional diagnostics only sent when you manually report an issue$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  LICENCE$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "Redball is open source software licensed under the MIT Licence.$\r$\n"
+    FileWrite $0 "See the LICENSE file included with this distribution, or visit:$\r$\n"
+    FileWrite $0 "${PRODUCT_WEB_SITE}/blob/main/LICENSE$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  THANK YOU!$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "Thank you for choosing Redball! We hope it helps you stay productive.$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "If you find Redball useful, please consider starring the project on GitHub$\r$\n"
+    FileWrite $0 "and sharing it with others who might benefit.$\r$\n"
+    FileWrite $0 "\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
+    FileWrite $0 "  ${PRODUCT_PUBLISHER} | ${PRODUCT_WEB_SITE}$\r$\n"
+    FileWrite $0 "================================================================================$\r$\n"
     FileClose $0
     
     ; Register application
@@ -540,31 +712,45 @@ wpf_not_found:
         
 kill_process:
             DetailPrint "Attempting to close ${PRODUCT_NAME}..."
-            ; Try graceful close first (find by window title)
-            System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r1'
-            ${If} $1 != 0
-                DetailPrint "Found ${PRODUCT_NAME} window, sending close message..."
-                System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0' ; WM_CLOSE = 16
-                Sleep 2000
-            ${EndIf}
             
-            ; Also try to find and close Settings window
-            System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME} Settings") i .r1'
+            ; Stop service first if installed (properly through SCM)
+            DetailPrint "Stopping background service..."
+            nsExec::Exec 'sc stop "Redball Input Service" 2>nul'
+            Sleep 2000
+            
+            ; Try graceful close using taskkill without /F first (sends WM_CLOSE)
+            DetailPrint "Requesting graceful shutdown..."
+            nsExec::Exec 'taskkill /IM Redball.UI.WPF.exe /T 2>nul'
+            Sleep 3000
+            
+            ; Check if still running
+            nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.UI.WPF.exe" /FO CSV /NH'
+            Pop $0
+            Pop $1
+            ${WordFind} "$1" "Redball.UI.WPF.exe" "E+1{" $2
+            IfErrors not_running_1 +2
+            Goto still_running
+            not_running_1:
+            ClearErrors
+            Goto process_killed
+            
+        still_running:
+            DetailPrint "Process still running, attempting force kill..."
+            
+            ; Try to find windows by partial title match (starts with Redball)
+            ; Use FindWindowEx to enumerate and check titles
+            System::Call 'user32::FindWindowW(i 0, i 0) i .r1'
             ${If} $1 != 0
                 System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
                 Sleep 1000
             ${EndIf}
             
-            ; Stop service first if installed (properly through SCM)
-            DetailPrint "Stopping background service..."
-            nsExec::Exec 'sc stop "Redball Input Service" 2>nul'
-            Sleep 3000
-            
-            ; Force kill if still running
+            ; Force kill the application
             nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'
             nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
-            Sleep 2000
+            Sleep 3000
             
+        process_killed:
             ; Check again
             Goto retry_check
             
@@ -658,20 +844,11 @@ FunctionEnd
 Function un.KillAllRedballProcesses
     DetailPrint "Stopping Redball processes..."
     
-    ; Try graceful close first (by window title)
-    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME}") i .r1'
-    ${If} $1 != 0
-        DetailPrint "Found ${PRODUCT_NAME} window, sending close..."
-        System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0' ; WM_CLOSE = 16
-        Sleep 1500
-    ${EndIf}
-    
-    ; Try closing Settings window if open
-    System::Call 'user32::FindWindowW(i 0, w "${PRODUCT_NAME} Settings") i .r1'
-    ${If} $1 != 0
-        System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
-        Sleep 1000
-    ${EndIf}
+    ; Try graceful close first (taskkill without /F sends WM_CLOSE)
+    DetailPrint "Requesting graceful shutdown..."
+    nsExec::Exec 'taskkill /IM Redball.UI.WPF.exe /T 2>nul'
+    nsExec::Exec 'taskkill /IM Redball.Service.exe /T 2>nul'
+    Sleep 3000
     
     ; Force kill if still running
     nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'

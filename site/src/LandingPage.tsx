@@ -80,17 +80,11 @@ export const LandingPage: React.FC = () => {
         borderBottom: '1px solid rgba(148, 163, 184, 0.1)'
       }}>
         <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', color: 'white' }}>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
-            background: 'linear-gradient(135deg, #e8443a, #ff6b5a)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <Zap size={20} color="white" />
-          </div>
+          <svg width="36" height="36" viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
+            <circle cx="50" cy="50" r="45" fill="rgba(232, 68, 58, 0.1)" />
+            <circle cx="50" cy="50" r="35" stroke="#e8443a" strokeWidth="4" fill="none" />
+            <rect x="35" y="35" width="30" height="30" fill="#e8443a" transform="rotate(45 50 50)" />
+          </svg>
           <span style={{ fontWeight: 700, fontSize: '1.25rem' }}>Redball</span>
         </a>
 

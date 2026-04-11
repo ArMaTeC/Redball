@@ -7,7 +7,7 @@ module.exports = {
     exec_mode: 'fork',
     env: {
       NODE_ENV: 'production',
-      PORT: 3500
+      PORT: 3501
     },
     // Graceful shutdown and restart
     kill_timeout: 5000,

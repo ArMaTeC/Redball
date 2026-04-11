@@ -668,6 +668,7 @@
                 <button class="nav-btn active" data-section="dashboard">Dashboard</button>
                 <button class="nav-btn" data-section="build">Build</button>
                 <button class="nav-btn" data-section="releases">Releases</button>
+                <button class="nav-btn" data-section="system">System</button>
             </nav>
             <button class="logout-btn" onclick="doLogout()">Logout</button>
             <div class="connection-status" style="margin-left: 1.5rem;">
@@ -823,6 +824,391 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Config -->
+        <section id="system" class="section">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">⚙️ System Configuration</div>
+                </div>
+                <div class="panel-body">
+                    <div id="system-info" style="display: grid; gap: 1.5rem;">
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                            <div
+                                style="background: var(--bg-panel); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
+                                <h4
+                                    style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
+                                    Server Info</h4>
+                                <div id="server-info-content"
+                                    style="font-size: 0.875rem; line-height: 1.8; color: var(--text-secondary);">
+                                    Loading...
+                                </div>
+                            </div>
+                            <div
+                                style="background: var(--bg-panel); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
+                                <h4
+                                    style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
+                                    Environment</h4>
+                                <div id="env-info-content"
+                                    style="font-size: 0.875rem; line-height: 1.8; color: var(--text-secondary);">
+                                    Loading...
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            style="background: var(--bg-panel); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
+                            <h4
+                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
+                                Disk Usage</h4>
+                            <div id="disk-info-content"
+                                style="font-size: 0.875rem; line-height: 1.8; color: var(--text-secondary);">
+                                Loading...
+                            </div>
+                        </div>
+                        <div
+                            style="background: var(--bg-panel); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
+                            <h4
+                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
+                                Admin Actions</h4>
+                            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="changePassword()">Change Password</button>
+                                <button class="btn" onclick="clearLogs()"
+                                    style="background: var(--bg-dark); color: var(--text-secondary); border: 1px solid var(--border);">Clear
+                                    Build Logs</button>
+                                <button class="btn" onclick="restartServer()"
+                                    style="background: var(--bg-dark); color: var(--text-secondary); border: 1px solid var(--border);">Restart
+                                    Server</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Configuration -->
+            <div class="panel" style="margin-top: 2rem;">
+                <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="panel-title">🔧 Application Configuration</div>
+                    <div>
+                        <button class="btn btn-primary" onclick="saveAppConfig()">💾 Save Changes</button>
+                        <button class="btn" onclick="resetAppConfig()"
+                            style="background: var(--bg-dark); color: var(--text-secondary); border: 1px solid var(--border); margin-left: 0.5rem;">↺
+                            Reset</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div id="app-config-loading"
+                        style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                        Loading configuration...
+                    </div>
+                    <div id="app-config-form" style="display: none; gap: 2rem; flex-direction: column;">
+
+                        <!-- Keep-Alive Settings -->
+                        <div
+                            style="background: var(--bg-dark); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
+                            <h4
+                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
+                                Keep-Alive Settings</h4>
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Heartbeat
+                                        Interval (seconds)</label>
+                                    <input type="number" id="cfg-HeartbeatSeconds" min="1" max="300"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Default
+                                        Duration (minutes)</label>
+                                    <input type="number" id="cfg-DefaultDuration" min="1" max="1440"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Heartbeat
+                                        Input Mode</label>
+                                    <select id="cfg-HeartbeatInputMode"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                        <option value="F15">F15 Key</option>
+                                        <option value="Shift">Shift Key</option>
+                                        <option value="Mouse">Mouse Move</option>
+                                    </select>
+                                </div>
+                                <div class="form-group"
+                                    style="display: flex; align-items: center; gap: 0.5rem; padding-top: 1.5rem;">
+                                    <input type="checkbox" id="cfg-PreventDisplaySleep"
+                                        style="width: 18px; height: 18px;">
+                                    <label for="cfg-PreventDisplaySleep"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Prevent Display
+                                        Sleep</label>
+                                </div>
+                                <div class="form-group"
+                                    style="display: flex; align-items: center; gap: 0.5rem; padding-top: 1.5rem;">
+                                    <input type="checkbox" id="cfg-UseHeartbeatKeypress"
+                                        style="width: 18px; height: 18px;">
+                                    <label for="cfg-UseHeartbeatKeypress"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Use Heartbeat
+                                        Keypress</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TypeThing Settings -->
+                        <div
+                            style="background: var(--bg-dark); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
+                            <h4
+                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
+                                TypeThing Settings</h4>
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-TypeThingEnabled" style="width: 18px; height: 18px;">
+                                    <label for="cfg-TypeThingEnabled"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Enable
+                                        TypeThing</label>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-TypeThingNotifications"
+                                        style="width: 18px; height: 18px;">
+                                    <label for="cfg-TypeThingNotifications"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Show
+                                        Notifications</label>
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Min
+                                        Delay (ms)</label>
+                                    <input type="number" id="cfg-TypeThingMinDelayMs" min="10" max="1000"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Max
+                                        Delay (ms)</label>
+                                    <input type="number" id="cfg-TypeThingMaxDelayMs" min="10" max="2000"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Start
+                                        Delay (seconds)</label>
+                                    <input type="number" id="cfg-TypeThingStartDelaySec" min="0" max="10"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Theme</label>
+                                    <select id="cfg-TypeThingTheme"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                        <option value="dark">Dark</option>
+                                        <option value="light">Light</option>
+                                        <option value="system">System</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Smart Features -->
+                        <div
+                            style="background: var(--bg-dark); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
+                            <h4
+                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
+                                Smart Features</h4>
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-BatteryAware" style="width: 18px; height: 18px;">
+                                    <label for="cfg-BatteryAware"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Battery Aware</label>
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Battery
+                                        Threshold (%)</label>
+                                    <input type="number" id="cfg-BatteryThreshold" min="5" max="50"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-NetworkAware" style="width: 18px; height: 18px;">
+                                    <label for="cfg-NetworkAware"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Network Aware</label>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-IdleDetection" style="width: 18px; height: 18px;">
+                                    <label for="cfg-IdleDetection"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Idle
+                                        Detection</label>
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Idle
+                                        Threshold (seconds)</label>
+                                    <input type="number" id="cfg-IdleThreshold" min="10" max="3600"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-PresentationModeDetection"
+                                        style="width: 18px; height: 18px;">
+                                    <label for="cfg-PresentationModeDetection"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Presentation Mode
+                                        Detection</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Update Settings -->
+                        <div
+                            style="background: var(--bg-dark); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
+                            <h4
+                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
+                                Update Settings</h4>
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Repository
+                                        Owner</label>
+                                    <input type="text" id="cfg-UpdateRepoOwner"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Repository
+                                        Name</label>
+                                    <input type="text" id="cfg-UpdateRepoName"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Update
+                                        Channel</label>
+                                    <select id="cfg-UpdateChannel"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                        <option value="stable">Stable</option>
+                                        <option value="beta">Beta</option>
+                                        <option value="dev">Development</option>
+                                    </select>
+                                </div>
+                                <div class="form-group"
+                                    style="display: flex; align-items: center; gap: 0.5rem; padding-top: 1.5rem;">
+                                    <input type="checkbox" id="cfg-VerifyUpdateSignature"
+                                        style="width: 18px; height: 18px;">
+                                    <label for="cfg-VerifyUpdateSignature"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Verify Update
+                                        Signatures</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- UI Settings -->
+                        <div
+                            style="background: var(--bg-dark); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
+                            <h4
+                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
+                                UI Settings</h4>
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Theme</label>
+                                    <select id="cfg-Theme"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                        <option value="System">System Default</option>
+                                        <option value="Dark">Dark</option>
+                                        <option value="Light">Light</option>
+                                        <option value="Midnight Blue">Midnight Blue</option>
+                                        <option value="Forest Green">Forest Green</option>
+                                        <option value="Ocean Blue">Ocean Blue</option>
+                                        <option value="Sunset Orange">Sunset Orange</option>
+                                        <option value="Royal Purple">Royal Purple</option>
+                                        <option value="Slate Grey">Slate Grey</option>
+                                        <option value="Rose Gold">Rose Gold</option>
+                                        <option value="Cyberpunk">Cyberpunk</option>
+                                        <option value="Coffee">Coffee</option>
+                                        <option value="Arctic Frost">Arctic Frost</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Locale</label>
+                                    <select id="cfg-Locale"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                        <option value="en">English</option>
+                                        <option value="en-GB">English (UK)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-MinimizeToTray" style="width: 18px; height: 18px;">
+                                    <label for="cfg-MinimizeToTray"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Minimize to
+                                        Tray</label>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-MinimizeOnStart" style="width: 18px; height: 18px;">
+                                    <label for="cfg-MinimizeOnStart"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Minimize on
+                                        Start</label>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-ShowNotifications"
+                                        style="width: 18px; height: 18px;">
+                                    <label for="cfg-ShowNotifications"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Show
+                                        Notifications</label>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-ShowBalloonOnStart"
+                                        style="width: 18px; height: 18px;">
+                                    <label for="cfg-ShowBalloonOnStart"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Show Balloon on
+                                        Start</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Logging & Debug -->
+                        <div
+                            style="background: var(--bg-dark); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
+                            <h4
+                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
+                                Logging & Debug</h4>
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-VerboseLogging" style="width: 18px; height: 18px;">
+                                    <label for="cfg-VerboseLogging"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Verbose
+                                        Logging</label>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-EnableTelemetry" style="width: 18px; height: 18px;">
+                                    <label for="cfg-EnableTelemetry"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Enable
+                                        Telemetry</label>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="cfg-EnablePerformanceMetrics"
+                                        style="width: 18px; height: 18px;">
+                                    <label for="cfg-EnablePerformanceMetrics"
+                                        style="color: var(--text-secondary); font-size: 0.875rem;">Enable Performance
+                                        Metrics</label>
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Max
+                                        Log Size (MB)</label>
+                                    <input type="number" id="cfg-MaxLogSizeMB" min="1" max="100"
+                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </section>
@@ -1299,6 +1685,238 @@
                     `).join('');
             } catch (err) {
                 console.error('Failed to load releases:', err);
+            }
+        }
+
+        // System Config Functions
+        async function loadSystemConfig() {
+            try {
+                const res = await authFetch('/api/system/config');
+                if (!res.ok) throw new Error('Failed to load config');
+                const data = await res.json();
+
+                // Server Info
+                document.getElementById('server-info-content').innerHTML = `
+                    <div><strong>Hostname:</strong> ${data.hostname}</div>
+                    <div><strong>Platform:</strong> ${data.platform}</div>
+                    <div><strong>Node.js:</strong> ${data.nodeVersion}</div>
+                    <div><strong>Uptime:</strong> ${formatUptime(data.uptime)}</div>
+                    <div><strong>Web Admin Port:</strong> ${data.webPort}</div>
+                    <div><strong>Update Server Port:</strong> ${data.updatePort}</div>
+                `;
+
+                // Environment
+                document.getElementById('env-info-content').innerHTML = `
+                    <div><strong>Node Env:</strong> ${data.env}</div>
+                    <div><strong>Project Root:</strong> <code style="font-size: 0.75rem;">${data.projectRoot}</code></div>
+                    <div><strong>Releases Dir:</strong> <code style="font-size: 0.75rem;">${data.releasesDir}</code></div>
+                    <div><strong>Total Releases:</strong> ${data.releaseCount}</div>
+                `;
+
+                // Disk Usage
+                document.getElementById('disk-info-content').innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div><strong>Releases Size:</strong> ${formatBytes(data.diskUsage.releases)}</div>
+                        <div><strong>Logs Size:</strong> ${formatBytes(data.diskUsage.logs)}</div>
+                        <div><strong>Total:</strong> ${formatBytes(data.diskUsage.total)}</div>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Failed to load system config:', err);
+                document.getElementById('server-info-content').innerHTML = '<span style="color: var(--danger)">Failed to load</span>';
+                document.getElementById('env-info-content').innerHTML = '<span style="color: var(--danger)">Failed to load</span>';
+                document.getElementById('disk-info-content').innerHTML = '<span style="color: var(--danger)">Failed to load</span>';
+            }
+        }
+
+        function formatUptime(seconds) {
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            if (days > 0) return `${days}d ${hours}h ${mins}m`;
+            if (hours > 0) return `${hours}h ${mins}m`;
+            return `${mins}m`;
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        async function clearLogs() {
+            if (!confirm('Clear all build logs?')) return;
+            try {
+                const res = await authFetch('/api/system/clear-logs', { method: 'POST' });
+                if (res.ok) {
+                    alert('Logs cleared successfully');
+                    loadSystemConfig();
+                } else {
+                    alert('Failed to clear logs');
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function restartServer() {
+            if (!confirm('Restart the web admin server?')) return;
+            try {
+                await authFetch('/api/system/restart', { method: 'POST' });
+                alert('Server restarting...');
+                setTimeout(() => location.reload(), 3000);
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function changePassword() {
+            const current = prompt('Enter current password:');
+            if (!current) return;
+            const newPass = prompt('Enter new password (min 8 chars):');
+            if (!newPass || newPass.length < 8) {
+                alert('Password must be at least 8 characters');
+                return;
+            }
+            try {
+                const res = await authFetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentPassword: current, newPassword: newPass })
+                });
+                if (res.ok) {
+                    alert('Password changed successfully. Please login again.');
+                    doLogout();
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to change password');
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        // Load system config when section is shown
+        document.querySelector('.nav-btn[data-section="system"]').addEventListener('click', () => {
+            loadSystemConfig();
+            loadAppConfig();
+        });
+
+        // Application Configuration Functions
+        let appConfigData = null;
+
+        async function loadAppConfig() {
+            try {
+                const res = await authFetch('/api/config');
+                if (!res.ok) throw new Error('Failed to load app config');
+                appConfigData = await res.json();
+
+                // Populate form fields
+                document.getElementById('cfg-HeartbeatSeconds').value = appConfigData.HeartbeatSeconds || 59;
+                document.getElementById('cfg-DefaultDuration').value = appConfigData.DefaultDuration || 60;
+                document.getElementById('cfg-HeartbeatInputMode').value = appConfigData.HeartbeatInputMode || 'F15';
+                document.getElementById('cfg-PreventDisplaySleep').checked = appConfigData.PreventDisplaySleep || false;
+                document.getElementById('cfg-UseHeartbeatKeypress').checked = appConfigData.UseHeartbeatKeypress || false;
+
+                document.getElementById('cfg-TypeThingEnabled').checked = appConfigData.TypeThingEnabled !== false;
+                document.getElementById('cfg-TypeThingNotifications').checked = appConfigData.TypeThingNotifications || false;
+                document.getElementById('cfg-TypeThingMinDelayMs').value = appConfigData.TypeThingMinDelayMs || 30;
+                document.getElementById('cfg-TypeThingMaxDelayMs').value = appConfigData.TypeThingMaxDelayMs || 120;
+                document.getElementById('cfg-TypeThingStartDelaySec').value = appConfigData.TypeThingStartDelaySec || 3;
+                document.getElementById('cfg-TypeThingTheme').value = appConfigData.TypeThingTheme || 'dark';
+
+                document.getElementById('cfg-BatteryAware').checked = appConfigData.BatteryAware || false;
+                document.getElementById('cfg-BatteryThreshold').value = appConfigData.BatteryThreshold || 20;
+                document.getElementById('cfg-NetworkAware').checked = appConfigData.NetworkAware || false;
+                document.getElementById('cfg-IdleDetection').checked = appConfigData.IdleDetection || false;
+                document.getElementById('cfg-IdleThreshold').value = appConfigData.IdleThreshold || 30;
+                document.getElementById('cfg-PresentationModeDetection').checked = appConfigData.PresentationModeDetection || false;
+
+                document.getElementById('cfg-UpdateRepoOwner').value = appConfigData.UpdateRepoOwner || 'ArMaTeC';
+                document.getElementById('cfg-UpdateRepoName').value = appConfigData.UpdateRepoName || 'Redball';
+                document.getElementById('cfg-UpdateChannel').value = appConfigData.UpdateChannel || 'stable';
+                document.getElementById('cfg-VerifyUpdateSignature').checked = appConfigData.VerifyUpdateSignature || false;
+
+                document.getElementById('cfg-Theme').value = appConfigData.Theme || 'System';
+                document.getElementById('cfg-Locale').value = appConfigData.Locale || 'en';
+                document.getElementById('cfg-MinimizeToTray').checked = appConfigData.MinimizeToTray || false;
+                document.getElementById('cfg-MinimizeOnStart').checked = appConfigData.MinimizeOnStart || false;
+                document.getElementById('cfg-ShowNotifications').checked = appConfigData.ShowNotifications !== false;
+                document.getElementById('cfg-ShowBalloonOnStart').checked = appConfigData.ShowBalloonOnStart || false;
+
+                document.getElementById('cfg-VerboseLogging').checked = appConfigData.VerboseLogging || false;
+                document.getElementById('cfg-EnableTelemetry').checked = appConfigData.EnableTelemetry || false;
+                document.getElementById('cfg-EnablePerformanceMetrics').checked = appConfigData.EnablePerformanceMetrics || false;
+                document.getElementById('cfg-MaxLogSizeMB').value = appConfigData.MaxLogSizeMB || 10;
+
+                document.getElementById('app-config-loading').style.display = 'none';
+                document.getElementById('app-config-form').style.display = 'flex';
+            } catch (err) {
+                console.error('Failed to load app config:', err);
+                document.getElementById('app-config-loading').innerHTML = '<span style="color: var(--danger);">Failed to load configuration</span>';
+            }
+        }
+
+        async function saveAppConfig() {
+            const config = {
+                ...appConfigData,
+                HeartbeatSeconds: parseInt(document.getElementById('cfg-HeartbeatSeconds').value),
+                DefaultDuration: parseInt(document.getElementById('cfg-DefaultDuration').value),
+                HeartbeatInputMode: document.getElementById('cfg-HeartbeatInputMode').value,
+                PreventDisplaySleep: document.getElementById('cfg-PreventDisplaySleep').checked,
+                UseHeartbeatKeypress: document.getElementById('cfg-UseHeartbeatKeypress').checked,
+                TypeThingEnabled: document.getElementById('cfg-TypeThingEnabled').checked,
+                TypeThingNotifications: document.getElementById('cfg-TypeThingNotifications').checked,
+                TypeThingMinDelayMs: parseInt(document.getElementById('cfg-TypeThingMinDelayMs').value),
+                TypeThingMaxDelayMs: parseInt(document.getElementById('cfg-TypeThingMaxDelayMs').value),
+                TypeThingStartDelaySec: parseInt(document.getElementById('cfg-TypeThingStartDelaySec').value),
+                TypeThingTheme: document.getElementById('cfg-TypeThingTheme').value,
+                BatteryAware: document.getElementById('cfg-BatteryAware').checked,
+                BatteryThreshold: parseInt(document.getElementById('cfg-BatteryThreshold').value),
+                NetworkAware: document.getElementById('cfg-NetworkAware').checked,
+                IdleDetection: document.getElementById('cfg-IdleDetection').checked,
+                IdleThreshold: parseInt(document.getElementById('cfg-IdleThreshold').value),
+                PresentationModeDetection: document.getElementById('cfg-PresentationModeDetection').checked,
+                UpdateRepoOwner: document.getElementById('cfg-UpdateRepoOwner').value,
+                UpdateRepoName: document.getElementById('cfg-UpdateRepoName').value,
+                UpdateChannel: document.getElementById('cfg-UpdateChannel').value,
+                VerifyUpdateSignature: document.getElementById('cfg-VerifyUpdateSignature').checked,
+                Theme: document.getElementById('cfg-Theme').value,
+                Locale: document.getElementById('cfg-Locale').value,
+                MinimizeToTray: document.getElementById('cfg-MinimizeToTray').checked,
+                MinimizeOnStart: document.getElementById('cfg-MinimizeOnStart').checked,
+                ShowNotifications: document.getElementById('cfg-ShowNotifications').checked,
+                ShowBalloonOnStart: document.getElementById('cfg-ShowBalloonOnStart').checked,
+                VerboseLogging: document.getElementById('cfg-VerboseLogging').checked,
+                EnableTelemetry: document.getElementById('cfg-EnableTelemetry').checked,
+                EnablePerformanceMetrics: document.getElementById('cfg-EnablePerformanceMetrics').checked,
+                MaxLogSizeMB: parseInt(document.getElementById('cfg-MaxLogSizeMB').value)
+            };
+
+            try {
+                const res = await authFetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                if (res.ok) {
+                    alert('Configuration saved successfully!');
+                    appConfigData = config;
+                } else {
+                    const err = await res.json();
+                    alert('Failed to save configuration: ' + (err.error || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Error saving configuration: ' + e.message);
+            }
+        }
+
+        function resetAppConfig() {
+            if (confirm('Reset all changes to last saved values?')) {
+                loadAppConfig();
             }
         }
 

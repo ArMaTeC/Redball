@@ -306,6 +306,156 @@ app.get('/api/download/:version/:file', (req, res) => {
   res.sendFile(filePath);
 });
 
+// System Config endpoints
+app.get('/api/system/config', authenticateToken, (req, res) => {
+  try {
+    // Calculate disk usage
+    const getDirSize = (dirPath) => {
+      if (!fs.existsSync(dirPath)) return 0;
+      let size = 0;
+      const files = fs.readdirSync(dirPath);
+      for (const file of files) {
+        const filePath = path.join(dirPath, file);
+        const stat = fs.statSync(filePath);
+        if (stat.isDirectory()) {
+          size += getDirSize(filePath);
+        } else {
+          size += stat.size;
+        }
+      }
+      return size;
+    };
+
+    const releaseCount = fs.existsSync(RELEASES_DIR)
+      ? fs.readdirSync(RELEASES_DIR).filter(d => /^\d+\.\d+\.\d+$/.test(d)).length
+      : 0;
+
+    res.json({
+      hostname: require('os').hostname(),
+      platform: require('os').platform(),
+      nodeVersion: process.version,
+      uptime: process.uptime(),
+      env: process.env.NODE_ENV || 'development',
+      webPort: PORT,
+      updatePort: 3500,
+      projectRoot: PROJECT_ROOT,
+      releasesDir: RELEASES_DIR,
+      releaseCount: releaseCount,
+      diskUsage: {
+        releases: getDirSize(RELEASES_DIR),
+        logs: getDirSize(path.join(__dirname, 'logs')),
+        total: getDirSize(RELEASES_DIR) + getDirSize(path.join(__dirname, 'logs'))
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/system/clear-logs', authenticateToken, (req, res) => {
+  try {
+    const logsDir = path.join(__dirname, 'logs');
+    if (fs.existsSync(logsDir)) {
+      const files = fs.readdirSync(logsDir);
+      for (const file of files) {
+        const filePath = path.join(logsDir, file);
+        const stat = fs.statSync(filePath);
+        if (stat.isFile() && (file.endsWith('.log') || file.endsWith('.json'))) {
+          // Don't delete auth or secret files
+          if (!file.startsWith('.') && file !== 'auth.json' && file !== 'downloads.json') {
+            fs.truncateSync(filePath, 0);
+          }
+        }
+      }
+    }
+    // Reset build state log
+    buildState.log = [];
+    saveBuildState();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/system/restart', authenticateToken, (req, res) => {
+  res.json({ success: true, message: 'Server restarting...' });
+  setTimeout(() => process.exit(0), 1000);
+});
+
+// Application Configuration endpoints
+const DEFAULT_CONFIG_PATH = path.join(PROJECT_ROOT, 'Redball.json');
+
+app.get('/api/config', authenticateToken, (req, res) => {
+  try {
+    if (fs.existsSync(DEFAULT_CONFIG_PATH)) {
+      const config = JSON.parse(fs.readFileSync(DEFAULT_CONFIG_PATH, 'utf8'));
+      res.json(config);
+    } else {
+      // Return default config if file doesn't exist
+      res.json({
+        HeartbeatSeconds: 59,
+        PreventDisplaySleep: true,
+        UseHeartbeatKeypress: true,
+        HeartbeatInputMode: 'F15',
+        DefaultDuration: 60,
+        LogPath: 'Redball.log',
+        MaxLogSizeMB: 10,
+        ShowBalloonOnStart: true,
+        Locale: 'en',
+        MinimizeOnStart: false,
+        BatteryAware: false,
+        BatteryThreshold: 20,
+        NetworkAware: false,
+        IdleDetection: false,
+        PresentationModeDetection: false,
+        UpdateRepoOwner: 'ArMaTeC',
+        UpdateRepoName: 'Redball',
+        UpdateChannel: 'stable',
+        VerifyUpdateSignature: false,
+        TypeThingEnabled: true,
+        TypeThingMinDelayMs: 30,
+        TypeThingMaxDelayMs: 120,
+        TypeThingStartDelaySec: 3,
+        TypeThingTheme: 'dark',
+        TypeThingNotifications: true,
+        VerboseLogging: false,
+        MinimizeToTray: false,
+        ShowNotifications: true,
+        IdleThreshold: 30,
+        Theme: 'System'
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/config', authenticateToken, (req, res) => {
+  try {
+    const config = req.body;
+    // Validate required fields
+    if (!config || typeof config !== 'object') {
+      return res.status(400).json({ error: 'Invalid configuration data' });
+    }
+
+    // Read existing config to preserve any fields not sent
+    let existingConfig = {};
+    if (fs.existsSync(DEFAULT_CONFIG_PATH)) {
+      existingConfig = JSON.parse(fs.readFileSync(DEFAULT_CONFIG_PATH, 'utf8'));
+    }
+
+    // Merge new config with existing
+    const mergedConfig = { ...existingConfig, ...config };
+
+    // Write back to file
+    fs.writeFileSync(DEFAULT_CONFIG_PATH, JSON.stringify(mergedConfig, null, 2), 'utf8');
+
+    res.json({ success: true, message: 'Configuration saved' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Static files - Serve React app from site/dist
 app.use('/admin', express.static(path.join(__dirname, 'public'), { index: 'admin.html' }));
 app.use('/releases', express.static(RELEASES_DIR));
