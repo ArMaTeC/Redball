@@ -383,76 +383,95 @@ app.post('/api/system/restart', authenticateToken, (req, res) => {
 });
 
 // Application Configuration endpoints
-const DEFAULT_CONFIG_PATH = path.join(PROJECT_ROOT, 'Redball.json');
+const DEFAULT_CONFIG_PATH = path.join(__dirname, 'logs', 'default-client-config.json');
 
-app.get('/api/config', authenticateToken, (req, res) => {
-  try {
-    if (fs.existsSync(DEFAULT_CONFIG_PATH)) {
-      const config = JSON.parse(fs.readFileSync(DEFAULT_CONFIG_PATH, 'utf8'));
-      res.json(config);
-    } else {
-      // Return default config if file doesn't exist
-      res.json({
-        HeartbeatSeconds: 59,
-        PreventDisplaySleep: true,
-        UseHeartbeatKeypress: true,
-        HeartbeatInputMode: 'F15',
-        DefaultDuration: 60,
-        LogPath: 'Redball.log',
-        MaxLogSizeMB: 10,
-        ShowBalloonOnStart: true,
-        Locale: 'en',
-        MinimizeOnStart: false,
-        BatteryAware: false,
-        BatteryThreshold: 20,
-        NetworkAware: false,
-        IdleDetection: false,
-        PresentationModeDetection: false,
-        UpdateRepoOwner: 'ArMaTeC',
-        UpdateRepoName: 'Redball',
-        UpdateChannel: 'stable',
-        VerifyUpdateSignature: false,
-        TypeThingEnabled: true,
-        TypeThingMinDelayMs: 30,
-        TypeThingMaxDelayMs: 120,
-        TypeThingStartDelaySec: 3,
-        TypeThingTheme: 'dark',
-        TypeThingNotifications: true,
-        VerboseLogging: false,
-        MinimizeToTray: false,
-        ShowNotifications: true,
-        IdleThreshold: 30,
-        Theme: 'System'
-      });
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+const DEFAULT_CLIENT_CONFIG = {
+  // Keep-Alive Settings
+  HeartbeatSeconds: 30,
+  DefaultDuration: 480,
+  HeartbeatInputMode: 'F15',
+  PreventDisplaySleep: true,
+  UseHeartbeatKeypress: true,
+
+  // TypeThing Settings
+  TypeThingEnabled: true,
+  TypeThingNotifications: true,
+  TypeThingMinDelayMs: 50,
+  TypeThingMaxDelayMs: 150,
+  TypeThingTheme: 'dark',
+
+  // Smart Features
+  BatteryAware: true,
+  BatteryThreshold: 20,
+  NetworkAware: true,
+  IdleDetection: true,
+  IdleThreshold: 300,
+  PresentationModeDetection: true,
+
+  // Update Settings
+  UpdateRepoOwner: 'ArMaTeC',
+  UpdateRepoName: 'Redball',
+  UpdateChannel: 'stable',
+  VerifyUpdateSignature: true,
+
+  // UI Settings
+  Theme: 'System',
+  Locale: 'en-GB',
+  MinimizeToTray: true,
+  MinimizeOnStart: false,
+  ShowNotifications: true,
+  ShowBalloonOnStart: true,
+
+  // Logging & Debug
+  VerboseLogging: false,
+  EnableTelemetry: false,
+  EnablePerformanceMetrics: false,
+  MaxLogSizeMB: 10
+};
+
+function loadClientConfig() {
+  if (!fs.existsSync(DEFAULT_CONFIG_PATH)) {
+    return { ...DEFAULT_CLIENT_CONFIG };
   }
+  try {
+    const data = JSON.parse(fs.readFileSync(DEFAULT_CONFIG_PATH, 'utf8'));
+    return { ...DEFAULT_CLIENT_CONFIG, ...data };
+  } catch (err) {
+    console.error('[Config] Failed to load client config:', err.message);
+    return { ...DEFAULT_CLIENT_CONFIG };
+  }
+}
+
+function saveClientConfig(config) {
+  try {
+    fs.writeFileSync(DEFAULT_CONFIG_PATH, JSON.stringify(config, null, 2));
+    return true;
+  } catch (err) {
+    console.error('[Config] Failed to save client config:', err.message);
+    return false;
+  }
+}
+
+// Public endpoint for clients to get default config (no auth required)
+app.get('/api/defaults', (req, res) => {
+  const config = loadClientConfig();
+  res.json(config);
+});
+
+// Admin endpoints (require auth)
+app.get('/api/config', authenticateToken, (req, res) => {
+  const config = loadClientConfig();
+  res.json(config);
 });
 
 app.post('/api/config', authenticateToken, (req, res) => {
-  try {
-    const config = req.body;
-    // Validate required fields
-    if (!config || typeof config !== 'object') {
-      return res.status(400).json({ error: 'Invalid configuration data' });
-    }
+  const currentConfig = loadClientConfig();
+  const newConfig = { ...currentConfig, ...req.body };
 
-    // Read existing config to preserve any fields not sent
-    let existingConfig = {};
-    if (fs.existsSync(DEFAULT_CONFIG_PATH)) {
-      existingConfig = JSON.parse(fs.readFileSync(DEFAULT_CONFIG_PATH, 'utf8'));
-    }
-
-    // Merge new config with existing
-    const mergedConfig = { ...existingConfig, ...config };
-
-    // Write back to file
-    fs.writeFileSync(DEFAULT_CONFIG_PATH, JSON.stringify(mergedConfig, null, 2), 'utf8');
-
-    res.json({ success: true, message: 'Configuration saved' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  if (saveClientConfig(newConfig)) {
+    res.json({ success: true, config: newConfig });
+  } else {
+    res.status(500).json({ error: 'Failed to save configuration' });
   }
 });
 

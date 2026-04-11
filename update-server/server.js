@@ -636,6 +636,111 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// --- System Information endpoint ---
+app.get('/api/system/config', (req, res) => {
+  const db = loadDB();
+  res.json({
+    hostname: require('os').hostname(),
+    platform: require('os').platform(),
+    nodeVersion: process.version,
+    uptime: process.uptime(),
+    webPort: process.env.WEB_PORT || 3000,
+    updatePort: PORT,
+    env: process.env.NODE_ENV || 'development',
+    releaseCount: db.releases?.length || 0,
+    dataDir: DATA_DIR,
+    releasesDir: RELEASES_DIR
+  });
+});
+
+// Default client configuration
+const DEFAULT_CLIENT_CONFIG = {
+  // Keep-Alive Settings
+  HeartbeatSeconds: 30,
+  DefaultDuration: 480,
+  HeartbeatInputMode: 'F15',
+  PreventDisplaySleep: true,
+  UseHeartbeatKeypress: true,
+
+  // TypeThing Settings
+  TypeThingEnabled: true,
+  TypeThingNotifications: true,
+  TypeThingMinDelayMs: 50,
+  TypeThingMaxDelayMs: 150,
+  TypeThingTheme: 'dark',
+
+  // Smart Features
+  BatteryAware: true,
+  BatteryThreshold: 20,
+  NetworkAware: true,
+  IdleDetection: true,
+  IdleThreshold: 300,
+  PresentationModeDetection: true,
+
+  // Update Settings
+  UpdateRepoOwner: 'ArMaTeC',
+  UpdateRepoName: 'Redball',
+  UpdateChannel: 'stable',
+  VerifyUpdateSignature: true,
+
+  // UI Settings
+  Theme: 'System',
+  Locale: 'en-GB',
+  MinimizeToTray: true,
+  MinimizeOnStart: false,
+  ShowNotifications: true,
+  ShowBalloonOnStart: true,
+
+  // Logging & Debug
+  VerboseLogging: false,
+  EnableTelemetry: false,
+  EnablePerformanceMetrics: false,
+  MaxLogSizeMB: 10
+};
+
+const CLIENT_CONFIG_PATH = path.join(DATA_DIR, 'client-config.json');
+
+function loadClientConfig() {
+  if (!fs.existsSync(CLIENT_CONFIG_PATH)) {
+    return { ...DEFAULT_CLIENT_CONFIG };
+  }
+  try {
+    const data = JSON.parse(fs.readFileSync(CLIENT_CONFIG_PATH, 'utf8'));
+    return { ...DEFAULT_CLIENT_CONFIG, ...data };
+  } catch (err) {
+    console.error('[Config] Failed to load client config:', err.message);
+    return { ...DEFAULT_CLIENT_CONFIG };
+  }
+}
+
+function saveClientConfig(config) {
+  try {
+    fs.writeFileSync(CLIENT_CONFIG_PATH, JSON.stringify(config, null, 2));
+    return true;
+  } catch (err) {
+    console.error('[Config] Failed to save client config:', err.message);
+    return false;
+  }
+}
+
+// --- Get default client configuration ---
+app.get('/api/config', (req, res) => {
+  const config = loadClientConfig();
+  res.json(config);
+});
+
+// --- Update default client configuration ---
+app.post('/api/config', (req, res) => {
+  const currentConfig = loadClientConfig();
+  const newConfig = { ...currentConfig, ...req.body };
+
+  if (saveClientConfig(newConfig)) {
+    res.json({ success: true, config: newConfig });
+  } else {
+    res.status(500).json({ error: 'Failed to save configuration' });
+  }
+});
+
 // --- Get delta patches for a version ---
 app.get('/api/releases/:version/patches', (req, res) => {
   const patchesDir = path.join(RELEASES_DIR, req.params.version, 'patches');

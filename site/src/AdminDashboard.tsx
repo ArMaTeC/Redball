@@ -53,6 +53,7 @@ export const AdminDashboard: React.FC = () => {
   const [isBuilding, setIsBuilding] = useState(false);
   const [stats, setStats] = useState<Stats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const wsRef = React.useRef<WebSocket | null>(null);
 
   const fetchLogs = async () => {
     try {
@@ -64,11 +65,51 @@ export const AdminDashboard: React.FC = () => {
     } catch (e) { console.error('Failed to fetch logs', e); }
   };
 
+  // Setup WebSocket for real-time build output
+  useEffect(() => {
+    const wsUrl = `ws://${window.location.host}/ws`;
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log('[WebSocket] Connected');
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'build-output' && msg.data?.line) {
+          setBuildLogs(prev => [...prev.slice(-199), msg.data.line]);
+        } else if (msg.type === 'build-started') {
+          setIsBuilding(true);
+          setBuildLogs(['[BUILD] Build engine starting...']);
+        } else if (msg.type === 'build-complete') {
+          setIsBuilding(false);
+          const duration = msg.data?.duration?.toFixed(1) || '?';
+          setBuildLogs(prev => [...prev, `[SUCCESS] Build completed in ${duration}s`]);
+        }
+      } catch (e) {
+        console.error('[WebSocket] Failed to parse message:', e);
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.error('[WebSocket] Error:', err);
+    };
+
+    ws.onclose = () => {
+      console.log('[WebSocket] Disconnected');
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
+
   useEffect(() => {
     fetchStats();
     if (activeTab === 'build') {
-      const interval = setInterval(fetchLogs, 2000);
-      return () => clearInterval(interval);
+      fetchLogs();
     }
   }, [activeTab]);
 
@@ -88,11 +129,14 @@ export const AdminDashboard: React.FC = () => {
 
   const runBuild = async () => {
     setIsBuilding(true);
-    setBuildLogs(prev => [...prev, '[BUILD] Starting Redball build pipeline...']);
+    setBuildLogs(['[BUILD] Starting Redball build pipeline...']);
     try {
-      await fetch('/api/admin/build', { method: 'POST' });
-    } catch {
-      setBuildLogs(prev => [...prev, '[ERROR] Failed to trigger build server']);
+      const res = await fetch('/api/admin/build', { method: 'POST' });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+    } catch (err) {
+      setBuildLogs(prev => [...prev, `[ERROR] Failed to trigger build: ${err}`]);
       setIsBuilding(false);
     }
   };
@@ -379,11 +423,17 @@ const SystemConfigPanel: React.FC = () => {
     fetchConfig();
   }, []);
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  };
+
   const fetchConfig = async () => {
     try {
+      const headers = getAuthHeaders();
       const [serverRes, configRes] = await Promise.all([
-        fetch('/api/system/config'),
-        fetch('/api/config')
+        fetch('/api/system/config', { headers }),
+        fetch('/api/config', { headers })
       ]);
       if (serverRes.ok) setServerInfo(await serverRes.json());
       if (configRes.ok) setConfig(await configRes.json());
@@ -399,11 +449,13 @@ const SystemConfigPanel: React.FC = () => {
     try {
       const res = await fetch('/api/config', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(config)
       });
       if (res.ok) {
         alert('Configuration saved successfully!');
+      } else if (res.status === 401) {
+        alert('Authentication required. Please log in again.');
       } else {
         alert('Failed to save configuration');
       }
@@ -672,10 +724,37 @@ const SystemConfigPanel: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
         <button
           className="btn-secondary"
+          onClick={async () => {
+            if (confirm('Reset all settings to factory defaults? This cannot be undone.')) {
+              try {
+                const res = await fetch('/api/config', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                  body: JSON.stringify({})
+                });
+                if (res.ok) {
+                  alert('Configuration reset to defaults');
+                  fetchConfig();
+                } else if (res.status === 401) {
+                  alert('Authentication required. Please log in again.');
+                } else {
+                  alert('Failed to reset configuration');
+                }
+              } catch {
+                alert('Error resetting configuration');
+              }
+            }
+          }}
+          disabled={saving}
+        >
+          Reset to Defaults
+        </button>
+        <button
+          className="btn-secondary"
           onClick={fetchConfig}
           disabled={saving}
         >
-          Reset Changes
+          Discard Changes
         </button>
         <button
           className="btn-primary"
