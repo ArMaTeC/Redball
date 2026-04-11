@@ -329,8 +329,40 @@ auto_release() {
     else
         export PUBLISH_TO_UPDATE_SERVER=1
         log_info "Publishing to update-server via API..."
-        # TODO: Implement direct API publishing to update-server
-        log_warn "Direct update-server publishing not implemented"
+        
+        local version
+        version=$(get_version)
+        local channel_flag=""
+        [[ "$CHANNEL" == "beta" ]] && channel_flag="--form channel=beta"
+        
+        # Build curl command with files that exist
+        local curl_files=()
+        [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] && curl_files+=("-F" "files=@$DIST_DIR/Redball-${version}-Setup.exe")
+        [[ -f "$DIST_DIR/Redball-${version}.zip" ]] && curl_files+=("-F" "files=@$DIST_DIR/Redball-${version}.zip")
+        
+        if [[ ${#curl_files[@]} -eq 0 ]]; then
+            log_warn "No distribution files found to publish"
+        else
+            log_info "Uploading files to update-server..."
+            local publish_response
+            publish_response=$(curl -s -w "\n%{http_code}" -X POST \
+                "http://localhost:3500/api/publish?version=${version}" \
+                -F "version=${version}" \
+                -F "notes=Release ${version} (${CHANNEL} channel)" \
+                ${channel_flag} \
+                "${curl_files[@]}" 2>&1)
+            
+            local http_code=$(echo "$publish_response" | tail -n1)
+            local response_body=$(echo "$publish_response" | sed '$d')
+            
+            if [[ "$http_code" == "201" ]]; then
+                log_success "Published to update-server (HTTP $http_code)"
+                log_detail "Response: $response_body"
+            else
+                log_warn "Update-server publish returned HTTP $http_code"
+                log_detail "Response: $response_body"
+            fi
+        fi
     fi
     
     # 5.5 Generate delta patches for differential updates

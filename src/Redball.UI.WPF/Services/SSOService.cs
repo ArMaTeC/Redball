@@ -27,7 +27,6 @@ public class SSOService
     private SSOSession? _currentSession;
 
     public event EventHandler<SSOAuthenticationEventArgs>? AuthenticationCompleted;
-    public event EventHandler<SSOSessionEventArgs>? SessionRefreshed;
 
     public bool IsEnabled => _config?.IsEnabled ?? false;
     public bool IsAuthenticated => _currentSession?.IsValid ?? false;
