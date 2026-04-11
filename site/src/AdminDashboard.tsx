@@ -236,7 +236,7 @@ export const AdminDashboard: React.FC = () => {
               <p style={{ color: 'var(--text-dim)' }}>No releases found</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {stats.releases.map((release) => (
+                {stats?.releases?.map((release) => (
                   <div key={release.version} className="glass-card" style={{ padding: '20px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

@@ -1,3 +1,166 @@
 {
-  "releases": []
+  "releases": [
+    {
+      "version": "2.1.542",
+      "channel": "stable",
+      "date": "2026-04-11T16:35:01.605Z",
+      "notes": "",
+      "files": [
+        {
+          "name": "Redball-2.1.542-Setup.exe",
+          "size": 68806614,
+          "hash": "0eb2ff6c854ea4ca9aaf393bdab84a4fd79fab8da0bd7ad0cd1d1f19b96b936c",
+          "downloads": 0
+        },
+        {
+          "name": "Redball-2.1.542.exe",
+          "size": 373760,
+          "hash": "755c5f13dcea14cea50bdbb4e019a79d4e101ff257714bd9c0fb1810454dba04",
+          "downloads": 0
+        },
+        {
+          "name": "Redball-2.1.542.zip",
+          "size": 10675731,
+          "hash": "a2da08b8918041cf94b36263c39c69fd6f8b36f94388e0f34ca1adb4d25993e5",
+          "downloads": 0
+        }
+      ],
+      "totalDownloads": 0
+    },
+    {
+      "version": "2.1.543",
+      "channel": "stable",
+      "date": "2026-04-11T16:35:02.082Z",
+      "notes": "",
+      "files": [
+        {
+          "name": "Redball-2.1.543-Setup.exe",
+          "size": 68806774,
+          "hash": "97d5b605b6ddec7214f1ea1003f2619f12da5c6a9e55c0c59047155c8dbeb393",
+          "downloads": 0
+        },
+        {
+          "name": "Redball-2.1.543.exe",
+          "size": 373760,
+          "hash": "6cbef539e47a6ecb6c7b4ab65d76a459d9b3c1a6dd9851e8a9b4d56333fbbd99",
+          "downloads": 0
+        },
+        {
+          "name": "Redball-2.1.543.zip",
+          "size": 10675787,
+          "hash": "8c2f68311d27aab8f1f5b7824f231295ef70d243aa558c2ed9c98ce113d5c535",
+          "downloads": 0
+        }
+      ],
+      "totalDownloads": 0
+    },
+    {
+      "version": "2.1.545",
+      "channel": "stable",
+      "date": "2026-04-11T16:35:02.260Z",
+      "notes": "",
+      "files": [
+        {
+          "name": "Redball-2.1.545-Setup.exe",
+          "size": 68806292,
+          "hash": "c1582554b7744fc80beae5d0af30b15ac0d64487a099bc97cca1885250dddb3f",
+          "downloads": 0
+        },
+        {
+          "name": "Redball-2.1.545.exe",
+          "size": 373760,
+          "hash": "6d982772a04dabed21cc44fa03790009f93ccc5390635a9dc0bc10027f14d176",
+          "downloads": 0
+        },
+        {
+          "name": "Redball-2.1.545.zip",
+          "size": 70400947,
+          "hash": "920d1f68a2f39bd0f60fe52e5db5e200f1c240b812a4d621bdb498301e6d3d54",
+          "downloads": 0
+        }
+      ],
+      "totalDownloads": 0
+    },
+    {
+      "version": "2.1.546",
+      "channel": "stable",
+      "date": "2026-04-11T16:35:02.496Z",
+      "notes": "",
+      "files": [
+        {
+          "name": "Redball-2.1.546-Setup.exe",
+          "size": 68807778,
+          "hash": "2ebfcd3b3fb9be1c89f280e3729c0226dc45ccdd933dc26aa49c5ddeda153e14",
+          "downloads": 0
+        },
+        {
+          "name": "Redball-2.1.546.exe",
+          "size": 373760,
+          "hash": "9d78c38dc51690daec0894a8059efad4396425d8e7ccdc28ab39ad93caa92563",
+          "downloads": 0
+        },
+        {
+          "name": "Redball-2.1.546.zip",
+          "size": 10676157,
+          "hash": "26e30288673be6d0bbaa47a35363700c97b7bca7f8a95f72edcb44b131ab5555",
+          "downloads": 0
+        }
+      ],
+      "totalDownloads": 0
+    },
+    {
+      "version": "2.1.547",
+      "channel": "stable",
+      "date": "2026-04-11T16:35:02.625Z",
+      "notes": "",
+      "files": [
+        {
+          "name": "Redball-2.1.547-Setup.exe",
+          "size": 68808064,
+          "hash": "9fc52be0e47857ff47c909f2a783089a672b9daf5ba1225e3b32b73902408853",
+          "downloads": 0
+        },
+        {
+          "name": "Redball-2.1.547.exe",
+          "size": 373760,
+          "hash": "333cfef94da4a55a18da56102ca9d2b2f0193fd1d689676fbd54024121362aa3",
+          "downloads": 0
+        },
+        {
+          "name": "Redball-2.1.547.zip",
+          "size": 10676113,
+          "hash": "e5ba2976743088ac57f926f95de40fc7092908abdfb8f44922ce95f8e161366e",
+          "downloads": 0
+        }
+      ],
+      "totalDownloads": 0
+    },
+    {
+      "version": "2.1.548",
+      "channel": "stable",
+      "date": "2026-04-11T16:35:02.783Z",
+      "notes": "",
+      "files": [
+        {
+          "name": "Redball-2.1.548-Setup.exe",
+          "size": 68796308,
+          "hash": "f2102d2380274a6e7101a350ea2d9747e2b48436c3b2662e1df11806b771f84b",
+          "downloads": 0
+        },
+        {
+          "name": "Redball-2.1.548.exe",
+          "size": 373760,
+          "hash": "d1a979e2009f0b9465d943e2f2eb8536129afcb7e8ecf1c076d1b33054da11dd",
+          "downloads": 0
+        },
+        {
+          "name": "Redball-2.1.548.zip",
+          "size": 10662231,
+          "hash": "7ad6cbcf9ed53178c14866df892d024120f32b70ae89b30760f031fd55fbd7ec",
+          "downloads": 0
+        }
+      ],
+      "totalDownloads": 0
+    }
+  ]
 }

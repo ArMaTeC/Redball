@@ -15,10 +15,51 @@ const PORT = process.env.PORT || 3500;
 const PROJECT_ROOT = path.join(__dirname, '..');
 const RELEASES_JSON = path.join(PROJECT_ROOT, 'update-server', 'data', 'releases.json');
 const RELEASES_DIR = path.join(PROJECT_ROOT, 'update-server', 'releases');
-const PUBLIC_DIR = path.join(__dirname, 'public');
+const PUBLIC_DIR = path.join(PROJECT_ROOT, 'site', 'dist');
 const BUILD_STATE_FILE = path.join(__dirname, 'logs', 'build-state.json');
 const BUILD_LOG_FILE = path.join(__dirname, 'logs', 'build.log');
 const AUTH_FILE = path.join(__dirname, 'logs', 'auth.json');
+const DOWNLOADS_DB = path.join(__dirname, 'logs', 'downloads.json');
+
+// Download tracking database
+let downloadCounts = loadDownloadCounts();
+
+function loadDownloadCounts() {
+  try {
+    if (fs.existsSync(DOWNLOADS_DB)) {
+      return JSON.parse(fs.readFileSync(DOWNLOADS_DB, 'utf8'));
+    }
+  } catch (e) {
+    console.error('[DOWNLOADS] Error loading download counts:', e.message);
+  }
+  return { files: {}, total: 0, byVersion: {} };
+}
+
+function saveDownloadCounts() {
+  try {
+    fs.writeFileSync(DOWNLOADS_DB, JSON.stringify(downloadCounts, null, 2));
+  } catch (e) {
+    console.error('[DOWNLOADS] Error saving download counts:', e.message);
+  }
+}
+
+function trackDownload(version, filename) {
+  const key = `${version}/${filename}`;
+  if (!downloadCounts.files[key]) {
+    downloadCounts.files[key] = 0;
+  }
+  downloadCounts.files[key]++;
+  downloadCounts.total++;
+
+  if (!downloadCounts.byVersion[version]) {
+    downloadCounts.byVersion[version] = 0;
+  }
+  downloadCounts.byVersion[version]++;
+
+  saveDownloadCounts();
+  console.log(`[DOWNLOAD] ${key} (count: ${downloadCounts.files[key]})`);
+  return downloadCounts.files[key];
+}
 
 // JWT Secret (generate random on first run)
 const JWT_SECRET = loadOrCreateJwtSecret();
@@ -243,21 +284,45 @@ app.get('/api/releases', (req, res) => {
   }
 });
 
-// Static files
-app.use('/admin', express.static(PUBLIC_DIR, { index: 'admin.html' }));
-app.use(express.static(PUBLIC_DIR, { index: 'marketing.html' }));
+// Download tracking endpoint
+app.get('/api/download/:version/:file', (req, res) => {
+  const { version, file } = req.params;
+  const filePath = path.join(RELEASES_DIR, version, file);
+
+  // Validate path to prevent directory traversal
+  if (!filePath.startsWith(RELEASES_DIR)) {
+    return res.status(403).json({ error: 'Invalid path' });
+  }
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'File not found' });
+  }
+
+  // Track the download
+  trackDownload(version, file);
+
+  // Serve the file
+  res.setHeader('Content-Disposition', `attachment; filename="${file}"`);
+  res.sendFile(filePath);
+});
+
+// Static files - Serve React app from site/dist
+app.use('/admin', express.static(path.join(__dirname, 'public'), { index: 'admin.html' }));
+app.use('/releases', express.static(RELEASES_DIR));
+app.use(express.static(PUBLIC_DIR, { index: 'index.html' }));
 
 // Fallbacks
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, 'admin.html'));
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 app.get(/\/admin\/.*/, (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, 'admin.html'));
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
+// SPA fallback for React app
 app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, 'marketing.html'));
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
 // WebSocket
@@ -292,6 +357,9 @@ function getDownloadStats() {
   const stats = { totalDownloads: 0, totalReleases: 0, latestVersion: null, releases: [], byFile: {} };
   const releaseMap = new Map();
 
+  // Reload download counts to get latest values
+  downloadCounts = loadDownloadCounts();
+
   // Scan releases directory
   if (fs.existsSync(RELEASES_DIR)) {
     const versionDirs = fs.readdirSync(RELEASES_DIR)
@@ -315,31 +383,36 @@ function getDownloadStats() {
           const filePath = path.join(versionPath, file);
           const fileStat = fs.statSync(filePath);
           if (fileStat.isFile()) {
+            const downloadKey = `${version}/${file}`;
+            const fileDownloads = downloadCounts.files[downloadKey] || 0;
             fileList.push({
               name: file,
               size: fileStat.size,
-              downloads: 0 // We don't track downloads per file locally
+              downloads: fileDownloads,
+              url: `/api/download/${version}/${file}`
             });
 
             if (!stats.byFile[file]) {
               stats.byFile[file] = { downloads: 0, versions: [] };
             }
+            stats.byFile[file].downloads += fileDownloads;
             stats.byFile[file].versions.push(version);
           }
         });
 
+        const versionTotal = downloadCounts.byVersion[version] || 0;
         releaseMap.set(version, {
           version,
           channel: 'stable',
           date: stat.mtime.toISOString(),
           files: fileList,
-          totalDownloads: 0
+          totalDownloads: versionTotal
         });
       }
     });
   }
 
-  // Merge with releases.json data if available
+  // Merge with releases.json data if available (but preserve actual download counts)
   if (fs.existsSync(RELEASES_JSON)) {
     try {
       const data = JSON.parse(fs.readFileSync(RELEASES_JSON, 'utf8'));
@@ -348,14 +421,8 @@ function getDownloadStats() {
           const existing = releaseMap.get(r.version);
           existing.channel = r.channel || existing.channel;
           existing.date = r.date || existing.date;
-          existing.totalDownloads = r.totalDownloads || 0;
-          if (r.files) {
-            r.files.forEach(f => {
-              if (stats.byFile[f.name]) {
-                stats.byFile[f.name].downloads = f.downloads || 0;
-              }
-            });
-          }
+          // Don't overwrite totalDownloads - keep the actual tracked value
+          // existing.totalDownloads is already set from downloadCounts.byVersion
         } else {
           releaseMap.set(r.version, r);
         }
@@ -370,10 +437,10 @@ function getDownloadStats() {
 
   if (stats.releases.length > 0) {
     stats.latestVersion = stats.releases[0].version;
-    stats.releases.forEach(r => {
-      stats.totalDownloads += r.totalDownloads || 0;
-    });
   }
+
+  // Use actual download count from database
+  stats.totalDownloads = downloadCounts.total || 0;
 
   return stats;
 }

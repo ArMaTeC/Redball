@@ -48,6 +48,11 @@ public partial class MainWindow : Window
     private void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
         Logger.Info("MainWindow", "Window loaded, initializing services...");
+
+        // Set window title with version
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        Title = $"Redball v{version?.Major}.{version?.Minor}.{version?.Build}";
+
         SyncWindowChromeButtons();
         try
         {
