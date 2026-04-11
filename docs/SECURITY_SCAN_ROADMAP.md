@@ -162,7 +162,6 @@ public static class SecurePathValidator
 **Files**:
 
 - `@/root/Redball/src/Redball.Service/IpcServer.cs:166`
-- `@/root/Redball/src/Redball.UI.WPF/Services/SSOService.cs:681`
 - `@/root/Redball/src/Redball.UI.WPF/Services/MobileCompanionApiService.cs:176-214`
 - `@/root/Redball/src/Redball.UI.WPF/Services/UpdateService.cs:684`
 
@@ -201,7 +200,7 @@ public static class SecureJsonSerializer
 - [x] Create `SecureJsonSerializer` wrapper
 - [x] Add maximum JSON payload size validation (10MB limit)
 - [x] Implement strict deserialization settings (max depth 32)
-- [x] Replace critical `JsonSerializer.Deserialize` calls (ConfigService, UpdateService, MobileCompanionApiService, SSOService)
+- [x] Replace critical `JsonSerializer.Deserialize` calls (ConfigService, UpdateService, MobileCompanionApiService)
 - [x] Replace additional service calls (CentralizedManagementService, TeamSettingsService, SmartHomeIntegrationService, DesignTokenPipelineService)
 - [x] Replace remaining `JsonSerializer.Deserialize` calls in all services (28 services total)
 
@@ -277,18 +276,6 @@ const allowedExtensions = ['.zip', '.msi', '.exe', '.patch'];
 - Detailed exception messages logged/displayed
 - Stack traces exposed to users
 - Sensitive data in exception messages
-
-**Remediation**:
-
-```csharp
-// BEFORE
-Logger.Error("SSOService", $"Token exchange failed: {ex.Message}");
-return JsonSerializer.Serialize(new { error = ex.ToString() });
-
-// AFTER
-Logger.Error("SSOService", "Token exchange failed", ex);
-return JsonSerializer.Serialize(new { error = "Authentication failed" });
-```
 
 **Actions**:
 

@@ -155,7 +155,6 @@
 ### Enterprise Suite
 
 - [x] Centralized management console
-- [x] SSO integration
 - [x] Advanced security policies
 - [x] Usage-based licensing
 

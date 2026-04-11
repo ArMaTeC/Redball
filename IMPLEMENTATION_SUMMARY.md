@@ -284,9 +284,7 @@ This document summarizes the systematic implementation of critical and high-prio
 
 ### Critical Items (Require Architectural Changes)
 
-- 1.3 - SSO validation flags (requires security audit)
 - 1.7 - Update signature verification (requires cert infrastructure)
-- 2.6 - SAML signature validation (requires config refactor)
 
 ### High Priority (Backend)
 

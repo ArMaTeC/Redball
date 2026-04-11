@@ -1,22 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  BarChart3, 
-  Settings, 
-  Package, 
-  Terminal, 
-  Play, 
-  Plus, 
-  Clock, 
+import {
+  BarChart3,
+  Settings,
+  Package,
+  Terminal,
+  Play,
+  Plus,
+  Clock,
   Search,
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
 
 
+interface Release {
+  version: string;
+  date: string;
+  totalDownloads: number;
+  files: Array<{
+    name: string;
+    size: number;
+    downloads: number;
+  }>;
+  channel?: string;
+}
+
+interface Stats {
+  totalDownloads: number;
+  totalReleases: number;
+  totalFiles: number;
+  latestVersion: string;
+  releases: Release[];
+}
+
+const formatNumber = (num: number): string => {
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+  if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+  return num.toString();
+};
+
+const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
 export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [buildLogs, setBuildLogs] = useState<string[]>(['[IDLE] System ready for build...']);
   const [isBuilding, setIsBuilding] = useState(false);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const fetchLogs = async () => {
     try {
@@ -29,18 +65,33 @@ export const AdminDashboard: React.FC = () => {
   };
 
   useEffect(() => {
+    fetchStats();
     if (activeTab === 'build') {
       const interval = setInterval(fetchLogs, 2000);
       return () => clearInterval(interval);
     }
   }, [activeTab]);
 
+  const fetchStats = async () => {
+    try {
+      const res = await fetch('/api/stats');
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
+    } catch (e) {
+      console.error('Failed to fetch stats', e);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   const runBuild = async () => {
     setIsBuilding(true);
     setBuildLogs(prev => [...prev, '[BUILD] Starting Redball build pipeline...']);
     try {
       await fetch('/api/admin/build', { method: 'POST' });
-    } catch (e) {
+    } catch {
       setBuildLogs(prev => [...prev, '[ERROR] Failed to trigger build server']);
       setIsBuilding(false);
     }
@@ -50,11 +101,11 @@ export const AdminDashboard: React.FC = () => {
   return (
     <div className="admin-container" style={{ display: 'flex', height: '100vh', background: '#050505' }}>
       {/* Sidebar */}
-      <aside style={{ 
-        width: '280px', 
-        borderRight: '1px solid var(--border-glass)', 
-        padding: '30px', 
-        display: 'flex', 
+      <aside style={{
+        width: '280px',
+        borderRight: '1px solid var(--border-glass)',
+        padding: '30px',
+        display: 'flex',
         flexDirection: 'column',
         gap: '40px'
       }}>
@@ -86,12 +137,12 @@ export const AdminDashboard: React.FC = () => {
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
           <h2 style={{ fontSize: '2rem' }}>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h2>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <div className="search-bar" style={{ 
-              background: 'rgba(255,255,255,0.05)', 
-              borderRadius: '8px', 
-              padding: '8px 16px', 
-              display: 'flex', 
-              alignItems: 'center', 
+            <div className="search-bar" style={{
+              background: 'rgba(255,255,255,0.05)',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              display: 'flex',
+              alignItems: 'center',
               gap: '8px',
               border: '1px solid var(--border-glass)'
             }}>
@@ -107,10 +158,22 @@ export const AdminDashboard: React.FC = () => {
 
         {activeTab === 'overview' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
-            <StatCard label="Total Downloads" value="24.8k" trend="+12%" />
-            <StatCard label="Active Sessions" value="1,402" trend="+5.4%" />
-            <StatCard label="Avg. Typing Latency" value="42ms" trend="-2.1%" />
-            
+            <StatCard
+              label="Total Downloads"
+              value={statsLoading ? '...' : formatNumber(stats?.totalDownloads || 0)}
+              trend="+12%"
+            />
+            <StatCard
+              label="Total Releases"
+              value={statsLoading ? '...' : (stats?.totalReleases || 0).toString()}
+              trend="GitHub + Local"
+            />
+            <StatCard
+              label="Latest Version"
+              value={statsLoading ? '...' : (stats?.latestVersion || 'N/A')}
+              trend="Current"
+            />
+
             <div className="glass-card" style={{ gridColumn: 'span 2', padding: '30px', height: '300px' }}>
               <h3 style={{ marginBottom: '20px' }}>Deployment History</h3>
               {/* Chart Placeholder */}
@@ -136,11 +199,11 @@ export const AdminDashboard: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div className="glass-card" style={{ padding: '30px' }}>
               <h3>Build Console</h3>
-              <div style={{ 
-                background: '#000', 
-                borderRadius: '8px', 
-                padding: '20px', 
-                height: '400px', 
+              <div style={{
+                background: '#000',
+                borderRadius: '8px',
+                padding: '20px',
+                height: '400px',
                 fontFamily: 'monospace',
                 overflowY: 'auto',
                 marginTop: '16px',
@@ -164,21 +227,100 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Other tabs omitted for brevity but they follow same pattern */}
+        {activeTab === 'releases' && (
+          <div style={{ padding: '20px' }}>
+            <h2 style={{ marginBottom: '24px' }}>Releases</h2>
+            {statsLoading ? (
+              <p style={{ color: 'var(--text-dim)' }}>Loading releases...</p>
+            ) : stats?.releases?.length === 0 ? (
+              <p style={{ color: 'var(--text-dim)' }}>No releases found</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {stats.releases.map((release) => (
+                  <div key={release.version} className="glass-card" style={{ padding: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <h3 style={{ margin: 0 }}>v{release.version}</h3>
+                        {release.channel === 'beta' && (
+                          <span style={{
+                            background: 'rgba(251, 191, 36, 0.2)',
+                            color: '#fbbf24',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem'
+                          }}>
+                            BETA
+                          </span>
+                        )}
+                      </div>
+                      <span style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>
+                        {new Date(release.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '24px', marginBottom: '12px', fontSize: '0.875rem' }}>
+                      <span>{formatNumber(release.totalDownloads)} downloads</span>
+                      <span>{release.files?.length || 0} files</span>
+                    </div>
+                    {release.files && release.files.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {release.files.map((file) => (
+                          <div
+                            key={file.name}
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '8px 12px',
+                              background: 'rgba(255,255,255,0.03)',
+                              borderRadius: '6px'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <span style={{ fontSize: '0.875rem' }}>{file.name}</span>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                                {formatBytes(file.size)}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                                {formatNumber(file.downloads || 0)} dl
+                              </span>
+                              <a
+                                href={`/downloads/${release.version}/${file.name}`}
+                                className="btn-primary"
+                                style={{
+                                  padding: '4px 12px',
+                                  fontSize: '0.75rem',
+                                  textDecoration: 'none'
+                                }}
+                              >
+                                Download
+                              </a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
 };
 
 const NavItem: React.FC<{ active: boolean, onClick: () => void, icon: React.ReactNode, label: string }> = ({ active, onClick, icon, label }) => (
-  <div 
+  <div
     onClick={onClick}
-    style={{ 
-      padding: '12px 16px', 
-      borderRadius: '8px', 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: '12px', 
+    style={{
+      padding: '12px 16px',
+      borderRadius: '8px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
       cursor: 'pointer',
       background: active ? 'rgba(255, 51, 51, 0.1)' : 'transparent',
       color: active ? 'var(--primary)' : 'var(--text-dim)',
