@@ -381,6 +381,7 @@
     <Style x:Key="AnimatedToggleSwitch" TargetType="ToggleButton">
         <Setter Property="Width" Value="48"/>
         <Setter Property="Height" Value="26"/>
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
@@ -408,22 +409,22 @@
                         <EventTrigger RoutedEvent="Checked">
                             <BeginStoryboard>
                                 <Storyboard>
-                                    <DoubleAnimation Storyboard.Target="{Binding ElementName=Thumb, Mode=OneTime}" Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleX)" From="0.8" To="1.1" Duration="0:0:0.1" AutoReverse="True">
+                                    <DoubleAnimation Storyboard.TargetName="Thumb" Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleX)" From="0.8" To="1.1" Duration="0:0:0.1" AutoReverse="True">
                                         <DoubleAnimation.EasingFunction>
                                             <ElasticEase EasingMode="EaseOut" Oscillations="1" Springiness="6"/>
                                         </DoubleAnimation.EasingFunction>
                                     </DoubleAnimation>
-                                    <DoubleAnimation Storyboard.Target="{Binding ElementName=Thumb, Mode=OneTime}" Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleY)" From="0.8" To="1.1" Duration="0:0:0.1" AutoReverse="True">
+                                    <DoubleAnimation Storyboard.TargetName="Thumb" Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleY)" From="0.8" To="1.1" Duration="0:0:0.1" AutoReverse="True">
                                         <DoubleAnimation.EasingFunction>
                                             <ElasticEase EasingMode="EaseOut" Oscillations="1" Springiness="6"/>
                                         </DoubleAnimation.EasingFunction>
                                     </DoubleAnimation>
-                                    <ThicknessAnimation Storyboard.Target="{Binding ElementName=Thumb, Mode=OneTime}" Storyboard.TargetProperty="Margin" From="3,0,0,0" To="23,0,0,0" Duration="0:0:0.2">
+                                    <ThicknessAnimation Storyboard.TargetName="Thumb" Storyboard.TargetProperty="Margin" From="3,0,0,0" To="23,0,0,0" Duration="0:0:0.2">
                                         <ThicknessAnimation.EasingFunction>
                                             <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
                                         </ThicknessAnimation.EasingFunction>
                                     </ThicknessAnimation>
-                                    <ThicknessAnimation Storyboard.Target="{Binding ElementName=ThumbShadow, Mode=OneTime}" Storyboard.TargetProperty="Margin" From="3,2,0,0" To="23,2,0,0" Duration="0:0:0.2">
+                                    <ThicknessAnimation Storyboard.TargetName="ThumbShadow" Storyboard.TargetProperty="Margin" From="3,2,0,0" To="23,2,0,0" Duration="0:0:0.2">
                                         <ThicknessAnimation.EasingFunction>
                                             <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
                                         </ThicknessAnimation.EasingFunction>
@@ -435,12 +436,12 @@
                         <EventTrigger RoutedEvent="Unchecked">
                             <BeginStoryboard>
                                 <Storyboard>
-                                    <ThicknessAnimation Storyboard.Target="{Binding ElementName=Thumb, Mode=OneTime}" Storyboard.TargetProperty="Margin" From="23,0,0,0" To="3,0,0,0" Duration="0:0:0.2">
+                                    <ThicknessAnimation Storyboard.TargetName="Thumb" Storyboard.TargetProperty="Margin" From="23,0,0,0" To="3,0,0,0" Duration="0:0:0.2">
                                         <ThicknessAnimation.EasingFunction>
                                             <CubicEase EasingMode="EaseOut"/>
                                         </ThicknessAnimation.EasingFunction>
                                     </ThicknessAnimation>
-                                    <ThicknessAnimation Storyboard.Target="{Binding ElementName=ThumbShadow, Mode=OneTime}" Storyboard.TargetProperty="Margin" From="23,2,0,0" To="3,2,0,0" Duration="0:0:0.2">
+                                    <ThicknessAnimation Storyboard.TargetName="ThumbShadow" Storyboard.TargetProperty="Margin" From="23,2,0,0" To="3,2,0,0" Duration="0:0:0.2">
                                         <ThicknessAnimation.EasingFunction>
                                             <CubicEase EasingMode="EaseOut"/>
                                         </ThicknessAnimation.EasingFunction>
@@ -452,16 +453,16 @@
                         <EventTrigger RoutedEvent="MouseEnter">
                             <BeginStoryboard>
                                 <Storyboard>
-                                    <DoubleAnimation Storyboard.Target="{Binding ElementName=Thumb, Mode=OneTime}" Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleX)" To="1.1" Duration="0:0:0.1"/>
-                                    <DoubleAnimation Storyboard.Target="{Binding ElementName=Thumb, Mode=OneTime}" Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleY)" To="1.1" Duration="0:0:0.1"/>
+                                    <DoubleAnimation Storyboard.TargetName="Thumb" Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleX)" To="1.1" Duration="0:0:0.1"/>
+                                    <DoubleAnimation Storyboard.TargetName="Thumb" Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleY)" To="1.1" Duration="0:0:0.1"/>
                                 </Storyboard>
                             </BeginStoryboard>
                         </EventTrigger>
                         <EventTrigger RoutedEvent="MouseLeave">
                             <BeginStoryboard>
                                 <Storyboard>
-                                    <DoubleAnimation Storyboard.Target="{Binding ElementName=Thumb, Mode=OneTime}" Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleX)" To="1" Duration="0:0:0.1"/>
-                                    <DoubleAnimation Storyboard.Target="{Binding ElementName=Thumb, Mode=OneTime}" Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleY)" To="1" Duration="0:0:0.1"/>
+                                    <DoubleAnimation Storyboard.TargetName="Thumb" Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleX)" To="1" Duration="0:0:0.1"/>
+                                    <DoubleAnimation Storyboard.TargetName="Thumb" Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleY)" To="1" Duration="0:0:0.1"/>
                                 </Storyboard>
                             </BeginStoryboard>
                         </EventTrigger>

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Redball.UI.Headless.Tests</RootNamespace>
+    <AssemblyName>Redball.UI.Headless.Tests</AssemblyName>
+    <!-- Headless - no WPF window required, but can reference WPF types -->
+    <UseWPF>false</UseWPF>
+    <DefineConstants>HEADLESS_TESTS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="8.0.1" />
+    <PackageReference Include="coverlet.msbuild" Version="8.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="MSTest.TestAdapter" Version="4.1.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\Redball.UI.WPF\Redball.UI.WPF.csproj" />
+  </ItemGroup>
+
+</Project>

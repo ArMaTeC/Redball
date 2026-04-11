@@ -32,16 +32,13 @@ pwsh -File scripts/build.ps1 all
 pwsh -File scripts/build.ps1 windows
 ```
 
-**Linux/macOS Setup:**
+**Linux/Wine Setup (for building Windows on Linux):**
 
 ```bash
-# Build everything (including Windows artifacts via Wine)
+# Build everything (Windows artifacts via Wine, update-server, website)
 ./scripts/build.sh all
 
-# Build Linux artifacts only
-./scripts/build.sh linux
-
-# Build Windows artifacts (requires Wine + .NET SDK setup)
+# Build Windows artifacts only (requires Wine + .NET SDK setup)
 ./scripts/build.sh windows
 ```
 

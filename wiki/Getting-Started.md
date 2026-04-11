@@ -5,7 +5,6 @@ Welcome to Redball! This guide will get you up and running with **TypeThing**, t
 ## Prerequisites
 
 - **Windows:** Windows 10 or later (WPF application)
-- **Linux:** Ubuntu 20.04+ or compatible distributions (GTK application)
 - **.NET 10 Runtime** (included in the self-contained EXE — no separate install needed)
 
 ## Installation
@@ -25,14 +24,6 @@ The installer provides:
 - Optional default behaviour features (battery-aware, network-aware, idle detection, etc.)
 - "Launch Redball" checkbox on the finish page
 - Silent install support (`/S`)
-
-### Linux
-
-Download the appropriate package for your distribution:
-
-- **Flatpak:** `redball.flatpak` — Universal Linux package
-- **DEB:** `redball.deb` — For Debian/Ubuntu-based distributions
-- **Tarball:** `redball-linux.tar.gz` — Portable archive
 
 ### Option B — Run the Executable
 

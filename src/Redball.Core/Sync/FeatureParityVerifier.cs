@@ -6,7 +6,7 @@ namespace Redball.Core.Sync;
 
 /// <summary>
 /// Feature parity verification service that tracks which features are
-/// available and working across Windows, macOS, and Linux platforms.
+/// available and working across Windows and macOS platforms.
 /// </summary>
 public class FeatureParityVerifier
 {
@@ -29,7 +29,7 @@ public class FeatureParityVerifier
         var matrix = new FeatureParityMatrix
         {
             GeneratedAt = DateTime.UtcNow,
-            Platforms = new[] { "Windows", "macOS", "Linux" },
+            Platforms = new[] { "Windows", "macOS" },
             Features = new List<FeatureParityEntry>()
         };
 
@@ -46,7 +46,6 @@ public class FeatureParityVerifier
             // Check each platform
             entry.PlatformStatus["Windows"] = GetFeatureStatus(feature, "windows");
             entry.PlatformStatus["macOS"] = GetFeatureStatus(feature, "macos");
-            entry.PlatformStatus["Linux"] = GetFeatureStatus(feature, "linux");
 
             // Calculate parity score
             entry.ParityScore = CalculateParityScore(entry.PlatformStatus);
@@ -136,21 +135,6 @@ public class FeatureParityVerifier
             });
         }
 
-        // Linux gaps
-        var linuxMissing = matrix.Features
-            .Where(f => f.PlatformStatus["Linux"] != FeatureStatus.Available)
-            .Select(f => f.FeatureName)
-            .ToList();
-        if (linuxMissing.Any())
-        {
-            report.Gaps.Add(new PlatformGap
-            {
-                Platform = "Linux",
-                MissingFeatures = linuxMissing,
-                Priority = linuxMissing.Count > 5 ? GapPriority.High : GapPriority.Medium
-            });
-        }
-
         return report;
     }
 
@@ -191,17 +175,16 @@ public class FeatureParityVerifier
         {
             markdown.AppendLine($"## {category.Key}");
             markdown.AppendLine();
-            markdown.AppendLine("| Feature | Windows | macOS | Linux | Notes |");
-            markdown.AppendLine("|---------|---------|-------|-------|-------|");
+            markdown.AppendLine("| Feature | Windows | macOS | Notes |");
+            markdown.AppendLine("|---------|---------|-------|-------|");
 
             foreach (var feature in category.OrderBy(f => f.FeatureName))
             {
                 var windows = GetStatusEmoji(feature.PlatformStatus["Windows"]);
                 var macos = GetStatusEmoji(feature.PlatformStatus["macOS"]);
-                var linux = GetStatusEmoji(feature.PlatformStatus["Linux"]);
                 var notes = GetFeatureNotes(feature);
 
-                markdown.AppendLine($"| {feature.FeatureName} | {windows} | {macos} | {linux} | {notes} |");
+                markdown.AppendLine($"| {feature.FeatureName} | {windows} | {macos} | {notes} |");
             }
 
             markdown.AppendLine();
@@ -222,7 +205,7 @@ public class FeatureParityVerifier
                 Description = "Prevent system sleep",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Available,
-                LinuxStatus = FeatureStatus.Available
+                
             },
             new FeatureDefinition
             {
@@ -231,7 +214,7 @@ public class FeatureParityVerifier
                 Description = "Session duration limits",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Available,
-                LinuxStatus = FeatureStatus.Available
+                
             },
             new FeatureDefinition
             {
@@ -240,7 +223,7 @@ public class FeatureParityVerifier
                 Description = "Simulate input to prevent sleep",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Available,
-                LinuxStatus = FeatureStatus.Available
+                
             },
 
             // Awareness Features
@@ -251,7 +234,7 @@ public class FeatureParityVerifier
                 Description = "Auto-pause on low battery",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Available,
-                LinuxStatus = FeatureStatus.Available
+                
             },
             new FeatureDefinition
             {
@@ -260,7 +243,7 @@ public class FeatureParityVerifier
                 Description = "Pause when network unavailable",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Available,
-                LinuxStatus = FeatureStatus.Available
+                
             },
             new FeatureDefinition
             {
@@ -269,7 +252,7 @@ public class FeatureParityVerifier
                 Description = "Pause when user is idle",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Available,
-                LinuxStatus = FeatureStatus.Available
+                
             },
             new FeatureDefinition
             {
@@ -278,7 +261,7 @@ public class FeatureParityVerifier
                 Description = "Detect Teams meetings",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.NotApplicable,
-                LinuxStatus = FeatureStatus.NotApplicable,
+                
                 Notes = "Windows-specific integration"
             },
             new FeatureDefinition
@@ -288,7 +271,7 @@ public class FeatureParityVerifier
                 Description = "Detect Slack huddles",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.NotApplicable,
-                LinuxStatus = FeatureStatus.NotApplicable,
+                
                 Notes = "Windows-specific integration"
             },
             new FeatureDefinition
@@ -298,7 +281,7 @@ public class FeatureParityVerifier
                 Description = "Detect Zoom meetings",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.NotApplicable,
-                LinuxStatus = FeatureStatus.NotApplicable,
+                
                 Notes = "Windows-specific integration"
             },
 
@@ -310,7 +293,7 @@ public class FeatureParityVerifier
                 Description = "Tray/menubar integration",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Available,
-                LinuxStatus = FeatureStatus.Available
+                
             },
             new FeatureDefinition
             {
@@ -319,7 +302,7 @@ public class FeatureParityVerifier
                 Description = "Floating widget interface",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Planned,
-                LinuxStatus = FeatureStatus.Planned
+                
             },
             new FeatureDefinition
             {
@@ -328,7 +311,7 @@ public class FeatureParityVerifier
                 Description = "Quick command interface",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Planned,
-                LinuxStatus = FeatureStatus.Planned
+                
             },
             new FeatureDefinition
             {
@@ -337,7 +320,7 @@ public class FeatureParityVerifier
                 Description = "Head-up display",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Planned,
-                LinuxStatus = FeatureStatus.Planned
+                
             },
 
             // Advanced Features
@@ -348,7 +331,7 @@ public class FeatureParityVerifier
                 Description = "Automated text typing",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Planned,
-                LinuxStatus = FeatureStatus.Planned
+                
             },
             new FeatureDefinition
             {
@@ -357,7 +340,7 @@ public class FeatureParityVerifier
                 Description = "AI-powered pattern detection",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Planned,
-                LinuxStatus = FeatureStatus.Planned
+                
             },
             new FeatureDefinition
             {
@@ -366,7 +349,7 @@ public class FeatureParityVerifier
                 Description = "Usage insights and predictions",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Planned,
-                LinuxStatus = FeatureStatus.Planned
+                
             },
 
             // Enterprise Features
@@ -377,7 +360,7 @@ public class FeatureParityVerifier
                 Description = "Cloud-based team config",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Planned,
-                LinuxStatus = FeatureStatus.Planned
+                
             },
             new FeatureDefinition
             {
@@ -386,7 +369,7 @@ public class FeatureParityVerifier
                 Description = "Usage reports for IT",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Planned,
-                LinuxStatus = FeatureStatus.Planned
+                
             },
             new FeatureDefinition
             {
@@ -395,7 +378,7 @@ public class FeatureParityVerifier
                 Description = "Compliance logging",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Planned,
-                LinuxStatus = FeatureStatus.Planned
+                
             },
 
             // Cross-Platform
@@ -406,7 +389,7 @@ public class FeatureParityVerifier
                 Description = "Universal config format",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Available,
-                LinuxStatus = FeatureStatus.Available
+                
             },
             new FeatureDefinition
             {
@@ -415,7 +398,7 @@ public class FeatureParityVerifier
                 Description = "Unified analytics across platforms",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Available,
-                LinuxStatus = FeatureStatus.Available
+                
             },
             new FeatureDefinition
             {
@@ -424,7 +407,7 @@ public class FeatureParityVerifier
                 Description = "Chrome/Edge/Firefox extension",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Available,
-                LinuxStatus = FeatureStatus.Available
+                
             },
 
             // Plugin System
@@ -435,7 +418,7 @@ public class FeatureParityVerifier
                 Description = "Third-party plugin support",
                 WindowsStatus = FeatureStatus.Available,
                 MacOSStatus = FeatureStatus.Planned,
-                LinuxStatus = FeatureStatus.Planned
+                
             }
         };
     }
@@ -446,7 +429,6 @@ public class FeatureParityVerifier
         {
             "windows" => feature.WindowsStatus,
             "macos" => feature.MacOSStatus,
-            "linux" => feature.LinuxStatus,
             _ => FeatureStatus.Missing
         };
     }
@@ -466,7 +448,6 @@ public class FeatureParityVerifier
     {
         if (OperatingSystem.IsWindows()) return "windows";
         if (OperatingSystem.IsMacOS()) return "macos";
-        if (OperatingSystem.IsLinux()) return "linux";
         return "unknown";
     }
 
@@ -518,7 +499,6 @@ public class FeatureDefinition
     
     public FeatureStatus WindowsStatus { get; set; } = FeatureStatus.Missing;
     public FeatureStatus MacOSStatus { get; set; } = FeatureStatus.Missing;
-    public FeatureStatus LinuxStatus { get; set; } = FeatureStatus.Missing;
 }
 
 public enum FeatureStatus

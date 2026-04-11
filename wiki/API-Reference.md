@@ -2,7 +2,7 @@
 
 Complete reference for Redball v2.1.492 C# services.
 
-> **Note:** Redball is a pure C# application with cross-platform support. The architecture uses a modular design with separate projects for Windows (WPF), Linux (GTK), and shared Core functionality.
+> **Note:** Redball is a pure C# WPF application. The architecture uses a modular design with a Windows UI project and shared Core functionality.
 
 ## Service Architecture
 

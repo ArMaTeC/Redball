@@ -14,6 +14,42 @@ namespace Redball.UIAutomation;
 /// </summary>
 public class RedballUIAutomation : IDisposable
 {
+    /// <summary>
+    /// Checks if running in a headless environment where UI automation is not possible.
+    /// </summary>
+    public static bool IsHeadlessEnvironment()
+    {
+        // Check for common headless indicators
+        if (Environment.GetEnvironmentVariable("HEADLESS") == "true")
+            return true;
+
+        if (Environment.GetEnvironmentVariable("DISPLAY") == null)
+            return true;
+
+        // Check if running in CI environment
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")))
+            return true;
+
+        // Check if running in GitHub Actions
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")))
+            return true;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Throws an appropriate exception if running in headless mode.
+    /// </summary>
+    public static void AssertNotHeadless()
+    {
+        if (IsHeadlessEnvironment())
+        {
+            throw new AssertInconclusiveException(
+                "UI automation tests require a graphical display. " +
+                "Run with HEADLESS=false or use headless tests (Redball.UI.Headless.Tests) instead.");
+        }
+    }
+
     private Application? _app;
     private UIA3Automation? _automation;
     private Window? _mainWindow;

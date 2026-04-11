@@ -2,7 +2,7 @@
 
 > A professional clipboard typer that keeps your computer awake — type anything, anywhere.
 
-Welcome to the Redball wiki — the complete documentation for the TypeThing clipboard automation tool and its companion keep-awake utility. Cross-platform support for Windows and Linux.
+Welcome to the Redball wiki — the complete documentation for the TypeThing clipboard automation tool and its companion keep-awake utility. Windows application with cross-platform build support via Wine.
 
 ## Quick Start
 

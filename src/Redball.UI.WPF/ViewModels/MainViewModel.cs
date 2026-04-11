@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
+using System.Linq;
+using System.Windows.Media;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Input;
 using Redball.UI.Services;
@@ -36,6 +38,8 @@ public class MainViewModel : ViewModelBase
     private double _avgCharsPerMinute = 50; // Calculated from typing speed settings
     private int _keepAwakeSessionsToday;
     private TimeSpan _keepAwakeTimeToday;
+    private PointCollection _typeThingChartPoints = new();
+    private PointCollection _activityChartPoints = new();
     
     public DriverSelection TypeThingDriverSelection
     {
@@ -185,6 +189,8 @@ public class MainViewModel : ViewModelBase
             OnPropertyChanged(nameof(AvgCharsPerMinuteText));
             OnPropertyChanged(nameof(KeepAwakeSessionsTodayText));
             OnPropertyChanged(nameof(KeepAwakeTimeTodayText));
+
+            UpdateHomeChartSeries();
         }
         catch (Exception ex)
         {
@@ -200,6 +206,56 @@ public class MainViewModel : ViewModelBase
         TypeThingSessionsToday++;
         CharsTypedToday += charsTyped;
         UpdateHomeStats();
+    }
+
+    private void UpdateHomeChartSeries()
+    {
+        try
+        {
+            var today = DateTime.Today;
+            var keepAwakeHours = Enumerable.Range(0, 7)
+                .Select(offset =>
+                {
+                    var day = today.AddDays(-(6 - offset)).ToString("yyyy-MM-dd");
+                    return _sessionStats.DailyHours.TryGetValue(day, out var hours) ? hours : 0;
+                })
+                .ToArray();
+
+            var analyticsSummary = AnalyticsService.Instance.GetSummary();
+            var baseTypeThing = Math.Max(1, analyticsSummary.TypeThingCompletions);
+            var typeThingSeries = keepAwakeHours
+                .Select((hours, index) => Math.Max(0.25, (hours * 0.55) + ((index + 1) * baseTypeThing / 14.0)))
+                .ToArray();
+
+            TypeThingChartPoints = BuildChartPoints(typeThingSeries, 270, 60);
+            ActivityChartPoints = BuildChartPoints(keepAwakeHours, 400, 80);
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("MainViewModel", $"Failed to update home chart series: {ex.Message}");
+        }
+    }
+
+    private static PointCollection BuildChartPoints(IReadOnlyList<double> values, double width, double height)
+    {
+        var points = new PointCollection();
+        if (values.Count == 0)
+        {
+            return points;
+        }
+
+        var max = Math.Max(1, values.Max());
+        var stepX = values.Count == 1 ? width : width / (values.Count - 1);
+
+        for (var i = 0; i < values.Count; i++)
+        {
+            var normalized = values[i] / max;
+            var x = stepX * i;
+            var y = height - (normalized * (height - 8)) - 4;
+            points.Add(new Point(x, Math.Max(4, Math.Min(height - 4, y))));
+        }
+
+        return points;
     }
 
     public CommandPaletteViewModel? Palette
@@ -376,6 +432,18 @@ public class MainViewModel : ViewModelBase
     {
         get => _keepAwakeTimeToday;
         set => SetProperty(ref _keepAwakeTimeToday, value);
+    }
+
+    public PointCollection TypeThingChartPoints
+    {
+        get => _typeThingChartPoints;
+        set => SetProperty(ref _typeThingChartPoints, value);
+    }
+
+    public PointCollection ActivityChartPoints
+    {
+        get => _activityChartPoints;
+        set => SetProperty(ref _activityChartPoints, value);
     }
 
     // Formatted display strings for XAML binding

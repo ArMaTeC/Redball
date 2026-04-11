@@ -97,10 +97,10 @@
   - Menu bar integration
   - macOS-specific features (Do Not Disturb detection)
   
-- [x] **Linux Support**
-  - GTK/GNOME tray app
-  - systemd integration
-  - Wayland compatibility
+- [ ] **Linux Support** (Removed — Windows-only focus)
+  - ~~GTK/GNOME tray app~~
+  - ~~systemd integration~~
+  - ~~Wayland compatibility~~
 
 - [x] **Browser extension**
   - Chrome/Edge/Firefox
@@ -224,19 +224,19 @@ Redball v3.x is implemented as a pure C# WPF application (.NET 10). The core fun
 
 ## Key Services
 
-| Service                          | Purpose                                      |
-| -------------------------------- | -------------------------------------------- |
-| `KeepAwakeService`               | Core keep-awake engine                       |
-| `SecurityService`                | Tamper detection, threat model, CI gates     |
-| `SecretManagerService`           | Windows Credential Manager integration       |
-| `StartupTimingService`           | Startup SLO instrumentation                  |
-| `ResourceBudgetService`          | Per-service CPU/RAM budgets                  |
-| `MemoryPressureService`          | Memory pressure handling                     |
-| `PerformanceTestService`         | Continuous performance testing               |
-| `RolloutService`                 | Staged release channels                      |
-| `CommandPaletteService`          | Searchable command surface                   |
-| `WindowsShellIntegrationService` | Jump lists, URI protocol                     |
-| `OutboxDispatcherService`        | Offline sync with SQLite                     |
-| `CrashTelemetryService`          | Privacy-safe crash reporting                 |
-| `AccessibilityService`           | WCAG AA compliance                           |
-| `DesignSystemService`            | Tokenized design system                      |
+| Service                          | Purpose                                  |
+| -------------------------------- | ---------------------------------------- |
+| `KeepAwakeService`               | Core keep-awake engine                   |
+| `SecurityService`                | Tamper detection, threat model, CI gates |
+| `SecretManagerService`           | Windows Credential Manager integration   |
+| `StartupTimingService`           | Startup SLO instrumentation              |
+| `ResourceBudgetService`          | Per-service CPU/RAM budgets              |
+| `MemoryPressureService`          | Memory pressure handling                 |
+| `PerformanceTestService`         | Continuous performance testing           |
+| `RolloutService`                 | Staged release channels                  |
+| `CommandPaletteService`          | Searchable command surface               |
+| `WindowsShellIntegrationService` | Jump lists, URI protocol                 |
+| `OutboxDispatcherService`        | Offline sync with SQLite                 |
+| `CrashTelemetryService`          | Privacy-safe crash reporting             |
+| `AccessibilityService`           | WCAG AA compliance                       |
+| `DesignSystemService`            | Tokenized design system                  |

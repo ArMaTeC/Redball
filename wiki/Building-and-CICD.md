@@ -19,7 +19,7 @@ The installer is built with [NSIS (Nullsoft Scriptable Install System)](https://
 .\scripts\build.ps1 all -Channel beta
 ```
 
-**Unified Build Script (Linux - Bash):**
+**Unified Build Script (Bash - Wine cross-compilation):**
 
 ```bash
 # Full auto-release workflow (builds + publishes everything)
@@ -29,8 +29,7 @@ The installer is built with [NSIS (Nullsoft Scriptable Install System)](https://
 ./scripts/build.sh all
 
 # Build specific targets
-./scripts/build.sh windows    # Windows artifacts
-./scripts/build.sh linux      # Linux artifacts (GTK app, packages)
+./scripts/build.sh windows    # Windows artifacts (via Wine on Linux)
 ./scripts/build.sh update-server  # Update server
 ./scripts/build.sh website    # Website validation
 ```
@@ -42,7 +41,6 @@ The installer is built with [NSIS (Nullsoft Scriptable Install System)](https://
 | `all`           | Build everything (no publish)        |
 | `auto-release`  | Build + publish everything [DEFAULT] |
 | `windows`       | Build Windows artifacts              |
-| `linux`         | Build Linux artifacts                |
 | `update-server` | Build/validate update-server         |
 | `website`       | Build website                        |
 | `clean`         | Clean all build artifacts            |
@@ -70,7 +68,7 @@ The build script automatically:
 2. Builds the Windows Service (`Redball.Service`)
 3. Creates an NSIS installer (`Redball-{version}-Setup.exe`)
 4. Creates a portable ZIP archive
-5. Builds Linux artifacts (Flatpak, DEB, tarball) if on Linux or WSL available
+5. Publishes to update-server and generates delta patches
 6. Validates the update-server
 7. Signs artifacts with a code-signing certificate (creates self-signed cert if none exists)
 
@@ -136,16 +134,6 @@ The installer uses modern dark-themed graphics:
 4. **WPF Build** — Build the .NET 10 WPF application (via Wine on Linux runner)
 5. **Unit Tests** — Run MSTest suite
 
-### Linux CI Workflow (`linux-ci.yml`)
-
-**Trigger:** Push or pull request affecting Linux-related files
-
-**Steps:**
-
-1. **Build Linux** — Build the GTK application on Ubuntu
-2. **Build Packages** — Create Flatpak, DEB, and tarball packages
-3. **Test** — Run Linux-specific tests
-
 ### Other Workflows
 
 | Workflow         | Purpose                                 |
@@ -166,9 +154,6 @@ Build artifacts are placed in the `dist/` directory:
 | `Redball.Service.exe`         | Windows Service for input injection |
 | `Redball-{version}-Setup.exe` | NSIS installer                      |
 | `redball-portable.zip`        | Portable ZIP archive                |
-| `redball-linux.tar.gz`        | Linux tarball                       |
-| `redball.deb`                 | Debian package                      |
-| `redball.flatpak`             | Flatpak bundle                      |
 
 ---
 

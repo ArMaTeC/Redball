@@ -25,9 +25,7 @@
                         <!-- Header -->
                         <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
                             <TextBlock Text="TypeThing Stats" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}"/>
-                            <Button Style="{DynamicResource BorderlessButton}" HorizontalAlignment="Right" Command="{Binding OpenTypeThingCommand}">
-                                <TextBlock Text="Open →" FontSize="12" Foreground="{DynamicResource AccentBrush}" Cursor="Hand"/>
-                            </Button>
+                            <Button Style="{DynamicResource TextLinkButton}" HorizontalAlignment="Right" Command="{Binding OpenTypeThingCommand}" Content="Open →"/>
                         </Grid>
 
                         <!-- Stats Grid -->
@@ -60,9 +58,9 @@
                                     <!-- Visual chart representation -->
                                     <Canvas Grid.Row="1" Height="60">
                                         <!-- Red line -->
-                                        <Polyline Points="0,45 30,30 60,35 90,20 120,25 150,15 180,30 210,20 240,28 270,10" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" Opacity="0.8"/>
+                                        <Polyline Points="{Binding ActivityChartPoints}" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" Opacity="0.8"/>
                                         <!-- Cyan line -->
-                                        <Polyline Points="0,50 30,40 60,42 90,35 120,38 150,30 180,38 210,32 240,35 270,22" Stroke="{DynamicResource NeonCyanBrush}" StrokeThickness="2" Opacity="0.6"/>
+                                        <Polyline Points="{Binding TypeThingChartPoints}" Stroke="{DynamicResource NeonCyanBrush}" StrokeThickness="2" Opacity="0.6"/>
                                     </Canvas>
                                 </Grid>
                             </Border>
@@ -93,12 +91,18 @@
 
                 <!-- Keep-Awake Panel (cyan border) -->
                 <Border Grid.Column="1" Style="{DynamicResource NeonCyanPanelStyle}">
-                    <DockPanel>
-                        <TextBlock DockPanel.Dock="Top" Text="Keep-Awake" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,16"/>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="Keep-Awake" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,16"/>
 
                         <!-- Central Power Button - Clickable -->
-                        <Button Style="{DynamicResource BorderlessButton}" VerticalAlignment="Center" HorizontalAlignment="Center" Command="{Binding ToggleActiveCommand}">
-                            <Grid>
+                        <Button Grid.Row="1" Style="{DynamicResource BorderlessButton}" VerticalAlignment="Center" HorizontalAlignment="Center" Command="{Binding ToggleActiveCommand}">
+                            <Grid Width="90" Height="90">
                                 <!-- Outer ring glow -->
                                 <Ellipse Width="90" Height="90" StrokeThickness="3" VerticalAlignment="Center" HorizontalAlignment="Center">
                                     <Ellipse.Stroke>
@@ -119,11 +123,10 @@
                             </Grid>
                         </Button>
 
-                        <!-- Status with nav arrows at bottom -->
-                        <Grid DockPanel.Dock="Bottom" Margin="0,12,0,0">
-                            <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" HorizontalAlignment="Center"/>
-                        </Grid>
-                    </DockPanel>
+                        <!-- Status at bottom -->
+                        <TextBlock Grid.Row="2" Text="{Binding StatusText}" FontSize="11" Foreground="{DynamicResource ForegroundSecondaryBrush}" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+
+                    </Grid>
                 </Border>
 
                 <!-- Settings Quick Panel (glass effect) -->
@@ -132,9 +135,7 @@
                         <!-- Header -->
                         <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
                             <TextBlock Text="Quick Settings" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ForegroundBrush}"/>
-                            <Button Style="{DynamicResource BorderlessButton}" HorizontalAlignment="Right" Command="{Binding OpenSettingsCommand}">
-                                <TextBlock Text="Full Settings →" FontSize="12" Foreground="{DynamicResource AccentBrush}" Cursor="Hand"/>
-                            </Button>
+                            <Button Style="{DynamicResource TextLinkButton}" HorizontalAlignment="Right" Command="{Binding OpenSettingsCommand}" Content="Full Settings →"/>
                         </Grid>
 
                         <StackPanel>
@@ -215,9 +216,9 @@
 
                             <Canvas Grid.Row="0" Height="80" Margin="0,0,0,8">
                                 <!-- Red activity line -->
-                                <Polyline Points="0,60 40,50 80,55 120,30 160,45 200,25 240,40 280,20 320,35 360,15 400,30" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" Opacity="0.7"/>
+                                <Polyline Points="{Binding ActivityChartPoints}" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" Opacity="0.7"/>
                                 <!-- Cyan usage line -->
-                                <Polyline Points="0,65 40,55 80,60 120,40 160,50 200,35 240,45 280,30 320,40 360,25 400,38" Stroke="{DynamicResource NeonCyanBrush}" StrokeThickness="2" Opacity="0.5"/>
+                                <Polyline Points="{Binding TypeThingChartPoints}" Stroke="{DynamicResource NeonCyanBrush}" StrokeThickness="2" Opacity="0.5"/>
                                 <!-- Grid lines -->
                                 <Line X1="0" Y1="20" X2="400" Y2="20" Stroke="{DynamicResource BorderBrush}" StrokeThickness="0.5"/>
                                 <Line X1="0" Y1="40" X2="400" Y2="40" Stroke="{DynamicResource BorderBrush}" StrokeThickness="0.5"/>

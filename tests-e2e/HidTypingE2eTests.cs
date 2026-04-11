@@ -160,17 +160,17 @@ public class HidTypingE2eTests
     [Test]
     public void HidTyping_NotepadPrintableAscii_RoundTripsExactly()
     {
-        var interception = InterceptionInputService.Instance;
-        if (!interception.IsDriverInstalled)
+        var inputProvider = ServiceInputProvider.Instance;
+        if (!inputProvider.RefreshServiceInstalledState())
         {
-            if (!interception.Initialize())
+            if (!inputProvider.Initialize())
             {
-                Assert.Ignore("Interception HID driver is not installed/ready on this machine.");
+                Assert.Ignore("Service input provider is not installed or ready on this machine.");
             }
         }
-        else if (!interception.IsReady && !interception.Initialize())
+        else if (!inputProvider.IsReady && !inputProvider.Initialize())
         {
-            Assert.Ignore("Interception HID driver is installed but not ready.");
+            Assert.Ignore("Service input provider is installed but not ready.");
         }
 
         var expected = BuildPrintableAsciiPayload();
@@ -188,7 +188,7 @@ public class HidTypingE2eTests
         for (var i = 0; i < clipboardPayload.Length; i++)
         {
             var ch = clipboardPayload[i];
-            var ok = interception.SendCharacter(ch);
+            var ok = inputProvider.SendCharacter(ch);
             if (!ok)
             {
                 sendFailures.Add($"SendCharacter failed for '{Printable(ch)}' (U+{(int)ch:X4})");

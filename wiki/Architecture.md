@@ -1,6 +1,6 @@
 # Architecture
 
-> **v2.1.492** — Pure C# WPF architecture with cross-platform support. All functionality runs natively with no PowerShell dependency.
+> **v2.1.492** — Pure C# WPF architecture. All functionality runs natively with no PowerShell dependency.
 
 ## Project Structure
 
@@ -8,7 +8,6 @@
 Redball/
 ├── .github/workflows/
 │   ├── ci.yml                       # CI pipeline (build, test, lint, security)
-│   ├── linux-ci.yml                 # Linux CI pipeline
 │   ├── release.yml                  # Release pipeline (tag, build, publish)
 │   └── security.yml                 # Security scanning
 ├── src/
@@ -83,9 +82,6 @@ Redball/
 │   │   ├── InputInjectionService.cs
 │   │   ├── InputInjectionEngine.cs
 │   │   └── IpcServer.cs
-│   │
-│   ├── Redball.Linux/               # Linux GTK application
-│   │   └── (GTK-based Linux port)
 │   │
 │   └── Redball.macOS/               # macOS application (future)
 │

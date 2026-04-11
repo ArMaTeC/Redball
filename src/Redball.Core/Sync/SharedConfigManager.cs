@@ -8,7 +8,7 @@ namespace Redball.Core.Sync;
 
 /// <summary>
 /// Cross-platform configuration manager that provides a shared configuration format
-/// across Windows, macOS, and Linux implementations of Redball.
+/// across Windows and macOS implementations of Redball.
 /// </summary>
 public class SharedConfigManager
 {
@@ -47,29 +47,15 @@ public class SharedConfigManager
         // Use platform-appropriate config directories
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         
-        // On macOS/Linux, this typically maps to ~/.config
+        // On macOS, this typically maps to ~/.config
         // On Windows, it's %APPDATA%
         var configDir = Path.Combine(appData, "Redball");
-        
+
         // For macOS, prefer ~/Library/Application Support/Redball
         if (OperatingSystem.IsMacOS())
         {
             var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             configDir = Path.Combine(home, "Library", "Application Support", "Redball");
-        }
-        // For Linux, use ~/.config/redball
-        else if (OperatingSystem.IsLinux())
-        {
-            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            var xdgConfig = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
-            if (!string.IsNullOrEmpty(xdgConfig))
-            {
-                configDir = Path.Combine(xdgConfig, "redball");
-            }
-            else
-            {
-                configDir = Path.Combine(home, ".config", "redball");
-            }
         }
 
         return configDir;
@@ -338,7 +324,6 @@ public class SharedConfigManager
         var overrides = platform switch
         {
             "macos" => shared.PlatformOverrides?.MacOS as object,
-            "linux" => shared.PlatformOverrides?.Linux as object,
             _ => shared.PlatformOverrides?.Windows as object
         };
 
@@ -396,7 +381,6 @@ public class SharedConfigManager
     {
         if (OperatingSystem.IsWindows()) return "windows";
         if (OperatingSystem.IsMacOS()) return "macos";
-        if (OperatingSystem.IsLinux()) return "linux";
         return "unknown";
     }
 
@@ -467,7 +451,6 @@ public class PlatformSpecificSettings
 {
     public WindowsSettings? Windows { get; set; }
     public MacOSSettings? MacOS { get; set; }
-    public LinuxSettings? Linux { get; set; }
 }
 
 public class WindowsSettings
@@ -483,11 +466,6 @@ public class MacOSSettings
     public bool MenuBarIconOnly { get; set; } = false;
 }
 
-public class LinuxSettings
-{
-    public string? PreferredBackend { get; set; } // x11, wayland, systemd
-    public bool UseAppIndicator { get; set; } = true;
-}
 
 public class ConfigExportPackage
 {

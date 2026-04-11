@@ -194,32 +194,32 @@
                         <DockPanel>
                             <!-- Top navigation icons -->
                             <StackPanel DockPanel.Dock="Top">
-                                <RadioButton x:Name="HomeNavButton" IsChecked="True" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Home">
+                                <RadioButton x:Name="HomeNavButton" GroupName="MainNavigation" IsChecked="True" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Home">
                                     <TextBlock Text="&#xE80F;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
                                 </RadioButton>
-                                <RadioButton x:Name="AnalyticsNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Analytics">
+                                <RadioButton x:Name="AnalyticsNavButton" GroupName="MainNavigation" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Analytics">
                                     <TextBlock Text="&#xE9D2;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
                                 </RadioButton>
-                                <RadioButton x:Name="TypeThingNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="TypeThing">
+                                <RadioButton x:Name="TypeThingNavButton" GroupName="MainNavigation" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="TypeThing">
                                     <TextBlock Text="&#xE8D2;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
                                 </RadioButton>
-                                <RadioButton x:Name="DiagnosticsNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Diagnostics">
+                                <RadioButton x:Name="DiagnosticsNavButton" GroupName="MainNavigation" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Diagnostics">
                                     <TextBlock Text="&#xE9D9;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
                                 </RadioButton>
-                                <RadioButton x:Name="BehaviorNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Behavior">
+                                <RadioButton x:Name="BehaviorNavButton" GroupName="MainNavigation" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Behavior">
                                     <TextBlock Text="&#xE771;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
                                 </RadioButton>
-                                <RadioButton x:Name="SmartFeaturesNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Smart Features">
+                                <RadioButton x:Name="SmartFeaturesNavButton" GroupName="MainNavigation" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Smart Features">
                                     <TextBlock Text="&#xEA80;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
                                 </RadioButton>
                             </StackPanel>
 
                             <!-- Bottom icons: Settings + Updates -->
                             <StackPanel DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
-                                <RadioButton x:Name="SettingsNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Settings" AutomationProperties.AutomationId="SettingsButton">
+                                <RadioButton x:Name="SettingsNavButton" GroupName="MainNavigation" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Settings" AutomationProperties.AutomationId="SettingsButton">
                                     <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
                                 </RadioButton>
-                                <RadioButton x:Name="UpdatesNavButton" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Updates">
+                                <RadioButton x:Name="UpdatesNavButton" GroupName="MainNavigation" Style="{DynamicResource IconNavButtonStyle}" Checked="NavButton_Checked" ToolTipService.ShowDuration="12000" ToolTip="Updates">
                                     <TextBlock Text="&#xE895;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center"/>
                                 </RadioButton>
                             </StackPanel>

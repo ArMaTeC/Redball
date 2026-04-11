@@ -84,8 +84,18 @@ async function fetchGitHubReleases() {
     return releases;
   } catch (err) {
     console.error('[GitHub] Failed to fetch releases:', err.message);
-    // Return cached data even if stale, or empty array
-    return githubCache.releases || [];
+    // Return cached data even if stale
+    if (githubCache.releases && githubCache.releases.length > 0) {
+      console.log('[GitHub] Returning stale cached releases');
+      return githubCache.releases;
+    }
+    // Fall back to local database releases
+    const db = loadDB();
+    if (db.releases && db.releases.length > 0) {
+      console.log(`[GitHub] Falling back to local database with ${db.releases.length} releases`);
+      return db.releases;
+    }
+    return [];
   }
 }
 
@@ -123,7 +133,20 @@ async function fetchGitHubLatest() {
     return latest;
   } catch (err) {
     console.error('[GitHub] Failed to fetch latest:', err.message);
-    return githubCache.latest || null;
+    // Return cached data even if stale
+    if (githubCache.latest) {
+      console.log('[GitHub] Returning stale cached latest release');
+      return githubCache.latest;
+    }
+    // Fall back to local database - return the most recent release
+    const db = loadDB();
+    if (db.releases && db.releases.length > 0) {
+      // Sort by version and return the latest
+      const sorted = [...db.releases].sort((a, b) => compareVersions(b.version, a.version));
+      console.log(`[GitHub] Falling back to local database latest: ${sorted[0].version}`);
+      return sorted[0];
+    }
+    return null;
   }
 }
 

@@ -18,6 +18,13 @@ public class RedballUIAutomationTests
     [ClassInitialize]
     public static void ClassInitialize(TestContext _)
     {
+        // Skip if running in headless environment
+        if (RedballUIAutomation.IsHeadlessEnvironment())
+        {
+            Assert.Inconclusive("UI automation tests require a graphical display. " +
+                "Set HEADLESS=false or use Redball.UI.Headless.Tests for headless testing.");
+        }
+
         _ui = new RedballUIAutomation();
         _ui.LaunchApplication();
     }

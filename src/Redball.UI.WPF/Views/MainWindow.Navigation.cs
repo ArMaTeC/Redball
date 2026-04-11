@@ -286,14 +286,14 @@ public partial class MainWindow
             return;
         }
 
-        if (HomeNavButton.IsChecked == true) { ShowSection("Home"); return; }
-        if (AnalyticsNavButton.IsChecked == true) { ShowSection("Analytics"); LoadEmbeddedDashboardContent(); return; }
-        if (DiagnosticsNavButton.IsChecked == true) { ShowSection("Diagnostics"); LoadEmbeddedDashboardContent(); return; }
-        if (SettingsNavButton.IsChecked == true) { ShowSection("Settings"); return; }
-        if (BehaviorNavButton.IsChecked == true) { ShowSection("Behavior"); return; }
-        if (SmartFeaturesNavButton.IsChecked == true) { ShowSection("SmartFeatures"); return; }
-        if (TypeThingNavButton.IsChecked == true) { ShowSection("TypeThing"); return; }
-        if (UpdatesNavButton.IsChecked == true) { ShowSection("Updates"); }
+        if (sender == HomeNavButton) { ShowSection("Home"); return; }
+        if (sender == AnalyticsNavButton) { LoadEmbeddedDashboardContent(); ShowSection("Analytics"); return; }
+        if (sender == DiagnosticsNavButton) { LoadEmbeddedDashboardContent(); ShowSection("Diagnostics"); return; }
+        if (sender == SettingsNavButton) { ShowSection("Settings"); return; }
+        if (sender == BehaviorNavButton) { ShowSection("Behavior"); return; }
+        if (sender == SmartFeaturesNavButton) { ShowSection("SmartFeatures"); return; }
+        if (sender == TypeThingNavButton) { ShowSection("TypeThing"); return; }
+        if (sender == UpdatesNavButton) { ShowSection("Updates"); }
     }
 
     private void AnalyticsExportCsv_Click(object sender, RoutedEventArgs e)

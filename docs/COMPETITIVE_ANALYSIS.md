@@ -3,6 +3,7 @@
 ## Market Overview
 
 The keep-awake utility market consists of several categories:
+
 1. **Built-in OS Features** (Windows Power Settings, Caffeine on macOS)
 2. **Simple Tray Utilities** (Caffeine, Mouse Jiggler)
 3. **Enterprise Tools** (PowerToys Awake, Don't Sleep)
@@ -11,12 +12,15 @@ The keep-awake utility market consists of several categories:
 ## Competitor Comparison
 
 ### Caffeine (zhornsoftware.co.uk)
+
 **Strengths:**
+
 - Extremely lightweight (~40KB)
 - Simple F15 key simulation
 - Long history (2008+)
 
 **Weaknesses:**
+
 - No modern UI
 - No smart features (battery, network awareness)
 - No theming
@@ -26,12 +30,15 @@ The keep-awake utility market consists of several categories:
 **Redball Advantage:** Modern WPF UI, 12 themes, smart monitoring, clipboard typer
 
 ### Mouse Jiggler (Microsoft PowerToys)
+
 **Strengths:**
+
 - Microsoft backing
 - Open source
 - Integrates with PowerToys ecosystem
 
 **Weaknesses:**
+
 - Requires full PowerToys installation (~500MB)
 - No keep-awake via keyboard (only mouse)
 - Limited customization
@@ -40,12 +47,15 @@ The keep-awake utility market consists of several categories:
 **Redball Advantage:** Standalone lightweight app, keyboard-based prevention, rich features
 
 ### Don't Sleep (SoftwareOK)
+
 **Strengths:**
+
 - Portable
 - Multiple prevention methods
 - Timer functionality
 
 **Weaknesses:**
+
 - Outdated UI (WinForms)
 - No smart features
 - No theming
@@ -54,11 +64,14 @@ The keep-awake utility market consists of several categories:
 **Redball Advantage:** Modern design, smart automation, beautiful themes
 
 ### Hardware Mouse Movers
+
 **Strengths:**
+
 - Undetectable by software
 - Works without software installation
 
 **Weaknesses:**
+
 - Physical hardware required ($10-30)
 - Can be detected visually
 - No smart features
@@ -112,7 +125,7 @@ The keep-awake utility market consists of several categories:
 
 ## Market Position
 
-```
+```text
                     High Features
                          │
     Don't Sleep          │     ★ REDBALL
@@ -130,6 +143,7 @@ The keep-awake utility market consists of several categories:
 ## Feature Gap Analysis
 
 ### Features Redball Has That Others Don't
+
 - [x] Multiple themes (12 vs 0-2)
 - [x] TypeThing clipboard typer
 - [x] Smart battery/network/idle detection
@@ -140,7 +154,8 @@ The keep-awake utility market consists of several categories:
 - [x] Analytics dashboard
 
 ### Features Competitors Have That Redball Could Add
-- [ ] Cross-platform support (macOS/Linux)
+
+- [ ] Cross-platform support (macOS)
 - [ ] Browser extension
 - [ ] Cloud sync of settings
 - [ ] Team/enterprise dashboard
@@ -150,10 +165,12 @@ The keep-awake utility market consists of several categories:
 ## Pricing Strategy
 
 ### Current: Free Open Source
+
 - **Pros:** Maximum adoption, community goodwill
 - **Cons:** No revenue for sustainability
 
 ### Future Options
+
 1. **Freemium:** Core free, pro features paid
 2. **Enterprise:** Free for personal, paid for commercial
 3. **Support/Hosting:** Paid support contracts

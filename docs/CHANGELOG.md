@@ -493,14 +493,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - License types: Standard, Enterprise tiers.
   - Billing models: Usage-based ($0.10/hr), Per-user ($5/mo), Per-device ($2/mo).
 
-- **Q4: Linux Support (ROADMAP)**: Created initial Linux implementation structure.
-  - New `src/Redball.Linux/` directory with GTK4/GNOME project structure.
-  - `main.py` - Application entry point with libadwaita.
-  - `keepawake.py` - Multi-backend keep-awake engine (X11, Wayland, systemd).
-  - `tray.py` - StatusNotifier/AppIndicator system tray integration.
-  - `README.md` with project structure, requirements, and build instructions.
-  - Support for Flatpak, DEB/RPM packaging, and AUR distribution.
-  - Wayland compatibility via portals, X11 via xdg-screensaver.
+- **Q4: Linux Support (ROADMAP)**: ~~Created initial Linux implementation structure.~~ **REMOVED** — Project now Windows-only.
+  - ~~New `src/Redball.Linux/` directory with GTK4/GNOME project structure.~~
+  - ~~`main.py` - Application entry point with libadwaita.~~
+  - ~~`keepawake.py` - Multi-backend keep-awake engine (X11, Wayland, systemd).~~
+  - ~~`tray.py` - StatusNotifier/AppIndicator system tray integration.~~
+  - ~~`README.md` with project structure, requirements, and build instructions.~~
+  - ~~Support for Flatpak, DEB/RPM packaging, and AUR distribution.~~
+  - ~~Wayland compatibility via portals, X11 via xdg-screensaver.~~
 
 - **Q4: macOS Support (ROADMAP)**: Created initial macOS implementation structure.
   - New `src/Redball.macOS/` directory with Swift/SwiftUI project structure.
