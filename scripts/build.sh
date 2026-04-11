@@ -351,6 +351,24 @@ auto_release() {
         fi
     fi
     
+    # 5.6 Clean old version
+    log_step "Phase 5.6: Clean old version..."
+    if [[ $DRY_RUN == true ]]; then
+        log_info "[DRY RUN] Would clean old version"
+    else
+        local patch_script="$UPDATE_SERVER_DIR/scripts/cleanup-releases.js"
+        log_debug "Looking for clean old version script at: $patch_script"
+        if [[ -f "$patch_script" ]]; then
+            log_debug "Running: node $patch_script"
+            node "$patch_script" 2>&1 | while IFS= read -r line; do
+                log_detail "$line"
+            done
+            log_success "Clean old version run"
+        else
+            log_warn "Clean old version script not found: $patch_script"
+        fi
+    fi
+
     # 6. Publish to GitHub
     log_step "Phase 6: Publishing to GitHub..."
     if [[ $DRY_RUN == true ]]; then
