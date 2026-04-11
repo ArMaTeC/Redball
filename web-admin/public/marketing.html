@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redball - Keep Your Windows PC Awake</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0f1a;
+            --bg-panel: #111827;
+            --accent: #00d4aa;
+            --accent-hover: #00b894;
+            --text-primary: #f7fafc;
+            --text-secondary: #a0aec0;
+            --border: #2d3748;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .logo svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover {
+            color: var(--text-primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .hero {
+            padding: 10rem 2rem 6rem;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-panel) 100%);
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, var(--text-primary), var(--accent));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .version-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 2rem;
+        }
+
+        .features {
+            padding: 6rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        .stats {
+            background: var(--bg-panel);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .download {
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .download h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .download p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .download-options {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .download-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            min-width: 250px;
+            text-align: center;
+        }
+
+        .download-card h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        .download-card p {
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer {
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <a href="/" class="logo">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" fill="currentColor" fill-opacity="0.1" />
+                <circle cx="50" cy="50" r="35" stroke="currentColor" stroke-width="4" fill="none" />
+                <circle cx="50" cy="50" r="20" fill="currentColor" />
+            </svg>
+            Redball
+        </a>
+        <nav class="nav">
+            <a href="#features">Features</a>
+            <a href="#download">Download</a>
+            <a href="https://github.com/ArMaTeC/Redball">GitHub</a>
+            <a href="/admin" class="btn btn-secondary">Admin</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>Keep Your Windows PC Awake</h1>
+        <p>Redball is a modern, lightweight keep-awake utility for Windows. Prevent screen lock, sleep, and idle timeout
+            with smart monitoring and beautiful themes.</p>
+        <div class="hero-buttons">
+            <a href="#download" class="btn btn-primary">Download Free</a>
+            <a href="https://github.com/ArMaTeC/Redball" class="btn btn-secondary">View on GitHub</a>
+        </div>
+        <div class="version-badge">
+            <span>Latest:</span>
+            <strong id="latest-version">Loading...</strong>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <h2>Why Choose Redball?</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>12 Beautiful Themes</h3>
+                <p>Choose from a variety of modern dark and light themes including Midnight, Ocean, Forest, and Sunset.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <h3>Smart Detection</h3>
+                <p>Automatically detects battery state, network activity, and idle time to intelligently manage
+                    keep-awake behaviour.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⌨️</div>
+                <h3>TypeThing Clipboard Typer</h3>
+                <p>Built-in clipboard typer that simulates human typing with variable speed for testing and automation.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>Auto-Updates</h3>
+                <p>Built-in update system with delta patches for fast, efficient updates. Always stay on the latest
+                    version.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Secure & Private</h3>
+                <p>No telemetry, no data collection. Your activity stays on your machine. Optional local analytics only.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Lightweight</h3>
+                <p>Minimal resource usage. Runs quietly in the system tray without impacting performance.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="stats-grid">
+            <div>
+                <div class="stat-value" id="total-downloads">-</div>
+                <div class="stat-label">Downloads</div>
+            </div>
+            <div>
+                <div class="stat-value" id="total-releases">-</div>
+                <div class="stat-label">Releases</div>
+            </div>
+            <div>
+                <div class="stat-value">v2.1</div>
+                <div class="stat-label">Current Version</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="download" id="download">
+        <h2>Download Redball</h2>
+        <p>Free and open source. No ads, no tracking.</p>
+        <div class="download-options">
+            <div class="download-card">
+                <h4>Windows Installer</h4>
+                <p>Recommended for most users</p>
+                <a href="https://github.com/ArMaTeC/Redball/releases/latest" class="btn btn-primary">Download .exe</a>
+            </div>
+            <div class="download-card">
+                <h4>Portable ZIP</h4>
+                <p>No installation required</p>
+                <a href="https://github.com/ArMaTeC/Redball/releases/latest" class="btn btn-secondary">Download .zip</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="https://github.com/ArMaTeC/Redball">GitHub</a>
+            <a href="https://github.com/ArMaTeC/Redball/issues">Issues</a>
+            <a href="https://github.com/ArMaTeC/Redball/discussions">Discussions</a>
+            <a href="/admin">Admin</a>
+        </div>
+        <p>&copy; 2026 Redball. Open source under MIT License.</p>
+    </footer>
+
+    <script>
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+
+                document.getElementById('total-downloads').textContent =
+                    stats.totalDownloads > 0 ? stats.totalDownloads.toLocaleString() : '10K+';
+                document.getElementById('total-releases').textContent =
+                    stats.totalReleases > 0 ? stats.totalReleases : '50+';
+                document.getElementById('latest-version').textContent =
+                    stats.latestVersion ? `v${stats.latestVersion}` : 'v2.1.533';
+            } catch (err) {
+                console.log('Stats unavailable');
+                document.getElementById('total-downloads').textContent = '10K+';
+                document.getElementById('total-releases').textContent = '50+';
+                document.getElementById('latest-version').textContent = 'v2.1.533';
+            }
+        }
+        loadStats();
+    </script>
+</body>
+
+</html>

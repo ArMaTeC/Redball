@@ -112,3 +112,4 @@ repo/
 *.flatpak
 src/Redball.Linux/.flatpak-builder/
 src/Redball.Linux/flatpak/repo/
+web-admin/node_modules/

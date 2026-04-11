@@ -8,19 +8,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3502;
+const PORT = process.env.PORT || 3500;
 
 app.use(express.json());
 
-// Serve static files from the Vite build directory
-app.use(express.static(path.join(__dirname, 'dist')));
+// Serve static files from the update-server public directory (full marketing site)
+app.use(express.static(path.join(__dirname, '..', 'update-server', 'public')));
 
 // --- Admin APIs ---
 
 app.post('/api/admin/build', (req, res) => {
   console.log('[SITE] Triggering build...');
   const buildProcess = spawn('npm', ['run', 'build'], { cwd: path.join(__dirname, '..') });
-  
+
   res.json({ status: 'started', pid: buildProcess.pid });
 
   buildProcess.stdout.on('data', (data) => {
@@ -31,7 +31,7 @@ app.post('/api/admin/build', (req, res) => {
 app.post('/api/admin/release', (req, res) => {
   console.log('[SITE] Triggering release...');
   const releaseProcess = spawn('npm', ['run', 'release'], { cwd: path.join(__dirname, '..') });
-  
+
   res.json({ status: 'started', pid: releaseProcess.pid });
 
   releaseProcess.stdout.on('data', (data) => {
@@ -62,7 +62,7 @@ app.get('/api/admin/config', (req, res) => {
 // Fallback to index.html for SPA
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/')) return next();
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'update-server', 'public', 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {

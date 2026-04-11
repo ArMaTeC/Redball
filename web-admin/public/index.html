@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redball Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-dark: #0a0f1a;
+            --bg-panel: #111827;
+            --bg-card: #1a2236;
+            --border: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #a0aec0;
+            --accent: #00d4aa;
+            --accent-hover: #00b894;
+            --danger: #e53e3e;
+            --warning: #dd6b20;
+            --success: #38a169;
+            --info: #3182ce;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .logo svg {
+            width: 32px;
+            height: 32px;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+        
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-dark);
+        }
+        
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent);
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .stat-change {
+            font-size: 0.875rem;
+            color: var(--success);
+            margin-top: 0.25rem;
+        }
+        
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            background: var(--bg-panel);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .panel-body {
+            padding: 1.5rem;
+        }
+        
+        /* Build UI */
+        .build-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .build-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .build-stages {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .stage {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-panel);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+        
+        .stage.active {
+            border-color: var(--accent);
+            background: rgba(0, 212, 170, 0.1);
+        }
+        
+        .stage.complete {
+            border-color: var(--success);
+        }
+        
+        .stage.error {
+            border-color: var(--danger);
+        }
+        
+        .stage-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            font-size: 1.25rem;
+        }
+        
+        .stage.active .stage-icon {
+            border-color: var(--accent);
+            animation: pulse 2s infinite;
+        }
+        
+        .stage.complete .stage-icon {
+            border-color: var(--success);
+            background: var(--success);
+            color: white;
+        }
+        
+        .stage.error .stage-icon {
+            border-color: var(--danger);
+            background: var(--danger);
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(0, 212, 170, 0); }
+        }
+        
+        .stage-info {
+            flex: 1;
+        }
+        
+        .stage-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stage-status {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .build-progress {
+            margin-top: 2rem;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-panel);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .progress-text {
+            text-align: center;
+            margin-top: 0.75rem;
+            font-weight: 600;
+        }
+        
+        /* Terminal */
+        .terminal {
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+            font-size: 0.8125rem;
+            line-height: 1.6;
+        }
+        
+        .terminal-header {
+            background: var(--bg-panel);
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .terminal-dots {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .terminal-dot.red { background: #ff5f56; }
+        .terminal-dot.yellow { background: #ffbd2e; }
+        .terminal-dot.green { background: #27c93f; }
+        
+        .terminal-title {
+            margin-left: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+        
+        .terminal-body {
+            padding: 1rem;
+            height: 400px;
+            overflow-y: auto;
+            color: #e4e4e4;
+        }
+        
+        .terminal-line {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .terminal-line.error { color: #ff5f56; }
+        .terminal-line.success { color: #27c93f; }
+        .terminal-line.warning { color: #ffbd2e; }
+        .terminal-line.info { color: #5ac8fa; }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            opacity: 0.9;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Releases Table */
+        .releases-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .releases-table th,
+        .releases-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .releases-table th {
+            background: var(--bg-panel);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+        
+        .releases-table tr:hover {
+            background: var(--bg-panel);
+        }
+        
+        .version-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .version-badge.stable {
+            background: var(--success);
+            color: white;
+        }
+        
+        .version-badge.beta {
+            background: var(--warning);
+            color: white;
+        }
+        
+        /* Status indicators */
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status.running {
+            background: rgba(0, 212, 170, 0.2);
+            color: var(--accent);
+        }
+        
+        .status.running::before {
+            background: var(--accent);
+            animation: blink 1s infinite;
+        }
+        
+        .status.success {
+            background: rgba(56, 161, 105, 0.2);
+            color: var(--success);
+        }
+        
+        .status.success::before {
+            background: var(--success);
+        }
+        
+        .status.failed {
+            background: rgba(229, 62, 62, 0.2);
+            color: var(--danger);
+        }
+        
+        .status.failed::before {
+            background: var(--danger);
+        }
+        
+        .status.idle {
+            background: var(--bg-panel);
+            color: var(--text-secondary);
+        }
+        
+        .status.idle::before {
+            background: var(--text-secondary);
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Connection status */
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            transition: background 0.3s;
+        }
+        
+        .connection-dot.connected {
+            background: var(--success);
+        }
+        
+        .connection-dot.disconnected {
+            background: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" fill="currentColor" fill-opacity="0.1"/>
+                <circle cx="50" cy="50" r="35" stroke="currentColor" stroke-width="4" fill="none"/>
+                <circle cx="50" cy="50" r="20" fill="currentColor"/>
+            </svg>
+            Redball Admin
+        </div>
+        <nav class="nav">
+            <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+            <button class="nav-btn" data-section="build">Build</button>
+            <button class="nav-btn" data-section="releases">Releases</button>
+        </nav>
+        <div class="connection-status">
+            <span class="connection-dot" id="connection-dot"></span>
+            <span id="connection-text">Connecting...</span>
+        </div>
+    </header>
+
+    <main class="main">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Downloads</div>
+                    <div class="stat-value" id="total-downloads">-</div>
+                    <div class="stat-change">Across all releases</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Releases</div>
+                    <div class="stat-value" id="total-releases">-</div>
+                    <div class="stat-change">Published versions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Latest Version</div>
+                    <div class="stat-value" id="latest-version">-</div>
+                    <div class="stat-change">Current stable</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Build Status</div>
+                    <div class="status idle" id="build-status">Idle</div>
+                    <div class="stat-change" id="last-build">No recent builds</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">📊 Download Statistics by File</div>
+                </div>
+                <div class="panel-body">
+                    <div id="download-stats">
+                        <p class="text-secondary">Loading statistics...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Build Section -->
+        <section id="build" class="section">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">🔨 Build Pipeline</div>
+                    <div>
+                        <button class="btn btn-primary" id="start-build-btn" onclick="startBuild()">
+                            ▶ Start Build
+                        </button>
+                        <button class="btn btn-danger" id="stop-build-btn" onclick="stopBuild()" disabled>
+                            ⏹ Stop
+                        </button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="build-container">
+                        <div class="build-stages" id="build-stages">
+                            <div class="stage" data-stage="setup">
+                                <div class="stage-icon">⚙</div>
+                                <div class="stage-info">
+                                    <div class="stage-name">Environment Setup</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                            <div class="stage" data-stage="version">
+                                <div class="stage-icon">🏷</div>
+                                <div class="stage-info">
+                                    <div class="stage-name">Version Bump</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                            <div class="stage" data-stage="windows-build">
+                                <div class="stage-icon">🔨</div>
+                                <div class="stage-info">
+                                    <div class="stage-name">Windows Build</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                            <div class="stage" data-stage="update-server">
+                                <div class="stage-icon">📦</div>
+                                <div class="stage-info">
+                                    <div class="stage-name">Update Server</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                            <div class="stage" data-stage="publish">
+                                <div class="stage-icon">☁</div>
+                                <div class="stage-info">
+                                    <div class="stage-name">Publish Release</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                            <div class="stage" data-stage="github">
+                                <div class="stage-icon">🚀</div>
+                                <div class="stage-info">
+                                    <div class="stage-name">GitHub Release</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                            <div class="stage" data-stage="restart">
+                                <div class="stage-icon">🔄</div>
+                                <div class="stage-info">
+                                    <div class="stage-name">Restart Services</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="terminal">
+                                <div class="terminal-header">
+                                    <div class="terminal-dots">
+                                        <span class="terminal-dot red"></span>
+                                        <span class="terminal-dot yellow"></span>
+                                        <span class="terminal-dot green"></span>
+                                    </div>
+                                    <span class="terminal-title">build-output.log</span>
+                                </div>
+                                <div class="terminal-body" id="terminal-body">
+                                    <div class="terminal-line info">Ready to build. Click "Start Build" to begin.</div>
+                                </div>
+                            </div>
+
+                            <div class="build-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                                </div>
+                                <div class="progress-text" id="progress-text">0% Complete</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Releases Section -->
+        <section id="releases" class="section">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">📦 Release History</div>
+                </div>
+                <div class="panel-body">
+                    <table class="releases-table">
+                        <thead>
+                            <tr>
+                                <th>Version</th>
+                                <th>Channel</th>
+                                <th>Date</th>
+                                <th>Downloads</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="releases-tbody">
+                            <tr>
+                                <td colspan="5">Loading releases...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let ws;
+        let buildState = { status: 'idle', stage: null, progress: 0 };
+
+        const stageNames = {
+            'setup': 'Environment Setup',
+            'version': 'Version Bump',
+            'windows-build': 'Windows Build',
+            'update-server': 'Update Server',
+            'publish': 'Publish Release',
+            'github': 'GitHub Release',
+            'restart': 'Restart Services',
+            'complete': 'Complete',
+            'error': 'Error'
+        };
+
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+            ws.onopen = () => {
+                console.log('[WS] Connected');
+                document.getElementById('connection-dot').className = 'connection-dot connected';
+                document.getElementById('connection-text').textContent = 'Connected';
+                loadStats();
+                loadReleases();
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                handleMessage(message);
+            };
+
+            ws.onclose = () => {
+                console.log('[WS] Disconnected');
+                document.getElementById('connection-dot').className = 'connection-dot disconnected';
+                document.getElementById('connection-text').textContent = 'Disconnected - Retrying...';
+                setTimeout(connect, 3000);
+            };
+
+            ws.onerror = (err) => {
+                console.error('[WS] Error:', err);
+            };
+        }
+
+        function handleMessage(message) {
+            switch (message.type) {
+                case 'state':
+                    updateBuildState(message.data);
+                    break;
+                case 'build-started':
+                    buildStarted(message.data);
+                    break;
+                case 'build-output':
+                    addTerminalLine(message.data.line, message.data.stage);
+                    updateProgress(message.data.progress);
+                    updateStage(message.data.stage);
+                    break;
+                case 'build-complete':
+                    buildComplete(message.data);
+                    break;
+                case 'build-stopped':
+                    buildStopped();
+                    break;
+            }
+        }
+
+        function updateBuildState(state) {
+            buildState = state;
+            updateUI();
+        }
+
+        function buildStarted(data) {
+            buildState = { ...data, status: 'running' };
+            document.getElementById('start-build-btn').disabled = true;
+            document.getElementById('stop-build-btn').disabled = false;
+            document.getElementById('terminal-body').innerHTML = '';
+            addTerminalLine('Build started...', 'info');
+            resetStages();
+            updateUI();
+        }
+
+        function buildComplete(data) {
+            buildState.status = data.status;
+            buildState.endTime = Date.now();
+            document.getElementById('start-build-btn').disabled = false;
+            document.getElementById('stop-build-btn').disabled = true;
+            addTerminalLine(`Build ${data.status === 'success' ? 'completed successfully' : 'failed'}`, data.status);
+            updateProgress(data.status === 'success' ? 100 : buildState.progress);
+            updateUI();
+            loadStats();
+        }
+
+        function buildStopped() {
+            buildState.status = 'stopped';
+            document.getElementById('start-build-btn').disabled = false;
+            document.getElementById('stop-build-btn').disabled = true;
+            addTerminalLine('Build stopped by user', 'warning');
+            updateUI();
+        }
+
+        function addTerminalLine(line, stage) {
+            const terminal = document.getElementById('terminal-body');
+            const div = document.createElement('div');
+            div.className = 'terminal-line';
+            
+            // Colorize based on content
+            if (line.includes('[STEP]')) div.classList.add('info');
+            if (line.includes('[OK]')) div.classList.add('success');
+            if (line.includes('[WARN]')) div.classList.add('warning');
+            if (line.includes('[ERROR]')) div.classList.add('error');
+            if (line.includes('✓')) div.classList.add('success');
+            if (line.includes('✗')) div.classList.add('error');
+            if (stage === 'error') div.classList.add('error');
+            if (stage === 'success') div.classList.add('success');
+            
+            div.textContent = line;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            // Limit lines
+            while (terminal.children.length > 1000) {
+                terminal.removeChild(terminal.firstChild);
+            }
+        }
+
+        function updateProgress(progress) {
+            buildState.progress = progress;
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('progress-text').textContent = `${Math.round(progress)}% Complete`;
+        }
+
+        function updateStage(stageName) {
+            if (!stageName) return;
+            
+            const stages = document.querySelectorAll('.stage');
+            stages.forEach(stage => {
+                const name = stage.dataset.stage;
+                if (name === stageName) {
+                    stage.classList.add('active');
+                    stage.classList.remove('complete');
+                    stage.querySelector('.stage-status').textContent = 'In progress...';
+                } else if (isStageBefore(name, stageName)) {
+                    stage.classList.remove('active');
+                    stage.classList.add('complete');
+                    stage.querySelector('.stage-status').textContent = 'Complete ✓';
+                }
+            });
+        }
+
+        function isStageBefore(stage1, stage2) {
+            const order = ['setup', 'version', 'windows-build', 'update-server', 'publish', 'github', 'restart', 'complete'];
+            const i1 = order.indexOf(stage1);
+            const i2 = order.indexOf(stage2);
+            return i1 >= 0 && i2 >= 0 && i1 < i2;
+        }
+
+        function resetStages() {
+            const stages = document.querySelectorAll('.stage');
+            stages.forEach(stage => {
+                stage.classList.remove('active', 'complete', 'error');
+                stage.querySelector('.stage-status').textContent = 'Waiting...';
+            });
+        }
+
+        function updateUI() {
+            const statusEl = document.getElementById('build-status');
+            statusEl.className = `status ${buildState.status}`;
+            statusEl.textContent = buildState.status.charAt(0).toUpperCase() + buildState.status.slice(1);
+            
+            if (buildState.startTime && buildState.endTime) {
+                const duration = Math.round((buildState.endTime - buildState.startTime) / 1000);
+                document.getElementById('last-build').textContent = `Last build: ${duration}s`;
+            }
+        }
+
+        function startBuild() {
+            if (ws && ws.readyState === 1) {
+                ws.send(JSON.stringify({ action: 'start-build', buildType: 'windows' }));
+            } else {
+                fetch('/api/build/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'windows' }) });
+            }
+        }
+
+        function stopBuild() {
+            if (ws && ws.readyState === 1) {
+                ws.send(JSON.stringify({ action: 'stop-build' }));
+            } else {
+                fetch('/api/build/stop', { method: 'POST' });
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                document.getElementById('total-downloads').textContent = stats.totalDownloads.toLocaleString();
+                document.getElementById('total-releases').textContent = stats.totalReleases;
+                document.getElementById('latest-version').textContent = stats.latestVersion || '-';
+                
+                // Download by file stats
+                const statsContainer = document.getElementById('download-stats');
+                if (Object.keys(stats.byFile).length > 0) {
+                    let html = '<table class="releases-table"><thead><tr><th>File</th><th>Downloads</th><th>Versions</th></tr></thead><tbody>';
+                    Object.entries(stats.byFile)
+                        .sort((a, b) => b[1].downloads - a[1].downloads)
+                        .forEach(([file, data]) => {
+                            html += `<tr><td>${file}</td><td>${data.downloads.toLocaleString()}</td><td>${data.versions.length}</td></tr>`;
+                        });
+                    html += '</tbody></table>';
+                    statsContainer.innerHTML = html;
+                } else {
+                    statsContainer.innerHTML = '<p class="text-secondary">No download data available</p>';
+                }
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+            }
+        }
+
+        async function loadReleases() {
+            try {
+                const response = await fetch('/api/releases');
+                const releases = await response.json();
+                
+                const tbody = document.getElementById('releases-tbody');
+                if (releases.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5">No releases found</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = releases
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .map(r => `
+                        <tr>
+                            <td><span class="version-badge ${r.channel}">${r.version}</span></td>
+                            <td>${r.channel}</td>
+                            <td>${new Date(r.date).toLocaleDateString()}</td>
+                            <td>${(r.totalDownloads || 0).toLocaleString()}</td>
+                            <td>${r.files ? r.files.length : 0} files</td>
+                        </tr>
+                    `).join('');
+            } catch (err) {
+                console.error('Failed to load releases:', err);
+            }
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.section).classList.add('active');
+            });
+        });
+
+        // Initialize
+        connect();
+    </script>
+</body>
+</html>

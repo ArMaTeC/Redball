@@ -429,15 +429,43 @@ auto_release() {
         elif [[ -f "$server_dir/server.js" ]]; then
             # Try to find and kill existing node process, then restart
             log_info "Restarting update server via node..."
-            pkill -f "node.*update-server/server.js" 2>/dev/null || true
+            pkill -f "node.*server.js" 2>/dev/null || true
             sleep 2
-            (cd "$server_dir" && nohup node server.js > /dev/null 2>&1 &)
-            sleep 2
-            if pgrep -f "node.*update-server/server.js" > /dev/null; then
-                log_success "Update server restarted"
-            else
-                log_warn "Update server may not have started properly"
-            fi
+            
+            # Start server with log file for debugging
+            local log_file="$server_dir/server.log"
+            (cd "$server_dir" && nohup node server.js > "$log_file" 2>&1 &)
+            
+            # Wait for server to start and verify it's responding
+            local max_wait=10
+            local waited=0
+            while [[ $waited -lt $max_wait ]]; do
+                sleep 1
+                ((waited++))
+                
+                # Check if process is running
+                if pgrep -f "node.*server.js" > /dev/null; then
+                    # Check if server is responding on port 3500
+                    if curl -s http://localhost:3500/api/health > /dev/null 2>&1; then
+                        log_success "Update server restarted and responding on port 3500"
+                        break
+                    fi
+                else
+                    # Process died, check log for errors
+                    if [[ -f "$log_file" ]] && [[ $waited -ge 3 ]]; then
+                        log_warn "Server process not found, checking logs..."
+                        tail -5 "$log_file" | while IFS= read -r line; do log_detail "$line"; done
+                    fi
+                fi
+                
+                if [[ $waited -eq $max_wait ]]; then
+                    log_warn "Update server may not have started properly (timeout after ${max_wait}s)"
+                    if [[ -f "$log_file" ]]; then
+                        log_detail "Last 10 lines of server.log:"
+                        tail -10 "$log_file" | while IFS= read -r line; do log_detail "$line"; done
+                    fi
+                fi
+            done
         else
             log_warn "Update server not found at $server_dir"
         fi

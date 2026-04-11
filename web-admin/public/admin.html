@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redball Admin Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0a0f1a;
+            --bg-panel: #111827;
+            --bg-card: #1a2236;
+            --border: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #a0aec0;
+            --accent: #00d4aa;
+            --accent-hover: #00b894;
+            --danger: #e53e3e;
+            --warning: #dd6b20;
+            --success: #38a169;
+            --info: #3182ce;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        /* Login Modal */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 15, 26, 0.98);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .login-overlay.hidden {
+            display: none;
+        }
+        .login-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-box h2 {
+            margin-bottom: 0.5rem;
+            font-size: 1.75rem;
+        }
+        .login-box p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        .login-box input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .login-box button {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--accent);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .login-box button:hover {
+            background: var(--accent-hover);
+        }
+        .login-error {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        .login-error.show {
+            display: block;
+        }
+        /* Header */
+        .header {
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .nav {
+            display: flex;
+            gap: 1rem;
+        }
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-dark);
+        }
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            margin-left: 1rem;
+        }
+        .logout-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+        }
+        .connection-dot.connected { background: var(--success); }
+        .connection-dot.disconnected { background: var(--danger); }
+        /* Main */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent);
+        }
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        /* Panels */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .panel-header {
+            background: var(--bg-panel);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        .panel-body {
+            padding: 1.5rem;
+        }
+        /* Build UI */
+        .build-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        @media (max-width: 1024px) {
+            .build-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .build-stages {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .stage {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.875rem 1rem;
+            background: var(--bg-panel);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+        .stage.active {
+            border-color: var(--accent);
+            background: rgba(0, 212, 170, 0.1);
+        }
+        .stage.complete {
+            border-color: var(--success);
+        }
+        .stage.error {
+            border-color: var(--danger);
+        }
+        .stage-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            font-size: 1.1rem;
+        }
+        .stage.active .stage-icon {
+            border-color: var(--accent);
+            animation: pulse 2s infinite;
+        }
+        .stage.complete .stage-icon {
+            border-color: var(--success);
+            background: var(--success);
+            color: white;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(0, 212, 170, 0); }
+        }
+        .stage-name {
+            font-weight: 600;
+            font-size: 0.9375rem;
+        }
+        .stage-status {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+        /* Terminal */
+        .terminal {
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+            font-size: 0.8125rem;
+            line-height: 1.5;
+        }
+        .terminal-header {
+            background: var(--bg-panel);
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .terminal-dot.red { background: #ff5f56; }
+        .terminal-dot.yellow { background: #ffbd2e; }
+        .terminal-dot.green { background: #27c93f; }
+        .terminal-title {
+            margin-left: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+        .terminal-body {
+            padding: 1rem;
+            height: 400px;
+            overflow-y: auto;
+            color: #e4e4e4;
+        }
+        .terminal-line {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+            padding: 1px 0;
+        }
+        .terminal-line.timestamp {
+            color: #666;
+            font-size: 0.75rem;
+        }
+        .terminal-line.phase-start {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .terminal-line.success {
+            color: #27c93f;
+        }
+        .terminal-line.warning {
+            color: #ffbd2e;
+        }
+        .terminal-line.error {
+            color: #ff5f56;
+        }
+        .terminal-line.dim {
+            color: #666;
+        }
+        /* Progress */
+        .build-progress {
+            margin-top: 1.5rem;
+        }
+        .progress-bar {
+            height: 6px;
+            background: var(--bg-panel);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .progress-text {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* Tables */
+        .releases-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        .releases-table th,
+        .releases-table td {
+            padding: 0.875rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .releases-table th {
+            background: var(--bg-panel);
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+        .releases-table tr:hover {
+            background: var(--bg-panel);
+        }
+        .version-badge {
+            display: inline-flex;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+        }
+        .version-badge.stable {
+            background: var(--success);
+            color: white;
+        }
+        .version-badge.beta {
+            background: var(--warning);
+            color: white;
+        }
+        /* Status */
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+        }
+        .status::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        .status.running {
+            background: rgba(0, 212, 170, 0.15);
+            color: var(--accent);
+        }
+        .status.running::before {
+            background: var(--accent);
+            animation: blink 1s infinite;
+        }
+        .status.success {
+            background: rgba(56, 161, 105, 0.15);
+            color: var(--success);
+        }
+        .status.success::before {
+            background: var(--success);
+        }
+        .status.failed {
+            background: rgba(229, 62, 62, 0.15);
+            color: var(--danger);
+        }
+        .status.idle {
+            background: var(--bg-panel);
+            color: var(--text-secondary);
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-box">
+            <h2>🔐 Admin Login</h2>
+            <p>Enter your password to access the dashboard</p>
+            <input type="password" id="password-input" placeholder="Password" autocomplete="off">
+            <button onclick="doLogin()">Sign In</button>
+            <div class="login-error" id="login-error">Invalid password</div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <header class="header">
+        <a href="/" class="logo">
+            <svg viewBox="0 0 100 100" width="28" height="28">
+                <circle cx="50" cy="50" r="45" fill="currentColor" fill-opacity="0.1"/>
+                <circle cx="50" cy="50" r="35" stroke="currentColor" stroke-width="4" fill="none"/>
+                <circle cx="50" cy="50" r="20" fill="currentColor"/>
+            </svg>
+            Redball Admin
+        </a>
+        <div style="display: flex; align-items: center;">
+            <nav class="nav">
+                <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+                <button class="nav-btn" data-section="build">Build</button>
+                <button class="nav-btn" data-section="releases">Releases</button>
+            </nav>
+            <button class="logout-btn" onclick="doLogout()">Logout</button>
+            <div class="connection-status" style="margin-left: 1.5rem;">
+                <span class="connection-dot" id="connection-dot"></span>
+                <span id="connection-text">...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <!-- Dashboard -->
+        <section id="dashboard" class="section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Downloads</div>
+                    <div class="stat-value" id="total-downloads">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Releases</div>
+                    <div class="stat-value" id="total-releases">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Latest Version</div>
+                    <div class="stat-value" id="latest-version">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Build Status</div>
+                    <div class="status idle" id="build-status">Idle</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">📊 Downloads by File</div>
+                </div>
+                <div class="panel-body" id="download-stats">
+                    <p style="color: var(--text-secondary);">Loading...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Build -->
+        <section id="build" class="section">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">🔨 Build Pipeline</div>
+                    <div>
+                        <button class="btn btn-primary" id="start-build-btn" onclick="startBuild()">▶ Start</button>
+                        <button class="btn btn-danger" id="stop-build-btn" onclick="stopBuild()" disabled>⏹ Stop</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="build-container">
+                        <div class="build-stages" id="build-stages">
+                            <div class="stage" data-stage="setup">
+                                <div class="stage-icon">⚙</div>
+                                <div>
+                                    <div class="stage-name">Environment Setup</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                            <div class="stage" data-stage="version">
+                                <div class="stage-icon">🏷</div>
+                                <div>
+                                    <div class="stage-name">Version Bump</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                            <div class="stage" data-stage="windows-build">
+                                <div class="stage-icon">🔨</div>
+                                <div>
+                                    <div class="stage-name">Windows Build</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                            <div class="stage" data-stage="update-server">
+                                <div class="stage-icon">📦</div>
+                                <div>
+                                    <div class="stage-name">Update Server</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                            <div class="stage" data-stage="publish">
+                                <div class="stage-icon">☁</div>
+                                <div>
+                                    <div class="stage-name">Publish Release</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                            <div class="stage" data-stage="github">
+                                <div class="stage-icon">🚀</div>
+                                <div>
+                                    <div class="stage-name">GitHub Release</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                            <div class="stage" data-stage="restart">
+                                <div class="stage-icon">🔄</div>
+                                <div>
+                                    <div class="stage-name">Restart Services</div>
+                                    <div class="stage-status">Waiting...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="terminal">
+                                <div class="terminal-header">
+                                    <div style="display: flex; gap: 6px;">
+                                        <span class="terminal-dot red"></span>
+                                        <span class="terminal-dot yellow"></span>
+                                        <span class="terminal-dot green"></span>
+                                    </div>
+                                    <span class="terminal-title">build.log</span>
+                                </div>
+                                <div class="terminal-body" id="terminal-body">
+                                    <div class="terminal-line dim">Ready. Click Start to begin build.</div>
+                                </div>
+                            </div>
+                            <div class="build-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                                </div>
+                                <div class="progress-text" id="progress-text">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Releases -->
+        <section id="releases" class="section">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">📦 Release History</div>
+                </div>
+                <div class="panel-body">
+                    <table class="releases-table">
+                        <thead>
+                            <tr>
+                                <th>Version</th>
+                                <th>Channel</th>
+                                <th>Date</th>
+                                <th>Downloads</th>
+                                <th>Files</th>
+                            </tr>
+                        </thead>
+                        <tbody id="releases-tbody">
+                            <tr><td colspan="5">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Auth
+        const AUTH_KEY = 'redball_admin_auth';
+        const CORRECT_PASSWORD = 'redball2026'; // In production, use proper auth
+
+        function checkAuth() {
+            if (localStorage.getItem(AUTH_KEY) === 'true') {
+                document.getElementById('login-overlay').classList.add('hidden');
+                return true;
+            }
+            return false;
+        }
+
+        function doLogin() {
+            const password = document.getElementById('password-input').value;
+            if (password === CORRECT_PASSWORD) {
+                localStorage.setItem(AUTH_KEY, 'true');
+                document.getElementById('login-overlay').classList.add('hidden');
+                document.getElementById('login-error').classList.remove('show');
+                connectWS();
+            } else {
+                document.getElementById('login-error').classList.add('show');
+                document.getElementById('password-input').value = '';
+            }
+        }
+
+        function doLogout() {
+            localStorage.removeItem(AUTH_KEY);
+            location.reload();
+        }
+
+        document.getElementById('password-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') doLogin();
+        });
+
+        // WebSocket
+        let ws;
+        let buildState = { status: 'idle', stage: null, progress: 0 };
+
+        const stages = ['setup', 'version', 'windows-build', 'update-server', 'publish', 'github', 'restart'];
+
+        function connectWS() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+            ws.onopen = () => {
+                document.getElementById('connection-dot').className = 'connection-dot connected';
+                document.getElementById('connection-text').textContent = 'Connected';
+                loadStats();
+                loadReleases();
+            };
+
+            ws.onmessage = (e) => {
+                const msg = JSON.parse(e.data);
+                handleMessage(msg);
+            };
+
+            ws.onclose = () => {
+                document.getElementById('connection-dot').className = 'connection-dot disconnected';
+                document.getElementById('connection-text').textContent = 'Reconnecting...';
+                setTimeout(connectWS, 3000);
+            };
+        }
+
+        function handleMessage(msg) {
+            switch (msg.type) {
+                case 'state':
+                    updateBuildState(msg.data);
+                    break;
+                case 'build-started':
+                    buildStarted(msg.data);
+                    break;
+                case 'build-output':
+                    addTerminalLine(msg.data.line, msg.data.stage);
+                    updateProgress(msg.data.progress);
+                    updateStage(msg.data.stage);
+                    break;
+                case 'build-complete':
+                    buildComplete(msg.data);
+                    break;
+                case 'build-stopped':
+                    buildStopped();
+                    break;
+            }
+        }
+
+        // ANSI stripping and formatting
+        function stripAnsi(str) {
+            return str.replace(/\x1B\[[0-9;?]*[a-zA-Z]/g, '');
+        }
+
+        function formatLine(line) {
+            const clean = stripAnsi(line).trim();
+            
+            // Skip empty and decorative lines
+            if (!clean) return null;
+            if (/^[═╚╠╣╗╔╝╩╦╬═─│┌┐└┘├┤┬┴┼]+$/.test(clean)) return null;
+            if (clean.includes('Redball Unified Build System')) return { text: '🚀 Starting build...', class: 'phase-start' };
+            
+            // Phase detection
+            if (clean.includes('Phase 0:') || clean.includes('Phase 1:')) {
+                return { text: clean.replace(/\[.*\]\s*/, ''), class: 'phase-start' };
+            }
+            
+            // Status patterns
+            if (/\[\s*OK\s*\]/.test(clean) || /✓/.test(clean)) {
+                return { text: '✓ ' + clean.replace(/\[.*\]\s*/, '').replace(/✓\s*/, ''), class: 'success' };
+            }
+            if (/\[\s*WARN/.test(clean)) {
+                return { text: '⚠ ' + clean.replace(/\[.*\]\s*/, ''), class: 'warning' };
+            }
+            if (/\[\s*ERROR/.test(clean) || /\[\s*ERR/.test(clean)) {
+                return { text: '✗ ' + clean.replace(/\[.*\]\s*/, ''), class: 'error' };
+            }
+            if (/\[\s*STEP/.test(clean) || /\[\s*INFO/.test(clean)) {
+                return { text: clean.replace(/\[.*\]\s*/, ''), class: '' };
+            }
+            if (/\[\s*DEBUG/.test(clean)) {
+                return { text: clean.replace(/\[.*\]\s*/, ''), class: 'dim' };
+            }
+            
+            return { text: clean, class: '' };
+        }
+
+        function addTerminalLine(rawLine, stage) {
+            const formatted = formatLine(rawLine);
+            if (!formatted) return;
+            
+            const term = document.getElementById('terminal-body');
+            const div = document.createElement('div');
+            div.className = 'terminal-line ' + formatted.class;
+            div.textContent = formatted.text;
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
+            
+            // Limit lines
+            while (term.children.length > 500) {
+                term.removeChild(term.firstChild);
+            }
+        }
+
+        function updateProgress(pct) {
+            buildState.progress = pct;
+            document.getElementById('progress-fill').style.width = pct + '%';
+            document.getElementById('progress-text').textContent = Math.round(pct) + '%';
+        }
+
+        function updateStage(name) {
+            if (!name) return;
+            const idx = stages.indexOf(name);
+            if (idx === -1) return;
+            
+            stages.forEach((s, i) => {
+                const el = document.querySelector(`.stage[data-stage="${s}"]`);
+                el.classList.remove('active', 'complete');
+                
+                if (i === idx) {
+                    el.classList.add('active');
+                    el.querySelector('.stage-status').textContent = 'Running...';
+                } else if (i < idx) {
+                    el.classList.add('complete');
+                    el.querySelector('.stage-status').textContent = 'Complete';
+                }
+            });
+        }
+
+        function resetStages() {
+            stages.forEach(s => {
+                const el = document.querySelector(`.stage[data-stage="${s}"]`);
+                el.classList.remove('active', 'complete', 'error');
+                el.querySelector('.stage-status').textContent = 'Waiting...';
+            });
+        }
+
+        function buildStarted(data) {
+            buildState = { ...data, status: 'running' };
+            document.getElementById('start-build-btn').disabled = true;
+            document.getElementById('stop-build-btn').disabled = false;
+            document.getElementById('terminal-body').innerHTML = '';
+            resetStages();
+            updateUI();
+        }
+
+        function buildComplete(data) {
+            buildState.status = data.status;
+            buildState.endTime = Date.now();
+            document.getElementById('start-build-btn').disabled = false;
+            document.getElementById('stop-build-btn').disabled = true;
+            addTerminalLine(data.status === 'success' ? 'Build completed successfully!' : 'Build failed!', data.status);
+            updateProgress(data.status === 'success' ? 100 : buildState.progress);
+            if (data.status === 'success') {
+                document.querySelectorAll('.stage').forEach(s => s.classList.add('complete'));
+            }
+            updateUI();
+            loadStats();
+            loadReleases();
+        }
+
+        function buildStopped() {
+            buildState.status = 'stopped';
+            document.getElementById('start-build-btn').disabled = false;
+            document.getElementById('stop-build-btn').disabled = true;
+            addTerminalLine('Build stopped by user', 'warning');
+            updateUI();
+        }
+
+        function updateUI() {
+            const el = document.getElementById('build-status');
+            el.className = 'status ' + buildState.status;
+            el.textContent = buildState.status.charAt(0).toUpperCase() + buildState.status.slice(1);
+        }
+
+        function startBuild() {
+            if (!checkAuth()) return;
+            if (ws?.readyState === 1) {
+                ws.send(JSON.stringify({ action: 'start-build' }));
+            } else {
+                fetch('/api/build/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'windows' }) });
+            }
+        }
+
+        function stopBuild() {
+            if (ws?.readyState === 1) {
+                ws.send(JSON.stringify({ action: 'stop-build' }));
+            } else {
+                fetch('/api/build/stop', { method: 'POST' });
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const stats = await res.json();
+                
+                document.getElementById('total-downloads').textContent = 
+                    stats.totalDownloads > 0 ? stats.totalDownloads.toLocaleString() : '0';
+                document.getElementById('total-releases').textContent = stats.totalReleases;
+                document.getElementById('latest-version').textContent = stats.latestVersion || '-';
+                
+                const container = document.getElementById('download-stats');
+                if (Object.keys(stats.byFile).length > 0) {
+                    let html = '<table class="releases-table"><thead><tr><th>File</th><th>Downloads</th></tr></thead><tbody>';
+                    Object.entries(stats.byFile)
+                        .sort((a, b) => b[1].downloads - a[1].downloads)
+                        .forEach(([file, data]) => {
+                            html += `<tr><td>${file}</td><td>${data.downloads.toLocaleString()}</td></tr>`;
+                        });
+                    html += '</tbody></table>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p style="color: var(--text-secondary);">No download data available</p>';
+                }
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+            }
+        }
+
+        async function loadReleases() {
+            try {
+                const res = await fetch('/api/releases');
+                const releases = await res.json();
+                
+                const tbody = document.getElementById('releases-tbody');
+                if (releases.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary)">No releases found</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = releases
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .map(r => `
+                        <tr>
+                            <td><span class="version-badge ${r.channel}">${r.version}</span></td>
+                            <td>${r.channel}</td>
+                            <td>${new Date(r.date).toLocaleDateString()}</td>
+                            <td>${(r.totalDownloads || 0).toLocaleString()}</td>
+                            <td>${r.files ? r.files.length : 0}</td>
+                        </tr>
+                    `).join('');
+            } catch (err) {
+                console.error('Failed to load releases:', err);
+            }
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.section).classList.add('active');
+            });
+        });
+
+        // Init
+        if (checkAuth()) {
+            connectWS();
+        }
+    </script>
+</body>
+</html>
