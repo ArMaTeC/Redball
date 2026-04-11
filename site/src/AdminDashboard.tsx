@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   BarChart3,
   Settings,
@@ -419,16 +419,12 @@ const SystemConfigPanel: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchConfig();
-  }, []);
-
   const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   };
 
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
     try {
       const headers = getAuthHeaders();
       const [serverRes, configRes] = await Promise.all([
@@ -442,9 +438,13 @@ const SystemConfigPanel: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const saveConfig = async () => {
+  useEffect(() => {
+    fetchConfig();
+  }, [fetchConfig]);
+
+  const saveConfig = useCallback(async () => {
     setSaving(true);
     try {
       const res = await fetch('/api/config', {
@@ -464,7 +464,7 @@ const SystemConfigPanel: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  };
+  }, [config]);
 
   const updateConfigField = (field: string, value: unknown) => {
     setConfig((prev: Config | null) => prev ? { ...prev, [field]: value } : { [field]: value });
