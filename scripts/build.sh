@@ -573,9 +573,9 @@ build_windows() {
     log_info "Starting Windows build via Wine + .NET SDK..."
     log_info "Build steps: WPF Compile → WPF Publish → Custom Actions → NSIS Installer"
     
-    # Run with timeout - use stdbuf to force line buffering for real-time output
+    # Run with timeout - background process for real-time output streaming
     local win_log=$(mktemp /tmp/redball-win-XXXXXX.log)
-    timeout 600s stdbuf -oL "$win_script" --skip-setup > "$win_log" 2>&1 &
+    timeout 600s "$win_script" --skip-setup > "$win_log" 2>&1 &
     local win_pid=$!
     
     # Start background progress indicator
