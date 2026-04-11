@@ -3,7 +3,6 @@ const { WebSocketServer } = require('ws');
 const pty = require('node-pty');
 const path = require('path');
 const fs = require('fs');
-const { spawn } = require('child_process');
 const http = require('http');
 
 const app = express();
@@ -13,10 +12,12 @@ const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 3500;
 const PROJECT_ROOT = path.join(__dirname, '..');
 const RELEASES_JSON = path.join(PROJECT_ROOT, 'update-server', 'data', 'releases.json');
+const RELEASES_DIR = path.join(PROJECT_ROOT, 'update-server', 'releases');
+const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // Build state
 let buildState = {
-  status: 'idle', // idle, running, success, failed
+  status: 'idle',
   stage: null,
   progress: 0,
   log: [],
@@ -28,7 +29,7 @@ let buildState = {
 // Middleware
 app.use(express.json());
 
-// API: Get download stats
+// API Routes
 app.get('/api/stats', (req, res) => {
   try {
     const stats = getDownloadStats();
@@ -38,28 +39,22 @@ app.get('/api/stats', (req, res) => {
   }
 });
 
-// API: Get current build status
 app.get('/api/build/status', (req, res) => {
   res.json(buildState);
 });
 
-// API: Get build log
 app.get('/api/build/log', (req, res) => {
   res.json({ log: buildState.log });
 });
 
-// API: Start build
 app.post('/api/build/start', (req, res) => {
   if (buildState.status === 'running') {
     return res.status(409).json({ error: 'Build already in progress' });
   }
-
-  const buildType = req.body.type || 'windows';
-  startBuild(buildType);
-  res.json({ status: 'started', type: buildType });
+  startBuild(req.body.type || 'windows');
+  res.json({ status: 'started' });
 });
 
-// API: Stop build
 app.post('/api/build/stop', (req, res) => {
   if (buildState.pid) {
     try {
@@ -76,102 +71,145 @@ app.post('/api/build/stop', (req, res) => {
   }
 });
 
-// API: Get releases
 app.get('/api/releases', (req, res) => {
   try {
-    if (fs.existsSync(RELEASES_JSON)) {
-      const data = JSON.parse(fs.readFileSync(RELEASES_JSON, 'utf8'));
-      res.json(data.releases || []);
-    } else {
-      res.json([]);
-    }
+    const stats = getDownloadStats();
+    res.json(stats.releases || []);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// WebSocket handling
+// Static files
+app.use('/admin', express.static(PUBLIC_DIR, { index: 'admin.html' }));
+app.use(express.static(PUBLIC_DIR, { index: 'marketing.html' }));
+
+// Fallbacks
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'admin.html'));
+});
+
+app.get(/\/admin\/.*/, (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'admin.html'));
+});
+
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'marketing.html'));
+});
+
+// WebSocket
 wss.on('connection', (ws) => {
   console.log('[WS] Client connected');
 
-  // Send current build state
-  ws.send(JSON.stringify({
-    type: 'state',
-    data: buildState
-  }));
+  ws.send(JSON.stringify({ type: 'state', data: buildState }));
 
   ws.on('message', (message) => {
     try {
       const data = JSON.parse(message);
-
-      if (data.action === 'start-build') {
-        if (buildState.status !== 'running') {
-          startBuild(data.buildType || 'windows');
-        }
-      } else if (data.action === 'stop-build') {
-        if (buildState.pid) {
-          process.kill(buildState.pid, 'SIGTERM');
-        }
+      if (data.action === 'start-build' && buildState.status !== 'running') {
+        startBuild(data.buildType || 'windows');
+      } else if (data.action === 'stop-build' && buildState.pid) {
+        process.kill(buildState.pid, 'SIGTERM');
       }
     } catch (err) {
       console.error('[WS] Error:', err);
     }
   });
 
-  ws.on('close', () => {
-    console.log('[WS] Client disconnected');
-  });
+  ws.on('close', () => console.log('[WS] Client disconnected'));
 });
 
-function broadcast(message) {
-  wss.clients.forEach(client => {
-    if (client.readyState === 1) {
-      client.send(JSON.stringify(message));
-    }
+function broadcast(msg) {
+  wss.clients.forEach(c => {
+    if (c.readyState === 1) c.send(JSON.stringify(msg));
   });
 }
 
 function getDownloadStats() {
-  const stats = {
-    totalDownloads: 0,
-    totalReleases: 0,
-    latestVersion: null,
-    releases: [],
-    byFile: {}
-  };
+  const stats = { totalDownloads: 0, totalReleases: 0, latestVersion: null, releases: [], byFile: {} };
+  const releaseMap = new Map();
 
-  if (fs.existsSync(RELEASES_JSON)) {
-    const data = JSON.parse(fs.readFileSync(RELEASES_JSON, 'utf8'));
-    stats.releases = data.releases || [];
-    stats.totalReleases = stats.releases.length;
-
-    if (stats.releases.length > 0) {
-      const sorted = [...stats.releases].sort((a, b) => {
-        const va = a.version.split('.').map(Number);
-        const vb = b.version.split('.').map(Number);
-        for (let i = 0; i < 3; i++) {
-          if (va[i] !== vb[i]) return vb[i] - va[i];
-        }
+  // Scan releases directory
+  if (fs.existsSync(RELEASES_DIR)) {
+    const versionDirs = fs.readdirSync(RELEASES_DIR)
+      .filter(d => /^\d+\.\d+\.\d+$/.test(d))
+      .sort((a, b) => {
+        const va = a.split('.').map(Number);
+        const vb = b.split('.').map(Number);
+        for (let i = 0; i < 3; i++) if (va[i] !== vb[i]) return vb[i] - va[i];
         return 0;
       });
-      stats.latestVersion = sorted[0].version;
 
-      stats.releases.forEach(release => {
-        const releaseDownloads = release.totalDownloads || 0;
-        stats.totalDownloads += releaseDownloads;
+    versionDirs.forEach(version => {
+      const versionPath = path.join(RELEASES_DIR, version);
+      const stat = fs.statSync(versionPath);
+      if (stat.isDirectory()) {
+        const files = fs.readdirSync(versionPath);
+        const fileList = [];
+        let totalDownloads = 0;
 
-        if (release.files) {
-          release.files.forEach(file => {
-            const fileName = file.name;
-            if (!stats.byFile[fileName]) {
-              stats.byFile[fileName] = { downloads: 0, versions: [] };
+        files.forEach(file => {
+          const filePath = path.join(versionPath, file);
+          const fileStat = fs.statSync(filePath);
+          if (fileStat.isFile()) {
+            fileList.push({
+              name: file,
+              size: fileStat.size,
+              downloads: 0 // We don't track downloads per file locally
+            });
+
+            if (!stats.byFile[file]) {
+              stats.byFile[file] = { downloads: 0, versions: [] };
             }
-            stats.byFile[fileName].downloads += file.downloads || 0;
-            stats.byFile[fileName].versions.push(release.version);
-          });
+            stats.byFile[file].versions.push(version);
+          }
+        });
+
+        releaseMap.set(version, {
+          version,
+          channel: 'stable',
+          date: stat.mtime.toISOString(),
+          files: fileList,
+          totalDownloads: 0
+        });
+      }
+    });
+  }
+
+  // Merge with releases.json data if available
+  if (fs.existsSync(RELEASES_JSON)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(RELEASES_JSON, 'utf8'));
+      (data.releases || []).forEach(r => {
+        if (releaseMap.has(r.version)) {
+          const existing = releaseMap.get(r.version);
+          existing.channel = r.channel || existing.channel;
+          existing.date = r.date || existing.date;
+          existing.totalDownloads = r.totalDownloads || 0;
+          if (r.files) {
+            r.files.forEach(f => {
+              if (stats.byFile[f.name]) {
+                stats.byFile[f.name].downloads = f.downloads || 0;
+              }
+            });
+          }
+        } else {
+          releaseMap.set(r.version, r);
         }
       });
+    } catch (e) {
+      console.error('[STATS] Error reading releases.json:', e.message);
     }
+  }
+
+  stats.releases = Array.from(releaseMap.values());
+  stats.totalReleases = stats.releases.length;
+
+  if (stats.releases.length > 0) {
+    stats.latestVersion = stats.releases[0].version;
+    stats.releases.forEach(r => {
+      stats.totalDownloads += r.totalDownloads || 0;
+    });
   }
 
   return stats;
@@ -179,27 +217,20 @@ function getDownloadStats() {
 
 function parseBuildStage(line) {
   const stages = [
-    { name: 'setup', pattern: /Phase 1.*Setup/i, progress: 5 },
-    { name: 'version', pattern: /Phase 2.*Version/i, progress: 10 },
-    { name: 'windows-build', pattern: /Phase 3.*Windows Build/i, progress: 30 },
-    { name: 'update-server', pattern: /Phase 4.*Update Server/i, progress: 60 },
-    { name: 'publish', pattern: /Phase 5.*Publish/i, progress: 80 },
-    { name: 'github', pattern: /Phase 6.*GitHub/i, progress: 90 },
-    { name: 'restart', pattern: /Phase 7.*Restart/i, progress: 95 },
+    { name: 'setup', pattern: /Phase 1|Checking build dependencies/i, progress: 5 },
+    { name: 'version', pattern: /Phase 0|Bumping version/i, progress: 10 },
+    { name: 'windows-build', pattern: /Phase 1.*Building|Building Windows/i, progress: 30 },
+    { name: 'update-server', pattern: /Phase 4|Update Server/i, progress: 60 },
+    { name: 'publish', pattern: /Phase 5|Publish to Update Server/i, progress: 80 },
+    { name: 'github', pattern: /Phase 6|Publish to GitHub/i, progress: 90 },
+    { name: 'restart', pattern: /Phase 7|Restarting update server/i, progress: 95 },
     { name: 'complete', pattern: /AUTO-RELEASE COMPLETED/i, progress: 100 }
   ];
 
-  for (const stage of stages) {
-    if (stage.pattern.test(line)) {
-      return stage;
-    }
+  for (const s of stages) {
+    if (s.pattern.test(line)) return s;
   }
-
-  // Check for error patterns
-  if (/error|failed|abort/i.test(line)) {
-    return { name: 'error', progress: buildState.progress };
-  }
-
+  if (/error|failed|abort/i.test(line)) return { name: 'error', progress: buildState.progress };
   return null;
 }
 
@@ -222,7 +253,7 @@ function startBuild(buildType = 'windows') {
     cols: 120,
     rows: 30,
     cwd: PROJECT_ROOT,
-    env: process.env
+    env: { ...process.env, FORCE_COLOR: '1' }
   });
 
   buildState.pid = ptyProcess.pid;
@@ -232,22 +263,15 @@ function startBuild(buildType = 'windows') {
 
     lines.forEach(line => {
       if (line.trim()) {
-        buildState.log.push({
-          timestamp: Date.now(),
-          message: line
-        });
+        buildState.log.push({ timestamp: Date.now(), message: line });
 
-        // Parse build stage
         const stage = parseBuildStage(line);
         if (stage) {
           buildState.stage = stage.name;
           buildState.progress = stage.progress;
         }
 
-        // Keep log size manageable
-        if (buildState.log.length > 10000) {
-          buildState.log = buildState.log.slice(-5000);
-        }
+        if (buildState.log.length > 5000) buildState.log = buildState.log.slice(-2500);
 
         broadcast({
           type: 'build-output',
@@ -274,14 +298,7 @@ function startBuild(buildType = 'windows') {
   });
 }
 
-// Static files (after API routes)
-app.use(express.static(path.join(__dirname, 'public')));
-
-// SPA fallback (must be last)
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`[REDBALL ADMIN] Server running at http://localhost:${PORT}`);
+  console.log(`[REDBALL] Server running at http://localhost:${PORT}`);
+  console.log(`[REDBALL] Marketing: /, Admin: /admin`);
 });
