@@ -342,6 +342,15 @@ auto_release() {
         [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] && curl_files+=("-F" "files=@$DIST_DIR/Redball-${version}-Setup.exe")
         [[ -f "$DIST_DIR/Redball-${version}.zip" ]] && curl_files+=("-F" "files=@$DIST_DIR/Redball-${version}.zip")
         
+        # Add individual binaries from wpf-publish to enable delta updates
+        if [[ -d "$DIST_DIR/wpf-publish" ]]; then
+            log_info "Collecting individual binaries for delta update manifest..."
+            # Use process substitution to avoid subshell array issues
+            while read -r f; do
+                [[ -f "$f" ]] && curl_files+=("-F" "files=@$f")
+            done < <(find "$DIST_DIR/wpf-publish" -maxdepth 1 -type f -not -name "*.pdb" -not -name "*.xml")
+        fi
+        
         if [[ ${#curl_files[@]} -eq 0 ]]; then
             log_warn "No distribution files found to publish"
         else
