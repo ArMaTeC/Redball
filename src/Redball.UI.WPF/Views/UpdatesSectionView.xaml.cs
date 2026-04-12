@@ -165,6 +165,7 @@ public partial class UpdatesSectionView : UserControl
 
         _cancellationTokenSource = new CancellationTokenSource();
         _logBuilder.Clear();
+        _pendingUpdateInfo = null; // Clear any previously found update
 
         ShowProgressPanel();
         ProgressTitleText.Text = "Checking for Updates";
@@ -587,7 +588,9 @@ public partial class UpdatesSectionView : UserControl
         StageApplying.Background = dimBg;
         ((TextBlock)StageApplying.Child).Foreground = dimFg;
 
+        // Clear All Progress Values
         ProgressBar.Value = 0;
+        ProgressBar.IsIndeterminate = false;
         ProgressPercentText.Text = "";
         ProgressStatusText.Text = "Preparing...";
         ProgressSizeText.Text = "";
@@ -597,6 +600,15 @@ public partial class UpdatesSectionView : UserControl
         LogTextBlock.Text = "";
         _logBuilder.Clear();
         _currentDownloadStage = UpdateStage.Checking;
+
+        // Clear All Result Values (even though hidden, ensures no "stale" data flashes later)
+        ResultTitleText.Text = "";
+        ResultMessageText.Text = "";
+        CurrentVersionCompareText.Text = "";
+        NewVersionCompareText.Text = "";
+        UpdateSizeText.Text = "";
+        UpdateTypeText.Text = "";
+        ReleaseNotesText.Text = "";
     }
 
     #endregion
