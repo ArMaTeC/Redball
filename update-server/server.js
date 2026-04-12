@@ -51,125 +51,82 @@ async function fetchGitHubReleases() {
     return githubCache.releases;
   }
 
+  let ghReleases = [];
   try {
     const response = await fetch('https://api.github.com/repos/ArMaTeC/Redball/releases');
-    if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
-
-    const ghReleases = await response.json();
-    const db = loadDB();
-
-    // Transform GitHub format to our format and merge with local patch data
-    const releases = ghReleases.map(r => {
-      const version = r.tag_name.replace(/^v/, '');
-      const localRelease = db.releases.find(lr => lr.version === version);
-
-      // Start with GitHub assets
-      const files = r.assets.map(a => ({
-        name: a.name,
-        size: a.size,
-        hash: '', // GitHub doesn't provide hashes in the API
-        downloads: a.download_count,
-        url: a.browser_download_url
-      }));
-
-      // Merge with local patch files if available
-      if (localRelease?.files) {
-        const patchFiles = localRelease.files.filter(f => f.name.endsWith('.patch'));
-        for (const patch of patchFiles) {
-          const existing = files.findIndex(f => f.name === patch.name);
-          if (existing >= 0) {
-            files[existing] = { ...files[existing], ...patch };
-          } else {
-            files.push(patch);
-          }
-        }
-      }
-
-      return {
-        version,
-        channel: r.prerelease ? 'beta' : 'stable',
-        date: r.published_at,
-        notes: r.body || '',
-        files,
-        totalDownloads: r.assets.reduce((sum, a) => sum + a.download_count, 0),
-        githubUrl: r.html_url,
-        patchInfo: localRelease?.patchInfo || null
-      };
-    });
-
-    githubCache = {
-      releases,
-      latest: releases[0] || null,
-      lastFetch: now
-    };
-
-    return releases;
+    if (response.ok) {
+      ghReleases = await response.json();
+    } else {
+      console.warn(`[GitHub] API returned ${response.status} - will use local releases only`);
+    }
   } catch (err) {
     console.error('[GitHub] Failed to fetch releases:', err.message);
-    // Return cached data even if stale
-    if (githubCache.releases && githubCache.releases.length > 0) {
-      console.log('[GitHub] Returning stale cached releases');
-      return githubCache.releases;
-    }
-    // Fall back to local database releases
-    const db = loadDB();
-    if (db.releases && db.releases.length > 0) {
-      console.log(`[GitHub] Falling back to local database with ${db.releases.length} releases`);
-      return db.releases;
-    }
-    return [];
-  }
-}
-
-async function fetchGitHubLatest() {
-  const now = Date.now();
-  if (githubCache.latest && (now - githubCache.lastFetch) < GITHUB_CACHE_TTL) {
-    return githubCache.latest;
   }
 
-  try {
-    const response = await fetch('https://api.github.com/repos/ArMaTeC/Redball/releases/latest');
-    if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+  const db = loadDB();
+  const localReleases = db.releases || [];
 
-    const r = await response.json();
+  // Transform GitHub releases and merge with local data
+  const mappedGitHub = ghReleases.map(r => {
+    const version = r.tag_name.replace(/^v/, '');
+    const localRelease = localReleases.find(lr => lr.version === version);
 
-    const latest = {
-      version: r.tag_name.replace(/^v/, ''),
+    const files = r.assets.map(a => ({
+      name: a.name,
+      size: a.size,
+      hash: '', // GitHub doesn't provide hashes in the API
+      downloads: a.download_count,
+      url: a.browser_download_url
+    }));
+
+    // Merge with local patch files or richer metadata if available
+    if (localRelease?.files) {
+      for (const localFile of localRelease.files) {
+        const existingIdx = files.findIndex(f => f.name === localFile.name);
+        if (existingIdx >= 0) {
+          files[existingIdx] = { ...files[existingIdx], ...localFile };
+        } else {
+          files.push(localFile);
+        }
+      }
+    }
+
+    return {
+      version,
       channel: r.prerelease ? 'beta' : 'stable',
       date: r.published_at,
       notes: r.body || '',
-      files: r.assets.map(a => ({
-        name: a.name,
-        size: a.size,
-        hash: '',
-        downloads: a.download_count,
-        url: a.browser_download_url
-      })),
-      totalDownloads: r.assets.reduce((sum, a) => sum + a.download_count, 0),
-      githubUrl: r.html_url
+      files,
+      totalDownloads: r.assets.reduce((sum, a) => sum + a.download_count, 0) + (localRelease?.totalDownloads || 0),
+      githubUrl: r.html_url,
+      patchInfo: localRelease?.patchInfo || null
     };
+  });
 
-    githubCache.latest = latest;
-    githubCache.lastFetch = now;
+  // Include local releases that aren't on GitHub yet
+  const localOnly = localReleases
+    .filter(lr => !mappedGitHub.some(gr => gr.version === lr.version))
+    .map(lr => ({
+      ...lr,
+      githubUrl: null
+    }));
 
-    return latest;
-  } catch (err) {
-    console.error('[GitHub] Failed to fetch latest:', err.message);
-    // Return cached data even if stale
-    if (githubCache.latest) {
-      console.log('[GitHub] Returning stale cached latest release');
-      return githubCache.latest;
-    }
-    // Fall back to local database - return the most recent release
-    const db = loadDB();
-    if (db.releases && db.releases.length > 0) {
-      // Sort by version and return the latest
-      const sorted = [...db.releases].sort((a, b) => compareVersions(b.version, a.version));
-      console.log(`[GitHub] Falling back to local database latest: ${sorted[0].version}`);
-      return sorted[0];
-    }
-    return null;
-  }
+  // Combine and sort by version (newest first)
+  const combined = [...mappedGitHub, ...localOnly].sort((a, b) => compareVersions(b.version, a.version));
+
+  githubCache = {
+    releases: combined,
+    latest: combined[0] || null,
+    lastFetch: now
+  };
+
+  return combined;
+}
+
+async function fetchGitHubLatest() {
+  // Always ensure releases are fetched/cached first
+  const releases = await fetchGitHubReleases();
+  return releases.length > 0 ? releases[0] : null;
 }
 
 // Ensure directories exist
@@ -495,6 +452,7 @@ app.get('/api/github/releases', async (req, res) => {
       name: `Redball v${r.version}`,
       body: r.notes,
       prerelease: r.channel !== 'stable',
+      draft: false,
       published_at: r.date,
       assets: (r.files || [])
         .filter(f => !f.name.endsWith('.msi') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS' && !f.name.startsWith('patches/'))
@@ -842,6 +800,13 @@ app.get('/api/system/config', authenticateToken, (req, res) => {
       releases: releasesSize,
       logs: logsSize,
       total: releasesSize + logsSize
+    },
+    metrics: {
+      freeMem: require('os').freemem(),
+      totalMem: require('os').totalmem(),
+      loadAvg: require('os').loadavg(),
+      processMemory: process.memoryUsage(),
+      cpuCount: require('os').cpus().length
     }
   });
 });

@@ -545,6 +545,13 @@
             box-shadow: 0 0 15px rgba(229, 62, 62, 0.3);
         }
 
+        .pipeline-step.complete .step-node {
+            background: rgba(39, 201, 63, 0.15);
+            border-color: #27c93f;
+            color: #27c93f;
+            box-shadow: none;
+        }
+
         .step-label {
             font-size: 0.75rem;
             text-transform: uppercase;
@@ -866,6 +873,41 @@
                 opacity: 0.4;
             }
         }
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .page-btn {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .page-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-dark);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -932,8 +974,11 @@
                 <div class="panel-header">
                     <div class="panel-title">📊 Downloads by File</div>
                 </div>
-                <div class="panel-body" id="download-stats">
-                    <p style="color: var(--text-secondary);">Loading...</p>
+                <div class="panel-body">
+                    <div id="download-stats">
+                        <p style="color: var(--text-secondary);">Loading...</p>
+                    </div>
+                    <div id="downloads-pagination" class="pagination"></div>
                 </div>
             </div>
         </section>
@@ -1106,6 +1151,7 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div id="releases-pagination" class="pagination"></div>
                 </div>
             </div>
         </section>
@@ -1583,6 +1629,49 @@
         let buildInsights = { version: '-', savings: 0, totalSaved: 0, artifacts: [], startTime: 0 };
 
         const stages = ['setup', 'version', 'restore', 'wpf-build', 'service-build', 'manifest', 'zip-bundle', 'installer', 'update-server', 'publish', 'github', 'restart', 'health'];
+        
+        // Pagination State
+        const PAGE_SIZE = 6;
+        let releasesData = [];
+        let downloadsData = [];
+        let currentReleasesPage = 1;
+        let currentDownloadsPage = 1;
+
+        function paginate(items, page) {
+            const start = (page - 1) * PAGE_SIZE;
+            return items.slice(start, start + PAGE_SIZE);
+        }
+
+        function renderPagination(containerId, totalItems, currentPage, changeFnName) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="${changeFnName}(${currentPage - 1})">Prev</button>`;
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="${changeFnName}(${i})">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += '<span style="color:var(--text-secondary);padding:0 0.25rem">...</span>';
+                }
+            }
+            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="${changeFnName}(${currentPage + 1})">Next</button>`;
+            container.innerHTML = html;
+        }
+
+        function changeReleasesPage(page) {
+            currentReleasesPage = page;
+            renderReleases();
+        }
+
+        function changeDownloadsPage(page) {
+            currentDownloadsPage = page;
+            renderDownloads();
+        }
 
 
         function connectWS() {
@@ -1866,12 +1955,17 @@
                     const phaseText = {
                         'setup': 'Initializing...',
                         'version': 'Bumping version...',
-                        'windows-build': 'Compiling Windows binaries...',
-                        'update-server': 'Preparing update package...',
-                        'publish': 'Uploading to server...',
-                        'github': 'Submitting to GitHub...',
-                        'restart': 'Recycling unified server...',
-                        'health': 'Executing final health audits...'
+                        'restore': 'Restoring NuGet...',
+                        'wpf-build': 'Compiling WPF UI...',
+                        'service-build': 'Building Service...',
+                        'manifest': 'Generating Manifest...',
+                        'zip-bundle': 'Creating Bundle...',
+                        'installer': 'Building Installer...',
+                        'update-server': 'Uploading Binaries...',
+                        'publish': 'Publishing Cloud...',
+                        'github': 'GitHub Release...',
+                        'restart': 'Server Recycle...',
+                        'health': 'Final Health Check...'
                     }[s] || 'Running...';
                     document.getElementById('progress-phase').textContent = phaseText;
                 } else if (i < idx) {
@@ -2036,21 +2130,31 @@
                 document.getElementById('total-releases').textContent = stats.totalReleases || 0;
                 document.getElementById('latest-version').textContent = stats.latestVersion || '-';
 
-                const container = document.getElementById('download-stats');
-                if (stats.byFile && Object.keys(stats.byFile).length > 0) {
-                    let html = '<table class="releases-table"><thead><tr><th>File</th><th>Downloads</th></tr></thead><tbody>';
-                    Object.entries(stats.byFile)
-                        .sort((a, b) => (b[1].downloads || 0) - (a[1].downloads || 0))
-                        .forEach(([file, data]) => {
-                            html += `<tr><td>${file}</td><td>${(data.downloads || 0).toLocaleString()}</td></tr>`;
-                        });
-                    html += '</tbody></table>';
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<p style="color: var(--text-secondary);">No download data available</p>';
+                if (stats.byFile) {
+                    downloadsData = Object.entries(stats.byFile)
+                        .map(([file, data]) => ({ file, downloads: data.downloads || 0 }))
+                        .sort((a, b) => b.downloads - a.downloads);
+                    renderDownloads();
                 }
             } catch (err) {
                 console.error('Failed to load stats:', err);
+            }
+        }
+
+        function renderDownloads() {
+            const container = document.getElementById('download-stats');
+            if (downloadsData.length > 0) {
+                const paginated = paginate(downloadsData, currentDownloadsPage);
+                let html = '<table class="releases-table"><thead><tr><th>File</th><th>Downloads</th></tr></thead><tbody>';
+                paginated.forEach(item => {
+                    html += `<tr><td>${item.file}</td><td>${item.downloads.toLocaleString()}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+                renderPagination('downloads-pagination', downloadsData.length, currentDownloadsPage, 'changeDownloadsPage');
+            } else {
+                container.innerHTML = '<p style="color: var(--text-secondary);">No download data available</p>';
+                document.getElementById('downloads-pagination').innerHTML = '';
             }
         }
 
@@ -2058,28 +2162,36 @@
         async function loadReleases() {
             try {
                 const res = await fetch('/api/releases');
-                const releases = await res.json();
-
-                const tbody = document.getElementById('releases-tbody');
-                if (releases.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary)">No releases found</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = releases
-                    .sort((a, b) => new Date(b.date) - new Date(a.date))
-                    .map(r => `
-                        <tr>
-                            <td><span class="version-badge ${r.channel}">${r.version}</span></td>
-                            <td>${r.channel}</td>
-                            <td>${new Date(r.date).toLocaleDateString()}</td>
-                            <td>${(r.totalDownloads || 0).toLocaleString()}</td>
-                            <td>${r.files ? r.files.length : 0}</td>
-                        </tr>
-                    `).join('');
+                releasesData = await res.json();
+                releasesData.sort((a, b) => new Date(b.date) - new Date(a.date));
+                renderReleases();
             } catch (err) {
                 console.error('Failed to load releases:', err);
             }
+        }
+
+        function renderReleases() {
+            const tbody = document.getElementById('releases-tbody');
+            if (!tbody) return;
+
+            if (releasesData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary)">No releases found</td></tr>';
+                document.getElementById('releases-pagination').innerHTML = '';
+                return;
+            }
+
+            const paginated = paginate(releasesData, currentReleasesPage);
+            tbody.innerHTML = paginated.map(r => `
+                <tr>
+                    <td><span class="version-badge ${r.channel}">${r.version}</span></td>
+                    <td>${r.channel}</td>
+                    <td>${new Date(r.date).toLocaleDateString()}</td>
+                    <td>${(r.totalDownloads || 0).toLocaleString()}</td>
+                    <td>${r.files ? r.files.length : 0}</td>
+                </tr>
+            `).join('');
+            
+            renderPagination('releases-pagination', releasesData.length, currentReleasesPage, 'changeReleasesPage');
         }
 
         // System Config Functions
