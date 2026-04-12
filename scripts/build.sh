@@ -515,8 +515,18 @@ auto_release() {
     echo ""
     echo "  System Health Check:"
     
-    # Check Unified Server
-    if curl -s http://localhost:3500/api/health | grep -q '"server":"unified-redball-server"'; then
+    # Check Unified Server (with retries for slow startup)
+    local unified_ok=0
+    for ((i=1; i<=5; i++)); do
+        if curl -s http://localhost:3500/api/health | grep -q '"server":"unified-redball-server"'; then
+            unified_ok=1
+            break
+        fi
+        log_detail "Unified server not ready... retrying in 2s ($i/5)"
+        sleep 2
+    done
+
+    if [[ $unified_ok -eq 1 ]]; then
         echo -e "    ${GREEN}✓${NC} Unified Server: ONLINE (Port 3500)"
     else
         echo -e "    ${RED}✗${NC} Unified Server: OFFLINE or ERROR"
