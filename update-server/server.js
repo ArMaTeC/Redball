@@ -642,6 +642,7 @@ app.get('/api/stats', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
+    server: 'update-server',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     version: process.env.npm_package_version || '1.0.0'

@@ -890,7 +890,15 @@
                                 </div>
                                 <div class="pipeline-step" data-stage="restart">
                                     <div class="step-node">🔄<div class="step-pulse"></div></div>
-                                    <div class="step-label">Service</div>
+                                    <div class="step-label">Update Svr</div>
+                                </div>
+                                <div class="pipeline-step" data-stage="web-admin">
+                                    <div class="step-node">🖥️<div class="step-pulse"></div></div>
+                                    <div class="step-label">Web Admin</div>
+                                </div>
+                                <div class="pipeline-step" data-stage="health">
+                                    <div class="step-node">🏥<div class="step-pulse"></div></div>
+                                    <div class="step-label">Health</div>
                                 </div>
                             </div>
                         </div>
@@ -1422,7 +1430,7 @@
         let ws;
         let buildState = { status: 'idle', stage: null, progress: 0 };
 
-        const stages = ['setup', 'version', 'windows-build', 'update-server', 'publish', 'github', 'restart'];
+        const stages = ['setup', 'version', 'windows-build', 'update-server', 'publish', 'github', 'restart', 'web-admin', 'health'];
 
         function connectWS() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -1666,7 +1674,9 @@
                         'update-server': 'Preparing update package...',
                         'publish': 'Uploading to server...',
                         'github': 'Submitting to GitHub...',
-                        'restart': 'Recycling services...'
+                        'restart': 'Recycling update server...',
+                        'web-admin': 'Recycling web admin server...',
+                        'health': 'Executing final health audits...'
                     }[s] || 'Running...';
                     document.getElementById('progress-phase').textContent = phaseText;
                 } else if (i < idx) {

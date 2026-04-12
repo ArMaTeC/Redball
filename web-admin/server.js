@@ -130,6 +130,16 @@ function authenticateToken(req, res, next) {
   });
 }
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    server: 'web-admin', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // Build state
 let buildState = loadBuildState();
 
@@ -625,10 +635,12 @@ function parseBuildStage(line) {
     { name: 'setup', pattern: /Phase 1|Checking build dependencies/i, progress: 5 },
     { name: 'version', pattern: /Phase 0|Bumping version/i, progress: 10 },
     { name: 'windows-build', pattern: /Phase 1.*Building|Building Windows/i, progress: 30 },
-    { name: 'update-server', pattern: /Phase 4|Update Server/i, progress: 60 },
-    { name: 'publish', pattern: /Phase 5|Publish to Update Server/i, progress: 80 },
-    { name: 'github', pattern: /Phase 6|Publish to GitHub/i, progress: 90 },
-    { name: 'restart', pattern: /Phase 7|Restarting update server/i, progress: 95 },
+    { name: 'update-server', pattern: /Phase 4|Update Server/i, progress: 50 },
+    { name: 'publish', pattern: /Phase 5|Publish to Update Server/i, progress: 70 },
+    { name: 'github', pattern: /Phase 6|Publish to GitHub/i, progress: 85 },
+    { name: 'restart', pattern: /Phase 7|Restarting update server/i, progress: 92 },
+    { name: 'web-admin', pattern: /Phase 8|Restarting web admin/i, progress: 96 },
+    { name: 'health', pattern: /Phase 9|Final health status check/i, progress: 98 },
     { name: 'complete', pattern: /AUTO-RELEASE COMPLETED/i, progress: 100 }
   ];
 
