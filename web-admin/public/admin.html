@@ -453,6 +453,143 @@
             color: #666;
         }
 
+        /* Horizontal Pipeline */
+        .pipeline-container {
+            margin-bottom: 2.5rem;
+            padding: 1rem 0;
+            position: relative;
+        }
+
+        .pipeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .pipeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--border);
+            transform: translateY(-50%);
+            z-index: -1;
+        }
+
+        .pipeline-progress {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            height: 2px;
+            background: var(--accent);
+            transform: translateY(-50%);
+            z-index: -1;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .pipeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--bg-card);
+            position: relative;
+            padding: 0 1rem;
+        }
+
+        .step-node {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: var(--text-secondary);
+            position: relative;
+            z-index: 2;
+        }
+
+        .pipeline-step.active .step-node {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--bg-panel);
+            box-shadow: 0 0 20px rgba(0, 212, 170, 0.4), inset 0 0 10px rgba(0, 212, 170, 0.2);
+            transform: scale(1.15) translateY(-2px);
+        }
+
+        .pipeline-step.complete .step-node {
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            border-color: var(--accent);
+            color: var(--bg-dark);
+            box-shadow: 0 0 15px rgba(0, 212, 170, 0.2);
+        }
+
+        .pipeline-step.error .step-node {
+            background: linear-gradient(135deg, var(--danger), #b91c1c);
+            border-color: var(--danger);
+            color: white;
+            box-shadow: 0 0 15px rgba(229, 62, 62, 0.3);
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-align: center;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .pipeline-step.active .step-label {
+            color: var(--accent);
+            text-shadow: 0 0 8px rgba(0, 212, 170, 0.4);
+        }
+
+        .pipeline-step.complete .step-label {
+            color: var(--text-primary);
+        }
+
+
+        .step-pulse {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .pipeline-step.active .step-pulse {
+            animation: nodePulse 2s infinite;
+        }
+
+        @keyframes nodePulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+
+        /* Responsive Build Layout */
+        .build-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+
         /* Progress */
         .build-progress {
             margin-top: 1.5rem;
@@ -722,60 +859,43 @@
                     </div>
                 </div>
                 <div class="panel-body">
-                    <div class="build-container">
-                        <div class="build-stages" id="build-stages">
-                            <div class="stage" data-stage="setup">
-                                <div class="stage-icon">⚙</div>
-                                <div>
-                                    <div class="stage-name">Environment Setup</div>
-                                    <div class="stage-status">Waiting...</div>
+                    <div class="build-layout">
+                        <!-- New Pipeline -->
+                        <div class="pipeline-container">
+                            <div class="pipeline-progress" id="pipeline-progress" style="width: 0%"></div>
+                            <div class="pipeline" id="pipeline-steps">
+                                <div class="pipeline-step" data-stage="setup">
+                                    <div class="step-node">⚙️<div class="step-pulse"></div></div>
+                                    <div class="step-label">Setup</div>
                                 </div>
-                            </div>
-                            <div class="stage" data-stage="version">
-                                <div class="stage-icon">🏷</div>
-                                <div>
-                                    <div class="stage-name">Version Bump</div>
-                                    <div class="stage-status">Waiting...</div>
+                                <div class="pipeline-step" data-stage="version">
+                                    <div class="step-node">🏷️<div class="step-pulse"></div></div>
+                                    <div class="step-label">Version</div>
                                 </div>
-                            </div>
-                            <div class="stage" data-stage="windows-build">
-                                <div class="stage-icon">🔨</div>
-                                <div>
-                                    <div class="stage-name">Windows Build</div>
-                                    <div class="stage-status">Waiting...</div>
+                                <div class="pipeline-step" data-stage="windows-build">
+                                    <div class="step-node">🔨<div class="step-pulse"></div></div>
+                                    <div class="step-label">Windows</div>
                                 </div>
-                            </div>
-                            <div class="stage" data-stage="update-server">
-                                <div class="stage-icon">📦</div>
-                                <div>
-                                    <div class="stage-name">Update Server</div>
-                                    <div class="stage-status">Waiting...</div>
+                                <div class="pipeline-step" data-stage="update-server">
+                                    <div class="step-node">📦<div class="step-pulse"></div></div>
+                                    <div class="step-label">Package</div>
                                 </div>
-                            </div>
-                            <div class="stage" data-stage="publish">
-                                <div class="stage-icon">☁</div>
-                                <div>
-                                    <div class="stage-name">Publish Release</div>
-                                    <div class="stage-status">Waiting...</div>
+                                <div class="pipeline-step" data-stage="publish">
+                                    <div class="step-node">☁️<div class="step-pulse"></div></div>
+                                    <div class="step-label">Publish</div>
                                 </div>
-                            </div>
-                            <div class="stage" data-stage="github">
-                                <div class="stage-icon">🚀</div>
-                                <div>
-                                    <div class="stage-name">GitHub Release</div>
-                                    <div class="stage-status">Waiting...</div>
+                                <div class="pipeline-step" data-stage="github">
+                                    <div class="step-node">🚀<div class="step-pulse"></div></div>
+                                    <div class="step-label">Release</div>
                                 </div>
-                            </div>
-                            <div class="stage" data-stage="restart">
-                                <div class="stage-icon">🔄</div>
-                                <div>
-                                    <div class="stage-name">Restart Services</div>
-                                    <div class="stage-status">Waiting...</div>
+                                <div class="pipeline-step" data-stage="restart">
+                                    <div class="step-node">🔄<div class="step-pulse"></div></div>
+                                    <div class="step-label">Service</div>
                                 </div>
                             </div>
                         </div>
 
-                        <div>
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
                             <div class="terminal">
                                 <div class="terminal-header">
                                     <div style="display: flex; gap: 6px;">
@@ -783,17 +903,20 @@
                                         <span class="terminal-dot yellow"></span>
                                         <span class="terminal-dot green"></span>
                                     </div>
-                                    <span class="terminal-title">build.log</span>
+                                    <span class="terminal-title">build.log — redball-engine</span>
                                 </div>
                                 <div class="terminal-body" id="terminal-body">
-                                    <div class="terminal-line dim">Ready. Click Start to begin build.</div>
+                                    <div class="terminal-line dim">Ready. Click Start to begin build pipeline.</div>
                                 </div>
                             </div>
                             <div class="build-progress">
                                 <div class="progress-bar">
                                     <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
                                 </div>
-                                <div class="progress-text" id="progress-text">0%</div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+                                    <div class="progress-text" style="font-size: 0.75rem; color: var(--text-secondary);" id="progress-phase">Idle</div>
+                                    <div class="progress-text" id="progress-text">0%</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1333,7 +1456,9 @@
                     buildStarted(msg.data);
                     break;
                 case 'build-output':
-                    addTerminalLine(msg.data.line, msg.data.stage);
+                    // Clean the line if it comes as an object (spam protection)
+                    const line = (typeof msg.data.line === 'object') ? JSON.stringify(msg.data.line) : msg.data.line;
+                    addTerminalLine(line, msg.data.stage);
                     updateProgress(msg.data.progress);
                     updateStage(msg.data.stage);
                     break;
@@ -1343,6 +1468,38 @@
                 case 'build-stopped':
                     buildStopped();
                     break;
+            }
+        }
+
+        function updateBuildState(data) {
+            buildState = { ...data };
+            
+            // Sync UI elements
+            updateUI();
+            updateProgress(buildState.progress || 0);
+            updateStage(buildState.stage);
+
+            if (buildState.status === 'running') {
+                document.getElementById('start-build-btn').disabled = true;
+                document.getElementById('stop-build-btn').disabled = false;
+            }
+
+            // Restore logs cleanly
+            if (buildState.log && buildState.log.length > 0) {
+                const term = document.getElementById('terminal-body');
+                term.innerHTML = '';
+                
+                // Add a marker for reconnection
+                const restoredMarker = document.createElement('div');
+                restoredMarker.className = 'terminal-line dim';
+                restoredMarker.textContent = '--- Restored Session Logs ---';
+                term.appendChild(restoredMarker);
+
+                // Add last 100 lines for speed
+                const recentLogs = buildState.log.slice(-100);
+                recentLogs.forEach(entry => {
+                    addTerminalLine(entry.message, buildState.stage);
+                });
             }
         }
 
@@ -1388,12 +1545,21 @@
         }
 
         function formatLine(line) {
-            const clean = stripAnsi(line).trim();
+            // Safety check: if line is not a string, stringify it
+            let text = (typeof line === 'object') ? JSON.stringify(line) : String(line);
+            
+            const clean = stripAnsi(text).trim();
 
-            // Skip empty and terminal control sequences
+            // Skip empty, terminal control, or obviously redundant MSBuild noise
             if (!clean) return null;
             if (/^[═╚╠╣╗╔╝╩╦╬═─│┌┐└┘├┤┬┴┼\[\?1h\[=]+$/.test(clean)) return null;
             if (clean === '=' || clean === '[?1h' || clean === '[?1h=') return null;
+            
+            // Filter out JSON spam that occasionally leaks from internal logging
+            if (clean.startsWith('{') && clean.endsWith('}') && clean.includes('"timestamp"')) {
+                return null;
+            }
+
             if (clean.includes('Redball Unified Build System')) return { text: '🚀 Starting build...', class: 'phase-start' };
 
             // Windows build specific patterns
@@ -1402,41 +1568,16 @@
                 return { text: '🔨 Starting Windows build...', class: 'phase-start' };
             }
 
-            // Wine/dotnet progress indicators
-            if (/wine|dotnet|MSBuild|Building|Restore|Publish/i.test(clean)) {
-                // Calculate synthetic progress during Windows build
-                if (windowsBuildStartTime && buildState.stage === 'windows-build') {
-                    const elapsed = (Date.now() - windowsBuildStartTime) / 1000;
-                    // Estimate: Windows build takes ~2-3 minutes, show progress 30-60%
-                    const syntheticProgress = Math.min(30 + (elapsed / 180) * 30, 55);
-                    if (syntheticProgress > lastWindowsProgress) {
-                        lastWindowsProgress = syntheticProgress;
-                        updateProgress(syntheticProgress);
-                    }
-                }
-
-                // Show important build output
-                if (/Build succeeded|Build FAILED|error|warning/i.test(clean)) {
-                    if (clean.includes('succeeded')) return { text: '✓ ' + clean, class: 'success' };
-                    if (clean.includes('FAILED')) return { text: '✗ ' + clean, class: 'error' };
-                    return { text: clean, class: /error/i.test(clean) ? 'error' : 'warning' };
-                }
-
-                // Show project compilation output
-                if (/->|Compiling|Generating|Creating/i.test(clean)) {
-                    return { text: clean, class: '' };
-                }
-
-                // Skip most verbose MSBuild output but show some
-                if (/^→|Skipping|Up-to-date|Time Elapsed/.test(clean)) return null;
+            // MSBuild Success/Fail summaries
+            if (clean.includes('Build succeeded') || clean.includes('0 Error(s)')) {
+                return { text: '✓ Compilation succeeded', class: 'success' };
+            }
+            if (clean.includes('Build FAILED') || clean.includes('Error(s)')) {
+                if (clean.includes('0 Error(s)')) return null; // Ignore '0 Error(s)' but show actual errors
+                return { text: '✗ ' + clean, class: 'error' };
             }
 
-            // Phase detection
-            if (/Phase [0-9]:/.test(clean)) {
-                return { text: clean.replace(/\[.*\]\s*/, ''), class: 'phase-start' };
-            }
-
-            // Status patterns
+            // Core log patterns
             if (/\[\s*OK\s*\]/.test(clean) || /✓/.test(clean)) {
                 return { text: '✓ ' + clean.replace(/\[.*\]\s*/, '').replace(/✓\s*/, ''), class: 'success' };
             }
@@ -1447,25 +1588,28 @@
                 return { text: '✗ ' + clean.replace(/\[.*\]\s*/, ''), class: 'error' };
             }
             if (/\[\s*STEP/.test(clean)) {
-                return { text: clean.replace(/\[.*\]\s*/, ''), class: 'phase-start' };
-            }
-            if (/\[\s*INFO/.test(clean)) {
-                return { text: clean.replace(/\[.*\]\s*/, ''), class: '' };
+                return { text: '→ ' + clean.replace(/\[.*\]\s*/, ''), class: 'phase-start' };
             }
             if (/\[\s*DEBUG/.test(clean)) {
-                // Only show some debug messages during Windows build for feedback
+                // Show critical debug info during build for technical context
                 if (buildState.stage === 'windows-build' && /wine|dotnet|Running/.test(clean)) {
                     return { text: clean.replace(/\[.*\]\s*/, ''), class: 'dim' };
                 }
-                return null; // Hide most debug output
+                return null;
             }
 
-            // Show meaningful content during Windows build
-            if (buildState.stage === 'windows-build' && clean.length > 3) {
-                return { text: clean, class: 'dim' };
+            // Compact MSBuild output
+            if (clean.includes('->')) {
+                const parts = clean.split('->');
+                return { text: parts[parts.length - 1].trim(), class: 'dim' };
             }
 
-            return { text: clean, class: '' };
+            // Default fallback for meaningful lines
+            if (clean.length > 2 && !/^[\s\.*\#\-]+$/.test(clean)) {
+                return { text: clean, class: '' };
+            }
+
+            return null;
         }
 
         function addTerminalLine(rawLine, stage) {
@@ -1501,44 +1645,42 @@
             const idx = stages.indexOf(name);
             if (idx === -1) return;
 
+            // Update horizontal pipeline progress bar
+            const prog = document.getElementById('pipeline-progress');
+            const total = stages.length;
+            const pct = ((idx) / (total - 1)) * 100;
+            prog.style.width = pct + '%';
+
             stages.forEach((s, i) => {
-                const el = document.querySelector(`.stage[data-stage="${s}"]`);
+                const el = document.querySelector(`.pipeline-step[data-stage="${s}"]`);
                 if (!el) return;
 
-                // Don't override completed stages
-                if (el.classList.contains('complete')) return;
-
-                el.classList.remove('active', 'complete');
+                el.classList.remove('active', 'complete', 'error');
 
                 if (i === idx) {
                     el.classList.add('active');
-                    el.querySelector('.stage-status').textContent = 'Running...';
-
-                    // Add feedback to terminal when stage changes
-                    const stageNames = {
-                        'setup': '⚙️ Environment Setup',
-                        'version': '🏷️ Version Bump',
-                        'windows-build': '🔨 Windows Build',
-                        'update-server': '📦 Update Server',
-                        'publish': '☁️ Publish Release',
-                        'github': '🚀 GitHub Release',
-                        'restart': '🔄 Restart Services'
-                    };
-                    if (stageNames[s] && !isDuplicate(stageNames[s])) {
-                        addTerminalLine(`→ ${stageNames[s]} started...`, 'phase-start');
-                    }
+                    const phaseText = {
+                        'setup': 'Initializing...',
+                        'version': 'Bumping version...',
+                        'windows-build': 'Compiling Windows binaries...',
+                        'update-server': 'Preparing update package...',
+                        'publish': 'Uploading to server...',
+                        'github': 'Submitting to GitHub...',
+                        'restart': 'Recycling services...'
+                    }[s] || 'Running...';
+                    document.getElementById('progress-phase').textContent = phaseText;
                 } else if (i < idx) {
                     el.classList.add('complete');
-                    el.querySelector('.stage-status').textContent = 'Complete';
                 }
             });
         }
 
         function resetStages() {
+            document.getElementById('pipeline-progress').style.width = '0%';
+            document.getElementById('progress-phase').textContent = 'Ready';
             stages.forEach(s => {
-                const el = document.querySelector(`.stage[data-stage="${s}"]`);
-                el.classList.remove('active', 'complete', 'error');
-                el.querySelector('.stage-status').textContent = 'Waiting...';
+                const el = document.querySelector(`.pipeline-step[data-stage="${s}"]`);
+                if (el) el.classList.remove('active', 'complete', 'error');
             });
         }
 
@@ -1565,14 +1707,22 @@
 
             // Mark all stages as complete on success
             if (data.status === 'success') {
+                document.getElementById('pipeline-progress').style.width = '100%';
+                document.getElementById('progress-phase').textContent = 'Build Success!';
                 stages.forEach(s => {
-                    const el = document.querySelector(`.stage[data-stage="${s}"]`);
+                    const el = document.querySelector(`.pipeline-step[data-stage="${s}"]`);
                     if (el) {
                         el.classList.remove('active', 'error');
                         el.classList.add('complete');
-                        el.querySelector('.stage-status').textContent = 'Complete';
                     }
                 });
+            } else if (data.status === 'failed') {
+                document.getElementById('progress-phase').textContent = 'Build Failed';
+                const currentStageEl = document.querySelector('.pipeline-step.active');
+                if (currentStageEl) {
+                    currentStageEl.classList.remove('active');
+                    currentStageEl.classList.add('error');
+                }
             }
 
             updateUI();
