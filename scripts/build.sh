@@ -455,9 +455,14 @@ auto_release() {
         if command -v pm2 &>/dev/null; then
             # Check if already running with pm2
             if pm2 list | grep -q "redball-update-server"; then
-                log_info "Restarting update server via PM2..."
-                pm2 restart redball-update-server 2>&1 | while IFS= read -r line; do log_detail "$line"; done
-                log_success "Update server restarted via PM2"
+                if [[ -n "$BUILD_BY_SERVICE" ]]; then
+                    log_info "Running under update-server, signaling parent to restart after build..."
+                    echo "[SIGNAL] RESTART_NEEDED"
+                else
+                    log_info "Restarting update server via PM2..."
+                    pm2 restart redball-update-server 2>&1 | while IFS= read -r line; do log_detail "$line"; done
+                fi
+                log_success "Update server restart process initiated"
             else
                 log_info "Starting update server via PM2..."
                 cd "$server_dir" && pm2 start server.js --name "redball-update-server" 2>&1 | while IFS= read -r line; do log_detail "$line"; done

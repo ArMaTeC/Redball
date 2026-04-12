@@ -254,8 +254,21 @@ function loadBuildState() {
     if (fs.existsSync(BUILD_STATE_FILE)) {
       const saved = JSON.parse(fs.readFileSync(BUILD_STATE_FILE, 'utf8'));
       if (saved.status === 'running') {
-        saved.status = 'failed';
-        saved.log.push({ time: new Date().toISOString(), type: 'error', line: '--- Server was restarted during build ---' });
+        if (saved.stage === 'restart' || saved.stage === 'health') {
+          saved.status = 'success';
+          saved.progress = 100;
+          saved.endTime = Date.now();
+          saved.log.push({ 
+            timestamp: Date.now(), 
+            message: '--- Build completed successfully after planned server restart ---' 
+          });
+        } else {
+          saved.status = 'failed';
+          saved.log.push({ 
+            timestamp: Date.now(), 
+            message: '--- Server was restarted unexpectedly during build ---' 
+          });
+        }
       }
       return saved;
     }
@@ -1326,9 +1339,10 @@ function startBuild() {
     cols: 120,
     rows: 30,
     cwd: PROJECT_ROOT,
-    env: { ...process.env, FORCE_COLOR: '1' }
+    env: { ...process.env, FORCE_COLOR: '1', BUILD_BY_SERVICE: '1' }
   });
 
+  let restartNeeded = false;
   buildState.pid = ptyProcess.pid;
 
   ptyProcess.onData((data) => {
@@ -1359,6 +1373,10 @@ function startBuild() {
       if (buildState.log.length > 5000) buildState.log = buildState.log.slice(-2500);
       if (buildState.log.length % 50 === 0 || stage) saveBuildState();
       
+      if (cleanLine.includes('[SIGNAL] RESTART_NEEDED')) {
+        restartNeeded = true;
+      }
+
       broadcast({
         type: 'build-output',
         data: { 
@@ -1381,6 +1399,22 @@ function startBuild() {
       type: 'build-complete',
       data: { status: buildState.status, exitCode, duration: buildState.endTime - buildState.startTime }
     });
+
+    if (exitCode === 0 && restartNeeded) {
+      console.log('[BUILD] Restart signaled, scheduling self-restart in 5s...');
+      buildState.log.push({ timestamp: Date.now(), message: '[SYSTEM] Restarting server to apply updates...' });
+      saveBuildState();
+      
+      const { exec } = require('child_process');
+      setTimeout(() => {
+        exec('pm2 restart redball-update-server', (err) => {
+          if (err) {
+            console.error('[BUILD] Self-restart failed, exiting instead:', err);
+            process.exit(0);
+          }
+        });
+      }, 5000);
+    }
   });
 }function stopBuild() {
   if (buildState.pid) {
