@@ -171,6 +171,12 @@ function saveBuildState() {
 // Middleware
 app.use(express.json());
 
+// Security headers - override restrictive CSP from reverse proxy
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' wss: https:; img-src 'self' data: blob:; font-src 'self';");
+  next();
+});
+
 // Auth endpoints
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;

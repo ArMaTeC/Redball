@@ -67,7 +67,8 @@ export const AdminDashboard: React.FC = () => {
 
   // Setup WebSocket for real-time build output
   useEffect(() => {
-    const wsUrl = `ws://${window.location.host}/ws`;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
@@ -413,11 +414,73 @@ interface Config {
   [key: string]: unknown;
 }
 
+const LoginPanel: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (res.ok && data.token) {
+        localStorage.setItem('token', data.token);
+        onLogin();
+      } else {
+        setError(data.error || 'Login failed');
+      }
+    } catch {
+      setError('Network error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="glass-card" style={{ maxWidth: '400px', margin: '100px auto', padding: '40px' }}>
+      <h2 style={{ marginBottom: '24px', textAlign: 'center' }}>Admin Login</h2>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)' }}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)' }}
+        />
+        {error && <div style={{ color: '#ff6b6b', fontSize: '14px' }}>{error}</div>}
+        <button
+          type="submit"
+          disabled={loading}
+          style={{ padding: '12px', borderRadius: '8px', border: 'none', background: 'var(--accent)', color: 'white', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+        >
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
 const SystemConfigPanel: React.FC = () => {
   const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
   const [config, setConfig] = useState<Config | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
 
   const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem('token');
@@ -430,6 +493,11 @@ const SystemConfigPanel: React.FC = () => {
         fetch('/api/system/config', { headers: getAuthHeaders() }),
         fetch('/api/config', { headers: getAuthHeaders() })
       ]);
+      if (serverRes.status === 401 || configRes.status === 401) {
+        setIsAuthenticated(false);
+        localStorage.removeItem('token');
+        return;
+      }
       if (serverRes.ok) setServerInfo(await serverRes.json());
       if (configRes.ok) setConfig(await configRes.json());
     } catch (e) {
@@ -475,6 +543,10 @@ const SystemConfigPanel: React.FC = () => {
         Loading configuration...
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPanel onLogin={() => { setIsAuthenticated(true); fetchConfig(); }} />;
   }
 
   return (
