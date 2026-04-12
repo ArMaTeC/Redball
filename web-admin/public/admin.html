@@ -1790,21 +1790,21 @@
 
         async function loadStats() {
             try {
-                const res = await fetch('/api/stats');
+                const res = await authFetch('/api/stats');
                 const stats = await res.json();
 
                 document.getElementById('total-downloads').textContent =
-                    stats.totalDownloads > 0 ? stats.totalDownloads.toLocaleString() : '0';
-                document.getElementById('total-releases').textContent = stats.totalReleases;
+                    (stats.totalDownloads || 0).toLocaleString();
+                document.getElementById('total-releases').textContent = stats.totalReleases || 0;
                 document.getElementById('latest-version').textContent = stats.latestVersion || '-';
 
                 const container = document.getElementById('download-stats');
-                if (Object.keys(stats.byFile).length > 0) {
+                if (stats.byFile && Object.keys(stats.byFile).length > 0) {
                     let html = '<table class="releases-table"><thead><tr><th>File</th><th>Downloads</th></tr></thead><tbody>';
                     Object.entries(stats.byFile)
-                        .sort((a, b) => b[1].downloads - a[1].downloads)
+                        .sort((a, b) => (b[1].downloads || 0) - (a[1].downloads || 0))
                         .forEach(([file, data]) => {
-                            html += `<tr><td>${file}</td><td>${data.downloads.toLocaleString()}</td></tr>`;
+                            html += `<tr><td>${file}</td><td>${(data.downloads || 0).toLocaleString()}</td></tr>`;
                         });
                     html += '</tbody></table>';
                     container.innerHTML = html;
@@ -1815,6 +1815,7 @@
                 console.error('Failed to load stats:', err);
             }
         }
+
 
         async function loadReleases() {
             try {

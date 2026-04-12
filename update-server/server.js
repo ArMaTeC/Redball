@@ -14,6 +14,7 @@ const rateLimit = require('express-rate-limit');
 const { generatePatches, formatBytes } = require('./lib/delta-patches');
 
 const app = express();
+app.set('trust proxy', 1); // Enable trust proxy for rate limiting (needed behind Cloudflare/reverse proxy)
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
@@ -269,6 +270,25 @@ function authenticateToken(req, res, next) {
     next();
   });
 }
+
+function getDirSize(dirPath) {
+  if (!fs.existsSync(dirPath)) return 0;
+  let size = 0;
+  try {
+    const files = fs.readdirSync(dirPath);
+    for (const file of files) {
+      const filePath = path.join(dirPath, file);
+      const stat = fs.statSync(filePath);
+      if (stat.isDirectory()) {
+        size += getDirSize(filePath);
+      } else {
+        size += stat.size;
+      }
+    }
+  } catch (e) { }
+  return size;
+}
+
 
 let buildState = loadBuildState();
 function loadBuildState() {
@@ -750,20 +770,54 @@ app.post('/api/publish', uploadLimiter, (req, res, next) => {
   res.status(201).json({ published: version, files: release.files.length });
 });
 
-// --- Server stats (from GitHub with cache) ---
+// --- Server stats (Unified for public and admin) ---
 app.get('/api/stats', async (req, res) => {
   try {
     const releases = await fetchGitHubReleases();
     const totalReleases = releases.length;
-    const totalFiles = releases.reduce((sum, r) => sum + (r.files?.length || 0), 0);
-    const totalDownloads = releases.reduce((sum, r) => sum + (r.totalDownloads || 0), 0);
-    const latestVersion = releases.length > 0 ? releases[0].version : 'none';
-    res.json({ totalReleases, totalFiles, totalDownloads, latestVersion, releases });
+    const latestVersion = releases.length > 0 ? releases[0].version : '0.0.0';
+    
+    // Detailed file-level stats
+    const byFile = {};
+    for (const r of releases) {
+      if (!r.files) continue;
+      for (const f of r.files) {
+        if (!byFile[f.name]) {
+          byFile[f.name] = { downloads: 0, versions: [] };
+        }
+        byFile[f.name].downloads += (f.downloads || 0);
+        if (!byFile[f.name].versions.includes(r.version)) {
+          byFile[f.name].versions.push(r.version);
+        }
+      }
+    }
+
+    // Add local download tracking data if available
+    for (const [key, count] of Object.entries(downloadCounts.files || {})) {
+      const filename = key.split('/').pop();
+      if (byFile[filename]) {
+        byFile[filename].downloads += count;
+      } else {
+        byFile[filename] = { downloads: count, versions: [key.split('/')[0]] };
+      }
+    }
+
+    const totalDownloads = Object.values(byFile).reduce((sum, f) => sum + f.downloads, 0);
+
+    res.json({
+      totalReleases,
+      totalDownloads,
+      latestVersion,
+      byFile,
+      releases,
+      activeBuilds: buildState.status === 'running' ? 1 : 0
+    });
   } catch (err) {
     console.error('[API] Error fetching stats:', err);
     res.status(500).json({ error: 'Failed to fetch stats' });
   }
 });
+
 
 // --- Health check endpoint ---
 app.get('/api/health', (req, res) => {
@@ -777,8 +831,11 @@ app.get('/api/health', (req, res) => {
 });
 
 // --- System Information endpoint ---
-app.get('/api/system/config', (req, res) => {
+app.get('/api/system/config', authenticateToken, (req, res) => {
   const db = loadDB();
+  const releasesSize = getDirSize(RELEASES_DIR);
+  const logsSize = getDirSize(LOGS_DIR);
+  
   res.json({
     hostname: require('os').hostname(),
     platform: require('os').platform(),
@@ -789,9 +846,16 @@ app.get('/api/system/config', (req, res) => {
     env: process.env.NODE_ENV || 'development',
     releaseCount: db.releases?.length || 0,
     dataDir: DATA_DIR,
-    releasesDir: RELEASES_DIR
+    releasesDir: RELEASES_DIR,
+    projectRoot: PROJECT_ROOT,
+    diskUsage: {
+      releases: releasesSize,
+      logs: logsSize,
+      total: releasesSize + logsSize
+    }
   });
 });
+
 
 // Default client configuration
 const DEFAULT_CLIENT_CONFIG = {
@@ -1189,10 +1253,26 @@ function broadcast(msg) {
 
 wss.on('connection', (ws) => {
   console.log('[WS] New client connected');
-  ws.send(JSON.stringify({ type: 'init', data: buildState }));
+  ws.send(JSON.stringify({ type: 'state', data: buildState }));
+
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message);
+      if (data.action === 'start-build') {
+        if (buildState.status !== 'running') {
+          startBuild();
+        }
+      } else if (data.action === 'stop-build') {
+        stopBuild();
+      }
+    } catch (e) {
+      console.error('[WS] Message error:', e);
+    }
+  });
 
   ws.on('close', () => console.log('[WS] Client disconnected'));
 });
+
 
 // Admin Auth Routes
 app.post('/api/auth/login', async (req, res) => {
@@ -1207,8 +1287,13 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Build Trigger
-app.post('/api/admin/build', authenticateToken, (req, res) => {
+app.get('/api/auth/me', authenticateToken, (req, res) => {
+  res.json({ user: req.user });
+});
+
+
+// Build Trigger (Aliased for compatibility)
+app.post(['/api/admin/build', '/api/build/start'], authenticateToken, (req, res) => {
   if (buildState.status === 'running') {
     return res.status(409).json({ error: 'Build already in progress' });
   }
@@ -1216,6 +1301,12 @@ app.post('/api/admin/build', authenticateToken, (req, res) => {
   startBuild();
   res.json({ message: 'Build started', status: 'running' });
 });
+
+app.post('/api/build/stop', authenticateToken, (req, res) => {
+  stopBuild();
+  res.json({ message: 'Build stopping', status: 'stopping' });
+});
+
 
 app.get('/api/admin/status', authenticateToken, (req, res) => {
   res.json(buildState);
@@ -1231,10 +1322,8 @@ async function getSystemStats() {
   };
 }
 
-app.get('/api/stats', authenticateToken, async (req, res) => {
-  const stats = await getSystemStats();
-  res.json(stats);
-});
+// Note: Consolidated into public /api/stats above
+
 
 // --- Build Orchestration Logic ---
 function parseBuildStage(line) {
@@ -1312,6 +1401,18 @@ function startBuild() {
       data: { status: buildState.status, exitCode, duration: buildState.endTime - buildState.startTime }
     });
   });
+}function stopBuild() {
+  if (buildState.pid) {
+    try {
+      process.kill(buildState.pid, 'SIGTERM');
+      buildState.status = 'stopped';
+      buildState.endTime = Date.now();
+      saveBuildState();
+      broadcast({ type: 'build-stopped', data: buildState });
+    } catch (e) {
+      console.error('[BUILD] Error stopping build:', e.message);
+    }
+  }
 }
 
 // --- Health Check ---
@@ -1334,9 +1435,8 @@ app.use('/downloads', express.static(RELEASES_DIR));
 app.use(express.static(SITE_PUBLIC, { index: 'index.html' }));
 
 // SPA Fallbacks
-app.get('/admin/*', (req, res) => res.sendFile(path.join(ADMIN_PUBLIC, 'admin.html')));
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api/') || req.path.startsWith('/downloads/')) return next();
+app.get(/^\/admin\/(.*)/, (req, res) => res.sendFile(path.join(ADMIN_PUBLIC, 'admin.html')));
+app.get(/^(?!\/api|\/downloads).*/, (req, res, next) => {
   res.sendFile(path.join(SITE_PUBLIC, 'index.html'));
 });
 
