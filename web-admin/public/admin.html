@@ -587,6 +587,92 @@
             100% { transform: scale(1.8); opacity: 0; }
         }
 
+        /* Build Insights */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .insight-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .insight-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .insight-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--accent);
+            opacity: 0.6;
+        }
+
+        .insight-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0.5rem 0;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .insight-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+
+        .savings-meter {
+            height: 4px;
+            background: var(--bg-panel);
+            border-radius: 2px;
+            margin-top: 0.8rem;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .savings-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4aa, #27c93f);
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 8px rgba(0, 212, 170, 0.4);
+        }
+
+        .artifact-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: rgba(0, 212, 170, 0.08);
+            color: var(--accent);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid rgba(0, 212, 170, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .artifact-badge:hover {
+            background: rgba(0, 212, 170, 0.15);
+            border-color: var(--accent);
+        }
+
+
         /* Responsive Build Layout */
         .build-layout {
             display: flex;
@@ -939,7 +1025,7 @@
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;" id="build-detail-row">
                             <div class="terminal">
                                 <div class="terminal-header">
                                     <div style="display: flex; gap: 6px;">
@@ -949,20 +1035,49 @@
                                     </div>
                                     <span class="terminal-title">build.log — redball-engine</span>
                                 </div>
-                                <div class="terminal-body" id="terminal-body">
+                                <div class="terminal-body" id="terminal-body" style="height: 450px;">
                                     <div class="terminal-line dim">Ready. Click Start to begin build pipeline.</div>
                                 </div>
                             </div>
-                            <div class="build-progress">
-                                <div class="progress-bar">
-                                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
-                                    <div class="progress-text" style="font-size: 0.75rem; color: var(--text-secondary);" id="progress-phase">Idle</div>
-                                    <div class="progress-text" id="progress-text">0%</div>
+
+                            <div class="insights-container">
+                                <div class="panel" style="height: 100%; border: 1px solid var(--border); display: flex; flex-direction: column; background: rgba(0,0,0,0.2);">
+                                    <div class="panel-header" style="background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);">
+                                        <div class="panel-title" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">💎 Build Insights</div>
+                                    </div>
+                                    <div class="panel-body" style="padding: 1.25rem; flex: 1; overflow-y: auto;">
+                                        <div id="insights-empty" style="text-align: center; color: var(--text-secondary); margin-top: 3rem; opacity: 0.5;">
+                                            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🛰️</div>
+                                            <p style="font-size: 0.75rem;">Awaiting build telemetry...</p>
+                                        </div>
+                                        
+                                        <div id="insights-content" style="display: none;">
+                                            <div class="insight-card" style="margin-bottom: 1.25rem;">
+                                                <div class="insight-label">Latest Version</div>
+                                                <div class="insight-value" id="insight-version">-</div>
+                                                <div id="artifact-list" style="margin-top: 0.75rem; display: flex; flex-direction: column; gap: 8px;"></div>
+                                            </div>
+
+                                            <div class="insight-card" style="margin-bottom: 1.25rem;">
+                                                <div class="insight-label">Delta Savings</div>
+                                                <div class="insight-value" id="insight-savings">0%</div>
+                                                <div class="savings-meter">
+                                                    <div class="savings-fill" id="savings-progress" style="width: 0%"></div>
+                                                </div>
+                                                <div id="savings-detail" style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.75rem; font-family: 'JetBrains Mono', monospace;">Total payload reduction: 0MB</div>
+                                            </div>
+
+                                            <div class="insight-card">
+                                                <div class="insight-label">Release Integrity</div>
+                                                <div class="insight-value" id="insight-duration">0s</div>
+                                                <div style="font-size: 0.75rem; font-weight: 700; color: #27c93f;" id="insight-status">HEALTHY</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -1465,6 +1580,7 @@
         // WebSocket
         let ws;
         let buildState = { status: 'idle', stage: null, progress: 0 };
+        let buildInsights = { version: '-', savings: 0, totalSaved: 0, artifacts: [], startTime: 0 };
 
         const stages = ['setup', 'version', 'restore', 'wpf-build', 'service-build', 'manifest', 'zip-bundle', 'installer', 'update-server', 'publish', 'github', 'restart', 'health'];
 
@@ -1507,11 +1623,42 @@
                     // Show current operation
                     if (rawLine.includes('[STEP]') || rawLine.includes('→')) {
                         document.getElementById('current-op').textContent = rawLine.replace(/\[STEP .*?\]/g, '').replace(/→/g, '').trim();
-                        document.getElementById('current-op').style.color = 'var(--text-primary)';
+                        document.getElementById('current-op').style.color = 'var(--accent)';
                     } else if (rawLine.trim().length > 5 && !rawLine.includes('│')) {
-                        // For generic lines that aren't table borders
                         document.getElementById('current-op').textContent = rawLine.trim();
                         document.getElementById('current-op').style.color = 'var(--text-secondary)';
+                    }
+
+                    // Extract Insights
+                    if (rawLine.includes('Building version:')) {
+                        buildInsights.version = rawLine.split(':').pop().trim();
+                        updateInsightsUI();
+                    }
+                    if (rawLine.includes('% savings')) {
+                        const match = rawLine.match(/(\d+\.?\d*)%\s+savings/);
+                        if (match) {
+                            const val = parseFloat(match[1]);
+                            if (val > buildInsights.savings) buildInsights.savings = val;
+                            updateInsightsUI();
+                        }
+                    }
+                    if (rawLine.includes('Total savings:')) {
+                        buildInsights.totalSaved = rawLine.split(':').pop().trim();
+                        updateInsightsUI();
+                    }
+                    if (rawLine.includes('Redball-') && rawLine.includes('.exe')) {
+                        const file = rawLine.match(/Redball-[\d\.]+-Setup\.exe/);
+                        if (file && !buildInsights.artifacts.includes(file[0])) {
+                            buildInsights.artifacts.push(file[0]);
+                            updateInsightsUI();
+                        }
+                    }
+                    if (rawLine.includes('Redball-') && rawLine.includes('.zip')) {
+                        const file = rawLine.match(/Redball-[\d\.]+\.zip/);
+                        if (file && !buildInsights.artifacts.includes(file[0])) {
+                            buildInsights.artifacts.push(file[0]);
+                            updateInsightsUI();
+                        }
                     }
 
                     addTerminalLine(rawLine, msg.data.stage);
@@ -1763,17 +1910,24 @@
             addTerminalLine(data.status === 'success' ? '✅ Build completed successfully!' : '❌ Build failed!', data.status);
             updateProgress(data.status === 'success' ? 100 : buildState.progress);
 
-            // Mark all stages as complete on success
+            // Insights Update
             if (data.status === 'success') {
                 document.getElementById('pipeline-progress').style.width = '100%';
                 document.getElementById('progress-phase').textContent = 'Build Success!';
                 stages.forEach(s => {
                     const el = document.querySelector(`.pipeline-step[data-stage="${s}"]`);
-                    if (el) {
-                        el.classList.remove('active', 'error');
-                        el.classList.add('complete');
-                    }
+                    if (el) { el.classList.remove('active', 'error'); el.classList.add('complete'); }
                 });
+
+                const statusEl = document.getElementById('insight-status');
+                const durEl = document.getElementById('insight-duration');
+                if (statusEl) { statusEl.textContent = 'RELEASE READY'; statusEl.style.color = '#27c93f'; }
+                if (durEl) { durEl.textContent = (data.duration / 1000).toFixed(1) + 's'; }
+                
+                if (buildInsights.artifacts.length === 0 && buildInsights.version !== '-') {
+                     buildInsights.artifacts.push(`Redball-${buildInsights.version}-Setup.exe`);
+                }
+                updateInsightsUI();
             } else if (data.status === 'failed') {
                 document.getElementById('progress-phase').textContent = 'Build Failed';
                 const currentStageEl = document.querySelector('.pipeline-step.active');
@@ -1781,11 +1935,42 @@
                     currentStageEl.classList.remove('active');
                     currentStageEl.classList.add('error');
                 }
+                const statusEl = document.getElementById('insight-status');
+                if (statusEl) { statusEl.textContent = 'FAILURE DETECTED'; statusEl.style.color = '#ff5f56'; }
             }
 
             updateUI();
             loadStats();
             loadReleases();
+        }
+
+        function updateInsightsUI() {
+            const empty = document.getElementById('insights-empty');
+            const content = document.getElementById('insights-content');
+            if (empty && content) { empty.style.display = 'none'; content.style.display = 'block'; }
+            
+            const ver = document.getElementById('insight-version');
+            if (ver) ver.textContent = buildInsights.version;
+            
+            const sav = document.getElementById('insight-savings');
+            if (sav) sav.textContent = buildInsights.savings.toFixed(1) + '%';
+            
+            const prog = document.getElementById('savings-progress');
+            if (prog) prog.style.width = buildInsights.savings + '%';
+            
+            const det = document.getElementById('savings-detail');
+            if (det) det.textContent = `Total payload reduction: ${buildInsights.totalSaved || '0MB'}`;
+            
+            const list = document.getElementById('artifact-list');
+            if (list) {
+                list.innerHTML = '';
+                buildInsights.artifacts.forEach(art => {
+                    const badge = document.createElement('div');
+                    badge.className = 'artifact-badge';
+                    badge.innerHTML = `📦 <span style="font-weight: 500;">${art}</span>`;
+                    list.appendChild(badge);
+                });
+            }
         }
 
         function buildStopped() {
