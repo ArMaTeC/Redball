@@ -21,10 +21,10 @@ public static class SecureJsonSerializer
     /// </summary>
     public static readonly JsonSerializerOptions StrictOptions = new()
     {
-        PropertyNameCaseInsensitive = false,
+        PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = null, // Use exact property names
         NumberHandling = JsonNumberHandling.Strict,
-        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip,
         MaxDepth = MaxDepth,
         ReadCommentHandling = JsonCommentHandling.Skip,
         AllowTrailingCommas = false

@@ -614,18 +614,20 @@ Section "Uninstall"
         Delete "$DESKTOP\${PRODUCT_NAME}.lnk"
     ${EndIf}
     
-    ; Stop running process
+    ; Stop running process more aggressively
     DetailPrint "Stopping ${PRODUCT_NAME}..."
     
-    ; Try graceful close via window message first
+    ; 1. Try graceful close via window message first
     System::Call 'user32::FindWindowW(i 0, w "Redball") i .r1'
     ${If} $1 != 0
-        DetailPrint "Found Redball window, sending close message..."
         System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
-        Sleep 2000
+        Sleep 1000
     ${EndIf}
     
-    ; Force kill if still running
+    ; 2. Stop service
+    nsExec::Exec 'sc stop "Redball Input Service"'
+    
+    ; 3. Force kill binaries
     nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
     nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
     Sleep 2000
@@ -725,47 +727,58 @@ svc_not_found:
 kill_process:
             DetailPrint "Attempting to close ${PRODUCT_NAME}..."
             
-            ; Stop service first if installed (properly through SCM)
+            ; 1. Stop service first if installed (properly through SCM)
             DetailPrint "Stopping background service..."
             nsExec::Exec 'sc stop "Redball Input Service"'
-            Sleep 2000
+            Sleep 1000
             
-            ; Try graceful close using taskkill without /F first (sends WM_CLOSE)
+            ; 2. Try graceful close using taskkill without /F (sends WM_CLOSE)
             DetailPrint "Requesting graceful shutdown..."
             nsExec::Exec 'taskkill /IM Redball.UI.WPF.exe /T'
             nsExec::Exec 'taskkill /IM Redball.Service.exe /T'
-            Sleep 3000
+            Sleep 2000
             
-            ; Check if still running
+            ; 3. Use System call to close window by title as backup
+            System::Call 'user32::FindWindowW(i 0, w "Redball") i .r0'
+            ${If} $0 != 0
+                System::Call 'user32::PostMessageW(i r0, i 16, i 0, i 0) i .r1'
+                Sleep 1000
+            ${EndIf}
+            
+            ; 4. Force kill if still running
+            DetailPrint "Ensuring process is stopped (force kill)..."
+            nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
+            nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
+            Sleep 2000
+            
+            ; 5. Final check loop (up to 3 times)
+            StrCpy $R1 0
+        final_check_loop:
+            IntOp $R1 $R1 + 1
+            ${If} $R1 > 3
+                Goto process_failure
+            ${EndIf}
+            
             nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.UI.WPF.exe" /FO CSV /NH'
             Pop $0
             Pop $1
             ${WordFind} "$1" "Redball.UI.WPF.exe" "E+1{" $2
-            IfErrors not_running_1 +2
-            Goto still_running
-            not_running_1:
+            IfErrors +3
+                DetailPrint "Process still detected, retrying force kill ($R1)..."
+                nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
+                Sleep 1000
+                Goto final_check_loop
+            
             ClearErrors
             Goto process_killed
-            
-        still_running:
-            DetailPrint "Process still running, attempting force kill..."
-            
-            ; Try to find windows by partial title match (starts with Redball)
-            ; Use FindWindowEx to enumerate and check titles
-            System::Call 'user32::FindWindowW(i 0, i 0) i .r1'
-            ${If} $1 != 0
-                System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
-                Sleep 1000
-            ${EndIf}
-            
-            ; Force kill the application
-            nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
-            nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
-            Sleep 3000
-            
+
+        process_failure:
+            MessageBox MB_RETRYCANCEL|MB_ICONSTOP "Failed to close ${PRODUCT_NAME}. Please close it manually and click Retry." IDRETRY retry_check
+            Abort
+
         process_killed:
-            ; Check again
-            Goto retry_check
+            DetailPrint "${PRODUCT_NAME} stopped successfully"
+            Goto done
             
 continue_install:
             DetailPrint "Continuing without closing ${PRODUCT_NAME} (may fail if files locked)"
