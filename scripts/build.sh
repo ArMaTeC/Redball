@@ -456,7 +456,7 @@ auto_release() {
         if command -v pm2 &>/dev/null; then
             # Check if already running with pm2
             if pm2 list | grep -q "redball-update-server"; then
-                if [[ -n "$BUILD_BY_SERVICE" ]]; then
+                if [[ -n "${BUILD_BY_SERVICE:-}" ]]; then
                     log_info "Running under update-server, signaling parent to restart after build..."
                     echo "[SIGNAL] RESTART_NEEDED"
                 else

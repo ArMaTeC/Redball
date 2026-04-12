@@ -469,6 +469,12 @@ step_build_wpf() {
         log_success "Assets copied"
     fi
 
+    # Copy config
+    if [[ -f "$PROJECT_ROOT/Redball.json" ]]; then
+        cp "$PROJECT_ROOT/Redball.json" "$WPF_PUBLISH_DIR/"
+        log_success "Redball.json copied to publish directory"
+    fi
+
     # Create logs placeholder
     mkdir -p "$WPF_PUBLISH_DIR/logs"
     touch "$WPF_PUBLISH_DIR/logs/.keep"

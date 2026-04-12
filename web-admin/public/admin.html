@@ -4,7 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redball Admin Dashboard</title>
+    <title>Redball OS • Admin Core</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,178 +16,216 @@
         }
 
         :root {
-            --bg-dark: #0a0f1a;
-            --bg-panel: #111827;
-            --bg-card: #1a2236;
-            --border: #2d3748;
-            --text-primary: #f7fafc;
-            --text-secondary: #a0aec0;
-            --accent: #00d4aa;
-            --accent-hover: #00b894;
-            --danger: #e53e3e;
-            --warning: #dd6b20;
-            --success: #38a169;
-            --info: #3182ce;
+            --bg-dark: #06090f;
+            --bg-panel: #0d111a;
+            --bg-card: #121826;
+            --border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #00d9a3;
+            --accent-glow: rgba(0, 217, 163, 0.3);
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --info: #3b82f6;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Outfit', sans-serif;
             background: var(--bg-dark);
             color: var(--text-primary);
             min-height: 100vh;
-            line-height: 1.6;
+            line-height: 1.5;
+            overflow-x: hidden;
         }
 
-        /* Login Modal */
+        /* Particles Background */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            background: radial-gradient(circle at 0% 0%, rgba(0, 217, 163, 0.03) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(232, 68, 58, 0.03) 0%, transparent 50%);
+        }
+
+        /* Login Overlay */
         .login-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(10, 15, 26, 0.98);
+            background: rgba(6, 9, 15, 0.95);
+            backdrop-filter: blur(20px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 10000;
+            transition: opacity 0.5s ease;
         }
 
         .login-overlay.hidden {
-            display: none;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .login-box {
             background: var(--bg-panel);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 2.5rem;
+            border-radius: var(--radius-lg);
+            padding: 3rem;
             width: 100%;
-            max-width: 400px;
+            max-width: 440px;
             text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
 
         .login-box h2 {
+            font-size: 2rem;
+            font-weight: 800;
             margin-bottom: 0.5rem;
-            font-size: 1.75rem;
+            letter-spacing: -0.02em;
         }
 
         .login-box p {
             color: var(--text-secondary);
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .login-box input {
             width: 100%;
-            padding: 0.875rem 1rem;
-            background: var(--bg-dark);
+            padding: 1rem 1.25rem;
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            color: white;
             font-size: 1rem;
             margin-bottom: 1rem;
+            transition: all 0.3s ease;
         }
 
         .login-box input:focus {
             outline: none;
             border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 20px var(--accent-glow);
         }
 
         .login-box button {
             width: 100%;
-            padding: 0.875rem;
+            padding: 1rem;
             background: var(--accent);
-            color: var(--bg-dark);
+            color: #000;
             border: none;
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
         }
 
         .login-box button:hover {
-            background: var(--accent-hover);
-        }
-
-        .login-error {
-            color: var(--danger);
-            font-size: 0.875rem;
-            margin-top: 1rem;
-            display: none;
-        }
-
-        .login-error.show {
-            display: block;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--accent-glow);
         }
 
         /* Header */
         .header {
-            background: var(--bg-panel);
+            background: rgba(13, 17, 26, 0.7);
+            backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
+            padding: 1.25rem 2.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--accent);
+            gap: 1rem;
             text-decoration: none;
+        }
+
+        .logo-sphere {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 20px var(--accent-glow);
+            animation: breathe 3s infinite ease-in-out;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.02em;
         }
 
         .nav {
             display: flex;
-            gap: 1rem;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
 
         .nav-btn {
             background: transparent;
-            border: 1px solid var(--border);
+            border: none;
             color: var(--text-secondary);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 0.875rem;
+            font-weight: 600;
         }
 
-        .nav-btn:hover,
+        .nav-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
         .nav-btn.active {
             background: var(--accent);
-            border-color: var(--accent);
-            color: var(--bg-dark);
+            color: #000;
+            box-shadow: 0 0 15px var(--accent-glow);
         }
 
-        .logout-btn {
-            background: transparent;
-            border: 1px solid var(--danger);
-            color: var(--danger);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            margin-left: 1rem;
-        }
-
-        .logout-btn:hover {
-            background: var(--danger);
-            color: white;
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
         }
 
         .connection-status {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            color: var(--text-secondary);
+            gap: 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 100px;
+            border: 1px solid var(--border);
         }
 
         .connection-dot {
@@ -194,80 +235,91 @@
             background: var(--text-secondary);
         }
 
-        .connection-dot.connected {
-            background: var(--success);
-        }
+        .connection-dot.connected { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .connection-dot.disconnected { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
 
-        .connection-dot.disconnected {
-            background: var(--danger);
-        }
-
-        /* Main */
+        /* Main Content */
         .main {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 3rem 2.5rem;
         }
 
         .section {
             display: none;
+            animation: fadeIn 0.4s ease-out;
         }
 
-        .section.active {
-            display: block;
+        .section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
         }
 
         .stat-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            padding: 2rem;
             position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease;
         }
 
-        .stat-card::before {
+        .stat-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .stat-card::after {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--accent);
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), transparent);
         }
 
         .stat-label {
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
+            letter-spacing: 0.1rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
         }
 
         .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
+            font-size: 2.75rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            color: white;
+            font-family: 'Outfit', sans-serif;
         }
 
         /* Panels */
         .panel {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            margin-bottom: 2rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 3rem;
             overflow: hidden;
+            box-shadow: var(--shadow);
         }
 
         .panel-header {
-            background: var(--bg-panel);
-            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 1.25rem 2rem;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
@@ -275,188 +327,30 @@
         }
 
         .panel-title {
-            font-size: 1.125rem;
-            font-weight: 600;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
         }
 
         .panel-body {
-            padding: 1.5rem;
+            padding: 2.5rem;
         }
 
-        /* Build UI */
-        .build-container {
+        /* Build Layout */
+        .build-layout {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 2rem;
+            gap: 2.5rem;
         }
 
-        @media (max-width: 1024px) {
-            .build-container {
-                grid-template-columns: 1fr;
-            }
+        @media (max-width: 1100px) {
+            .build-layout { grid-template-columns: 1fr; }
         }
 
-        .build-stages {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .stage {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.875rem 1rem;
-            background: var(--bg-panel);
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            transition: all 0.3s;
-        }
-
-        .stage.active {
-            border-color: var(--accent);
-            background: rgba(0, 212, 170, 0.1);
-        }
-
-        .stage.complete {
-            border-color: var(--success);
-        }
-
-        .stage.error {
-            border-color: var(--danger);
-        }
-
-        .stage-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            font-size: 1.1rem;
-        }
-
-        .stage.active .stage-icon {
-            border-color: var(--accent);
-            animation: pulse 2s infinite;
-        }
-
-        .stage.complete .stage-icon {
-            border-color: var(--success);
-            background: var(--success);
-            color: white;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.4);
-            }
-
-            50% {
-                box-shadow: 0 0 0 8px rgba(0, 212, 170, 0);
-            }
-        }
-
-        .stage-name {
-            font-weight: 600;
-            font-size: 0.9375rem;
-        }
-
-        .stage-status {
-            font-size: 0.8125rem;
-            color: var(--text-secondary);
-        }
-
-        /* Terminal */
-        .terminal {
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
-            font-size: 0.8125rem;
-            line-height: 1.5;
-        }
-
-        .terminal-header {
-            background: var(--bg-panel);
-            padding: 0.5rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .terminal-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .terminal-dot.red {
-            background: #ff5f56;
-        }
-
-        .terminal-dot.yellow {
-            background: #ffbd2e;
-        }
-
-        .terminal-dot.green {
-            background: #27c93f;
-        }
-
-        .terminal-title {
-            margin-left: 0.75rem;
-            color: var(--text-secondary);
-            font-size: 0.75rem;
-        }
-
-        .terminal-body {
-            padding: 1rem;
-            height: 400px;
-            overflow-y: auto;
-            color: #e4e4e4;
-        }
-
-        .terminal-line {
-            margin: 0;
-            white-space: pre-wrap;
-            word-break: break-all;
-            padding: 1px 0;
-        }
-
-        .terminal-line.timestamp {
-            color: #666;
-            font-size: 0.75rem;
-        }
-
-        .terminal-line.phase-start {
-            color: var(--accent);
-            font-weight: 600;
-        }
-
-        .terminal-line.success {
-            color: #27c93f;
-        }
-
-        .terminal-line.warning {
-            color: #ffbd2e;
-        }
-
-        .terminal-line.error {
-            color: #ff5f56;
-        }
-
-        .terminal-line.dim {
-            color: #666;
-        }
-
-        /* Horizontal Pipeline */
+        /* Pipeline Visual */
         .pipeline-container {
-            margin-bottom: 2.5rem;
-            padding: 1rem 0;
+            margin-bottom: 3.5rem;
+            padding: 2rem 0;
             position: relative;
         }
 
@@ -465,47 +359,42 @@
             justify-content: space-between;
             align-items: center;
             position: relative;
-            z-index: 1;
+            z-index: 5;
         }
 
         .pipeline::before {
             content: '';
             position: absolute;
-            top: 24px; /* Align with center of 48px node */
+            top: 24px;
             left: 0;
             right: 0;
             height: 2px;
             background: var(--border);
             transform: translateY(-50%);
-            z-index: -1;
+            z-index: 1;
         }
-
 
         .pipeline-progress {
             position: absolute;
-            top: 24px; /* Align with center of 48px node */
+            top: 24px;
             left: 0;
             height: 3px;
-            background: linear-gradient(90deg, var(--accent), #00ffcc);
+            background: linear-gradient(90deg, var(--accent), #10b981);
             transform: translateY(-50%);
-            z-index: 0;
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 15px rgba(0, 212, 170, 0.6);
+            z-index: 2;
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 20px var(--accent-glow);
         }
-
 
         .pipeline-step {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.5rem;
-            background: rgba(0,0,0,0); /* transparent bg */
+            gap: 0.75rem;
             position: relative;
-            padding: 0;
+            z-index: 10;
             flex: 1;
-            min-width: 60px;
         }
-
 
         .step-node {
             width: 48px;
@@ -516,62 +405,42 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.35rem;
+            font-size: 1.3rem;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             color: var(--text-secondary);
-            position: relative;
-            z-index: 2;
         }
 
         .pipeline-step.active .step-node {
             border-color: var(--accent);
-            color: var(--accent);
-            background: var(--bg-panel);
-            box-shadow: 0 0 20px rgba(0, 212, 170, 0.4), inset 0 0 10px rgba(0, 212, 170, 0.2);
-            transform: scale(1.15) translateY(-2px);
+            color: white;
+            background: #000;
+            transform: scale(1.2);
+            box-shadow: 0 0 25px var(--accent-glow);
         }
 
         .pipeline-step.complete .step-node {
-            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-            border-color: var(--accent);
-            color: var(--bg-dark);
-            box-shadow: 0 0 15px rgba(0, 212, 170, 0.2);
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
         }
 
         .pipeline-step.error .step-node {
-            background: linear-gradient(135deg, var(--danger), #b91c1c);
+            background: var(--danger);
             border-color: var(--danger);
             color: white;
-            box-shadow: 0 0 15px rgba(229, 62, 62, 0.3);
-        }
-
-        .pipeline-step.complete .step-node {
-            background: rgba(39, 201, 63, 0.15);
-            border-color: #27c93f;
-            color: #27c93f;
-            box-shadow: none;
         }
 
         .step-label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 700;
+            font-weight: 800;
+            letter-spacing: 0.05rem;
             color: var(--text-secondary);
             text-align: center;
-            white-space: nowrap;
-            transition: all 0.3s;
+            transition: color 0.3s;
         }
 
-        .pipeline-step.active .step-label {
-            color: var(--accent);
-            text-shadow: 0 0 8px rgba(0, 212, 170, 0.4);
-        }
-
-        .pipeline-step.complete .step-label {
-            color: var(--text-primary);
-        }
-
+        .pipeline-step.active .step-label { color: var(--accent); }
 
         .step-pulse {
             position: absolute;
@@ -586,485 +455,390 @@
         }
 
         .pipeline-step.active .step-pulse {
-            animation: nodePulse 2s infinite;
+            animation: nodePulse 2s infinite cubic-bezier(0.25, 0, 0, 1);
         }
 
         @keyframes nodePulse {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.8); opacity: 0; }
+            0% { transform: scale(1); opacity: 0.6; }
+            100% { transform: scale(2); opacity: 0; }
         }
+
+        /* Terminal Redesign */
+        .terminal {
+            background: #080c14;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .terminal-toolbar {
+            background: #111827;
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .terminal-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .t-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .t-dot.r { background: #ff5f56; }
+        .t-dot.y { background: #ffbd2e; }
+        .t-dot.g { background: #27c93f; }
+
+        .terminal-body {
+            padding: 1.5rem;
+            height: 500px;
+            overflow-y: auto;
+            color: #d1d5db;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* Terminal line styles */
+        .t-line { margin: 2px 0; white-space: pre-wrap; word-break: break-all; }
+        .t-line.dim { opacity: 0.4; }
+        .t-line.success { color: var(--success); font-weight: 600; }
+        .t-line.error { color: var(--danger); font-weight: 600; }
+        .t-line.phase { color: var(--accent); font-weight: 700; margin-top: 10px; border-left: 2px solid var(--accent); padding-left: 10px; }
+        .t-line.time { color: #4b5563; font-size: 0.75rem; margin-right: 8px; }
 
         /* Build Insights */
         .insights-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1.5rem;
+            gap: 1.25rem;
+            margin-top: 2rem;
         }
 
         .insight-card {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.25rem;
+            border-radius: 16px;
+            padding: 1.5rem;
             position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-
-        .insight-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-2px);
-        }
-
-        .insight-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 3px;
-            height: 100%;
-            background: var(--accent);
-            opacity: 0.6;
         }
 
         .insight-value {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: 800;
+            color: white;
             margin: 0.5rem 0;
-            color: var(--text-primary);
-            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -0.02em;
         }
 
         .insight-label {
             font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
+            font-weight: 800;
             color: var(--text-secondary);
-            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .savings-meter {
-            height: 4px;
+        /* Controls */
+        .controls-card {
             background: var(--bg-panel);
-            border-radius: 2px;
-            margin-top: 0.8rem;
-            overflow: hidden;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            border: 1px solid var(--border);
+            height: fit-content;
         }
 
-        .savings-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00d4aa, #27c93f);
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 8px rgba(0, 212, 170, 0.4);
-        }
-
-        .artifact-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.6rem;
-            background: rgba(0, 212, 170, 0.08);
-            color: var(--accent);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-family: 'JetBrains Mono', monospace;
-            border: 1px solid rgba(0, 212, 170, 0.15);
-            transition: all 0.2s ease;
-        }
-
-        .artifact-badge:hover {
-            background: rgba(0, 212, 170, 0.15);
-            border-color: var(--accent);
-        }
-
-
-        /* Responsive Build Layout */
-        .build-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-
-        /* Progress */
-        .build-progress {
-            margin-top: 1.5rem;
-        }
-
-        .progress-bar {
-            height: 6px;
-            background: var(--bg-panel);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent), var(--accent-hover));
-            border-radius: 3px;
-            transition: width 0.5s ease;
-            position: relative;
-        }
-
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% {
-                transform: translateX(-100%);
-            }
-
-            100% {
-                transform: translateX(100%);
-            }
-        }
-
-        .progress-text {
-            text-align: center;
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        /* Buttons */
         .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.625rem 1.25rem;
-            border-radius: 6px;
+            width: 100%;
+            padding: 1.1rem;
+            border-radius: 12px;
             border: none;
-            font-size: 0.875rem;
-            font-weight: 600;
+            font-size: 1rem;
+            font-weight: 800;
             cursor: pointer;
-            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05rem;
         }
 
-        .btn-primary {
+        .btn-build {
             background: var(--accent);
-            color: var(--bg-dark);
+            color: #000;
+            box-shadow: 0 10px 20px var(--accent-glow);
         }
 
-        .btn-primary:hover:not(:disabled) {
-            background: var(--accent-hover);
-            transform: translateY(-1px);
+        .btn-build:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px var(--accent-glow);
         }
 
-        .btn-danger {
+        .btn-stop {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .btn-stop:hover:not(:disabled) {
             background: var(--danger);
             color: white;
         }
 
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .progress-container {
+            margin-top: 2rem;
         }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .meter {
+            height: 12px;
+            background: #111827;
+            border-radius: 100px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #10b981);
+            width: 0%;
+            transition: width 0.4s ease;
+            position: relative;
+        }
+
+        .meter-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: meterShimmer 2s infinite;
+        }
+
+        @keyframes meterShimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Scrollbar Customization */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* Current Operation Alert */
+        .operation-pill {
+            margin-top: 1.5rem;
+            padding: 1rem 1.25rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border-left: 4px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .op-text { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
 
         /* Tables */
-        .releases-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.875rem;
-        }
-
-        .releases-table th,
-        .releases-table td {
-            padding: 0.875rem 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .releases-table th {
-            background: var(--bg-panel);
-            font-weight: 600;
+        .table-container { overflow-x: auto; }
+        .r-table { width: 100%; border-collapse: collapse; }
+        .r-table th { 
+            text-align: left; 
+            padding: 1.25rem 1.5rem; 
+            background: rgba(255,255,255,0.02); 
+            font-size: 0.75rem; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 0.1rem; 
             color: var(--text-secondary);
-            text-transform: uppercase;
+        }
+        .r-table td { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+        .r-table tr:hover { background: rgba(255,255,255,0.01); }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
             font-size: 0.75rem;
-            letter-spacing: 0.05em;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
         }
+        .badge-ver { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .badge-dl { background: rgba(16, 185, 129, 0.1); color: var(--success); }
 
-        .releases-table tr:hover {
-            background: var(--bg-panel);
-        }
-
-        .version-badge {
-            display: inline-flex;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8125rem;
-            font-weight: 600;
-        }
-
-        .version-badge.stable {
-            background: var(--success);
-            color: white;
-        }
-
-        .version-badge.beta {
-            background: var(--warning);
-            color: white;
-        }
-
-        /* Status */
-        .status {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8125rem;
-            font-weight: 500;
-        }
-
-        .status::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
-
-        .status.running {
-            background: rgba(0, 212, 170, 0.15);
-            color: var(--accent);
-        }
-
-        .status.running::before {
-            background: var(--accent);
-            animation: blink 1s infinite;
-        }
-
-        .status.success {
-            background: rgba(56, 161, 105, 0.15);
-            color: var(--success);
-        }
-
-        .status.success::before {
-            background: var(--success);
-        }
-
-        .status.failed {
-            background: rgba(229, 62, 62, 0.15);
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--danger);
             color: var(--danger);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
         }
-
-        .status.idle {
-            background: var(--bg-panel);
-            color: var(--text-secondary);
-        }
-
-        @keyframes blink {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.4;
-            }
-        }
-        /* Pagination */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.5rem;
+        .logout-btn:hover { background: var(--danger); color: white; }
+        /* Config Grid */
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 2rem;
             margin-top: 1rem;
         }
 
-        .page-btn {
-            background: var(--bg-panel);
+        .config-group {
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--border);
-            color: var(--text-secondary);
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            transition: all 0.2s;
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
         }
 
-        .page-btn:hover:not(:disabled) {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .page-btn.active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: var(--bg-dark);
-        }
-
-        .page-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        /* Toast Notifications */
-        .toast {
-            min-width: 300px;
-            padding: 1rem 1.25rem;
-            border-radius: 8px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+        .group-header {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            animation: toast-in 0.3s ease-out forwards;
-            position: relative;
-            overflow: hidden;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1.25rem;
+            margin-bottom: 0.5rem;
         }
 
-        .toast::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: currentColor;
-            opacity: 0.3;
-            width: 100%;
-            animation: toast-progress var(--duration, 4s) linear forwards;
-        }
-
-        @keyframes toast-in {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes toast-progress {
-            from { width: 100%; }
-            to { width: 0%; }
-        }
-
-        .toast.success { border-color: var(--success); color: var(--success); }
-        .toast.error { border-color: var(--danger); color: var(--danger); }
-        .toast.warning { border-color: var(--warning); color: var(--warning); }
-        .toast.info { border-color: var(--info); color: var(--info); }
-
-        /* Metric bar */
-        .metric-container {
-            margin-top: 0.5rem;
-        }
-        .metric-bar {
-            height: 6px;
-            background: var(--bg-dark);
-            border-radius: 3px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-        }
-        .metric-fill {
-            height: 100%;
+        .group-icon {
+            width: 36px;
+            height: 36px;
             background: var(--accent);
-            transition: width 0.5s ease;
+            color: #000;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 0 15px var(--accent-glow);
         }
-        .metric-fill.warning { background: var(--warning); }
-        .metric-fill.danger { background: var(--danger); }
+
+        .group-title { font-weight: 700; font-size: 1.15rem; }
+
+        .config-field { display: flex; flex-direction: column; gap: 0.5rem; }
+        .config-field label { font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+        .config-field input, .config-field select {
+            width: 100%; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem 1rem; color: white; transition: all 0.3s;
+        }
+        .config-field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+
+        .config-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        .cb-field { display: flex; align-items: center; gap: 1rem; cursor: pointer; padding: 0.5rem 0; }
+        .cb-field input { width: 18px; height: 18px; accent-color: var(--accent); }
+        .cb-field span { font-size: 0.9rem; font-weight: 600; }
     </style>
 </head>
 
 <body>
-    <!-- Login Overlay -->
-    <div class="login-overlay" id="login-overlay">
+    <div class="ambient-bg"></div>
+
+    <!-- Login -->
+    <div id="login-overlay" class="login-overlay hidden">
         <div class="login-box">
-            <h2>🔐 Admin Login</h2>
-            <p>Enter your password to access the dashboard</p>
-            <input type="password" id="password-input" placeholder="Password" autocomplete="off">
-            <button onclick="doLogin()">Sign In</button>
-            <div class="login-error" id="login-error">Invalid password</div>
+            <div style="margin-bottom: 2rem">
+                <svg width="60" height="60" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="48" fill="rgba(0, 217, 163, 0.1)" />
+                    <circle cx="50" cy="50" r="32" stroke="#00d9a3" strokeWidth="4" fill="none" />
+                    <rect x="36" y="36" width="28" height="28" fill="#00d9a3" transform="rotate(45 50 50)" />
+                </svg>
+            </div>
+            <h2>Authentication Required</h2>
+            <p>Enter your administrator credentials to access the Redball Core System.</p>
+            <input type="text" id="username" placeholder="Username" autocomplete="username">
+            <input type="password" id="password" placeholder="Key Password" autocomplete="current-password">
+            <button onclick="handleLogin()">Unlock Access</button>
+            <div id="login-error" class="login-error">Invalid authorization key</div>
         </div>
     </div>
 
-    <!-- Main App -->
     <header class="header">
-        <a href="/" class="logo">
-            <svg viewBox="0 0 100 100" width="28" height="28">
-                <circle cx="50" cy="50" r="45" fill="currentColor" fill-opacity="0.1" />
-                <circle cx="50" cy="50" r="35" stroke="currentColor" stroke-width="4" fill="none" />
-                <circle cx="50" cy="50" r="20" fill="currentColor" />
-            </svg>
-            Redball Admin
+        <a href="#" class="logo">
+            <div class="logo-sphere"></div>
+            <span class="logo-text">REDBALL <span style="font-weight: 300; opacity: 0.5;">DASHBOARD</span></span>
         </a>
-        <div style="display: flex; align-items: center;">
-            <nav class="nav">
-                <button class="nav-btn active" data-section="dashboard">Dashboard</button>
-                <button class="nav-btn" data-section="build">Build</button>
-                <button class="nav-btn" data-section="releases">Releases</button>
-                <button class="nav-btn" data-section="system">System</button>
-            </nav>
-            <button class="logout-btn" onclick="doLogout()">Logout</button>
-            <div class="connection-status" style="margin-left: 1.5rem;">
-                <span class="connection-dot" id="connection-dot"></span>
-                <span id="connection-text">...</span>
+
+        <div class="nav">
+            <button class="nav-btn active" onclick="showSection('dashboard', this)">Infrastructure</button>
+            <button class="nav-btn" onclick="showSection('build', this)">Build Pipeline</button>
+            <button class="nav-btn" onclick="showSection('releases', this)">Release Control</button>
+            <button class="nav-btn" onclick="showSection('config', this)">System Config</button>
+        </div>
+
+        <div class="user-actions">
+            <div class="connection-status">
+                <div id="connection-dot" class="connection-dot"></div>
+                <span id="connection-text">Synchronizing...</span>
             </div>
+            <button class="logout-btn" onclick="handleLogout()">Exit</button>
         </div>
     </header>
-    
-    <!-- Toast Container -->
-    <div id="toast-container" style="position: fixed; top: 1.5rem; right: 1.5rem; z-index: 10001; display: flex; flex-direction: column; gap: 0.75rem;"></div>
 
     <main class="main">
-        <!-- Dashboard -->
-        <section id="dashboard" class="section active">
+        <!-- Infrastructure -->
+        <section id="dashboard-section" class="section active">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">Total Downloads</div>
-                    <div class="stat-value" id="total-downloads">-</div>
+                    <div class="stat-label">Total Distribution</div>
+                    <div class="stat-value" id="stat-downloads">—</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Total Releases</div>
-                    <div class="stat-value" id="total-releases">-</div>
+                    <div class="stat-label">Production Version</div>
+                    <div class="stat-value" id="stat-version">—</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Latest Version</div>
-                    <div class="stat-value" id="latest-version">-</div>
+                    <div class="stat-label">Active Builds</div>
+                    <div class="stat-value" id="stat-active">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Build Status</div>
-                    <div class="status idle" id="build-status">Idle</div>
+                    <div class="stat-label">System Health</div>
+                    <div class="stat-value" style="color: var(--accent)">100%</div>
                 </div>
             </div>
 
             <div class="panel">
                 <div class="panel-header">
-                    <div class="panel-title">📊 Downloads by File</div>
+                    <h3 class="panel-title">System Insights</h3>
+                    <span class="badge badge-dl" id="live-time">Real-time metrics active</span>
                 </div>
                 <div class="panel-body">
-                    <div id="download-stats">
-                        <p style="color: var(--text-secondary);">Loading...</p>
+                    <div class="insights-grid">
+                        <div class="insight-card">
+                            <div class="insight-label">GitHub Sync</div>
+                            <div class="insight-value" style="color: var(--success)">ACTIVE</div>
+                        </div>
+                        <div class="insight-card">
+                            <div class="insight-label">Update Server</div>
+                            <div class="insight-value">v2.1.0</div>
+                        </div>
+                        <div class="insight-card">
+                            <div class="insight-label">Delta Engine</div>
+                            <div class="insight-value" style="color: var(--warning)">READY</div>
+                        </div>
                     </div>
-                    <div id="downloads-pagination" class="pagination"></div>
                 </div>
             </div>
         </section>
 
-        <!-- Build -->
-        <section id="build" class="section">
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-title">🔨 Build Pipeline</div>
-                    <div>
-                        <button class="btn btn-primary" id="start-build-btn" onclick="startBuild()">▶ Start</button>
-                        <button class="btn btn-danger" id="stop-build-btn" onclick="stopBuild()" disabled>⏹
-                            Stop</button>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <div class="build-layout">
-                        <!-- Granular Pipeline -->
-                        <div class="pipeline-wrapper" style="margin-bottom: 2rem;">
-                            <div class="pipeline-container">
+        <!-- Build Section -->
+        <section id="build-section" class="section">
+            <div class="pipeline-container">
                                 <div class="pipeline" id="pipeline-steps">
                                     <div class="pipeline-progress" id="pipeline-progress" style="width: 0%"></div>
                                     <div class="pipeline-step" data-stage="setup">
@@ -1080,32 +854,20 @@
                                         <div class="step-label">Restore</div>
                                     </div>
                                     <div class="pipeline-step" data-stage="wpf-build">
-                                        <div class="step-node">🖼️<div class="step-pulse"></div></div>
-                                        <div class="step-label">WPF</div>
+                                        <div class="step-node">🖥️<div class="step-pulse"></div></div>
+                                        <div class="step-label">WPF App</div>
                                     </div>
                                     <div class="pipeline-step" data-stage="service-build">
-                                        <div class="step-node">⚙️<div class="step-pulse"></div></div>
+                                        <div class="step-node">🛠️<div class="step-pulse"></div></div>
                                         <div class="step-label">Service</div>
-                                    </div>
-                                    <div class="pipeline-step" data-stage="manifest">
-                                        <div class="step-node">📄<div class="step-pulse"></div></div>
-                                        <div class="step-label">Manifest</div>
-                                    </div>
-                                    <div class="pipeline-step" data-stage="zip-bundle">
-                                        <div class="step-node">🗜️<div class="step-pulse"></div></div>
-                                        <div class="step-label">ZIP</div>
                                     </div>
                                     <div class="pipeline-step" data-stage="installer">
                                         <div class="step-node">🔨<div class="step-pulse"></div></div>
                                         <div class="step-label">Installer</div>
                                     </div>
-                                    <div class="pipeline-step" data-stage="update-server">
-                                        <div class="step-node">📦<div class="step-pulse"></div></div>
-                                        <div class="step-label">Upload</div>
-                                    </div>
                                     <div class="pipeline-step" data-stage="publish">
                                         <div class="step-node">☁️<div class="step-pulse"></div></div>
-                                        <div class="step-label">Cloud</div>
+                                        <div class="step-label">Publish</div>
                                     </div>
                                     <div class="pipeline-step" data-stage="github">
                                         <div class="step-node">🚀<div class="step-pulse"></div></div>
@@ -1121,538 +883,97 @@
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Detailed Status -->
-                            <div class="build-status-detail" style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: flex-end;">
-                                <div style="flex: 1; overflow: hidden; margin-right: 1rem;">
-                                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 2px; font-weight: 700;">Current Operation</div>
-                                    <div id="current-op" style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid var(--accent); padding-left: 10px; height: 1.2em;">Ready to build...</div>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 2px; font-weight: 700;">Progress</div>
-                                    <div id="progress-percent" style="font-size: 1.5rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; line-height: 1;">0%</div>
-                                </div>
 
-                            </div>
+            <div class="build-layout">
+                <div class="terminal">
+                    <div class="terminal-toolbar">
+                        <div class="terminal-actions">
+                            <div class="t-dot r"></div><div class="t-dot y"></div><div class="t-dot g"></div>
+                            <span style="font-size: 0.7rem; color: #666; font-weight: 700; margin-left: 10px;">CORE_BUILD_LOG</span>
                         </div>
+                        <div id="build-timer" style="font-size: 0.75rem; font-weight: 700; color: var(--accent);">00:00</div>
+                    </div>
+                    <div class="terminal-body" id="terminal-out">
+                    </div>
+                </div>
 
-                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;" id="build-detail-row">
-                            <div class="terminal">
-                                <div class="terminal-header">
-                                    <div style="display: flex; gap: 6px;">
-                                        <span class="terminal-dot red"></span>
-                                        <span class="terminal-dot yellow"></span>
-                                        <span class="terminal-dot green"></span>
-                                    </div>
-                                    <span class="terminal-title">build.log — redball-engine</span>
-                                </div>
-                                <div class="terminal-body" id="terminal-body" style="height: 450px;">
-                                    <div class="terminal-line dim">Ready. Click Start to begin build pipeline.</div>
-                                </div>
-                            </div>
+                <div class="controls-card">
+                    <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 2rem; border-left: 4px solid var(--accent); padding-left: 1rem;">Operations Control</h3>
+                    
+                    <div id="initial-controls">
+                        <button class="btn btn-build" id="start-btn" onclick="startBuild()">
+                            <span style="font-size: 1.4rem">▶</span> Initialize Full Build
+                        </button>
+                    </div>
 
-                            <div class="insights-container">
-                                <div class="panel" style="height: 100%; border: 1px solid var(--border); display: flex; flex-direction: column; background: rgba(0,0,0,0.2);">
-                                    <div class="panel-header" style="background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);">
-                                        <div class="panel-title" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">💎 Build Insights</div>
-                                    </div>
-                                    <div class="panel-body" style="padding: 1.25rem; flex: 1; overflow-y: auto;">
-                                        <div id="insights-empty" style="text-align: center; color: var(--text-secondary); margin-top: 3rem; opacity: 0.5;">
-                                            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🛰️</div>
-                                            <p style="font-size: 0.75rem;">Awaiting build telemetry...</p>
-                                        </div>
-                                        
-                                        <div id="insights-content" style="display: none;">
-                                            <div class="insight-card" style="margin-bottom: 1.25rem;">
-                                                <div class="insight-label">Latest Version</div>
-                                                <div class="insight-value" id="insight-version">-</div>
-                                                <div id="artifact-list" style="margin-top: 0.75rem; display: flex; flex-direction: column; gap: 8px;"></div>
-                                            </div>
+                    <div id="active-controls" style="display: none;">
+                        <button class="btn btn-stop" id="stop-btn" onclick="stopBuild()">
+                            <span style="font-size: 1.4rem">■</span> Terminate Pipeline
+                        </button>
+                    </div>
 
-                                            <div class="insight-card" style="margin-bottom: 1.25rem;">
-                                                <div class="insight-label">Delta Savings</div>
-                                                <div class="insight-value" id="insight-savings">0%</div>
-                                                <div class="savings-meter">
-                                                    <div class="savings-fill" id="savings-progress" style="width: 0%"></div>
-                                                </div>
-                                                <div id="savings-detail" style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.75rem; font-family: 'JetBrains Mono', monospace;">Total payload reduction: 0MB</div>
-                                            </div>
-
-                                            <div class="insight-card">
-                                                <div class="insight-label">Release Integrity</div>
-                                                <div class="insight-value" id="insight-duration">0s</div>
-                                                <div style="font-size: 0.75rem; font-weight: 700; color: #27c93f;" id="insight-status">HEALTHY</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span>Pipeline Saturation</span>
+                            <span id="progress-percent">0%</span>
                         </div>
+                        <div class="meter">
+                            <div class="meter-fill" id="progress-fill"></div>
+                        </div>
+                        <div class="operation-pill" id="current-op-container">
+                            <div style="font-size: 1.2rem; animation: breathe 2s infinite;">⚡</div>
+                            <div class="op-text" id="current-op">Awaiting instruction...</div>
+                        </div>
+                    </div>
 
+                    <div class="insights-grid" style="grid-template-columns: 1fr 1fr; margin-top: 2rem;">
+                        <div class="insight-card">
+                             <div class="insight-label">Last Build</div>
+                             <div class="insight-value" id="last-status" style="font-size: 1.2rem;">READY</div>
+                        </div>
+                        <div class="insight-card">
+                             <div class="insight-label">Architecture</div>
+                             <div class="insight-value" style="font-size: 1.2rem;">x64/x86</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Releases -->
-        <section id="releases" class="section">
+        <section id="releases-section" class="section">
             <div class="panel">
                 <div class="panel-header">
-                    <div class="panel-title">📦 Release History</div>
-                    <div style="position: relative;">
-                        <input type="text" id="release-search" placeholder="Search versions..." 
-                               style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.75rem; color: var(--text-primary); font-size: 0.85rem; width: 220px;"
-                               oninput="filterReleases()">
-                        <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
-                    </div>
+                    <h3 class="panel-title">Repository Content</h3>
                 </div>
-                <div class="panel-body">
-                    <table class="releases-table">
+                <div class="table-container">
+                    <table class="r-table">
                         <thead>
                             <tr>
-                                <th>Version</th>
-                                <th>Channel</th>
-                                <th>Date</th>
-                                <th>Downloads</th>
-                                <th>Files</th>
+                                <th>Version Tag</th>
+                                <th>Release Date</th>
+                                <th>Analytics</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody id="releases-tbody">
-                            <tr>
-                                <td colspan="5">Loading...</td>
-                            </tr>
+                        <tbody id="releases-body">
+                            <!-- Populated by JS -->
                         </tbody>
                     </table>
-                    <div id="releases-pagination" class="pagination"></div>
                 </div>
             </div>
         </section>
 
-        <!-- System Config -->
-        <section id="system" class="section">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-                 <!-- Metrics Card -->
-                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">📡 Real-time Performance</div>
-                    </div>
-                    <div class="panel-body" id="performance-metrics">
-                        <div style="display: grid; gap: 1.25rem;">
-                            <div class="metric-container">
-                                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
-                                    <span>CPU Load (Avg)</span>
-                                    <span id="metric-cpu">-</span>
-                                </div>
-                                <div class="metric-bar"><div id="fill-cpu" class="metric-fill" style="width: 0%"></div></div>
-                            </div>
-                            <div class="metric-container">
-                                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
-                                    <span>RAM Usage</span>
-                                    <span id="metric-ram">-</span>
-                                </div>
-                                <div class="metric-bar"><div id="fill-ram" class="metric-fill" style="width: 0%"></div></div>
-                            </div>
-                            <div class="metric-container">
-                                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
-                                    <span>Node.js Memory</span>
-                                    <span id="metric-node">-</span>
-                                </div>
-                                <div class="metric-bar"><div id="fill-node" class="metric-fill" style="width: 0%"></div></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">⚙️ System Information</div>
-                    </div>
-                    <div class="panel-body">
-                         <div id="server-info-content" style="font-size: 0.875rem; line-height: 1.8; color: var(--text-secondary);">
-                            Loading...
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+        <!-- System Configuration -->
+        <section id="config-section" class="section">
             <div class="panel">
                 <div class="panel-header">
-                    <div class="panel-title">🛠️ Environment & Administration</div>
+                    <h3 class="panel-title">System Settings & Client Profiles</h3>
+                    <button class="btn btn-build" onclick="saveConfiguration()" style="width: auto; padding: 0.75rem 2rem;">Apply System-Wide</button>
                 </div>
                 <div class="panel-body">
-                    <div id="system-info" style="display: grid; gap: 1.5rem;">
-                        <div
-                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-                            <div
-                                style="background: var(--bg-panel); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
-                                <h4
-                                    style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
-                                    Server Info</h4>
-                                <div id="server-info-content"
-                                    style="font-size: 0.875rem; line-height: 1.8; color: var(--text-secondary);">
-                                    Loading...
-                                </div>
-                            </div>
-                            <div
-                                style="background: var(--bg-panel); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
-                                <h4
-                                    style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
-                                    Environment</h4>
-                                <div id="env-info-content"
-                                    style="font-size: 0.875rem; line-height: 1.8; color: var(--text-secondary);">
-                                    Loading...
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            style="background: var(--bg-panel); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
-                            <h4
-                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
-                                Disk Usage</h4>
-                            <div id="disk-info-content"
-                                style="font-size: 0.875rem; line-height: 1.8; color: var(--text-secondary);">
-                                Loading...
-                            </div>
-                        </div>
-                        <div
-                            style="background: var(--bg-panel); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
-                            <h4
-                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
-                                Admin Actions</h4>
-                            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                                <button class="btn btn-primary" onclick="changePassword()">Change Password</button>
-                                <button class="btn" onclick="clearLogs()"
-                                    style="background: var(--bg-dark); color: var(--text-secondary); border: 1px solid var(--border);">Clear
-                                    Build Logs</button>
-                                <button class="btn" onclick="restartServer()"
-                                    style="background: var(--bg-dark); color: var(--text-secondary); border: 1px solid var(--border);">Restart
-                                    Server</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Application Configuration -->
-            <div class="panel" style="margin-top: 2rem;">
-                <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="panel-title">🔧 Application Configuration</div>
-                    <div>
-                        <button class="btn btn-primary" onclick="saveAppConfig()">💾 Save Changes</button>
-                        <button class="btn" onclick="resetAppConfig()"
-                            style="background: var(--bg-dark); color: var(--text-secondary); border: 1px solid var(--border); margin-left: 0.5rem;">↺
-                            Reset</button>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <div id="app-config-loading"
-                        style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                        Loading configuration...
-                    </div>
-                    <div id="app-config-form" style="display: none; gap: 2rem; flex-direction: column;">
-
-                        <!-- Keep-Alive Settings -->
-                        <div
-                            style="background: var(--bg-dark); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
-                            <h4
-                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
-                                Keep-Alive Settings</h4>
-                            <div
-                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Heartbeat
-                                        Interval (seconds)</label>
-                                    <input type="number" id="cfg-HeartbeatSeconds" min="1" max="300"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Default
-                                        Duration (minutes)</label>
-                                    <input type="number" id="cfg-DefaultDuration" min="1" max="1440"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Heartbeat
-                                        Input Mode</label>
-                                    <select id="cfg-HeartbeatInputMode"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                        <option value="F15">F15 Key</option>
-                                        <option value="Shift">Shift Key</option>
-                                        <option value="Mouse">Mouse Move</option>
-                                    </select>
-                                </div>
-                                <div class="form-group"
-                                    style="display: flex; align-items: center; gap: 0.5rem; padding-top: 1.5rem;">
-                                    <input type="checkbox" id="cfg-PreventDisplaySleep"
-                                        style="width: 18px; height: 18px;">
-                                    <label for="cfg-PreventDisplaySleep"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Prevent Display
-                                        Sleep</label>
-                                </div>
-                                <div class="form-group"
-                                    style="display: flex; align-items: center; gap: 0.5rem; padding-top: 1.5rem;">
-                                    <input type="checkbox" id="cfg-UseHeartbeatKeypress"
-                                        style="width: 18px; height: 18px;">
-                                    <label for="cfg-UseHeartbeatKeypress"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Use Heartbeat
-                                        Keypress</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TypeThing Settings -->
-                        <div
-                            style="background: var(--bg-dark); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
-                            <h4
-                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
-                                TypeThing Settings</h4>
-                            <div
-                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-TypeThingEnabled" style="width: 18px; height: 18px;">
-                                    <label for="cfg-TypeThingEnabled"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Enable
-                                        TypeThing</label>
-                                </div>
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-TypeThingNotifications"
-                                        style="width: 18px; height: 18px;">
-                                    <label for="cfg-TypeThingNotifications"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Show
-                                        Notifications</label>
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Min
-                                        Delay (ms)</label>
-                                    <input type="number" id="cfg-TypeThingMinDelayMs" min="10" max="1000"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Max
-                                        Delay (ms)</label>
-                                    <input type="number" id="cfg-TypeThingMaxDelayMs" min="10" max="2000"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Start
-                                        Delay (seconds)</label>
-                                    <input type="number" id="cfg-TypeThingStartDelaySec" min="0" max="10"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Theme</label>
-                                    <select id="cfg-TypeThingTheme"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                        <option value="dark">Dark</option>
-                                        <option value="light">Light</option>
-                                        <option value="system">System</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Smart Features -->
-                        <div
-                            style="background: var(--bg-dark); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
-                            <h4
-                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
-                                Smart Features</h4>
-                            <div
-                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-BatteryAware" style="width: 18px; height: 18px;">
-                                    <label for="cfg-BatteryAware"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Battery Aware</label>
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Battery
-                                        Threshold (%)</label>
-                                    <input type="number" id="cfg-BatteryThreshold" min="5" max="50"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                </div>
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-NetworkAware" style="width: 18px; height: 18px;">
-                                    <label for="cfg-NetworkAware"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Network Aware</label>
-                                </div>
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-IdleDetection" style="width: 18px; height: 18px;">
-                                    <label for="cfg-IdleDetection"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Idle
-                                        Detection</label>
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Idle
-                                        Threshold (seconds)</label>
-                                    <input type="number" id="cfg-IdleThreshold" min="10" max="3600"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                </div>
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-PresentationModeDetection"
-                                        style="width: 18px; height: 18px;">
-                                    <label for="cfg-PresentationModeDetection"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Presentation Mode
-                                        Detection</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Update Settings -->
-                        <div
-                            style="background: var(--bg-dark); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
-                            <h4
-                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
-                                Update Settings</h4>
-                            <div
-                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Repository
-                                        Owner</label>
-                                    <input type="text" id="cfg-UpdateRepoOwner"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Repository
-                                        Name</label>
-                                    <input type="text" id="cfg-UpdateRepoName"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Update
-                                        Channel</label>
-                                    <select id="cfg-UpdateChannel"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                        <option value="stable">Stable</option>
-                                        <option value="beta">Beta</option>
-                                        <option value="dev">Development</option>
-                                    </select>
-                                </div>
-                                <div class="form-group"
-                                    style="display: flex; align-items: center; gap: 0.5rem; padding-top: 1.5rem;">
-                                    <input type="checkbox" id="cfg-VerifyUpdateSignature"
-                                        style="width: 18px; height: 18px;">
-                                    <label for="cfg-VerifyUpdateSignature"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Verify Update
-                                        Signatures</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- UI Settings -->
-                        <div
-                            style="background: var(--bg-dark); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
-                            <h4
-                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
-                                UI Settings</h4>
-                            <div
-                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Theme</label>
-                                    <select id="cfg-Theme"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                        <option value="System">System Default</option>
-                                        <option value="Dark">Dark</option>
-                                        <option value="Light">Light</option>
-                                        <option value="Midnight Blue">Midnight Blue</option>
-                                        <option value="Forest Green">Forest Green</option>
-                                        <option value="Ocean Blue">Ocean Blue</option>
-                                        <option value="Sunset Orange">Sunset Orange</option>
-                                        <option value="Royal Purple">Royal Purple</option>
-                                        <option value="Slate Grey">Slate Grey</option>
-                                        <option value="Rose Gold">Rose Gold</option>
-                                        <option value="Cyberpunk">Cyberpunk</option>
-                                        <option value="Coffee">Coffee</option>
-                                        <option value="Arctic Frost">Arctic Frost</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Locale</label>
-                                    <select id="cfg-Locale"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                        <option value="en">English</option>
-                                        <option value="en-GB">English (UK)</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-MinimizeToTray" style="width: 18px; height: 18px;">
-                                    <label for="cfg-MinimizeToTray"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Minimize to
-                                        Tray</label>
-                                </div>
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-MinimizeOnStart" style="width: 18px; height: 18px;">
-                                    <label for="cfg-MinimizeOnStart"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Minimize on
-                                        Start</label>
-                                </div>
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-ShowNotifications"
-                                        style="width: 18px; height: 18px;">
-                                    <label for="cfg-ShowNotifications"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Show
-                                        Notifications</label>
-                                </div>
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-ShowBalloonOnStart"
-                                        style="width: 18px; height: 18px;">
-                                    <label for="cfg-ShowBalloonOnStart"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Show Balloon on
-                                        Start</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Logging & Debug -->
-                        <div
-                            style="background: var(--bg-dark); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
-                            <h4
-                                style="margin: 0 0 1rem 0; color: var(--accent); font-size: 0.875rem; text-transform: uppercase;">
-                                Logging & Debug</h4>
-                            <div
-                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-VerboseLogging" style="width: 18px; height: 18px;">
-                                    <label for="cfg-VerboseLogging"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Verbose
-                                        Logging</label>
-                                </div>
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-EnableTelemetry" style="width: 18px; height: 18px;">
-                                    <label for="cfg-EnableTelemetry"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Enable
-                                        Telemetry</label>
-                                </div>
-                                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" id="cfg-EnablePerformanceMetrics"
-                                        style="width: 18px; height: 18px;">
-                                    <label for="cfg-EnablePerformanceMetrics"
-                                        style="color: var(--text-secondary); font-size: 0.875rem;">Enable Performance
-                                        Metrics</label>
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Max
-                                        Log Size (MB)</label>
-                                    <input type="number" id="cfg-MaxLogSizeMB" min="1" max="100"
-                                        style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-                                </div>
-                            </div>
-                        </div>
-
+                    <div id="config-root" class="config-grid">
+                        <div class="loading-state" style="grid-column: 1/-1; padding: 5rem; text-align: center; color: var(--text-secondary);">Synchronizing configuration cluster...</div>
                     </div>
                 </div>
             </div>
@@ -1660,988 +981,393 @@
     </main>
 
     <script>
-        // Auth - JWT Token based
-        const TOKEN_KEY = 'redball_admin_token';
-        let authToken = localStorage.getItem(TOKEN_KEY);
-        let currentUser = null;
+        let socket;
+        let token = localStorage.getItem('redball_admin_token');
+        let buildRunning = false;
+        let timerInterval;
 
-        async function checkAuth() {
-            const token = localStorage.getItem(TOKEN_KEY);
-            if (!token) return false;
+        // --- Sections ---
+        function showSection(id, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id + '-section').classList.add('active');
+            btn.classList.add('active');
+            if (id === 'dashboard' || id === 'releases') fetchStats();
+            if (id === 'config') loadConfiguration();
+        }
+
+        // --- Configuration ---
+        let currentConfig = {};
+        async function loadConfiguration() {
+            try {
+                const res = await fetch('/api/config', { headers: { 'Authorization': 'Bearer ' + token } });
+                if (res.ok) {
+                    currentConfig = await res.json();
+                    renderConfig();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function renderConfig() {
+            const root = document.getElementById('config-root');
+            root.innerHTML = `
+                <div class="config-group">
+                    <div class="group-header">
+                        <div class="group-icon">⚡</div>
+                        <div class="group-title">Pulse & Power</div>
+                    </div>
+                    <div class="config-field">
+                        <label>Heartbeat Sync (Seconds)</label>
+                        <input type="number" id="cfg-HeartbeatSeconds" value="${currentConfig.HeartbeatSeconds}">
+                    </div>
+                    <div class="config-field">
+                        <label>Default Op Duration (Min)</label>
+                        <input type="number" id="cfg-DefaultDuration" value="${currentConfig.DefaultDuration}">
+                    </div>
+                    <label class="cb-field">
+                        <input type="checkbox" id="cfg-PreventDisplaySleep" ${currentConfig.PreventDisplaySleep ? 'checked' : ''}>
+                        <span>Prevent System Hibernation</span>
+                    </label>
+                    <label class="cb-field">
+                        <input type="checkbox" id="cfg-UseHeartbeatKeypress" ${currentConfig.UseHeartbeatKeypress ? 'checked' : ''}>
+                        <span>Simulate User Activity (Ghost Pulse)</span>
+                    </label>
+                </div>
+
+                <div class="config-group">
+                    <div class="group-header">
+                        <div class="group-icon">🧠</div>
+                        <div class="group-title">Intelligence Engine</div>
+                    </div>
+                    <label class="cb-field">
+                        <input type="checkbox" id="cfg-TypeThingEnabled" ${currentConfig.TypeThingEnabled ? 'checked' : ''}>
+                        <span>Enable Virtual Input Logic</span>
+                    </label>
+                    <div class="config-row">
+                        <div class="config-field">
+                            <label>Min Key Delay</label>
+                            <input type="number" id="cfg-TypeThingMinDelayMs" value="${currentConfig.TypeThingMinDelayMs}">
+                        </div>
+                        <div class="config-field">
+                            <label>Max Key Delay</label>
+                            <input type="number" id="cfg-TypeThingMaxDelayMs" value="${currentConfig.TypeThingMaxDelayMs}">
+                        </div>
+                    </div>
+                    <label class="cb-field">
+                        <input type="checkbox" id="cfg-IdleDetection" ${currentConfig.IdleDetection ? 'checked' : ''}>
+                        <span>Automatic Idle Migration</span>
+                    </label>
+                    <div class="config-field">
+                        <label>Idle Threshold (Seconds)</label>
+                        <input type="number" id="cfg-IdleThreshold" value="${currentConfig.IdleThreshold}">
+                    </div>
+                </div>
+
+                <div class="config-group">
+                    <div class="group-header">
+                        <div class="group-icon">🌐</div>
+                        <div class="group-title">System Infrastructure</div>
+                    </div>
+                    <div class="config-field">
+                        <label>GitHub Repository Owner</label>
+                        <input type="text" id="cfg-UpdateRepoOwner" value="${currentConfig.UpdateRepoOwner}">
+                    </div>
+                    <div class="config-field">
+                        <label>GitHub Repository Name</label>
+                        <input type="text" id="cfg-UpdateRepoName" value="${currentConfig.UpdateRepoName}">
+                    </div>
+                    <div class="config-field">
+                        <label>Update Channel</label>
+                        <select id="cfg-UpdateChannel">
+                            <option value="stable" ${currentConfig.UpdateChannel === 'stable' ? 'selected' : ''}>Stable (Production)</option>
+                            <option value="beta" ${currentConfig.UpdateChannel === 'beta' ? 'selected' : ''}>Beta (Preview)</option>
+                            <option value="dev" ${currentConfig.UpdateChannel === 'dev' ? 'selected' : ''}>Development</option>
+                        </select>
+                    </div>
+                    <label class="cb-field">
+                        <input type="checkbox" id="cfg-VerifyUpdateSignature" ${currentConfig.VerifyUpdateSignature ? 'checked' : ''}>
+                        <span>Strict Binary Signature Verification</span>
+                    </label>
+                </div>
+            `;
+        }
+
+        async function saveConfiguration() {
+            const updates = {};
+            const inputs = document.querySelectorAll('[id^="cfg-"]');
+            inputs.forEach(input => {
+                const key = input.id.replace('cfg-', '');
+                if (input.type === 'checkbox') updates[key] = input.checked;
+                else if (input.type === 'number') updates[key] = parseInt(input.value);
+                else updates[key] = input.value;
+            });
 
             try {
-                const res = await fetch('/api/auth/me', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updates)
+                });
+                if (res.ok) {
+                    showToast('Configuration synchronized successfully', 'success');
+                    loadConfiguration();
+                } else {
+                    showToast('Failed to synchronize configuration', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Network error during synchronization', 'error');
+            }
+        }
+
+        // --- Auth ---
+        function checkAuth() {
+            if (!token) {
+                document.getElementById('login-overlay').classList.remove('hidden');
+            } else {
+                initSocket();
+                fetchStats();
+            }
+        }
+
+        async function handleLogin() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p })
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    currentUser = data.user;
+                    token = data.token;
+                    localStorage.setItem('redball_admin_token', token);
                     document.getElementById('login-overlay').classList.add('hidden');
-                    return true;
-                }
-            } catch (e) {
-                console.error('Auth check failed:', e);
-            }
-
-            // Token invalid, clear it
-            localStorage.removeItem(TOKEN_KEY);
-            return false;
-        }
-
-        async function doLogin() {
-            const username = 'admin';
-            const password = document.getElementById('password-input').value;
-
-            try {
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await res.json();
-
-                if (res.ok && data.token) {
-                    localStorage.setItem(TOKEN_KEY, data.token);
-                    currentUser = data.user;
-                    document.getElementById('login-overlay').classList.add('hidden');
-                    document.getElementById('login-error').classList.remove('show');
-                    connectWS();
+                    initSocket();
+                    fetchStats();
                 } else {
-                    document.getElementById('login-error').textContent = data.error || 'Invalid credentials';
                     document.getElementById('login-error').classList.add('show');
-                    document.getElementById('password-input').value = '';
                 }
             } catch (e) {
-                console.error('Login failed:', e);
-                document.getElementById('login-error').textContent = 'Login failed. Please try again.';
-                document.getElementById('login-error').classList.add('show');
+                console.error(e);
             }
         }
 
-        function doLogout() {
-            localStorage.removeItem(TOKEN_KEY);
-            authToken = null;
-            currentUser = null;
+        function handleLogout() {
+            localStorage.removeItem('redball_admin_token');
             location.reload();
         }
 
-        // Helper for authenticated fetch
-        function authFetch(url, options = {}) {
-            const token = localStorage.getItem(TOKEN_KEY);
-            if (token) {
-                options.headers = options.headers || {};
-                options.headers['Authorization'] = `Bearer ${token}`;
+        // --- Stats ---
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/stats', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('stat-downloads').innerText = data.totalDownloads.toLocaleString();
+                    document.getElementById('stat-version').innerText = 'v' + data.latestVersion;
+                    
+                    const tbody = document.getElementById('releases-body');
+                    tbody.innerHTML = data.releases.map(r => `
+                        <tr>
+                            <td><span class="badge badge-ver">v${r.version}</span></td>
+                            <td>${new Date(r.date).toLocaleDateString()}</td>
+                            <td><span class="badge badge-dl">${r.totalDownloads.toLocaleString()} dl</span></td>
+                            <td><span style="color: var(--success)">PROD</span></td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error(e);
             }
-            return fetch(url, options);
         }
 
-        document.getElementById('password-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') doLogin();
+        // --- Keyboard ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !document.getElementById('login-overlay').classList.contains('hidden')) {
+                handleLogin();
+            }
         });
 
-        // WebSocket
-        let ws;
-        let buildState = { status: 'idle', stage: null, progress: 0 };
-        let buildInsights = { version: '-', savings: 0, totalSaved: 0, artifacts: [], startTime: 0 };
+        // --- Socket & Build ---
+        function initSocket() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            socket = new WebSocket(`${protocol}//${location.host}?token=${token}`);
 
-        const stages = ['setup', 'version', 'restore', 'wpf-build', 'service-build', 'manifest', 'zip-bundle', 'installer', 'update-server', 'publish', 'github', 'restart', 'health'];
-        
-        // Toast Notifications
-        function showToast(message, type = 'info', duration = 4000) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.style.setProperty('--duration', `${duration}ms`);
-            
-            const icon = {
-                success: '✅',
-                error: '❌',
-                warning: '⚠️',
-                info: 'ℹ️'
-            }[type] || 'ℹ️';
-
-            toast.innerHTML = `<span>${icon}</span> <span style="font-size:0.875rem;font-weight:500;">${message}</span>`;
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                toast.style.transition = 'all 0.3s ease-in';
-                setTimeout(() => toast.remove(), 300);
-            }, duration);
-        }
-
-        // System Metrics logic
-        function updateMetrics(data) {
-            if (!data.metrics) return;
-            const m = data.metrics;
-            const cpuLoad = (m.loadAvg[0] / m.cpuCount) * 100;
-            const ramUsed = m.totalMem - m.freeMem;
-            const ramPct = (ramUsed / m.totalMem) * 100;
-            const nodeMem = m.processMemory.rss;
-            const nodePct = (nodeMem / (512 * 1024 * 1024)) * 100;
-
-            document.getElementById('metric-cpu').textContent = cpuLoad.toFixed(1) + '%';
-            document.getElementById('fill-cpu').style.width = Math.min(cpuLoad, 100) + '%';
-            updateMetricColor('fill-cpu', cpuLoad);
-
-            document.getElementById('metric-ram').textContent = formatBytes(ramUsed) + ' / ' + formatBytes(m.totalMem);
-            document.getElementById('fill-ram').style.width = ramPct + '%';
-            updateMetricColor('fill-ram', ramPct);
-
-            document.getElementById('metric-node').textContent = formatBytes(nodeMem);
-            document.getElementById('fill-node').style.width = Math.min(nodePct, 100) + '%';
-            updateMetricColor('fill-node', nodePct);
-        }
-
-        function updateMetricColor(id, pct) {
-            const el = document.getElementById(id);
-            el.classList.remove('warning', 'danger');
-            if (pct > 85) el.classList.add('danger');
-            else if (pct > 65) el.classList.add('warning');
-        }
-
-        // Pagination State
-        const PAGE_SIZE = 6;
-        let originalReleasesData = [];
-        let releasesData = [];
-        let downloadsData = [];
-        let currentReleasesPage = 1;
-        let currentDownloadsPage = 1;
-
-        function paginate(items, page) {
-            const start = (page - 1) * PAGE_SIZE;
-            return items.slice(start, start + PAGE_SIZE);
-        }
-
-        function renderPagination(containerId, totalItems, currentPage, changeFnName) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            const totalPages = Math.ceil(totalItems / PAGE_SIZE);
-            if (totalPages <= 1) {
-                container.innerHTML = '';
-                return;
-            }
-
-            let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="${changeFnName}(${currentPage - 1})">Prev</button>`;
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="${changeFnName}(${i})">${i}</button>`;
-                } else if (i === currentPage - 2 || i === currentPage + 2) {
-                    html += '<span style="color:var(--text-secondary);padding:0 0.25rem">...</span>';
-                }
-            }
-            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="${changeFnName}(${currentPage + 1})">Next</button>`;
-            container.innerHTML = html;
-        }
-
-        function changeReleasesPage(page) {
-            currentReleasesPage = page;
-            renderReleases();
-        }
-
-        function changeDownloadsPage(page) {
-            currentDownloadsPage = page;
-            renderDownloads();
-        }
-
-        function filterReleases() {
-            const query = document.getElementById('release-search').value.toLowerCase();
-            if (!query) {
-                releasesData = [...originalReleasesData];
-            } else {
-                releasesData = originalReleasesData.filter(r => 
-                    r.version.toLowerCase().includes(query) || 
-                    r.channel.toLowerCase().includes(query) ||
-                    (r.notes && r.notes.toLowerCase().includes(query))
-                );
-            }
-            currentReleasesPage = 1;
-            renderReleases();
-        }
-
-
-        function connectWS() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${protocol}//${window.location.host}`);
-
-            ws.onopen = () => {
+            socket.onopen = () => {
                 document.getElementById('connection-dot').className = 'connection-dot connected';
-                document.getElementById('connection-text').textContent = 'Connected';
-                loadStats();
-                loadReleases();
+                document.getElementById('connection-text').innerText = 'Live Link Established';
+                // Sync current state
+                fetchStatus();
             };
 
-            ws.onmessage = (e) => {
+            socket.onclose = () => {
+                document.getElementById('connection-dot').className = 'connection-dot disconnected';
+                document.getElementById('connection-text').innerText = 'Link Connection Lost';
+                setTimeout(initSocket, 3000);
+            };
+
+            socket.onmessage = (e) => {
                 const msg = JSON.parse(e.data);
                 handleMessage(msg);
             };
+        }
 
-            ws.onclose = () => {
-                document.getElementById('connection-dot').className = 'connection-dot disconnected';
-                document.getElementById('connection-text').textContent = 'Reconnecting...';
-                setTimeout(connectWS, 3000);
-            };
+        async function fetchStatus() {
+            const res = await fetch('/api/admin/status', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) {
+                const status = await res.json();
+                syncState(status);
+            }
         }
 
         function handleMessage(msg) {
             switch (msg.type) {
-                case 'state':
-                    updateBuildState(msg.data);
-                    break;
                 case 'build-started':
-                    buildStarted(msg.data);
+                    syncState(msg.data);
                     break;
                 case 'build-output':
-                    // Clean the line if it comes as an object (spam protection)
-                    const rawLine = (typeof msg.data.line === 'object') ? JSON.stringify(msg.data.line) : msg.data.line;
-                    
-                    const cleanLine = stripAnsi(rawLine).trim();
-
-                    // Show current operation
-                    if (cleanLine.includes('[STEP]') || cleanLine.includes('→')) {
-                        document.getElementById('current-op').textContent = cleanLine.replace(/\[STEP .*?\]/g, '').replace(/→/g, '').trim();
-                        document.getElementById('current-op').style.color = 'var(--accent)';
-                    } else if (cleanLine.length > 5 && !cleanLine.includes('│')) {
-                        document.getElementById('current-op').textContent = cleanLine;
-                        document.getElementById('current-op').style.color = 'var(--text-secondary)';
+                    appendLog(msg.data.line);
+                    updatePipeline(msg.data.stage, msg.data.progress);
+                    // Update current operation display with clean text
+                    const cleanOp = msg.data.line.replace(/\u001b\[[0-9;]*[mGHKJKpf]/g, '').trim();
+                    if (cleanOp && !cleanOp.startsWith('[') && cleanOp.length < 100 && !/^\([0-9.]+s\)$/.test(cleanOp)) {
+                         document.getElementById('current-op').innerText = cleanOp;
                     }
-
-                    // Extract Insights
-                    if (rawLine.includes('Building version:')) {
-                        buildInsights.version = rawLine.split(':').pop().trim();
-                        updateInsightsUI();
-                    }
-                    if (rawLine.includes('% savings')) {
-                        const match = rawLine.match(/(\d+\.?\d*)%\s+savings/);
-                        if (match) {
-                            const val = parseFloat(match[1]);
-                            if (val > buildInsights.savings) buildInsights.savings = val;
-                            updateInsightsUI();
-                        }
-                    }
-                    if (rawLine.includes('Total savings:')) {
-                        buildInsights.totalSaved = rawLine.split(':').pop().trim();
-                        updateInsightsUI();
-                    }
-                    if (rawLine.includes('Redball-') && rawLine.includes('.exe')) {
-                        const file = rawLine.match(/Redball-[\d\.]+-Setup\.exe/);
-                        if (file && !buildInsights.artifacts.includes(file[0])) {
-                            buildInsights.artifacts.push(file[0]);
-                            updateInsightsUI();
-                        }
-                    }
-                    if (rawLine.includes('Redball-') && rawLine.includes('.zip')) {
-                        const file = rawLine.match(/Redball-[\d\.]+\.zip/);
-                        if (file && !buildInsights.artifacts.includes(file[0])) {
-                            buildInsights.artifacts.push(file[0]);
-                            updateInsightsUI();
-                        }
-                    }
-
-                    addTerminalLine(rawLine, msg.data.stage);
-                    updateProgress(msg.data.progress);
-                    updateStage(msg.data.stage);
                     break;
-
                 case 'build-complete':
-                    buildComplete(msg.data);
+                    syncState({ status: msg.data.status, progress: 100, stage: 'complete' });
+                    stopTimer();
+                    fetchStats(); // Update stats grid
                     break;
                 case 'build-stopped':
-                    buildStopped();
+                    syncState(msg.data);
+                    stopTimer();
                     break;
             }
         }
 
-        function updateBuildState(data) {
-            buildState = { ...data };
+        function syncState(state) {
+            const isRunning = state.status === 'running';
+            buildRunning = isRunning;
+
+            document.getElementById('stat-active').innerText = isRunning ? '1' : '0';
+            document.getElementById('start-btn').disabled = isRunning;
+            document.getElementById('stop-btn').disabled = !isRunning;
             
-            // Sync UI elements
-            updateUI();
-            updateProgress(buildState.progress || 0);
-            updateStage(buildState.stage);
+            document.getElementById('initial-controls').style.display = isRunning ? 'none' : 'block';
+            document.getElementById('active-controls').style.display = isRunning ? 'block' : 'none';
 
-            if (buildState.status === 'running') {
-                document.getElementById('start-build-btn').disabled = true;
-                document.getElementById('stop-build-btn').disabled = false;
+            if (state.stage) updatePipeline(state.stage, state.progress);
+            if (state.status === 'success') {
+                document.getElementById('last-status').innerText = 'SUCCESS';
+                document.getElementById('last-status').style.color = 'var(--success)';
+            } else if (state.status === 'failed') {
+                document.getElementById('last-status').innerText = 'FAILED';
+                document.getElementById('last-status').style.color = 'var(--danger)';
             }
 
-            // Restore logs cleanly
-            if (buildState.log && buildState.log.length > 0) {
-                const term = document.getElementById('terminal-body');
-                term.innerHTML = '';
-                
-                // Add a marker for reconnection
-                const restoredMarker = document.createElement('div');
-                restoredMarker.className = 'terminal-line dim';
-                restoredMarker.textContent = '--- Restored Session Logs ---';
-                term.appendChild(restoredMarker);
-
-                // Add last 100 lines for speed
-                const recentLogs = buildState.log.slice(-100);
-                recentLogs.forEach(entry => {
-                    addTerminalLine(entry.message, buildState.stage);
-                });
-            }
-        }
-
-        // ANSI stripping and formatting
-        function stripAnsi(str) {
-            return str.replace(/\x1B\[[0-9;?]*[a-zA-Z]/g, '').replace(/\x1B\[\?1h/g, '').replace(/\x1B=/g, '');
-        }
-
-        let lastWindowsProgress = 0;
-        let windowsBuildStartTime = null;
-
-        // Deduplication: track recent messages to avoid duplicates
-        const recentMessages = new Map();
-        const DEDUP_WINDOW_MS = 2000; // 2 second window
-        const MAX_RECENT_SIZE = 50;
-
-        function isDuplicate(text) {
-            const now = Date.now();
-            const key = text.trim().substring(0, 100); // First 100 chars
-
-            // Clean old entries
-            for (const [k, v] of recentMessages) {
-                if (now - v > DEDUP_WINDOW_MS) {
-                    recentMessages.delete(k);
+            if (isRunning) {
+                if (state.log) {
+                    const terminal = document.getElementById('terminal-out');
+                    terminal.innerHTML = '';
+                    state.log.forEach(l => appendLog(l.message));
+                }
+                startTimer(state.startTime);
+            } else {
+                stopTimer();
+                if (state.stage === 'complete' || state.status === 'success') {
+                     document.getElementById('current-op').innerText = 'System idle. Readiness 100%';
                 }
             }
-
-            // Check if we've seen this recently
-            if (recentMessages.has(key)) {
-                return true;
-            }
-
-            // Add to recent
-            recentMessages.set(key, now);
-
-            // Limit size
-            if (recentMessages.size > MAX_RECENT_SIZE) {
-                const oldest = recentMessages.keys().next().value;
-                recentMessages.delete(oldest);
-            }
-
-            return false;
         }
 
-        function formatLine(line) {
-            // Safety check: if line is not a string, stringify it
-            let text = (typeof line === 'object') ? JSON.stringify(line) : String(line);
-            
-            const clean = stripAnsi(text).trim();
+        function updatePipeline(stage, progress) {
+            const steps = document.querySelectorAll('.pipeline-step');
+            let found = false;
 
-            // Skip empty, terminal control, or obviously redundant MSBuild noise
-            if (!clean) return null;
-            if (/^[═╚╠╣╗╔╝╩╦╬═─│┌┐└┘├┤┬┴┼\[\?1h\[=]+$/.test(clean)) return null;
-            if (clean === '=' || clean === '[?1h' || clean === '[?1h=') return null;
-            
-            // Filter out JSON spam that occasionally leaks from internal logging
-            if (clean.startsWith('{') && clean.endsWith('}') && clean.includes('"timestamp"')) {
-                return null;
-            }
+            document.getElementById('progress-percent').innerText = Math.round(progress) + '%';
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('pipeline-progress').style.width = progress + '%';
 
-            // Filter out MSBuild noise like (1.4s)
-            if (/^\([0-9.]+s\)$/.test(clean)) return null;
-
-            if (clean.includes('Redball Unified Build System')) return { text: '🚀 Starting build...', class: 'phase-start' };
-
-            // Windows build specific patterns
-            if (/Building Windows artifacts|build-windows/.test(clean)) {
-                windowsBuildStartTime = Date.now();
-                return { text: '🔨 Starting Windows build...', class: 'phase-start' };
-            }
-
-            // MSBuild Success/Fail summaries
-            if (clean.includes('Build succeeded') || clean.includes('0 Error(s)')) {
-                return { text: '✓ Compilation succeeded', class: 'success' };
-            }
-            if (clean.includes('Build FAILED') || clean.includes('Error(s)')) {
-                if (clean.includes('0 Error(s)')) return null; // Ignore '0 Error(s)' but show actual errors
-                return { text: '✗ ' + clean, class: 'error' };
-            }
-
-            // Core log patterns
-            if (/\[\s*OK\s*\]/.test(clean) || /✓/.test(clean)) {
-                return { text: '✓ ' + clean.replace(/\[.*\]\s*/, '').replace(/✓\s*/, ''), class: 'success' };
-            }
-            if (/\[\s*WARN/.test(clean)) {
-                return { text: '⚠ ' + clean.replace(/\[.*\]\s*/, ''), class: 'warning' };
-            }
-            if (/\[\s*ERROR/.test(clean) || /\[\s*ERR/.test(clean)) {
-                return { text: '✗ ' + clean.replace(/\[.*\]\s*/, ''), class: 'error' };
-            }
-            if (/\[\s*STEP/.test(clean)) {
-                return { text: '→ ' + clean.replace(/\[.*\]\s*/, ''), class: 'phase-start' };
-            }
-            if (/\[\s*DEBUG/.test(clean)) {
-                // Show critical debug info during build for technical context
-                if (buildState.stage === 'windows-build' && /wine|dotnet|Running/.test(clean)) {
-                    return { text: clean.replace(/\[.*\]\s*/, ''), class: 'dim' };
+            steps.forEach(step => {
+                const s = step.dataset.stage;
+                step.classList.remove('active');
+                if (s === stage) {
+                    step.classList.add('active');
+                    found = true;
+                } else if (!found) {
+                    step.classList.add('complete');
+                } else {
+                    step.classList.remove('complete');
                 }
-                return null;
-            }
-
-            // Compact MSBuild output
-            if (clean.includes('->')) {
-                const parts = clean.split('->');
-                return { text: parts[parts.length - 1].trim(), class: 'dim' };
-            }
-
-            // Default fallback for meaningful lines
-            if (clean.length > 2 && !/^[\s\.*\#\-]+$/.test(clean)) {
-                return { text: clean, class: '' };
-            }
-
-            return null;
+            });
         }
 
-        function addTerminalLine(rawLine, stage) {
-            const formatted = formatLine(rawLine);
-            if (!formatted) return;
-
-            // Check for duplicates
-            if (isDuplicate(formatted.text)) {
-                return;
-            }
-
-            const term = document.getElementById('terminal-body');
+        function appendLog(line) {
+            const terminal = document.getElementById('terminal-out');
             const div = document.createElement('div');
-            div.className = 'terminal-line ' + formatted.class;
-            div.textContent = formatted.text;
-            term.appendChild(div);
-            term.scrollTop = term.scrollHeight;
-
-            // Limit lines
-            while (term.children.length > 500) {
-                term.removeChild(term.firstChild);
-            }
-        }
-
-        function updateProgress(pct) {
-            buildState.progress = pct;
-            const fill = document.getElementById('progress-fill');
-            if (fill) fill.style.width = pct + '%';
             
-            const text = document.getElementById('progress-text') || document.getElementById('progress-percent');
-            if (text) text.textContent = Math.round(pct) + '%';
-        }
+            // Comprehensive ANSI cleaning (handles cursor movement, color, visibility, etc.)
+            const cleanLine = line.replace(/\u001b\[[0-9;?]*[a-zA-Z]/g, '').trim();
+            if (!cleanLine || /^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]*[a-zA-Z]/.test(cleanLine)) return; // skip noise or fragments
 
-        function updateStage(name) {
-            if (!name) return;
-            const idx = stages.indexOf(name);
-            if (idx === -1) return;
+            div.className = 't-line';
+            if (cleanLine.includes('ERROR') || cleanLine.includes('failed')) div.className += ' error';
+            else if (cleanLine.includes('OK') || cleanLine.includes('success')) div.className += ' success';
+            else if (cleanLine.includes('Phase')) div.className += ' phase';
+            else if (cleanLine.startsWith('↳') || cleanLine.startsWith('  [')) div.className += ' dim';
 
-            // Update horizontal pipeline progress bar
-            const prog = document.getElementById('pipeline-progress');
-            const total = stages.length;
-            const pct = ((idx) / (total - 1)) * 100;
-            prog.style.width = pct + '%';
-
-            stages.forEach((s, i) => {
-                const el = document.querySelector(`.pipeline-step[data-stage="${s}"]`);
-                if (!el) return;
-
-                el.classList.remove('active', 'complete', 'error');
-
-                if (i === idx) {
-                    el.classList.add('active');
-                    const phaseText = {
-                        'setup': 'Initializing...',
-                        'version': 'Bumping version...',
-                        'restore': 'Restoring NuGet...',
-                        'wpf-build': 'Compiling WPF UI...',
-                        'service-build': 'Building Service...',
-                        'manifest': 'Generating Manifest...',
-                        'zip-bundle': 'Creating Bundle...',
-                        'installer': 'Building Installer...',
-                        'update-server': 'Uploading Binaries...',
-                        'publish': 'Publishing Cloud...',
-                        'github': 'GitHub Release...',
-                        'restart': 'Server Recycle...',
-                        'health': 'Final Health Check...'
-                    }[s] || 'Running...';
-                    document.getElementById('progress-phase').textContent = phaseText;
-                } else if (i < idx) {
-                    el.classList.add('complete');
-                }
-            });
-        }
-
-        function resetStages() {
-            document.getElementById('pipeline-progress').style.width = '0%';
-            document.getElementById('progress-phase').textContent = 'Ready';
-            stages.forEach(s => {
-                const el = document.querySelector(`.pipeline-step[data-stage="${s}"]`);
-                if (el) el.classList.remove('active', 'complete', 'error');
-            });
-        }
-
-        function buildStarted(data) {
-            buildState = { ...data, status: 'running' };
-            document.getElementById('start-build-btn').disabled = true;
-            document.getElementById('stop-build-btn').disabled = false;
-            document.getElementById('terminal-body').innerHTML = '';
-            // Reset tracking
-            lastWindowsProgress = 0;
-            windowsBuildStartTime = null;
-            recentMessages.clear(); // Clear deduplication cache
-            resetStages();
-            updateUI();
-        }
-
-        function buildComplete(data) {
-            buildState.status = data.status;
-            buildState.endTime = Date.now();
-            document.getElementById('start-build-btn').disabled = false;
-            document.getElementById('stop-build-btn').disabled = true;
-            addTerminalLine(data.status === 'success' ? '✅ Build completed successfully!' : '❌ Build failed!', data.status);
-            updateProgress(data.status === 'success' ? 100 : buildState.progress);
-
-            // Insights Update
-            if (data.status === 'success') {
-                document.getElementById('pipeline-progress').style.width = '100%';
-                document.getElementById('progress-phase').textContent = 'Build Success!';
-                stages.forEach(s => {
-                    const el = document.querySelector(`.pipeline-step[data-stage="${s}"]`);
-                    if (el) { el.classList.remove('active', 'error'); el.classList.add('complete'); }
-                });
-
-                const statusEl = document.getElementById('insight-status');
-                const durEl = document.getElementById('insight-duration');
-                if (statusEl) { statusEl.textContent = 'RELEASE READY'; statusEl.style.color = '#27c93f'; }
-                if (durEl) { durEl.textContent = (data.duration / 1000).toFixed(1) + 's'; }
-                
-                if (buildInsights.artifacts.length === 0 && buildInsights.version !== '-') {
-                     buildInsights.artifacts.push(`Redball-${buildInsights.version}-Setup.exe`);
-                }
-                updateInsightsUI();
-            } else if (data.status === 'failed') {
-                document.getElementById('progress-phase').textContent = 'Build Failed';
-                const currentStageEl = document.querySelector('.pipeline-step.active');
-                if (currentStageEl) {
-                    currentStageEl.classList.remove('active');
-                    currentStageEl.classList.add('error');
-                }
-                const statusEl = document.getElementById('insight-status');
-                if (statusEl) { statusEl.textContent = 'FAILURE DETECTED'; statusEl.style.color = '#ff5f56'; }
-            }
-
-            updateUI();
-            loadStats();
-            loadReleases();
-        }
-
-        function updateInsightsUI() {
-            const empty = document.getElementById('insights-empty');
-            const content = document.getElementById('insights-content');
-            if (empty && content) { empty.style.display = 'none'; content.style.display = 'block'; }
+            const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+            div.innerHTML = `<span class="t-line time">[${time}]</span>${cleanLine}`;
             
-            const ver = document.getElementById('insight-version');
-            if (ver) ver.textContent = buildInsights.version;
-            
-            const sav = document.getElementById('insight-savings');
-            if (sav) sav.textContent = buildInsights.savings.toFixed(1) + '%';
-            
-            const prog = document.getElementById('savings-progress');
-            if (prog) prog.style.width = buildInsights.savings + '%';
-            
-            const det = document.getElementById('savings-detail');
-            if (det) det.textContent = `Total payload reduction: ${buildInsights.totalSaved || '0MB'}`;
-            
-            const list = document.getElementById('artifact-list');
-            if (list) {
-                list.innerHTML = '';
-                buildInsights.artifacts.forEach(art => {
-                    const badge = document.createElement('div');
-                    badge.className = 'artifact-badge';
-                    badge.innerHTML = `📦 <span style="font-weight: 500;">${art}</span>`;
-                    list.appendChild(badge);
-                });
-            }
-        }
-
-        function buildStopped() {
-            buildState.status = 'stopped';
-            document.getElementById('start-build-btn').disabled = false;
-            document.getElementById('stop-build-btn').disabled = true;
-            addTerminalLine('Build stopped by user', 'warning');
-            updateUI();
-        }
-
-        function updateUI() {
-            const el = document.getElementById('build-status');
-            el.className = 'status ' + buildState.status;
-            el.textContent = buildState.status.charAt(0).toUpperCase() + buildState.status.slice(1);
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
         }
 
         async function startBuild() {
-            const token = localStorage.getItem(TOKEN_KEY);
-            if (!token) {
-                alert('Please login first');
-                return;
-            }
-
-            if (ws?.readyState === 1) {
-                ws.send(JSON.stringify({ action: 'start-build' }));
-                showToast('Build request sent', 'info');
-            } else {
-                try {
-                    const res = await authFetch('/api/build/start', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type: 'windows' })
-                    });
-                    if (res.ok) {
-                        showToast('Build pipeline started', 'success');
-                    } else {
-                        const err = await res.json();
-                        showToast('Start failed: ' + (err.error || 'Unknown error'), 'error');
-                    }
-                } catch (e) {
-                    console.error('Start build failed:', e);
-                    showToast('Failed to connect to build system', 'error');
-                }
-            }
+             document.getElementById('terminal-out').innerHTML = '';
+             fetch('/api/admin/build', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
         }
 
         async function stopBuild() {
-            if (ws?.readyState === 1) {
-                ws.send(JSON.stringify({ action: 'stop-build' }));
-            } else {
-                try {
-                    await authFetch('/api/build/stop', { method: 'POST' });
-                } catch (e) {
-                    console.error('Stop build failed:', e);
-                }
-            }
-        }
-
-        async function loadStats() {
-            try {
-                const res = await authFetch('/api/stats');
-                const stats = await res.json();
-
-                document.getElementById('total-downloads').textContent =
-                    (stats.totalDownloads || 0).toLocaleString();
-                document.getElementById('total-releases').textContent = stats.totalReleases || 0;
-                document.getElementById('latest-version').textContent = stats.latestVersion || '-';
-
-                if (stats.byFile) {
-                    downloadsData = Object.entries(stats.byFile)
-                        .map(([file, data]) => ({ file, downloads: data.downloads || 0 }))
-                        .sort((a, b) => b.downloads - a.downloads);
-                    renderDownloads();
-                }
-            } catch (err) {
-                console.error('Failed to load stats:', err);
-            }
-        }
-
-        function renderDownloads() {
-            const container = document.getElementById('download-stats');
-            if (downloadsData.length > 0) {
-                const paginated = paginate(downloadsData, currentDownloadsPage);
-                let html = '<table class="releases-table"><thead><tr><th>File</th><th>Downloads</th></tr></thead><tbody>';
-                paginated.forEach(item => {
-                    html += `<tr><td>${item.file}</td><td>${item.downloads.toLocaleString()}</td></tr>`;
-                });
-                html += '</tbody></table>';
-                container.innerHTML = html;
-                renderPagination('downloads-pagination', downloadsData.length, currentDownloadsPage, 'changeDownloadsPage');
-            } else {
-                container.innerHTML = '<p style="color: var(--text-secondary);">No download data available</p>';
-                document.getElementById('downloads-pagination').innerHTML = '';
-            }
-        }
-
-
-        async function loadReleases() {
-            try {
-                const res = await fetch('/api/releases');
-                originalReleasesData = await res.json();
-                originalReleasesData.sort((a, b) => new Date(b.date) - new Date(a.date));
-                filterReleases(); // This will populate releasesData and render
-            } catch (err) {
-                console.error('Failed to load releases:', err);
-            }
-        }
-
-        function renderReleases() {
-            const tbody = document.getElementById('releases-tbody');
-            if (!tbody) return;
-
-            if (releasesData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary)">No releases found</td></tr>';
-                document.getElementById('releases-pagination').innerHTML = '';
-                return;
-            }
-
-            const paginated = paginate(releasesData, currentReleasesPage);
-            tbody.innerHTML = paginated.map(r => `
-                <tr>
-                    <td><span class="version-badge ${r.channel}">${r.version}</span></td>
-                    <td>${r.channel}</td>
-                    <td>${new Date(r.date).toLocaleDateString()}</td>
-                    <td>${(r.totalDownloads || 0).toLocaleString()}</td>
-                    <td>${r.files ? r.files.length : 0}</td>
-                </tr>
-            `).join('');
-            
-            renderPagination('releases-pagination', releasesData.length, currentReleasesPage, 'changeReleasesPage');
-        }
-
-        // System Config Functions
-        async function loadSystemConfig() {
-            try {
-                const res = await authFetch('/api/system/config');
-                if (!res.ok) throw new Error('Failed to load config');
-                const data = await res.json();
-                
-                // Live Metrics
-                updateMetrics(data);
-
-                // Server Info
-                document.getElementById('server-info-content').innerHTML = `
-                    <div><strong>Hostname:</strong> ${data.hostname}</div>
-                    <div><strong>Platform:</strong> ${data.platform}</div>
-                    <div><strong>Node.js:</strong> ${data.nodeVersion}</div>
-                    <div><strong>Uptime:</strong> ${formatUptime(data.uptime)}</div>
-                    <div><strong>Web Admin Port:</strong> ${data.webPort}</div>
-                    <div><strong>Update Server Port:</strong> ${data.updatePort}</div>
-                `;
-
-                // Environment
-                document.getElementById('env-info-content').innerHTML = `
-                    <div><strong>Node Env:</strong> ${data.env}</div>
-                    <div><strong>Project Root:</strong> <code style="font-size: 0.75rem;">${data.projectRoot}</code></div>
-                    <div><strong>Releases Dir:</strong> <code style="font-size: 0.75rem;">${data.releasesDir}</code></div>
-                    <div><strong>Total Releases:</strong> ${data.releaseCount}</div>
-                `;
-
-                // Disk Usage
-                document.getElementById('disk-info-content').innerHTML = `
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                        <div><strong>Releases Size:</strong> ${formatBytes(data.diskUsage.releases)}</div>
-                        <div><strong>Logs Size:</strong> ${formatBytes(data.diskUsage.logs)}</div>
-                        <div><strong>Total:</strong> ${formatBytes(data.diskUsage.total)}</div>
-                    </div>
-                `;
-            } catch (err) {
-                console.error('Failed to load system config:', err);
-                document.getElementById('server-info-content').innerHTML = '<span style="color: var(--danger)">Failed to load</span>';
-                document.getElementById('env-info-content').innerHTML = '<span style="color: var(--danger)">Failed to load</span>';
-                document.getElementById('disk-info-content').innerHTML = '<span style="color: var(--danger)">Failed to load</span>';
-            }
-        }
-
-        function formatUptime(seconds) {
-            const days = Math.floor(seconds / 86400);
-            const hours = Math.floor((seconds % 86400) / 3600);
-            const mins = Math.floor((seconds % 3600) / 60);
-            if (days > 0) return `${days}d ${hours}h ${mins}m`;
-            if (hours > 0) return `${hours}h ${mins}m`;
-            return `${mins}m`;
-        }
-
-        function formatBytes(bytes) {
-            if (bytes === 0) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        async function clearLogs() {
-            if (!confirm('Clear all build logs?')) return;
-            try {
-                const res = await authFetch('/api/system/clear-logs', { method: 'POST' });
-                if (res.ok) {
-                    showToast('Build logs cleared', 'success');
-                    loadSystemConfig();
-                } else {
-                    showToast('Failed to clear logs', 'error');
-                }
-            } catch (e) {
-                showToast('Error: ' + e.message, 'error');
-            }
-        }
-
-        async function restartServer() {
-            if (!confirm('Restart the web admin server?')) return;
-            try {
-                await authFetch('/api/system/restart', { method: 'POST' });
-                showToast('Server restart initiated...', 'warning');
-                setTimeout(() => location.reload(), 3000);
-            } catch (e) {
-                showToast('Error: ' + e.message, 'error');
-            }
-        }
-
-        async function changePassword() {
-            const current = prompt('Enter current password:');
-            if (!current) return;
-            const newPass = prompt('Enter new password (min 8 chars):');
-            if (!newPass || newPass.length < 8) {
-                showToast('Password too short', 'warning');
-                return;
-            }
-            try {
-                const res = await authFetch('/api/auth/change-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ currentPassword: current, newPassword: newPass })
-                });
-                if (res.ok) {
-                    showToast('Password changed successfully', 'success');
-                    setTimeout(() => doLogout(), 1500);
-                } else {
-                    const data = await res.json();
-                    showToast(data.error || 'Update failed', 'error');
-                }
-            } catch (e) {
-                showToast('Error: ' + e.message, 'error');
-            }
-        }
-
-        // Load system config when section is shown
-        document.querySelector('.nav-btn[data-section="system"]').addEventListener('click', () => {
-            loadSystemConfig();
-            loadAppConfig();
-        });
-
-        // Application Configuration Functions
-        let appConfigData = null;
-
-        async function loadAppConfig() {
-            try {
-                const res = await authFetch('/api/config');
-                if (!res.ok) throw new Error('Failed to load app config');
-                appConfigData = await res.json();
-
-                // Populate form fields
-                document.getElementById('cfg-HeartbeatSeconds').value = appConfigData.HeartbeatSeconds || 59;
-                document.getElementById('cfg-DefaultDuration').value = appConfigData.DefaultDuration || 60;
-                document.getElementById('cfg-HeartbeatInputMode').value = appConfigData.HeartbeatInputMode || 'F15';
-                document.getElementById('cfg-PreventDisplaySleep').checked = appConfigData.PreventDisplaySleep || false;
-                document.getElementById('cfg-UseHeartbeatKeypress').checked = appConfigData.UseHeartbeatKeypress || false;
-
-                document.getElementById('cfg-TypeThingEnabled').checked = appConfigData.TypeThingEnabled !== false;
-                document.getElementById('cfg-TypeThingNotifications').checked = appConfigData.TypeThingNotifications || false;
-                document.getElementById('cfg-TypeThingMinDelayMs').value = appConfigData.TypeThingMinDelayMs || 30;
-                document.getElementById('cfg-TypeThingMaxDelayMs').value = appConfigData.TypeThingMaxDelayMs || 120;
-                document.getElementById('cfg-TypeThingStartDelaySec').value = appConfigData.TypeThingStartDelaySec || 3;
-                document.getElementById('cfg-TypeThingTheme').value = appConfigData.TypeThingTheme || 'dark';
-
-                document.getElementById('cfg-BatteryAware').checked = appConfigData.BatteryAware || false;
-                document.getElementById('cfg-BatteryThreshold').value = appConfigData.BatteryThreshold || 20;
-                document.getElementById('cfg-NetworkAware').checked = appConfigData.NetworkAware || false;
-                document.getElementById('cfg-IdleDetection').checked = appConfigData.IdleDetection || false;
-                document.getElementById('cfg-IdleThreshold').value = appConfigData.IdleThreshold || 30;
-                document.getElementById('cfg-PresentationModeDetection').checked = appConfigData.PresentationModeDetection || false;
-
-                document.getElementById('cfg-UpdateRepoOwner').value = appConfigData.UpdateRepoOwner || 'ArMaTeC';
-                document.getElementById('cfg-UpdateRepoName').value = appConfigData.UpdateRepoName || 'Redball';
-                document.getElementById('cfg-UpdateChannel').value = appConfigData.UpdateChannel || 'stable';
-                document.getElementById('cfg-VerifyUpdateSignature').checked = appConfigData.VerifyUpdateSignature || false;
-
-                document.getElementById('cfg-Theme').value = appConfigData.Theme || 'System';
-                document.getElementById('cfg-Locale').value = appConfigData.Locale || 'en';
-                document.getElementById('cfg-MinimizeToTray').checked = appConfigData.MinimizeToTray || false;
-                document.getElementById('cfg-MinimizeOnStart').checked = appConfigData.MinimizeOnStart || false;
-                document.getElementById('cfg-ShowNotifications').checked = appConfigData.ShowNotifications !== false;
-                document.getElementById('cfg-ShowBalloonOnStart').checked = appConfigData.ShowBalloonOnStart || false;
-
-                document.getElementById('cfg-VerboseLogging').checked = appConfigData.VerboseLogging || false;
-                document.getElementById('cfg-EnableTelemetry').checked = appConfigData.EnableTelemetry || false;
-                document.getElementById('cfg-EnablePerformanceMetrics').checked = appConfigData.EnablePerformanceMetrics || false;
-                document.getElementById('cfg-MaxLogSizeMB').value = appConfigData.MaxLogSizeMB || 10;
-
-                document.getElementById('app-config-loading').style.display = 'none';
-                document.getElementById('app-config-form').style.display = 'flex';
-            } catch (err) {
-                console.error('Failed to load app config:', err);
-                document.getElementById('app-config-loading').innerHTML = '<span style="color: var(--danger);">Failed to load configuration</span>';
-            }
-        }
-
-        async function saveAppConfig() {
-            const config = {
-                ...appConfigData,
-                HeartbeatSeconds: parseInt(document.getElementById('cfg-HeartbeatSeconds').value),
-                DefaultDuration: parseInt(document.getElementById('cfg-DefaultDuration').value),
-                HeartbeatInputMode: document.getElementById('cfg-HeartbeatInputMode').value,
-                PreventDisplaySleep: document.getElementById('cfg-PreventDisplaySleep').checked,
-                UseHeartbeatKeypress: document.getElementById('cfg-UseHeartbeatKeypress').checked,
-                TypeThingEnabled: document.getElementById('cfg-TypeThingEnabled').checked,
-                TypeThingNotifications: document.getElementById('cfg-TypeThingNotifications').checked,
-                TypeThingMinDelayMs: parseInt(document.getElementById('cfg-TypeThingMinDelayMs').value),
-                TypeThingMaxDelayMs: parseInt(document.getElementById('cfg-TypeThingMaxDelayMs').value),
-                TypeThingStartDelaySec: parseInt(document.getElementById('cfg-TypeThingStartDelaySec').value),
-                TypeThingTheme: document.getElementById('cfg-TypeThingTheme').value,
-                BatteryAware: document.getElementById('cfg-BatteryAware').checked,
-                BatteryThreshold: parseInt(document.getElementById('cfg-BatteryThreshold').value),
-                NetworkAware: document.getElementById('cfg-NetworkAware').checked,
-                IdleDetection: document.getElementById('cfg-IdleDetection').checked,
-                IdleThreshold: parseInt(document.getElementById('cfg-IdleThreshold').value),
-                PresentationModeDetection: document.getElementById('cfg-PresentationModeDetection').checked,
-                UpdateRepoOwner: document.getElementById('cfg-UpdateRepoOwner').value,
-                UpdateRepoName: document.getElementById('cfg-UpdateRepoName').value,
-                UpdateChannel: document.getElementById('cfg-UpdateChannel').value,
-                VerifyUpdateSignature: document.getElementById('cfg-VerifyUpdateSignature').checked,
-                Theme: document.getElementById('cfg-Theme').value,
-                Locale: document.getElementById('cfg-Locale').value,
-                MinimizeToTray: document.getElementById('cfg-MinimizeToTray').checked,
-                MinimizeOnStart: document.getElementById('cfg-MinimizeOnStart').checked,
-                ShowNotifications: document.getElementById('cfg-ShowNotifications').checked,
-                ShowBalloonOnStart: document.getElementById('cfg-ShowBalloonOnStart').checked,
-                VerboseLogging: document.getElementById('cfg-VerboseLogging').checked,
-                EnableTelemetry: document.getElementById('cfg-EnableTelemetry').checked,
-                EnablePerformanceMetrics: document.getElementById('cfg-EnablePerformanceMetrics').checked,
-                MaxLogSizeMB: parseInt(document.getElementById('cfg-MaxLogSizeMB').value)
-            };
-
-            try {
-                const res = await authFetch('/api/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(config)
-                });
-
-                if (res.ok) {
-                    showToast('Configuration saved!', 'success');
-                    appConfigData = config;
-                } else {
-                    const err = await res.json();
-                    showToast('Save failed: ' + (err.error || 'error'), 'error');
-                }
-            } catch (e) {
-                alert('Error saving configuration: ' + e.message);
-            }
-        }
-
-        function resetAppConfig() {
-            if (confirm('Reset all changes to last saved values?')) {
-                loadAppConfig();
-            }
-        }
-
-        // Navigation
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById(btn.dataset.section).classList.add('active');
+            fetch('/api/build/stop', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
             });
-        });
-
-        // Init
-        if (checkAuth()) {
-            connectWS();
         }
+
+        function startTimer(startTime) {
+            clearInterval(timerInterval);
+            const start = startTime || Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - start;
+                const m = Math.floor(elapsed / 60000);
+                const s = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('build-timer').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // Start
+        checkAuth();
+        setInterval(() => {
+            document.getElementById('live-time').innerText = 'LIVE: ' + new Date().toLocaleTimeString();
+        }, 1000);
     </script>
 </body>
 

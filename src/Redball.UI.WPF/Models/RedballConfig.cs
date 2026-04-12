@@ -36,6 +36,7 @@ public class RedballConfig
     public string UpdateRepoName { get; set; } = "Redball";
     public string UpdateChannel { get; set; } = "stable";
     public bool VerifyUpdateSignature { get; set; }
+    public string UpdateServerUrl { get; set; } = "https://redball.certrunnerx.com/";
     // Update check settings
     public bool AutoUpdateCheckEnabled { get; set; } = true;
     public int AutoUpdateCheckIntervalMinutes { get; set; } = 120;

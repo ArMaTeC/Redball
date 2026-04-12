@@ -31,6 +31,7 @@
   "UpdateRepoOwner": "ArMaTeC",
   "UpdateRepoName": "Redball",
   "UpdateChannel": "stable",
+  "UpdateServerUrl": "http://localhost:3500",
   "VerifyUpdateSignature": false,
   "TypeThingEnabled": true,
   "TypeThingMinDelayMs": 30,

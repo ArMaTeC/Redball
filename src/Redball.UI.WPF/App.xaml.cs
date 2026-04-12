@@ -643,7 +643,8 @@ public partial class App : Application
                 cfg.UpdateRepoOwner,
                 cfg.UpdateRepoName,
                 cfg.UpdateChannel ?? "stable",
-                cfg.VerifyUpdateSignature);
+                cfg.VerifyUpdateSignature,
+                cfg.UpdateServerUrl);
 
             var updateInfo = await updateService.CheckForUpdateAsync();
 

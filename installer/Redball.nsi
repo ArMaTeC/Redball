@@ -65,9 +65,9 @@ SetCompressorDictSize 32
 !define MUI_UNICON "redball.ico"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
-!define MUI_HEADERIMAGE_BITMAP "nsis-header.bmp"
-!define MUI_WELCOMEFINISHPAGE_BITMAP "nsis-welcome.bmp"
-!define MUI_UNWELCOMEFINISHPAGE_BITMAP "nsis-welcome.bmp"
+!define MUI_HEADERIMAGE_BITMAP "${PROJECT_ROOT}\installer\nsis-header.bmp"
+!define MUI_WELCOMEFINISHPAGE_BITMAP "${PROJECT_ROOT}\installer\nsis-welcome.bmp"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "${PROJECT_ROOT}\installer\nsis-welcome.bmp"
 
 ; Welcome page
 !define MUI_WELCOMEPAGE_TITLE "Welcome to ${PRODUCT_NAME} ${PRODUCT_VERSION_SHORT}"
@@ -105,7 +105,7 @@ SetCompressorDictSize 32
 
 ; Installer pages
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_LICENSE "/root/Redball/LICENSE"
+!insertmacro MUI_PAGE_LICENSE "${PROJECT_ROOT}\LICENSE"
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
@@ -257,7 +257,7 @@ Section ".NET 10 Runtime (Embedded)" SecDotNet
     
     ; Extract embedded .NET installer to plugins directory
     SetOutPath "$PLUGINSDIR"
-    File "${DOTNET_INSTALLER}"
+    File "${PROJECT_ROOT}\dist\wpf-publish\${DOTNET_INSTALLER}"
     
     Call CheckDotNet
     ${If} $DotNetInstalled == 0
@@ -279,14 +279,15 @@ Section "!${PRODUCT_NAME} Application" SecApp
     SetOverwrite on
     
     ; Main executable and DLLs
-    File "Redball.UI.WPF.exe"
-    File "Redball.UI.WPF.dll"
-    File "Redball.UI.WPF.deps.json"
-    File "Redball.UI.WPF.runtimeconfig.json"
+    File "${PROJECT_ROOT}\dist\wpf-publish\Redball.UI.WPF.exe"
+    File "${PROJECT_ROOT}\dist\wpf-publish\Redball.UI.WPF.dll"
+    File "${PROJECT_ROOT}\dist\wpf-publish\Redball.UI.WPF.deps.json"
+    File "${PROJECT_ROOT}\dist\wpf-publish\Redball.UI.WPF.runtimeconfig.json"
+    File "Redball.json"
     
     ; Copy DLL folder (contains dependency assemblies resolved via dll/ subfolder)
     SetOutPath "$INSTDIR\dll"
-    File /r "dll\*.*"
+    File /r "${PROJECT_ROOT}\dist\wpf-publish\dll\*.*"
     SetOutPath "$INSTDIR"
     
     ; Copy Assets folder (animations, icons, themes)
@@ -524,7 +525,7 @@ Section /o "Background Service" SecService
     Sleep 2000
     
     ; Copy service files (single-file published, no separate DLL)
-    File "Redball.Service.exe"
+    File "${PROJECT_ROOT}\dist\wpf-publish\Redball.Service.exe"
     
     ; Install service (requires admin - skip if not elevated)
     UserInfo::GetAccountType

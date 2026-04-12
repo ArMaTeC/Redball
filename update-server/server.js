@@ -74,22 +74,11 @@ async function fetchGitHubReleases() {
     const files = r.assets.map(a => ({
       name: a.name,
       size: a.size,
-      hash: '', // GitHub doesn't provide hashes in the API
-      downloads: a.download_count,
-      url: a.browser_download_url
+      hash: '', 
+      downloads: (localRelease?.files?.find(lf => lf.name === a.name)?.downloads || 0) + a.download_count,
+      url: `/api/download/${version}/${a.name}`,
+      sourceUrl: a.browser_download_url
     }));
-
-    // Merge with local patch files or richer metadata if available
-    if (localRelease?.files) {
-      for (const localFile of localRelease.files) {
-        const existingIdx = files.findIndex(f => f.name === localFile.name);
-        if (existingIdx >= 0) {
-          files[existingIdx] = { ...files[existingIdx], ...localFile };
-        } else {
-          files.push(localFile);
-        }
-      }
-    }
 
     return {
       version,
@@ -97,7 +86,7 @@ async function fetchGitHubReleases() {
       date: r.published_at,
       notes: r.body || '',
       files,
-      totalDownloads: r.assets.reduce((sum, a) => sum + a.download_count, 0) + (localRelease?.totalDownloads || 0),
+      totalDownloads: (localRelease?.totalDownloads || 0) + r.assets.reduce((sum, a) => sum + a.download_count, 0),
       githubUrl: r.html_url,
       patchInfo: localRelease?.patchInfo || null
     };
@@ -106,10 +95,18 @@ async function fetchGitHubReleases() {
   // Include local releases that aren't on GitHub yet
   const localOnly = localReleases
     .filter(lr => !mappedGitHub.some(gr => gr.version === lr.version))
-    .map(lr => ({
-      ...lr,
-      githubUrl: null
-    }));
+    .map(lr => {
+      const files = (lr.files || []).map(f => ({
+        ...f,
+        url: `/api/download/${lr.version}/${f.name}`,
+        sourceUrl: f.url // Preserve original local path
+      }));
+      return {
+        ...lr,
+        files,
+        githubUrl: null
+      };
+    });
 
   // Combine and sort by version (newest first)
   const combined = [...mappedGitHub, ...localOnly].sort((a, b) => compareVersions(b.version, a.version));
@@ -742,6 +739,29 @@ app.post('/api/publish', uploadLimiter, (req, res, next) => {
 });
 
 // --- Server stats (Unified for public and admin) ---
+app.get('/api/download/:version/:filename', async (req, res) => {
+  const { version, filename } = req.params;
+  
+  // 1. Track the download in our local DB
+  trackDownload(version, filename);
+  
+  // 2. Find the source URL
+  const releases = await fetchGitHubReleases();
+  const release = releases.find(r => r.version === version);
+  const file = release?.files?.find(f => f.name === filename);
+  
+  const sourceUrl = file?.sourceUrl || `/downloads/${filename}`;
+  
+  // 3. Redirect to the actual file
+  if (sourceUrl.startsWith('http')) {
+    res.redirect(sourceUrl);
+  } else {
+    // If it's a local path, ensure it starts with /downloads
+    const redirectUrl = sourceUrl.startsWith('/downloads') ? sourceUrl : `/downloads/${sourceUrl.replace(/^\.\//, '')}`;
+    res.redirect(redirectUrl);
+  }
+});
+
 app.get('/api/stats', async (req, res) => {
   try {
     const releases = await fetchGitHubReleases();
@@ -1357,11 +1377,11 @@ function startBuild() {
       if (!line.trim()) continue;
       
       // Strip ANSI codes before parsing stage to ensure regex matches correctly
-      const cleanLine = line.replace(/\u001b\[[0-9;]*[mGHKJKpf]/g, '').trim();
+      const cleanLine = line.replace(/\u001b\[[0-9;?]*[a-zA-Z]/g, '').trim();
       if (!cleanLine) continue;
 
-      // Ignore noise lines like MSBuild progress timer (1.4s)
-      if (/^\([0-9.]+s\)$/.test(cleanLine)) continue;
+      // Ignore noise lines like MSBuild progress timer (1.4s) or left-over ANSI fragments
+      if (/^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]*[a-zA-Z]/.test(cleanLine)) continue;
 
       buildState.log.push({ timestamp: Date.now(), message: line });
       const stage = parseBuildStage(cleanLine);

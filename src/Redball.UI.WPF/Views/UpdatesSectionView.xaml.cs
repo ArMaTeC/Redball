@@ -43,7 +43,7 @@ public partial class UpdatesSectionView : UserControl
             config.UpdateRepoName,
             config.UpdateChannel ?? "stable",
             config.VerifyUpdateSignature,
-            "https://redball.certrunnerx.com/");
+            config.UpdateServerUrl);
     }
 
     private void LoadSettings()

@@ -31,7 +31,7 @@ public partial class MainWindow
             config.UpdateRepoName,
             config.UpdateChannel ?? "stable",
             config.VerifyUpdateSignature,
-            "https://redball.certrunnerx.com/");
+            config.UpdateServerUrl);
     }
 
     /// <summary>
