@@ -605,11 +605,11 @@ step_build_nsis() {
     cp "$installer_dir/nsis-welcome.bmp" "$WPF_PUBLISH_DIR/" 2>/dev/null || true
 
     # Download .NET 10 runtime for bundling (avoids download failures during installation)
-    log_step "Downloading .NET 10 runtime for bundling..."
     local dotnet_installer="windowsdesktop-runtime-10.0.5-win-x64.exe"
     local dotnet_url="https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.5/windowsdesktop-runtime-10.0.5-win-x64.exe"
     
     if [[ ! -f "$installer_dir/$dotnet_installer" ]]; then
+        log_step "Downloading .NET 10 runtime for bundling..."
         if command -v curl &>/dev/null; then
             curl -L -o "$installer_dir/$dotnet_installer" "$dotnet_url" 2>/dev/null || {
                 log_warn "Failed to download .NET runtime - installer will attempt download during installation"
@@ -619,6 +619,8 @@ step_build_nsis() {
                 log_warn "Failed to download .NET runtime - installer will attempt download during installation"
             }
         fi
+    else
+        log_info ".NET 10 runtime already downloaded (cached)"
     fi
     
     # Copy .NET installer to publish directory if available
