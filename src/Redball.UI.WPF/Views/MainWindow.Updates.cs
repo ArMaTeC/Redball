@@ -16,6 +16,7 @@ public partial class MainWindow
     private DispatcherTimer? _startupUpdateCheckTimer;
     private string? _skippedVersion;
     private bool _isShowingUpdateDialog;
+    private bool _updateTimerStarted;
 
     private void EnsureUpdateService()
     {
@@ -39,7 +40,14 @@ public partial class MainWindow
     /// </summary>
     private void StartAutoUpdateCheck()
     {
+        if (_updateTimerStarted)
+        {
+            Logger.Debug("MainWindow", "Auto update check timer already started, skipping");
+            return;
+        }
+
         StopAutoUpdateCheck();
+        _updateTimerStarted = true;
 
         var config = ConfigService.Instance.Config;
 
@@ -207,6 +215,7 @@ public partial class MainWindow
         _updateCheckTimer = null;
         _startupUpdateCheckTimer?.Stop();
         _startupUpdateCheckTimer = null;
+        _updateTimerStarted = false;
     }
 
     private async void MainCheckUpdatesButton_Click(object sender, RoutedEventArgs e)
