@@ -908,6 +908,69 @@
             opacity: 0.4;
             cursor: not-allowed;
         }
+
+        /* Toast Notifications */
+        .toast {
+            min-width: 300px;
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: toast-in 0.3s ease-out forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: currentColor;
+            opacity: 0.3;
+            width: 100%;
+            animation: toast-progress var(--duration, 4s) linear forwards;
+        }
+
+        @keyframes toast-in {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes toast-progress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        .toast.success { border-color: var(--success); color: var(--success); }
+        .toast.error { border-color: var(--danger); color: var(--danger); }
+        .toast.warning { border-color: var(--warning); color: var(--warning); }
+        .toast.info { border-color: var(--info); color: var(--info); }
+
+        /* Metric bar */
+        .metric-container {
+            margin-top: 0.5rem;
+        }
+        .metric-bar {
+            height: 6px;
+            background: var(--bg-dark);
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .metric-fill {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.5s ease;
+        }
+        .metric-fill.warning { background: var(--warning); }
+        .metric-fill.danger { background: var(--danger); }
     </style>
 </head>
 
@@ -947,6 +1010,9 @@
             </div>
         </div>
     </header>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" style="position: fixed; top: 1.5rem; right: 1.5rem; z-index: 10001; display: flex; flex-direction: column; gap: 0.75rem;"></div>
 
     <main class="main">
         <!-- Dashboard -->
@@ -1133,6 +1199,12 @@
             <div class="panel">
                 <div class="panel-header">
                     <div class="panel-title">📦 Release History</div>
+                    <div style="position: relative;">
+                        <input type="text" id="release-search" placeholder="Search versions..." 
+                               style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.75rem; color: var(--text-primary); font-size: 0.85rem; width: 220px;"
+                               oninput="filterReleases()">
+                        <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
+                    </div>
                 </div>
                 <div class="panel-body">
                     <table class="releases-table">
@@ -1158,9 +1230,54 @@
 
         <!-- System Config -->
         <section id="system" class="section">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                 <!-- Metrics Card -->
+                 <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">📡 Real-time Performance</div>
+                    </div>
+                    <div class="panel-body" id="performance-metrics">
+                        <div style="display: grid; gap: 1.25rem;">
+                            <div class="metric-container">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    <span>CPU Load (Avg)</span>
+                                    <span id="metric-cpu">-</span>
+                                </div>
+                                <div class="metric-bar"><div id="fill-cpu" class="metric-fill" style="width: 0%"></div></div>
+                            </div>
+                            <div class="metric-container">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    <span>RAM Usage</span>
+                                    <span id="metric-ram">-</span>
+                                </div>
+                                <div class="metric-bar"><div id="fill-ram" class="metric-fill" style="width: 0%"></div></div>
+                            </div>
+                            <div class="metric-container">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    <span>Node.js Memory</span>
+                                    <span id="metric-node">-</span>
+                                </div>
+                                <div class="metric-bar"><div id="fill-node" class="metric-fill" style="width: 0%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">⚙️ System Information</div>
+                    </div>
+                    <div class="panel-body">
+                         <div id="server-info-content" style="font-size: 0.875rem; line-height: 1.8; color: var(--text-secondary);">
+                            Loading...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="panel">
                 <div class="panel-header">
-                    <div class="panel-title">⚙️ System Configuration</div>
+                    <div class="panel-title">🛠️ Environment & Administration</div>
                 </div>
                 <div class="panel-body">
                     <div id="system-info" style="display: grid; gap: 1.5rem;">
@@ -1630,8 +1747,64 @@
 
         const stages = ['setup', 'version', 'restore', 'wpf-build', 'service-build', 'manifest', 'zip-bundle', 'installer', 'update-server', 'publish', 'github', 'restart', 'health'];
         
+        // Toast Notifications
+        function showToast(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.style.setProperty('--duration', `${duration}ms`);
+            
+            const icon = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            }[type] || 'ℹ️';
+
+            toast.innerHTML = `<span>${icon}</span> <span style="font-size:0.875rem;font-weight:500;">${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease-in';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // System Metrics logic
+        function updateMetrics(data) {
+            if (!data.metrics) return;
+            const m = data.metrics;
+            const cpuLoad = (m.loadAvg[0] / m.cpuCount) * 100;
+            const ramUsed = m.totalMem - m.freeMem;
+            const ramPct = (ramUsed / m.totalMem) * 100;
+            const nodeMem = m.processMemory.rss;
+            const nodePct = (nodeMem / (512 * 1024 * 1024)) * 100;
+
+            document.getElementById('metric-cpu').textContent = cpuLoad.toFixed(1) + '%';
+            document.getElementById('fill-cpu').style.width = Math.min(cpuLoad, 100) + '%';
+            updateMetricColor('fill-cpu', cpuLoad);
+
+            document.getElementById('metric-ram').textContent = formatBytes(ramUsed) + ' / ' + formatBytes(m.totalMem);
+            document.getElementById('fill-ram').style.width = ramPct + '%';
+            updateMetricColor('fill-ram', ramPct);
+
+            document.getElementById('metric-node').textContent = formatBytes(nodeMem);
+            document.getElementById('fill-node').style.width = Math.min(nodePct, 100) + '%';
+            updateMetricColor('fill-node', nodePct);
+        }
+
+        function updateMetricColor(id, pct) {
+            const el = document.getElementById(id);
+            el.classList.remove('warning', 'danger');
+            if (pct > 85) el.classList.add('danger');
+            else if (pct > 65) el.classList.add('warning');
+        }
+
         // Pagination State
         const PAGE_SIZE = 6;
+        let originalReleasesData = [];
         let releasesData = [];
         let downloadsData = [];
         let currentReleasesPage = 1;
@@ -1671,6 +1844,21 @@
         function changeDownloadsPage(page) {
             currentDownloadsPage = page;
             renderDownloads();
+        }
+
+        function filterReleases() {
+            const query = document.getElementById('release-search').value.toLowerCase();
+            if (!query) {
+                releasesData = [...originalReleasesData];
+            } else {
+                releasesData = originalReleasesData.filter(r => 
+                    r.version.toLowerCase().includes(query) || 
+                    r.channel.toLowerCase().includes(query) ||
+                    (r.notes && r.notes.toLowerCase().includes(query))
+                );
+            }
+            currentReleasesPage = 1;
+            renderReleases();
         }
 
 
@@ -2090,6 +2278,7 @@
 
             if (ws?.readyState === 1) {
                 ws.send(JSON.stringify({ action: 'start-build' }));
+                showToast('Build request sent', 'info');
             } else {
                 try {
                     const res = await authFetch('/api/build/start', {
@@ -2097,13 +2286,15 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ type: 'windows' })
                     });
-                    if (!res.ok) {
+                    if (res.ok) {
+                        showToast('Build pipeline started', 'success');
+                    } else {
                         const err = await res.json();
-                        alert('Failed to start build: ' + (err.error || 'Unknown error'));
+                        showToast('Start failed: ' + (err.error || 'Unknown error'), 'error');
                     }
                 } catch (e) {
                     console.error('Start build failed:', e);
-                    alert('Failed to start build');
+                    showToast('Failed to connect to build system', 'error');
                 }
             }
         }
@@ -2162,9 +2353,9 @@
         async function loadReleases() {
             try {
                 const res = await fetch('/api/releases');
-                releasesData = await res.json();
-                releasesData.sort((a, b) => new Date(b.date) - new Date(a.date));
-                renderReleases();
+                originalReleasesData = await res.json();
+                originalReleasesData.sort((a, b) => new Date(b.date) - new Date(a.date));
+                filterReleases(); // This will populate releasesData and render
             } catch (err) {
                 console.error('Failed to load releases:', err);
             }
@@ -2200,6 +2391,9 @@
                 const res = await authFetch('/api/system/config');
                 if (!res.ok) throw new Error('Failed to load config');
                 const data = await res.json();
+                
+                // Live Metrics
+                updateMetrics(data);
 
                 // Server Info
                 document.getElementById('server-info-content').innerHTML = `
@@ -2257,13 +2451,13 @@
             try {
                 const res = await authFetch('/api/system/clear-logs', { method: 'POST' });
                 if (res.ok) {
-                    alert('Logs cleared successfully');
+                    showToast('Build logs cleared', 'success');
                     loadSystemConfig();
                 } else {
-                    alert('Failed to clear logs');
+                    showToast('Failed to clear logs', 'error');
                 }
             } catch (e) {
-                alert('Error: ' + e.message);
+                showToast('Error: ' + e.message, 'error');
             }
         }
 
@@ -2271,10 +2465,10 @@
             if (!confirm('Restart the web admin server?')) return;
             try {
                 await authFetch('/api/system/restart', { method: 'POST' });
-                alert('Server restarting...');
+                showToast('Server restart initiated...', 'warning');
                 setTimeout(() => location.reload(), 3000);
             } catch (e) {
-                alert('Error: ' + e.message);
+                showToast('Error: ' + e.message, 'error');
             }
         }
 
@@ -2283,7 +2477,7 @@
             if (!current) return;
             const newPass = prompt('Enter new password (min 8 chars):');
             if (!newPass || newPass.length < 8) {
-                alert('Password must be at least 8 characters');
+                showToast('Password too short', 'warning');
                 return;
             }
             try {
@@ -2293,14 +2487,14 @@
                     body: JSON.stringify({ currentPassword: current, newPassword: newPass })
                 });
                 if (res.ok) {
-                    alert('Password changed successfully. Please login again.');
-                    doLogout();
+                    showToast('Password changed successfully', 'success');
+                    setTimeout(() => doLogout(), 1500);
                 } else {
                     const data = await res.json();
-                    alert(data.error || 'Failed to change password');
+                    showToast(data.error || 'Update failed', 'error');
                 }
             } catch (e) {
-                alert('Error: ' + e.message);
+                showToast('Error: ' + e.message, 'error');
             }
         }
 
@@ -2409,11 +2603,11 @@
                 });
 
                 if (res.ok) {
-                    alert('Configuration saved successfully!');
+                    showToast('Configuration saved!', 'success');
                     appConfigData = config;
                 } else {
                     const err = await res.json();
-                    alert('Failed to save configuration: ' + (err.error || 'Unknown error'));
+                    showToast('Save failed: ' + (err.error || 'error'), 'error');
                 }
             } catch (e) {
                 alert('Error saving configuration: ' + e.message);
