@@ -1,6 +1,11 @@
 const express = require('express');
+const { WebSocketServer } = require('ws');
+const pty = require('node-pty');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const multer = require('multer');
 const morgan = require('morgan');
@@ -9,10 +14,26 @@ const rateLimit = require('express-rate-limit');
 const { generatePatches, formatBytes } = require('./lib/delta-patches');
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+
 const PORT = process.env.PORT || 3500;
+const PROJECT_ROOT = path.join(__dirname, '..');
 const RELEASES_DIR = path.join(__dirname, 'releases');
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'releases.json');
+const LOGS_DIR = path.join(__dirname, 'logs');
+
+// Build State & Auth Files (migrated from web-admin)
+const BUILD_STATE_FILE = path.join(LOGS_DIR, 'build-state.json');
+const AUTH_FILE = path.join(LOGS_DIR, 'auth.json');
+const DOWNLOADS_DB = path.join(LOGS_DIR, 'downloads.json');
+
+// Ensure logs dir exists
+if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
+
+
+
 
 // GitHub cache configuration
 const GITHUB_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -190,6 +211,112 @@ function sha256File(filePath) {
     stream.on('error', reject);
   });
 }
+
+// === Unified Auth & State Management (Migrated from web-admin) ===
+
+const JWT_SECRET = loadOrCreateJwtSecret();
+
+function loadOrCreateJwtSecret() {
+  const secretFile = path.join(LOGS_DIR, '.jwt-secret');
+  try {
+    if (fs.existsSync(secretFile)) {
+      return fs.readFileSync(secretFile, 'utf8').trim();
+    }
+  } catch (e) { }
+
+  const secret = crypto.randomBytes(64).toString('hex');
+  try {
+    fs.writeFileSync(secretFile, secret, { mode: 0o600 });
+  } catch (e) {
+    console.error('[AUTH] Warning: Could not save JWT secret to file');
+  }
+  return secret;
+}
+
+function getAdminUser() {
+  const defaultUser = {
+    username: 'admin',
+    passwordHash: '$2b$10$NH.q4MEoGZUuC4kHmv8B2uLh4OXdPVwa2Q/CKp/ORwSMG2XvhGQ8e'
+  };
+  try {
+    if (fs.existsSync(AUTH_FILE)) {
+      const auth = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf8'));
+      return auth.admin || defaultUser;
+    }
+  } catch (e) {
+    console.error('[AUTH] Error loading auth file:', e.message);
+  }
+  saveAdminUser(defaultUser);
+  return defaultUser;
+}
+
+function saveAdminUser(user) {
+  try {
+    fs.writeFileSync(AUTH_FILE, JSON.stringify({ admin: user }, null, 2), { mode: 0o600 });
+  } catch (e) {
+    console.error('[AUTH] Error saving auth file:', e.message);
+  }
+}
+
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Access denied. No token provided.' });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Invalid or expired token' });
+    req.user = user;
+    next();
+  });
+}
+
+let buildState = loadBuildState();
+function loadBuildState() {
+  const defaultState = { status: 'idle', stage: null, progress: 0, log: [], pid: null, startTime: null, endTime: null };
+  try {
+    if (fs.existsSync(BUILD_STATE_FILE)) {
+      const saved = JSON.parse(fs.readFileSync(BUILD_STATE_FILE, 'utf8'));
+      if (saved.status === 'running') {
+        saved.status = 'failed';
+        saved.log.push({ time: new Date().toISOString(), type: 'error', line: '--- Server was restarted during build ---' });
+      }
+      return saved;
+    }
+  } catch (e) { }
+  return defaultState;
+}
+
+function saveBuildState() {
+  try {
+    fs.writeFileSync(BUILD_STATE_FILE, JSON.stringify(buildState, null, 2));
+  } catch (e) { }
+}
+
+let downloadCounts = loadDownloadCounts();
+function loadDownloadCounts() {
+  try {
+    if (fs.existsSync(DOWNLOADS_DB)) return JSON.parse(fs.readFileSync(DOWNLOADS_DB, 'utf8'));
+  } catch (e) { }
+  return { files: {}, total: 0, byVersion: {} };
+}
+
+function saveDownloadCounts() {
+  try {
+    fs.writeFileSync(DOWNLOADS_DB, JSON.stringify(downloadCounts, null, 2));
+  } catch (e) { }
+}
+
+function trackDownload(version, filename) {
+  const key = `${version}/${filename}`;
+  if (!downloadCounts.files[key]) downloadCounts.files[key] = 0;
+  downloadCounts.files[key]++;
+  downloadCounts.total++;
+  if (!downloadCounts.byVersion[version]) downloadCounts.byVersion[version] = 0;
+  downloadCounts.byVersion[version]++;
+  saveDownloadCounts();
+  return downloadCounts.files[key];
+}
+
 
 // === Security Middleware ===
 // Rate limiting for API endpoints
@@ -1050,63 +1177,188 @@ app.get('/api/check-update', async (req, res) => {
   }
 });
 
-// --- Trigger Build Engine ---
-app.post('/api/admin/build', (req, res) => {
-  // Simulates an async build trigger. 
-  // In a true environment, this spawns `pwsh ./scripts/build.ps1`
-  // and pipes output to a WebSocket.
-  console.log('[BUILD] Simulated build trigger initiated.');
-  setTimeout(() => {
-    console.log('[BUILD] Simulated build trigger finished.');
-  }, 3000);
-  res.status(202).json({ message: 'Build started', status: 'processing' });
-});
+// === Unified Build & Admin Logic (Migrated from web-admin) ===
 
-// === SPA fallback (catch-all for non-API routes) ===
-app.use((req, res, next) => {
-  if (req.path.startsWith('/api/') || req.path.startsWith('/downloads/')) {
-    return next();
-  }
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// === Scheduled Cleanup Job ===
-const { cleanupReleases } = require('./scripts/cleanup-releases');
-
-// Run cleanup every 24 hours
-const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
-
-function scheduleCleanup() {
-  console.log('[SCHEDULER] Release cleanup scheduled (runs every 24 hours, keeps last 6 versions)');
-
-  // Run immediately on startup
-  setTimeout(() => {
-    try {
-      cleanupReleases();
-    } catch (err) {
-      console.error('[SCHEDULER] Cleanup failed:', err);
+function broadcast(msg) {
+  wss.clients.forEach(client => {
+    if (client.readyState === 1) { // OPEN
+      client.send(JSON.stringify(msg));
     }
-  }, 5000); // 5 seconds after startup
-
-  // Schedule recurring cleanup
-  setInterval(() => {
-    try {
-      cleanupReleases();
-    } catch (err) {
-      console.error('[SCHEDULER] Scheduled cleanup failed:', err);
-    }
-  }, CLEANUP_INTERVAL);
+  });
 }
 
+wss.on('connection', (ws) => {
+  console.log('[WS] New client connected');
+  ws.send(JSON.stringify({ type: 'init', data: buildState }));
+
+  ws.on('close', () => console.log('[WS] Client disconnected'));
+});
+
+// Admin Auth Routes
+app.post('/api/auth/login', async (req, res) => {
+  const { username, password } = req.body;
+  const admin = getAdminUser();
+
+  if (username === admin.username && await bcrypt.compare(password, admin.passwordHash)) {
+    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ token, user: { username } });
+  } else {
+    res.status(401).json({ error: 'Invalid credentials' });
+  }
+});
+
+// Build Trigger
+app.post('/api/admin/build', authenticateToken, (req, res) => {
+  if (buildState.status === 'running') {
+    return res.status(409).json({ error: 'Build already in progress' });
+  }
+  
+  startBuild();
+  res.json({ message: 'Build started', status: 'running' });
+});
+
+app.get('/api/admin/status', authenticateToken, (req, res) => {
+  res.json(buildState);
+});
+
+async function getSystemStats() {
+  const releases = await fetchGitHubReleases();
+  return {
+    totalDownloads: downloadCounts.total || 0,
+    latestVersion: releases[0]?.version || '0.0.0',
+    totalReleases: releases.length,
+    activeBuilds: buildState.status === 'running' ? 1 : 0
+  };
+}
+
+app.get('/api/stats', authenticateToken, async (req, res) => {
+  const stats = await getSystemStats();
+  res.json(stats);
+});
+
+// --- Build Orchestration Logic ---
+function parseBuildStage(line) {
+  const stages = [
+    { name: 'setup', pattern: /Phase 1|Checking build dependencies/i, progress: 5 },
+    { name: 'version', pattern: /Phase 0|Bumping version/i, progress: 10 },
+    { name: 'windows-build', pattern: /Phase 1.*Building|Building Windows/i, progress: 30 },
+    { name: 'update-server', pattern: /Phase 4|Update Server/i, progress: 50 },
+    { name: 'publish', pattern: /Phase 5|Publish to Update Server/i, progress: 70 },
+    { name: 'github', pattern: /Phase 6|Publish to GitHub/i, progress: 85 },
+    { name: 'restart', pattern: /Phase 7|Restarting update server/i, progress: 92 },
+    { name: 'health', pattern: /Phase 9|Final health status check/i, progress: 98 },
+    { name: 'complete', pattern: /AUTO-RELEASE COMPLETED/i, progress: 100 }
+  ];
+
+  for (const s of stages) {
+    if (s.pattern.test(line)) return s;
+  }
+  if (/error|failed|abort/i.test(line)) return { name: 'error', progress: buildState.progress };
+  return null;
+}
+
+function startBuild() {
+  buildState = {
+    status: 'running',
+    stage: 'setup',
+    progress: 0,
+    log: [],
+    pid: null,
+    startTime: Date.now(),
+    endTime: null
+  };
+  saveBuildState();
+  broadcast({ type: 'build-started', data: buildState });
+
+  const scriptPath = path.join(PROJECT_ROOT, 'scripts', 'build.sh');
+  const ptyProcess = pty.spawn('bash', [scriptPath, 'auto-release'], {
+    name: 'xterm-color',
+    cols: 120,
+    rows: 30,
+    cwd: PROJECT_ROOT,
+    env: { ...process.env, FORCE_COLOR: '1' }
+  });
+
+  buildState.pid = ptyProcess.pid;
+
+  ptyProcess.onData((data) => {
+    const line = data.toString();
+    if (line.trim()) {
+      buildState.log.push({ timestamp: Date.now(), message: line });
+      const stage = parseBuildStage(line);
+      if (stage) {
+        buildState.stage = stage.name;
+        buildState.progress = stage.progress;
+      }
+      if (buildState.log.length > 5000) buildState.log = buildState.log.slice(-2500);
+      if (buildState.log.length % 50 === 0 || stage) saveBuildState();
+      
+      broadcast({
+        type: 'build-output',
+        data: { line, stage: buildState.stage, progress: buildState.progress }
+      });
+    }
+  });
+
+  ptyProcess.onExit(({ exitCode }) => {
+    buildState.status = exitCode === 0 ? 'success' : 'failed';
+    buildState.endTime = Date.now();
+    buildState.progress = exitCode === 0 ? 100 : buildState.progress;
+    buildState.pid = null;
+    saveBuildState();
+
+    broadcast({
+      type: 'build-complete',
+      data: { status: buildState.status, exitCode, duration: buildState.endTime - buildState.startTime }
+    });
+  });
+}
+
+// --- Health Check ---
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    server: 'unified-redball-server',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: process.env.npm_package_version || '1.0.0'
+  });
+});
+
+// === Unified Static Serving ===
+const ADMIN_PUBLIC = path.join(PROJECT_ROOT, 'web-admin', 'public');
+const SITE_PUBLIC = path.join(PROJECT_ROOT, 'site', 'dist');
+
+app.use('/admin', express.static(ADMIN_PUBLIC, { index: 'admin.html' }));
+app.use('/downloads', express.static(RELEASES_DIR));
+app.use(express.static(SITE_PUBLIC, { index: 'index.html' }));
+
+// SPA Fallbacks
+app.get('/admin/*', (req, res) => res.sendFile(path.join(ADMIN_PUBLIC, 'admin.html')));
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/') || req.path.startsWith('/downloads/')) return next();
+  res.sendFile(path.join(SITE_PUBLIC, 'index.html'));
+});
+
+// --- Scheduled Cleanup Job ---
+const { cleanupReleases } = require('./scripts/cleanup-releases');
+const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000;
+
+function scheduleCleanup() {
+  console.log('[SCHEDULER] Release cleanup scheduled');
+  setTimeout(() => { try { cleanupReleases(); } catch (e) { } }, 5000);
+  setInterval(() => { try { cleanupReleases(); } catch (e) { } }, CLEANUP_INTERVAL);
+}
+
+
 // === Start ===
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n  ╔══════════════════════════════════════════════════╗`);
-  console.log(`  ║  Redball Update Server                            ║`);
+  console.log(`  ║  Redball Unified Server (Admin + Update)          ║`);
   console.log(`  ╠══════════════════════════════════════════════════╣`);
   console.log(`  ║  http://0.0.0.0:${PORT}                            ║`);
-  console.log(`  ║  Releases: ${RELEASES_DIR}`);
+  console.log(`  ║  Dashboard: http://localhost:${PORT}/admin       ║`);
   console.log(`  ╚══════════════════════════════════════════════════╝\n`);
 
-  // Start scheduled cleanup
   scheduleCleanup();
 });

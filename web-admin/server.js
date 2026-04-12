@@ -11,7 +11,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-const PORT = process.env.PORT || 3500;
+const PORT = process.env.PORT || 3000;
 const PROJECT_ROOT = path.join(__dirname, '..');
 const RELEASES_JSON = path.join(PROJECT_ROOT, 'update-server', 'data', 'releases.json');
 const RELEASES_DIR = path.join(PROJECT_ROOT, 'update-server', 'releases');

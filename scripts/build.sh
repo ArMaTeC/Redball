@@ -507,48 +507,6 @@ auto_release() {
         fi
     fi
 
-    # 8. Restart Web Admin
-    log_step "Phase 8: Restarting web admin..."
-    if [[ $DRY_RUN == true ]]; then
-        log_info "[DRY RUN] Would restart web admin"
-    else
-        local admin_dir="$PROJECT_ROOT/web-admin"
-        if command -v pm2 &>/dev/null; then
-            if pm2 list | grep -q "redball-web-admin"; then
-                log_info "Restarting web admin via PM2..."
-                pm2 restart redball-web-admin 2>&1 | while IFS= read -r line; do log_detail "$line"; done
-            else
-                log_info "Starting web admin via PM2..."
-                cd "$admin_dir" && pm2 start server.js --name "redball-web-admin" 2>&1 | while IFS= read -r line; do log_detail "$line"; done
-            fi
-        elif [[ -f "$admin_dir/server.js" ]]; then
-            log_info "Restarting web admin via node..."
-            # Kill existing web-admin process (identified by path)
-            pkill -f "node.*web-admin/server.js" 2>/dev/null || true
-            sleep 2
-            
-            local log_file="$admin_dir/server.log"
-            # Try port 3501 if 3500 is taken by update-server
-            (cd "$admin_dir" && PORT=3501 nohup node server.js > "$log_file" 2>&1 &)
-            
-            local max_wait=10
-            local waited=0
-            while [[ $waited -lt $max_wait ]]; do
-                sleep 1
-                ((waited++))
-                if curl -s http://localhost:3501/api/health > /dev/null 2>&1; then
-                    log_success "Web admin restarted and responding on port 3501"
-                    break
-                fi
-                if [[ $waited -eq $max_wait ]]; then
-                    log_warn "Web admin may not have started properly (timeout)"
-                fi
-            done
-        else
-            log_warn "Web admin not found at $admin_dir"
-        fi
-    fi
-
     # 9. Final Health Summary
     log_step "Phase 9: Final health status check..."
     local health_fail=0
@@ -556,21 +514,11 @@ auto_release() {
     echo ""
     echo "  System Health Check:"
     
-    # Check Update Server
-    if curl -s http://localhost:3500/api/health | grep -q '"status":"healthy"'; then
-        echo -e "    ${GREEN}✓${NC} Update Server: ONLINE (Port 3500)"
+    # Check Unified Server
+    if curl -s http://localhost:3500/api/health | grep -q '"server":"unified-redball-server"'; then
+        echo -e "    ${GREEN}✓${NC} Unified Server: ONLINE (Port 3500)"
     else
-        echo -e "    ${RED}✗${NC} Update Server: OFFLINE or ERROR"
-        health_fail=1
-    fi
-    
-    # Check Web Admin
-    if curl -s http://localhost:3501/api/health | grep -q '"status":"healthy"'; then
-        echo -e "    ${GREEN}✓${NC} Web Admin:    ONLINE (Port 3501)"
-    elif curl -s http://localhost:3500/api/health | grep -q '"server":"web-admin"'; then
-        echo -e "    ${GREEN}✓${NC} Web Admin:    ONLINE (Port 3500)"
-    else
-        echo -e "    ${RED}✗${NC} Web Admin:    OFFLINE or ERROR"
+        echo -e "    ${RED}✗${NC} Unified Server: OFFLINE or ERROR"
         health_fail=1
     fi
     
@@ -595,8 +543,8 @@ auto_release() {
     echo "  Version: $(get_version)"
     echo ""
     echo "  Published to:"
-    echo "    ✓ Update-server: http://localhost:3500"
-    echo "    ✓ Web-admin:     http://localhost:3501"
+    echo "    ✓ Unified Server: http://localhost:3500"
+    echo "    ✓ Dashboard:      http://localhost:3500/admin"
     echo "    ✓ GitHub Releases"
     echo ""
 }
