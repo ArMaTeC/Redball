@@ -108,6 +108,7 @@ VERSION=""
 SKIP_WINDOWS=false
 DRY_RUN=false
 VERBOSE=true  # always verbose now
+BUILD_BY_SERVICE="${BUILD_BY_SERVICE:-}"
 
 # === Parse Arguments ===
 while [[ $# -gt 0 ]]; do
