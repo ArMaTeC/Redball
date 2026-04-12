@@ -179,7 +179,7 @@ public partial class UpdatesSectionView : UserControl
 
         try
         {
-            var updateInfo = await _updateService.CheckForUpdateAsync(progress, _cancellationTokenSource.Token);
+            var updateInfo = await _updateService.CheckForUpdateAsync(true, progress, _cancellationTokenSource.Token);
 
             if (_cancellationTokenSource.IsCancellationRequested)
             {

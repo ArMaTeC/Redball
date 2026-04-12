@@ -106,7 +106,7 @@ public partial class MainWindow
             Logger.Debug("MainWindow", "Running auto update check...");
             _analytics.TrackFeature("update.auto_check");
 
-            var updateInfo = await _updateService.CheckForUpdateAsync();
+            var updateInfo = await _updateService.CheckForUpdateAsync(false);
 
             if (updateInfo == null)
             {
@@ -238,7 +238,7 @@ public partial class MainWindow
                 }
 
                 _analytics.TrackFeature("update.manual_check");
-                var updateInfo = await _updateService.CheckForUpdateAsync();
+                var updateInfo = await _updateService.CheckForUpdateAsync(true);
                 if (updateInfo == null)
                 {
                     NotificationService.Instance.ShowInfo("Updates", "You are already on the latest version.");

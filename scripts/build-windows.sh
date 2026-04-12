@@ -645,7 +645,7 @@ step_build_nsis() {
     sed -i "s/!define PRODUCT_VERSION \"[^\"]*\"/!define PRODUCT_VERSION \"${version}.0\"/" "$build_nsi"
     sed -i "s/!define PRODUCT_VERSION_SHORT \"[^\"]*\"/!define PRODUCT_VERSION_SHORT \"${version}\"/" "$build_nsi"
     # Fix license path for local build
-    sed -i 's|/root/Redball/LICENSE|LICENSE.txt|g' "$build_nsi"
+    sed -i "s|$PROJECT_ROOT/LICENSE|LICENSE.txt|g" "$build_nsi"
 
     # Build NSIS installer from publish directory
     log_info "→ Compiling NSIS installer script..."

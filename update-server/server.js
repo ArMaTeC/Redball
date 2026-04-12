@@ -594,6 +594,11 @@ app.post('/api/releases', (req, res) => {
 
   db.releases.push(release);
   saveDB(db);
+
+  // Invalidate cache
+  githubCache.releases = null;
+  githubCache.lastFetch = 0;
+
   res.status(201).json(release);
 });
 
@@ -638,6 +643,11 @@ app.post('/api/releases/:version/upload', uploadLimiter, upload.array('files', 5
   }
 
   saveDB(db);
+  
+  // Invalidate cache
+  githubCache.releases = null;
+  githubCache.lastFetch = 0;
+
   res.json({ uploaded: req.files.length, release });
 });
 
@@ -738,6 +748,10 @@ app.post('/api/publish', uploadLimiter, (req, res, next) => {
 
   // Auto-generate delta patches from previous version
   generatePatchesForRelease(version);
+
+  // Invalidate cache
+  githubCache.releases = null;
+  githubCache.lastFetch = 0;
 
   res.status(201).json({ published: version, files: release.files.length });
 });

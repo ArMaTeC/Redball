@@ -21,7 +21,7 @@ public partial class AboutWindow : Window
             cfg.UpdateRepoName,
             cfg.UpdateChannel,
             cfg.VerifyUpdateSignature,
-            "https://redball.certrunnerx.com/");
+            cfg.UpdateServerUrl);
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -65,7 +65,7 @@ public partial class AboutWindow : Window
         }
 
         // Check for updates
-        var updateInfo = await _updateService.CheckForUpdateAsync();
+        var updateInfo = await _updateService.CheckForUpdateAsync(true);
         
         if (updateInfo == null)
         {

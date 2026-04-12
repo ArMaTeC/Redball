@@ -111,7 +111,7 @@ public partial class MainWindow
         progressWindow.Show();
 
         var progress = new Progress<UpdateCheckProgress>(p => progressWindow.UpdateProgress(p));
-        var updateInfo = await _updateService.CheckForUpdateAsync(progress);
+        var updateInfo = await _updateService.CheckForUpdateAsync(true, progress);
 
         progressWindow.Close();
 

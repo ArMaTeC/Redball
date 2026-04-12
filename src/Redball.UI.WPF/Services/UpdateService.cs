@@ -301,7 +301,7 @@ public class UpdateService : IUpdateService
     /// Includes automatic retry logic for transient failures.
     /// </summary>
     /// <returns>Update info if an update is available, null if up to date or error.</returns>
-    public async Task<UpdateInfo?> CheckForUpdateAsync(IProgress<UpdateCheckProgress>? progress = null, CancellationToken cancellationToken = default)
+    public async Task<UpdateInfo?> CheckForUpdateAsync(bool bypassCache = false, IProgress<UpdateCheckProgress>? progress = null, CancellationToken cancellationToken = default)
     {
         // Circuit breaker: skip if too many recent failures
         if (_consecutiveFailures >= CircuitBreakerThreshold && DateTime.UtcNow < _circuitOpenUntil)
@@ -318,7 +318,7 @@ public class UpdateService : IUpdateService
         {
             try
             {
-                var result = await CheckForUpdateInternalAsync(progress, cancellationToken);
+                var result = await CheckForUpdateInternalAsync(bypassCache, progress, cancellationToken);
                 
                 if (result != null)
                 {
@@ -380,7 +380,7 @@ public class UpdateService : IUpdateService
     /// <summary>
     /// Internal implementation of update check (extracted for retry logic).
     /// </summary>
-    private async Task<UpdateInfo?> CheckForUpdateInternalAsync(IProgress<UpdateCheckProgress>? progress, CancellationToken cancellationToken = default)
+    private async Task<UpdateInfo?> CheckForUpdateInternalAsync(bool bypassCache, IProgress<UpdateCheckProgress>? progress, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -403,7 +403,7 @@ public class UpdateService : IUpdateService
             
             // Get all releases and find the highest version
             ReportCheckProgress(progress, UpdateCheckStage.FetchingReleases, 20, "Connecting to GitHub API...");
-            var allReleases = await GetAllReleasesAsync(cancellationToken);
+            var allReleases = await GetAllReleasesAsync(bypassCache, cancellationToken);
             
             ReportCheckProgress(progress, UpdateCheckStage.FetchingReleases, 35, $"Found {allReleases.Count} releases");
             var latestRelease = FindHighestVersionRelease(allReleases);
@@ -1340,10 +1340,10 @@ public class UpdateService : IUpdateService
 
 
 
-    private async Task<List<GitHubRelease>> GetAllReleasesAsync(CancellationToken cancellationToken = default)
+    private async Task<List<GitHubRelease>> GetAllReleasesAsync(bool bypassCache = false, CancellationToken cancellationToken = default)
     {
         // Check cache first
-        if (_cachedReleases != null && DateTime.UtcNow < _cacheExpiry)
+        if (!bypassCache && _cachedReleases != null && DateTime.UtcNow < _cacheExpiry)
         {
             Logger.Debug("UpdateService", "Using cached releases (valid for another " + 
                 (_cacheExpiry - DateTime.UtcNow).TotalMinutes.ToString("F1") + " min)");
@@ -1455,7 +1455,7 @@ public class UpdateService : IUpdateService
     {
         try
         {
-            var allReleases = await GetAllReleasesAsync(cancellationToken);
+            var allReleases = await GetAllReleasesAsync(false, cancellationToken);
             var currentNormalized = new Version(currentVersion.Major, currentVersion.Minor, currentVersion.Build);
             var latestNormalized = new Version(latestVersion.Major, latestVersion.Minor, latestVersion.Build);
 

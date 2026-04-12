@@ -84,26 +84,30 @@ PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
 echo "Current version: $CURRENT_VERSION"
 
 # Calculate new version
-case "$COMPONENT" in
-    major)
-        MAJOR=$((MAJOR + 1))
-        MINOR=0
-        PATCH=0
-        ;;
-    minor)
-        MINOR=$((MINOR + 1))
-        PATCH=0
-        ;;
-    patch)
-        PATCH=$((PATCH + 1))
-        ;;
-    *)
-        echo "Error: Invalid component '$COMPONENT'. Use major, minor, or patch."
-        exit 1
-        ;;
-esac
-
-NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+if [[ "$COMPONENT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    NEW_VERSION="$COMPONENT"
+    echo "Using explicitly provided version: $NEW_VERSION"
+else
+    case "$COMPONENT" in
+        major)
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+            ;;
+        minor)
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            ;;
+        patch)
+            PATCH=$((PATCH + 1))
+            ;;
+        *)
+            echo "Error: Invalid component '$COMPONENT'. Use major, minor, patch, or a specific version (X.Y.Z)."
+            exit 1
+            ;;
+    esac
+    NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+fi
 echo "New version: $NEW_VERSION"
 
 # Update Directory.Build.props

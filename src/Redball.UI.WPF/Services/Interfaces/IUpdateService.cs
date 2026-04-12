@@ -52,7 +52,7 @@ public class UpdateCheckProgress
 /// </summary>
     public interface IUpdateService
     {
-        Task<UpdateInfo?> CheckForUpdateAsync(IProgress<UpdateCheckProgress>? progress = null, CancellationToken cancellationToken = default);
+        Task<UpdateInfo?> CheckForUpdateAsync(bool bypassCache = false, IProgress<UpdateCheckProgress>? progress = null, CancellationToken cancellationToken = default);
         Task<bool> DownloadAndInstallAsync(UpdateInfo updateInfo, IProgress<UpdateDownloadProgress>? progress = null, CancellationToken cancellationToken = default);
     }
 

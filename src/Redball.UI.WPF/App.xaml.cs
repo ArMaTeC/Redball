@@ -646,7 +646,7 @@ public partial class App : Application
                 cfg.VerifyUpdateSignature,
                 cfg.UpdateServerUrl);
 
-            var updateInfo = await updateService.CheckForUpdateAsync();
+            var updateInfo = await updateService.CheckForUpdateAsync(false);
 
             if (updateInfo == null)
             {

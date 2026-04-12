@@ -38,7 +38,7 @@ public partial class SettingsWindow : Window
             cfg.UpdateRepoName,
             cfg.UpdateChannel,
             cfg.VerifyUpdateSignature,
-            "https://redball.certrunnerx.com/");
+            cfg.UpdateServerUrl);
     }
 
     private void SetVersionText()
@@ -60,7 +60,7 @@ public partial class SettingsWindow : Window
         progressWindow.Show();
 
         var progress = new Progress<UpdateCheckProgress>(p => progressWindow.UpdateProgress(p));
-        var updateInfo = await _updateService.CheckForUpdateAsync(progress);
+        var updateInfo = await _updateService.CheckForUpdateAsync(true, progress);
         
         progressWindow.Close();
         

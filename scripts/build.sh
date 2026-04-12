@@ -252,8 +252,10 @@ auto_release() {
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would bump version number"
     else
-        if bash "$SCRIPT_DIR/bump-version.sh" patch; then
-            log_info "Version bumped to $(get_version)"
+        local bump_arg="patch"
+        if [[ -n "$VERSION" ]]; then bump_arg="$VERSION"; fi
+        if bash "$SCRIPT_DIR/bump-version.sh" "$bump_arg"; then
+            log_info "Version set/bumped to $(get_version)"
         else
             log_warning "Version bump failed, continuing with current version"
         fi
