@@ -1336,13 +1336,21 @@ function startBuild() {
     if (!rawContent.trim()) return;
 
     // Split into individual lines to ensure we don't skip stages if they arrive in a single burst
-    const lines = rawContent.split(/\r?\n/);
+    // Also handle \r (carriage return) which is often used for in-place progress updates
+    const lines = rawContent.split(/\r?\n|\r/);
     
     for (let line of lines) {
       if (!line.trim()) continue;
       
+      // Strip ANSI codes before parsing stage to ensure regex matches correctly
+      const cleanLine = line.replace(/\u001b\[[0-9;]*[mGHKJKpf]/g, '').trim();
+      if (!cleanLine) continue;
+
+      // Ignore noise lines like MSBuild progress timer (1.4s)
+      if (/^\([0-9.]+s\)$/.test(cleanLine)) continue;
+
       buildState.log.push({ timestamp: Date.now(), message: line });
-      const stage = parseBuildStage(line);
+      const stage = parseBuildStage(cleanLine);
       if (stage) {
         buildState.stage = stage.name;
         buildState.progress = stage.progress;
@@ -1353,7 +1361,11 @@ function startBuild() {
       
       broadcast({
         type: 'build-output',
-        data: { line, stage: buildState.stage, progress: buildState.progress }
+        data: { 
+          line, 
+          stage: buildState.stage, 
+          progress: buildState.progress 
+        }
       });
     }
   });

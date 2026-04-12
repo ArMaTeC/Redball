@@ -1897,12 +1897,14 @@
                     // Clean the line if it comes as an object (spam protection)
                     const rawLine = (typeof msg.data.line === 'object') ? JSON.stringify(msg.data.line) : msg.data.line;
                     
+                    const cleanLine = stripAnsi(rawLine).trim();
+
                     // Show current operation
-                    if (rawLine.includes('[STEP]') || rawLine.includes('→')) {
-                        document.getElementById('current-op').textContent = rawLine.replace(/\[STEP .*?\]/g, '').replace(/→/g, '').trim();
+                    if (cleanLine.includes('[STEP]') || cleanLine.includes('→')) {
+                        document.getElementById('current-op').textContent = cleanLine.replace(/\[STEP .*?\]/g, '').replace(/→/g, '').trim();
                         document.getElementById('current-op').style.color = 'var(--accent)';
-                    } else if (rawLine.trim().length > 5 && !rawLine.includes('│')) {
-                        document.getElementById('current-op').textContent = rawLine.trim();
+                    } else if (cleanLine.length > 5 && !cleanLine.includes('│')) {
+                        document.getElementById('current-op').textContent = cleanLine;
                         document.getElementById('current-op').style.color = 'var(--text-secondary)';
                     }
 
@@ -2041,6 +2043,9 @@
                 return null;
             }
 
+            // Filter out MSBuild noise like (1.4s)
+            if (/^\([0-9.]+s\)$/.test(clean)) return null;
+
             if (clean.includes('Redball Unified Build System')) return { text: '🚀 Starting build...', class: 'phase-start' };
 
             // Windows build specific patterns
@@ -2117,8 +2122,11 @@
 
         function updateProgress(pct) {
             buildState.progress = pct;
-            document.getElementById('progress-fill').style.width = pct + '%';
-            document.getElementById('progress-text').textContent = Math.round(pct) + '%';
+            const fill = document.getElementById('progress-fill');
+            if (fill) fill.style.width = pct + '%';
+            
+            const text = document.getElementById('progress-text') || document.getElementById('progress-percent');
+            if (text) text.textContent = Math.round(pct) + '%';
         }
 
         function updateStage(name) {
