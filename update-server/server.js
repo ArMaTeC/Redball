@@ -1332,14 +1332,22 @@ function startBuild() {
   buildState.pid = ptyProcess.pid;
 
   ptyProcess.onData((data) => {
-    const line = data.toString();
-    if (line.trim()) {
+    const rawContent = data.toString();
+    if (!rawContent.trim()) return;
+
+    // Split into individual lines to ensure we don't skip stages if they arrive in a single burst
+    const lines = rawContent.split(/\r?\n/);
+    
+    for (let line of lines) {
+      if (!line.trim()) continue;
+      
       buildState.log.push({ timestamp: Date.now(), message: line });
       const stage = parseBuildStage(line);
       if (stage) {
         buildState.stage = stage.name;
         buildState.progress = stage.progress;
       }
+      
       if (buildState.log.length > 5000) buildState.log = buildState.log.slice(-2500);
       if (buildState.log.length % 50 === 0 || stage) saveBuildState();
       

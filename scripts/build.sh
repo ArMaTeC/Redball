@@ -642,42 +642,11 @@ build_windows() {
     log_info "Starting Windows build via Wine + .NET SDK..."
     log_info "Build steps: WPF Compile → WPF Publish → Custom Actions → NSIS Installer"
     
-    # Run with timeout - background process for real-time output streaming
-    local win_log=$(mktemp /tmp/redball-win-XXXXXX.log)
-    timeout 600s "$win_script" --skip-setup > "$win_log" 2>&1 &
-    local win_pid=$!
-    
-    # Start background progress indicator
-    local progress_pid
-    (
-        local elapsed=0
-        while kill -0 $win_pid 2>/dev/null; do
-            sleep 30
-            elapsed=$((elapsed + 30))
-            local mins=$((elapsed / 60))
-            local secs=$((elapsed % 60))
-            log_info "⏱️  Build running... ${mins}m ${secs}s elapsed"
-            # Stream any new output
-            if [[ -f "$win_log" ]]; then
-                cat "$win_log"
-                > "$win_log"  # Clear the file after reading
-            fi
-        done
-    ) &
-    progress_pid=$!
-    
-    # Wait for build to complete
-    wait $win_pid
+    # Run with timeout - foreground execution for true real-time output streaming
+    set +e
+    timeout 600s "$win_script" --skip-setup
     local win_exit=$?
-    
-    # Stop progress indicator
-    kill $progress_pid 2>/dev/null || true
-    
-    # Final output stream
-    if [[ -f "$win_log" ]]; then
-        cat "$win_log" 2>/dev/null
-        rm -f "$win_log"
-    fi
+    set -e
     
     # Kill any orphaned Wine build daemons
     pkill -f "wine.*MSBuild.*nodemode" 2>/dev/null || true
