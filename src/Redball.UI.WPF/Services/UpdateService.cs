@@ -1589,6 +1589,12 @@ public class UpdateService : IUpdateService
 
     private async Task<bool> DownloadFileAsync(string url, string destinationPath, IProgress<UpdateDownloadProgress>? progress, CancellationToken cancellationToken = default)
     {
+        // Handle relative URLs from update-server
+        if (url.StartsWith("/") && !string.IsNullOrEmpty(_updateServerUrl))
+        {
+            url = $"{_updateServerUrl.TrimEnd('/')}{url}";
+        }
+
         Logger.Info("UpdateService", $"Downloading update from: {url}");
         using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();

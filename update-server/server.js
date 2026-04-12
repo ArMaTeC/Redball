@@ -465,7 +465,7 @@ app.get('/api/github/releases', async (req, res) => {
       draft: false,
       published_at: r.date,
       assets: (r.files || [])
-        .filter(f => !f.name.endsWith('.msi') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS' && !f.name.startsWith('patches/'))
+        .filter(f => !f.name.endsWith('.msi') && f.name !== 'SHA256SUMS')
         .map(f => {
           // Patch files are in the patches subdirectory
           const isPatch = f.name.endsWith('.patch');
