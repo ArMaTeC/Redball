@@ -1303,7 +1303,7 @@ function parseBuildStage(line) {
   for (const s of stages) {
     if (s.pattern.test(line)) return s;
   }
-  if (/error|failed|abort/i.test(line)) return { name: 'error', progress: buildState.progress };
+  if (/(?<!0\s)(error|failed|abort)/i.test(line)) return { name: 'error', progress: buildState.progress };
   return null;
 }
 
