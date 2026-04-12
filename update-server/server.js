@@ -819,16 +819,6 @@ app.get('/api/stats', async (req, res) => {
 });
 
 
-// --- Health check endpoint ---
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    server: 'update-server',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    version: process.env.npm_package_version || '1.0.0'
-  });
-});
 
 // --- System Information endpoint ---
 app.get('/api/system/config', authenticateToken, (req, res) => {
