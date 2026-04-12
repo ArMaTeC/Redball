@@ -2032,12 +2032,23 @@ public class UpdateService : IUpdateService
                 : "$process = Start-Process -FilePath '" + installerPath.Replace("'", "''") + "' -ArgumentList '/S' -Wait -PassThru";
 
             var script = $@"
-$ErrorActionPreference = 'Stop'
-$processName = 'Redball.UI.WPF'
+$ErrorActionPreference = 'SilentlyContinue'
+$processes = @('Redball.UI.WPF', 'Redball.Service')
 
-while (Get-Process -Name `$processName -ErrorAction SilentlyContinue) {{
-    Start-Sleep -Seconds 1
+# Wait for processes to exit gracefully
+$timeout = (Get-Date).AddSeconds(5)
+foreach ($p in $processes) {{
+    while (Get-Process -Name $p -ErrorAction SilentlyContinue) {{
+        if ((Get-Date) -gt $timeout) {{
+            Stop-Process -Name $p -Force -ErrorAction SilentlyContinue
+            break
+        }}
+        Start-Sleep -Seconds 1
+    }}
 }}
+
+# Small additional buffer to ensure handles are released
+Start-Sleep -Seconds 1
 
 {installerCommand}
 

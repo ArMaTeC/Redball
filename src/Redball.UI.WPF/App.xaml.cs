@@ -700,7 +700,9 @@ public partial class App : Application
                                 {
                                     if (success)
                                     {
+                                        Services.Logger.Info("App", "Update staged successfully, shutting down for install...");
                                         progressWindow.Close();
+                                        Shutdown();
                                     }
                                     else
                                     {
@@ -915,7 +917,7 @@ public partial class App : Application
     [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
     private static partial bool SetForegroundWindow(IntPtr hWnd);
  
-    [System.Runtime.InteropServices.LibraryImport("user32.dll", StringMarshalling = System.Runtime.InteropServices.StringMarshalling.Utf16)]
+    [System.Runtime.InteropServices.LibraryImport("user32.dll", EntryPoint = "FindWindowW", StringMarshalling = System.Runtime.InteropServices.StringMarshalling.Utf16)]
     private static partial IntPtr FindWindow(string? lpClassName, string? lpWindowName);
  
     [System.Runtime.InteropServices.LibraryImport("user32.dll")]
@@ -927,7 +929,7 @@ public partial class App : Application
     private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
 #pragma warning restore SYSLIB1054
  
-    [System.Runtime.InteropServices.LibraryImport("user32.dll")]
+    [System.Runtime.InteropServices.LibraryImport("user32.dll", EntryPoint = "GetWindowTextLengthW")]
     private static partial int GetWindowTextLength(IntPtr hWnd);
 
     private delegate bool EnumWindowsCallback(IntPtr hWnd, IntPtr lParam);

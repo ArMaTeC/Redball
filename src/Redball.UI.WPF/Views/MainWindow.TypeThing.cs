@@ -885,7 +885,7 @@ public partial class MainWindow
 
     #region P/Invoke SendInput helpers
 
-    [LibraryImport("user32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    [LibraryImport("user32.dll", EntryPoint = "RegisterWindowMessageW", StringMarshalling = StringMarshalling.Utf16)]
     private static partial uint RegisterWindowMessage(string lpString);
 
     [LibraryImport("user32.dll", SetLastError = true)]

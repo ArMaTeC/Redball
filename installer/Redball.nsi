@@ -716,9 +716,9 @@ svc_not_found:
         ${EndIf}
     ${EndIf}
     
-    ; If running, ask user what to do
+    ; If running, ask user what to do (Silent Default: IDYES to ensure updates proceed)
     ${If} $R0 != 0
-        MessageBox MB_YESNOCANCEL|MB_ICONQUESTION "${PRODUCT_NAME} is currently running. Would you like to close it and continue with installation? (Yes=Close, No=Continue, Cancel=Abort)" /SD IDCANCEL IDYES kill_process IDNO continue_install
+        MessageBox MB_YESNOCANCEL|MB_ICONQUESTION "${PRODUCT_NAME} is currently running. Would you like to close it and continue with installation? (Yes=Close, No=Continue, Cancel=Abort)" /SD IDYES IDYES kill_process IDNO continue_install
         Goto abort_install
         
 kill_process:
