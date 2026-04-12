@@ -471,7 +471,7 @@
         .pipeline::before {
             content: '';
             position: absolute;
-            top: 50%;
+            top: 24px; /* Align with center of 48px node */
             left: 0;
             right: 0;
             height: 2px;
@@ -480,27 +480,32 @@
             z-index: -1;
         }
 
+
         .pipeline-progress {
             position: absolute;
-            top: 50%;
+            top: 24px; /* Align with center of 48px node */
             left: 0;
-            height: 2px;
-            background: var(--accent);
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), #00ffcc);
             transform: translateY(-50%);
-            z-index: -1;
-            transition: width 0.5s ease;
-            box-shadow: 0 0 10px var(--accent);
+            z-index: 0;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 15px rgba(0, 212, 170, 0.6);
         }
+
 
         .pipeline-step {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.75rem;
-            background: var(--bg-card);
+            gap: 0.5rem;
+            background: rgba(0,0,0,0); /* transparent bg */
             position: relative;
-            padding: 0 1rem;
+            padding: 0;
+            flex: 1;
+            min-width: 60px;
         }
+
 
         .step-node {
             width: 48px;
@@ -860,42 +865,77 @@
                 </div>
                 <div class="panel-body">
                     <div class="build-layout">
-                        <!-- New Pipeline -->
-                        <div class="pipeline-container">
-                            <div class="pipeline-progress" id="pipeline-progress" style="width: 0%"></div>
-                            <div class="pipeline" id="pipeline-steps">
-                                <div class="pipeline-step" data-stage="setup">
-                                    <div class="step-node">⚙️<div class="step-pulse"></div></div>
-                                    <div class="step-label">Setup</div>
+                        <!-- Granular Pipeline -->
+                        <div class="pipeline-wrapper" style="margin-bottom: 2rem;">
+                            <div class="pipeline-container">
+                                <div class="pipeline-progress" id="pipeline-progress" style="width: 0%"></div>
+                                <div class="pipeline" id="pipeline-steps">
+                                    <div class="pipeline-step" data-stage="setup">
+                                        <div class="step-node">⚙️<div class="step-pulse"></div></div>
+                                        <div class="step-label">Init</div>
+                                    </div>
+                                    <div class="pipeline-step" data-stage="version">
+                                        <div class="step-node">🏷️<div class="step-pulse"></div></div>
+                                        <div class="step-label">Version</div>
+                                    </div>
+                                    <div class="pipeline-step" data-stage="restore">
+                                        <div class="step-node">📦<div class="step-pulse"></div></div>
+                                        <div class="step-label">Restore</div>
+                                    </div>
+                                    <div class="pipeline-step" data-stage="wpf-build">
+                                        <div class="step-node">🖼️<div class="step-pulse"></div></div>
+                                        <div class="step-label">WPF</div>
+                                    </div>
+                                    <div class="pipeline-step" data-stage="service-build">
+                                        <div class="step-node">⚙️<div class="step-pulse"></div></div>
+                                        <div class="step-label">Service</div>
+                                    </div>
+                                    <div class="pipeline-step" data-stage="manifest">
+                                        <div class="step-node">📄<div class="step-pulse"></div></div>
+                                        <div class="step-label">Manifest</div>
+                                    </div>
+                                    <div class="pipeline-step" data-stage="zip-bundle">
+                                        <div class="step-node">🗜️<div class="step-pulse"></div></div>
+                                        <div class="step-label">ZIP</div>
+                                    </div>
+                                    <div class="pipeline-step" data-stage="installer">
+                                        <div class="step-node">🔨<div class="step-pulse"></div></div>
+                                        <div class="step-label">Installer</div>
+                                    </div>
+                                    <div class="pipeline-step" data-stage="update-server">
+                                        <div class="step-node">📦<div class="step-pulse"></div></div>
+                                        <div class="step-label">Upload</div>
+                                    </div>
+                                    <div class="pipeline-step" data-stage="publish">
+                                        <div class="step-node">☁️<div class="step-pulse"></div></div>
+                                        <div class="step-label">Cloud</div>
+                                    </div>
+                                    <div class="pipeline-step" data-stage="github">
+                                        <div class="step-node">🚀<div class="step-pulse"></div></div>
+                                        <div class="step-label">GitHub</div>
+                                    </div>
+                                    <div class="pipeline-step" data-stage="restart">
+                                        <div class="step-node">🔄<div class="step-pulse"></div></div>
+                                        <div class="step-label">Restart</div>
+                                    </div>
+                                    <div class="pipeline-step" data-stage="health">
+                                        <div class="step-node">🏥<div class="step-pulse"></div></div>
+                                        <div class="step-label">Health</div>
+                                    </div>
                                 </div>
-                                <div class="pipeline-step" data-stage="version">
-                                    <div class="step-node">🏷️<div class="step-pulse"></div></div>
-                                    <div class="step-label">Version</div>
+                            </div>
+                            
+                            <!-- Detailed Status -->
+                            <div class="build-status-detail" style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: flex-end;">
+                                <div style="flex: 1; overflow: hidden; margin-right: 1rem;">
+                                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 2px; font-weight: 700;">Current Operation</div>
+                                    <div id="current-op" style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid var(--accent); padding-left: 10px; height: 1.2em;">Ready to build...</div>
                                 </div>
-                                <div class="pipeline-step" data-stage="windows-build">
-                                    <div class="step-node">🔨<div class="step-pulse"></div></div>
-                                    <div class="step-label">Windows</div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 2px; font-weight: 700;">Progress</div>
+                                    <div id="progress-percent" style="font-size: 1.5rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; line-height: 1;">0%</div>
                                 </div>
-                                <div class="pipeline-step" data-stage="update-server">
-                                    <div class="step-node">📦<div class="step-pulse"></div></div>
-                                    <div class="step-label">Package</div>
-                                </div>
-                                <div class="pipeline-step" data-stage="publish">
-                                    <div class="step-node">☁️<div class="step-pulse"></div></div>
-                                    <div class="step-label">Publish</div>
-                                </div>
-                                <div class="pipeline-step" data-stage="github">
-                                    <div class="step-node">🚀<div class="step-pulse"></div></div>
-                                    <div class="step-label">Release</div>
-                                </div>
-                                <div class="pipeline-step" data-stage="restart">
-                                    <div class="step-node">🔄<div class="step-pulse"></div></div>
-                                    <div class="step-label">Restart</div>
-                                </div>
-                                <div class="pipeline-step" data-stage="health">
-                                    <div class="step-node">🏥<div class="step-pulse"></div></div>
-                                    <div class="step-label">Health</div>
-                                </div>
+
                             </div>
                         </div>
 
@@ -1426,7 +1466,8 @@
         let ws;
         let buildState = { status: 'idle', stage: null, progress: 0 };
 
-        const stages = ['setup', 'version', 'windows-build', 'update-server', 'publish', 'github', 'restart', 'health'];
+        const stages = ['setup', 'version', 'restore', 'wpf-build', 'service-build', 'manifest', 'zip-bundle', 'installer', 'update-server', 'publish', 'github', 'restart', 'health'];
+
 
         function connectWS() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -1461,11 +1502,23 @@
                     break;
                 case 'build-output':
                     // Clean the line if it comes as an object (spam protection)
-                    const line = (typeof msg.data.line === 'object') ? JSON.stringify(msg.data.line) : msg.data.line;
-                    addTerminalLine(line, msg.data.stage);
+                    const rawLine = (typeof msg.data.line === 'object') ? JSON.stringify(msg.data.line) : msg.data.line;
+                    
+                    // Show current operation
+                    if (rawLine.includes('[STEP]') || rawLine.includes('→')) {
+                        document.getElementById('current-op').textContent = rawLine.replace(/\[STEP .*?\]/g, '').replace(/→/g, '').trim();
+                        document.getElementById('current-op').style.color = 'var(--text-primary)';
+                    } else if (rawLine.trim().length > 5 && !rawLine.includes('│')) {
+                        // For generic lines that aren't table borders
+                        document.getElementById('current-op').textContent = rawLine.trim();
+                        document.getElementById('current-op').style.color = 'var(--text-secondary)';
+                    }
+
+                    addTerminalLine(rawLine, msg.data.stage);
                     updateProgress(msg.data.progress);
                     updateStage(msg.data.stage);
                     break;
+
                 case 'build-complete':
                     buildComplete(msg.data);
                     break;

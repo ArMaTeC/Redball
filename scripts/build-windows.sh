@@ -407,9 +407,12 @@ step_build_wpf() {
         -p:RunObfuscar=false \
         --no-restore
 
-    local wpf_end=$(date +%s)
+    wpf_end=$(date +%s)
     log_success "WPF application published to $WPF_PUBLISH_DIR ($(( wpf_end - wpf_start ))s)"
+    
+    log_step "Organizing DLLs into subdirectories..."
     log_debug "Published files: $(ls -1 "$WPF_PUBLISH_DIR" 2>/dev/null | wc -l) items"
+
 
     # Organise DLLs into dll/ subfolder (matches installer WXS structure)
     log_step "Organizing publish output..."

@@ -1318,16 +1318,22 @@ async function getSystemStats() {
 // --- Build Orchestration Logic ---
 function parseBuildStage(line) {
   const stages = [
-    { name: 'setup', pattern: /Phase 1|Checking build dependencies/i, progress: 5 },
-    { name: 'version', pattern: /Phase 0|Bumping version/i, progress: 10 },
-    { name: 'windows-build', pattern: /Phase 1.*Building|Building Windows/i, progress: 30 },
-    { name: 'update-server', pattern: /Phase 4|Update Server/i, progress: 50 },
-    { name: 'publish', pattern: /Phase 5|Publish to Update Server/i, progress: 70 },
-    { name: 'github', pattern: /Phase 6|Publish to GitHub/i, progress: 85 },
-    { name: 'restart', pattern: /Phase 7|Restarting update server/i, progress: 92 },
-    { name: 'health', pattern: /Phase 9|Final health status check/i, progress: 98 },
+    { name: 'setup', pattern: /Phase 1|Checking build dependencies|Repairing missing.*Wine .NET SDK/i, progress: 3 },
+    { name: 'version', pattern: /Phase 0|Bumping version/i, progress: 6 },
+    { name: 'restore', pattern: /Restoring NuGet packages/i, progress: 12 },
+    { name: 'wpf-build', pattern: /Building WPF Application|Compiling WPF project/i, progress: 25 },
+    { name: 'service-build', pattern: /Building Redball Service/i, progress: 45 },
+    { name: 'manifest', pattern: /Generating manifest\.json/i, progress: 55 },
+    { name: 'zip-bundle', pattern: /Creating portable ZIP package/i, progress: 62 },
+    { name: 'installer', pattern: /Building NSIS Installer|Creating Windows installer package/i, progress: 75 },
+    { name: 'update-server', pattern: /Phase 4|Update Server/i, progress: 82 },
+    { name: 'publish', pattern: /Phase 5|Publish to Update Server/i, progress: 88 },
+    { name: 'github', pattern: /Phase 6|Publish to GitHub/i, progress: 94 },
+    { name: 'restart', pattern: /Phase 7|Restarting update server/i, progress: 97 },
+    { name: 'health', pattern: /Phase 9|Final health status check/i, progress: 99 },
     { name: 'complete', pattern: /AUTO-RELEASE COMPLETED/i, progress: 100 }
   ];
+
 
   for (const s of stages) {
     if (s.pattern.test(line)) return s;

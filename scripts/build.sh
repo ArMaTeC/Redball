@@ -264,8 +264,9 @@ auto_release() {
     echo ""
     
     # 1. Build all components
-    log_step "Phase 1: Building all components..."
+    log_step "Phase 1: Restoring and Building all components..."
     if ! build_all; then
+
         log_error "Build phase failed. Aborting auto-release before publishing."
         return 1
     fi
@@ -682,7 +683,9 @@ build_windows() {
     local win_dur=$((win_end - win_start))
     
     if [[ $win_exit -eq 0 ]]; then
+        log_step "Finalizing Windows artifacts..."
         log_success "Windows build completed in ${win_dur}s"
+
         # List produced artifacts
         log_info "Windows artifacts created:"
         ls -lh "$DIST_DIR"/*.exe "$DIST_DIR"/*.zip 2>/dev/null | head -5 | while IFS= read -r line; do log_detail "$line"; done
