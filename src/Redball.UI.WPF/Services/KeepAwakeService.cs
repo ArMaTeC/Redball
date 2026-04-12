@@ -52,6 +52,8 @@ public class KeepAwakeService : IKeepAwakeService
     public event EventHandler? TimedAwakeExpired;
     public event EventHandler? HeartbeatTick;
 
+    public IdleDetectionService IdleDetection => _idleDetection;
+
     private KeepAwakeService()
     {
         Logger.Verbose("KeepAwakeService", "Instance created");

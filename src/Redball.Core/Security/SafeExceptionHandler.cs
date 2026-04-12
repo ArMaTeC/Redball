@@ -6,7 +6,7 @@ using System;
 /// Utility for handling exceptions securely to prevent information disclosure.
 /// Ensures detailed exception details are logged internally but generic messages are shown to users.
 /// </summary>
-public static class SafeExceptionHandler
+public static partial class SafeExceptionHandler
 {
     /// <summary>
     /// Handles an exception securely, logging full details internally while returning a safe user-facing message.
@@ -51,20 +51,32 @@ public static class SafeExceptionHandler
             return string.Empty;
 
         // Remove file paths
-        message = System.Text.RegularExpressions.Regex.Replace(message, @"[a-zA-Z]:\\[^\s]*|/[^\s]*", "[PATH]");
-
+        message = PathRegex().Replace(message, "[PATH]");
+ 
         // Remove connection strings
-        message = System.Text.RegularExpressions.Regex.Replace(message, @"(Server|Data Source|Host)=[^;]*", "[SERVER]");
-        message = System.Text.RegularExpressions.Regex.Replace(message, @"(Database|Initial Catalog)=[^;]*", "[DATABASE]");
-        message = System.Text.RegularExpressions.Regex.Replace(message, @"(User Id|Password)=[^;]*", "[CREDENTIALS]");
+        message = ServerRegex().Replace(message, "[SERVER]");
+        message = DatabaseRegex().Replace(message, "[DATABASE]");
+        message = CredentialsRegex().Replace(message, "[CREDENTIALS]");
 
         // Remove stack trace indicators
-        if (message.Contains(" at ") && message.Contains(" in "))
+        if (message.Contains(" at ", StringComparison.Ordinal) && message.Contains(" in ", StringComparison.Ordinal))
         {
-            var index = message.IndexOf(" at ");
-            message = message.Substring(0, index).Trim();
+            var index = message.IndexOf(" at ", StringComparison.Ordinal);
+            message = message[..index].Trim();
         }
 
         return message;
     }
+ 
+    [System.Text.RegularExpressions.GeneratedRegex(@"[a-zA-Z]:\\[^\s]*|/[^\s]*")]
+    private static partial System.Text.RegularExpressions.Regex PathRegex();
+ 
+    [System.Text.RegularExpressions.GeneratedRegex(@"(Server|Data Source|Host)=[^;]*", System.Text.RegularExpressions.RegexOptions.IgnoreCase)]
+    private static partial System.Text.RegularExpressions.Regex ServerRegex();
+ 
+    [System.Text.RegularExpressions.GeneratedRegex(@"(Database|Initial Catalog)=[^;]*", System.Text.RegularExpressions.RegexOptions.IgnoreCase)]
+    private static partial System.Text.RegularExpressions.Regex DatabaseRegex();
+ 
+    [System.Text.RegularExpressions.GeneratedRegex(@"(User Id|Password)=[^;]*", System.Text.RegularExpressions.RegexOptions.IgnoreCase)]
+    private static partial System.Text.RegularExpressions.Regex CredentialsRegex();
 }

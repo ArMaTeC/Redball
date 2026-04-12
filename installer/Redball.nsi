@@ -519,8 +519,8 @@ Section /o "Background Service" SecService
     
     ; Stop existing service before copying files to prevent file lock
     DetailPrint "Checking for existing service..."
-    nsExec::Exec 'sc stop "Redball Input Service" 2>nul'
-    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
+    nsExec::Exec 'sc stop "Redball Input Service"'
+    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
     Sleep 2000
     
     ; Copy service files (single-file published, no separate DLL)
@@ -625,8 +625,8 @@ Section "Uninstall"
     ${EndIf}
     
     ; Force kill if still running
-    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'
-    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
+    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
+    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
     Sleep 2000
     
     ; Remove files
@@ -683,6 +683,17 @@ retry_check:
 wpf_not_found:
     ClearErrors
     
+    ; Check for service process
+    nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.Service.exe" /FO CSV /NH'
+    Pop $0  ; exit code
+    Pop $1  ; stdout
+    ${WordFind} "$1" "Redball.Service.exe" "E+1{" $2
+    IfErrors 0 +2
+        Goto svc_not_found
+    StrCpy $R0 1
+svc_not_found:
+    ClearErrors
+    
     ; Secondary check: find window by exact title "Redball" (main window)
     ${If} $R0 == 0
         System::Call 'user32::FindWindowW(i 0, w "Redball") i .r0'
@@ -715,12 +726,13 @@ kill_process:
             
             ; Stop service first if installed (properly through SCM)
             DetailPrint "Stopping background service..."
-            nsExec::Exec 'sc stop "Redball Input Service" 2>nul'
+            nsExec::Exec 'sc stop "Redball Input Service"'
             Sleep 2000
             
             ; Try graceful close using taskkill without /F first (sends WM_CLOSE)
             DetailPrint "Requesting graceful shutdown..."
-            nsExec::Exec 'taskkill /IM Redball.UI.WPF.exe /T 2>nul'
+            nsExec::Exec 'taskkill /IM Redball.UI.WPF.exe /T'
+            nsExec::Exec 'taskkill /IM Redball.Service.exe /T'
             Sleep 3000
             
             ; Check if still running
@@ -746,8 +758,8 @@ kill_process:
             ${EndIf}
             
             ; Force kill the application
-            nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'
-            nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
+            nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
+            nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
             Sleep 3000
             
         process_killed:
@@ -846,13 +858,13 @@ Function un.KillAllRedballProcesses
     
     ; Try graceful close first (taskkill without /F sends WM_CLOSE)
     DetailPrint "Requesting graceful shutdown..."
-    nsExec::Exec 'taskkill /IM Redball.UI.WPF.exe /T 2>nul'
-    nsExec::Exec 'taskkill /IM Redball.Service.exe /T 2>nul'
+    nsExec::Exec 'taskkill /IM Redball.UI.WPF.exe /T'
+    nsExec::Exec 'taskkill /IM Redball.Service.exe /T'
     Sleep 3000
     
     ; Force kill if still running
-    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T 2>nul'
-    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T 2>nul'
+    nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
+    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
     Sleep 2000
     
     DetailPrint "Processes stopped"

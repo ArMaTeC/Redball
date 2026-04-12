@@ -105,7 +105,7 @@ public partial class App : Application
         {
             Services.Logger.Fatal("App", $"XAML parse error: {xamlEx.Message}", xamlEx);
             
-            bool isTest = Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--smoke-test" || arg == "--test-mode");
+            bool isTest = Array.Exists(Environment.GetCommandLineArgs(), arg => arg.Equals("--smoke-test", StringComparison.Ordinal) || arg.Equals("--test-mode", StringComparison.Ordinal));
             if (isTest)
             {
                 Services.Logger.Fatal("App", "Fatal XAML error during test mode - exiting with code 1");
@@ -148,7 +148,7 @@ public partial class App : Application
         }
 
         // Handle smoke test for build verification
-        if (e.Args.Length > 0 && Array.Exists(e.Args, arg => arg == "--smoke-test"))
+        if (e.Args.Length > 0 && Array.Exists(e.Args, arg => arg.Equals("--smoke-test", StringComparison.Ordinal)))
         {
             Services.Logger.Info("App", "Running in smoke-test mode for build verification");
             // We'll let the rest of the startup run to verify XAML/DI/Config, 
@@ -156,7 +156,7 @@ public partial class App : Application
         }
 
         // Handle test mode for E2E tests
-        bool isTestMode = e.Args.Length > 0 && Array.Exists(e.Args, arg => arg == "--test-mode");
+        bool isTestMode = e.Args.Length > 0 && Array.Exists(e.Args, arg => arg.Equals("--test-mode", StringComparison.Ordinal));
         _isStartupTestMode = isTestMode;
         if (isTestMode)
         {
@@ -286,6 +286,9 @@ public partial class App : Application
             Services.Logger.Info("App", "Initializing KeepAwakeService...");
             Services.KeepAwakeService.Instance.Initialize();
 
+            // Initialize memory optimizer to compact LOH on idle (perf-6)
+            Services.MemoryOptimizerService.Instance.Initialize(Services.KeepAwakeService.Instance.IdleDetection);
+
             // Restore previous session state or start fresh
             var sessionState = _serviceProvider.GetRequiredService<Services.ISessionStateService>();
             var restored = sessionState.Restore(Services.KeepAwakeService.Instance);
@@ -319,7 +322,7 @@ public partial class App : Application
             {
                 Services.Logger.Info("App", "Smoke test successful - exiting with code 0");
                 _startupStopwatch.Stop();
-                Services.Logger.Info("App", $"Startup sequence verified in {_startupStopwatch.Elapsed.TotalSeconds:F2}s");
+                Services.Logger.Info("App", string.Format(System.Globalization.CultureInfo.InvariantCulture, "Startup sequence verified in {0:F2}s", _startupStopwatch.Elapsed.TotalSeconds));
                 
                 // Cleanup and exit
                 Services.Logger.Shutdown();
@@ -370,10 +373,10 @@ public partial class App : Application
             ShutdownMode = ShutdownMode.OnMainWindowClose;
             _startupStopwatch.Stop();
             StartupDuration = _startupStopwatch.Elapsed;
-            Services.Logger.Info("App", $"MainWindow initialized in tray-only mode, startup sequence complete (took {StartupDuration.TotalSeconds:F2}s)");
+            Services.Logger.Info("App", string.Format(System.Globalization.CultureInfo.InvariantCulture, "MainWindow initialized in tray-only mode, startup sequence complete (took {0:F2}s)", StartupDuration.TotalSeconds));
             if (StartupDuration.TotalSeconds > 2.0)
             {
-                Services.Logger.Warning("App", $"Startup exceeded 2-second target: {StartupDuration.TotalSeconds:F2}s");
+                Services.Logger.Warning("App", string.Format(System.Globalization.CultureInfo.InvariantCulture, "Startup exceeded 2-second target: {0:F2}s", StartupDuration.TotalSeconds));
             }
             Services.Logger.LogMemoryStats("App");
 
@@ -896,29 +899,36 @@ public partial class App : Application
     private const uint FLASHW_TIMERNOFG = 12;
     private const int SW_RESTORE = 9;
 
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
-    private static extern bool FlashWindowEx(ref FLASHWINFO pwfi);
-
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
-    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
-    private static extern bool IsIconic(IntPtr hWnd);
-
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
-    private static extern bool SetForegroundWindow(IntPtr hWnd);
-
-    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
-    private static extern IntPtr FindWindow(string? lpClassName, string? lpWindowName);
-
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
-    private static extern bool EnumWindows(EnumWindowsCallback lpEnumFunc, IntPtr lParam);
-
-    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+    [System.Runtime.InteropServices.LibraryImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static partial bool FlashWindowEx(ref FLASHWINFO pwfi);
+ 
+    [System.Runtime.InteropServices.LibraryImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static partial bool ShowWindow(IntPtr hWnd, int nCmdShow);
+ 
+    [System.Runtime.InteropServices.LibraryImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static partial bool IsIconic(IntPtr hWnd);
+ 
+    [System.Runtime.InteropServices.LibraryImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static partial bool SetForegroundWindow(IntPtr hWnd);
+ 
+    [System.Runtime.InteropServices.LibraryImport("user32.dll", StringMarshalling = System.Runtime.InteropServices.StringMarshalling.Utf16)]
+    private static partial IntPtr FindWindow(string? lpClassName, string? lpWindowName);
+ 
+    [System.Runtime.InteropServices.LibraryImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static partial bool EnumWindows(EnumWindowsCallback lpEnumFunc, IntPtr lParam);
+ 
+#pragma warning disable SYSLIB1054
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
     private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
-
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
-    private static extern int GetWindowTextLength(IntPtr hWnd);
+#pragma warning restore SYSLIB1054
+ 
+    [System.Runtime.InteropServices.LibraryImport("user32.dll")]
+    private static partial int GetWindowTextLength(IntPtr hWnd);
 
     private delegate bool EnumWindowsCallback(IntPtr hWnd, IntPtr lParam);
 

@@ -316,7 +316,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void InitializeMemoryPressureMonitoring()
+    private static void InitializeMemoryPressureMonitoring()
     {
         try
         {
@@ -334,7 +334,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnMemoryPressureChanged(object? sender, MemoryPressureEventArgs e)
+    private static void OnMemoryPressureChanged(object? sender, MemoryPressureEventArgs e)
     {
         Logger.Info("MainWindow", $"Memory pressure event: {e.Level} - {MemoryPressureService.Instance.GetSummary()}");
 
@@ -345,7 +345,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void InitializeResourceBudgetMonitoring()
+    private static void InitializeResourceBudgetMonitoring()
     {
         try
         {

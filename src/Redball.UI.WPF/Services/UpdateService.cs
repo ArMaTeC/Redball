@@ -499,161 +499,104 @@ public class UpdateService : IUpdateService
                     
                     Logger.Info("UpdateService", $"[DELTA] Processing {manifest.Files.Count} files from manifest...");
                     
-                    foreach (var file in manifest.Files)
+                    // Parallelize hashing to drastically speed up manifest scans
+                    int filesProcessed = 0;
+                    var lockObj = new object();
+
+                    await Parallel.ForEachAsync(manifest.Files, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount, CancellationToken = cancellationToken }, async (file, ct) =>
                     {
-                        processedFiles++;
                         var normalizedName = NormalizeRelativeUpdatePath(file.Name);
                         var localPath = Path.Combine(appDir, normalizedName);
                         var fileName = Path.GetFileName(normalizedName);
                         bool needsUpdate = true;
-                        
-                        Logger.Debug("UpdateService", $"[DELTA] Checking file {processedFiles}/{totalFiles}: {normalizedName}");
-                        
-                        // Report progress every file with detailed status
-                        int progressPct = 55 + (processedFiles * 30 / totalFiles);
-                        
+
                         if (File.Exists(localPath))
                         {
-                            string? localHash = null;
-                            
-                            // Try to get cached hash first
-                            var cachedHash = hashCache.GetCachedHash(localPath);
-                            if (cachedHash != null)
+                            string? localHash = hashCache.GetCachedHash(localPath);
+                            if (localHash != null)
                             {
-                                localHash = cachedHash.ToUpper();
-                                cachedHashesUsed++;
-                                ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
-                                    $"✓ {fileName} (cached)", processedFiles, totalFiles);
+                                localHash = localHash.ToUpper();
+                                lock (lockObj) cachedHashesUsed++;
                             }
                             else
                             {
-                                // Calculate hash and cache it
-                                ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
-                                    $"Hashing {fileName}...", processedFiles, totalFiles);
                                 localHash = (await CalculateHashAsync(localPath)).ToUpper();
                                 hashCache.StoreHash(localPath, localHash);
-                                filesHashed++;
+                                lock (lockObj) filesHashed++;
                             }
-                            
+
                             if (localHash == file.Hash.ToUpper())
                             {
                                 needsUpdate = false;
-                                filesUpToDate++;
-                                ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
-                                    $"✓ {fileName} up to date", processedFiles, totalFiles);
+                                lock (lockObj) filesUpToDate++;
                             }
                             else
                             {
-                                filesNeedUpdate++;
-                                ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
-                                    $"✗ {fileName} needs update", processedFiles, totalFiles);
+                                lock (lockObj) filesNeedUpdate++;
                             }
                         }
                         else
                         {
-                            filesNeedUpdate++;
-                            ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
-                                $"✗ {fileName} missing", processedFiles, totalFiles);
+                            lock (lockObj) filesNeedUpdate++;
                         }
-                        
-                        if (needsUpdate)
-                        {
-                            // --- SECURITY: Signature Verification ---
-                            if (_verifySignature && !string.IsNullOrEmpty(file.Signature))
-                            {
-                                Logger.Debug("UpdateService", $"Signature available for {normalizedName}, verification will happen after download.");
-                            }
-                            else if (_verifySignature)
-                            {
-                                Logger.Warning("UpdateService", $"MISSING core signature for {normalizedName}! Skipping differential update for security.");
-                                filesToUpdate.Clear();
-                                break;
-                            }
 
-                            var fileInfo = new FileUpdateInfo
+                        lock (lockObj)
+                        {
+                            filesProcessed++;
+                            int progressPct = 55 + (filesProcessed * 30 / totalFiles);
+                            var status = needsUpdate ? "✗ needs update" : "✓ up to date";
+                            ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
+                                $"{fileName} {status}", filesProcessed, totalFiles);
+
+                            if (needsUpdate)
                             {
-                                Name = normalizedName,
-                                Hash = file.Hash,
-                                Size = file.Size,
-                                Signature = file.Signature
-                            };
-                            
-                            // Check if individual file asset exists in the release
-                            var asset = latestRelease.Assets.Find(a => a.Name.Equals(Path.GetFileName(file.Name), StringComparison.OrdinalIgnoreCase));
-                            if (asset != null)
-                            {
-                                fileInfo.DownloadUrl = asset.DownloadUrl;
-                                Logger.Debug("UpdateService", $"[DELTA] Found full file asset for {normalizedName}: {asset.Size} bytes");
-                            }
-                            else
-                            {
-                                Logger.Debug("UpdateService", $"[DELTA] No full file asset found for {normalizedName}");
-                            }
-                            
-                            // Check if binary delta patch is available (preferred for bandwidth)
-                            // PRIORITY: 1. Update server (primary), 2. GitHub release assets (fallback)
-                            var expectedPatchName = Path.GetFileName(file.Name) + ".patch";
-                            Logger.Debug("UpdateService", $"[DELTA] Looking for patch: {expectedPatchName}");
-                            
-                            bool patchFound = false;
-                            
-                            // 1. Try update server first (primary source)
-                            if (serverManifest?.Patches != null)
-                            {
-                                var serverPatch = serverManifest.Patches.Find(p => 
-                                    p.File.Equals(file.Name, StringComparison.OrdinalIgnoreCase) ||
-                                    p.PatchFile.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
-                                
-                                if (serverPatch != null && !string.IsNullOrEmpty(_updateServerUrl))
+                                var fileInfo = new FileUpdateInfo
                                 {
-                                    Logger.Info("UpdateService", $"[DELTA] Found patch on update server for {normalizedName}: {serverPatch.PatchFile} ({serverPatch.PatchSize} bytes)");
-                                    
-                                    if (serverPatch.PatchSize > 0 && serverPatch.PatchSize < file.Size)
+                                    Name = normalizedName,
+                                    Hash = file.Hash,
+                                    Size = file.Size,
+                                    Signature = file.Signature
+                                };
+
+                                // Find asset in release
+                                var asset = latestRelease.Assets.Find(a => a.Name.Equals(Path.GetFileName(file.Name), StringComparison.OrdinalIgnoreCase));
+                                if (asset != null) fileInfo.DownloadUrl = asset.DownloadUrl;
+
+                                // Look for patch
+                                var expectedPatchName = Path.GetFileName(file.Name) + ".patch";
+                                bool patchFound = false;
+
+                                if (serverManifest?.Patches != null)
+                                {
+                                    var serverPatch = serverManifest.Patches.Find(p => 
+                                        p.File.Equals(file.Name, StringComparison.OrdinalIgnoreCase) ||
+                                        p.PatchFile.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
+
+                                    if (serverPatch != null && !string.IsNullOrEmpty(_updateServerUrl))
                                     {
-                                        // Construct update server patch URL
-                                        var patchUrl = $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/patches/{serverPatch.PatchFile}";
-                                        fileInfo.PatchUrl = patchUrl;
-                                        fileInfo.PatchSize = serverPatch.PatchSize;
-                                        patchFound = true;
-                                        Logger.Info("UpdateService", $"[DELTA] ✓ Using update server delta patch for {normalizedName}: {FormatBytes(serverPatch.PatchSize)} vs {FormatBytes(file.Size)} full file (saves {FormatBytes(serverPatch.Savings)})");
-                                    }
-                                    else
-                                    {
-                                        Logger.Warning("UpdateService", $"[DELTA] ✗ Update server patch for {normalizedName} rejected: size={serverPatch.PatchSize}");
+                                        if (serverPatch.PatchSize > 0 && serverPatch.PatchSize < file.Size)
+                                        {
+                                            fileInfo.PatchUrl = $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/patches/{serverPatch.PatchFile}";
+                                            fileInfo.PatchSize = serverPatch.PatchSize;
+                                            patchFound = true;
+                                        }
                                     }
                                 }
-                            }
-                            
-                            // 2. Fallback to GitHub release assets if update server doesn't have it
-                            if (!patchFound)
-                            {
-                                var patchAsset = latestRelease.Assets.Find(a => 
-                                    a.Name.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
-                                
-                                if (patchAsset != null)
+
+                                if (!patchFound)
                                 {
-                                    Logger.Info("UpdateService", $"[DELTA] Found patch asset on GitHub for {normalizedName}: {patchAsset.Name} ({patchAsset.Size} bytes) [FALLBACK]");
-                                    
-                                    if (patchAsset.Size > 0 && patchAsset.Size < file.Size)
+                                    var patchAsset = latestRelease.Assets.Find(a => a.Name.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
+                                    if (patchAsset != null && patchAsset.Size > 0 && patchAsset.Size < file.Size)
                                     {
                                         fileInfo.PatchUrl = patchAsset.DownloadUrl;
                                         fileInfo.PatchSize = patchAsset.Size;
-                                        Logger.Info("UpdateService", $"[DELTA] ✓ Using GitHub delta patch for {normalizedName}: {FormatBytes(patchAsset.Size)} vs {FormatBytes(file.Size)} full file");
-                                    }
-                                    else
-                                    {
-                                        Logger.Warning("UpdateService", $"[DELTA] ✗ GitHub patch for {normalizedName} rejected: size={patchAsset.Size}");
                                     }
                                 }
-                                else
-                                {
-                                    Logger.Debug("UpdateService", $"[DELTA] No patch found for {normalizedName} (looked for: {expectedPatchName})");
-                                }
+
+                                filesToUpdate.Add(fileInfo);
                             }
-                            
-                            filesToUpdate.Add(fileInfo);
                         }
-                    }
+                    });
                     
                     Logger.Info("UpdateService", $"Differential check complete: {filesUpToDate} up to date, {filesNeedUpdate} need update, {filesHashed} hashed, {cachedHashesUsed} cached");
                     

@@ -885,11 +885,11 @@ public partial class MainWindow
 
     #region P/Invoke SendInput helpers
 
-    [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    private static extern uint RegisterWindowMessage(string lpString);
+    [LibraryImport("user32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    private static partial uint RegisterWindowMessage(string lpString);
 
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    private static partial uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
     // SECURITY: Buffer-validated wrapper for SendInput
     private static uint SendInputSafe(INPUT[] inputs)
@@ -905,23 +905,26 @@ public partial class MainWindow
         return SendInput((uint)inputs.Length, inputs, cbSize);
     }
 
-    [DllImport("user32.dll")]
-    private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetForegroundWindow();
+    [LibraryImport("user32.dll")]
+    private static partial IntPtr GetForegroundWindow();
 
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    private static partial uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
-    [DllImport("user32.dll")]
-    private static extern int GetSystemMetrics(int nIndex);
+    [LibraryImport("user32.dll")]
+    private static partial int GetSystemMetrics(int nIndex);
 
-    [DllImport("user32.dll")]
+#pragma warning disable SYSLIB1054
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern short VkKeyScanW(char ch);
+#pragma warning restore SYSLIB1054
 
-    [DllImport("user32.dll")]
-    private static extern uint MapVirtualKeyW(uint uCode, uint uMapType);
+    [LibraryImport("user32.dll")]
+    private static partial uint MapVirtualKeyW(uint uCode, uint uMapType);
 
     private const int SM_REMOTESESSION = 0x1000;
     private const uint WM_KEYDOWN = 0x0100;

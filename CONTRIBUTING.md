@@ -10,12 +10,12 @@ Please read our [Code of Conduct](docs/CODE_OF_CONDUCT.md) before contributing. 
 
 ### Prerequisites
 
-- **Windows 8.1+**
-- **PowerShell 5.1+** (PowerShell 7+ recommended)
-- **.NET 8.0 SDK** (for WPF UI development)
+- **Windows 10+** (or cross-platform build systems via Node/Playwright)
+- **PowerShell 7+**
+- **.NET 10.0 SDK** (for WPF UI development)
+- **Node.js 20+** (for Web Admin and UI Control Test E2E automation)
 - **Git**
-- **Pester 5.5.0** (for running tests)
-- **PSScriptAnalyzer** (for linting)
+- **Playwright** (for E2E tests)
 
 ### Development Setup
 
@@ -110,10 +110,10 @@ Fixes #123
 
 ## Testing
 
-- All new features must include Pester tests
+- All new features must include Pester tests (or NUnit/Playwright tests depending on the component)
 - All bug fixes should include a regression test
-- Run the full suite before submitting: `Invoke-Pester -Path tests\Redball.Tests.ps1`
-- Target: 40%+ code coverage (current baseline)
+- Run the full suite before submitting: `Invoke-Pester -Path tests\Redball.Tests.ps1` or run the comprehensive `pwsh ./scripts/Get-CodeCoverage.ps1`
+- Target: 100% code coverage across statement, branch, and line metrics. No changes will be merged that degrade this standard.
 
 ## Pull Request Process
 

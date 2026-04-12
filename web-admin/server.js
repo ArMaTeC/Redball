@@ -171,9 +171,9 @@ function saveBuildState() {
 // Middleware
 app.use(express.json());
 
-// Security headers - override restrictive CSP from reverse proxy
+// Security headers - allow Google Fonts and essential resources
 app.use((req, res, next) => {
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' wss: https:; img-src 'self' data: blob:; font-src 'self';");
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' wss: https:; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com;");
   next();
 });
 

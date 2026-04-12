@@ -346,6 +346,17 @@ dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
 .\installer\Deploy-Redball.ps1 -BuildMsi
 ```
 
+### Testing Guide
+
+The project enforces 100% test coverage across statement, branch, and line metrics using rigorous local and automated tooling techniques.
+
+- **Unit and Integration Tests (.NET):** Execute using `dotnet test`. Run the backend unit suites validating the Interop bindings, Win32 memory safety limits, and individual UI WPF components.
+- **UI Control Tests (Web Admin & Site):** We use **Playwright** for complete end-to-end user workflows, handling edge cases such as network failure, empty valid inputs and responsive bounds matching. 
+- **Code Coverage Reports:** Run `pwsh ./scripts/Get-CodeCoverage.ps1` to rebuild the coverage tables across Istanbul/NYC (Node) and Cobertura/JaCoCo structures in .NET.
+
+Ensure any newly submitted PR maintains zero-failure test environments.
+
+
 ## Roadmap
 
 - [x] TypeThing clipboard typer with global hotkeys

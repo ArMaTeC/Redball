@@ -1049,6 +1049,18 @@ app.get('/api/check-update', async (req, res) => {
   }
 });
 
+// --- Trigger Build Engine ---
+app.post('/api/admin/build', (req, res) => {
+  // Simulates an async build trigger. 
+  // In a true environment, this spawns `pwsh ./scripts/build.ps1`
+  // and pipes output to a WebSocket.
+  console.log('[BUILD] Simulated build trigger initiated.');
+  setTimeout(() => {
+    console.log('[BUILD] Simulated build trigger finished.');
+  }, 3000);
+  res.status(202).json({ message: 'Build started', status: 'processing' });
+});
+
 // === SPA fallback (catch-all for non-API routes) ===
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/') || req.path.startsWith('/downloads/')) {

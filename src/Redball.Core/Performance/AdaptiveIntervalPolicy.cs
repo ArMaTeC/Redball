@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 /// Adaptive monitoring interval policy that adjusts frequency based on system state.
 /// Implements improve_me.txt item E: adaptive scheduling.
 /// </summary>
-public sealed class AdaptiveIntervalPolicy
+public sealed partial class AdaptiveIntervalPolicy
 {
     // Base intervals
     private readonly TimeSpan _defaultInterval;
@@ -20,8 +20,9 @@ public sealed class AdaptiveIntervalPolicy
     private float _lastCpuLoad;
 
     // P/Invoke for power status
-    [DllImport("kernel32.dll")]
-    private static extern bool GetSystemPowerStatus(out SYSTEM_POWER_STATUS lpSystemPowerStatus);
+    [LibraryImport("kernel32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetSystemPowerStatus(out SYSTEM_POWER_STATUS lpSystemPowerStatus);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct SYSTEM_POWER_STATUS
@@ -261,7 +262,7 @@ public sealed class SharedScheduler : IDisposable
         _timer?.Dispose();
     }
 
-    private class ScheduledTask
+    private sealed class ScheduledTask
     {
         public string Name { get; init; } = string.Empty;
         public Action Action { get; init; } = () => { };

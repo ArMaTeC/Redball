@@ -671,7 +671,7 @@ public class ConfigService : IConfigService
 
             var backup = new
             {
-                ExportedAt = DateTime.Now,
+                ExportedAt = DateTime.UtcNow,
                 Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(),
                 Config
             };

@@ -10,13 +10,13 @@ namespace Redball.UI.Interop;
 /// These are required for Windows system integration (power management, input injection).
 /// </summary>
 [SecurityCritical]
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     // --- Power Management (kernel32.dll) ---
 
     // codeql[cs/dll-import-of-unmanaged-code] Required for Windows power management APIs
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    public static extern uint SetThreadExecutionState(uint esFlags);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    public static partial uint SetThreadExecutionState(uint esFlags);
 
     public const uint ES_CONTINUOUS = 0x80000000;
     public const uint ES_SYSTEM_REQUIRED = 0x00000001;
@@ -26,8 +26,8 @@ internal static class NativeMethods
     // --- Keyboard Input (user32.dll) ---
 
     // codeql[cs/dll-import-of-unmanaged-code] Required for keep-awake functionality via simulated input
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    private static partial uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
     /// <summary>
     /// SECURITY: Wrapper for SendInput with buffer size validation.
@@ -105,8 +105,8 @@ internal static class NativeMethods
     // --- Focus Assist / Do Not Disturb Detection ---
 
     // codeql[cs/dll-import-of-unmanaged-code] Required for Windows Focus Assist detection via WNF state
-    [DllImport("ntdll.dll")]
-    public static extern int NtQueryWnfStateData(
+    [LibraryImport("ntdll.dll")]
+    public static partial int NtQueryWnfStateData(
         ref ulong stateName,
         IntPtr typeId,
         IntPtr explicitScope,
@@ -144,13 +144,14 @@ internal static class NativeMethods
     // --- Idle Detection (user32.dll) ---
 
     // codeql[cs/dll-import-of-unmanaged-code] Required for user idle time detection
-    [DllImport("user32.dll")]
-    public static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetLastInputInfo(ref LASTINPUTINFO plii);
 
     // codeql[cs/dll-import-of-unmanaged-code] Required for admin privilege check
-    [DllImport("shell32.dll", SetLastError = true)]
+    [LibraryImport("shell32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool IsUserAnAdmin();
+    public static partial bool IsUserAnAdmin();
 
     [StructLayout(LayoutKind.Sequential)]
     public struct LASTINPUTINFO
@@ -162,8 +163,8 @@ internal static class NativeMethods
     // --- DWM Theming (dwmapi.dll) ---
 
     // codeql[cs/dll-import-of-unmanaged-code] Required for Windows theming (Mica/Acrylic)
-    [DllImport("dwmapi.dll")]
-    public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int attrSize);
+    [LibraryImport("dwmapi.dll")]
+    public static partial int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int attrSize);
 
     public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     public const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
@@ -180,8 +181,8 @@ internal static class NativeMethods
     // --- Code Integrity / Test Signing (ntdll.dll) ---
 
     // codeql[cs/dll-import-of-unmanaged-code] Required for detecting Windows Test Mode
-    [DllImport("ntdll.dll")]
-    private static extern int NtQuerySystemInformation(
+    [LibraryImport("ntdll.dll")]
+    private static partial int NtQuerySystemInformation(
         int SystemInformationClass,
         IntPtr SystemInformation,
         int SystemInformationLength,
@@ -239,6 +240,7 @@ internal static class NativeMethods
     // --- Memory Management (psapi.dll) ---
 
     // codeql[cs/dll-import-of-unmanaged-code] Required for memory optimisation
-    [DllImport("psapi.dll")]
-    internal static extern bool EmptyWorkingSet(IntPtr hProcess);
+    [LibraryImport("psapi.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool EmptyWorkingSet(IntPtr hProcess);
 }

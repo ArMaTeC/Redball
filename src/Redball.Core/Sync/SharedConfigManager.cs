@@ -42,7 +42,7 @@ public class SharedConfigManager
     /// <summary>
     /// Gets the cross-platform config directory path.
     /// </summary>
-    private string GetCrossPlatformConfigDirectory()
+    private static string GetCrossPlatformConfigDirectory()
     {
         // Use platform-appropriate config directories
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -258,7 +258,7 @@ public class SharedConfigManager
         }
     }
 
-    private SharedConfig CreateDefaultConfig()
+    private static SharedConfig CreateDefaultConfig()
     {
         return new SharedConfig
         {
@@ -287,12 +287,9 @@ public class SharedConfigManager
         };
     }
 
-    private SharedConfig ValidateAndRepair(SharedConfig config)
+    private static SharedConfig ValidateAndRepair(SharedConfig config)
     {
-        if (config.UniversalSettings == null)
-        {
-            config.UniversalSettings = new UniversalSettings();
-        }
+        config.UniversalSettings ??= new UniversalSettings();
 
         // Ensure reasonable defaults
         if (config.UniversalSettings.DefaultDuration < 1)
@@ -304,7 +301,7 @@ public class SharedConfigManager
         return config;
     }
 
-    private void ImportSharedToLocal(SharedConfig shared, RedballConfig local)
+    private static void ImportSharedToLocal(SharedConfig shared, RedballConfig local)
     {
         // Copy universal settings to local config
         local.DefaultDuration = shared.UniversalSettings.DefaultDuration;
@@ -318,22 +315,9 @@ public class SharedConfigManager
         local.SoundNotifications = shared.UniversalSettings.SoundNotifications;
         local.MinimizeToTray = shared.UniversalSettings.MinimizeToTray;
         local.ConfirmOnExit = shared.UniversalSettings.ConfirmOnExit;
-
-        // Apply platform-specific overrides if present
-        var platform = GetCurrentPlatform();
-        var overrides = platform switch
-        {
-            "macos" => shared.PlatformOverrides?.MacOS as object,
-            _ => shared.PlatformOverrides?.Windows as object
-        };
-
-        if (overrides != null)
-        {
-            // Apply overrides
-        }
     }
 
-    private void ExportLocalToShared(RedballConfig local, SharedConfig shared)
+    private static void ExportLocalToShared(RedballConfig local, SharedConfig shared)
     {
         // Copy local settings to universal config
         shared.UniversalSettings.DefaultDuration = local.DefaultDuration;
@@ -349,7 +333,7 @@ public class SharedConfigManager
         shared.UniversalSettings.ConfirmOnExit = local.ConfirmOnExit;
     }
 
-    private List<ConfigChange> GetConfigDifferences(SharedConfig shared, RedballConfig local)
+    private static List<ConfigChange> GetConfigDifferences(SharedConfig shared, RedballConfig local)
     {
         var changes = new List<ConfigChange>();
 
@@ -364,7 +348,7 @@ public class SharedConfigManager
         return changes;
     }
 
-    private SharedConfig AdaptConfigForPlatform(SharedConfig config, string sourcePlatform)
+    private static SharedConfig AdaptConfigForPlatform(SharedConfig config, string sourcePlatform)
     {
         var adapted = config;
         
@@ -377,21 +361,21 @@ public class SharedConfigManager
         return adapted;
     }
 
-    private string GetCurrentPlatform()
+    private static string GetCurrentPlatform()
     {
         if (OperatingSystem.IsWindows()) return "windows";
         if (OperatingSystem.IsMacOS()) return "macos";
         return "unknown";
     }
 
-    private string GetCurrentVersion()
+    private static string GetCurrentVersion()
     {
         return typeof(SharedConfigManager).Assembly.GetName().Version?.ToString(3) ?? "3.0.0";
     }
 
-    private int GetCurrentConfigVersion() => 1;
+    private static int GetCurrentConfigVersion() => 1;
 
-    private bool IsVersionCompatible(string version)
+    private static bool IsVersionCompatible(string version)
     {
         try
         {
@@ -438,13 +422,13 @@ public class UniversalSettings
     // UI settings
     public string Theme { get; set; } = "System";
     public bool Notifications { get; set; } = true;
-    public bool SoundNotifications { get; set; } = false;
+    public bool SoundNotifications { get; set; }
     public bool MinimizeToTray { get; set; } = true;
     public bool ConfirmOnExit { get; set; } = true;
     
     // Feature flags
-    public bool EnableSmartSchedule { get; set; } = false;
-    public bool EnableAdvancedAnalytics { get; set; } = false;
+    public bool EnableSmartSchedule { get; set; }
+    public bool EnableAdvancedAnalytics { get; set; }
 }
 
 public class PlatformSpecificSettings
@@ -455,15 +439,15 @@ public class PlatformSpecificSettings
 
 public class WindowsSettings
 {
-    public bool UseHIDMode { get; set; } = false;
+    public bool UseHIDMode { get; set; }
     public string? HIDDriverPath { get; set; }
-    public bool FocusAssistIntegration { get; set; } = false;
+    public bool FocusAssistIntegration { get; set; }
 }
 
 public class MacOSSettings
 {
     public bool UseCGEventMode { get; set; } = true;
-    public bool MenuBarIconOnly { get; set; } = false;
+    public bool MenuBarIconOnly { get; set; }
 }
 
 

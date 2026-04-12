@@ -22,6 +22,8 @@ public sealed class CrashTelemetryService
     private bool _consentConfigured;
     private string? _endpointUrl;
     private string? _apiKey;
+ 
+    private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
     private CrashTelemetryService()
     {
@@ -99,7 +101,7 @@ public sealed class CrashTelemetryService
                 ConsentConfigured = _consentConfigured,
                 ConfiguredAt = DateTime.UtcNow
             };
-            var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+            var json = JsonSerializer.Serialize(config, _jsonOptions);
             File.WriteAllText(_consentFilePath, json);
         }
         catch (Exception ex)
@@ -131,7 +133,7 @@ public sealed class CrashTelemetryService
     /// <summary>
     /// Configuration for consent persistence.
     /// </summary>
-    private class ConsentConfig
+    private sealed class ConsentConfig
     {
         public bool ConsentGranted { get; set; }
         public bool ConsentConfigured { get; set; }
@@ -162,7 +164,7 @@ public sealed class CrashTelemetryService
 
             // Save to local crash store
             var crashFile = Path.Combine(_crashStorePath, $"{envelope.ReportId}.json");
-            var json = JsonSerializer.Serialize(envelope, new JsonSerializerOptions { WriteIndented = true });
+            var json = JsonSerializer.Serialize(envelope, _jsonOptions);
             File.WriteAllText(crashFile, json);
 
             Logger.Error("CrashTelemetry", $"Crash recorded: {envelope.ExceptionType} (Fingerprint: {envelope.StackFingerprint})", ex);
@@ -272,7 +274,7 @@ public sealed class CrashTelemetryService
 
         // Copy recent crash reports (max 10)
         var crashes = GetLocalCrashes(10);
-        var crashesJson = JsonSerializer.Serialize(crashes, new JsonSerializerOptions { WriteIndented = true });
+        var crashesJson = JsonSerializer.Serialize(crashes, _jsonOptions);
         await File.WriteAllTextAsync(Path.Combine(bundleDir, "crashes.json"), crashesJson, ct);
 
         // Create metadata file
@@ -288,7 +290,7 @@ public sealed class CrashTelemetryService
             PendingUploads = Directory.GetFiles(_uploadQueuePath, "*.json").Length,
             ConsentGranted = _consentGranted
         };
-        var metadataJson = JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true });
+        var metadataJson = JsonSerializer.Serialize(metadata, _jsonOptions);
         await File.WriteAllTextAsync(Path.Combine(bundleDir, "metadata.json"), metadataJson, ct);
 
         // Note: Log files would be copied here in a real implementation

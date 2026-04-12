@@ -188,7 +188,7 @@ public sealed class StartupOptimizer
 /// </summary>
 public class LazyService
 {
-    private readonly object _lock = new();
+    private readonly System.Threading.SemaphoreSlim _lock = new(1, 1);
     private object? _instance;
 
     public string Name { get; }
@@ -219,7 +219,8 @@ public class LazyService
     {
         if (IsInitialized) return _instance!;
 
-        lock (_lock)
+        await _lock.WaitAsync();
+        try
         {
             if (IsInitialized) return _instance!;
 
@@ -232,7 +233,7 @@ public class LazyService
                 // If the instance has an async init method, call it
                 if (_instance is IInitializable initializable)
                 {
-                    initializable.InitializeAsync().Wait(TimeSpan.FromSeconds(10));
+                    await initializable.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
                 }
                 
                 IsInitialized = true;
@@ -251,6 +252,10 @@ public class LazyService
             }
 
             return _instance;
+        }
+        finally
+        {
+            _lock.Release();
         }
     }
 

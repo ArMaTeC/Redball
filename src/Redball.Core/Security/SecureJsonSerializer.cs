@@ -97,6 +97,11 @@ public static class SecureJsonSerializer
         return JsonSerializer.Serialize(value, StrictOptions);
     }
 
+    private static readonly JsonSerializerOptions PrettyOptions = new(StrictOptions)
+    {
+        WriteIndented = true
+    };
+ 
     /// <summary>
     /// Serializes an object to JSON with indented formatting for debugging.
     /// </summary>
@@ -105,11 +110,7 @@ public static class SecureJsonSerializer
     /// <returns>The formatted JSON string.</returns>
     public static string SerializePretty<T>(T value)
     {
-        var options = new JsonSerializerOptions(StrictOptions)
-        {
-            WriteIndented = true
-        };
-        return JsonSerializer.Serialize(value, options);
+        return JsonSerializer.Serialize(value, PrettyOptions);
     }
 
     /// <summary>

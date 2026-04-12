@@ -10,7 +10,7 @@ using System.Text.Json.Serialization;
 /// <summary>
 /// Named pipe server for IPC between the UI application and the service.
 /// </summary>
-public class IpcServer : IDisposable
+public partial class IpcServer : IDisposable
 {
     private const int DefaultPipeBufferSize = 4096; // 4KB buffer for IPC messages
     private const int MaxMessageSize = 1024 * 1024; // 1MB max message size for DoS protection
@@ -26,10 +26,10 @@ public class IpcServer : IDisposable
     private readonly Dictionary<int, ClientRateLimit> _clientRateLimits = new();
     private readonly object _rateLimitLock = new();
 
-    private class ClientRateLimit
+    private sealed class ClientRateLimit
     {
         public DateTime WindowStart { get; set; } = DateTime.UtcNow;
-        public int MessageCount { get; set; } = 0;
+        public int MessageCount { get; set; }
     }
 
     public const string PipeName = "RedballInputService";
@@ -55,14 +55,14 @@ public class IpcServer : IDisposable
 
         _cts = new CancellationTokenSource();
         _listenerTask = Task.Run(() => ListenAsync(_cts.Token));
-        _logger.LogInformation("IPC server starting");
+        Log.Starting(_logger);
     }
 
     public void Stop()
     {
         _cts?.Cancel();
         _listenerTask?.Wait(TimeSpan.FromSeconds(5));
-        _logger.LogInformation("IPC server stopped");
+        Log.Stopped(_logger);
     }
 
     private async Task ListenAsync(CancellationToken cancellationToken)
@@ -72,10 +72,10 @@ public class IpcServer : IDisposable
             try
             {
                 await using var pipe = CreatePipe();
-                _logger.LogDebug("Waiting for client connection...");
+                Log.WaitingForConnection(_logger);
 
                 await pipe.WaitForConnectionAsync(cancellationToken);
-                _logger.LogDebug("Client connected");
+                Log.ClientConnected(_logger);
 
                 await HandleClientAsync(pipe, cancellationToken);
             }
@@ -85,7 +85,7 @@ public class IpcServer : IDisposable
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in IPC listener");
+                Log.ErrorInListener(_logger, ex);
                 await Task.Delay(1000, cancellationToken);
             }
         }
@@ -117,7 +117,7 @@ public class IpcServer : IDisposable
         catch (IdentityNotMappedException)
         {
             // RedballUsers group doesn't exist on first run - this is expected, fall back to Interactive Users
-            _logger.LogInformation("RedballUsers group not found (expected on first run). Using Interactive Users for IPC access.");
+            Log.GroupNotFound(_logger);
             var interactiveRule = new PipeAccessRule(
                 new SecurityIdentifier(WellKnownSidType.InteractiveSid, null),
                 PipeAccessRights.ReadWrite,
@@ -165,7 +165,7 @@ public class IpcServer : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogWarning("Could not identify client process: {Message}", ex.Message);
+            Log.CouldNotIdentifyClient(_logger, ex.Message);
             clientProcessId = pipe.GetHashCode(); // Fallback identifier
         }
 
@@ -182,7 +182,7 @@ public class IpcServer : IDisposable
                 // SECURITY: Validate message size to prevent memory exhaustion
                 if (message.Length > MaxMessageSize)
                 {
-                    _logger.LogWarning("Rejected oversized message from client {ClientId}: {Size} bytes", clientProcessId, message.Length);
+                    Log.OversizedMessage(_logger, clientProcessId, message.Length);
                     await writer.WriteLineAsync(JsonSerializer.Serialize(new IpcResponse
                     {
                         Success = false,
@@ -194,7 +194,7 @@ public class IpcServer : IDisposable
                 // SECURITY: Rate limiting check
                 if (clientProcessId > 0 && !CheckRateLimit(clientProcessId))
                 {
-                    _logger.LogWarning("Rate limit exceeded for client {ClientId}", clientProcessId);
+                    Log.RateLimitExceeded(_logger, clientProcessId);
                     await writer.WriteLineAsync(JsonSerializer.Serialize(new IpcResponse
                     {
                         Success = false,
@@ -209,11 +209,11 @@ public class IpcServer : IDisposable
         }
         catch (IOException ex) when (ex.Message.Contains("broken", StringComparison.OrdinalIgnoreCase))
         {
-            _logger.LogDebug("Client disconnected");
+            Log.ClientDisconnected(_logger);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error handling client");
+            Log.ErrorHandlingClient(_logger, ex);
         }
         finally
         {
@@ -283,7 +283,7 @@ public class IpcServer : IDisposable
                 "get_session" => JsonSerializer.Serialize(new IpcResponse
                 {
                     Success = true,
-                    Data = System.Diagnostics.Process.GetCurrentProcess().SessionId.ToString()
+                    Data = System.Diagnostics.Process.GetCurrentProcess().SessionId.ToString(System.Globalization.CultureInfo.InvariantCulture)
                 }, _strictJsonOptions),
 
                 _ => JsonSerializer.Serialize(new IpcResponse { Success = false, Error = "Unknown command" }, _strictJsonOptions)
@@ -291,12 +291,12 @@ public class IpcServer : IDisposable
         }
         catch (JsonException ex)
         {
-            _logger.LogWarning("Invalid IPC message format: {Message}", ex.Message);
+            Log.InvalidIpcFormat(_logger, ex.Message);
             return JsonSerializer.Serialize(new IpcResponse { Success = false, Error = "Invalid message format" }, _strictJsonOptions);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing IPC message");
+            Log.ErrorProcessingIpc(_logger, ex);
             return JsonSerializer.Serialize(new IpcResponse { Success = false, Error = "Internal error" }, _strictJsonOptions);
         }
     }
@@ -322,7 +322,7 @@ public class IpcServer : IDisposable
         }
         catch (JsonException ex)
         {
-            _logger.LogWarning("Invalid keyboard injection data: {Message}", ex.Message);
+            Log.InvalidKeyboardInjectionData(_logger, ex.Message);
             return JsonSerializer.Serialize(new IpcResponse { Success = false, Error = "Invalid keyboard data format" }, _strictJsonOptions);
         }
     }
@@ -351,7 +351,7 @@ public class IpcServer : IDisposable
         }
         catch (JsonException ex)
         {
-            _logger.LogWarning("Invalid mouse injection data: {Message}", ex.Message);
+            Log.InvalidMouseInjectionData(_logger, ex.Message);
             return JsonSerializer.Serialize(new IpcResponse { Success = false, Error = "Invalid mouse data format" }, _strictJsonOptions);
         }
     }
@@ -363,32 +363,33 @@ public class IpcServer : IDisposable
         Stop();
         _cts?.Dispose();
         _disposed = true;
+        GC.SuppressFinalize(this);
     }
 
     #region IPC Data Types
-
-    private class IpcRequest
+ 
+    private sealed class IpcRequest
     {
         public string Command { get; set; } = string.Empty;
         public string Data { get; set; } = string.Empty;
     }
-
-    private class IpcResponse
+ 
+    private sealed class IpcResponse
     {
         public bool Success { get; set; }
         public string? Data { get; set; }
         public string? Error { get; set; }
     }
-
-    private class KeyboardInjectionData
+ 
+    private sealed class KeyboardInjectionData
     {
         public uint SessionId { get; set; }
         public ushort KeyCode { get; set; }
         public bool KeyUp { get; set; }
         public bool Extended { get; set; }
     }
-
-    private class MouseInjectionData
+ 
+    private sealed class MouseInjectionData
     {
         public uint SessionId { get; set; }
         public int X { get; set; }
@@ -396,6 +397,54 @@ public class IpcServer : IDisposable
         public uint MouseData { get; set; }
         public uint Flags { get; set; }
     }
-
+ 
     #endregion
+ 
+    private static partial class Log
+    {
+        [LoggerMessage(Level = LogLevel.Information, Message = "IPC server starting")]
+        public static partial void Starting(ILogger logger);
+ 
+        [LoggerMessage(Level = LogLevel.Information, Message = "IPC server stopped")]
+        public static partial void Stopped(ILogger logger);
+ 
+        [LoggerMessage(Level = LogLevel.Debug, Message = "Waiting for client connection...")]
+        public static partial void WaitingForConnection(ILogger logger);
+ 
+        [LoggerMessage(Level = LogLevel.Debug, Message = "Client connected")]
+        public static partial void ClientConnected(ILogger logger);
+ 
+        [LoggerMessage(Level = LogLevel.Error, Message = "Error in IPC listener")]
+        public static partial void ErrorInListener(ILogger logger, Exception ex);
+ 
+        [LoggerMessage(Level = LogLevel.Information, Message = "RedballUsers group not found (expected on first run). Using Interactive Users for IPC access.")]
+        public static partial void GroupNotFound(ILogger logger);
+ 
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Could not identify client process: {Message}")]
+        public static partial void CouldNotIdentifyClient(ILogger logger, string message);
+ 
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Rejected oversized message from client {ClientId}: {Size} bytes")]
+        public static partial void OversizedMessage(ILogger logger, int clientId, int size);
+ 
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Rate limit exceeded for client {ClientId}")]
+        public static partial void RateLimitExceeded(ILogger logger, int clientId);
+ 
+        [LoggerMessage(Level = LogLevel.Debug, Message = "Client disconnected")]
+        public static partial void ClientDisconnected(ILogger logger);
+ 
+        [LoggerMessage(Level = LogLevel.Error, Message = "Error handling client")]
+        public static partial void ErrorHandlingClient(ILogger logger, Exception ex);
+ 
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Invalid IPC message format: {Message}")]
+        public static partial void InvalidIpcFormat(ILogger logger, string message);
+ 
+        [LoggerMessage(Level = LogLevel.Error, Message = "Error processing IPC message")]
+        public static partial void ErrorProcessingIpc(ILogger logger, Exception ex);
+ 
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Invalid keyboard injection data: {Message}")]
+        public static partial void InvalidKeyboardInjectionData(ILogger logger, string message);
+ 
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Invalid mouse injection data: {Message}")]
+        public static partial void InvalidMouseInjectionData(ILogger logger, string message);
+    }
 }

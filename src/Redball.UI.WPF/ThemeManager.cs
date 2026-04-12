@@ -337,12 +337,16 @@ public static class ThemeManager
 
     private static void SetBrush(ResourceDictionary res, string key, byte r, byte g, byte b)
     {
-        res[key] = new SolidColorBrush(Color.FromRgb(r, g, b));
+        var brush = new SolidColorBrush(Color.FromRgb(r, g, b));
+        brush.Freeze();
+        res[key] = brush;
     }
 
     private static void SetBrush(ResourceDictionary res, string key, byte a, byte r, byte g, byte b)
     {
-        res[key] = new SolidColorBrush(Color.FromArgb(a, r, g, b));
+        var brush = new SolidColorBrush(Color.FromArgb(a, r, g, b));
+        brush.Freeze();
+        res[key] = brush;
     }
 
     /// <summary>

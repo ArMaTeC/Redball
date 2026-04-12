@@ -1,0 +1,11 @@
+058c:err:winediag:ntlm_check_version ntlm_auth was not found. Make sure that ntlm_auth >= 3.0.25 is in your path. Usually, you can find it in the winbind package of your distribution.
+058c:err:ntlm:ntlm_LsaApInitializePackage no NTLM support, expect problems
+  Redball.Core -> Z:\root\Redball\src\Redball.Core\bin\Release\net10.0\Redball.Core.dll
+  Redball.Service -> Z:\root\Redball\src\Redball.Service\bin\Release\net10.0-windows\win-x64\Redball.Service.dll
+  Redball.UI.WPF -> Z:\root\Redball\src\Redball.UI.WPF\bin\Release\net10.0-windows\win-x64\Redball.UI.WPF.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:55.43

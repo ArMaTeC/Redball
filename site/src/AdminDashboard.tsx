@@ -57,7 +57,10 @@ export const AdminDashboard: React.FC = () => {
 
   const fetchLogs = async () => {
     try {
-      const res = await fetch('/api/admin/logs');
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/build/log', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       if (res.ok) {
         const text = await res.text();
         setBuildLogs(text.split('\n').filter(Boolean).slice(-50)); // Last 50 lines
@@ -132,7 +135,11 @@ export const AdminDashboard: React.FC = () => {
     setIsBuilding(true);
     setBuildLogs(['[BUILD] Starting Redball build pipeline...']);
     try {
-      const res = await fetch('/api/admin/build', { method: 'POST' });
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/build/start', {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }

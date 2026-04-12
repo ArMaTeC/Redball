@@ -20,9 +20,8 @@ public static class HashUtility
     /// <returns>Hex-encoded hash string</returns>
     public static string ComputeStringHash(string input, int? truncateLength = null)
     {
-        using var sha256 = SHA256.Create();
         var bytes = Encoding.UTF8.GetBytes(input);
-        var hash = sha256.ComputeHash(bytes);
+        var hash = SHA256.HashData(bytes);
         var hexHash = Convert.ToHexString(hash);
         
         return truncateLength.HasValue 
@@ -38,8 +37,7 @@ public static class HashUtility
     /// <returns>Hex-encoded hash string</returns>
     public static string ComputeBytesHash(byte[] data, int? truncateLength = null)
     {
-        using var sha256 = SHA256.Create();
-        var hash = sha256.ComputeHash(data);
+        var hash = SHA256.HashData(data);
         var hexHash = Convert.ToHexString(hash);
         
         return truncateLength.HasValue 
@@ -56,9 +54,8 @@ public static class HashUtility
     public static string ComputeFileHash(string filePath, bool lowercase = false)
     {
         using var stream = File.OpenRead(filePath);
-        using var sha256 = SHA256.Create();
-        var hash = sha256.ComputeHash(stream);
-        var hexHash = BitConverter.ToString(hash).Replace("-", "");
+        var hash = SHA256.HashData(stream);
+        var hexHash = Convert.ToHexString(hash);
         
         return lowercase ? hexHash.ToLowerInvariant() : hexHash;
     }
@@ -72,9 +69,8 @@ public static class HashUtility
     public static async Task<string> ComputeFileHashAsync(string filePath, bool lowercase = false)
     {
         await using var stream = File.OpenRead(filePath);
-        using var sha256 = SHA256.Create();
-        var hash = await sha256.ComputeHashAsync(stream);
-        var hexHash = BitConverter.ToString(hash).Replace("-", "");
+        var hash = await SHA256.HashDataAsync(stream);
+        var hexHash = Convert.ToHexString(hash);
         
         return lowercase ? hexHash.ToLowerInvariant() : hexHash;
     }
@@ -87,9 +83,8 @@ public static class HashUtility
     /// <returns>Hex-encoded hash string</returns>
     public static async Task<string> ComputeStreamHashAsync(Stream stream, bool lowercase = false)
     {
-        using var sha256 = SHA256.Create();
-        var hash = await sha256.ComputeHashAsync(stream);
-        var hexHash = BitConverter.ToString(hash).Replace("-", "");
+        var hash = await SHA256.HashDataAsync(stream);
+        var hexHash = Convert.ToHexString(hash);
         
         return lowercase ? hexHash.ToLowerInvariant() : hexHash;
     }

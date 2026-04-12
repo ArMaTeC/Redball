@@ -66,9 +66,8 @@ public sealed record CrashEnvelope(
 
     private static string HashString(string input)
     {
-        using var sha256 = SHA256.Create();
         var bytes = Encoding.UTF8.GetBytes(input);
-        var hash = sha256.ComputeHash(bytes);
+        var hash = SHA256.HashData(bytes);
         return Convert.ToHexString(hash)[..16]; // First 16 chars for brevity
     }
 }
@@ -76,7 +75,7 @@ public sealed record CrashEnvelope(
 /// <summary>
 /// Generates consistent fingerprints from exceptions for grouping and deduplication.
 /// </summary>
-public static class CrashFingerprint
+public static partial class CrashFingerprint
 {
     /// <summary>
     /// Creates a normalized fingerprint from an exception.
@@ -111,9 +110,8 @@ public static class CrashFingerprint
         }
 
         // Hash the combined string for consistent length
-        using var sha256 = SHA256.Create();
         var bytes = Encoding.UTF8.GetBytes(sb.ToString());
-        var hash = sha256.ComputeHash(bytes);
+        var hash = SHA256.HashData(bytes);
 
         // Return first 16 chars of hex - enough for grouping, short for display
         return Convert.ToHexString(hash)[..16];
@@ -136,7 +134,7 @@ public static class CrashFingerprint
             // To: "Redball.UI.Services.ConfigService.Load"
 
             var trimmed = line.Trim();
-            if (!trimmed.StartsWith("at ")) continue;
+            if (!trimmed.StartsWith("at ", StringComparison.Ordinal)) continue;
 
             var methodPart = trimmed[3..]; // Remove "at "
 
@@ -171,23 +169,23 @@ public static class CrashFingerprint
     private static string SanitizeMethodSignature(string signature)
     {
         // Remove any Windows-style paths (C:\, D:\, etc.)
-        signature = System.Text.RegularExpressions.Regex.Replace(
-            signature, 
-            @"[A-Z]:\\[^\s]+", 
-            "[PATH_REMOVED]");
+        signature = WindowsPathRegex().Replace(signature, "[PATH_REMOVED]");
 
         // Remove any Unix-style absolute paths (/home/, /usr/, etc.)
-        signature = System.Text.RegularExpressions.Regex.Replace(
-            signature, 
-            @"/(?:home|usr|opt|var|root)/[^\s]+", 
-            "[PATH_REMOVED]");
+        signature = UnixPathRegex().Replace(signature, "[PATH_REMOVED]");
 
         // Remove any UNC paths (\\server\share\...)
-        signature = System.Text.RegularExpressions.Regex.Replace(
-            signature, 
-            @"\\\\[^\s]+", 
-            "[PATH_REMOVED]");
+        signature = UncPathRegex().Replace(signature, "[PATH_REMOVED]");
 
         return signature;
     }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"[A-Z]:\\[^\s]+")]
+    private static partial System.Text.RegularExpressions.Regex WindowsPathRegex();
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"/(?:home|usr|opt|var|root)/[^\s]+")]
+    private static partial System.Text.RegularExpressions.Regex UnixPathRegex();
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"\\\\[^\s]+")]
+    private static partial System.Text.RegularExpressions.Regex UncPathRegex();
 }

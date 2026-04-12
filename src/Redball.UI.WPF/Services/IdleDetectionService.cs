@@ -40,6 +40,11 @@ public class IdleDetectionService
         }
     }
 
+    public event EventHandler? OnUserIdleDetected;
+    public event EventHandler? OnUserActivityDetected;
+
+    private bool _wasIdle;
+
     /// <summary>
     /// Checks idle time and auto-pauses/resumes keep-awake as needed.
     /// </summary>
@@ -48,6 +53,20 @@ public class IdleDetectionService
         if (!IsEnabled) return;
 
         var idleMinutes = GetIdleMinutes();
+        bool isIdle = idleMinutes > ThresholdMinutes;
+
+        if (isIdle && !_wasIdle)
+        {
+            _wasIdle = true;
+            OnUserIdleDetected?.Invoke(this, EventArgs.Empty);
+            Logger.Info("IdleDetection", $"User declared idle after {idleMinutes:F1} minutes.");
+        }
+        else if (!isIdle && _wasIdle)
+        {
+            _wasIdle = false;
+            OnUserActivityDetected?.Invoke(this, EventArgs.Empty);
+            Logger.Info("IdleDetection", "User activity detected. System is no longer idle.");
+        }
 
         if (idleMinutes > ThresholdMinutes && keepAwake.IsActive && !keepAwake.AutoPausedIdle)
         {

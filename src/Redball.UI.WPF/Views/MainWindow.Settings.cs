@@ -1181,7 +1181,7 @@ public partial class MainWindow
             if (createResult.ExitCode != 0)
             {
                 // Check if service already exists
-                if (createResult.StdErr.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+                if (createResult.StdErr.Contains("already exists", StringComparison.Ordinal))
                 {
                     Logger.Info("MainWindow", "Service already exists, attempting to start...");
                 }
@@ -1370,7 +1370,7 @@ public partial class MainWindow
 
             // Delete the service
             var deleteResult = RunProcess("sc.exe", "delete RedballInputService");
-            if (deleteResult.ExitCode != 0 && !deleteResult.StdErr.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
+            if (deleteResult.ExitCode != 0 && !deleteResult.StdErr.Contains("does not exist", StringComparison.Ordinal))
             {
                 var err = $"Failed to delete service: {deleteResult.StdErr}";
                 Logger.Error("MainWindow", err);

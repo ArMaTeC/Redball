@@ -12,7 +12,7 @@ using System.Text.Json;
 /// Handles input injection across sessions, including RDP.
 /// Uses SendInput for local session and WTSSendMessage for remote session notification.
 /// </summary>
-public class InputInjectionEngine
+public partial class InputInjectionEngine
 {
     private readonly ILogger<InputInjectionEngine> _logger;
     private bool _initialized;
@@ -25,15 +25,15 @@ public class InputInjectionEngine
     public void Initialize()
     {
         if (_initialized) return;
-
-        _logger.LogInformation("Initializing input injection engine");
+ 
+        Log.Initializing(_logger);
         _initialized = true;
     }
-
+ 
     public void Shutdown()
     {
         _initialized = false;
-        _logger.LogInformation("Input injection engine shutdown");
+        Log.Shutdown(_logger);
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ public class InputInjectionEngine
     {
         if (!_initialized)
         {
-            _logger.LogWarning("Engine not initialized");
+            Log.EngineNotInitialized(_logger);
             return false;
         }
 
@@ -64,7 +64,7 @@ public class InputInjectionEngine
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to inject keyboard input for session {SessionId}", sessionId);
+            Log.KeyboardInjectionFailed(_logger, sessionId, ex);
             return false;
         }
     }
@@ -76,7 +76,7 @@ public class InputInjectionEngine
     {
         if (!_initialized)
         {
-            _logger.LogWarning("Engine not initialized");
+            Log.EngineNotInitialized(_logger);
             return false;
         }
 
@@ -95,7 +95,7 @@ public class InputInjectionEngine
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to inject mouse input for session {SessionId}", sessionId);
+            Log.MouseInjectionFailed(_logger, sessionId, ex);
             return false;
         }
     }
@@ -120,14 +120,14 @@ public class InputInjectionEngine
         if (result == 0)
         {
             var error = Marshal.GetLastWin32Error();
-            _logger.LogError("SendInput failed with error {Error}", error);
+            Log.SendInputFailed(_logger, error);
             return false;
         }
 
         return true;
     }
 
-    private bool SendLocalMouseInput(MouseInputData data)
+    private static bool SendLocalMouseInput(MouseInputData data)
     {
         var input = new INPUT
         {
@@ -150,7 +150,7 @@ public class InputInjectionEngine
 
     private bool SendRemoteKeyboardInput(uint targetSessionId, ushort keyCode, bool keyUp, bool extended)
     {
-        _logger.LogDebug("Launching helper for remote keyboard injection in session {SessionId}", targetSessionId);
+        Log.LaunchingHelperRemoteKeyboard(_logger, targetSessionId);
 
         // For RDP sessions, we need to use the session helper via CreateProcessAsUser
         var request = new
@@ -166,7 +166,7 @@ public class InputInjectionEngine
 
     private bool SendRemoteMouseInput(uint targetSessionId, MouseInputData input)
     {
-        _logger.LogDebug("Launching helper for remote mouse injection in session {SessionId}", targetSessionId);
+        Log.LaunchingHelperRemoteMouse(_logger, targetSessionId);
 
         var request = new
         {
@@ -186,7 +186,7 @@ public class InputInjectionEngine
         if (!WTSQueryUserToken(sessionId, out hToken))
         {
             var error = Marshal.GetLastWin32Error();
-            _logger.LogError("WTSQueryUserToken failed for session {SessionId}: {Error}", sessionId, error);
+            Log.WtsQueryUserTokenFailed(_logger, sessionId, error);
             return false;
         }
 
@@ -204,7 +204,7 @@ public class InputInjectionEngine
             IntPtr env = IntPtr.Zero;
             if (!CreateEnvironmentBlock(out env, hToken, false))
             {
-                _logger.LogWarning("Failed to create environment block");
+                Log.EnvironmentBlockFailed(_logger);
             }
 
             try
@@ -229,24 +229,29 @@ public class InputInjectionEngine
                 if (!created)
                 {
                     var error = Marshal.GetLastWin32Error();
-                    _logger.LogError("CreateProcessAsUser failed: {Error}", error);
+                    Log.CreateProcessAsUserFailed(_logger, error);
                     return false;
                 }
 
                 try
                 {
                     // Resume and wait for completion
-                    ResumeThread(pi.hThread);
+                    int resumeResult = (int)ResumeThread(pi.hThread);
+                    if (resumeResult == -1)
+                    {
+                        var error = Marshal.GetLastWin32Error();
+                        Log.ResumeThreadFailed(_logger, error);
+                    }
 
                     // Wait up to 5 seconds for helper to complete
                     using var process = Process.GetProcessById((int)pi.dwProcessId);
                     if (!process.WaitForExit(5000))
                     {
-                        _logger.LogWarning("Session helper timed out");
+                        Log.SessionHelperTimeout(_logger);
                         try { process.Kill(); }
                         catch (Exception ex)
                         {
-                            _logger.LogDebug("Failed to kill timed out session helper: {Message}", ex.Message);
+                            Log.KillHelperFailed(_logger, ex.Message);
                         }
                         return false;
                     }
@@ -335,8 +340,7 @@ public class InputInjectionEngine
     // SECURITY: Buffer-validated wrapper for SendInput
     private static uint SendInputSafe(INPUT[] inputs)
     {
-        if (inputs == null)
-            throw new ArgumentNullException(nameof(inputs));
+        ArgumentNullException.ThrowIfNull(inputs);
         if (inputs.Length == 0)
             return 0;
         if (inputs.Length > 1000)
@@ -346,37 +350,42 @@ public class InputInjectionEngine
         return SendInput((uint)inputs.Length, inputs, cbSize);
     }
 
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    private static partial uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
-    [DllImport("wtsapi32.dll", SetLastError = true)]
-    private static extern bool WTSQueryUserToken(uint sessionId, out IntPtr phToken);
+    [LibraryImport("wtsapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool WTSQueryUserToken(uint sessionId, out IntPtr phToken);
 
-    [DllImport("userenv.dll", SetLastError = true)]
-    private static extern bool CreateEnvironmentBlock(out IntPtr lpEnvironment, IntPtr hToken, bool bInherit);
+    [LibraryImport("userenv.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool CreateEnvironmentBlock(out IntPtr lpEnvironment, IntPtr hToken, [MarshalAs(UnmanagedType.Bool)] bool bInherit);
 
-    [DllImport("userenv.dll", SetLastError = true)]
-    private static extern bool DestroyEnvironmentBlock(IntPtr lpEnvironment);
+    [LibraryImport("userenv.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool DestroyEnvironmentBlock(IntPtr lpEnvironment);
 
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool CloseHandle(IntPtr hObject);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool CloseHandle(IntPtr hObject);
 
-    [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-    private static extern bool CreateProcessAsUser(
+    [LibraryImport("advapi32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool CreateProcessAsUser(
         IntPtr hToken,
         string? lpApplicationName,
         string lpCommandLine,
         IntPtr lpProcessAttributes,
         IntPtr lpThreadAttributes,
-        bool bInheritHandles,
+        [MarshalAs(UnmanagedType.Bool)] bool bInheritHandles,
         uint dwCreationFlags,
         IntPtr lpEnvironment,
         string? lpCurrentDirectory,
         ref STARTUPINFO lpStartupInfo,
         out PROCESS_INFORMATION lpProcessInformation);
 
-    [DllImport("kernel32.dll")]
-    private static extern uint ResumeThread(IntPtr hThread);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    private static partial uint ResumeThread(IntPtr hThread);
 
     private const uint CREATE_SUSPENDED = 0x00000004;
     private const uint CREATE_UNICODE_ENVIRONMENT = 0x00000400;
@@ -442,13 +451,52 @@ public class InputInjectionEngine
         public IntPtr dwExtraInfo;
     }
 
-    public struct MouseInputData
-    {
-        public int X;
-        public int Y;
-        public uint MouseData;
-        public uint Flags;
-    }
+    public record struct MouseInputData(int X, int Y, uint MouseData, uint Flags);
 
     #endregion
+ 
+    private static partial class Log
+    {
+        [LoggerMessage(Level = LogLevel.Information, Message = "Initializing input injection engine")]
+        public static partial void Initializing(ILogger logger);
+ 
+        [LoggerMessage(Level = LogLevel.Information, Message = "Input injection engine shutdown")]
+        public static partial void Shutdown(ILogger logger);
+ 
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Engine not initialized")]
+        public static partial void EngineNotInitialized(ILogger logger);
+ 
+        [LoggerMessage(Level = LogLevel.Error, Message = "Failed to inject keyboard input for session {SessionId}")]
+        public static partial void KeyboardInjectionFailed(ILogger logger, uint sessionId, Exception ex);
+ 
+        [LoggerMessage(Level = LogLevel.Error, Message = "Failed to inject mouse input for session {SessionId}")]
+        public static partial void MouseInjectionFailed(ILogger logger, uint sessionId, Exception ex);
+ 
+        [LoggerMessage(Level = LogLevel.Error, Message = "SendInput failed with error {Error}")]
+        public static partial void SendInputFailed(ILogger logger, int error);
+ 
+        [LoggerMessage(Level = LogLevel.Debug, Message = "Launching helper for remote keyboard injection in session {SessionId}")]
+        public static partial void LaunchingHelperRemoteKeyboard(ILogger logger, uint sessionId);
+ 
+        [LoggerMessage(Level = LogLevel.Debug, Message = "Launching helper for remote mouse injection in session {SessionId}")]
+        public static partial void LaunchingHelperRemoteMouse(ILogger logger, uint sessionId);
+ 
+        [LoggerMessage(Level = LogLevel.Error, Message = "WTSQueryUserToken failed for session {SessionId}: {Error}")]
+        public static partial void WtsQueryUserTokenFailed(ILogger logger, uint sessionId, int error);
+ 
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to create environment block")]
+        public static partial void EnvironmentBlockFailed(ILogger logger);
+ 
+        [LoggerMessage(Level = LogLevel.Error, Message = "CreateProcessAsUser failed: {Error}")]
+        public static partial void CreateProcessAsUserFailed(ILogger logger, int error);
+ 
+        [LoggerMessage(Level = LogLevel.Error, Message = "ResumeThread failed: {Error}")]
+        public static partial void ResumeThreadFailed(ILogger logger, int error);
+ 
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Session helper timed out")]
+        public static partial void SessionHelperTimeout(ILogger logger);
+ 
+        [LoggerMessage(Level = LogLevel.Debug, Message = "Failed to kill timed out session helper: {Message}")]
+        public static partial void KillHelperFailed(ILogger logger, string message);
+    }
 }

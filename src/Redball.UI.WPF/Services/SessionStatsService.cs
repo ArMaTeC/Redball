@@ -18,6 +18,8 @@ public class SessionStatsService
     private readonly string _statsFile;
     private SessionStatsData _data = new();
     private DateTime? _currentSessionStart;
+ 
+    private static readonly JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
 
     public event EventHandler? StatsUpdated;
 
@@ -64,14 +66,14 @@ public class SessionStatsService
             _data.LongestSession = duration;
 
         // Track daily hours
-        var dayKey = DateTime.Now.ToString("yyyy-MM-dd");
+        var dayKey = DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
         _data.DailyHours.TryGetValue(dayKey, out var existing);
         _data.DailyHours[dayKey] = existing + duration.TotalHours;
 
         _currentSessionStart = null;
         Save();
         StatsUpdated?.Invoke(this, EventArgs.Empty);
-        Logger.Info("SessionStatsService", $"Session ended: {duration.TotalMinutes:F1} min");
+        Logger.Info("SessionStatsService", string.Format(System.Globalization.CultureInfo.InvariantCulture, "Session ended: {0:F1} min", duration.TotalMinutes));
     }
 
     public string GetSummaryText()
@@ -137,8 +139,8 @@ public class SessionStatsService
         if (ts.TotalDays >= 1)
             return $"{(int)ts.TotalDays}d {ts.Hours}h {ts.Minutes}m";
         if (ts.TotalHours >= 1)
-            return $"{(int)ts.TotalHours}h {ts.Minutes}m";
-        return $"{(int)ts.TotalMinutes}m";
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}h {1}m", (int)ts.TotalHours, ts.Minutes);
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}m", (int)ts.TotalMinutes);
     }
 
     private void Load()
@@ -163,7 +165,7 @@ public class SessionStatsService
     {
         try
         {
-            var json = JsonSerializer.Serialize(_data, new JsonSerializerOptions { WriteIndented = true });
+            var json = JsonSerializer.Serialize(_data, SerializerOptions);
             File.WriteAllText(_statsFile, json);
         }
         catch (Exception ex)

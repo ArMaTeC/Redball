@@ -28,8 +28,9 @@ public static class SecurePathValidator
             var fullBase = Path.GetFullPath(baseDir);
 
             // Ensure base directory ends with separator for proper prefix matching
-            if (!fullBase.EndsWith(Path.DirectorySeparatorChar.ToString()))
-                fullBase += Path.DirectorySeparatorChar;
+            var separator = Path.DirectorySeparatorChar.ToString();
+            if (!fullBase.EndsWith(separator, StringComparison.Ordinal))
+                fullBase += separator;
 
             return fullPath.StartsWith(fullBase, StringComparison.OrdinalIgnoreCase);
         }
@@ -66,11 +67,11 @@ public static class SecurePathValidator
             return false;
 
         // Check for common traversal patterns
-        if (path.Contains("..") || path.Contains("~"))
+        if (path.Contains("..", StringComparison.Ordinal) || path.Contains('~'))
             return false;
 
         // Check for rooted/absolute paths that might be unexpected
-        if (Path.IsPathRooted(path) && !path.StartsWith("\\?\\"))
+        if (Path.IsPathRooted(path) && !path.StartsWith(@"\\?\", StringComparison.Ordinal))
             return false;
 
         return true;
@@ -105,7 +106,7 @@ public static class SecurePathValidator
         }
 
         // Remove traversal sequences
-        fileName = fileName.Replace("..", "_");
+        fileName = fileName.Replace("..", "_", StringComparison.Ordinal);
 
         return fileName.Trim();
     }

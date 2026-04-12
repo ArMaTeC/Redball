@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 
-public class InputInjectionService : BackgroundService
+public partial class InputInjectionService : BackgroundService
 {
     private readonly ILogger<InputInjectionService> _logger;
     private readonly InputInjectionEngine _engine;
@@ -22,34 +22,55 @@ public class InputInjectionService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Redball Input Service starting...");
+        Log.ServiceStarting(_logger);
 
         try
         {
             _engine.Initialize();
-            _logger.LogInformation("Input injection engine initialized");
+            Log.EngineInitialized(_logger);
 
             _ipcServer.Start();
-            _logger.LogInformation("IPC server started on pipe: {PipeName}", IpcServer.PipeName);
+            Log.IpcServerStarted(_logger, IpcServer.PipeName);
 
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("Service shutdown requested");
+            Log.ServiceShutdown(_logger);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Service encountered fatal error");
+            Log.ServiceFatalError(_logger, ex);
             throw;
         }
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Redball Input Service stopping...");
+        Log.ServiceStopping(_logger);
         _ipcServer.Stop();
         _engine.Shutdown();
         await base.StopAsync(cancellationToken);
+    }
+
+    private static partial class Log
+    {
+        [LoggerMessage(Level = LogLevel.Information, Message = "Redball Input Service starting...")]
+        public static partial void ServiceStarting(ILogger logger);
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "Input injection engine initialized")]
+        public static partial void EngineInitialized(ILogger logger);
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "IPC server started on pipe: {PipeName}")]
+        public static partial void IpcServerStarted(ILogger logger, string pipeName);
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "Service shutdown requested")]
+        public static partial void ServiceShutdown(ILogger logger);
+
+        [LoggerMessage(Level = LogLevel.Error, Message = "Service encountered fatal error")]
+        public static partial void ServiceFatalError(ILogger logger, Exception ex);
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "Redball Input Service stopping...")]
+        public static partial void ServiceStopping(ILogger logger);
     }
 }
