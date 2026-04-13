@@ -178,6 +178,36 @@ internal static partial class NativeMethods
         DWMSBT_TABBEDWINDOW = 4 // Mica Alt
     }
 
+    // --- Window Styles and Property Management (user32.dll) ---
+
+    public const int GWL_EXSTYLE = -20;
+    public const int WS_EX_LAYERED = 0x80000;
+    public const int WS_EX_TRANSPARENT = 0x20;
+
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
+    private static partial IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);
+
+    [LibraryImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
+    private static partial IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+    /// <summary>
+    /// Wrapper for GetWindowLongPtr that handles 32-bit and 64-bit compatibility.
+    /// </summary>
+    public static IntPtr GetWindowLong(IntPtr hWnd, int nIndex)
+    {
+        // For win-x64, we always use GetWindowLongPtr
+        return GetWindowLongPtr(hWnd, nIndex);
+    }
+
+    /// <summary>
+    /// Wrapper for SetWindowLongPtr that handles 32-bit and 64-bit compatibility.
+    /// </summary>
+    public static IntPtr SetWindowLong(IntPtr hWnd, int nIndex, IntPtr dwNewLong)
+    {
+        // For win-x64, we always use SetWindowLongPtr
+        return SetWindowLongPtr(hWnd, nIndex, dwNewLong);
+    }
+
     // --- Code Integrity / Test Signing (ntdll.dll) ---
 
     // codeql[cs/dll-import-of-unmanaged-code] Required for detecting Windows Test Mode

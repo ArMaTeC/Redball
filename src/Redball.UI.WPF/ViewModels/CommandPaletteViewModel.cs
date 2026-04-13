@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using Redball.UI.Services;
+using System.Diagnostics;
 
 namespace Redball.UI.ViewModels;
 
@@ -55,12 +57,55 @@ public class CommandPaletteViewModel : ViewModelBase
     private void FilterCommands()
     {
         FilteredCommands.Clear();
-        var matches = string.IsNullOrWhiteSpace(SearchText)
-            ? _allCommands
-            : _allCommands.Where(c => c.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) || 
-                                     c.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+        
+        if (string.IsNullOrWhiteSpace(SearchText))
+        {
+            foreach (var cmd in _allCommands) FilteredCommands.Add(cmd);
+            return;
+        }
 
-        foreach (var match in matches)
+        // 1. Check for Smart Intent
+        var lowerSearch = SearchText.ToLower();
+        var matches = new List<PaletteCommand>();
+        
+        // Timer Intent
+        var timerMatch = System.Text.RegularExpressions.Regex.Match(SearchText, @"(?:awake|for|min|stay)\s*(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (timerMatch.Success && int.TryParse(timerMatch.Groups[1].Value, out var mins))
+        {
+            if (mins > 0 && mins <= 720)
+            {
+                matches.Add(new PaletteCommand { Name = $"Start {mins}m Session", Description = $"Keep-Awake for {mins} minutes", Icon = "⏰", Action = () => KeepAwakeService.Instance.StartTimed(mins) });
+            }
+        }
+
+        // Theme Intent
+        if (lowerSearch.Contains("theme") || lowerSearch.Contains("mode") || lowerSearch.Contains("skin"))
+        {
+            var themes = new[] { "Dark", "Light", "Cyan", "Amber", "Red", "Green", "Slate" };
+            foreach (var t in themes)
+            {
+                if (lowerSearch.Contains(t.ToLower()))
+                {
+                    matches.Add(new PaletteCommand { Name = $"Apply {t} Theme", Description = $"Switch UI color to {t}", Icon = "🎨", Action = () => ThemeManager.SetThemeFromConfig(t) });
+                }
+            }
+        }
+
+        // Documentation Intent
+        if (lowerSearch.Contains("help") || lowerSearch.Contains("wiki") || lowerSearch.Contains("docs"))
+        {
+            matches.Add(new PaletteCommand { Name = "Open Documentation", Description = "View the Redball Wiki on GitHub", Icon = "📖", Action = () => Process.Start(new ProcessStartInfo("https://github.com/ArMaTeC/Redball/wiki") { UseShellExecute = true }) });
+        }
+
+        // 2. Direct name matches (High priority)
+        matches.AddRange(_allCommands.Where(c => c.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
+
+        // 3. Description/Keyword matches (Lower priority)
+        var remaining = _allCommands.Except(matches)
+                                   .Where(c => c.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+        matches.AddRange(remaining);
+
+        foreach (var match in matches.Distinct())
         {
             FilteredCommands.Add(match);
         }

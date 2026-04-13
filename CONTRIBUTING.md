@@ -11,34 +11,26 @@ Please read our [Code of Conduct](docs/CODE_OF_CONDUCT.md) before contributing. 
 ### Prerequisites
 
 - **Windows 10+** (or cross-platform build systems via Node/Playwright)
-- **PowerShell 7+**
-- **.NET 10.0 SDK** (for WPF UI development)
-- **Node.js 20+** (for Web Admin and UI Control Test E2E automation)
+- **.NET 10.0 SDK** (Core development)
+- **Node.js 22+** (for Update Server and UI Control Test E2E automation)
 - **Git**
 - **Playwright** (for E2E tests)
 
 ### Development Setup
 
-```powershell
+```bash
 # Clone the repository
 git clone https://github.com/ArMaTeC/Redball.git
 cd Redball
 
-# Install test dependencies
-Install-Module Pester -RequiredVersion 5.5.0 -Force -SkipPublisherCheck
-Install-Module PSScriptAnalyzer -Force
-
-# Run the PowerShell core
-.\Redball.ps1
-
 # Build the WPF UI
-dotnet build src\Redball.UI.WPF\Redball.UI.WPF.csproj
+dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj
 
-# Run all tests
-Invoke-Pester -Path tests\Redball.Tests.ps1 -Output Detailed
+# Run all tests (Unit, Service, Interop)
+dotnet test tests/Redball.Tests.csproj
 
-# Run linter
-Invoke-ScriptAnalyzer -Path .\Redball.ps1 -Severity Warning,Error
+# Use the unified build script for full validation
+./scripts/build.sh all
 ```
 
 ## How to Contribute

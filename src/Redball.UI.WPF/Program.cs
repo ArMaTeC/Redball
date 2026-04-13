@@ -25,8 +25,8 @@ public static class Program
         var appBaseDir = AppContext.BaseDirectory;
         var dllDir = Path.Combine(appBaseDir, "dll");
 
-        // Preload critical assemblies to avoid JIT compilation issues
-        PreloadCriticalAssemblies(dllDir);
+        // Preload critical assemblies in a background task to avoid blocking the UI thread during startup
+        _ = System.Threading.Tasks.Task.Run(() => PreloadCriticalAssemblies(dllDir));
 
         // .NET Core/8 primary mechanism: AssemblyLoadContext.Default.Resolving
         AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>

@@ -19,6 +19,24 @@ public partial class OnboardingWindow : Window
         InitializeComponent();
         LoadCurrentSettings();
         UpdateStepUI();
+        Loaded += OnboardingWindow_Loaded;
+    }
+
+    private void OnboardingWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+            var micaValue = (int)Redball.UI.Interop.NativeMethods.DWM_SYSTEMBACKDROP_TYPE.DWMSBT_MAINWINDOW;
+            var darkMode = ConfigService.Instance.Config.Theme == "Dark" ? 1 : 0;
+
+            Redball.UI.Interop.NativeMethods.DwmSetWindowAttribute(hwnd, Redball.UI.Interop.NativeMethods.DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
+            Redball.UI.Interop.NativeMethods.DwmSetWindowAttribute(hwnd, Redball.UI.Interop.NativeMethods.DWMWA_SYSTEMBACKDROP_TYPE, ref micaValue, sizeof(int));
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("OnboardingWindow", $"Failed to apply Mica: {ex.Message}");
+        }
     }
 
     private bool _isLoading = true;

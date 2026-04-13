@@ -18,7 +18,7 @@ public partial class App : Application
     private Views.MainWindow? _mainWindow; // Keep reference to prevent GC
     private Services.SingletonService? _singleton;
     private Services.SingleInstanceMessenger? _instanceMessenger;
-    private IServiceProvider? _serviceProvider;
+    private System.IServiceProvider? _serviceProvider;
     private bool _isStartupTestMode;
     private readonly Stopwatch _startupStopwatch = Stopwatch.StartNew();
     public static TimeSpan StartupDuration { get; private set; }
@@ -118,114 +118,158 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        Services.Logger.Info("App", "=== OnStartup Begin ===");
+        Services.Logger.Info("App", "=== OnStartup Begin (Modern Threaded Startup) ===");
         
-        // Handle service installation elevation
-        if (e.Args.Length > 0 && e.Args[0] == "--install-service")
-        {
-            Services.Logger.Info("App", "Running in elevated service installation mode");
-            var success = InstallServiceInElevatedMode();
-            Environment.Exit(success ? 0 : 1);
-            return;
-        }
+        // SECURITY: Log app launch event
+        Services.SecurityAuditService.Instance.LogEvent("Lifecycle", "Application Startup initiated");
 
-        // Handle service uninstall elevation
-        if (e.Args.Length > 0 && e.Args[0] == "--uninstall-service")
-        {
-            Services.Logger.Info("App", "Running in elevated service uninstall mode");
-            var success = UninstallServiceInElevatedMode();
-            Environment.Exit(success ? 0 : 1);
-            return;
-        }
+        // Handle service installation elevation (synchronous as they exit immediately)
+        if (HandleElevatedServiceArgs(e.Args)) return;
 
-        // Handle service start elevation
-        if (e.Args.Length > 0 && e.Args[0] == "--start-service")
-        {
-            Services.Logger.Info("App", "Running in elevated service start mode");
-            var success = StartServiceInElevatedMode();
-            Environment.Exit(success ? 0 : 1);
-            return;
-        }
+        // Start background initialization task IMMEDIATELY
+        var backgroundInitTask = Task.Run(() => InitializeBackgroundServices(e.Args));
 
-        // Handle smoke test for build verification
-        if (e.Args.Length > 0 && Array.Exists(e.Args, arg => arg.Equals("--smoke-test", StringComparison.Ordinal)))
-        {
-            Services.Logger.Info("App", "Running in smoke-test mode for build verification");
-            // We'll let the rest of the startup run to verify XAML/DI/Config, 
-            // then we'll exit after the MainWindow would have been created.
-        }
-
-        // Handle test mode for E2E tests
+        // Smoke test/Test mode flags
         bool isTestMode = e.Args.Length > 0 && Array.Exists(e.Args, arg => arg.Equals("--test-mode", StringComparison.Ordinal));
         _isStartupTestMode = isTestMode;
-        if (isTestMode)
-        {
-            Services.Logger.Info("App", "Running in test-mode for E2E tests");
-        }
 
-        Services.Logger.LogMemoryStats("App");
-        
+        // Perform fast-path UI thread initialization
         try
         {
             base.OnStartup(e);
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
-            Services.Logger.Debug("App", "base.OnStartup completed");
 
-            // Singleton check - prevent multiple instances
+            // Singleton check - prevent multiple instances (synchronous, very fast)
             _singleton = new Services.SingletonService();
             if (!isTestMode && !_singleton.TryAcquire())
             {
                 Services.Logger.Warning("App", "Another instance is already running. Signaling it to show window.");
-                
-                // Try to signal the existing instance to show its window
-                var signaled = Services.SingleInstanceMessenger.TryShowWindow();
-                
-                if (!signaled)
-                {
-                    // Fallback: try to find and activate the window using Win32
-                    TryActivateExistingWindow();
-                }
-                
+                Services.SingleInstanceMessenger.TryShowWindow();
                 Shutdown();
                 return;
             }
 
-            // Start listening for messages from other instances
+            // Start listening for messages while background init proceeds
             _instanceMessenger = new Services.SingleInstanceMessenger(OnShowWindowRequested);
             _instanceMessenger.StartListening();
 
-            // Crash recovery check
-            var wasCrash = Services.CrashRecoveryService.CheckAndRecover();
-            if (wasCrash)
-            {
-                Services.Logger.Warning("App", "Recovered from previous crash - using safe defaults");
-            }
-            Services.CrashRecoveryService.SetCrashFlag();
+            // Continue rest of UI startup when background tasks complete
+            _ = CompleteStartupAsync(backgroundInitTask, e.Args);
+        }
+        catch (Exception ex)
+        {
+            Services.Logger.Fatal("App", "Fast-path OnStartup failed", ex);
+            throw;
+        }
+    }
 
-            // Load configuration
-            Services.Logger.Info("App", "Loading configuration...");
-            var configLoaded = Services.ConfigService.Instance.Load();
-            Services.Logger.Info("App", configLoaded ? "Configuration loaded successfully" : "Using default configuration (file not found)");
+    private bool HandleElevatedServiceArgs(string[] args)
+    {
+        if (args.Length == 0) return false;
 
-            // Apply one-time installer-selected HID option if present.
-            // This is set by MSI optional feature and consumed on first launch.
-            TryApplyInstallerHidOption();
+        if (args[0] == "--install-service")
+        {
+            Services.Logger.Info("App", "Running in elevated service installation mode");
+            var success = InstallServiceInElevatedMode();
+            Environment.Exit(success ? 0 : 1);
+            return true;
+        }
 
-            // Log configuration details
-            var cfg = Services.ConfigService.Instance.Config;
-            Services.Logger.ApplyConfig(cfg);
-            Services.Logger.Info("App", $"Config: Heartbeat={cfg.HeartbeatSeconds}s, Duration={cfg.DefaultDuration}min, Theme={cfg.Theme}");
-            Services.Logger.Info("App", $"Config: PreventDisplaySleep={cfg.PreventDisplaySleep}, BatteryAware={cfg.BatteryAware}, NetworkAware={cfg.NetworkAware}");
+        if (args[0] == "--uninstall-service")
+        {
+            Services.Logger.Info("App", "Running in elevated service uninstall mode");
+            var success = UninstallServiceInElevatedMode();
+            Environment.Exit(success ? 0 : 1);
+            return true;
+        }
 
-            // Initialize theme resources before showing any themed windows such as onboarding.
-            Services.Logger.Info("App", "Initializing ThemeManager...");
+        if (args[0] == "--start-service")
+        {
+            Services.Logger.Info("App", "Running in elevated service start mode");
+            var success = StartServiceInElevatedMode();
+            Environment.Exit(success ? 0 : 1);
+            return true;
+        }
+
+        return false;
+    }
+
+    private struct BackgroundInitResult
+    {
+        public RedballConfig Config;
+        public IServiceProvider ServiceProvider;
+        public bool Restored;
+    }
+
+    private BackgroundInitResult InitializeBackgroundServices(string[] args)
+    {
+        var sw = Stopwatch.StartNew();
+        Services.Logger.Info("App", "Background initialization started...");
+
+        // SECURITY: Anti-Tamper check (10/10 Hardening Suggestion)
+        if (IsDebuggerPresent() && !args.Contains("--test-mode"))
+        {
+            Services.SecurityAuditService.Instance.LogEvent("Security", "CRITICAL: External Debugger Detected during initialization");
+            Services.Logger.Fatal("App", "DEBUGGER DETECTED! Application terminating for security.");
+            Environment.Exit(0xDEAD);
+        }
+
+        // 1. Crash recovery check
+        Services.CrashRecoveryService.CheckAndRecover();
+        Services.CrashRecoveryService.SetCrashFlag();
+
+        // 2. Load configuration (Disc IO)
+        var configLoaded = Services.ConfigService.Instance.Load();
+        var cfg = Services.ConfigService.Instance.Config;
+        
+        // 3. One-time installer hidden option
+        TryApplyInstallerHidOption();
+
+        // 4. Build DI container (CPU)
+        var serviceProvider = Services.ServiceLocator.BuildServiceProvider(cfg);
+        
+        // 5. Initialize Core Services (Parallelizable)
+        Parallel.Invoke(
+            () => Services.KeepAwakeService.Instance.Initialize(),
+            () => Services.MemoryOptimizerService.Instance.Initialize(Services.KeepAwakeService.Instance.IdleDetection)
+        );
+
+        // 6. Restore session state (Disc IO)
+        var sessionState = serviceProvider.GetRequiredService<Services.ISessionStateService>();
+        var restored = sessionState.Restore(Services.KeepAwakeService.Instance);
+        if (!restored)
+        {
+            Services.KeepAwakeService.Instance.SetActive(true);
+        }
+        Services.KeepAwakeService.Instance.StartMonitoring();
+
+        sw.Stop();
+        Services.Logger.Info("App", $"Background initialization complete in {sw.ElapsedMilliseconds}ms");
+        
+        return new BackgroundInitResult 
+        { 
+            Config = cfg, 
+            ServiceProvider = serviceProvider, 
+            Restored = restored 
+        };
+    }
+
+    private async Task CompleteStartupAsync(Task<BackgroundInitResult> backgroundTask, string[] args)
+    {
+        try
+        {
+            // Wait for critical background services to be ready
+            var result = await backgroundTask;
+            this._serviceProvider = result.ServiceProvider;
+            var cfg = result.Config;
+            var isTestMode = Array.Exists(args, arg => arg.Equals("--test-mode", StringComparison.Ordinal));
+
+            // Initialize theme on UI thread
+            Services.Logger.Info("App", "Initializing ThemeManager on UI thread...");
             try
             {
-                var savedTheme = Services.ConfigService.Instance.Config.Theme;
-                Services.Logger.Debug("App", $"Setting theme from config: '{savedTheme}'");
+                var savedTheme = cfg.Theme;
                 ThemeManager.SetThemeFromConfig(string.IsNullOrEmpty(savedTheme) ? "System" : savedTheme);
-
-                Services.Logger.Info("App", $"ThemeManager initialized with theme: {ThemeManager.CurrentTheme}");
                 ThemeManager.StartWatchingSystemTheme();
             }
             catch (Exception themeEx)
@@ -234,115 +278,24 @@ public partial class App : Application
                 ThemeManager.SetTheme(Theme.Dark);
             }
 
-            // Build DI container now that config is loaded
-            _serviceProvider = Services.ServiceLocator.BuildServiceProvider(cfg);
-            Services.Logger.Info("App", "DI container built");
-
-            var analytics = _serviceProvider.GetRequiredService<Services.IAnalyticsService>();
+            // Analytics session start
+            var analytics = result.ServiceProvider.GetRequiredService<Services.IAnalyticsService>();
             analytics.TrackSessionStart();
-            analytics.TrackFeature("app.launch");
-            analytics.TrackFunnel("onboarding", "app_started");
+            analytics.TrackFeature("app.launch.threaded");
 
-            // Validate configuration
-            var errors = Services.ConfigService.Instance.Validate();
-            if (errors.Count > 0)
-            {
-                Services.Logger.Warning("App", $"Configuration validation found {errors.Count} errors:");
-                foreach (var err in errors)
-                {
-                    Services.Logger.Warning("App", $"  - {err}");
-                }
-            }
-
-            // Show onboarding for first-time users
+            // Onboarding logic
             if (cfg.FirstRun && !isTestMode)
             {
-                Services.Logger.Info("App", "First run detected - showing onboarding window");
-                analytics.TrackFeature("onboarding.shown");
-                analytics.TrackFunnel("onboarding", "shown");
-                var onboarding = new Views.OnboardingWindow();
-                var result = onboarding.ShowDialog();
-                Services.Logger.Info("App", result == true ? "Onboarding completed" : "Onboarding cancelled/closed");
-                if (result == true)
-                {
-                    analytics.TrackFeature("onboarding.completed");
-                    analytics.TrackFunnel("onboarding", "completed");
-                    analytics.TrackRetention(0);
-                }
-                else
-                {
-                    analytics.TrackFeature("onboarding.dismissed");
-                }
-
-                // ALWAYS disable FirstRun after the onboarding window closes,
-                // whether completed or dismissed. This prevents the onboarding
-                // loop where the app keeps showing it after updates/restarts.
-                cfg.FirstRun = false;
-                Services.ConfigService.Instance.Save();
-                Services.Logger.Info("App", "FirstRun flag permanently disabled and config saved");
+                await ShowOnboardingAsync(cfg, analytics);
             }
 
-            // Initialize keep-awake engine
-            Services.Logger.Info("App", "Initializing KeepAwakeService...");
-            Services.KeepAwakeService.Instance.Initialize();
-
-            // Initialize memory optimizer to compact LOH on idle (perf-6)
-            Services.MemoryOptimizerService.Instance.Initialize(Services.KeepAwakeService.Instance.IdleDetection);
-
-            // Restore previous session state or start fresh
-            var sessionState = _serviceProvider.GetRequiredService<Services.ISessionStateService>();
-            var restored = sessionState.Restore(Services.KeepAwakeService.Instance);
-            if (!restored)
-            {
-                Services.KeepAwakeService.Instance.SetActive(true);
-            }
-            Services.KeepAwakeService.Instance.StartMonitoring();
-            Services.Logger.Info("App", restored ? "Session state restored" : "KeepAwakeService initialized and active");
-
-            // Create main window but don't show it (tray-only mode)
+            // Create and show MainWindow
             Services.Logger.Info("App", "Creating MainWindow...");
-            try
-            {
-                _mainWindow = new Views.MainWindow();
-                Services.Logger.Debug("App", "MainWindow instance created");
-                
-                if (isTestMode)
-                {
-                    _mainWindow.Title += " (Test Mode)";
-                }
-            }
-            catch (Exception mwEx)
-            {
-                Services.Logger.Fatal("App", "Failed to create MainWindow", mwEx);
-                throw;
-            }
-
-            // Handle smoke test exit
-            if (e.Args.Length > 0 && Array.Exists(e.Args, arg => arg == "--smoke-test"))
-            {
-                Services.Logger.Info("App", "Smoke test successful - exiting with code 0");
-                _startupStopwatch.Stop();
-                Services.Logger.Info("App", string.Format(System.Globalization.CultureInfo.InvariantCulture, "Startup sequence verified in {0:F2}s", _startupStopwatch.Elapsed.TotalSeconds));
-                
-                // Cleanup and exit
-                Services.Logger.Shutdown();
-                Environment.Exit(0);
-                return;
-            }
-            
-            // Ensure window is loaded before moving off-screen
-            _mainWindow.Loaded += OnMainWindowLoaded;
-            _mainWindow.Unloaded += OnMainWindowUnloaded;
-            
-            // Subscribe to application events
-            _mainWindow.Closed += OnMainWindowClosed;
-            
-            // Initialize the main window
-            Services.Logger.Debug("App", "Initializing MainWindow...");
+            _mainWindow = new Views.MainWindow();
             
             if (isTestMode)
             {
-                // In test mode, we want the window to be visible and findable by automation
+                _mainWindow.Title += " (Test Mode)";
                 _mainWindow.WindowState = WindowState.Normal;
                 _mainWindow.ShowInTaskbar = true;
                 _mainWindow.Show();
@@ -350,7 +303,7 @@ public partial class App : Application
             }
             else
             {
-                // Tray-only mode for normal startup
+                // Tray-only mode
                 _mainWindow.WindowState = WindowState.Minimized;
                 _mainWindow.ShowInTaskbar = false;
                 _mainWindow.Show();
@@ -358,53 +311,105 @@ public partial class App : Application
                 Services.Logger.Debug("App", "MainWindow initialized in tray-only mode");
             }
 
+            // Smoke test exit
+            if (Array.Exists(args, arg => arg == "--smoke-test"))
+            {
+                Services.Logger.Info("App", "Smoke test successful - exiting");
+                Services.Logger.Shutdown();
+                Environment.Exit(0);
+                return;
+            }
+
+            _mainWindow.Loaded += OnMainWindowLoaded;
+            _mainWindow.Unloaded += OnMainWindowUnloaded;
+            _mainWindow.Closed += OnMainWindowClosed;
+
+            // Optional mini-widget auto-open
             if (cfg.MiniWidgetOpenOnStartup)
             {
-                _mainWindow.Dispatcher.BeginInvoke(new Action(() =>
+                if (_mainWindow.DataContext is ViewModels.MainViewModel vm)
                 {
-                    if (_mainWindow.DataContext is ViewModels.MainViewModel vm)
-                    {
-                        vm.ShowMiniWidgetCommand.Execute(null);
-                        Services.Logger.Info("App", "Mini widget opened on startup from config");
-                    }
-                }), System.Windows.Threading.DispatcherPriority.Background);
+                    vm.ShowMiniWidgetCommand.Execute(null);
+                }
             }
 
             ShutdownMode = ShutdownMode.OnMainWindowClose;
             _startupStopwatch.Stop();
             StartupDuration = _startupStopwatch.Elapsed;
-            Services.Logger.Info("App", string.Format(System.Globalization.CultureInfo.InvariantCulture, "MainWindow initialized in tray-only mode, startup sequence complete (took {0:F2}s)", StartupDuration.TotalSeconds));
-            if (StartupDuration.TotalSeconds > 2.0)
-            {
-                Services.Logger.Warning("App", string.Format(System.Globalization.CultureInfo.InvariantCulture, "Startup exceeded 2-second target: {0:F2}s", StartupDuration.TotalSeconds));
-            }
-            Services.Logger.LogMemoryStats("App");
+            Services.Logger.Info("App", $"Startup complete (took {StartupDuration.TotalSeconds:F2}s)");
 
-            // Start background update check if enabled (after a short delay to not block startup)
+            // Intelligent Monitoring start
+            StartIntelligentMonitoring(cfg);
+
+            // Background update check
             if (cfg.AutoUpdateCheckEnabled && !isTestMode)
             {
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        // Wait a few seconds for startup to complete
-                        await Task.Delay(TimeSpan.FromSeconds(10));
-                        await PerformStartupUpdateCheckAsync(cfg);
-                    }
-                    catch (Exception ex)
-                    {
-                        Services.Logger.Error("App", "Startup update check failed", ex);
-                    }
-                });
+                _ = ScheduleUpdateCheckAsync(cfg);
             }
         }
         catch (Exception ex)
         {
-            Services.Logger.Fatal("App", "OnStartup failed with exception", ex);
-            Services.Logger.WriteCrashDump(ex, "OnStartup");
+            Services.Logger.Fatal("App", "CompleteStartupAsync failed", ex);
+            Services.Logger.WriteCrashDump(ex, "CompleteStartupAsync");
             throw;
         }
     }
+
+    private async Task ShowOnboardingAsync(RedballConfig cfg, Services.IAnalyticsService analytics)
+    {
+        Services.Logger.Info("App", "Showing onboarding window");
+        analytics.TrackFunnel("onboarding", "shown");
+        var onboarding = new Views.OnboardingWindow();
+        var result = onboarding.ShowDialog();
+        
+        if (result == true)
+        {
+            analytics.TrackFunnel("onboarding", "completed");
+        }
+        
+        cfg.FirstRun = false;
+        Services.ConfigService.Instance.Save();
+        Services.Logger.Info("App", "FirstRun flag cleared");
+    }
+
+    private async Task ScheduleUpdateCheckAsync(RedballConfig cfg)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(10));
+            await PerformStartupUpdateCheckAsync(cfg);
+        }
+        catch (Exception ex)
+        {
+            Services.Logger.Error("App", "Startup update check failed", ex);
+        }
+    }
+
+    private void StartIntelligentMonitoring(RedballConfig cfg)
+    {
+        Services.Logger.Info("App", "Starting intelligent awareness services...");
+        
+        // Webcam Awareness (10/10 Strategy suggestion)
+        var webcamTimer = new System.Windows.Threading.DispatcherTimer 
+        { 
+            Interval = TimeSpan.FromSeconds(5) 
+        };
+        
+        webcamTimer.Tick += (s, e) => 
+        {
+            bool inUse = Services.WebcamDetectionService.Instance.CheckWebcamStatus();
+            if (inUse && Services.KeepAwakeService.Instance.IsActive)
+            {
+                Services.Logger.Warning("App", "Webcam in use detected while Keep-Awake is active! Pausing for privacy.");
+                Services.KeepAwakeService.Instance.SetActive(false);
+                Views.HUDWindow.ShowStatus("Privacy Mode", "PAUSED FOR WEBCAM", "📷");
+            }
+        };
+        webcamTimer.Start();
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", ExactSpelling = true)]
+    private static extern bool IsDebuggerPresent();
 
     private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
     {
@@ -960,13 +965,13 @@ public partial class App : Application
         
         try
         {
-            var analytics = _serviceProvider?.GetService<Services.IAnalyticsService>();
+            var analytics = this._serviceProvider?.GetService<Services.IAnalyticsService>();
             analytics?.TrackFeature("app.exit");
             analytics?.TrackSessionEnd();
             analytics?.Dispose();
 
             // Save session state for next launch
-            var sessionState = _serviceProvider?.GetService<Services.ISessionStateService>();
+            var sessionState = this._serviceProvider?.GetService<Services.ISessionStateService>();
             sessionState?.Save(Services.KeepAwakeService.Instance);
             Services.Logger.Debug("App", "Session state saved");
 

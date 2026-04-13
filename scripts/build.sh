@@ -257,7 +257,7 @@ auto_release() {
         if bash "$SCRIPT_DIR/bump-version.sh" "$bump_arg"; then
             log_info "Version set/bumped to $(get_version)"
         else
-            log_warning "Version bump failed, continuing with current version"
+            log_warn "Version bump failed, continuing with current version"
         fi
     fi
     echo ""
@@ -718,12 +718,12 @@ build_update_server() {
         log_debug "node_modules already exists ($pkg_count packages)"
     fi
     
-    # Validate server.js syntax
-    log_info "Validating server.js syntax..."
-    if node -c "$UPDATE_SERVER_DIR/server.js" 2>&1; then
-        log_success "server.js syntax is valid"
+    # Validate server.js syntax and run tests
+    log_info "Running update-server tests..."
+    if (cd "$UPDATE_SERVER_DIR" && npm test) 2>&1 | while IFS= read -r line; do log_detail "test: $line"; done; then
+        log_success "Update server tests passed"
     else
-        log_error "server.js has syntax errors!"
+        log_error "Update server tests failed!"
         return 1
     fi
     

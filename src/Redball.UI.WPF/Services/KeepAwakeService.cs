@@ -467,6 +467,12 @@ public class KeepAwakeService : IKeepAwakeService
 
         try
         {
+            // STRATEGY: Adaptive Jitter (10/10 Strategy suggestion)
+            // Add slight randomness (-5% to +10%) to the heartbeat interval to mimic human patterns
+            var jitterPercent = new Random().Next(-5, 11);
+            var jitteredInterval = _heartbeatIntervalMs + (_heartbeatIntervalMs * jitterPercent / 100);
+            _heartbeatTimer?.Change(jitteredInterval, jitteredInterval);
+
             // Re-assert execution state on each heartbeat (P/Invoke, thread-safe)
             ApplyExecutionState(true);
 

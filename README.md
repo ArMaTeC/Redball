@@ -332,27 +332,31 @@ If the log file is locked by a previous instance, Redball automatically retries 
 
 ### Development Setup
 
-```powershell
+```bash
 git clone https://github.com/ArMaTeC/Redball.git
 cd Redball
 
-# Build the WPF application
+# Build all components using the unified script
+./scripts/build.sh all
+
+# Build the WPF application specifically
 dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj
 
-# Run in development mode
-dotnet run --project src/Redball.UI.WPF/Redball.UI.WPF.csproj
+# Run update-server tests
+(cd update-server && npm test)
 
-# Build installer locally
-.\installer\Deploy-Redball.ps1 -BuildMsi
+# Run .NET tests with coverage
+dotnet test tests/Redball.Tests.csproj --collect:"XPlat Code Coverage"
 ```
 
 ### Testing Guide
 
 The project enforces 100% test coverage across statement, branch, and line metrics using rigorous local and automated tooling techniques.
 
-- **Unit and Integration Tests (.NET):** Execute using `dotnet test`. Run the backend unit suites validating the Interop bindings, Win32 memory safety limits, and individual UI WPF components.
-- **UI Control Tests (Web Admin & Site):** We use **Playwright** for complete end-to-end user workflows, handling edge cases such as network failure, empty valid inputs and responsive bounds matching. 
-- **Code Coverage Reports:** Run `pwsh ./scripts/Get-CodeCoverage.ps1` to rebuild the coverage tables across Istanbul/NYC (Node) and Cobertura/JaCoCo structures in .NET.
+- **Unit and Integration Tests (.NET)**: Execute using `dotnet test`. Run the backend unit suites validating the Interop bindings, Win32 memory safety limits, and individual UI WPF components.
+- **Update Server Tests**: Run `npm test` in the `update-server` directory to validate API endpoints.
+- **UI Control Tests (Web Admin & Site)**: We use **Playwright** for complete end-to-end user workflows, handling edge cases such as network failure, valid inputs, and responsive bounds matching. 
+- **Code Coverage Reports**: Run tests with coverage collection and use tools like ReportGenerator to view the Cobertura results.
 
 Ensure any newly submitted PR maintains zero-failure test environments.
 

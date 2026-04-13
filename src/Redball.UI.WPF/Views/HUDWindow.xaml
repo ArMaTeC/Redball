@@ -4,80 +4,61 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="HUD" 
-        Height="120" 
-        Width="300"
-        WindowStyle="None"
-        AllowsTransparency="True"
-        Background="Transparent"
-        Topmost="True"
-        ShowInTaskbar="False"
-        WindowStartupLocation="CenterScreen"
-        IsHitTestVisible="False">
-
+        Title="HUD" Height="120" Width="320"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" WindowStartupLocation="Manual">
     <Window.Resources>
-        <Storyboard x:Key="ShowHideStoryboard">
-            <DoubleAnimation Storyboard.TargetName="MainBorder" 
-                             Storyboard.TargetProperty="Opacity"
-                             From="0" To="0.95" Duration="0:0:0.2"/>
-            <DoubleAnimation Storyboard.TargetName="MainBorder" 
-                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                             From="0.8" To="1.0" Duration="0:0:0.3">
+        <Storyboard x:Key="EntranceAnimation">
+            <DoubleAnimation Storyboard.TargetName="MainBorder" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"/>
+            <DoubleAnimation Storyboard.TargetName="MainBorder" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" From="40" To="0" Duration="0:0:0.4">
                 <DoubleAnimation.EasingFunction>
-                    <BackEase Amplitude="0.5" EasingMode="EaseOut"/>
+                    <BackEase EasingMode="EaseOut" Amplitude="0.8"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="MainBorder" 
-                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                             From="0.8" To="1.0" Duration="0:0:0.3">
+        </Storyboard>
+        <Storyboard x:Key="ExitAnimation">
+            <DoubleAnimation Storyboard.TargetName="MainBorder" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.5"/>
+            <DoubleAnimation Storyboard.TargetName="MainBorder" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" To="-20" Duration="0:0:0.5">
                 <DoubleAnimation.EasingFunction>
-                    <BackEase Amplitude="0.5" EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseIn"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            
-            <!-- Stay visible for 1.5s -->
-            <DoubleAnimation Storyboard.TargetName="MainBorder" 
-                             Storyboard.TargetProperty="Opacity"
-                             From="0.95" To="0" BeginTime="0:0:1.7" Duration="0:0:0.4"/>
         </Storyboard>
     </Window.Resources>
-
-    <Border x:Name="MainBorder" 
-            Margin="10" 
-            CornerRadius="20" 
-            Background="{DynamicResource SurfaceBrush}" 
-            BorderBrush="{DynamicResource BorderLightBrush}" 
-            BorderThickness="1"
-            Opacity="0"
-            RenderTransformOrigin="0.5,0.5">
+    
+    <Border x:Name="MainBorder" CornerRadius="20" Margin="10" BorderThickness="1.5">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#CC1A1A1A" Offset="0"/>
+                <GradientStop Color="#AA252525" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.Background>
+        <Border.BorderBrush>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#44FFFFFF" Offset="0"/>
+                <GradientStop Color="#11FFFFFF" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.BorderBrush>
         <Border.RenderTransform>
-            <ScaleTransform ScaleX="0.8" ScaleY="0.8"/>
+            <TranslateTransform Y="0"/>
         </Border.RenderTransform>
         <Border.Effect>
-            <BlurEffect Radius="0" />
+            <DropShadowEffect BlurRadius="15" Opacity="0.4" ShadowDepth="0"/>
         </Border.Effect>
-
-        <Grid Margin="20,10">
+        
+        <Grid Margin="15,5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-
-            <Viewbox Grid.Column="0" Width="40" Height="40" Margin="0,0,15,0">
-                <TextBlock x:Name="IconText" Text="🔔" FontSize="30" Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center"/>
+            
+            <Viewbox Height="45" Width="45" VerticalAlignment="Center" Margin="5,0,15,0">
+                <TextBlock x:Name="IconText" Text="🚀" FontFamily="Segoe UI Emoji" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Viewbox>
-
+            
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock x:Name="TitleText" 
-                           Text="KEEP-AWAKE" 
-                           Foreground="{DynamicResource ForegroundSecondaryBrush}" 
-                           FontSize="12" 
-                           FontWeight="SemiBold"/>
-                <TextBlock x:Name="StatusText" 
-                           Text="ACTIVATED" 
-                           Foreground="{DynamicResource ForegroundBrush}" 
-                           FontSize="20" 
-                           FontWeight="Bold"/>
+                <TextBlock x:Name="TitleText" Text="Keep-Awake" FontSize="14" FontWeight="SemiBold" Foreground="#99FFFFFF" Margin="0,0,0,2"/>
+                <TextBlock x:Name="ValueText" Text="ACTIVATED" FontSize="20" FontWeight="Bold" Foreground="White"/>
             </StackPanel>
         </Grid>
     </Border>

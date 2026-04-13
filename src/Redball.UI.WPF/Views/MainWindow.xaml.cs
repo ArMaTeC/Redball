@@ -47,78 +47,81 @@ public partial class MainWindow : Window
 
     private void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
-        Logger.Info("MainWindow", "Window loaded, initializing services...");
+        Logger.Info("MainWindow", "Window loaded (Fast-path UI initialization)");
 
-        // Set window title with version
+        // Set window title with version (Fast)
         var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         Title = $"Redball v{version?.Major}.{version?.Minor}.{version?.Build}";
 
         SyncWindowChromeButtons();
+        
         try
         {
-            // Hook window messages for taskbar recreation
+            // 1. CRITICAL UI ELEMENTS (Must be instant)
             _windowHwndSource = PresentationSource.FromVisual(this) as HwndSource;
             if (_windowHwndSource != null)
             {
                 _windowHwndSource.AddHook(WndProc);
-                Logger.Debug("MainWindow", "Window message hook added for tray icon recovery");
-                
-                // --- MICA BACKDROP SUPPORT ---
-                try
-                {
-                    var hwnd = _windowHwndSource.Handle;
-                    var micaValue = (int)NativeMethods.DWM_SYSTEMBACKDROP_TYPE.DWMSBT_MAINWINDOW;
-                    var darkMode = ConfigService.Instance.Config.Theme == "Dark" ? 1 : 0;
-                    
-                    // Set Immersive Dark Mode attribute for title bar
-                    NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
-                    
-                    // Set Mica background (Windows 11 22H2+)
-                    NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_SYSTEMBACKDROP_TYPE, ref micaValue, sizeof(int));
-                    
-                    Logger.Info("MainWindow", "DWM Mica backdrop and dark mode attributes applied");
-                }
-                catch (Exception dwmEx)
-                {
-                    Logger.Debug("MainWindow", $"Failed to apply DWM attributes: {dwmEx.Message}");
-                }
+                ApplyMicaBackdrop(_windowHwndSource.Handle);
             }
-
-            // Set DataContext here instead of XAML to prevent constructor issues during parsing
-            if (DataContext == null)
-            {
-                Logger.Debug("MainWindow", "Creating new MainViewModel...");
-                DataContext = new ViewModels.MainViewModel();
-                Logger.Debug("MainWindow", "DataContext set to new MainViewModel");
-            }
-
-            _viewModel = DataContext as ViewModels.MainViewModel;
-            if (_viewModel == null)
-            {
-                Logger.Error("MainWindow", "ERROR: DataContext is not MainViewModel");
-                return;
-            }
-
-            // Connect ViewModel to this window for proper command delegation
-            _viewModel.SetMainWindow(this);
-            Logger.Debug("MainWindow", "ViewModel connected to window");
 
             SetupTrayIcon();
             SetupTrayIconRefreshTimer();
-            SetupGlobalHotkeys();
-            LoadEmbeddedDashboardContent();
-            RefreshTemplateCombo();
-            StartAutoUpdateCheck();
-            InitializeResourceBudgetMonitoring();
-            InitializeMemoryPressureMonitoring();
-            Logger.Info("MainWindow", "Initialization complete");
 
-            // Apply window entrance animation
-            ApplyWindowEntranceAnimation();
+            // 2. DEFERRED INITIALIZATION (Background priority)
+            // This allows the app to feel instant while heavier logic loads
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                Logger.Debug("MainWindow", "Starting background service initialization...");
+                
+                if (DataContext == null)
+                {
+                    Logger.Debug("MainWindow", "Creating MainViewModel on background priority...");
+                    DataContext = new ViewModels.MainViewModel();
+                    _viewModel = DataContext as ViewModels.MainViewModel;
+                    _viewModel?.SetMainWindow(this);
+                }
+
+                SetupGlobalHotkeys();
+                LoadEmbeddedDashboardContent();
+                RefreshTemplateCombo();
+                StartAutoUpdateCheck();
+                InitializeResourceBudgetMonitoring();
+                InitializeMemoryPressureMonitoring();
+
+                Logger.Info("MainWindow", "Background initialization complete");
+                
+                // Entrance animation - only if window is actually shown
+                if (IsVisible && WindowState != WindowState.Minimized)
+                {
+                    ApplyWindowEntranceAnimation();
+                }
+            }), DispatcherPriority.Background);
         }
         catch (Exception ex)
         {
             Logger.Error("MainWindow", "Failed during window initialization", ex);
+        }
+    }
+
+    private void ApplyMicaBackdrop(IntPtr hwnd)
+    {
+        try
+        {
+            var micaValue = (int)NativeMethods.DWM_SYSTEMBACKDROP_TYPE.DWMSBT_MAINWINDOW;
+            var darkMode = ConfigService.Instance.Config.Theme == "Dark" ? 1 : 0;
+            
+            // Set Immersive Dark Mode attribute for title bar
+            NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
+            
+            // Set Mica background (Windows 11 22H2+)
+            NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_SYSTEMBACKDROP_TYPE, ref micaValue, sizeof(int));
+            
+            Logger.Info("MainWindow", "DWM Mica backdrop applied");
+        }
+        catch (Exception dwmEx)
+        {
+            Logger.Debug("MainWindow", $"Failed to apply DWM attributes: {dwmEx.Message}");
         }
     }
 
