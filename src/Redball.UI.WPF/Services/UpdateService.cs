@@ -496,7 +496,10 @@ public class UpdateService : IUpdateService
                                     Name = f.Name,
                                     Hash = f.Hash,
                                     Size = f.Size,
-                                    Signature = f.Signature
+                                    Signature = f.Signature,
+                                    DownloadUrl = !string.IsNullOrEmpty(_updateServerUrl) 
+                                        ? $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/files/{Uri.EscapeDataString(f.Name)}"
+                                        : ""
                                 }).ToList()
                             };
                         }
@@ -599,6 +602,7 @@ public class UpdateService : IUpdateService
                                 {
                                     var serverPatch = serverManifest.Patches.Find(p => 
                                         p.File.Equals(file.Name, StringComparison.OrdinalIgnoreCase) ||
+                                        p.File.Equals("binaries/" + file.Name, StringComparison.OrdinalIgnoreCase) ||
                                         p.PatchFile.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
 
                                     if (serverPatch != null && !string.IsNullOrEmpty(_updateServerUrl))
