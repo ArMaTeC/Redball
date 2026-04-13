@@ -38,7 +38,7 @@ jobs:
         }
 
     - name: Upload audit results
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: nuget-audit-results
@@ -77,7 +77,7 @@ jobs:
         & $sbomTool generate -b $sbomPath -bc src/Redball.UI.WPF -pn Redball -pv $env:GITHUB_REF_NAME -ps ArMaTeC -nsb https://github.com/ArMaTeC/Redball -m "$sbomPath/_manifest/spdx_2.2"
 
     - name: Upload SBOM
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: sbom-spdx
         path: sbom/_manifest/spdx_2.2/manifest.spdx.json
