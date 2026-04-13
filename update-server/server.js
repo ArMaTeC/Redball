@@ -74,11 +74,24 @@ async function fetchGitHubReleases() {
     const files = r.assets.map(a => ({
       name: a.name,
       size: a.size,
-      hash: '', 
+      hash: localRelease?.files?.find(lf => lf.name === a.name)?.hash || '', 
       downloads: (localRelease?.files?.find(lf => lf.name === a.name)?.downloads || 0) + a.download_count,
       url: `/api/download/${version}/${a.name}`,
       sourceUrl: a.browser_download_url
     }));
+
+    // Merge in local files that aren't on GitHub (e.g. manifest.json, patches)
+    if (localRelease?.files) {
+      for (const lf of localRelease.files) {
+        if (!files.some(f => f.name === lf.name)) {
+          files.push({
+            ...lf,
+            url: `/api/download/${version}/${lf.name}`,
+            sourceUrl: `/downloads/${version}/${lf.name}`
+          });
+        }
+      }
+    }
 
     return {
       version,

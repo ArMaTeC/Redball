@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -453,17 +454,26 @@ public class UpdateService : IUpdateService
             var patchAssets = latestRelease.Assets.Where(a => a.Name.EndsWith(".patch", StringComparison.OrdinalIgnoreCase)).ToList();
             Logger.Info("UpdateService", $"Found {patchAssets.Count} patch assets in release: {string.Join(", ", patchAssets.Select(p => $"{p.Name}({p.Size}bytes)"))}");
             
-            if (manifestAsset != null)
+            if (manifestAsset != null || !string.IsNullOrEmpty(_updateServerUrl))
             {
-                Logger.Info("UpdateService", "[DELTA] Found update manifest, checking for differential updates...");
-                Logger.Debug("UpdateService", $"[DELTA] Manifest URL: {manifestAsset.DownloadUrl}");
-                ReportCheckProgress(progress, UpdateCheckStage.ParsingManifest, 50, "Reading update manifest...");
-                
-                var manifestJson = await _httpClient.GetStringAsync(manifestAsset.DownloadUrl, cancellationToken);
-                // SECURITY: Use SecureJsonSerializer with size limit and max depth
-                var manifest = SecureJsonSerializer.Deserialize<UpdateManifest>(manifestJson);
-                
-                // Try to fetch update server manifest for patch information (primary source)
+                Logger.Info("UpdateService", "[DELTA] Entering differential update check...");
+                UpdateManifest? manifest = null;
+
+                if (manifestAsset != null)
+                {
+                    Logger.Info("UpdateService", "[DELTA] Found manifest.json on GitHub, reading...");
+                    try
+                    {
+                        var manifestJson = await _httpClient.GetStringAsync(manifestAsset.DownloadUrl, cancellationToken);
+                        manifest = SecureJsonSerializer.Deserialize<UpdateManifest>(manifestJson);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning("UpdateService", "[DELTA] Failed to read manifest from GitHub", ex);
+                    }
+                }
+
+                // Try to fetch update server manifest for patch information (primary source or fallback)
                 UpdateServerManifest? serverManifest = null;
                 if (!string.IsNullOrEmpty(_updateServerUrl))
                 {
@@ -473,9 +483,24 @@ public class UpdateService : IUpdateService
                         Logger.Info("UpdateService", $"[DELTA] Fetching patch manifest from update server: {serverManifestUrl}");
                         
                         var serverManifestJson = await _httpClient.GetStringAsync(serverManifestUrl, cancellationToken);
-                        // SECURITY: Use SecureJsonSerializer with size limit and max depth
                         serverManifest = SecureJsonSerializer.Deserialize<UpdateServerManifest>(serverManifestJson);
                         
+                        if (serverManifest?.Files != null && manifest == null)
+                        {
+                            Logger.Info("UpdateService", "[DELTA] Using server manifest as primary source");
+                            manifest = new UpdateManifest
+                            {
+                                Version = serverManifest.Version,
+                                Files = serverManifest.Files.Select(f => new FileUpdateInfo
+                                {
+                                    Name = f.Name,
+                                    Hash = f.Hash,
+                                    Size = f.Size,
+                                    Signature = f.Signature
+                                }).ToList()
+                            };
+                        }
+
                         if (serverManifest?.Patches != null && serverManifest.Patches.Count > 0)
                         {
                             Logger.Info("UpdateService", $"[DELTA] Found {serverManifest.Patches.Count} patches on update server (from v{serverManifest.FromVersion})");
@@ -483,11 +508,10 @@ public class UpdateService : IUpdateService
                     }
                     catch (Exception ex)
                     {
-                        // SECURITY: Log full details internally
                         Logger.Warning("UpdateService", "[DELTA] Could not fetch update server manifest", ex);
                     }
                 }
-                
+
                 if (manifest != null)
                 {
                     var filesToUpdate = new List<FileUpdateInfo>();
@@ -652,12 +676,12 @@ public class UpdateService : IUpdateService
                         Logger.Info("UpdateService", $"All {manifest.Files.Count} files match manifest - but version differs. Falling back to full installer.");
                     }
                 }
-            }
-            else
-            {
-                Logger.Warning("UpdateService", "No manifest.json found in release assets. Available assets: " + 
-                    string.Join(", ", latestRelease.Assets.Select(a => a.Name)));
-                Logger.Warning("UpdateService", "Falling back to full installer download. Differential updates require manifest.json.");
+                else
+                {
+                    Logger.Warning("UpdateService", "No manifest found on GitHub or update server. Available assets: " + 
+                        string.Join(", ", latestRelease.Assets.Select(a => a.Name)));
+                    Logger.Warning("UpdateService", "Falling back to full installer download. Differential updates require a manifest.");
+                }
             }
 
             // Fallback to full asset (MSI/ZIP)

@@ -441,15 +441,33 @@ auto_release() {
 
         log_info "Publishing to GitHub via gh CLI..."
         local version=$(get_version)
+        
+        # Collect assets for GitHub release
+        local gh_assets=()
+        gh_assets+=("$DIST_DIR/Redball-${version}-Setup.exe")
+        gh_assets+=("$DIST_DIR/Redball-${version}.zip")
+        
+        # Add manifest and patches if they exist
+        if [[ -f "$RELEASES_DIR/$version/manifest.json" ]]; then
+            gh_assets+=("$RELEASES_DIR/$version/manifest.json")
+        elif [[ -f "$DIST_DIR/manifest.json" ]]; then
+            gh_assets+=("$DIST_DIR/manifest.json")
+        fi
+        
+        if [[ -d "$RELEASES_DIR/$version/patches" ]]; then
+            while read -r patch; do
+                gh_assets+=("$patch")
+            done < <(find "$RELEASES_DIR/$version/patches" -maxdepth 1 -name "*.patch")
+        fi
+
         if command -v gh &>/dev/null; then
             if gh release create "v${version}" \
-                "$DIST_DIR/Redball-${version}-Setup.exe" \
-                "$DIST_DIR/Redball-${version}.zip" \
+                "${gh_assets[@]}" \
                 --title "Redball v${version}" \
                 --notes "Release ${version} (${CHANNEL} channel)" \
                 $([[ "$CHANNEL" == "beta" ]] && echo "--prerelease" || true) \
                 2>&1 | while IFS= read -r line; do log_detail "$line"; done; then
-                log_success "Published to GitHub"
+                log_success "Published to GitHub with $((${#gh_assets[@]}-2)) delta assets"
             else
                 log_warn "GitHub release may have failed"
             fi
