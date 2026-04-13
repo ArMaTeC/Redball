@@ -1,136 +1,6 @@
 {
   "releases": [
     {
-      "version": "2.1.610",
-      "notes": "Release 2.1.610 (stable channel)",
-      "channel": "stable",
-      "date": "2026-04-13T10:30:38.452Z",
-      "files": [
-        {
-          "name": "Redball-2.1.610-Setup.exe",
-          "size": 68818699,
-          "hash": "54c115acb2c9049edc839ef58119403dbb8912ba37abad34a04841ca427d3361",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:38.801Z"
-        },
-        {
-          "name": "Redball-2.1.610.zip",
-          "size": 10709666,
-          "hash": "ee45062750e4529cce6c506e01c2a8cb611aeb2e90a0311deb3145a2f89108f5",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:38.829Z"
-        },
-        {
-          "name": "Redball.UI.WPF.runtimeconfig.json",
-          "size": 586,
-          "hash": "42bdf3ff1bc458718481097cb192e129babe98117bfdcb7da9ce75bb0af4fbb8",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:38.832Z"
-        },
-        {
-          "name": "nsis-welcome.bmp",
-          "size": 154542,
-          "hash": "aa643f23d5da2ad2917fd7bb1b98332eab635214b6f6316b008a18d685f92ecf",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:38.832Z"
-        },
-        {
-          "name": "manifest.json",
-          "size": 12380,
-          "hash": "d1ad84f03340dd74005759e8872f47cc71841c327e3f115d67a873b40b07a326",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:38.833Z"
-        },
-        {
-          "name": "Redball.nsi",
-          "size": 39134,
-          "hash": "7aa656378a565e79a3aac55773554c12792fee33347a13bca89738844a309fec",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:38.834Z"
-        },
-        {
-          "name": "Redball.json",
-          "size": 1613,
-          "hash": "c982c0b265b7087600ff4ffc32feb458f0dce37e9c0569bcde698fcd742a78be",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:38.844Z"
-        },
-        {
-          "name": "Redball.UI.WPF.dll",
-          "size": 2831360,
-          "hash": "526bb56131c41dc45eff9a7b25585be4ac11d31b827a76d26acdca5dbfe1a491",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:38.856Z"
-        },
-        {
-          "name": "Redball.UI.WPF.deps.json",
-          "size": 45907,
-          "hash": "d49c19ffa0f216f5fe59fd659b1cbaa2362542e36e321384317f05339be63b15",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:38.857Z"
-        },
-        {
-          "name": "LICENSE.txt",
-          "size": 2691,
-          "hash": "5179a31878690837b556ef037379d7c336f709d1f51883c920ee3a631cfad8e5",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:38.858Z"
-        },
-        {
-          "name": "windowsdesktop-runtime-10.0.5-win-x64.exe",
-          "size": 60082160,
-          "hash": "1cbe57a8b78944b499d058d3c1af2a54eddd896456865207bf4a6b494bafc997",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:39.082Z"
-        },
-        {
-          "name": "redball.ico",
-          "size": 210491,
-          "hash": "1115214eb7c70c7dec87a60fd25c8caa261701e5d21310025eca8cf6958d4f37",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:39.092Z"
-        },
-        {
-          "name": "Redball.UI.WPF.exe",
-          "size": 373760,
-          "hash": "ad68ace5475108995e4339ffe2068b8ba16ddc06aa31fc922d2fea889d85e2d4",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:39.095Z"
-        },
-        {
-          "name": "nsis-header.bmp",
-          "size": 25818,
-          "hash": "f9bc8541fdccdf929439f09a3d34610b53546c68318002f2ed5c32dab299eb28",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:39.096Z"
-        },
-        {
-          "name": "Redball.Service.exe",
-          "size": 2203727,
-          "hash": "7df9d5199f7f71d52f31bbe5bb5742d96d9a3a82127b2736fa3078ec3bfaf3b6",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:39.106Z"
-        },
-        {
-          "name": "patch-manifest.json.patch",
-          "size": 852,
-          "hash": "9f6418d633b7dacfda899781f5d637bd371c5dbc8e434ebe637187014cfc0ca9",
-          "downloads": 0,
-          "uploadedAt": "2026-04-13T10:30:39.723Z",
-          "patchFor": "patches/patch-manifest.json",
-          "originalSize": 6642,
-          "savings": 5790
-        }
-      ],
-      "totalDownloads": 0,
-      "patchInfo": {
-        "fromVersion": "2.1.608",
-        "generatedAt": "2026-04-13T10:30:39.706Z",
-        "totalPatches": 1,
-        "totalSavings": 5790
-      }
-    },
-    {
       "version": "2.1.613",
       "notes": "Release 2.1.613 (stable channel)",
       "channel": "stable",
@@ -458,6 +328,136 @@
         "generatedAt": "2026-04-13T14:11:47.670Z",
         "totalPatches": 11,
         "totalSavings": 7042433
+      }
+    },
+    {
+      "version": "2.1.617",
+      "notes": "Release 2.1.617 (stable channel)",
+      "channel": "stable",
+      "date": "2026-04-13T14:51:22.740Z",
+      "files": [
+        {
+          "name": "Redball-2.1.617-Setup.exe",
+          "size": 68819470,
+          "hash": "99a226b1dc2f322e6e98089e70e6e749ef61102ba451d82df64a98f55e005095",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:22.878Z"
+        },
+        {
+          "name": "Redball-2.1.617.zip",
+          "size": 10710449,
+          "hash": "3695669e0e06427ddbb9d506b76b4bbe8a7e1863537fb6931ac3ef467e4c0fc9",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:22.895Z"
+        },
+        {
+          "name": "Redball.UI.WPF.runtimeconfig.json",
+          "size": 586,
+          "hash": "42bdf3ff1bc458718481097cb192e129babe98117bfdcb7da9ce75bb0af4fbb8",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:22.896Z"
+        },
+        {
+          "name": "nsis-welcome.bmp",
+          "size": 154542,
+          "hash": "aa643f23d5da2ad2917fd7bb1b98332eab635214b6f6316b008a18d685f92ecf",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:22.897Z"
+        },
+        {
+          "name": "manifest.json",
+          "size": 12380,
+          "hash": "321c1bf98d2e11f938939d04c6438f6b9d407397b52d93572f3bb49f0c577349",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:22.897Z"
+        },
+        {
+          "name": "Redball.nsi",
+          "size": 39134,
+          "hash": "c6f244e73dfc5cf9e5a69d2a32685e6d3f950dc92fbaa9c436f8d5078046a43b",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:22.897Z"
+        },
+        {
+          "name": "Redball.json",
+          "size": 1613,
+          "hash": "c982c0b265b7087600ff4ffc32feb458f0dce37e9c0569bcde698fcd742a78be",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:22.897Z"
+        },
+        {
+          "name": "Redball.UI.WPF.dll",
+          "size": 2833408,
+          "hash": "b4d8501b52761fb06db48a9251d3b2c78f362ba97818c3614dbe6d974165e405",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:22.904Z"
+        },
+        {
+          "name": "Redball.UI.WPF.deps.json",
+          "size": 45907,
+          "hash": "df83342e0a3a285b1242fbe6c2e05923a6901633c0da99417f51742c7c7b967f",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:22.918Z"
+        },
+        {
+          "name": "LICENSE.txt",
+          "size": 2691,
+          "hash": "5179a31878690837b556ef037379d7c336f709d1f51883c920ee3a631cfad8e5",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:22.921Z"
+        },
+        {
+          "name": "windowsdesktop-runtime-10.0.5-win-x64.exe",
+          "size": 60082160,
+          "hash": "1cbe57a8b78944b499d058d3c1af2a54eddd896456865207bf4a6b494bafc997",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:23.050Z"
+        },
+        {
+          "name": "redball.ico",
+          "size": 210491,
+          "hash": "1115214eb7c70c7dec87a60fd25c8caa261701e5d21310025eca8cf6958d4f37",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:23.052Z"
+        },
+        {
+          "name": "Redball.UI.WPF.exe",
+          "size": 373760,
+          "hash": "902d9c63e8884bc15ed1c54c8dfaaafe20ba005b38beabb7ef539c75b6fc6833",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:23.054Z"
+        },
+        {
+          "name": "nsis-header.bmp",
+          "size": 25818,
+          "hash": "f9bc8541fdccdf929439f09a3d34610b53546c68318002f2ed5c32dab299eb28",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:23.055Z"
+        },
+        {
+          "name": "Redball.Service.exe",
+          "size": 2203727,
+          "hash": "a65865481f9de65ef29f3b2329b6488335b961fc3e1a70fc83913a0394792bb2",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:23.068Z"
+        },
+        {
+          "name": "patch-manifest.json.patch",
+          "size": 853,
+          "hash": "0e3ad9986f288b11e496f92ef56e6a1a81c0ae7370808dadb3e6302fda711aaa",
+          "downloads": 0,
+          "uploadedAt": "2026-04-13T14:51:23.320Z",
+          "patchFor": "patches/patch-manifest.json",
+          "originalSize": 6642,
+          "savings": 5789
+        }
+      ],
+      "totalDownloads": 0,
+      "patchInfo": {
+        "fromVersion": "2.1.616",
+        "generatedAt": "2026-04-13T14:51:23.318Z",
+        "totalPatches": 1,
+        "totalSavings": 5789
       }
     }
   ]

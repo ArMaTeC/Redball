@@ -441,6 +441,7 @@ auto_release() {
 
         log_info "Publishing to GitHub via gh CLI..."
         local version=$(get_version)
+        local releases_dir="$UPDATE_SERVER_DIR/releases"
         
         # Collect assets for GitHub release
         local gh_assets=()
@@ -448,16 +449,16 @@ auto_release() {
         gh_assets+=("$DIST_DIR/Redball-${version}.zip")
         
         # Add manifest and patches if they exist
-        if [[ -f "$RELEASES_DIR/$version/manifest.json" ]]; then
-            gh_assets+=("$RELEASES_DIR/$version/manifest.json")
+        if [[ -f "$releases_dir/$version/manifest.json" ]]; then
+            gh_assets+=("$releases_dir/$version/manifest.json")
         elif [[ -f "$DIST_DIR/manifest.json" ]]; then
             gh_assets+=("$DIST_DIR/manifest.json")
         fi
         
-        if [[ -d "$RELEASES_DIR/$version/patches" ]]; then
+        if [[ -d "$releases_dir/$version/patches" ]]; then
             while read -r patch; do
                 gh_assets+=("$patch")
-            done < <(find "$RELEASES_DIR/$version/patches" -maxdepth 1 -name "*.patch")
+            done < <(find "$releases_dir/$version/patches" -maxdepth 1 -name "*.patch")
         fi
 
         if command -v gh &>/dev/null; then
