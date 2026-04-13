@@ -632,22 +632,26 @@ function getDownloadStats() {
 
 function parseBuildStage(line) {
   const stages = [
-    { name: 'setup', pattern: /Phase 1|Checking build dependencies/i, progress: 5 },
-    { name: 'version', pattern: /Phase 0|Bumping version/i, progress: 10 },
-    { name: 'windows-build', pattern: /Phase 1.*Building|Building Windows/i, progress: 30 },
-    { name: 'update-server', pattern: /Phase 4|Update Server/i, progress: 50 },
-    { name: 'publish', pattern: /Phase 5|Publish to Update Server/i, progress: 70 },
-    { name: 'github', pattern: /Phase 6|Publish to GitHub/i, progress: 85 },
-    { name: 'restart', pattern: /Phase 7|Restarting update server/i, progress: 92 },
-    { name: 'web-admin', pattern: /Phase 8|Restarting web admin/i, progress: 96 },
-    { name: 'health', pattern: /Phase 9|Final health status check/i, progress: 98 },
-    { name: 'complete', pattern: /AUTO-RELEASE COMPLETED/i, progress: 100 }
+    { name: 'setup', pattern: /starting full auto-release|checking build dependencies/i, progress: 5 },
+    { name: 'version', pattern: /phase 0: bumping version|version set\/bumped/i, progress: 10 },
+    { name: 'restore', pattern: /phase 1: restoring and building|restoring and building all components/i, progress: 20 },
+    { name: 'wpf-build', pattern: /building windows artifacts|wpf compile/i, progress: 40 },
+    { name: 'service-build', pattern: /wpf publish|building service/i, progress: 55 },
+    { name: 'installer', pattern: /nsis installer|finalizing windows artifacts/i, progress: 68 },
+    { name: 'publish', pattern: /phase 5: publishing to update-server|published to update-server/i, progress: 78 },
+    { name: 'github', pattern: /phase 6: publishing to github|published to github/i, progress: 90 },
+    { name: 'restart', pattern: /phase 7: restarting update server|update server restart process/i, progress: 95 },
+    { name: 'health', pattern: /phase 9: final health status check/i, progress: 98 },
+    { name: 'complete', pattern: /auto-release completed/i, progress: 100 }
   ];
 
   for (const s of stages) {
     if (s.pattern.test(line)) return s;
   }
-  if (/error|failed|abort/i.test(line)) return { name: 'error', progress: buildState.progress };
+  
+  if (/error|failed|abort|unexpected failure/i.test(line)) {
+      return { name: buildState.stage, progress: buildState.progress, status: 'failed' };
+  }
   return null;
 }
 
@@ -699,6 +703,7 @@ function startBuild(buildType = 'windows') {
         if (stage) {
           buildState.stage = stage.name;
           buildState.progress = stage.progress;
+          if (stage.status) buildState.status = stage.status;
         }
 
         if (buildState.log.length > 5000) buildState.log = buildState.log.slice(-2500);
@@ -710,7 +715,7 @@ function startBuild(buildType = 'windows') {
 
         broadcast({
           type: 'build-output',
-          data: { line, stage: buildState.stage, progress: buildState.progress }
+          data: { line, stage: buildState.stage, progress: buildState.progress, status: buildState.status }
         });
       }
     });

@@ -772,9 +772,22 @@ public class MainViewModel : ViewModelBase
 
     private void CheckForUpdates()
     {
+        Logger.Info("MainViewModel", "CheckForUpdates requested from UI button");
         if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var window))
         {
+            Logger.Debug("MainViewModel", "Delegating CheckForUpdates to MainWindow");
             _ = window.CheckForUpdatesAsync();
+        }
+        else
+        {
+            Logger.Warning("MainViewModel", "MainWindow reference is null, cannot navigate to Updates");
+            // Fallback: try to find main window via Application
+            var mainWin = Application.Current.MainWindow as MainWindow;
+            if (mainWin != null)
+            {
+                Logger.Info("MainViewModel", "Found MainWindow via Application.Current fallback");
+                _ = mainWin.CheckForUpdatesAsync();
+            }
         }
     }
 

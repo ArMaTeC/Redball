@@ -149,6 +149,7 @@ public class UpdateService : IUpdateService
     private static DateTime _circuitOpenUntil = DateTime.MinValue;
     private const int CircuitBreakerThreshold = 3;
     private static readonly TimeSpan CircuitBreakerCooldown = TimeSpan.FromMinutes(30);
+    private static readonly SemaphoreSlim _updateLock = new(1, 1);
 
     static UpdateService()
     {
@@ -312,6 +313,15 @@ public class UpdateService : IUpdateService
 
         ReportCheckProgress(progress, UpdateCheckStage.Connecting, 0, "Connecting to update server...");
 
+        if (!await _updateLock.WaitAsync(0, cancellationToken))
+        {
+            Logger.Warning("UpdateService", "Update check already in progress, skipping concurrent request");
+            return null;
+        }
+
+        try
+        {
+
         // Retry logic for transient failures
         int maxRetries = 3;
         for (int attempt = 0; attempt <= maxRetries; attempt++)
@@ -326,19 +336,9 @@ public class UpdateService : IUpdateService
                     return result;
                 }
                 
-                if (attempt == maxRetries)
-                {
-                    ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, "Up to date");
-                    return null;
-                }
-                
-                // If result is null but no exception, check if we should retry
-                if (attempt < maxRetries)
-                {
-                    var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt)); // 1s, 2s, 4s
-                    Logger.Debug("UpdateService", $"Update check returned null, retrying in {delay.TotalSeconds}s (attempt {attempt + 1}/{maxRetries})");
-                    await Task.Delay(delay, cancellationToken);
-                }
+                // If result is null, we are up to date. No need to retry.
+                ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, "Up to date");
+                return null;
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("rate limit", StringComparison.OrdinalIgnoreCase))
             {
@@ -361,8 +361,13 @@ public class UpdateService : IUpdateService
                 return null;
             }
         }
-
+        
         return null;
+        }
+        finally
+        {
+            _updateLock.Release();
+        }
     }
 
     private static void ReportCheckProgress(IProgress<UpdateCheckProgress>? progress, UpdateCheckStage stage, int percentage, string statusText, int filesHashed = 0, int totalFiles = 0)

@@ -17,6 +17,7 @@ public partial class MainWindow
     private string? _skippedVersion;
     private bool _isShowingUpdateDialog;
     private bool _updateTimerStarted;
+    private bool _isCheckingForUpdates;
 
     private void EnsureUpdateService()
     {
@@ -92,6 +93,14 @@ public partial class MainWindow
             return;
         }
 
+        if (_isCheckingForUpdates)
+        {
+            Logger.Debug("MainWindow", "Update check already in progress, skipping");
+            return;
+        }
+
+        _isCheckingForUpdates = true;
+
         try
         {
             // Ensure update service is available
@@ -130,6 +139,10 @@ public partial class MainWindow
         catch (Exception ex)
         {
             Logger.Debug("MainWindow", $"Auto update check failed: {ex.Message}");
+        }
+        finally
+        {
+            _isCheckingForUpdates = false;
         }
     }
 

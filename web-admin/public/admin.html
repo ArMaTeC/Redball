@@ -1016,22 +1016,34 @@
                         <div class="group-icon">⚡</div>
                         <div class="group-title">Pulse & Power</div>
                     </div>
-                    <div class="config-field">
-                        <label>Heartbeat Sync (Seconds)</label>
-                        <input type="number" id="cfg-HeartbeatSeconds" value="${currentConfig.HeartbeatSeconds}">
+                    <div class="config-row">
+                        <div class="config-field">
+                            <label>Heartbeat Sync (Seconds)</label>
+                            <input type="number" id="cfg-HeartbeatSeconds" value="${currentConfig.HeartbeatSeconds}">
+                        </div>
+                        <div class="config-field">
+                            <label>Default Op Duration (Min)</label>
+                            <input type="number" id="cfg-DefaultDuration" value="${currentConfig.DefaultDuration}">
+                        </div>
                     </div>
                     <div class="config-field">
-                        <label>Default Op Duration (Min)</label>
-                        <input type="number" id="cfg-DefaultDuration" value="${currentConfig.DefaultDuration}">
+                        <label>Heartbeat Input Mode</label>
+                        <select id="cfg-HeartbeatInputMode">
+                            <option value="F15" ${currentConfig.HeartbeatInputMode === 'F15' ? 'selected' : ''}>F15 (Ghost Key)</option>
+                            <option value="F24" ${currentConfig.HeartbeatInputMode === 'F24' ? 'selected' : ''}>F24 (Phantom Key)</option>
+                            <option value="Mouse" ${currentConfig.HeartbeatInputMode === 'Mouse' ? 'selected' : ''}>Mouse Jiggle</option>
+                        </select>
                     </div>
-                    <label class="cb-field">
-                        <input type="checkbox" id="cfg-PreventDisplaySleep" ${currentConfig.PreventDisplaySleep ? 'checked' : ''}>
-                        <span>Prevent System Hibernation</span>
-                    </label>
-                    <label class="cb-field">
-                        <input type="checkbox" id="cfg-UseHeartbeatKeypress" ${currentConfig.UseHeartbeatKeypress ? 'checked' : ''}>
-                        <span>Simulate User Activity (Ghost Pulse)</span>
-                    </label>
+                    <div class="config-row">
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-PreventDisplaySleep" ${currentConfig.PreventDisplaySleep ? 'checked' : ''}>
+                            <span>Prevent System Hibernation</span>
+                        </label>
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-UseHeartbeatKeypress" ${currentConfig.UseHeartbeatKeypress ? 'checked' : ''}>
+                            <span>Simulate User Activity</span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="config-group">
@@ -1039,27 +1051,63 @@
                         <div class="group-icon">🧠</div>
                         <div class="group-title">Intelligence Engine</div>
                     </div>
-                    <label class="cb-field">
-                        <input type="checkbox" id="cfg-TypeThingEnabled" ${currentConfig.TypeThingEnabled ? 'checked' : ''}>
-                        <span>Enable Virtual Input Logic</span>
-                    </label>
+                    <div class="config-row">
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-TypeThingEnabled" ${currentConfig.TypeThingEnabled ? 'checked' : ''}>
+                            <span>Enable Virtual Input Logic</span>
+                        </label>
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-TypeThingNotifications" ${currentConfig.TypeThingNotifications ? 'checked' : ''}>
+                            <span>Virtual Input Notifications</span>
+                        </label>
+                    </div>
                     <div class="config-row">
                         <div class="config-field">
-                            <label>Min Key Delay</label>
+                            <label>Min Key Delay (ms)</label>
                             <input type="number" id="cfg-TypeThingMinDelayMs" value="${currentConfig.TypeThingMinDelayMs}">
                         </div>
                         <div class="config-field">
-                            <label>Max Key Delay</label>
+                            <label>Max Key Delay (ms)</label>
                             <input type="number" id="cfg-TypeThingMaxDelayMs" value="${currentConfig.TypeThingMaxDelayMs}">
                         </div>
                     </div>
-                    <label class="cb-field">
-                        <input type="checkbox" id="cfg-IdleDetection" ${currentConfig.IdleDetection ? 'checked' : ''}>
-                        <span>Automatic Idle Migration</span>
-                    </label>
                     <div class="config-field">
-                        <label>Idle Threshold (Seconds)</label>
-                        <input type="number" id="cfg-IdleThreshold" value="${currentConfig.IdleThreshold}">
+                        <label>Input Theme</label>
+                        <select id="cfg-TypeThingTheme">
+                            <option value="dark" ${currentConfig.TypeThingTheme === 'dark' ? 'selected' : ''}>Dark</option>
+                            <option value="light" ${currentConfig.TypeThingTheme === 'light' ? 'selected' : ''}>Light</option>
+                        </select>
+                    </div>
+                    <hr style="border: 1px solid var(--border); margin: 0.5rem 0;">
+                    <div class="config-row">
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-IdleDetection" ${currentConfig.IdleDetection ? 'checked' : ''}>
+                            <span>Automatic Idle Migration</span>
+                        </label>
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-BatteryAware" ${currentConfig.BatteryAware ? 'checked' : ''}>
+                            <span>Battery Mode Awareness</span>
+                        </label>
+                    </div>
+                    <div class="config-row">
+                        <div class="config-field">
+                            <label>Idle Threshold (Sec)</label>
+                            <input type="number" id="cfg-IdleThreshold" value="${currentConfig.IdleThreshold}">
+                        </div>
+                        <div class="config-field">
+                            <label>Battery Threshold (%)</label>
+                            <input type="number" id="cfg-BatteryThreshold" value="${currentConfig.BatteryThreshold}">
+                        </div>
+                    </div>
+                    <div class="config-row">
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-NetworkAware" ${currentConfig.NetworkAware ? 'checked' : ''}>
+                            <span>Network Context Awareness</span>
+                        </label>
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-PresentationModeDetection" ${currentConfig.PresentationModeDetection ? 'checked' : ''}>
+                            <span>Suppress in Presentation Mode</span>
+                        </label>
                     </div>
                 </div>
 
@@ -1068,13 +1116,15 @@
                         <div class="group-icon">🌐</div>
                         <div class="group-title">System Infrastructure</div>
                     </div>
-                    <div class="config-field">
-                        <label>GitHub Repository Owner</label>
-                        <input type="text" id="cfg-UpdateRepoOwner" value="${currentConfig.UpdateRepoOwner}">
-                    </div>
-                    <div class="config-field">
-                        <label>GitHub Repository Name</label>
-                        <input type="text" id="cfg-UpdateRepoName" value="${currentConfig.UpdateRepoName}">
+                    <div class="config-row">
+                        <div class="config-field">
+                            <label>GitHub Repository Owner</label>
+                            <input type="text" id="cfg-UpdateRepoOwner" value="${currentConfig.UpdateRepoOwner}">
+                        </div>
+                        <div class="config-field">
+                            <label>GitHub Repository Name</label>
+                            <input type="text" id="cfg-UpdateRepoName" value="${currentConfig.UpdateRepoName}">
+                        </div>
                     </div>
                     <div class="config-field">
                         <label>Update Channel</label>
@@ -1088,6 +1138,72 @@
                         <input type="checkbox" id="cfg-VerifyUpdateSignature" ${currentConfig.VerifyUpdateSignature ? 'checked' : ''}>
                         <span>Strict Binary Signature Verification</span>
                     </label>
+                </div>
+
+                <div class="config-group">
+                    <div class="group-header">
+                        <div class="group-icon">🖥️</div>
+                        <div class="group-title">Client Interface</div>
+                    </div>
+                    <div class="config-row">
+                        <div class="config-field">
+                            <label>System Theme</label>
+                            <select id="cfg-Theme">
+                                <option value="System" ${currentConfig.Theme === 'System' ? 'selected' : ''}>System Default</option>
+                                <option value="Dark" ${currentConfig.Theme === 'Dark' ? 'selected' : ''}>Dark Mode</option>
+                                <option value="Light" ${currentConfig.Theme === 'Light' ? 'selected' : ''}>Light Mode</option>
+                            </select>
+                        </div>
+                        <div class="config-field">
+                            <label>Locale</label>
+                            <input type="text" id="cfg-Locale" value="${currentConfig.Locale}">
+                        </div>
+                    </div>
+                    <div class="config-row">
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-MinimizeToTray" ${currentConfig.MinimizeToTray ? 'checked' : ''}>
+                            <span>Minimize to Tray</span>
+                        </label>
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-MinimizeOnStart" ${currentConfig.MinimizeOnStart ? 'checked' : ''}>
+                            <span>Minimize on Start</span>
+                        </label>
+                    </div>
+                    <div class="config-row">
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-ShowNotifications" ${currentConfig.ShowNotifications ? 'checked' : ''}>
+                            <span>Show Notifications</span>
+                        </label>
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-ShowBalloonOnStart" ${currentConfig.ShowBalloonOnStart ? 'checked' : ''}>
+                            <span>Show Balloon on Start</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="config-group">
+                    <div class="group-header">
+                        <div class="group-icon">📊</div>
+                        <div class="group-title">Telemetry & Diagnostics</div>
+                    </div>
+                    <div class="config-row">
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-VerboseLogging" ${currentConfig.VerboseLogging ? 'checked' : ''}>
+                            <span>Verbose Logging</span>
+                        </label>
+                        <label class="cb-field">
+                            <input type="checkbox" id="cfg-EnableTelemetry" ${currentConfig.EnableTelemetry ? 'checked' : ''}>
+                            <span>Enable Telemetry</span>
+                        </label>
+                    </div>
+                    <label class="cb-field">
+                        <input type="checkbox" id="cfg-EnablePerformanceMetrics" ${currentConfig.EnablePerformanceMetrics ? 'checked' : ''}>
+                        <span>Collect Performance Metrics</span>
+                    </label>
+                    <div class="config-field">
+                        <label>Max Log Size (MB)</label>
+                        <input type="number" id="cfg-MaxLogSizeMB" value="${currentConfig.MaxLogSizeMB}">
+                    </div>
                 </div>
             `;
         }
@@ -1236,9 +1352,10 @@
                     break;
                 case 'build-output':
                     appendLog(msg.data.line);
-                    updatePipeline(msg.data.stage, msg.data.progress);
+                    updatePipeline(msg.data.stage, msg.data.progress, msg.data.status);
+                    
                     // Update current operation display with clean text
-                    const cleanOp = msg.data.line.replace(/\u001b\[[0-9;]*[mGHKJKpf]/g, '').trim();
+                    const cleanOp = cleanAnsi(msg.data.line).trim();
                     if (cleanOp && !cleanOp.startsWith('[') && cleanOp.length < 100 && !/^\([0-9.]+s\)$/.test(cleanOp)) {
                          document.getElementById('current-op').innerText = cleanOp;
                     }
@@ -1266,7 +1383,7 @@
             document.getElementById('initial-controls').style.display = isRunning ? 'none' : 'block';
             document.getElementById('active-controls').style.display = isRunning ? 'block' : 'none';
 
-            if (state.stage) updatePipeline(state.stage, state.progress);
+            if (state.stage) updatePipeline(state.stage, state.progress, state.status);
             if (state.status === 'success') {
                 document.getElementById('last-status').innerText = 'SUCCESS';
                 document.getElementById('last-status').style.color = 'var(--success)';
@@ -1290,35 +1407,62 @@
             }
         }
 
-        function updatePipeline(stage, progress) {
-            const steps = document.querySelectorAll('.pipeline-step');
-            let found = false;
+        function updatePipeline(stage, progress, status) {
+            const steps = Array.from(document.querySelectorAll('.pipeline-step'));
+            let foundCurrent = false;
 
             document.getElementById('progress-percent').innerText = Math.round(progress) + '%';
-            document.getElementById('progress-fill').style.width = progress + '%';
+            const fill = document.getElementById('progress-fill');
+            fill.style.width = progress + '%';
             document.getElementById('pipeline-progress').style.width = progress + '%';
+
+            if (status === 'failed') {
+                fill.style.background = 'var(--danger)';
+            } else {
+                fill.style.background = 'linear-gradient(90deg, var(--accent), #10b981)';
+            }
 
             steps.forEach(step => {
                 const s = step.dataset.stage;
-                step.classList.remove('active');
-                if (s === stage) {
-                    step.classList.add('active');
-                    found = true;
-                } else if (!found) {
+                step.classList.remove('active', 'complete', 'error');
+                
+                if (stage === 'complete' && status !== 'failed') {
                     step.classList.add('complete');
-                } else {
-                    step.classList.remove('complete');
+                    return;
+                }
+
+                if (s === stage) {
+                    foundCurrent = true;
+                    if (status === 'failed') {
+                        step.classList.add('error');
+                    } else if (progress === 100) {
+                        step.classList.add('complete');
+                    } else {
+                        step.classList.add('active');
+                    }
+                } else if (!foundCurrent) {
+                    step.classList.add('complete');
                 }
             });
+        }
+
+        function cleanAnsi(text) {
+            if (typeof text !== 'string') return text;
+            return text
+                .replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '') // CSI
+                .replace(/\u001b\].*?(\u001b\\|\x07)/g, '') // OSC
+                .replace(/\u001b[PX^_].*?\u001b\\/g, '') // DCS, SOS, PM, APC
+                .replace(/\u001b./g, '') // Other Esc
+                .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Control chars
         }
 
         function appendLog(line) {
             const terminal = document.getElementById('terminal-out');
             const div = document.createElement('div');
             
-            // Comprehensive ANSI cleaning (handles cursor movement, color, visibility, etc.)
-            const cleanLine = line.replace(/\u001b\[[0-9;?]*[a-zA-Z]/g, '').trim();
-            if (!cleanLine || /^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]*[a-zA-Z]/.test(cleanLine)) return; // skip noise or fragments
+            // Comprehensive ANSI cleaning
+            const cleanLine = cleanAnsi(line).trim();
+            if (!cleanLine || /^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]*[a-zA-Z]/.test(cleanLine)) return; 
 
             div.className = 't-line';
             if (cleanLine.includes('ERROR') || cleanLine.includes('failed')) div.className += ' error';

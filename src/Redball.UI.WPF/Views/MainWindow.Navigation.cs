@@ -89,40 +89,24 @@ public partial class MainWindow
 
     public async Task CheckForUpdatesAsync()
     {
-        // If we're on the Updates tab, use the embedded UI
-        if (UpdatesPanel is UpdatesSectionView updatesSection && _currentSection == "Updates")
+        Logger.Info("MainWindow", "CheckForUpdatesAsync manual trigger");
+        
+        // Switch to Updates section first to provide integrated experience
+        ShowUpdates();
+
+        // Small delay to allow UI to transition before heavy API call
+        await Task.Delay(100);
+
+        // If we have the embedded UI, use it to start the check
+        if (UpdatesPanel is UpdatesSectionView updatesSection)
         {
+            Logger.Debug("MainWindow", "Starting update check via UpdatesSectionView");
             await updatesSection.StartUpdateCheckFromExternalAsync();
-            return;
         }
-
-        // Otherwise use the fallback separate window approach
-        EnsureUpdateService();
-
-        if (_updateService == null)
+        else
         {
-            return;
+            Logger.Warning("MainWindow", "UpdatesPanel is NOT UpdatesSectionView or is null, cannot start check");
         }
-
-        _analytics.TrackFeature("update.manual_check");
-
-        // Show progress window during check
-        var progressWindow = new UpdateCheckProgressWindow();
-        progressWindow.Show();
-
-        var progress = new Progress<UpdateCheckProgress>(p => progressWindow.UpdateProgress(p));
-        var updateInfo = await _updateService.CheckForUpdateAsync(true, progress);
-
-        progressWindow.Close();
-
-        if (updateInfo == null)
-        {
-            NotificationWindow.Show("Up to Date", "You're running the latest version of Redball.", "\uE73E");
-            return;
-        }
-
-        // Show the full changelog dialog instead of jumping straight to download
-        await ShowUpdateAvailableDialogAsync(updateInfo);
     }
 
     private void MainOpenLogFolderButton_Click(object sender, RoutedEventArgs e)
@@ -182,7 +166,12 @@ public partial class MainWindow
 
         // Don't animate if we're already on this section
         if (_currentSection == section)
+        {
+            Logger.Debug("MainWindow", $"Already in section {section}, skipping animation");
             return;
+        }
+
+        Logger.Info("MainWindow", $"Switching UI section to: {section}");
 
         // Get all panels
         var panels = new (string name, UIElement panel)[]
