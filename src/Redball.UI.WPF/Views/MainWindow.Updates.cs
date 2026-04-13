@@ -95,7 +95,7 @@ public partial class MainWindow
 
         if (_isCheckingForUpdates)
         {
-            Logger.Debug("MainWindow", "Update check already in progress, skipping");
+            Logger.Debug("MainWindow", "Update check already in progress, skipping auto check");
             return;
         }
 
@@ -231,40 +231,47 @@ public partial class MainWindow
         _updateTimerStarted = false;
     }
 
+    /// <summary>
+    /// Shared entry point for manual update checks (from Home tab, Sidebar, or Command Palette).
+    /// </summary>
+    public async System.Threading.Tasks.Task CheckForUpdatesAsync()
+    {
+        if (_isCheckingForUpdates)
+        {
+            Logger.Debug("MainWindow", "Update check already in progress, skipping manual trigger");
+            return;
+        }
+
+        Logger.Info("MainWindow", "CheckForUpdatesAsync manual trigger");
+        _analytics.TrackFeature("update.manual_trigger");
+
+        // 1. Switch to Updates section first to provide integrated experience
+        ShowUpdates();
+
+        // 2. Small delay to allow UI to transition before heavy API call
+        await System.Threading.Tasks.Task.Delay(150);
+
+        // 3. Delegate to the embedded UpdatesSectionView
+        if (UpdatesPanel is UpdatesSectionView updatesSection)
+        {
+            Logger.Debug("MainWindow", "Starting update check via UpdatesSectionView");
+            await updatesSection.StartUpdateCheckFromExternalAsync();
+        }
+        else
+        {
+            // Fallback for unexpected UI state
+            Logger.Warning("MainWindow", "Updates section not available for manual check, falling back to basic check");
+            await PerformAutoUpdateCheckAsync();
+        }
+    }
+
     private async void MainCheckUpdatesButton_Click(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            // Delegate to the embedded UpdatesSectionView for integrated UI experience
-            if (UpdatesPanel is Views.UpdatesSectionView updatesSection)
-            {
-                await updatesSection.StartUpdateCheckFromExternalAsync();
-            }
-            else
-            {
-                // Fallback if UpdatesSection is not initialized
-                EnsureUpdateService();
-                if (_updateService == null)
-                {
-                    NotificationService.Instance.ShowError("Updates", "Update service is not available.");
-                    return;
-                }
+        await CheckForUpdatesAsync();
+    }
 
-                _analytics.TrackFeature("update.manual_check");
-                var updateInfo = await _updateService.CheckForUpdateAsync(true);
-                if (updateInfo == null)
-                {
-                    NotificationService.Instance.ShowInfo("Updates", "You are already on the latest version.");
-                    return;
-                }
-
-                await ShowUpdateAvailableDialogAsync(updateInfo);
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("MainWindow", "Manual update check failed", ex);
-            NotificationService.Instance.ShowError("Updates", "Failed to check for updates.");
-        }
+    private async void MainCheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
+    {
+        await CheckForUpdatesAsync();
     }
 }

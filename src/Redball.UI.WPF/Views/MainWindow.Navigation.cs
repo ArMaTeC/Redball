@@ -74,41 +74,6 @@ public partial class MainWindow
         return $"Current Version: v{version?.Major}.{version?.Minor}.{version?.Build}";
     }
 
-    private async void MainCheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
-    {
-        // Use the embedded UpdatesSectionView for integrated progress UI
-        if (UpdatesPanel is UpdatesSectionView updatesSection)
-        {
-            await updatesSection.StartUpdateCheckFromExternalAsync();
-        }
-        else
-        {
-            await CheckForUpdatesAsync();
-        }
-    }
-
-    public async Task CheckForUpdatesAsync()
-    {
-        Logger.Info("MainWindow", "CheckForUpdatesAsync manual trigger");
-        
-        // Switch to Updates section first to provide integrated experience
-        ShowUpdates();
-
-        // Small delay to allow UI to transition before heavy API call
-        await Task.Delay(100);
-
-        // If we have the embedded UI, use it to start the check
-        if (UpdatesPanel is UpdatesSectionView updatesSection)
-        {
-            Logger.Debug("MainWindow", "Starting update check via UpdatesSectionView");
-            await updatesSection.StartUpdateCheckFromExternalAsync();
-        }
-        else
-        {
-            Logger.Warning("MainWindow", "UpdatesPanel is NOT UpdatesSectionView or is null, cannot start check");
-        }
-    }
-
     private void MainOpenLogFolderButton_Click(object sender, RoutedEventArgs e)
     {
         try

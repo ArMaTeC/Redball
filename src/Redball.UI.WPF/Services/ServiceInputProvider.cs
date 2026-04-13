@@ -74,8 +74,21 @@ public class ServiceInputProvider : IDisposable
     /// <summary>
     /// Checks if the Redball Input Service is installed and running.
     /// Attempts to start the service if it's installed but stopped.
+    /// Note: This is now a non-blocking wrapper around the internal logic.
     /// </summary>
     public bool RefreshServiceInstalledState()
+    {
+        if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+        {
+            // If on UI thread, offload to background to prevent freezing
+            Task.Run(() => RefreshServiceInstalledStateInternal()).ConfigureAwait(false);
+            return IsServiceInstalled;
+        }
+        
+        return RefreshServiceInstalledStateInternal();
+    }
+
+    private bool RefreshServiceInstalledStateInternal()
     {
         try
         {
@@ -94,12 +107,6 @@ public class ServiceInputProvider : IDisposable
                     Logger.Info("ServiceInputProvider", "Service is installed but stopped. Administrator rights required to start the service automatically.");
                     _lastErrorSummary = "Service stopped - run as Administrator to auto-start";
                     IsServiceInstalled = false;
-                    
-                    // Show user-visible notification about elevation requirement
-                    NotificationService.Instance.ShowWarning(
-                        "Redball Service", 
-                        "Input Service is installed but stopped. Administrator rights are required to start it. TypeThing may not work correctly without the service.");
-                    
                     return IsServiceInstalled;
                 }
 
@@ -117,22 +124,13 @@ public class ServiceInputProvider : IDisposable
                     };
                     
                     using var process = System.Diagnostics.Process.Start(psi)!;
-                    var stdout = process.StandardOutput.ReadToEnd();
-                    var stderr = process.StandardError.ReadToEnd();
-                    process.WaitForExit();
+                    process.WaitForExit(5000); // 5s timeout for sc.exe
                     
-                    if (process.ExitCode == 0 || stdout.Contains("RUNNING", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Refresh status to confirm
-                        sc.Refresh();
-                        IsServiceInstalled = sc.Status == System.ServiceProcess.ServiceControllerStatus.Running;
-                        Logger.Info("ServiceInputProvider", $"Service started successfully: {IsServiceInstalled}");
-                    }
-                    else
-                    {
-                        Logger.Warning("ServiceInputProvider", $"sc.exe failed to start service: {stderr} {stdout}");
-                        IsServiceInstalled = false;
-                    }
+                    // Refresh status to confirm
+                    sc.Refresh();
+                    IsServiceInstalled = sc.Status == System.ServiceProcess.ServiceControllerStatus.Running || 
+                                         sc.Status == System.ServiceProcess.ServiceControllerStatus.StartPending;
+                    Logger.Info("ServiceInputProvider", $"Service start command issued. Status: {sc.Status}");
                 }
                 catch (Exception ex)
                 {
@@ -143,9 +141,10 @@ public class ServiceInputProvider : IDisposable
             else if (status == System.ServiceProcess.ServiceControllerStatus.StopPending || 
                      status == System.ServiceProcess.ServiceControllerStatus.StartPending)
             {
-                Logger.Info("ServiceInputProvider", $"Service is in pending state ({status}), waiting...");
-                sc.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
-                IsServiceInstalled = sc.Status == System.ServiceProcess.ServiceControllerStatus.Running;
+                Logger.Info("ServiceInputProvider", $"Service is in pending state ({status}), awaiting transition in background...");
+                // Don't block here with sc.WaitForStatus if we can avoid it.
+                // Instead, just return the current pending status as "not ready but present"
+                IsServiceInstalled = status == System.ServiceProcess.ServiceControllerStatus.StartPending;
             }
         }
         catch (Exception ex)
@@ -401,78 +400,87 @@ public class ServiceInputProvider : IDisposable
 
     /// <summary>
     /// Gets detailed service status including running state and pipe connectivity.
+    /// This method is now non-blocking and safe to call from UI thread.
     /// </summary>
-    public ServiceState GetDetailedServiceState()
+    public async Task<ServiceState> GetDetailedServiceStateAsync()
     {
-        try
+        return await Task.Run(() =>
         {
-            using var sc = new System.ServiceProcess.ServiceController("RedballInputService");
-            var status = sc.Status;
-            
-            var isRunning = status == System.ServiceProcess.ServiceControllerStatus.Running;
-            var isInstalled = isRunning || 
-                              status == System.ServiceProcess.ServiceControllerStatus.Stopped ||
-                              status == System.ServiceProcess.ServiceControllerStatus.StartPending ||
-                              status == System.ServiceProcess.ServiceControllerStatus.StopPending;
-            
-            if (!isInstalled)
+            try
             {
-                return new ServiceState { Status = ServiceStatus.NotInstalled };
-            }
-            
-            if (!isRunning)
-            {
+                using var sc = new System.ServiceProcess.ServiceController("RedballInputService");
+                var status = sc.Status;
+                
+                var isRunning = status == System.ServiceProcess.ServiceControllerStatus.Running;
+                var isInstalled = isRunning || 
+                                  status == System.ServiceProcess.ServiceControllerStatus.Stopped ||
+                                  status == System.ServiceProcess.ServiceControllerStatus.StartPending ||
+                                  status == System.ServiceProcess.ServiceControllerStatus.StopPending;
+                
+                if (!isInstalled)
+                {
+                    return new ServiceState { Status = ServiceStatus.NotInstalled };
+                }
+                
+                if (!isRunning)
+                {
+                    return new ServiceState 
+                    { 
+                        Status = ServiceStatus.Stopped,
+                        ServiceControllerStatus = status.ToString()
+                    };
+                }
+                
+                // Service is running - test pipe connectivity
+                using var testClient = new InputServiceClient();
+                var connected = testClient.ConnectAsync(3000).Result;
+                
+                if (!connected)
+                {
+                    return new ServiceState 
+                    { 
+                        Status = ServiceStatus.RunningNoPipe,
+                        ServiceControllerStatus = "Running",
+                        ErrorMessage = "Service running but named pipe connection failed"
+                    };
+                }
+                
+                // Test ping
+                var pingResult = testClient.PingAsync().Result;
+                if (!pingResult)
+                {
+                    return new ServiceState 
+                    { 
+                        Status = ServiceStatus.RunningNoResponse,
+                        ServiceControllerStatus = "Running",
+                        PipeConnected = true,
+                        ErrorMessage = "Connected but service not responding to ping"
+                    };
+                }
+                
                 return new ServiceState 
                 { 
-                    Status = ServiceStatus.Stopped,
-                    ServiceControllerStatus = status.ToString()
-                };
-            }
-            
-            // Service is running - test pipe connectivity
-            using var testClient = new InputServiceClient();
-            var connected = testClient.ConnectAsync(3000).Result;
-            
-            if (!connected)
-            {
-                return new ServiceState 
-                { 
-                    Status = ServiceStatus.RunningNoPipe,
-                    ServiceControllerStatus = "Running",
-                    ErrorMessage = "Service running but named pipe connection failed"
-                };
-            }
-            
-            // Test ping
-            var pingResult = testClient.PingAsync().Result;
-            if (!pingResult)
-            {
-                return new ServiceState 
-                { 
-                    Status = ServiceStatus.RunningNoResponse,
+                    Status = ServiceStatus.Healthy,
                     ServiceControllerStatus = "Running",
                     PipeConnected = true,
-                    ErrorMessage = "Connected but service not responding to ping"
+                    Responsive = true
                 };
             }
-            
-            return new ServiceState 
-            { 
-                Status = ServiceStatus.Healthy,
-                ServiceControllerStatus = "Running",
-                PipeConnected = true,
-                Responsive = true
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ServiceState 
-            { 
-                Status = ServiceStatus.Error,
-                ErrorMessage = ex.Message
-            };
-        }
+            catch (Exception ex)
+            {
+                return new ServiceState 
+                { 
+                    Status = ServiceStatus.Error,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// Legacy blocking call, avoid if possible.
+    /// </summary>
+    public ServiceState GetDetailedServiceState() => GetDetailedServiceStateAsync().GetAwaiter().GetResult();
 
     public record ServiceState
     {

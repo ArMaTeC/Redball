@@ -18,6 +18,7 @@ public partial class UpdatesSectionView : UserControl
     private CancellationTokenSource? _cancellationTokenSource;
     private bool _isChecking;
     private readonly StringBuilder _logBuilder = new();
+    private DateTime _lastLogUpdate = DateTime.MinValue;
     
     // Stage tracking for download progress
     private UpdateStage _currentDownloadStage = UpdateStage.Checking;
@@ -310,6 +311,11 @@ public partial class UpdatesSectionView : UserControl
             if (success)
             {
                 ShowInstallCompleteResult();
+                
+                // CRITICAL: Shut down the app after a short delay to allow the update script 
+                // (which is waiting for this process to exit) to begin the installation.
+                await Task.Delay(3000);
+                Application.Current.Shutdown();
             }
             else
             {
@@ -379,7 +385,7 @@ public partial class UpdatesSectionView : UserControl
             ProgressFileCountText.Text = progress.IsDelta ? "Differential update" : "";
         }
         
-        // Log
+        // Log throttling and size management
         if (!string.IsNullOrEmpty(progress.LogEntry))
         {
             var cleanedEntry = CleanAnsi(progress.LogEntry);
@@ -387,8 +393,22 @@ public partial class UpdatesSectionView : UserControl
             {
                 if (_logBuilder.Length > 0) _logBuilder.AppendLine();
                 _logBuilder.Append(cleanedEntry);
-                LogTextBlock.Text = _logBuilder.ToString();
-                LogScrollViewer.ScrollToEnd();
+                
+                // Keep only the last 10,000 characters to prevent junk build-up
+                if (_logBuilder.Length > 10000)
+                {
+                    _logBuilder.Remove(0, _logBuilder.Length - 5000);
+                }
+
+                // Throttle UI update - only update text if it's been at least 100ms
+                // or if it's a critical stage change
+                var now = DateTime.Now;
+                if ((now - _lastLogUpdate).TotalMilliseconds > 100 || progress.Stage != _currentDownloadStage)
+                {
+                    LogTextBlock.Text = _logBuilder.ToString();
+                    LogScrollViewer.ScrollToEnd();
+                    _lastLogUpdate = now;
+                }
             }
         }
         
@@ -427,7 +447,7 @@ public partial class UpdatesSectionView : UserControl
         UpdateSingleStage(StageVerifying, Connector4, UpdateStage.Verifying, stage,
         accentBrush, completedBrush, dimBg, whiteBrush, dimFg, ref reachedCurrent, failedBrush);
         
-        // Stage: Applying
+        // Stage: Applying (Staging is the final preparation before completion)
         if (stage == UpdateStage.Applying || stage == UpdateStage.Staging)
         {
             StageApplying.Background = accentBrush;

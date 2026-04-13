@@ -962,40 +962,61 @@ public partial class MainWindow
         SuspendHotkeys();
     }
 
-    private void RefreshServiceInstallVisibility()
+    private async void RefreshServiceInstallVisibility()
     {
         var inputMode = MainTypeThingInputModeCombo.SelectedIndex;
         var serviceSelected = inputMode == 1; // Service mode (index 1)
-        var serviceInstalled = ServiceInputProvider.Instance.RefreshServiceInstalledState();
-        var serviceRunning = ServiceInputProvider.Instance.IsReady || 
-                             ServiceInputProvider.Instance.GetDetailedServiceState().Status == ServiceInputProvider.ServiceStatus.Healthy;
-
-        // Update button text and visibility based on selected mode
-        if (serviceSelected)
-        {
-            MainInstallServiceBtn.Content = serviceInstalled
-                ? (serviceRunning ? "Uninstall Service" : "Start Service")
-                : "Install Service";
-            MainInstallServiceBtn.Visibility = Visibility.Visible;
-            MainUninstallServiceBtn.Visibility = Visibility.Collapsed;
-            if (MainServiceAdminHintText != null)
-            {
-                MainServiceAdminHintText.Visibility = Visibility.Visible;
-                MainServiceAdminHintText.Text = "Administrator approval (UAC) is required to install or uninstall the Input Service.";
-            }
-            
-            MainInstallServiceBtn.ToolTip = serviceInstalled
-                ? (serviceRunning 
-                    ? "Uninstall the Redball Input Service."
-                    : "Start the Redball Input Service (admin required).")
-                : "Install the Redball Input Service.";
-        }
-        else
+        
+        if (!serviceSelected)
         {
             // SendInput mode (index 0)
             MainInstallServiceBtn.Visibility = Visibility.Collapsed;
             MainUninstallServiceBtn.Visibility = Visibility.Collapsed;
             if (MainServiceAdminHintText != null) MainServiceAdminHintText.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        // Show loading state or at least keep button visible but disabled while checking
+        MainInstallServiceBtn.IsEnabled = false;
+        MainInstallServiceBtn.Visibility = Visibility.Visible;
+        if (MainServiceAdminHintText != null)
+        {
+            MainServiceAdminHintText.Visibility = Visibility.Visible;
+        }
+
+        try
+        {
+            // Use non-blocking async check
+            var serviceState = await ServiceInputProvider.Instance.GetDetailedServiceStateAsync();
+            var serviceInstalled = serviceState.Status != ServiceInputProvider.ServiceStatus.NotInstalled;
+            var serviceRunning = serviceState.Status == ServiceInputProvider.ServiceStatus.Healthy;
+
+            // Update UI on dispatcher
+            Dispatcher.Invoke(() =>
+            {
+                MainInstallServiceBtn.Content = serviceInstalled
+                    ? (serviceRunning ? "Uninstall Service" : "Start Service")
+                    : "Install Service";
+                
+                MainInstallServiceBtn.IsEnabled = true;
+                MainUninstallServiceBtn.Visibility = Visibility.Collapsed;
+                
+                if (MainServiceAdminHintText != null)
+                {
+                    MainServiceAdminHintText.Text = "Administrator approval (UAC) is required to install or uninstall the Input Service.";
+                }
+                
+                MainInstallServiceBtn.ToolTip = serviceInstalled
+                    ? (serviceRunning 
+                        ? "Uninstall the Redball Input Service."
+                        : "Start the Redball Input Service (admin required).")
+                    : "Install the Redball Input Service.";
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("MainWindow", $"Failed to refresh service visibility: {ex.Message}");
+            MainInstallServiceBtn.IsEnabled = true;
         }
     }
 

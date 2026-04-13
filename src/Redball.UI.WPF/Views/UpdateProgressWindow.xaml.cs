@@ -98,14 +98,32 @@ public partial class UpdateProgressWindow : Window
             FileCountLabel.Text = progress.IsDelta ? "Differential update" : "";
         }
 
-        // --- Append to log ---
+        // --- Append to log with throttling and cleaning ---
         if (!string.IsNullOrEmpty(progress.LogEntry))
         {
-            if (_logBuilder.Length > 0) _logBuilder.AppendLine();
-            _logBuilder.Append(progress.LogEntry);
-            LogTextBlock.Text = _logBuilder.ToString();
-            LogScrollViewer.ScrollToEnd();
+            var cleanedEntry = CleanAnsi(progress.LogEntry);
+            if (!string.IsNullOrEmpty(cleanedEntry))
+            {
+                if (_logBuilder.Length > 0) _logBuilder.AppendLine();
+                _logBuilder.Append(cleanedEntry);
+                
+                // Keep only the last 10,000 characters to prevent junk build-up
+                if (_logBuilder.Length > 10000)
+                {
+                    _logBuilder.Remove(0, _logBuilder.Length - 5000);
+                }
+
+                LogTextBlock.Text = _logBuilder.ToString();
+                LogScrollViewer.ScrollToEnd();
+            }
         }
+    }
+
+    private string CleanAnsi(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+        // Basic regex to strip ANSI escape codes
+        return System.Text.RegularExpressions.Regex.Replace(input, @"\x1B\[[^@-~]*[@-~]", "");
     }
 
     /// <summary>
@@ -125,85 +143,67 @@ public partial class UpdateProgressWindow : Window
 
         var failedBrush = new SolidColorBrush(Color.FromRgb(0xE7, 0x4C, 0x3C));
 
-        // Process stages in order
-        bool reachedCurrent = false;
-        
-        // Stage: Checking
-        UpdateSingleStage(StageChecking, Connector1, UpdateStage.Checking, current, 
-            accentBrush, completedBrush, dimBg, completedFg, activeFg, dimFg, connectorActive, connectorDim, failedBrush, ref reachedCurrent);
-        
-        // Stage: Downloading
-        UpdateSingleStage(StageDownloading, Connector2, UpdateStage.Downloading, current,
-            accentBrush, completedBrush, dimBg, completedFg, activeFg, dimFg, connectorActive, connectorDim, failedBrush, ref reachedCurrent);
-        
-        // Stage: Patching
-        UpdateSingleStage(StagePatching, Connector3, UpdateStage.Patching, current,
-            accentBrush, completedBrush, dimBg, completedFg, activeFg, dimFg, connectorActive, connectorDim, failedBrush, ref reachedCurrent);
-        
-        // Stage: Verifying
-        UpdateSingleStage(StageVerifying, Connector4, UpdateStage.Verifying, current,
-            accentBrush, completedBrush, dimBg, completedFg, activeFg, dimFg, connectorActive, connectorDim, failedBrush, ref reachedCurrent);
-        
-        // Stage: Applying
-        UpdateSingleStage(StageApplying, null, UpdateStage.Applying, current,
-            accentBrush, completedBrush, dimBg, completedFg, activeFg, dimFg, connectorActive, connectorDim, failedBrush, ref reachedCurrent);
+        // Define the visual stage sequence
+        var stages = new[] 
+        { 
+            (StageChecking, Connector1, UpdateStage.Checking),
+            (StageDownloading, Connector2, UpdateStage.Downloading),
+            (StagePatching, Connector3, UpdateStage.Patching),
+            (StageVerifying, Connector4, UpdateStage.Verifying),
+            (StageApplying, (Border?)null, UpdateStage.Applying)
+        };
 
-        // Handle Complete
+        // If current is Staging, it maps to Applying visually for the pipeline dots
+        var effectiveCurrent = current;
+        if (current == UpdateStage.Staging)
+        {
+            effectiveCurrent = UpdateStage.Applying;
+        }
+
+        bool reachedCurrent = false;
+
+        foreach (var (indicator, connector, stageType) in stages)
+        {
+            var icon = (System.Windows.Controls.TextBlock)indicator.Child;
+            
+            if (stageType == effectiveCurrent)
+            {
+                reachedCurrent = true;
+                indicator.Background = current == UpdateStage.Failed ? failedBrush : accentBrush;
+                icon.Foreground = activeFg;
+                if (connector != null)
+                    connector.Background = connectorDim;
+            }
+            else if (!reachedCurrent && (int)stageType < (int)effectiveCurrent)
+            {
+                // Past / completed
+                indicator.Background = completedBrush;
+                icon.Foreground = completedFg;
+                if (connector != null)
+                    connector.Background = connectorActive;
+            }
+            else
+            {
+                // Future
+                indicator.Background = dimBg;
+                icon.Foreground = dimFg;
+                if (connector != null)
+                    connector.Background = connectorDim;
+            }
+        }
+
+        // Handle terminal states
         if (current == UpdateStage.Complete)
         {
-            SetStageCompleted(StageChecking, Connector1, completedBrush, completedFg);
-            SetStageCompleted(StageDownloading, Connector2, completedBrush, completedFg);
-            SetStageCompleted(StagePatching, Connector3, completedBrush, completedFg);
-            SetStageCompleted(StageVerifying, Connector4, completedBrush, completedFg);
-            SetStageCompleted(StageApplying, null, completedBrush, completedFg);
+            foreach (var (indicator, connector, _) in stages)
+            {
+                SetStageCompleted(indicator, connector, completedBrush, completedFg);
+            }
         }
         else if (current == UpdateStage.Failed)
         {
             TitleLabel.Text = "Update Failed";
             PercentLabel.Text = "";
-        }
-        else if (current == UpdateStage.Staging)
-        {
-            // Staging uses the Applying indicator as "in progress"
-            StageApplying.Background = accentBrush;
-            ((System.Windows.Controls.TextBlock)StageApplying.Child).Foreground = activeFg;
-        }
-    }
-
-    /// <summary>
-    /// Updates a single stage indicator based on its position relative to current stage.
-    /// </summary>
-    private void UpdateSingleStage(
-        Border indicator, Border? connector, UpdateStage stage, UpdateStage current,
-        Brush accentBrush, Brush completedBrush, Brush dimBg,
-        Brush completedFg, Brush activeFg, Brush dimFg,
-        Brush connectorActive, Brush connectorDim, Brush failedBrush,
-        ref bool reachedCurrent)
-    {
-        var icon = (System.Windows.Controls.TextBlock)indicator.Child;
-        if (stage == current)
-        {
-            reachedCurrent = true;
-            indicator.Background = current == UpdateStage.Failed ? failedBrush : accentBrush;
-            icon.Foreground = activeFg;
-            if (connector != null)
-                connector.Background = connectorDim;
-        }
-        else if (!reachedCurrent)
-        {
-            // Past / completed
-            indicator.Background = completedBrush;
-            icon.Foreground = completedFg;
-            if (connector != null)
-                connector.Background = connectorActive;
-        }
-        else
-        {
-            // Future
-            indicator.Background = dimBg;
-            icon.Foreground = dimFg;
-            if (connector != null)
-                connector.Background = connectorDim;
         }
     }
 

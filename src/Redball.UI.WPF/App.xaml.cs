@@ -340,12 +340,6 @@ public partial class App : Application
 
             // Intelligent Monitoring start
             StartIntelligentMonitoring(cfg);
-
-            // Background update check
-            if (cfg.AutoUpdateCheckEnabled && !isTestMode)
-            {
-                _ = ScheduleUpdateCheckAsync(cfg);
-            }
         }
         catch (Exception ex)
         {
@@ -370,19 +364,6 @@ public partial class App : Application
         cfg.FirstRun = false;
         Services.ConfigService.Instance.Save();
         Services.Logger.Info("App", "FirstRun flag cleared");
-    }
-
-    private async Task ScheduleUpdateCheckAsync(RedballConfig cfg)
-    {
-        try
-        {
-            await Task.Delay(TimeSpan.FromSeconds(10));
-            await PerformStartupUpdateCheckAsync(cfg);
-        }
-        catch (Exception ex)
-        {
-            Services.Logger.Error("App", "Startup update check failed", ex);
-        }
     }
 
     private void StartIntelligentMonitoring(RedballConfig cfg)
@@ -616,142 +597,6 @@ public partial class App : Application
         var stderr = process.StandardError.ReadToEnd();
         process.WaitForExit();
         return (process.ExitCode, stdout, stderr);
-    }
-
-    #endregion
-
-    #region Startup Update Check
-
-    /// <summary>
-    /// Performs an update check on startup if enabled.
-    /// Shows the update dialog if an update is available.
-    /// </summary>
-    private async Task PerformStartupUpdateCheckAsync(RedballConfig cfg)
-    {
-        try
-        {
-            if (!cfg.AutoUpdateCheckEnabled)
-            {
-                Services.Logger.Debug("App", "Auto update check disabled, skipping");
-                return;
-            }
-
-            if (string.Equals(cfg.UpdateChannel, "Disabled", StringComparison.OrdinalIgnoreCase))
-            {
-                Services.Logger.Debug("App", "Update channel is disabled, skipping startup check");
-                return;
-            }
-
-            Services.Logger.Info("App", "Starting update check...");
-
-            var updateService = new Services.UpdateService(
-                cfg.UpdateRepoOwner,
-                cfg.UpdateRepoName,
-                cfg.UpdateChannel ?? "stable",
-                cfg.VerifyUpdateSignature,
-                cfg.UpdateServerUrl);
-
-            var updateInfo = await updateService.CheckForUpdateAsync(false);
-
-            if (updateInfo == null)
-            {
-                Services.Logger.Info("App", "No update available (already on latest version)");
-                return;
-            }
-
-            Services.Logger.Info("App", $"Update available: {updateInfo.LatestVersion}");
-
-            // Show the update dialog on the UI thread
-            await Dispatcher.BeginInvoke(new Action(async () =>
-            {
-                try
-                {
-                    // Check if user previously skipped this version
-                    var skippedVersion = cfg.SkippedUpdateVersion;
-                    if (!string.IsNullOrEmpty(skippedVersion) &&
-                        string.Equals(skippedVersion, updateInfo.LatestVersion.ToString(), StringComparison.OrdinalIgnoreCase))
-                    {
-                        Services.Logger.Info("App", $"User previously skipped version {updateInfo.LatestVersion}, not showing dialog");
-                        return;
-                    }
-
-                    // Get changelogs for the update
-                    var changelogs = await updateService.GetChangelogBetweenVersionsAsync(
-                        updateInfo.CurrentVersion, 
-                        updateInfo.LatestVersion);
-
-                    // Show update available window
-                    var updateWindow = new Views.UpdateAvailableWindow(updateInfo, updateService, changelogs);
-                    var result = updateWindow.ShowDialog();
-
-                    if (result == true)
-                    {
-                        // User chose to update - show progress window
-                        var progressWindow = new Views.UpdateProgressWindow();
-                        progressWindow.Show();
-                        
-                        // Start the download
-                        _ = Task.Run(async () =>
-                        {
-                            try
-                            {
-                                var progress = new Progress<Services.UpdateDownloadProgress>(p =>
-                                {
-                                    Dispatcher.BeginInvoke(() => progressWindow.UpdateProgress(p));
-                                });
-                                
-                                var success = await updateService.DownloadAndInstallAsync(updateInfo, progress);
-                                
-                                await Dispatcher.BeginInvoke(() =>
-                                {
-                                    if (success)
-                                    {
-                                        Services.Logger.Info("App", "Update staged successfully, shutting down for install...");
-                                        progressWindow.Close();
-                                        Shutdown();
-                                    }
-                                    else
-                                    {
-                                        System.Windows.MessageBox.Show(
-                                            "Update download failed. Please try again later.",
-                                            "Update Error",
-                                            System.Windows.MessageBoxButton.OK,
-                                            System.Windows.MessageBoxImage.Error);
-                                    }
-                                });
-                            }
-                            catch (Exception ex)
-                            {
-                                Services.Logger.Error("App", "Update download failed", ex);
-                                await Dispatcher.BeginInvoke(() =>
-                                {
-                                    System.Windows.MessageBox.Show(
-                                        $"Update error: {ex.Message}",
-                                        "Update Error",
-                                        System.Windows.MessageBoxButton.OK,
-                                        System.Windows.MessageBoxImage.Error);
-                                });
-                            }
-                        });
-                    }
-                    else if (updateWindow.SkipThisVersion)
-                    {
-                        // User chose to skip this version
-                        cfg.SkippedUpdateVersion = updateInfo.LatestVersion.ToString();
-                        Services.ConfigService.Instance.Save();
-                        Services.Logger.Info("App", $"User skipped update to version {updateInfo.LatestVersion}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Services.Logger.Error("App", "Error showing update dialog", ex);
-                }
-            }), System.Windows.Threading.DispatcherPriority.Background);
-        }
-        catch (Exception ex)
-        {
-            Services.Logger.Error("App", "Update check failed", ex);
-        }
     }
 
     #endregion

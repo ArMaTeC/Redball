@@ -322,48 +322,47 @@ public class UpdateService : IUpdateService
 
         try
         {
-
-        // Retry logic for transient failures
-        int maxRetries = 3;
-        for (int attempt = 0; attempt <= maxRetries; attempt++)
-        {
-            try
+            // Retry logic for transient failures
+            int maxRetries = 3;
+            for (int attempt = 0; attempt <= maxRetries; attempt++)
             {
-                var result = await CheckForUpdateInternalAsync(bypassCache, progress, cancellationToken);
-                
-                if (result != null)
+                try
                 {
-                    ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, "Update available!");
-                    return result;
+                    var result = await CheckForUpdateInternalAsync(bypassCache, progress, cancellationToken);
+                    
+                    if (result != null)
+                    {
+                        ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, "Update available!");
+                        return result;
+                    }
+                    
+                    // If result is null, we are up to date. No need to retry.
+                    ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, "Up to date");
+                    return null;
                 }
-                
-                // If result is null, we are up to date. No need to retry.
-                ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, "Up to date");
-                return null;
+                catch (HttpRequestException ex) when (ex.Message.Contains("rate limit", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Don't retry on rate limit
+                    Logger.Warning("UpdateService", "GitHub API rate limit hit - not retrying");
+                    ReportCheckProgress(progress, UpdateCheckStage.Failed, 0, "Rate limit hit");
+                    return null;
+                }
+                catch (Exception ex) when (attempt < maxRetries && IsTransientError(ex))
+                {
+                    var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt)); // 1s, 2s, 4s
+                    Logger.Warning("UpdateService", $"Update check failed (attempt {attempt + 1}/{maxRetries + 1}): {ex.Message}. Retrying in {delay.TotalSeconds}s...");
+                    await Task.Delay(delay, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _consecutiveFailures++;
+                    Logger.Error("UpdateService", $"Update check failed after {attempt + 1} attempts", ex);
+                    ReportCheckProgress(progress, UpdateCheckStage.Failed, 0, "Check failed");
+                    return null;
+                }
             }
-            catch (HttpRequestException ex) when (ex.Message.Contains("rate limit", StringComparison.OrdinalIgnoreCase))
-            {
-                // Don't retry on rate limit
-                Logger.Warning("UpdateService", "GitHub API rate limit hit - not retrying");
-                ReportCheckProgress(progress, UpdateCheckStage.Failed, 0, "Rate limit hit");
-                return null;
-            }
-            catch (Exception ex) when (attempt < maxRetries && IsTransientError(ex))
-            {
-                var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt)); // 1s, 2s, 4s
-                Logger.Warning("UpdateService", $"Update check failed (attempt {attempt + 1}/{maxRetries + 1}): {ex.Message}. Retrying in {delay.TotalSeconds}s...");
-                await Task.Delay(delay, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _consecutiveFailures++;
-                Logger.Error("UpdateService", $"Update check failed after {attempt + 1} attempts", ex);
-                ReportCheckProgress(progress, UpdateCheckStage.Failed, 0, "Check failed");
-                return null;
-            }
-        }
-        
-        return null;
+            
+            return null;
         }
         finally
         {
@@ -371,7 +370,7 @@ public class UpdateService : IUpdateService
         }
     }
 
-    private static void ReportCheckProgress(IProgress<UpdateCheckProgress>? progress, UpdateCheckStage stage, int percentage, string statusText, int filesHashed = 0, int totalFiles = 0)
+    private static void ReportCheckProgress(IProgress<UpdateCheckProgress>? progress, UpdateCheckStage stage, int percentage, string statusText, int filesHashed = 0, int totalFiles = 0, string? logEntry = null)
     {
         progress?.Report(new UpdateCheckProgress
         {
@@ -379,7 +378,8 @@ public class UpdateService : IUpdateService
             Percentage = percentage,
             StatusText = statusText,
             FilesHashed = filesHashed,
-            TotalFilesToHash = totalFiles
+            TotalFilesToHash = totalFiles,
+            LogEntry = logEntry
         });
     }
 
@@ -447,12 +447,17 @@ public class UpdateService : IUpdateService
             // Check for manifest.json for differential updates
             var manifestAsset = latestRelease.Assets.Find(a => a.Name.Equals("manifest.json", StringComparison.OrdinalIgnoreCase));
             
-            // DEBUG: Log all available assets
-            Logger.Info("UpdateService", $"Available release assets ({latestRelease.Assets.Count}): {string.Join(", ", latestRelease.Assets.Select(a => a.Name))}");
-            
+            // DEBUG: Log first 10 available assets to avoid log flooding
+            var assetNames = latestRelease.Assets.Select(a => a.Name).Take(15).ToList();
+            var assetSummary = string.Join(", ", assetNames) + (latestRelease.Assets.Count > 15 ? $"... ({latestRelease.Assets.Count} total)" : "");
+            Logger.Debug("UpdateService", $"Available release assets: {assetSummary}");
+
             // DEBUG: Check for any .patch files
             var patchAssets = latestRelease.Assets.Where(a => a.Name.EndsWith(".patch", StringComparison.OrdinalIgnoreCase)).ToList();
-            Logger.Info("UpdateService", $"Found {patchAssets.Count} patch assets in release: {string.Join(", ", patchAssets.Select(p => $"{p.Name}({p.Size}bytes)"))}");
+            if (patchAssets.Count > 0)
+            {
+                Logger.Info("UpdateService", $"Found {patchAssets.Count} patch assets on GitHub");
+            }
             
             if (manifestAsset != null || !string.IsNullOrEmpty(_updateServerUrl))
             {
@@ -523,9 +528,6 @@ public class UpdateService : IUpdateService
                     int cachedHashesUsed = 0;
                     int filesHashed = 0;
                     int totalFiles = manifest.Files.Count;
-                    int processedFiles = 0;
-                    int filesUpToDate = 0;
-                    int filesNeedUpdate = 0;
                     
                     ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, 55, $"Scanning {totalFiles} files for changes...", 0, totalFiles);
                     
@@ -539,7 +541,6 @@ public class UpdateService : IUpdateService
                     {
                         var normalizedName = NormalizeRelativeUpdatePath(file.Name);
                         var localPath = Path.Combine(appDir, normalizedName);
-                        var fileName = Path.GetFileName(normalizedName);
                         bool needsUpdate = true;
 
                         if (File.Exists(localPath))
@@ -560,77 +561,86 @@ public class UpdateService : IUpdateService
                             if (localHash == file.Hash.ToUpper())
                             {
                                 needsUpdate = false;
-                                lock (lockObj) filesUpToDate++;
                             }
-                            else
-                            {
-                                lock (lockObj) filesNeedUpdate++;
-                            }
-                        }
-                        else
-                        {
-                            lock (lockObj) filesNeedUpdate++;
                         }
 
                         lock (lockObj)
                         {
                             filesProcessed++;
                             int progressPct = 55 + (filesProcessed * 30 / totalFiles);
-                            var status = needsUpdate ? "✗ needs update" : "✓ up to date";
+                            
+                            // Only report log entry for hashing every 50 files to avoid UI flood (junk)
+                            string? logEntry = (filesProcessed % 50 == 0 || filesProcessed == totalFiles) 
+                                ? $"Verified {filesProcessed}/{totalFiles} files..." 
+                                : null;
+
                             ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
-                                $"{fileName} {status}", filesProcessed, totalFiles);
+                                $"Scanning files: {filesProcessed}/{totalFiles}", filesProcessed, totalFiles, logEntry);
+                        }
 
-                            if (needsUpdate)
+                        if (needsUpdate)
+                        {
+                            var fileInfo = new FileUpdateInfo
                             {
-                                var fileInfo = new FileUpdateInfo
-                                {
-                                    Name = normalizedName,
-                                    Hash = file.Hash,
-                                    Size = file.Size,
-                                    Signature = file.Signature
-                                };
+                                Name = normalizedName,
+                                Hash = file.Hash,
+                                Size = file.Size,
+                                Signature = file.Signature,
+                                DownloadUrl = file.DownloadUrl // CRITICAL: Copy the download URL from the manifest!
+                            };
 
-                                // Find asset in release
+                            // Fallback to GitHub asset if DownloadUrl is still empty
+                            if (string.IsNullOrEmpty(fileInfo.DownloadUrl))
+                            {
                                 var asset = latestRelease.Assets.Find(a => a.Name.Equals(Path.GetFileName(file.Name), StringComparison.OrdinalIgnoreCase));
-                                if (asset != null) fileInfo.DownloadUrl = asset.DownloadUrl;
-
-                                // Look for patch
-                                var expectedPatchName = Path.GetFileName(file.Name) + ".patch";
-                                bool patchFound = false;
-
-                                if (serverManifest?.Patches != null)
+                                if (asset != null)
                                 {
-                                    var serverPatch = serverManifest.Patches.Find(p => 
-                                        p.File.Equals(file.Name, StringComparison.OrdinalIgnoreCase) ||
-                                        p.File.Equals("binaries/" + file.Name, StringComparison.OrdinalIgnoreCase) ||
-                                        p.PatchFile.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
+                                    fileInfo.DownloadUrl = asset.DownloadUrl;
+                                }
+                            }
 
-                                    if (serverPatch != null && !string.IsNullOrEmpty(_updateServerUrl))
+                            // Look for patch
+                            var expectedPatchName = Path.GetFileName(file.Name) + ".patch";
+                            bool patchFound = false;
+
+                            if (serverManifest?.Patches != null)
+                            {
+                                var serverPatch = serverManifest.Patches.Find(p => 
+                                    p.File.Equals(file.Name, StringComparison.OrdinalIgnoreCase) ||
+                                    p.File.Equals("binaries/" + file.Name, StringComparison.OrdinalIgnoreCase) ||
+                                    p.PatchFile.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
+
+                                if (serverPatch != null && !string.IsNullOrEmpty(_updateServerUrl))
+                                {
+                                    if (serverPatch.PatchSize > 0 && serverPatch.PatchSize < file.Size)
                                     {
-                                        if (serverPatch.PatchSize > 0 && serverPatch.PatchSize < file.Size)
-                                        {
-                                            fileInfo.PatchUrl = $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/patches/{serverPatch.PatchFile}";
-                                            fileInfo.PatchSize = serverPatch.PatchSize;
-                                            patchFound = true;
-                                        }
+                                        fileInfo.PatchUrl = $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/patches/{serverPatch.PatchFile}";
+                                        fileInfo.PatchSize = serverPatch.PatchSize;
+                                        patchFound = true;
                                     }
                                 }
+                            }
 
-                                if (!patchFound)
+                            if (!patchFound)
+                            {
+                                var patchAsset = latestRelease.Assets.Find(a => a.Name.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
+                                if (patchAsset != null && patchAsset.Size > 0 && patchAsset.Size < file.Size)
                                 {
-                                    var patchAsset = latestRelease.Assets.Find(a => a.Name.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
-                                    if (patchAsset != null && patchAsset.Size > 0 && patchAsset.Size < file.Size)
-                                    {
-                                        fileInfo.PatchUrl = patchAsset.DownloadUrl;
-                                        fileInfo.PatchSize = patchAsset.Size;
-                                    }
+                                    fileInfo.PatchUrl = patchAsset.DownloadUrl;
+                                    fileInfo.PatchSize = patchAsset.Size;
                                 }
+                            }
 
+                            lock (lockObj)
+                            {
                                 filesToUpdate.Add(fileInfo);
                             }
                         }
                     });
                     
+                    int filesNeedUpdate = filesToUpdate.Count;
+                    int filesUpToDate = totalFiles - filesNeedUpdate;
+
                     Logger.Info("UpdateService", $"Differential check complete: {filesUpToDate} up to date, {filesNeedUpdate} need update, {filesHashed} hashed, {cachedHashesUsed} cached");
                     
                     if (filesToUpdate.Count > 0)
@@ -731,12 +741,6 @@ public class UpdateService : IUpdateService
                  ioEx.Message.Contains("cannot access")));
     }
 
-    /// <summary>
-    /// Downloads and installs the update.
-    /// </summary>
-    /// <param name="updateInfo">Update information from CheckForUpdateAsync.</param>
-    /// <param name="progress">Callback for download progress (0-100).</param>
-    /// <returns>True if update was downloaded and prepared successfully.</returns>
     /// <summary>
     /// Downloads and installs the update.
     /// </summary>
@@ -1370,7 +1374,6 @@ public class UpdateService : IUpdateService
         var hashBytes = await sha256.ComputeHashAsync(stream);
         return BitConverter.ToString(hashBytes).Replace("-", "");
     }
-
 
 
     private async Task<List<GitHubRelease>> GetAllReleasesAsync(bool bypassCache = false, CancellationToken cancellationToken = default)
