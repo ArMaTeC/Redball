@@ -26,6 +26,10 @@ public class ServiceInputProvider : IDisposable
     private string _lastErrorSummary = "None";
     private int _consecutiveFailures;
 
+    // Track initialization to prevent fire-and-forget task accumulation
+    private Task? _initializeTask;
+    private CancellationTokenSource? _initializeCts;
+
     /// <summary>
     /// Whether the service is installed and available.
     /// </summary>
@@ -85,7 +89,7 @@ public class ServiceInputProvider : IDisposable
             _ = Task.Run(() => RefreshServiceInstalledStateInternal());
             return IsServiceInstalled;
         }
-        
+
         return RefreshServiceInstalledStateInternal();
     }
 
@@ -95,10 +99,10 @@ public class ServiceInputProvider : IDisposable
         {
             using var sc = new System.ServiceProcess.ServiceController("RedballInputService");
             var status = sc.Status;
-            
+
             // Service is considered available only if it's running
             IsServiceInstalled = status == System.ServiceProcess.ServiceControllerStatus.Running;
-            
+
             // If installed but not running, try to start it using sc.exe (requires admin rights)
             if (status == System.ServiceProcess.ServiceControllerStatus.Stopped)
             {
@@ -114,7 +118,7 @@ public class ServiceInputProvider : IDisposable
                 if (status == System.ServiceProcess.ServiceControllerStatus.Stopped)
                 {
                     Logger.Info("ServiceInputProvider", "Service is installed but stopped, attempting to start via sc.exe (admin rights confirmed)...");
-                    
+
                     var startProcess = new Process
                     {
                         StartInfo = new ProcessStartInfo
@@ -127,7 +131,7 @@ public class ServiceInputProvider : IDisposable
                             WindowStyle = ProcessWindowStyle.Hidden
                         }
                     };
-                    
+
                     try
                     {
                         startProcess.Start();
@@ -153,10 +157,10 @@ public class ServiceInputProvider : IDisposable
                     IsServiceInstalled = true; // Mark as installed even if still starting
                     return true;
                 }
-                
+
                 IsServiceInstalled = status == System.ServiceProcess.ServiceControllerStatus.Running;
             }
-            else if (status == System.ServiceProcess.ServiceControllerStatus.StopPending || 
+            else if (status == System.ServiceProcess.ServiceControllerStatus.StopPending ||
                      status == System.ServiceProcess.ServiceControllerStatus.StartPending)
             {
                 Logger.Info("ServiceInputProvider", $"Service is in pending state ({status}), awaiting transition in background...");
@@ -176,21 +180,62 @@ public class ServiceInputProvider : IDisposable
     /// <summary>
     /// Initializes the service connection.
     /// Call this once before sending keystrokes.
+    /// Thread-safe and prevents concurrent initialization attempts.
     /// </summary>
     public bool Initialize()
     {
-        // Never block UI thread for initialization
+        // Never block UI thread for initialization - return existing task or start new one
         if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
         {
             Logger.Info("ServiceInputProvider", "Initialize called on UI thread, offloading for background initialization...");
-            _ = Task.Run(() => Initialize());
-            return true; // Return as if requested, background will handle failures
+
+            lock (_lock)
+            {
+                // If already initializing, don't start another task
+                if (_initializeTask != null && !_initializeTask.IsCompleted)
+                {
+                    Logger.Debug("ServiceInputProvider", "Initialization already in progress, returning existing task status");
+                    return !_initializeTask.IsFaulted && !_initializeTask.IsCanceled;
+                }
+
+                // Cancel any previous initialization
+                _initializeCts?.Cancel();
+                _initializeCts?.Dispose();
+                _initializeCts = new CancellationTokenSource();
+
+                // Start new initialization task and track it
+                _initializeTask = Task.Run(() => InitializeInternal(_initializeCts.Token));
+            }
+
+            return true; // Return optimistically, background will handle failures
         }
 
+        return InitializeInternal(CancellationToken.None);
+    }
+
+    private bool InitializeInternal(CancellationToken cancellationToken)
+    {
         lock (_lock)
         {
+            // Double-check after acquiring lock
             if (_initialized && _client != null) return true;
-            
+
+            // Dispose old client before creating new one
+            if (_client != null)
+            {
+                try
+                {
+                    _client.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Debug("ServiceInputProvider", $"Error disposing old client: {ex.Message}");
+                }
+                _client = null;
+            }
+
+            if (cancellationToken.IsCancellationRequested) return false;
+
             try
             {
                 Logger.Info("ServiceInputProvider", "Initializing service connection (Background)...");
@@ -202,6 +247,8 @@ public class ServiceInputProvider : IDisposable
                     _consecutiveFailures++;
                     return false;
                 }
+
+                if (cancellationToken.IsCancellationRequested) return false;
 
                 _client = new InputServiceClient();
 
@@ -422,6 +469,26 @@ public class ServiceInputProvider : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+
+        // Cancel and clean up initialization tracking
+        _initializeCts?.Cancel();
+        _initializeCts?.Dispose();
+        _initializeCts = null;
+
+        // Wait for initialization task to complete (with timeout)
+        if (_initializeTask != null && !_initializeTask.IsCompleted)
+        {
+            try
+            {
+                _initializeTask.Wait(TimeSpan.FromSeconds(2));
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug("ServiceInputProvider", $"Error waiting for init task: {ex.Message}");
+            }
+        }
+        _initializeTask = null;
+
         ReleaseResources("Dispose");
     }
 
@@ -437,56 +504,56 @@ public class ServiceInputProvider : IDisposable
             {
                 using var sc = new System.ServiceProcess.ServiceController("RedballInputService");
                 var status = sc.Status;
-                
+
                 var isRunning = status == System.ServiceProcess.ServiceControllerStatus.Running;
-                var isInstalled = isRunning || 
+                var isInstalled = isRunning ||
                                   status == System.ServiceProcess.ServiceControllerStatus.Stopped ||
                                   status == System.ServiceProcess.ServiceControllerStatus.StartPending ||
                                   status == System.ServiceProcess.ServiceControllerStatus.StopPending;
-                
+
                 if (!isInstalled)
                 {
                     return new ServiceState { Status = ServiceStatus.NotInstalled };
                 }
-                
+
                 if (!isRunning)
                 {
-                    return new ServiceState 
-                    { 
+                    return new ServiceState
+                    {
                         Status = ServiceStatus.Stopped,
                         ServiceControllerStatus = status.ToString()
                     };
                 }
-                
+
                 // Service is running - test pipe connectivity
                 using var testClient = new InputServiceClient();
                 var connected = testClient.ConnectAsync(3000).Result;
-                
+
                 if (!connected)
                 {
-                    return new ServiceState 
-                    { 
+                    return new ServiceState
+                    {
                         Status = ServiceStatus.RunningNoPipe,
                         ServiceControllerStatus = "Running",
                         ErrorMessage = "Service running but named pipe connection failed"
                     };
                 }
-                
+
                 // Test ping
                 var pingResult = testClient.PingAsync().Result;
                 if (!pingResult)
                 {
-                    return new ServiceState 
-                    { 
+                    return new ServiceState
+                    {
                         Status = ServiceStatus.RunningNoResponse,
                         ServiceControllerStatus = "Running",
                         PipeConnected = true,
                         ErrorMessage = "Connected but service not responding to ping"
                     };
                 }
-                
-                return new ServiceState 
-                { 
+
+                return new ServiceState
+                {
                     Status = ServiceStatus.Healthy,
                     ServiceControllerStatus = "Running",
                     PipeConnected = true,
@@ -495,8 +562,8 @@ public class ServiceInputProvider : IDisposable
             }
             catch (Exception ex)
             {
-                return new ServiceState 
-                { 
+                return new ServiceState
+                {
                     Status = ServiceStatus.Error,
                     ErrorMessage = ex.Message
                 };
@@ -516,7 +583,7 @@ public class ServiceInputProvider : IDisposable
         public bool PipeConnected { get; init; }
         public bool Responsive { get; init; }
         public string? ErrorMessage { get; init; }
-        
+
         public string GetDisplayText() => Status switch
         {
             ServiceStatus.NotInstalled => "Not installed",
@@ -527,7 +594,7 @@ public class ServiceInputProvider : IDisposable
             ServiceStatus.Error => $"Error: {ErrorMessage}",
             _ => "Unknown"
         };
-        
+
         public System.Windows.Media.Brush GetStatusBrush() => Status switch
         {
             ServiceStatus.NotInstalled => System.Windows.Media.Brushes.Gray,
