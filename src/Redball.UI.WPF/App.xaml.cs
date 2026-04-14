@@ -382,14 +382,23 @@ public partial class App : Application
             Interval = TimeSpan.FromSeconds(5)
         };
 
+        bool webcamPausedKeepAwake = false;
         webcamTimer.Tick += (s, e) =>
         {
             bool inUse = Services.WebcamDetectionService.Instance.CheckWebcamStatus();
-            if (inUse && Services.KeepAwakeService.Instance.IsActive)
+            if (inUse && Services.KeepAwakeService.Instance.IsActive && !webcamPausedKeepAwake)
             {
                 Services.Logger.Warning("App", "Webcam in use detected while Keep-Awake is active! Pausing for privacy.");
-                Services.KeepAwakeService.Instance.SetActive(false);
+                Services.KeepAwakeService.Instance.AutoPause("Webcam");
                 Views.HUDWindow.ShowStatus("Privacy Mode", "PAUSED FOR WEBCAM", "📷");
+                webcamPausedKeepAwake = true;
+            }
+            else if (!inUse && webcamPausedKeepAwake)
+            {
+                Services.Logger.Info("App", "Webcam no longer in use. Resuming keep-awake.");
+                Services.KeepAwakeService.Instance.AutoResume("Webcam");
+                Views.HUDWindow.ShowStatus("Privacy Mode", "WEBCAM RELEASED", "✓");
+                webcamPausedKeepAwake = false;
             }
         };
         webcamTimer.Start();

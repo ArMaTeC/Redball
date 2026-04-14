@@ -37,6 +37,7 @@ public class KeepAwakeService : IKeepAwakeService
     private bool _autoPausedNetwork;
     private bool _autoPausedIdle;
     private bool _autoPausedSchedule;
+    private bool _autoPausedWebcam;
     private bool _activeBeforeAutoPause;
 
     // Monitoring services
@@ -155,7 +156,7 @@ public class KeepAwakeService : IKeepAwakeService
         _meetingDetection.MeetingStateChanged += OnMeetingStateChanged;
         // Gaming mode state change handler
         _gamingMode.GamingStateChanged += OnGamingStateChanged;
-        
+
         // Initial check for gaming mode
         if (config.GamingModeEnabled)
         {
@@ -283,6 +284,7 @@ public class KeepAwakeService : IKeepAwakeService
             case "Network": _autoPausedNetwork = true; break;
             case "Idle": _autoPausedIdle = true; break;
             case "Schedule": _autoPausedSchedule = true; break;
+            case "Webcam": _autoPausedWebcam = true; break;
         }
 
         SetActive(false);
@@ -302,10 +304,11 @@ public class KeepAwakeService : IKeepAwakeService
             case "Network": _autoPausedNetwork = false; break;
             case "Idle": _autoPausedIdle = false; break;
             case "Schedule": _autoPausedSchedule = false; break;
+            case "Webcam": _autoPausedWebcam = false; break;
         }
 
         if (_activeBeforeAutoPause && !_autoPausedBattery && !_autoPausedNetwork &&
-            !_autoPausedIdle && !_autoPausedSchedule)
+            !_autoPausedIdle && !_autoPausedSchedule && !_autoPausedWebcam)
         {
             _activeBeforeAutoPause = false;
             SetActive(true);
@@ -522,7 +525,7 @@ public class KeepAwakeService : IKeepAwakeService
                 _batteryMonitor.CheckAndUpdate(this);
                 _networkMonitor.CheckAndUpdate(this);
                 _presentationMode.CheckAndUpdate(this);
-                
+
                 if (ConfigService.Instance.Config.MeetingAware)
                 {
                     _meetingDetection.CheckAndUpdate();
@@ -562,7 +565,7 @@ public class KeepAwakeService : IKeepAwakeService
         }
         else
         {
-            // Optional: de-activate if we auto-activated? 
+            // Optional: de-activate if we auto-activated?
             // For now let's stay active as it's safer
         }
     }

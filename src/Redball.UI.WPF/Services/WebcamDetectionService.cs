@@ -57,8 +57,11 @@ public class WebcamDetectionService
                             using var subKey = nonPackagedKey.OpenSubKey(subKeyName);
                             if (subKey != null)
                             {
-                                var lastUsedTimeStop = (long)(subKey.GetValue("LastUsedTimeStop") ?? 0L);
-                                if (lastUsedTimeStop == 0) // No stop time means it's currently running
+                                var lastUsedTimeStop = subKey.GetValue("LastUsedTimeStop");
+                                var lastUsedTimeStart = subKey.GetValue("LastUsedTimeStart");
+                                // Active = stop is 0 AND start is non-zero (both 0 means never used)
+                                if (lastUsedTimeStop is long stopVal && stopVal == 0 &&
+                                    lastUsedTimeStart is long startVal && startVal > 0)
                                 {
                                     IsWebcamInUse = true;
                                     return true;
@@ -73,8 +76,10 @@ public class WebcamDetectionService
                     using var appKey = key.OpenSubKey(appName);
                     if (appKey != null)
                     {
-                        var lastUsedTimeStop = (long)(appKey.GetValue("LastUsedTimeStop") ?? 0L);
-                        if (lastUsedTimeStop == 0)
+                        var lastUsedTimeStop = appKey.GetValue("LastUsedTimeStop");
+                        var lastUsedTimeStart = appKey.GetValue("LastUsedTimeStart");
+                        if (lastUsedTimeStop is long stopVal && stopVal == 0 &&
+                            lastUsedTimeStart is long startVal && startVal > 0)
                         {
                             IsWebcamInUse = true;
                             return true;
