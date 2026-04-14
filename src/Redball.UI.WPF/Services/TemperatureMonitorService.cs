@@ -19,7 +19,7 @@ public class TemperatureMonitorService : IDisposable
     public static TemperatureMonitorService Instance => _instance.Value;
 
     private readonly DispatcherTimer _pollTimer;
-    private readonly Computer? _computer;
+    private Computer? _computer;
     private bool _thermalPaused;
     private string _lastError = "";
     private int _consecutiveFailures;
@@ -43,16 +43,25 @@ public class TemperatureMonitorService : IDisposable
     {
         _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
         _pollTimer.Tick += PollTimer_Tick;
+
+        // Offload heavy initialization to background
+        Task.Run(() => InitializeHardwareAsync());
         
-        // Initialize LibreHardwareMonitor
+        Logger.Verbose("TemperatureMonitorService", "Instance created");
+    }
+
+    private async Task InitializeHardwareAsync()
+    {
         try
         {
-            _computer = new Computer
+            Logger.Debug("TemperatureMonitor", "Initializing LibreHardwareMonitor (Background)...");
+            var computer = new Computer
             {
                 IsCpuEnabled = true,
                 IsMotherboardEnabled = true  // For motherboard sensors like NCT/ITE
             };
-            _computer.Open();
+            computer.Open();
+            _computer = computer;
             _libreHardwareInitialized = true;
             Logger.Info("TemperatureMonitor", "LibreHardwareMonitor initialized successfully");
         }
@@ -62,16 +71,23 @@ public class TemperatureMonitorService : IDisposable
             _computer = null;
             _libreHardwareInitialized = false;
         }
+
+        // Initial poll after hardware setup
+        await Task.Run(() => PollTemperature());
         
-        _pollTimer.Start();
-        PollTemperature();
-        Logger.Verbose("TemperatureMonitorService", "Instance created");
+        // Start the timer on the UI thread for reliability
+        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => {
+            _pollTimer.Start();
+        });
     }
 
     private void PollTimer_Tick(object? sender, EventArgs e)
     {
-        PollTemperature();
-        CheckThreshold();
+        // Offload polling to background to prevent UI micro-stutters
+        Task.Run(() => {
+            PollTemperature();
+            CheckThreshold();
+        });
     }
 
     private void PollTemperature()

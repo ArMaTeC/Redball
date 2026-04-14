@@ -541,11 +541,11 @@ public class UpdateService : IUpdateService
                     {
                         var normalizedName = NormalizeRelativeUpdatePath(file.Name);
                         var localPath = Path.Combine(appDir, normalizedName);
+                        string? localHash = null;
                         bool needsUpdate = true;
-
                         if (File.Exists(localPath))
                         {
-                            string? localHash = hashCache.GetCachedHash(localPath);
+                            localHash = hashCache.GetCachedHash(localPath);
                             if (localHash != null)
                             {
                                 localHash = localHash.ToUpper();
@@ -584,6 +584,7 @@ public class UpdateService : IUpdateService
                             {
                                 Name = normalizedName,
                                 Hash = file.Hash,
+                                OldHash = localHash ?? "",
                                 Size = file.Size,
                                 Signature = file.Signature,
                                 DownloadUrl = file.DownloadUrl // CRITICAL: Copy the download URL from the manifest!
@@ -861,6 +862,7 @@ public class UpdateService : IUpdateService
                                     var patch = new DeltaPatch
                                     {
                                         Data = patchData,
+                                        OldFileHash = file.OldHash,
                                         NewFileHash = file.Hash,
                                         NewFileSize = file.Size
                                     };
@@ -984,9 +986,9 @@ public class UpdateService : IUpdateService
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "powershell.exe",
-                    Arguments = $"-ExecutionPolicy Bypass -WindowStyle Hidden -File \"{scriptPath}\"",
+                    Arguments = $"-ExecutionPolicy Bypass -WindowStyle Normal -File \"{scriptPath}\"",
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = false
                 });
                 
                 ReportProgress(progress, UpdateStage.Complete, 100, "Update ready — restarting...",
@@ -1086,9 +1088,9 @@ public class UpdateService : IUpdateService
                     Process.Start(new ProcessStartInfo
                     {
                         FileName = "powershell.exe",
-                        Arguments = $"-ExecutionPolicy Bypass -WindowStyle Hidden -File \"{installerScriptPath}\"",
+                        Arguments = $"-ExecutionPolicy Bypass -WindowStyle Normal -File \"{installerScriptPath}\"",
                         UseShellExecute = false,
-                        CreateNoWindow = true
+                        CreateNoWindow = false
                     });
                     
                     ReportProgress(progress, UpdateStage.Complete, 100, "Installer launched — closing app...",
@@ -2044,7 +2046,7 @@ public class UpdateService : IUpdateService
             sb.AppendLine();
             sb.AppendLine("    Write-Host ('Update failed. Details saved to: ' + $logFile) -ForegroundColor Red");
             sb.AppendLine("    Write-Host $errorText -ForegroundColor Red");
-            sb.AppendLine("    Read-Host 'Press Enter to close updater'");
+            sb.AppendLine("    Start-Sleep -Seconds 10");
             sb.AppendLine("    exit 1");
             sb.AppendLine("}");
 
@@ -2224,6 +2226,7 @@ public class FileUpdateInfo
     public string Hash { get; set; } = "";
     [System.Text.Json.Serialization.JsonPropertyName("size")]
     public long Size { get; set; }
+    public string OldHash { get; set; } = ""; // Hash of the file BEFORE update (for delta verification)
     [System.Text.Json.Serialization.JsonPropertyName("signature")]
     public string Signature { get; set; } = "";
     public string DownloadUrl { get; set; } = "";

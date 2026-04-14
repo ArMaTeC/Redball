@@ -45,6 +45,12 @@ public class GamingModeService
     [DllImport("psapi.dll")]
     private static extern int EmptyWorkingSet(IntPtr hwnd);
 
+    [DllImport("user32.dll")]
+    private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
     /// <summary>
     /// Checks if a full-screen window is in focus.
     /// Simplified: matches primary screen resolution and is not the desktop shell.
@@ -74,10 +80,40 @@ public class GamingModeService
             bool isFullScreen = width >= SystemParameters.PrimaryScreenWidth && 
                                 height >= SystemParameters.PrimaryScreenHeight;
 
+            if (isFullScreen)
+            {
+                // Log what is triggering fullscreen
+                LogForegroundWindowInfo(foreground);
+            }
+
             if (isFullScreen != _isGaming)
             {
                 SetGamingState(isFullScreen);
             }
+        }
+    }
+
+    private void LogForegroundWindowInfo(IntPtr hwnd)
+    {
+        try
+        {
+            var title = new System.Text.StringBuilder(256);
+            GetWindowText(hwnd, title, 256);
+            
+            GetWindowThreadProcessId(hwnd, out uint processId);
+            string processName = "Unknown";
+            try
+            {
+                using var proc = System.Diagnostics.Process.GetProcessById((int)processId);
+                processName = proc.ProcessName;
+            }
+            catch { }
+
+            Logger.Debug("GamingModeService", $"Fullscreen detected: [{processName}.exe] \"{title}\" (PID: {processId})");
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("GamingModeService", $"Failed to log window info: {ex.Message}");
         }
     }
 

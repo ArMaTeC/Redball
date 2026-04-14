@@ -78,10 +78,11 @@ public class ServiceInputProvider : IDisposable
     /// </summary>
     public bool RefreshServiceInstalledState()
     {
+        // Force offload if on UI thread or any STA thread to prevent freezing
         if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
         {
-            // If on UI thread, offload to background to prevent freezing
-            Task.Run(() => RefreshServiceInstalledStateInternal()).ConfigureAwait(false);
+            Logger.Debug("ServiceInputProvider", "RefreshServiceInstalledState called on UI thread, offloading to background...");
+            _ = Task.Run(() => RefreshServiceInstalledStateInternal());
             return IsServiceInstalled;
         }
         
@@ -110,33 +111,50 @@ public class ServiceInputProvider : IDisposable
                     return IsServiceInstalled;
                 }
 
-                Logger.Info("ServiceInputProvider", "Service is installed but stopped, attempting to start via sc.exe (admin rights confirmed)...");
-                try
+                if (status == System.ServiceProcess.ServiceControllerStatus.Stopped)
                 {
-                    var psi = new System.Diagnostics.ProcessStartInfo
+                    Logger.Info("ServiceInputProvider", "Service is installed but stopped, attempting to start via sc.exe (admin rights confirmed)...");
+                    
+                    var startProcess = new Process
                     {
-                        FileName = "sc.exe",
-                        Arguments = "start RedballInputService",
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = "sc.exe",
+                            Arguments = "start RedballInputService",
+                            UseShellExecute = true,
+                            Verb = "runas",
+                            CreateNoWindow = true,
+                            WindowStyle = ProcessWindowStyle.Hidden
+                        }
                     };
                     
-                    using var process = System.Diagnostics.Process.Start(psi)!;
-                    process.WaitForExit(5000); // 5s timeout for sc.exe
-                    
-                    // Refresh status to confirm
+                    try
+                    {
+                        startProcess.Start();
+                        // wait up to 3 seconds for the start command to finish (sc.exe exit, not service start)
+                        if (!startProcess.WaitForExit(3000))
+                        {
+                            Logger.Warning("ServiceInputProvider", "sc.exe start command timed out (3s).");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("ServiceInputProvider", $"Failed to execute sc.exe start: {ex.Message}");
+                    }
+
                     sc.Refresh();
-                    IsServiceInstalled = sc.Status == System.ServiceProcess.ServiceControllerStatus.Running || 
-                                         sc.Status == System.ServiceProcess.ServiceControllerStatus.StartPending;
-                    Logger.Info("ServiceInputProvider", $"Service start command issued. Status: {sc.Status}");
+                    status = sc.Status;
+                    Logger.Info("ServiceInputProvider", $"Service start command issued. New status: {status}");
                 }
-                catch (Exception ex)
+
+                if (status == System.ServiceProcess.ServiceControllerStatus.StartPending)
                 {
-                    Logger.Warning("ServiceInputProvider", $"Failed to start service via sc.exe: {ex.Message}");
-                    IsServiceInstalled = false;
+                    Logger.Info("ServiceInputProvider", $"Service is in pending state ({status}), awaiting transition in background...");
+                    IsServiceInstalled = true; // Mark as installed even if still starting
+                    return true;
                 }
+                
+                IsServiceInstalled = status == System.ServiceProcess.ServiceControllerStatus.Running;
             }
             else if (status == System.ServiceProcess.ServiceControllerStatus.StopPending || 
                      status == System.ServiceProcess.ServiceControllerStatus.StartPending)
@@ -161,12 +179,21 @@ public class ServiceInputProvider : IDisposable
     /// </summary>
     public bool Initialize()
     {
+        // Never block UI thread for initialization
+        if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+        {
+            Logger.Info("ServiceInputProvider", "Initialize called on UI thread, offloading for background initialization...");
+            _ = Task.Run(() => Initialize());
+            return true; // Return as if requested, background will handle failures
+        }
+
         lock (_lock)
         {
-            if (_initialized) return IsReady;
-
+            if (_initialized && _client != null) return true;
+            
             try
             {
+                Logger.Info("ServiceInputProvider", "Initializing service connection (Background)...");
                 RefreshServiceInstalledState();
 
                 if (!IsServiceInstalled)
