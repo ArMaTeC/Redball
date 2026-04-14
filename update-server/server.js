@@ -1270,8 +1270,26 @@ function broadcast(msg) {
   });
 }
 
-wss.on('connection', (ws) => {
-  console.log('[WS] New client connected');
+wss.on('connection', (ws, req) => {
+  // Authenticate WebSocket connection using token from query string
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const token = url.searchParams.get('token');
+
+  if (!token) {
+    console.log('[WS] Rejected connection: no token provided');
+    ws.close(1008, 'Authentication required');
+    return;
+  }
+
+  try {
+    jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    console.log('[WS] Rejected connection: invalid token');
+    ws.close(1008, 'Invalid token');
+    return;
+  }
+
+  console.log('[WS] New authenticated client connected');
   ws.send(JSON.stringify({ type: 'state', data: buildState }));
 
   ws.on('message', (message) => {
