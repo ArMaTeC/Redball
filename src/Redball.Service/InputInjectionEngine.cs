@@ -25,11 +25,11 @@ public partial class InputInjectionEngine
     public void Initialize()
     {
         if (_initialized) return;
- 
+
         Log.Initializing(_logger);
         _initialized = true;
     }
- 
+
     public void Shutdown()
     {
         _initialized = false;
@@ -50,6 +50,17 @@ public partial class InputInjectionEngine
         try
         {
             var currentSession = GetCurrentSessionId();
+
+            // CRITICAL: Services running in Session 0 cannot use SendInput to inject
+            // into user sessions due to Windows session isolation. Always use the
+            // remote injection path (helper process) when in Session 0.
+            if (currentSession == 0)
+            {
+                // Service is in Session 0 - must use helper process for any user session
+                var targetSession = sessionId == 0 ? GetActiveUserSessionId() : sessionId;
+                Log.UsingSessionZeroRemotePath(_logger, targetSession);
+                return SendRemoteKeyboardInput(targetSession, keyCode, keyUp, extended);
+            }
 
             if (sessionId == currentSession || sessionId == 0)
             {
@@ -83,6 +94,15 @@ public partial class InputInjectionEngine
         try
         {
             var currentSession = GetCurrentSessionId();
+
+            // CRITICAL: Services running in Session 0 cannot use SendInput to inject
+            // into user sessions due to Windows session isolation.
+            if (currentSession == 0)
+            {
+                var targetSession = sessionId == 0 ? GetActiveUserSessionId() : sessionId;
+                Log.UsingSessionZeroRemotePath(_logger, targetSession);
+                return SendRemoteMouseInput(targetSession, input);
+            }
 
             if (sessionId == currentSession || sessionId == 0)
             {
@@ -330,6 +350,22 @@ public partial class InputInjectionEngine
         return (uint)Process.GetCurrentProcess().SessionId;
     }
 
+    /// <summary>
+    /// Gets the active console session ID (the currently logged-in user's session).
+    /// This is the session we need to inject input into when running as a service in Session 0.
+    /// </summary>
+    private static uint GetActiveUserSessionId()
+    {
+        // Use WTS API to get the active console session
+        var sessionId = WTSGetActiveConsoleSessionId();
+        if (sessionId == 0xFFFFFFFF)
+        {
+            // No active console session, fallback to session 1 (typical user session)
+            return 1;
+        }
+        return sessionId;
+    }
+
     #region P/Invoke
 
     private const uint INPUT_MOUSE = 0;
@@ -356,6 +392,9 @@ public partial class InputInjectionEngine
     [LibraryImport("wtsapi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool WTSQueryUserToken(uint sessionId, out IntPtr phToken);
+
+    [LibraryImport("kernel32.dll")]
+    private static partial uint WTSGetActiveConsoleSessionId();
 
     [LibraryImport("userenv.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -454,48 +493,51 @@ public partial class InputInjectionEngine
     public record struct MouseInputData(int X, int Y, uint MouseData, uint Flags);
 
     #endregion
- 
+
     private static partial class Log
     {
         [LoggerMessage(Level = LogLevel.Information, Message = "Initializing input injection engine")]
         public static partial void Initializing(ILogger logger);
- 
+
         [LoggerMessage(Level = LogLevel.Information, Message = "Input injection engine shutdown")]
         public static partial void Shutdown(ILogger logger);
- 
+
         [LoggerMessage(Level = LogLevel.Warning, Message = "Engine not initialized")]
         public static partial void EngineNotInitialized(ILogger logger);
- 
+
         [LoggerMessage(Level = LogLevel.Error, Message = "Failed to inject keyboard input for session {SessionId}")]
         public static partial void KeyboardInjectionFailed(ILogger logger, uint sessionId, Exception ex);
- 
+
         [LoggerMessage(Level = LogLevel.Error, Message = "Failed to inject mouse input for session {SessionId}")]
         public static partial void MouseInjectionFailed(ILogger logger, uint sessionId, Exception ex);
- 
+
         [LoggerMessage(Level = LogLevel.Error, Message = "SendInput failed with error {Error}")]
         public static partial void SendInputFailed(ILogger logger, int error);
- 
+
         [LoggerMessage(Level = LogLevel.Debug, Message = "Launching helper for remote keyboard injection in session {SessionId}")]
         public static partial void LaunchingHelperRemoteKeyboard(ILogger logger, uint sessionId);
- 
+
+        [LoggerMessage(Level = LogLevel.Debug, Message = "Service in Session 0, using remote injection path for session {SessionId}")]
+        public static partial void UsingSessionZeroRemotePath(ILogger logger, uint sessionId);
+
         [LoggerMessage(Level = LogLevel.Debug, Message = "Launching helper for remote mouse injection in session {SessionId}")]
         public static partial void LaunchingHelperRemoteMouse(ILogger logger, uint sessionId);
- 
+
         [LoggerMessage(Level = LogLevel.Error, Message = "WTSQueryUserToken failed for session {SessionId}: {Error}")]
         public static partial void WtsQueryUserTokenFailed(ILogger logger, uint sessionId, int error);
- 
+
         [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to create environment block")]
         public static partial void EnvironmentBlockFailed(ILogger logger);
- 
+
         [LoggerMessage(Level = LogLevel.Error, Message = "CreateProcessAsUser failed: {Error}")]
         public static partial void CreateProcessAsUserFailed(ILogger logger, int error);
- 
+
         [LoggerMessage(Level = LogLevel.Error, Message = "ResumeThread failed: {Error}")]
         public static partial void ResumeThreadFailed(ILogger logger, int error);
- 
+
         [LoggerMessage(Level = LogLevel.Warning, Message = "Session helper timed out")]
         public static partial void SessionHelperTimeout(ILogger logger);
- 
+
         [LoggerMessage(Level = LogLevel.Debug, Message = "Failed to kill timed out session helper: {Message}")]
         public static partial void KillHelperFailed(ILogger logger, string message);
     }
