@@ -643,7 +643,7 @@ public class UpdateService : IUpdateService
                                 {
                                     if (serverPatch.PatchSize > 0 && serverPatch.PatchSize < file.Size)
                                     {
-                                        fileInfo.PatchUrl = $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/patches/{serverPatch.PatchFile}";
+                                        fileInfo.PatchUrl = $"{_updateServerUrl.TrimEnd('/')}/downloads/{latestNormalized}/patches/{serverPatch.PatchFile}";
                                         fileInfo.PatchSize = serverPatch.PatchSize;
                                         patchFound = true;
                                     }

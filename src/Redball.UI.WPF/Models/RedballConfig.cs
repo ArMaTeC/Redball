@@ -134,19 +134,10 @@ public class RedballConfig
 
     // Integrity signature (SHA256 of the JSON without this property)
     public string? ConfigSignature { get; set; }
-    
-    // Team Settings Sync (Q3 2024)
-    public bool TeamSyncEnabled { get; set; }
-    public string? TeamSyncServerUrl { get; set; }
-    public string? TeamId { get; set; }
-    public string? TeamJoinCode { get; set; }
-    public bool TeamSyncPresetsOnly { get; set; } = true;
-    public bool TeamSyncAutoApply { get; set; } = true;
-    public int TeamSyncIntervalMinutes { get; set; } = 60;
-    
+
     // Admin Dashboard (Q3 2024)
     public bool EnableAdminDashboard { get; set; }
-    
+
     // Smart Schedule Learning (2025)
     public bool EnableSmartSchedule { get; set; }
     public bool AutoStartBasedOnPatterns { get; set; }
