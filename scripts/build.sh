@@ -169,15 +169,15 @@ check_server_running() {
 # Start update-server in background
 start_server_background() {
     log_step "Starting update-server in background..."
-    
+
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would start update-server on http://localhost:3500"
         return 0
     fi
-    
+
     log_debug "update-server directory: $UPDATE_SERVER_DIR"
     log_debug "Checking for node_modules..."
-    
+
     # Install dependencies if needed
     if [[ ! -d "$UPDATE_SERVER_DIR/node_modules" ]]; then
         log_info "Installing npm dependencies..."
@@ -187,7 +187,7 @@ start_server_background() {
     else
         log_debug "node_modules already exists"
     fi
-    
+
     # Kill any existing server on port 3500
     local existing_pid
     existing_pid=$(lsof -ti:3500 2>/dev/null || true)
@@ -196,13 +196,13 @@ start_server_background() {
         kill -9 $existing_pid 2>/dev/null || true
         sleep 1
     fi
-    
+
     # Start server in background
     log_debug "Starting: node server.js in $UPDATE_SERVER_DIR"
     nohup node "$UPDATE_SERVER_DIR/server.js" > /tmp/update-server.log 2>&1 &
     local server_pid=$!
     log_debug "Server process started with PID: $server_pid"
-    
+
     # Wait for server to be ready
     local retries=30
     log_debug "Waiting up to 30s for server to become ready..."
@@ -221,7 +221,7 @@ start_server_background() {
             return 1
         fi
     done
-    
+
     log_error "Server started but not responding after 30s"
     log_error "Last 20 lines of server log:"
     tail -20 /tmp/update-server.log 2>/dev/null | while IFS= read -r line; do log_detail "$line"; done
@@ -244,9 +244,9 @@ auto_release() {
     log_info ".NET SDK: $(/usr/share/dotnet/dotnet --version 2>/dev/null || echo 'NOT FOUND')"
     log_info "Build log: $BUILD_LOG"
     echo ""
-    
+
     local start_time=$(date +%s)
-    
+
     # 0. Bump patch version for each release
     log_step "Phase 0: Bumping version number..."
     if [[ $DRY_RUN == true ]]; then
@@ -261,11 +261,11 @@ auto_release() {
         fi
     fi
     echo ""
-    
+
     # Re-log version after bump (so build logs show correct version)
     log_info "Building version: $(get_version)"
     echo ""
-    
+
     # 1. Build all components
     log_step "Phase 1: Restoring and Building all components..."
     if ! build_all; then
@@ -273,7 +273,7 @@ auto_release() {
         log_error "Build phase failed. Aborting auto-release before publishing."
         return 1
     fi
-    
+
     # 1.5 Commit any pending changes to git
     log_step "Phase 1.5: Committing changes to git..."
     if [[ $DRY_RUN == true ]]; then
@@ -304,7 +304,7 @@ auto_release() {
             log_info "No changes to commit"
         fi
     fi
-    
+
     # 2. Sign artifacts (placeholder - implement if needed)
     log_step "Phase 2: Code signing..."
     if [[ $DRY_RUN == true ]]; then
@@ -312,11 +312,11 @@ auto_release() {
     else
         log_info "Code signing not configured (add signing commands here if needed)"
     fi
-    
+
     # 3. Build website
     log_step "Phase 3: Building website..."
     build_website
-    
+
     # 4. Check if update-server is running, start if not
     log_step "Phase 4: Ensuring update-server is running..."
     if check_server_running; then
@@ -325,7 +325,7 @@ auto_release() {
         log_info "Update-server not running, starting it..."
         start_server_background
     fi
-    
+
     # 5. Publish to update-server
     log_step "Phase 5: Publishing to update-server..."
     if [[ $DRY_RUN == true ]]; then
@@ -333,17 +333,17 @@ auto_release() {
     else
         export PUBLISH_TO_UPDATE_SERVER=1
         log_info "Publishing to update-server via API..."
-        
+
         local version
         version=$(get_version)
         local channel_flag=""
         [[ "$CHANNEL" == "beta" ]] && channel_flag="--form channel=beta"
-        
+
         # Build curl command with files that exist
         local curl_files=()
         [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] && curl_files+=("-F" "files=@$DIST_DIR/Redball-${version}-Setup.exe")
         [[ -f "$DIST_DIR/Redball-${version}.zip" ]] && curl_files+=("-F" "files=@$DIST_DIR/Redball-${version}.zip")
-        
+
         # Add individual binaries from wpf-publish to enable delta updates
         if [[ -d "$DIST_DIR/wpf-publish" ]]; then
             log_info "Collecting individual binaries for delta update manifest..."
@@ -352,7 +352,7 @@ auto_release() {
                 [[ -f "$f" ]] && curl_files+=("-F" "files=@$f")
             done < <(find "$DIST_DIR/wpf-publish" -maxdepth 1 -type f -not -name "*.pdb" -not -name "*.xml")
         fi
-        
+
         if [[ ${#curl_files[@]} -eq 0 ]]; then
             log_warn "No distribution files found to publish"
         else
@@ -365,10 +365,10 @@ auto_release() {
                 ${channel_flag} \
                 "${curl_files[@]}" 2>&1)
             local curl_exit_code=$?
-            
+
             local http_code=$(echo "$publish_response" | tail -n1)
             local response_body=$(echo "$publish_response" | sed '$d')
-            
+
             if [[ $curl_exit_code -ne 0 ]]; then
                 log_warn "Failed to connect to update-server (curl exit code: $curl_exit_code)"
                 log_detail "Response: $response_body"
@@ -381,7 +381,7 @@ auto_release() {
             fi
         fi
     fi
-    
+
     # 5.5 Generate delta patches for differential updates
     log_step "Phase 5.5: Generating delta patches..."
     if [[ $DRY_RUN == true ]]; then
@@ -399,7 +399,7 @@ auto_release() {
             log_warn "Patch generation script not found: $patch_script"
         fi
     fi
-    
+
     # 5.6 Clean old version
     log_step "Phase 5.6: Clean old version..."
     if [[ $DRY_RUN == true ]]; then
@@ -426,7 +426,7 @@ auto_release() {
         local version
         version=$(get_version)
         local missing_windows=()
-        
+
         [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] || missing_windows+=("Redball-${version}-Setup.exe")
         [[ -f "$DIST_DIR/Redball-${version}.zip" ]] || missing_windows+=("Redball-${version}.zip")
         [[ -f "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" ]] || missing_windows+=("wpf-publish/Redball.UI.WPF.exe")
@@ -442,19 +442,19 @@ auto_release() {
         log_info "Publishing to GitHub via gh CLI..."
         local version=$(get_version)
         local releases_dir="$UPDATE_SERVER_DIR/releases"
-        
+
         # Collect assets for GitHub release
         local gh_assets=()
         gh_assets+=("$DIST_DIR/Redball-${version}-Setup.exe")
         gh_assets+=("$DIST_DIR/Redball-${version}.zip")
-        
+
         # Add manifest and patches if they exist
         if [[ -f "$releases_dir/$version/manifest.json" ]]; then
             gh_assets+=("$releases_dir/$version/manifest.json")
         elif [[ -f "$DIST_DIR/manifest.json" ]]; then
             gh_assets+=("$DIST_DIR/manifest.json")
         fi
-        
+
         if [[ -d "$releases_dir/$version/patches" ]]; then
             while read -r patch; do
                 gh_assets+=("$patch")
@@ -476,7 +476,7 @@ auto_release() {
             log_warn "gh CLI not found, skipping GitHub release"
         fi
     fi
-    
+
     # 7. Restart Update Server
     log_step "Phase 7: Restarting update server..."
     if [[ $DRY_RUN == true ]]; then
@@ -504,18 +504,18 @@ auto_release() {
             log_info "Restarting update server via node..."
             pkill -f "node.*update-server/server.js" 2>/dev/null || true
             sleep 2
-            
+
             # Start server with log file for debugging
             local log_file="$server_dir/server.log"
             (cd "$server_dir" && nohup node server.js > "$log_file" 2>&1 &)
-            
+
             # Wait for server to start and verify it's responding
             local max_wait=10
             local waited=0
             while [[ $waited -lt $max_wait ]]; do
                 sleep 1
                 ((waited++))
-                
+
                 # Check if update-server process is running (specific to update-server dir)
                 if pgrep -f "node.*update-server/server.js" > /dev/null; then
                     # Check if server is responding on port 3500
@@ -530,7 +530,7 @@ auto_release() {
                         tail -5 "$log_file" | while IFS= read -r line; do log_detail "$line"; done
                     fi
                 fi
-                
+
                 if [[ $waited -eq $max_wait ]]; then
                     log_warn "Update server may not have started properly (timeout after ${max_wait}s)"
                     if [[ -f "$log_file" ]]; then
@@ -547,10 +547,10 @@ auto_release() {
     # 9. Final Health Summary
     log_step "Phase 9: Final health status check..."
     local health_fail=0
-    
+
     echo ""
     echo "  System Health Check:"
-    
+
     # Check Unified Server (with retries for slow startup)
     local unified_ok=0
     for ((i=1; i<=5; i++)); do
@@ -568,18 +568,18 @@ auto_release() {
         echo -e "    ${RED}✗${NC} Unified Server: OFFLINE or ERROR"
         health_fail=1
     fi
-    
+
     if [[ $health_fail -eq 1 ]]; then
         log_error "One or more services failed health check!"
         return 1
     fi
 
-    
+
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
     local minutes=$((duration / 60))
     local seconds=$((duration % 60))
-    
+
     echo ""
     echo "  ╔══════════════════════════════════════════════════╗"
     echo "  ║  AUTO-RELEASE COMPLETED                          ║"
@@ -605,7 +605,7 @@ get_version() {
         echo "$VERSION"
         return
     fi
-    
+
     if [[ -f "$SCRIPT_DIR/version.txt" ]]; then
         cat "$SCRIPT_DIR/version.txt" | tr -d '[:space:]'
     elif [[ -f "$PROJECT_ROOT/Directory.Build.props" ]]; then
@@ -619,7 +619,7 @@ check_dependencies() {
     log_step "Checking build dependencies..."
     local missing=()
     local found=()
-    
+
     # Check each dependency
     for dep in node npm wine makensis git gh curl zip; do
         if command -v "$dep" &>/dev/null; then
@@ -640,7 +640,7 @@ check_dependencies() {
             log_debug "  ✗ $dep (NOT FOUND)"
         fi
     done
-    
+
     # Check .NET SDK in Wine
     if [[ -f "$HOME/.wine-dotnet/dotnet.exe" ]]; then
         log_debug "  ✓ Wine .NET SDK (at $HOME/.wine-dotnet/dotnet.exe)"
@@ -648,7 +648,7 @@ check_dependencies() {
         log_debug "  ✗ Wine .NET SDK (NOT FOUND at $HOME/.wine-dotnet/dotnet.exe)"
         missing+=("wine-dotnet")
     fi
-    
+
     if [[ ${#missing[@]} -gt 0 ]]; then
         log_warn "Missing optional dependencies: ${missing[*]}"
         log_info "Some build operations may fail. Install missing tools as needed."
@@ -663,40 +663,40 @@ build_windows() {
     log_step "Building Windows artifacts..."
     log_info "This step takes 3-5 minutes. Streaming output in real-time..."
     local win_start=$(date +%s)
-    
+
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would run: $SCRIPT_DIR/build-windows.sh"
         return 0
     fi
-    
+
     local win_script="$SCRIPT_DIR/build-windows.sh"
     if [[ ! -f "$win_script" ]]; then
         log_error "Windows build script not found at: $win_script"
         return 1
     fi
-    
+
     log_info "Starting Windows build via Wine + .NET SDK..."
     log_info "Build steps: WPF Compile → WPF Publish → Custom Actions → NSIS Installer"
-    
+
     # Run with timeout - foreground execution for true real-time output streaming
     set +e
     timeout 600s "$win_script" --skip-setup
     local win_exit=$?
     set -e
-    
+
     # Kill any orphaned Wine build daemons
     pkill -f "wine.*MSBuild.*nodemode" 2>/dev/null || true
     pkill -f "wine.*VBCSCompiler" 2>/dev/null || true
-    
+
     # Handle timeout case
     if [[ $win_exit -eq 124 ]]; then
         log_error "Windows build timed out after 10 minutes"
         return 1
     fi
-    
+
     local win_end=$(date +%s)
     local win_dur=$((win_end - win_start))
-    
+
     if [[ $win_exit -eq 0 ]]; then
         log_step "Finalizing Windows artifacts..."
         log_success "Windows build completed in ${win_dur}s"
@@ -713,20 +713,20 @@ build_windows() {
 
 build_update_server() {
     log_step "Building update-server..."
-    
+
     if [[ ! -d "$UPDATE_SERVER_DIR" ]]; then
         log_error "Update server directory not found at: $UPDATE_SERVER_DIR"
         return 1
     fi
-    
+
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would run: cd $UPDATE_SERVER_DIR && npm install"
         return 0
     fi
-    
+
     log_debug "Update server dir: $UPDATE_SERVER_DIR"
     log_debug "package.json exists: $(test -f "$UPDATE_SERVER_DIR/package.json" && echo 'yes' || echo 'NO')"
-    
+
     # Install dependencies if needed
     if [[ ! -d "$UPDATE_SERVER_DIR/node_modules" ]]; then
         log_info "Installing npm dependencies..."
@@ -736,7 +736,7 @@ build_update_server() {
         pkg_count=$(ls -1 "$UPDATE_SERVER_DIR/node_modules" 2>/dev/null | wc -l)
         log_debug "node_modules already exists ($pkg_count packages)"
     fi
-    
+
     # Validate server.js syntax and run tests
     log_info "Running update-server tests..."
     if (cd "$UPDATE_SERVER_DIR" && npm test) 2>&1 | while IFS= read -r line; do log_detail "test: $line"; done; then
@@ -745,7 +745,7 @@ build_update_server() {
         log_error "Update server tests failed!"
         return 1
     fi
-    
+
     # Check required files
     for f in server.js package.json public/index.html; do
         if [[ -f "$UPDATE_SERVER_DIR/$f" ]]; then
@@ -754,36 +754,36 @@ build_update_server() {
             log_warn "  ✗ $f MISSING"
         fi
     done
-    
+
     log_success "Update server ready"
 }
 
 build_website() {
     log_step "Building website..."
-    
+
     local website_file="$UPDATE_SERVER_DIR/public/index.html"
-    
+
     if [[ ! -f "$website_file" ]]; then
         log_error "Website file not found: $website_file"
         return 1
     fi
-    
+
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would validate: $website_file"
         return 0
     fi
-    
+
     local size
     size=$(du -h "$website_file" | cut -f1)
     log_debug "Website file: $website_file ($size)"
-    
+
     # Validate HTML (basic check)
     if grep -q "TypeThing" "$website_file"; then
         log_success "Website validated: $website_file"
     else
         log_warn "Website may need updates (TypeThing keyword not found)"
     fi
-    
+
     # Check for required assets
     local public_dir="$UPDATE_SERVER_DIR/public"
     local asset_count
@@ -793,10 +793,10 @@ build_website() {
 
 build_all() {
     log_step "Building all components..."
-    
+
     local start_time=$(date +%s)
     local failed=()
-    
+
     # Build update server first (needed for publishing)
     log_info "[1/3] Update Server"
     if build_update_server; then
@@ -805,7 +805,7 @@ build_all() {
         log_error "[1/3] Update Server FAILED"
         failed+=("update-server")
     fi
-    
+
     # Build website
     log_info "[2/3] Website"
     if build_website; then
@@ -814,7 +814,7 @@ build_all() {
         log_error "[2/3] Website FAILED"
         failed+=("website")
     fi
-    
+
     # Build Windows if not skipped
     if [[ $SKIP_WINDOWS == false ]]; then
         log_info "[3/3] Windows"
@@ -824,26 +824,29 @@ build_all() {
             log_error "[3/3] Windows FAILED"
             failed+=("windows")
         fi
-        
+
         # Publish to update-server for patch generation
         log_info "Publishing to update-server..."
         local version=$(get_version)
         local update_server_release_dir="$UPDATE_SERVER_DIR/releases/$version"
         mkdir -p "$update_server_release_dir/binaries"
-        
+
         # Copy installer, zip, and standalone exe
         [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] && cp "$DIST_DIR/Redball-${version}-Setup.exe" "$update_server_release_dir/"
         [[ -f "$DIST_DIR/Redball-${version}.zip" ]] && cp "$DIST_DIR/Redball-${version}.zip" "$update_server_release_dir/"
         [[ -f "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" ]] && cp "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" "$update_server_release_dir/Redball-${version}.exe"
-        
+
         # Copy binaries for delta patching (Service is single-file, no separate DLL)
-        for file in Redball.UI.WPF.exe Redball.UI.WPF.dll Redball.Service.exe; do
+        # Only copy required runtime files, excluding NSIS build artifacts
+        for file in Redball.UI.WPF.exe Redball.UI.WPF.dll Redball.Service.exe Redball.UI.WPF.runtimeconfig.json Redball.UI.WPF.deps.json Redball.json; do
             [[ -f "$DIST_DIR/wpf-publish/$file" ]] && cp "$DIST_DIR/wpf-publish/$file" "$update_server_release_dir/binaries/"
         done
         [[ -d "$DIST_DIR/wpf-publish/dll" ]] && cp "$DIST_DIR/wpf-publish/dll"/*.dll "$update_server_release_dir/binaries/" 2>/dev/null || true
-        
+        # Copy Assets folder if present
+        [[ -d "$DIST_DIR/wpf-publish/Assets" ]] && cp -r "$DIST_DIR/wpf-publish/Assets" "$update_server_release_dir/binaries/" 2>/dev/null || true
+
         log_success "Published to update-server: $update_server_release_dir"
-        
+
         # Generate delta patches after Windows build completes
         log_info "Generating delta patches..."
         local patch_script="$UPDATE_SERVER_DIR/scripts/generate-patches.js"
@@ -856,14 +859,14 @@ build_all() {
     else
         log_info "[3/3] Windows — SKIPPED (--skip-windows)"
     fi
-    
+
     # All components built
-    
+
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
     local minutes=$((duration / 60))
     local seconds=$((duration % 60))
-    
+
     echo ""
     if [[ ${#failed[@]} -gt 0 ]]; then
         echo "  ╔══════════════════════════════════════════════════╗"
@@ -888,43 +891,43 @@ build_all() {
 
 clean_all() {
     log_step "Cleaning build artifacts..."
-    
+
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would remove: $DIST_DIR"
         return 0
     fi
-    
+
     # Clean dist directory
     if [[ -d "$DIST_DIR" ]]; then
         rm -rf "$DIST_DIR"
         log_success "Removed: $DIST_DIR"
     fi
-    
+
     # Clean update-server node_modules (optional)
     # Uncomment if you want full clean:
     # if [[ -d "$UPDATE_SERVER_DIR/node_modules" ]]; then
     #     rm -rf "$UPDATE_SERVER_DIR/node_modules"
     #     log_success "Removed: update-server/node_modules"
     # fi
-    
+
     log_success "Clean completed"
 }
 
 publish_release() {
     log_step "Publishing release (channel: $CHANNEL)..."
-    
+
     local version=$(get_version)
-    
+
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would create GitHub release for v${version}"
         return 0
     fi
-    
+
     # Check for required artifacts
     local missing=()
     [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] || missing+=("Redball-${version}-Setup.exe")
     [[ -f "$DIST_DIR/Redball-${version}.zip" ]] || missing+=("Redball-${version}.zip")
-    
+
     if [[ ${#missing[@]} -gt 0 ]]; then
         log_error "Missing required artifacts for publish:"
         for f in "${missing[@]}"; do
@@ -932,7 +935,7 @@ publish_release() {
         done
         return 1
     fi
-    
+
     # Publish to GitHub using gh CLI
     if command -v gh &>/dev/null; then
         log_info "Creating GitHub release v${version}..."
@@ -956,22 +959,22 @@ publish_release() {
 
 serve_update_server() {
     log_step "Starting update-server..."
-    
+
     if [[ ! -d "$UPDATE_SERVER_DIR" ]]; then
         log_error "Update server directory not found at: $UPDATE_SERVER_DIR"
         return 1
     fi
-    
+
     # Ensure dependencies are installed
     if [[ ! -d "$UPDATE_SERVER_DIR/node_modules" ]]; then
         log_info "Installing npm dependencies..."
         npm install --prefix "$UPDATE_SERVER_DIR" 2>&1 | while IFS= read -r line; do log_detail "npm: $line"; done
     fi
-    
+
     log_info "Server starting on http://localhost:3500"
     log_info "Press Ctrl+C to stop"
     echo ""
-    
+
     node "$UPDATE_SERVER_DIR/server.js"
 }
 
@@ -981,11 +984,11 @@ show_status() {
     echo "  ║  Redball Build Status                            ║"
     echo "  ╚══════════════════════════════════════════════════╝"
     echo ""
-    
+
     local version=$(get_version)
     echo "  Version: $version"
     echo ""
-    
+
     # Check Windows artifacts
     echo "  Windows Artifacts:"
     if [[ -d "$DIST_DIR" ]]; then
@@ -1002,7 +1005,7 @@ show_status() {
         echo "    ✗ No dist directory"
     fi
     echo ""
-    
+
     # Check update-server
     echo "  Update Server:"
     if [[ -d "$UPDATE_SERVER_DIR/node_modules" ]]; then
@@ -1010,7 +1013,7 @@ show_status() {
     else
         echo "    ✗ Dependencies not installed (run: npm install)"
     fi
-    
+
     if [[ -f "$UPDATE_SERVER_DIR/data/releases.json" ]]; then
         local releases=$(grep -o '"version"' "$UPDATE_SERVER_DIR/data/releases.json" 2>/dev/null | wc -l)
         echo "    ✓ Database: $releases releases"
@@ -1018,7 +1021,7 @@ show_status() {
         echo "    ✗ No database found"
     fi
     echo ""
-    
+
     # Check website
     echo "  Website:"
     if [[ -f "$UPDATE_SERVER_DIR/public/index.html" ]]; then
@@ -1037,7 +1040,7 @@ main() {
     echo "  ║  Redball Unified Build System                    ║"
     echo "  ╚══════════════════════════════════════════════════╝"
     echo ""
-    
+
     log_debug "Script:       $0"
     log_debug "Arguments:    $COMMAND ${CHANNEL:+--channel $CHANNEL} ${VERSION:+--version $VERSION}"
     log_debug "Project root: $PROJECT_ROOT"
@@ -1045,23 +1048,23 @@ main() {
     log_debug "Server dir:   $UPDATE_SERVER_DIR"
     log_debug "Build log:    $BUILD_LOG"
     echo ""
-    
+
     # Default to 'auto-release' if no command specified (builds + publishes everything)
     if [[ -z "$COMMAND" ]]; then
         COMMAND="auto-release"
         log_info "No command specified, running FULL AUTO-RELEASE workflow"
         echo ""
     fi
-    
+
     log_info "Command: $COMMAND"
-    
+
     if [[ $DRY_RUN == true ]]; then
         log_warn "DRY RUN MODE - no changes will be made"
         echo ""
     fi
-    
+
     check_dependencies
-    
+
     case "$COMMAND" in
         auto-release)
             auto_release

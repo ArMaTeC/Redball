@@ -824,9 +824,17 @@ step_build_zip() {
     local zip_path="$DIST_DIR/$zip_name"
 
     # Create ZIP from published WPF directory
+    # Exclude NSIS build artifacts, bundled runtime, and license file
     if command -v zip &>/dev/null; then
         pushd "$WPF_PUBLISH_DIR" > /dev/null
-        zip -r "$zip_path" . -x "*.nsi" -x "*.bmp" -x "Redball.nsi" -x "nsis-*.bmp" > /dev/null
+        zip -r "$zip_path" . \
+            -x "*.nsi" \
+            -x "*.bmp" \
+            -x "Redball.nsi" \
+            -x "nsis-*.bmp" \
+            -x "redball.ico" \
+            -x "windowsdesktop-runtime-*.exe" \
+            -x "LICENSE.txt" > /dev/null
         popd > /dev/null
 
         if [[ -f "$zip_path" ]]; then
@@ -858,8 +866,15 @@ generate_manifest() {
     local timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
     local temp_entries="$(mktemp)"
 
-    # Generate file entries
-    find "$WPF_PUBLISH_DIR" -type f ! -name "manifest.json" ! -name "*.nsi" ! -name "nsis-*.bmp" -print0 | while IFS= read -r -d '' file; do
+    # Generate file entries - exclude NSIS build artifacts and bundled runtime
+    find "$WPF_PUBLISH_DIR" -type f \
+        ! -name "manifest.json" \
+        ! -name "*.nsi" \
+        ! -name "nsis-*.bmp" \
+        ! -name "redball.ico" \
+        ! -name "windowsdesktop-runtime-*.exe" \
+        ! -name "LICENSE.txt" \
+        -print0 | while IFS= read -r -d '' file; do
         local rel_path="${file#$WPF_PUBLISH_DIR/}"
         local hash=$(sha256sum "$file" | cut -d' ' -f1)
         local size=$(stat -c%s "$file")
