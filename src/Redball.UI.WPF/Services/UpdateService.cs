@@ -2105,6 +2105,108 @@ public class UpdateService : IUpdateService
         }
     }
 
+    /// <summary>
+    /// Fetches the manifest for a specific version from the update server.
+    /// Used for file verification to check current installation integrity.
+    /// </summary>
+    public async Task<UpdateManifest?> FetchManifestForVersionAsync(Version version, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var versionString = $"{version.Major}.{version.Minor}.{version.Build}";
+            Logger.Info("UpdateService", $"Fetching manifest for version {versionString}");
+
+            // Try update server first if configured
+            if (!string.IsNullOrEmpty(_updateServerUrl))
+            {
+                try
+                {
+                    var manifestUrl = $"{_updateServerUrl.TrimEnd('/')}/api/releases/{versionString}/manifest";
+                    Logger.Debug("UpdateService", $"Fetching from update server: {manifestUrl}");
+
+                    var serverManifestJson = await _httpClient.GetStringAsync(manifestUrl, cancellationToken);
+                    var serverManifest = SecureJsonSerializer.Deserialize<UpdateServerManifest>(serverManifestJson);
+
+                    if (serverManifest?.Files != null)
+                    {
+                        Logger.Info("UpdateService", $"Found {serverManifest.Files.Count} files in server manifest");
+
+                        // Convert server manifest to UpdateManifest format
+                        return new UpdateManifest
+                        {
+                            Version = serverManifest.Version,
+                            Files = serverManifest.Files.Select(f => new FileUpdateInfo
+                            {
+                                Name = f.Name,
+                                Hash = f.Hash,
+                                Size = f.Size,
+                                Signature = f.Signature,
+                                DownloadUrl = $"{_updateServerUrl.TrimEnd('/')}/downloads/{versionString}/{Uri.EscapeDataString(f.Name)}"
+                            }).ToList()
+                        };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning("UpdateService", "Failed to fetch manifest from update server, falling back to GitHub", ex);
+                }
+            }
+
+            // Fallback to GitHub releases
+            try
+            {
+                var allReleases = await GetAllReleasesAsync(false, cancellationToken);
+                var release = allReleases.Find(r =>
+                {
+                    var tag = r.TagName.TrimStart('v', 'V');
+                    return Version.TryParse(tag, out var v) && v == version;
+                });
+
+                if (release == null)
+                {
+                    Logger.Warning("UpdateService", $"Release for version {versionString} not found on GitHub");
+                    return null;
+                }
+
+                var manifestAsset = release.Assets.Find(a => a.Name.Equals("manifest.json", StringComparison.OrdinalIgnoreCase));
+                if (manifestAsset == null)
+                {
+                    Logger.Warning("UpdateService", "manifest.json not found in release assets");
+                    return null;
+                }
+
+                using var client = new HttpClient();
+                var manifestJson = await client.GetStringAsync(manifestAsset.DownloadUrl, cancellationToken);
+                var manifest = SecureJsonSerializer.Deserialize<UpdateManifest>(manifestJson);
+
+                if (manifest != null)
+                {
+                    // Populate download URLs from release assets
+                    foreach (var file in manifest.Files)
+                    {
+                        var asset = release.Assets.Find(a => a.Name.Equals(Path.GetFileName(file.Name), StringComparison.OrdinalIgnoreCase));
+                        if (asset != null)
+                        {
+                            file.DownloadUrl = asset.DownloadUrl;
+                        }
+                    }
+                }
+
+                return manifest;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("UpdateService", "Failed to fetch manifest from GitHub", ex);
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("UpdateService", "Failed to fetch manifest", ex);
+            return null;
+        }
+    }
+
     private string? CreateInstallerLaunchScript(string installerPath, string fileName)
     {
         try

@@ -143,6 +143,43 @@
                     </StackPanel>
                 </StackPanel>
 
+                <!-- File Verification Panel (shown when up to date but files need repair) -->
+                <StackPanel x:Name="FileVerificationPanel" Visibility="Collapsed">
+                    <Border Background="#15FF6B6B" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="&#xE7BA;" FontFamily="Segoe Fluent Icons" Foreground="#FF6B6B" FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBlock Text="Files Need Repair" Foreground="White" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock x:Name="VerificationSummaryText" Text="Some files are missing or corrupted and need to be repaired." Foreground="#FFCCCC" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                            <Border Background="#10FFFFFF" CornerRadius="6" Padding="8" Margin="0,0,0,12" MaxHeight="150">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl x:Name="FilesToRepairList">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="White" FontSize="11" FontFamily="Consolas" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Status}" Foreground="#FF9999" FontSize="11" Margin="8,0,0,0"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Border>
+
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="RepairFilesButton" Content="Repair Files" Style="{DynamicResource PrimaryButton}" Click="RepairFilesButton_Click" Padding="20,8"/>
+                                <Button x:Name="DismissRepairButton" Content="Ignore" Style="{DynamicResource ModernButton}" Margin="12,0,0,0" Click="DismissRepairButton_Click" Padding="16,8"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
                 <!-- Update Available Details Panel -->
                 <StackPanel x:Name="UpdateAvailablePanel" Visibility="Collapsed">
                     <!-- Version Comparison Card -->
@@ -190,6 +227,9 @@
 
                 <!-- Back Button (shown for all results) -->
                 <Button x:Name="BackToSettingsButton" Content="Back to Settings" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left" Margin="0,16,0,0" Click="BackToSettingsButton_Click"/>
+
+                <!-- Verify Files Button (shown when up to date) -->
+                <Button x:Name="VerifyFilesButton" Content="Verify File Integrity" Style="{DynamicResource ModernButton}" HorizontalAlignment="Left" Margin="0,8,0,0" Click="VerifyFilesButton_Click" Visibility="Collapsed"/>
             </StackPanel>
         </Border>
     </StackPanel>

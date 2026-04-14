@@ -405,10 +405,11 @@ public partial class MainWindow
             WindowState = WindowState.Normal;
             LoadEmbeddedSettings();
 
-            // Ensure UpdatesPanel is ready before showing
+            // Ensure UpdatesPanel is initialized before showing
+            // The UpdatesSectionView initializes its content in OnLoaded which may not have fired yet
             if (UpdatesPanel is Views.UpdatesSectionView updatesSection)
             {
-                updatesSection.Visibility = Visibility.Visible;
+                updatesSection.EnsureInitialized();
             }
 
             ShowSection("Updates");

@@ -745,7 +745,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="ENC_STATUS: ACTIVE  ▪  SYSCALL: STABLE" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" FontFamily="Consolas" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="0" Text="{Binding VersionText}" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" FontFamily="Consolas" VerticalAlignment="Center"/>
                         <Button Grid.Column="1" Content="♥ Support" Style="{DynamicResource TextButtonStyle}" Command="{Binding DonateCommand}" ToolTip="Support the development of Redball!" VerticalAlignment="Center"/>
                     </Grid>
                 </Border>

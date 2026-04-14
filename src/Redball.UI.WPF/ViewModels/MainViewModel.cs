@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.ComponentModel;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 using System.Linq;
@@ -40,7 +41,7 @@ public class MainViewModel : ViewModelBase
     private TimeSpan _keepAwakeTimeToday;
     private PointCollection _typeThingChartPoints = new();
     private PointCollection _activityChartPoints = new();
-    
+
     public DriverSelection TypeThingDriverSelection
     {
         get => ConfigService.Instance.Config.TypeThingDriverSelection;
@@ -91,11 +92,11 @@ public class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         Logger.Info("MainViewModel", "Constructor called");
-        
+
         _keepAwake = KeepAwakeService.Instance;
         _keepAwake.ActiveStateChanged += OnKeepAwakeStateChanged;
         _keepAwake.TimedAwakeExpired += OnTimedAwakeExpired;
-        
+
         ToggleActiveCommand = new RelayCommand(ToggleActive);
         PauseKeepAwakeCommand = new RelayCommand(ToggleActive);
         OpenSettingsCommand = new RelayCommand(OpenSettings);
@@ -118,6 +119,7 @@ public class MainViewModel : ViewModelBase
         ShowMiniWidgetCommand = new RelayCommand(ShowMiniWidget);
         ResetMiniWidgetPositionCommand = new RelayCommand(ResetMiniWidgetPosition);
         CheckForUpdatesCommand = new RelayCommand(CheckForUpdates);
+        DonateCommand = new RelayCommand(OpenDonatePage);
         InstallDriverCommand = new RelayCommand(async () => await InstallDriverAsync());
 
         // Sync initial state
@@ -134,9 +136,9 @@ public class MainViewModel : ViewModelBase
         _homeStatsTimer.Tick += (_, _) => UpdateHomeStats();
         _homeStatsTimer.Start();
         UpdateHomeStats(); // Initial load
-        
+
         InitializePalette();
-        
+
         Logger.Info("MainViewModel", "Commands initialized");
     }
 
@@ -149,7 +151,7 @@ public class MainViewModel : ViewModelBase
         {
             // KeepAwake stats from SessionStatsService
             KeepAwakeSessionsToday = _sessionStats.TotalSessions;
-            
+
             var today = DateTime.Now.ToString("yyyy-MM-dd");
             if (_sessionStats.DailyHours.TryGetValue(today, out var hours))
             {
@@ -279,12 +281,12 @@ public class MainViewModel : ViewModelBase
         // Load Custom Commands from Config
         foreach (var cmd in ConfigService.Instance.Config.CustomCommands)
         {
-            commands.Add(new PaletteCommand 
-            { 
-                Name = cmd.Name, 
-                Description = cmd.Description, 
-                Icon = cmd.Icon, 
-                Action = () => ExecuteCustomCommand(cmd) 
+            commands.Add(new PaletteCommand
+            {
+                Name = cmd.Name,
+                Description = cmd.Description,
+                Icon = cmd.Icon,
+                Action = () => ExecuteCustomCommand(cmd)
             });
         }
 
@@ -363,7 +365,7 @@ public class MainViewModel : ViewModelBase
     public ICommand PauseKeepAwakeCommand { get; }
     public ICommand OpenSettingsCommand { get; }
     public ICommand ExitCommand { get; }
-    
+
     public ICommand TypeThingCommand { get; }
     public ICommand InstallDriverCommand { get; }
     public ICommand ToggleDisplaySleepCommand { get; }
@@ -382,6 +384,7 @@ public class MainViewModel : ViewModelBase
     public ICommand ShowMiniWidgetCommand { get; }
     public ICommand ResetMiniWidgetPositionCommand { get; }
     public ICommand CheckForUpdatesCommand { get; }
+    public ICommand DonateCommand { get; }
 
     public bool IsMiniWidgetVisible => _miniWidget != null && _miniWidget.IsVisible;
 
@@ -496,7 +499,7 @@ public class MainViewModel : ViewModelBase
     private void OpenSettings()
     {
         Logger.Info("MainViewModel", "OpenSettings called");
-        
+
         // Delegate to MainWindow to show settings properly
         if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
         {
@@ -537,7 +540,7 @@ public class MainViewModel : ViewModelBase
     private void StartTypeThing()
     {
         Logger.Info("MainViewModel", "StartTypeThing called");
-        
+
         // Delegate to MainWindow for TypeThing paste-as-typing
         if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
         {
@@ -553,7 +556,7 @@ public class MainViewModel : ViewModelBase
     private void ShowAbout()
     {
         Logger.Info("MainViewModel", "ShowAbout called");
-        
+
         // Delegate to MainWindow to show about properly
         if (_mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mainWindow))
         {
@@ -643,13 +646,13 @@ public class MainViewModel : ViewModelBase
     private void ExitApplication()
     {
         Logger.Info("MainViewModel", "ExitApplication called");
-        
+
         // Confirm exit when configured and keep-awake is active
         var confirmOnExit = ConfigService.Instance.Config.ConfirmOnExit;
         if (confirmOnExit && _isActive)
         {
             Logger.Debug("MainViewModel", "Showing exit confirmation dialog");
-            
+
             // Get the currently active window to use as owner (handles About/Settings windows being open)
             Window? ownerWindow = null;
             if (Application.Current.Windows.Count > 0)
@@ -667,8 +670,8 @@ public class MainViewModel : ViewModelBase
             // Fall back to main window if no active window found
             if (ownerWindow == null)
             {
-                ownerWindow = _mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mw) 
-                    ? mw 
+                ownerWindow = _mainWindowRef != null && _mainWindowRef.TryGetTarget(out var mw)
+                    ? mw
                     : Application.Current.MainWindow;
             }
 
@@ -677,13 +680,13 @@ public class MainViewModel : ViewModelBase
                 "Redball is currently keeping your system awake. Are you sure you want to exit?",
                 "\uE7E8", // Power/Exit icon
                 true);
-                
+
             if (!result)
             {
                 Logger.Info("MainViewModel", "User cancelled exit");
                 return;
             }
-            
+
             Logger.Info("MainViewModel", "User confirmed exit");
         }
 
@@ -729,7 +732,18 @@ public class MainViewModel : ViewModelBase
 
         var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
         UptimeText = $"System uptime: {(int)uptime.TotalHours}h {uptime.Minutes}m";
+
+        // Set version text for footer
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        VersionText = version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v?.?.?";
     }
+
+    public string VersionText
+    {
+        get => _versionText;
+        set => SetProperty(ref _versionText, value);
+    }
+    private string _versionText = "";
 
     /// <summary>
     /// Public method to force refresh status text from KeepAwakeService.
@@ -1048,5 +1062,24 @@ public class MainViewModel : ViewModelBase
         var stderr = process.StandardError.ReadToEnd();
         process.WaitForExit();
         return (process.ExitCode, stdout, stderr);
+    }
+
+    private void OpenDonatePage()
+    {
+        try
+        {
+            var donateUrl = "https://github.com/sponsors/ArMaTeC";
+            var psi = new ProcessStartInfo
+            {
+                FileName = donateUrl,
+                UseShellExecute = true
+            };
+            Process.Start(psi);
+            Logger.Info("MainViewModel", "Opened donate page");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("MainViewModel", "Failed to open donate page", ex);
+        }
     }
 }
