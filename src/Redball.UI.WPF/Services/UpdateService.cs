@@ -144,6 +144,10 @@ public class UpdateService : IUpdateService
     private readonly string _updateChannel;
     private readonly bool _verifySignature;
     private readonly string? _updateServerUrl;
+    
+    // Throttling for high-frequency progress reporting
+    private long _lastReportTicks;
+    private const long ReportIntervalTicks = 50 * 10000; // 50ms in 100ns intervals
 
     // Circuit breaker: stop calling GitHub API after consecutive failures
     private static int _consecutiveFailures;
@@ -370,9 +374,23 @@ public class UpdateService : IUpdateService
         }
     }
 
-    private static void ReportCheckProgress(IProgress<UpdateCheckProgress>? progress, UpdateCheckStage stage, int percentage, string statusText, int filesHashed = 0, int totalFiles = 0, string? logEntry = null)
+    private void ReportCheckProgress(IProgress<UpdateCheckProgress>? progress, UpdateCheckStage stage, int percentage, string statusText, int filesHashed = 0, int totalFiles = 0, string? logEntry = null)
     {
-        progress?.Report(new UpdateCheckProgress
+        if (progress == null) return;
+
+        // Throttle high-frequency updates (like hashing) to prevent UI thread flooding
+        // Force report if stage changed or if there is a log entry
+        long currentTicks = DateTime.UtcNow.Ticks;
+        bool isCritical = !string.IsNullOrEmpty(logEntry) || stage == UpdateCheckStage.Complete || stage == UpdateCheckStage.Failed;
+        
+        if (!isCritical && currentTicks - _lastReportTicks < ReportIntervalTicks)
+        {
+            return;
+        }
+
+        _lastReportTicks = currentTicks;
+
+        progress.Report(new UpdateCheckProgress
         {
             Stage = stage,
             Percentage = percentage,
@@ -1147,18 +1165,34 @@ public class UpdateService : IUpdateService
     /// <summary>
     /// Reports progress with stage, status text, and optional log entry.
     /// </summary>
-    private static void ReportProgress(
+    private void ReportProgress(
         IProgress<UpdateDownloadProgress>? progress,
         UpdateStage stage, int percentage, string statusText,
-        string? logEntry = null,
+        long bytesReceived = 0, long totalBytes = 0, double speed = 0, string? logEntry = null,
         int currentFile = 0, int totalFiles = 0, string? currentFileName = null,
         bool isDelta = false)
     {
-        progress?.Report(new UpdateDownloadProgress
+        if (progress == null) return;
+
+        // Throttle progress updates to prevent dispatcher overflow
+        long currentTicks = DateTime.UtcNow.Ticks;
+        bool isCritical = !string.IsNullOrEmpty(logEntry) || stage == UpdateStage.Complete || stage == UpdateStage.Failed || stage == UpdateStage.Staging;
+
+        if (!isCritical && currentTicks - _lastReportTicks < ReportIntervalTicks)
+        {
+            return;
+        }
+
+        _lastReportTicks = currentTicks;
+
+        progress.Report(new UpdateDownloadProgress
         {
             Stage = stage,
             Percentage = percentage,
             StatusText = statusText,
+            BytesReceived = bytesReceived,
+            TotalBytes = totalBytes,
+            BytesPerSecond = speed,
             LogEntry = logEntry,
             CurrentFile = currentFile,
             TotalFiles = totalFiles,
