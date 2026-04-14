@@ -31,7 +31,7 @@ public class FileHashCache
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Redball", "UpdateCache");
         _cacheFilePath = Path.Combine(cacheDir, "filehashcache.json");
-        
+
         // Ensure directory exists before trying to load cache (fixes first-run race condition)
         try
         {
@@ -45,7 +45,7 @@ public class FileHashCache
             // SECURITY: Log full details internally
             Logger.Warning("UpdateService", "Failed to create cache directory", ex);
         }
-        
+
         LoadCache();
     }
 
@@ -91,8 +91,8 @@ public class FileHashCache
         if (_cache.TryGetValue(key, out var entry))
         {
             var info = new FileInfo(filePath);
-            if (info.Exists && 
-                entry.Size == info.Length && 
+            if (info.Exists &&
+                entry.Size == info.Length &&
                 entry.LastWriteTimeUtc == info.LastWriteTimeUtc.ToString("O"))
             {
                 return entry.Hash;
@@ -144,7 +144,7 @@ public class UpdateService : IUpdateService
     private readonly string _updateChannel;
     private readonly bool _verifySignature;
     private readonly string? _updateServerUrl;
-    
+
     // Throttling for high-frequency progress reporting
     private long _lastReportTicks;
     private const long ReportIntervalTicks = 50 * 10000; // 50ms in 100ns intervals
@@ -161,7 +161,7 @@ public class UpdateService : IUpdateService
         var handler = CreatePinnedHandler();
         _httpClient = new HttpClient(handler);
         _httpClient.DefaultRequestHeaders.UserAgent.Add(
-            new ProductInfoHeaderValue("Redball-Updater", 
+            new ProductInfoHeaderValue("Redball-Updater",
                 Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0"));
     }
 
@@ -173,7 +173,7 @@ public class UpdateService : IUpdateService
     private static HttpClientHandler CreatePinnedHandler()
     {
         var handler = new HttpClientHandler();
-        
+
         // GitHub API certificate pins (SHA-256 hashes of SPKI)
         // These are the expected public key hashes for GitHub's TLS certificates
         // Pins verified against DigiCert, Sectigo, Let's Encrypt, and Google Trust Services root CAs
@@ -209,14 +209,14 @@ public class UpdateService : IUpdateService
 
             // First, verify the standard chain
             var chainValid = errors == System.Net.Security.SslPolicyErrors.None;
-            
+
             // Get the certificate's public key hash
             var publicKey = cert.GetPublicKey();
             var publicKeyHash = Convert.ToBase64String(SHA256.HashData(publicKey));
-            
+
             // Check if the public key hash matches any pinned hash
             var isPinned = pinnedHashes.Contains(publicKeyHash, StringComparer.OrdinalIgnoreCase);
-            
+
             // Also check intermediate certificates for pinning
             var chainPinned = false;
             foreach (var element in chain.ChainElements)
@@ -243,22 +243,22 @@ public class UpdateService : IUpdateService
                     var hash = Convert.ToBase64String(SHA256.HashData(key));
                     return $"{e.Certificate.Subject}={hash}";
                 }));
-                
-                Logger.Error("UpdateService", 
+
+                Logger.Error("UpdateService",
                     $"Certificate pinning FAILED for {request.RequestUri?.Host}. " +
                     $"Public key hash {publicKeyHash} not in pinned set. " +
                     $"Chain hashes: [{chainHashes}]" +
                     "Possible MITM attack detected!");
-                
+
                 // Log security event
                 Debug.WriteLine($"[SECURITY] Certificate pinning failure for {request.RequestUri?.Host}: Unexpected hash {publicKeyHash}");
-                
+
                 return false;
             }
 
             if (isPinned || chainPinned)
             {
-                Logger.Debug("UpdateService", 
+                Logger.Debug("UpdateService",
                     $"Certificate pinning validated for {request.RequestUri?.Host}");
             }
 
@@ -333,13 +333,13 @@ public class UpdateService : IUpdateService
                 try
                 {
                     var result = await CheckForUpdateInternalAsync(bypassCache, progress, cancellationToken);
-                    
+
                     if (result != null)
                     {
                         ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, "Update available!");
                         return result;
                     }
-                    
+
                     // If result is null, we are up to date. No need to retry.
                     ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, "Up to date");
                     return null;
@@ -365,7 +365,7 @@ public class UpdateService : IUpdateService
                     return null;
                 }
             }
-            
+
             return null;
         }
         finally
@@ -382,7 +382,7 @@ public class UpdateService : IUpdateService
         // Force report if stage changed or if there is a log entry
         long currentTicks = DateTime.UtcNow.Ticks;
         bool isCritical = !string.IsNullOrEmpty(logEntry) || stage == UpdateCheckStage.Complete || stage == UpdateCheckStage.Failed;
-        
+
         if (!isCritical && currentTicks - _lastReportTicks < ReportIntervalTicks)
         {
             return;
@@ -411,10 +411,10 @@ public class UpdateService : IUpdateService
             Logger.Info("UpdateService", "=== UPDATE CHECK STARTED ===");
             Logger.Info("UpdateService", $"[CONFIG] Update server: {_updateServerUrl ?? "(not configured - using GitHub)"}");
             Logger.Info("UpdateService", $"[CONFIG] Repository: {_repoOwner}/{_repoName}, Channel: {_updateChannel}, Verify signature: {_verifySignature}");
-            
+
             var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
             Logger.Debug("UpdateService", $"Current assembly version: {currentVersion}");
-            
+
             if (currentVersion == null)
             {
                 Logger.Warning("UpdateService", "Could not get current assembly version");
@@ -424,14 +424,14 @@ public class UpdateService : IUpdateService
 
             var currentNormalized = new Version(currentVersion.Major, currentVersion.Minor, currentVersion.Build);
             ReportCheckProgress(progress, UpdateCheckStage.FetchingReleases, 10, $"Current version: {currentNormalized}");
-            
+
             // Get all releases and find the highest version
             ReportCheckProgress(progress, UpdateCheckStage.FetchingReleases, 20, "Connecting to GitHub API...");
             var allReleases = await GetAllReleasesAsync(bypassCache, cancellationToken);
-            
+
             ReportCheckProgress(progress, UpdateCheckStage.FetchingReleases, 35, $"Found {allReleases.Count} releases");
             var latestRelease = FindHighestVersionRelease(allReleases);
-            
+
             if (latestRelease == null)
             {
                 Logger.Warning("UpdateService", "Could not find any valid release");
@@ -447,12 +447,12 @@ public class UpdateService : IUpdateService
                 ReportCheckProgress(progress, UpdateCheckStage.Failed, 0, $"Invalid version tag: {tagName}");
                 return null;
             }
-            
+
             // Normalize versions
             var latestNormalized = new Version(latestVersion.Major, latestVersion.Minor, latestVersion.Build);
-            
+
             ReportCheckProgress(progress, UpdateCheckStage.ComparingVersions, 40, $"Comparing v{currentNormalized} → v{latestNormalized}");
-            
+
             if (latestNormalized <= currentNormalized)
             {
                 Logger.Info("UpdateService", $"Up to date (current: {currentNormalized}, latest: {latestNormalized})");
@@ -464,7 +464,7 @@ public class UpdateService : IUpdateService
 
             // Check for manifest.json for differential updates
             var manifestAsset = latestRelease.Assets.Find(a => a.Name.Equals("manifest.json", StringComparison.OrdinalIgnoreCase));
-            
+
             // DEBUG: Log first 10 available assets to avoid log flooding
             var assetNames = latestRelease.Assets.Select(a => a.Name).Take(15).ToList();
             var assetSummary = string.Join(", ", assetNames) + (latestRelease.Assets.Count > 15 ? $"... ({latestRelease.Assets.Count} total)" : "");
@@ -476,18 +476,19 @@ public class UpdateService : IUpdateService
             {
                 Logger.Info("UpdateService", $"Found {patchAssets.Count} patch assets on GitHub");
             }
-            
+
             if (manifestAsset != null || !string.IsNullOrEmpty(_updateServerUrl))
             {
                 Logger.Info("UpdateService", "[DELTA] Entering differential update check...");
                 UpdateManifest? manifest = null;
 
-                if (manifestAsset != null)
+                if (manifestAsset != null && Uri.IsWellFormedUriString(manifestAsset.DownloadUrl, UriKind.Absolute))
                 {
                     Logger.Info("UpdateService", "[DELTA] Found manifest.json on GitHub, reading...");
                     try
                     {
-                        var manifestJson = await _httpClient.GetStringAsync(manifestAsset.DownloadUrl, cancellationToken);
+                        using var ghClient = new HttpClient();
+                        var manifestJson = await ghClient.GetStringAsync(manifestAsset.DownloadUrl, cancellationToken);
                         manifest = SecureJsonSerializer.Deserialize<UpdateManifest>(manifestJson);
                     }
                     catch (Exception ex)
@@ -504,23 +505,25 @@ public class UpdateService : IUpdateService
                     {
                         var serverManifestUrl = $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/manifest";
                         Logger.Info("UpdateService", $"[DELTA] Fetching patch manifest from update server: {serverManifestUrl}");
-                        
+
                         var serverManifestJson = await _httpClient.GetStringAsync(serverManifestUrl, cancellationToken);
                         serverManifest = SecureJsonSerializer.Deserialize<UpdateServerManifest>(serverManifestJson);
-                        
+
                         if (serverManifest?.Files != null && manifest == null)
                         {
                             Logger.Info("UpdateService", "[DELTA] Using server manifest as primary source");
                             manifest = new UpdateManifest
                             {
                                 Version = serverManifest.Version,
-                                Files = serverManifest.Files.Select(f => new FileUpdateInfo
+                                Files = serverManifest.Files
+                                    .Where(f => !f.Name.EndsWith("-Setup.exe", StringComparison.OrdinalIgnoreCase))
+                                    .Select(f => new FileUpdateInfo
                                 {
                                     Name = f.Name,
                                     Hash = f.Hash,
                                     Size = f.Size,
                                     Signature = f.Signature,
-                                    DownloadUrl = !string.IsNullOrEmpty(_updateServerUrl) 
+                                    DownloadUrl = !string.IsNullOrEmpty(_updateServerUrl)
                                         ? $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/files/{Uri.EscapeDataString(f.Name)}"
                                         : ""
                                 }).ToList()
@@ -546,11 +549,11 @@ public class UpdateService : IUpdateService
                     int cachedHashesUsed = 0;
                     int filesHashed = 0;
                     int totalFiles = manifest.Files.Count;
-                    
+
                     ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, 55, $"Scanning {totalFiles} files for changes...", 0, totalFiles);
-                    
+
                     Logger.Info("UpdateService", $"[DELTA] Processing {manifest.Files.Count} files from manifest...");
-                    
+
                     // Parallelize hashing to drastically speed up manifest scans
                     int filesProcessed = 0;
                     var lockObj = new object();
@@ -586,13 +589,13 @@ public class UpdateService : IUpdateService
                         {
                             filesProcessed++;
                             int progressPct = 55 + (filesProcessed * 30 / totalFiles);
-                            
+
                             // Only report log entry for hashing every 50 files to avoid UI flood (junk)
-                            string? logEntry = (filesProcessed % 50 == 0 || filesProcessed == totalFiles) 
-                                ? $"Verified {filesProcessed}/{totalFiles} files..." 
+                            string? logEntry = (filesProcessed % 50 == 0 || filesProcessed == totalFiles)
+                                ? $"Verified {filesProcessed}/{totalFiles} files..."
                                 : null;
 
-                            ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct, 
+                            ReportCheckProgress(progress, UpdateCheckStage.HashingFiles, progressPct,
                                 $"Scanning files: {filesProcessed}/{totalFiles}", filesProcessed, totalFiles, logEntry);
                         }
 
@@ -624,7 +627,7 @@ public class UpdateService : IUpdateService
 
                             if (serverManifest?.Patches != null)
                             {
-                                var serverPatch = serverManifest.Patches.Find(p => 
+                                var serverPatch = serverManifest.Patches.Find(p =>
                                     p.File.Equals(file.Name, StringComparison.OrdinalIgnoreCase) ||
                                     p.File.Equals("binaries/" + file.Name, StringComparison.OrdinalIgnoreCase) ||
                                     p.PatchFile.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
@@ -656,37 +659,37 @@ public class UpdateService : IUpdateService
                             }
                         }
                     });
-                    
+
                     int filesNeedUpdate = filesToUpdate.Count;
                     int filesUpToDate = totalFiles - filesNeedUpdate;
 
                     Logger.Info("UpdateService", $"Differential check complete: {filesUpToDate} up to date, {filesNeedUpdate} need update, {filesHashed} hashed, {cachedHashesUsed} cached");
-                    
+
                     if (filesToUpdate.Count > 0)
                     {
-                        ReportCheckProgress(progress, UpdateCheckStage.CalculatingDiff, 90, 
+                        ReportCheckProgress(progress, UpdateCheckStage.CalculatingDiff, 90,
                             $"Found {filesToUpdate.Count} files to update ({filesUpToDate} up to date)");
                     }
                     else
                     {
-                        ReportCheckProgress(progress, UpdateCheckStage.Complete, 100, 
+                        ReportCheckProgress(progress, UpdateCheckStage.Complete, 100,
                             $"All files up to date! ({filesUpToDate}/{totalFiles} files)");
                     }
-                    
+
                     var filesWithPatches = filesToUpdate.Count(f => !string.IsNullOrEmpty(f.PatchUrl));
                     var totalPatchableSize = filesToUpdate.Where(f => !string.IsNullOrEmpty(f.PatchUrl)).Sum(f => f.PatchSize);
                     var totalFullSize = filesToUpdate.Where(f => string.IsNullOrEmpty(f.PatchUrl)).Sum(f => f.Size);
-                    
+
                     Logger.Info("UpdateService", $"[DELTA] Summary: {filesToUpdate.Count} files need update, {filesWithPatches} have patches available");
                     Logger.Info("UpdateService", $"[DELTA] Download size: {FormatBytes(totalPatchableSize)} (patches) + {FormatBytes(totalFullSize)} (full files)");
-                    
+
                     if (filesToUpdate.Count > 0)
                     {
                         // Find the ZIP asset URL for ZIP-based differential extraction
                         var zipAsset = latestRelease.Assets.Find(a =>
                             a.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) &&
                             !a.Name.Contains("debug", StringComparison.OrdinalIgnoreCase));
-                        
+
                         Logger.Info("UpdateService", $"[DELTA] Differential update ready: {filesToUpdate.Count}/{manifest.Files.Count} files need updating");
                         Logger.Info("UpdateService", $"[DELTA] ZIP fallback available: {(zipAsset != null ? "YES" : "NO")}");
                         Logger.Info("UpdateService", $"[DELTA] Total download size: {FormatBytes(filesToUpdate.Sum(f => f.PatchUrl != null ? f.PatchSize : f.Size))}");
@@ -711,7 +714,7 @@ public class UpdateService : IUpdateService
                 }
                 else
                 {
-                    Logger.Warning("UpdateService", "No manifest found on GitHub or update server. Available assets: " + 
+                    Logger.Warning("UpdateService", "No manifest found on GitHub or update server. Available assets: " +
                         string.Join(", ", latestRelease.Assets.Select(a => a.Name)));
                     Logger.Warning("UpdateService", "Falling back to full installer download. Differential updates require a manifest.");
                 }
@@ -754,7 +757,7 @@ public class UpdateService : IUpdateService
         return ex is HttpRequestException ||
                ex is TimeoutException ||
                ex is TaskCanceledException ||
-               (ex is IOException ioEx && 
+               (ex is IOException ioEx &&
                 (ioEx.Message.Contains("being used by another process") ||
                  ioEx.Message.Contains("access is denied") ||
                  ioEx.Message.Contains("cannot access")));
@@ -771,7 +774,7 @@ public class UpdateService : IUpdateService
         try
         {
             var tempDir = Path.Combine(Path.GetTempPath(), "RedballUpdate");
-            
+
             // Retry temp directory cleanup (handles race conditions with AV scanning)
             for (int i = 0; i < 3; i++)
             {
@@ -789,7 +792,7 @@ public class UpdateService : IUpdateService
                     await Task.Delay(500, cancellationToken);
                 }
             }
-            
+
             Directory.CreateDirectory(tempDir);
             var stagingDir = Path.Combine(tempDir, "staging");
             Directory.CreateDirectory(stagingDir);
@@ -801,53 +804,53 @@ public class UpdateService : IUpdateService
                 int completed = 0;
                 long totalBytesSaved = 0;
                 var appDir = AppDomain.CurrentDomain.BaseDirectory;
-                
+
                 // Check if any files have individual download URLs
                 bool hasIndividualAssets = updateInfo.FilesToUpdate.Any(f => !string.IsNullOrEmpty(f.DownloadUrl));
                 bool hasPatches = updateInfo.FilesToUpdate.Any(f => !string.IsNullOrEmpty(f.PatchUrl));
-                
+
                 Logger.Info("UpdateService", $"[DELTA-APPLY] hasIndividualAssets={hasIndividualAssets}, hasPatches={hasPatches}, zipUrl={!string.IsNullOrEmpty(updateInfo.DownloadUrl)}");
                 Logger.Info("UpdateService", $"[DELTA-APPLY] Patch breakdown: {updateInfo.FilesToUpdate.Count(f => !string.IsNullOrEmpty(f.PatchUrl))} with patches, {updateInfo.FilesToUpdate.Count(f => string.IsNullOrEmpty(f.PatchUrl) && !string.IsNullOrEmpty(f.DownloadUrl))} with full file URLs, {updateInfo.FilesToUpdate.Count(f => string.IsNullOrEmpty(f.PatchUrl) && string.IsNullOrEmpty(f.DownloadUrl))} with no source");
-                
+
                 // If no individual assets or patches, download ZIP once and extract changed files
                 string? extractedZipDir = null;
                 if (!hasIndividualAssets && !hasPatches && !string.IsNullOrEmpty(updateInfo.DownloadUrl))
                 {
-                    ReportProgress(progress, UpdateStage.Downloading, 0, $"Downloading update package...", 
+                    ReportProgress(progress, UpdateStage.Downloading, 0, $"Downloading update package...",
                         logEntry: $"Downloading ZIP for differential extraction ({totalFiles} files need updating)...",
                         isDelta: true);
-                    
+
                     var zipPath = Path.Combine(tempDir, updateInfo.FileName);
                     if (!await DownloadFileAsync(updateInfo.DownloadUrl, zipPath, progress, cancellationToken))
                         return false;
-                    
+
                     ReportProgress(progress, UpdateStage.Patching, 30, "Extracting changed files from update package...",
                         logEntry: "ZIP downloaded. Extracting changed files only...", isDelta: true);
-                    
+
                     extractedZipDir = Path.Combine(tempDir, "zip-extract");
                     if (!ExtractZip(zipPath, extractedZipDir))
                         return false;
-                    
+
                     // Clean up ZIP to save disk space
                     TryDeleteFile(zipPath);
-                    
+
                     ReportProgress(progress, UpdateStage.Patching, 35, "Applying differential updates...",
                         logEntry: $"Extracted. Copying {totalFiles} changed files to staging...", isDelta: true);
                 }
-                
+
                 foreach (var file in updateInfo.FilesToUpdate)
                 {
                     var normalizedName = NormalizeRelativeUpdatePath(file.Name);
                     var destPath = Path.Combine(stagingDir, normalizedName);
                     var destDir = Path.GetDirectoryName(destPath);
                     if (destDir != null && !Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
-                    
+
                     completed++;
                     var fileShortName = Path.GetFileName(normalizedName);
-                    
+
                     // Try binary delta patch first if available
                     Logger.Debug("UpdateService", $"[DELTA-APPLY] Processing file {completed}/{totalFiles}: {normalizedName}, PatchUrl={!string.IsNullOrEmpty(file.PatchUrl)}, PatchSize={file.PatchSize}, DownloadUrl={!string.IsNullOrEmpty(file.DownloadUrl)}");
-                    
+
                     if (!string.IsNullOrEmpty(file.PatchUrl) && file.PatchSize > 0)
                     {
                         Logger.Info("UpdateService", $"[DELTA-APPLY] Attempting delta patch for {fileShortName} from {file.PatchUrl}");
@@ -861,11 +864,11 @@ public class UpdateService : IUpdateService
                                     $"Downloading patch {completed}/{totalFiles}: {fileShortName}",
                                     logEntry: $"  [{completed}/{totalFiles}] Downloading delta patch: {fileShortName}",
                                     currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
-                                
+
                                 var patchPath = Path.Combine(tempDir, normalizedName + ".patch");
                                 var patchDir2 = Path.GetDirectoryName(patchPath);
                                 if (patchDir2 != null && !Directory.Exists(patchDir2)) Directory.CreateDirectory(patchDir2);
-                                
+
                                 Logger.Info("UpdateService", $"[DELTA-APPLY] Downloading patch to: {patchPath}");
                                 if (await DownloadFileAsync(file.PatchUrl, patchPath, progress, cancellationToken))
                                 {
@@ -873,10 +876,10 @@ public class UpdateService : IUpdateService
                                         $"Patching {completed}/{totalFiles}: {fileShortName}",
                                         logEntry: $"  [{completed}/{totalFiles}] Applying delta patch: {fileShortName}",
                                         currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
-                                    
+
                                     var oldData = await File.ReadAllBytesAsync(localFilePath, cancellationToken);
                                     var patchData = await File.ReadAllBytesAsync(patchPath, cancellationToken);
-                                    
+
                                     var patch = new DeltaPatch
                                     {
                                         Data = patchData,
@@ -884,12 +887,12 @@ public class UpdateService : IUpdateService
                                         NewFileHash = file.Hash,
                                         NewFileSize = file.Size
                                     };
-                                    
+
                                     Logger.Info("UpdateService", $"[DELTA-APPLY] Applying patch to {fileShortName}: oldData={oldData.Length} bytes, patch={patchData.Length} bytes");
                                     var newData = await DeltaUpdateService.Instance.ApplyPatchAsync(oldData, patch, cancellationToken);
                                     Logger.Info("UpdateService", $"[DELTA-APPLY] Patch applied, newData={newData.Length} bytes, writing to {destPath}");
                                     await File.WriteAllBytesAsync(destPath, newData, cancellationToken);
-                                    
+
                                     // Verify hash
                                     var actualHash = await CalculateHashAsync(destPath);
                                     Logger.Info("UpdateService", $"[DELTA-APPLY] Hash verification: expected={file.Hash}, actual={actualHash}");
@@ -899,14 +902,14 @@ public class UpdateService : IUpdateService
                                         File.Delete(destPath);
                                         throw new InvalidOperationException("Patch hash mismatch");
                                     }
-                                    
+
                                     totalBytesSaved += (file.Size - file.PatchSize);
                                     Logger.Info("UpdateService", $"[DELTA-APPLY] ✓ Successfully patched {fileShortName}");
                                     ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
                                         $"Patched {completed}/{totalFiles}: {fileShortName}",
                                         logEntry: $"  [{completed}/{totalFiles}] ✓ Patched: {fileShortName} (saved {FormatBytes(file.Size - file.PatchSize)})",
                                         currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
-                                    
+
                                     TryDeleteFile(patchPath);
                                     continue; // Skip full download
                                 }
@@ -922,7 +925,7 @@ public class UpdateService : IUpdateService
                                 currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
                         }
                     }
-                    
+
                     // Try extracting from downloaded ZIP if available
                     if (extractedZipDir != null)
                     {
@@ -930,7 +933,7 @@ public class UpdateService : IUpdateService
                         if (zipSourcePath != null)
                         {
                             File.Copy(zipSourcePath, destPath, overwrite: true);
-                            
+
                             ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
                                 $"Staged {completed}/{totalFiles}: {fileShortName}",
                                 logEntry: $"  [{completed}/{totalFiles}] ✓ Extracted: {fileShortName}",
@@ -942,7 +945,7 @@ public class UpdateService : IUpdateService
                             Logger.Warning("UpdateService", $"File not found in ZIP: {normalizedName}");
                         }
                     }
-                    
+
                     // Full file download (fallback or individual asset available)
                     if (!string.IsNullOrEmpty(file.DownloadUrl))
                     {
@@ -950,7 +953,7 @@ public class UpdateService : IUpdateService
                             $"Downloading {completed}/{totalFiles}: {fileShortName}",
                             logEntry: $"  [{completed}/{totalFiles}] Downloading: {fileShortName}",
                             currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
-                        
+
                         if (!await DownloadFileAsync(file.DownloadUrl, destPath, progress, cancellationToken))
                             return false;
                     }
@@ -959,7 +962,7 @@ public class UpdateService : IUpdateService
                         Logger.Error("UpdateService", $"No download source available for {normalizedName}");
                         return false;
                     }
-                    
+
                     // --- SECURITY: Hash/Signature Verification ---
                     if (_verifySignature && !string.IsNullOrEmpty(file.Signature))
                     {
@@ -967,7 +970,7 @@ public class UpdateService : IUpdateService
                             $"Verifying {fileShortName}...",
                             logEntry: $"  [{completed}/{totalFiles}] Verifying integrity: {fileShortName}",
                             currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
-                        
+
                         var actualHash = await CalculateHashAsync(destPath);
                         if (!actualHash.Equals(file.Hash, StringComparison.OrdinalIgnoreCase))
                         {
@@ -979,28 +982,28 @@ public class UpdateService : IUpdateService
                         Logger.Info("UpdateService", $"Integrity verified for {normalizedName}");
                     }
                 }
-                
+
                 Logger.Info("UpdateService", $"[DELTA-APPLY] Completed processing {completed} files, total bytes saved: {FormatBytes(totalBytesSaved)}");
-                
+
                 if (totalBytesSaved > 0)
                 {
                     Logger.Info("UpdateService", $"[DELTA-APPLY] Delta patching saved {FormatBytes(totalBytesSaved)} total");
                     ReportProgress(progress, UpdateStage.Staging, 90, "Preparing to apply update...",
                         logEntry: $"Delta patching saved {FormatBytes(totalBytesSaved)} in bandwidth.", isDelta: true);
                 }
-                
+
                 // Clean up extracted ZIP directory
                 if (extractedZipDir != null)
                 {
                     try { Directory.Delete(extractedZipDir, true); } catch { /* best effort */ }
                 }
-                
+
                 ReportProgress(progress, UpdateStage.Applying, 95, "Applying update...",
                     logEntry: $"All {totalFiles} files staged. Launching update script...", isDelta: true);
-                
+
                 var scriptPath = CreateUpdateScript(stagingDir);
                 if (scriptPath == null) return false;
-                
+
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "powershell.exe",
@@ -1008,7 +1011,7 @@ public class UpdateService : IUpdateService
                     UseShellExecute = false,
                     CreateNoWindow = false
                 });
-                
+
                 ReportProgress(progress, UpdateStage.Complete, 100, "Update ready — restarting...",
                     logEntry: "Update script launched. Application will restart.", isDelta: true);
                 return true;
@@ -1049,18 +1052,18 @@ public class UpdateService : IUpdateService
                     logEntry: "Validating package signature and trust chain...");
 
                 var trustResult = SecurityService.ValidateUpdatePackage(downloadPath, updateInfo.ManifestHash);
-                
+
                 if (!trustResult.IsTrusted)
                 {
                     Logger.Error("UpdateService", $"SECURITY ALERT: Update package failed trust validation! {trustResult.Summary}");
                     Logger.Error("UpdateService", $"Failures: {string.Join(", ", trustResult.Failures)}");
-                    
+
                     foreach (var warning in trustResult.Warnings)
                     {
                         Logger.Warning("UpdateService", $"Trust validation warning: {warning}");
                     }
 
-                    if (!trustResult.AuthenticodeValid || 
+                    if (!trustResult.AuthenticodeValid ||
                         (!string.IsNullOrEmpty(updateInfo.ManifestHash) && !trustResult.ManifestHashValid))
                     {
                         Logger.Error("UpdateService", "Update blocked due to failed trust validation");
@@ -1084,21 +1087,21 @@ public class UpdateService : IUpdateService
             }
 
             Logger.Debug("UpdateService", $"Checking installer type for: {updateInfo.FileName}");
-            
+
             if (updateInfo.FileName.EndsWith(".msi", StringComparison.OrdinalIgnoreCase) ||
                 updateInfo.FileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
             {
                 ReportProgress(progress, UpdateStage.Applying, 95, "Launching installer...",
                     logEntry: $"Launching installer: {updateInfo.FileName}");
-                
+
                 Logger.Info("UpdateService", $"Creating installer launch script for: {downloadPath}");
                 var installerScriptPath = CreateInstallerLaunchScript(downloadPath, updateInfo.FileName);
-                if (installerScriptPath == null) 
+                if (installerScriptPath == null)
                 {
                     Logger.Error("UpdateService", "Failed to create installer launch script");
                     return false;
                 }
-                
+
                 Logger.Info("UpdateService", $"Starting PowerShell with script: {installerScriptPath}");
 
                 try
@@ -1110,7 +1113,7 @@ public class UpdateService : IUpdateService
                         UseShellExecute = false,
                         CreateNoWindow = false
                     });
-                    
+
                     ReportProgress(progress, UpdateStage.Complete, 100, "Installer launched — closing app...",
                         logEntry: "Installer launched. Application will close for update.");
                     Logger.Info("UpdateService", "Installer launched successfully");
@@ -1132,12 +1135,12 @@ public class UpdateService : IUpdateService
             {
                 ReportProgress(progress, UpdateStage.Staging, 90, "Extracting update package...",
                     logEntry: $"Extracting: {updateInfo.FileName}");
-                
+
                 if (!ExtractZip(downloadPath, stagingDir)) return false;
-                
+
                 ReportProgress(progress, UpdateStage.Applying, 95, "Applying update...",
                     logEntry: "Launching update script...");
-                
+
                 var scriptPath = CreateUpdateScript(stagingDir);
                 if (scriptPath == null) return false;
                 Process.Start(new ProcessStartInfo
@@ -1147,7 +1150,7 @@ public class UpdateService : IUpdateService
                     UseShellExecute = false,
                     CreateNoWindow = true
                 });
-                
+
                 ReportProgress(progress, UpdateStage.Complete, 100, "Update ready — restarting...",
                     logEntry: "Update script launched. Application will restart.");
                 return true;
@@ -1252,12 +1255,12 @@ public class UpdateService : IUpdateService
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Redball",
             "UpdateCache");
-        
+
         if (!Directory.Exists(cacheDir))
         {
             Directory.CreateDirectory(cacheDir);
         }
-        
+
         return cacheDir;
     }
 
@@ -1269,7 +1272,7 @@ public class UpdateService : IUpdateService
     {
         try
         {
-            if (string.IsNullOrEmpty(updateInfo.FileName) || 
+            if (string.IsNullOrEmpty(updateInfo.FileName) ||
                 string.IsNullOrEmpty(updateInfo.DownloadUrl))
             {
                 return null;
@@ -1300,7 +1303,7 @@ public class UpdateService : IUpdateService
 
             // Calculate actual hash of cached file
             var actualHash = await CalculateHashAsync(cachedFile);
-            
+
             if (!actualHash.Equals(storedHash, StringComparison.OrdinalIgnoreCase))
             {
                 Logger.Warning("UpdateService", "Cached file hash mismatch, deleting cache");
@@ -1417,7 +1420,7 @@ public class UpdateService : IUpdateService
         // Check cache first
         if (!bypassCache && _cachedReleases != null && DateTime.UtcNow < _cacheExpiry)
         {
-            Logger.Debug("UpdateService", "Using cached releases (valid for another " + 
+            Logger.Debug("UpdateService", "Using cached releases (valid for another " +
                 (_cacheExpiry - DateTime.UtcNow).TotalMinutes.ToString("F1") + " min)");
             return _cachedReleases;
         }
@@ -1438,16 +1441,16 @@ public class UpdateService : IUpdateService
             {
                 var updateServerUrl = $"{_updateServerUrl.TrimEnd('/')}/api/github/releases";
                 Logger.Debug("UpdateService", $"Trying update-server: {updateServerUrl}");
-                
+
                 _lastApiCall = DateTime.UtcNow;
                 var response = await _httpClient.GetAsync(updateServerUrl, cancellationToken);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
                     // SECURITY: Use SecureJsonSerializer with size limit and max depth
                     var releases = SecureJsonSerializer.Deserialize<List<GitHubRelease>>(content);
-                    
+
                     if (releases != null && releases.Count > 0)
                     {
                         _cachedReleases = releases;
@@ -1456,7 +1459,7 @@ public class UpdateService : IUpdateService
                         return releases;
                     }
                 }
-                
+
                 Logger.Warning("UpdateService", "Update-server unavailable, falling back to GitHub");
             }
             catch (Exception ex)
@@ -1469,42 +1472,42 @@ public class UpdateService : IUpdateService
         // Fallback to GitHub API
         var url = $"https://api.github.com/repos/{_repoOwner}/{_repoName}/releases";
         Logger.Debug("UpdateService", $"Fetching releases from GitHub: {url}");
-        
+
         try
         {
             _lastApiCall = DateTime.UtcNow;
             var response = await _httpClient.GetAsync(url, cancellationToken);
-            
+
             // Handle rate limiting specifically
             if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
             {
                 var retryAfter = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromMinutes(5);
                 Logger.Warning("UpdateService", $"GitHub API rate limit exceeded. Retry after: {retryAfter.TotalMinutes:F1} min");
-                
+
                 // Open circuit breaker to prevent further calls
                 _consecutiveFailures = CircuitBreakerThreshold;
                 _circuitOpenUntil = DateTime.UtcNow + retryAfter;
-                
+
                 // Return cached data if available, even if expired
                 if (_cachedReleases != null)
                 {
                     Logger.Info("UpdateService", "Returning stale cached releases due to rate limit");
                     return _cachedReleases;
                 }
-                
+
                 throw new HttpRequestException($"GitHub API rate limit exceeded. Please try again after {retryAfter.TotalMinutes:F0} minutes.");
             }
-            
+
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             Logger.Debug("UpdateService", $"API response length: {content.Length} chars");
 
             // SECURITY: Use SecureJsonSerializer with size limit and max depth
             var releases = SecureJsonSerializer.Deserialize<List<GitHubRelease>>(content);
-            
+
             _cachedReleases = releases ?? new List<GitHubRelease>();
             _cacheExpiry = DateTime.UtcNow + CacheDuration;
-            
+
             Logger.Info("UpdateService", $"Cached {releases?.Count ?? 0} releases for {CacheDuration.TotalMinutes:F0} minutes");
             return _cachedReleases;
         }
@@ -1572,16 +1575,16 @@ public class UpdateService : IUpdateService
     private GitHubRelease? FindHighestVersionRelease(List<GitHubRelease> releases)
     {
         Logger.Debug("UpdateService", $"Checking {releases.Count} releases for highest version");
-        
+
         GitHubRelease? highestRelease = null;
         Version? highestVersion = null;
-        
+
         foreach (var release in releases)
         {
             // Skip drafts and pre-releases if not on a pre-release channel
             if (release.IsDraft) continue;
             if (release.IsPreRelease && _updateChannel != "beta" && _updateChannel != "alpha") continue;
-            
+
             // Parse version from tag (remove 'v' prefix if present)
             var tagName = release.TagName.TrimStart('v', 'V');
             if (!Version.TryParse(tagName, out var version))
@@ -1589,13 +1592,13 @@ public class UpdateService : IUpdateService
                 Logger.Warning("UpdateService", $"Could not parse version from tag: {release.TagName}");
                 continue;
             }
-            
+
             Logger.Verbose("UpdateService", $"Release {release.TagName} -> version {version}");
-            
+
             // Compare versions (only compare Major.Minor.Build, ignore Revision)
             var versionToCompare = new Version(version.Major, version.Minor, version.Build);
             var currentHighest = highestVersion == null ? null : new Version(highestVersion.Major, highestVersion.Minor, highestVersion.Build);
-            
+
             if (highestVersion == null || versionToCompare > currentHighest!)
             {
                 highestVersion = version;
@@ -1603,7 +1606,7 @@ public class UpdateService : IUpdateService
                 Logger.Debug("UpdateService", $"New highest version found: {version} from {release.TagName}");
             }
         }
-        
+
         if (highestRelease != null)
         {
             Logger.Info("UpdateService", $"Highest version release: {highestRelease.TagName} ({highestVersion})");
@@ -1612,7 +1615,7 @@ public class UpdateService : IUpdateService
         {
             Logger.Warning("UpdateService", "No valid version found in releases");
         }
-        
+
         return highestRelease;
     }
 
@@ -1630,10 +1633,10 @@ public class UpdateService : IUpdateService
 
         foreach (var priority in priorities)
         {
-            var asset = release.Assets.Find(a => 
+            var asset = release.Assets.Find(a =>
                 a.Name.Contains(priority, StringComparison.OrdinalIgnoreCase) &&
                 !a.Name.Contains("debug", StringComparison.OrdinalIgnoreCase));
-            
+
             if (asset != null)
             {
                 Logger.Debug("UpdateService", $"Found matching asset: {asset.Name}");
@@ -1642,11 +1645,11 @@ public class UpdateService : IUpdateService
         }
 
         // Fallback to first .exe or .msi file
-        var fallbackAsset = release.Assets.Find(a => 
+        var fallbackAsset = release.Assets.Find(a =>
             (a.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ||
              a.Name.EndsWith(".msi", StringComparison.OrdinalIgnoreCase)) &&
             !a.Name.Contains("debug", StringComparison.OrdinalIgnoreCase));
-        
+
         if (fallbackAsset != null)
         {
             Logger.Debug("UpdateService", $"Using fallback asset: {fallbackAsset.Name}");
@@ -1655,7 +1658,7 @@ public class UpdateService : IUpdateService
         {
             Logger.Warning("UpdateService", "No suitable asset found in release");
         }
-        
+
         return fallbackAsset;
     }
 
@@ -1682,7 +1685,7 @@ public class UpdateService : IUpdateService
         int read;
         var stopwatch = Stopwatch.StartNew();
         var lastReport = Stopwatch.StartNew();
-        
+
         while ((read = await contentStream.ReadAsync(buffer, cancellationToken)) > 0)
         {
             await fileStream.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
@@ -1694,7 +1697,7 @@ public class UpdateService : IUpdateService
                 {
                     var percent = (int)((downloadedBytes * 100) / totalBytes);
                     var speed = downloadedBytes / (stopwatch.Elapsed.TotalSeconds + 0.001);
-                    
+
                     progress.Report(new UpdateDownloadProgress
                     {
                         Stage = UpdateStage.Downloading,
@@ -1718,37 +1721,37 @@ public class UpdateService : IUpdateService
         {
             if (Directory.Exists(extractPath))
                 Directory.Delete(extractPath, true);
-            
+
             Directory.CreateDirectory(extractPath);
-            
+
             // SECURITY: Extract with ZipSlip protection
             using var archive = System.IO.Compression.ZipFile.OpenRead(zipPath);
             var fullExtractPath = Path.GetFullPath(extractPath);
-            
+
             foreach (var entry in archive.Entries)
             {
                 // Validate entry path to prevent directory traversal
                 var entryName = entry.FullName.Replace('/', Path.DirectorySeparatorChar);
                 var entryPath = Path.GetFullPath(Path.Combine(extractPath, entryName));
-                
+
                 if (!entryPath.StartsWith(fullExtractPath, StringComparison.OrdinalIgnoreCase))
                 {
                     Logger.Error("UpdateService", $"Security: ZIP entry escapes target directory: {entry.FullName}");
                     return false;
                 }
-                
+
                 var entryDir = Path.GetDirectoryName(entryPath);
                 if (!string.IsNullOrEmpty(entryDir))
                 {
                     Directory.CreateDirectory(entryDir);
                 }
-                
+
                 if (!entry.FullName.EndsWith("/"))
                 {
                     entry.ExtractToFile(entryPath, overwrite: true);
                 }
             }
-            
+
             return true;
         }
         catch (Exception ex)
@@ -1814,10 +1817,10 @@ public class UpdateService : IUpdateService
             var appDir = AppContext.BaseDirectory;
             var scriptDir = Path.Combine(Path.GetTempPath(), "RedballUpdate");
             var scriptPath = Path.Combine(scriptDir, "update.ps1");
-            
+
             // Ensure directory exists before writing script
             Directory.CreateDirectory(scriptDir);
-            
+
             // Build PowerShell script using StringBuilder to avoid escaping hell
             var sb = new StringBuilder();
             sb.AppendLine("# Redball Auto-Update Script");
@@ -2100,10 +2103,10 @@ public class UpdateService : IUpdateService
         {
             var scriptDir = Path.Combine(Path.GetTempPath(), "RedballUpdate");
             var scriptPath = Path.Combine(scriptDir, "install-update.ps1");
-            
+
             // Ensure directory exists before writing script
             Directory.CreateDirectory(scriptDir);
-            
+
             var packageDir = Path.GetDirectoryName(installerPath) ?? scriptDir;
             var installerCommand = fileName.EndsWith(".msi", StringComparison.OrdinalIgnoreCase)
                 ? "$process = Start-Process -FilePath 'msiexec.exe' -ArgumentList '/i \"" + installerPath.Replace("'", "''") + "\" /passive /norestart' -Wait -PassThru"
