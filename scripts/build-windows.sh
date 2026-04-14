@@ -329,9 +329,9 @@ install_nsis_from_source() {
         local cur_ver
         cur_ver=$(makensis -VERSION 2>/dev/null | sed 's/^v//')
         local cur_maj cur_min
-        cur_maj=$(echo "$cur_ver" | cut -d. -f1)
-        cur_min=$(echo "$cur_ver" | cut -d. -f2)
-        if [[ "$cur_maj" -gt 3 ]] || { [[ "$cur_maj" -eq 3 ]] && [[ "$cur_min" -ge 11 ]]; }; then
+        cur_maj=$(echo "$cur_ver" | cut -d. -f1 | grep -o '^[0-9]*')
+        cur_min=$(echo "$cur_ver" | cut -d. -f2 | grep -o '^[0-9]*')
+        if [[ "10#${cur_maj:-0}" -gt 3 ]] || { [[ "10#${cur_maj:-0}" -eq 3 ]] && [[ "10#${cur_min:-0}" -ge 11 ]]; }; then
             log_success "NSIS $cur_ver already installed — skipping build"
             return 0
         fi
@@ -382,23 +382,48 @@ install_nsis_from_source() {
 
     log_info "→ Building makensis via scons (install-compiler)..."
     pushd "$src_dir" > /dev/null
-    # NSIS_CONFIG_CONST_DATA_PATH=no + PREFIX pointing at extracted zip lets makensis
-    # find stubs/plugins/includes at runtime from the precompiled package.
+    # NSIS_CONFIG_CONST_DATA_PATH=no lets makensis find stubs/plugins from PREFIX at runtime.
     sudo scons \
         SKIPSTUBS=all SKIPPLUGINS=all SKIPUTILS=all SKIPMISC=all \
         NSIS_CONFIG_CONST_DATA_PATH=no \
+        VERSION="$NSIS_VERSION" \
         PREFIX="$NSIS_PREFIX" \
-        install-compiler
+        install-compiler 2>&1 | tail -20
+    local scons_rc=${PIPESTATUS[0]}
     popd > /dev/null
 
+    # If scons install-compiler didn't place the binary, copy it manually
+    if [[ ! -x "$NSIS_PREFIX/bin/makensis" ]]; then
+        log_info "→ scons did not install to $NSIS_PREFIX/bin — locating built binary..."
+        local built_bin
+        built_bin=$(find "$src_dir" -name makensis -type f -executable 2>/dev/null | head -1)
+        if [[ -n "$built_bin" ]]; then
+            sudo mkdir -p "$NSIS_PREFIX/bin"
+            sudo cp "$built_bin" "$NSIS_PREFIX/bin/makensis"
+            sudo chmod +x "$NSIS_PREFIX/bin/makensis"
+            log_info "→ Copied makensis to $NSIS_PREFIX/bin/makensis"
+        elif [[ "$scons_rc" -ne 0 ]]; then
+            log_error "scons build failed (exit code $scons_rc)"
+            return 1
+        else
+            log_error "makensis binary not found after build"
+            return 1
+        fi
+    fi
+
+    # Ensure /usr/local/bin is ahead of /usr/bin so our build takes priority
+    export PATH="$NSIS_PREFIX/bin:$PATH"
+    hash -r
+
     # Verify
-    local installed_ver
-    installed_ver=$(makensis -VERSION 2>/dev/null | sed 's/^v//')
+    local installed_ver installed_path
+    installed_path=$(which makensis 2>/dev/null)
+    installed_ver=$("$NSIS_PREFIX/bin/makensis" -VERSION 2>/dev/null | sed 's/^v//')
     if [[ -z "$installed_ver" ]]; then
-        log_error "makensis not found after install"
+        log_error "makensis not working after install"
         return 1
     fi
-    log_success "NSIS $installed_ver installed successfully"
+    log_success "NSIS $installed_ver installed successfully ($installed_path)"
 }
 
 # === Setup: All ===
@@ -638,6 +663,12 @@ step_build_custom_actions() {
 
 # === Build: NSIS Installer (Modern EXE with custom features) ===
 step_build_nsis() {
+    # Prefer locally-built NSIS 3.11 over apt-installed version
+    if [[ -x "$NSIS_PREFIX/bin/makensis" ]]; then
+        export PATH="$NSIS_PREFIX/bin:$PATH"
+        hash -r
+    fi
+
     if ! command -v makensis &>/dev/null; then
         log_warn "NSIS not installed — install with: apt-get install nsis"
         log_warn "NSIS version needed: 3.11+"
@@ -648,12 +679,11 @@ step_build_nsis() {
     local nsis_ver
     nsis_ver=$(makensis -VERSION 2>/dev/null | sed 's/^v//')
     local nsis_major nsis_minor
-    nsis_major=$(echo "$nsis_ver" | cut -d. -f1)
-    nsis_minor=$(echo "$nsis_ver" | cut -d. -f2)
-    if [[ "$nsis_major" -lt 3 ]] || { [[ "$nsis_major" -eq 3 ]] && [[ "$nsis_minor" -lt 11 ]]; }; then
-        log_warn "NSIS $nsis_ver detected — version 3.11+ is required"
-        log_warn "Install NSIS 3.11: https://nsis.sourceforge.io/Download"
-        return 1
+    nsis_major=$(echo "$nsis_ver" | cut -d. -f1 | grep -o '^[0-9]*')
+    nsis_minor=$(echo "$nsis_ver" | cut -d. -f2 | grep -o '^[0-9]*')
+    if [[ "10#${nsis_major:-0}" -lt 3 ]] || { [[ "10#${nsis_major:-0}" -eq 3 ]] && [[ "10#${nsis_minor:-0}" -lt 11 ]]; }; then
+        log_warn "NSIS $nsis_ver detected — version 3.11+ is recommended (security fix)"
+        log_warn "Run: bash scripts/build-windows.sh --setup  to install NSIS 3.11"
     fi
 
     log_step "Building NSIS Installer (Modern EXE with features)..."
@@ -741,8 +771,18 @@ step_build_nsis() {
     local build_nsi="$WPF_PUBLISH_DIR/Redball.nsi"
     sed -i "s/!define PRODUCT_VERSION \"[^\"]*\"/!define PRODUCT_VERSION \"${version}.0\"/" "$build_nsi"
     sed -i "s/!define PRODUCT_VERSION_SHORT \"[^\"]*\"/!define PRODUCT_VERSION_SHORT \"${version}\"/" "$build_nsi"
-    # Fix license path for local build
+    # Fix PROJECT_ROOT for local build (script is now in publish dir, not installer dir)
+    sed -i 's/!define PROJECT_ROOT "\.\.\\\.\."/!define PROJECT_ROOT "."/g' "$build_nsi"
+    # Fix dist\wpf-publish\ paths since files are directly in publish directory now
+    sed -i 's|dist\\wpf-publish\\||g' "$build_nsi"
+    # Fix installer\ prefix for BMP files copied directly to publish dir
+    sed -i 's|\\installer\\|\\|g' "$build_nsi"
+    # Fix license path for local build (handle both original and transformed paths)
     sed -i "s|$PROJECT_ROOT/LICENSE|LICENSE.txt|g" "$build_nsi"
+    sed -i 's|\.\\LICENSE|LICENSE.txt|g' "$build_nsi"
+    sed -i 's|\.\\\LICENSE|LICENSE.txt|g' "$build_nsi"
+    # Handle ${PROJECT_ROOT} variable reference (with curly braces)
+    sed -i 's|\${PROJECT_ROOT}\\LICENSE|LICENSE.txt|g' "$build_nsi"
 
     # Build NSIS installer from publish directory
     log_info "→ Compiling NSIS installer script..."
