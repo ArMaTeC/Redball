@@ -74,7 +74,7 @@ async function fetchGitHubReleases() {
     const files = r.assets.map(a => ({
       name: a.name,
       size: a.size,
-      hash: localRelease?.files?.find(lf => lf.name === a.name)?.hash || '', 
+      hash: localRelease?.files?.find(lf => lf.name === a.name)?.hash || '',
       downloads: (localRelease?.files?.find(lf => lf.name === a.name)?.downloads || 0) + a.download_count,
       url: `/api/download/${version}/${a.name}`,
       sourceUrl: a.browser_download_url
@@ -268,15 +268,15 @@ function loadBuildState() {
           saved.status = 'success';
           saved.progress = 100;
           saved.endTime = Date.now();
-          saved.log.push({ 
-            timestamp: Date.now(), 
-            message: '--- Build completed successfully after planned server restart ---' 
+          saved.log.push({
+            timestamp: Date.now(),
+            message: '--- Build completed successfully after planned server restart ---'
           });
         } else {
           saved.status = 'failed';
-          saved.log.push({ 
-            timestamp: Date.now(), 
-            message: '--- Server was restarted unexpectedly during build ---' 
+          saved.log.push({
+            timestamp: Date.now(),
+            message: '--- Server was restarted unexpectedly during build ---'
           });
         }
       }
@@ -549,7 +549,7 @@ app.get('/api/releases/:version/manifest', async (req, res) => {
   const manifest = {
     version: release.version,
     files: (release.files || [])
-      .filter(f => !f.name.endsWith('.msi') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS' && !f.name.endsWith('.patch'))
+      .filter(f => !f.name.endsWith('.msi') && !f.name.endsWith('.zip') && !f.name.includes('-Setup') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS' && !f.name.endsWith('.patch'))
       .map(f => ({
         name: f.name,
         hash: f.hash || '',
@@ -656,7 +656,7 @@ app.post('/api/releases/:version/upload', uploadLimiter, upload.array('files', 5
   }
 
   saveDB(db);
-  
+
   // Invalidate cache
   githubCache.releases = null;
   githubCache.lastFetch = 0;
@@ -753,7 +753,7 @@ app.post('/api/publish', uploadLimiter, (req, res, next) => {
     const manifest = {
       version,
       files: release.files
-        .filter(f => !f.name.endsWith('.msi') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS')
+        .filter(f => !f.name.endsWith('.msi') && !f.name.endsWith('.zip') && !f.name.includes('-Setup') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS' && !f.name.endsWith('.patch'))
         .map(f => ({ name: f.name, hash: f.hash, size: f.size, signature: '' }))
     };
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
@@ -772,17 +772,17 @@ app.post('/api/publish', uploadLimiter, (req, res, next) => {
 // --- Server stats (Unified for public and admin) ---
 app.get('/api/download/:version/:filename', async (req, res) => {
   const { version, filename } = req.params;
-  
+
   // 1. Track the download in our local DB
   trackDownload(version, filename);
-  
+
   // 2. Find the source URL
   const releases = await fetchGitHubReleases();
   const release = releases.find(r => r.version === version);
   const file = release?.files?.find(f => f.name === filename);
-  
+
   const sourceUrl = file?.sourceUrl || `/downloads/${version}/${filename}`;
-  
+
   // 3. Redirect to the actual file
   if (sourceUrl.startsWith('http')) {
     res.redirect(sourceUrl);
@@ -798,7 +798,7 @@ app.get('/api/stats', async (req, res) => {
     const releases = await fetchGitHubReleases();
     const totalReleases = releases.length;
     const latestVersion = releases.length > 0 ? releases[0].version : '0.0.0';
-    
+
     // Detailed file-level stats
     const byFile = {};
     for (const r of releases) {
@@ -847,7 +847,7 @@ app.get('/api/system/config', authenticateToken, (req, res) => {
   const db = loadDB();
   const releasesSize = getDirSize(RELEASES_DIR);
   const logsSize = getDirSize(LOGS_DIR);
-  
+
   res.json({
     hostname: require('os').hostname(),
     platform: require('os').platform(),
@@ -1316,7 +1316,7 @@ app.post(['/api/admin/build', '/api/build/start'], authenticateToken, (req, res)
   if (buildState.status === 'running') {
     return res.status(409).json({ error: 'Build already in progress' });
   }
-  
+
   startBuild();
   res.json({ message: 'Build started', status: 'running' });
 });
@@ -1403,10 +1403,10 @@ function startBuild() {
     // Split into individual lines to ensure we don't skip stages if they arrive in a single burst
     // Also handle \r (carriage return) which is often used for in-place progress updates
     const lines = rawContent.split(/\r?\n|\r/);
-    
+
     for (let line of lines) {
       if (!line.trim()) continue;
-      
+
       // Strip ANSI codes before parsing stage to ensure regex matches correctly
       const cleanLine = line.replace(/\u001b\[[0-9;?]*[a-zA-Z]/g, '').trim();
       if (!cleanLine) continue;
@@ -1420,20 +1420,20 @@ function startBuild() {
         buildState.stage = stage.name;
         buildState.progress = stage.progress;
       }
-      
+
       if (buildState.log.length > 5000) buildState.log = buildState.log.slice(-2500);
       if (buildState.log.length % 50 === 0 || stage) saveBuildState();
-      
+
       if (cleanLine.includes('[SIGNAL] RESTART_NEEDED')) {
         restartNeeded = true;
       }
 
       broadcast({
         type: 'build-output',
-        data: { 
-          line, 
-          stage: buildState.stage, 
-          progress: buildState.progress 
+        data: {
+          line,
+          stage: buildState.stage,
+          progress: buildState.progress
         }
       });
     }
@@ -1455,7 +1455,7 @@ function startBuild() {
       console.log('[BUILD] Restart signaled, scheduling self-restart in 5s...');
       buildState.log.push({ timestamp: Date.now(), message: '[SYSTEM] Restarting server to apply updates...' });
       saveBuildState();
-      
+
       const { exec } = require('child_process');
       setTimeout(() => {
         exec('pm2 restart redball-update-server', (err) => {
@@ -1467,7 +1467,7 @@ function startBuild() {
       }, 5000);
     }
   });
-}function stopBuild() {
+} function stopBuild() {
   if (buildState.pid) {
     try {
       process.kill(buildState.pid, 'SIGTERM');

@@ -2,7 +2,7 @@
 ; Redball Modern NSIS Installer
 ; ============================================================================
 ; A feature-rich, customizable installer for Redball Windows application
-; Built for NSIS 3.0+ with Modern UI 2
+; Built for NSIS 3.11+ with Modern UI 2
 ;
 ; Features:
 ;   - Modern branded welcome/finish pages

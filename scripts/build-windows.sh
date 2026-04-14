@@ -84,7 +84,7 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --setup       Only install dependencies (Wine, .NET SDK)"
+            echo "  --setup       Only install dependencies (Wine, .NET SDK, NSIS 3.11)"
             echo "  --wpf-only    Build WPF application only (no installer)"
             echo "  --skip-setup  Skip dependency installation"
             echo "  --clean       Clean build artifacts"
@@ -219,14 +219,14 @@ install_linux_dotnet() {
 # === Setup: Install Windows .NET SDK in Wine (for build/publish) ===
 install_dotnet_in_wine() {
     local force_install=${1:-false}
-    
+
     if [[ -f "$WINE_DOTNET_ROOT/dotnet.exe" && "$force_install" != "true" ]]; then
         local installed_version
         installed_version=$(WINEPREFIX="$WINE_PREFIX" WINEDEBUG=-all wine "$WINE_DOTNET_ROOT/dotnet.exe" --version 2>/dev/null || echo "unknown")
         log_success "Windows .NET SDK already installed in Wine: $installed_version"
         return 0
     fi
-    
+
     if [[ "$force_install" == "true" && -d "$WINE_DOTNET_ROOT" ]]; then
         log_info "Removing incomplete Wine .NET SDK for reinstallation..."
         rm -rf "$WINE_DOTNET_ROOT"
@@ -273,7 +273,7 @@ validate_wine_dotnet() {
         "$WINE_DOTNET_ROOT/shared/Microsoft.NETCore.App/*/System.Runtime.dll"
         "$WINE_DOTNET_ROOT/sdk/*/Sdks/Microsoft.NET.Sdk/Sdk/Sdk.props"
     )
-    
+
     local found=0
     for pattern in "${key_files[@]}"; do
         for file in $pattern; do
@@ -283,7 +283,7 @@ validate_wine_dotnet() {
             fi
         done
     done
-    
+
     if [[ $found -eq 0 ]]; then
         log_warn "Wine .NET SDK appears incomplete: core files not found"
         return 1
@@ -317,6 +317,90 @@ import_wine_certs() {
     log_success "Imported $imported certificates into Wine's trust store"
 }
 
+# === Setup: Build and install NSIS 3.11 from source (POSIX install-compiler method) ===
+# Downloads the precompiled nsis-3.11.zip for stubs/plugins, then builds makensis
+# from source using scons — no cross-compiler required.
+NSIS_VERSION="3.11"
+NSIS_PREFIX="/usr/local"
+
+install_nsis_from_source() {
+    # Skip if already at 3.11+
+    if command -v makensis &>/dev/null; then
+        local cur_ver
+        cur_ver=$(makensis -VERSION 2>/dev/null | sed 's/^v//')
+        local cur_maj cur_min
+        cur_maj=$(echo "$cur_ver" | cut -d. -f1)
+        cur_min=$(echo "$cur_ver" | cut -d. -f2)
+        if [[ "$cur_maj" -gt 3 ]] || { [[ "$cur_maj" -eq 3 ]] && [[ "$cur_min" -ge 11 ]]; }; then
+            log_success "NSIS $cur_ver already installed — skipping build"
+            return 0
+        fi
+        log_info "NSIS $cur_ver found but 3.11+ required — building from source"
+    fi
+
+    log_step "Installing NSIS $NSIS_VERSION from source..."
+
+    # Install build dependencies
+    log_info "→ Installing build dependencies (scons, zlib, mingw cross-compiler)..."
+    sudo apt-get install -y --no-install-recommends \
+        scons python3 zlib1g-dev gcc g++ \
+        mingw-w64 nsis 2>/dev/null || \
+    sudo apt-get install -y --no-install-recommends \
+        scons python3 zlib1g-dev gcc g++ mingw-w64
+
+    local work_dir
+    work_dir=$(mktemp -d)
+    trap "rm -rf '$work_dir'" RETURN
+
+    # Download the precompiled zip (provides stubs, plugins, headers — built with exact same sources)
+    local zip_url="https://downloads.sourceforge.net/project/nsis/NSIS%203/${NSIS_VERSION}/nsis-${NSIS_VERSION}.zip"
+    local zip_path="$work_dir/nsis-${NSIS_VERSION}.zip"
+    log_info "→ Downloading nsis-${NSIS_VERSION}.zip..."
+    if ! wget -q --show-progress -O "$zip_path" "$zip_url"; then
+        log_error "Failed to download nsis-${NSIS_VERSION}.zip from $zip_url"
+        return 1
+    fi
+
+    # Extract precompiled zip to install prefix (provides stubs/plugins/includes)
+    log_info "→ Extracting precompiled package to $NSIS_PREFIX..."
+    sudo unzip -qo "$zip_path" -d "$work_dir/nsis-precomp"
+    sudo cp -r "$work_dir/nsis-precomp/nsis-${NSIS_VERSION}/." "$NSIS_PREFIX/"
+
+    # Download source tarball to build makensis
+    local src_url="https://downloads.sourceforge.net/project/nsis/NSIS%203/${NSIS_VERSION}/nsis-${NSIS_VERSION}-src.tar.bz2"
+    local src_tar="$work_dir/nsis-${NSIS_VERSION}-src.tar.bz2"
+    log_info "→ Downloading nsis-${NSIS_VERSION}-src.tar.bz2..."
+    if ! wget -q --show-progress -O "$src_tar" "$src_url"; then
+        log_error "Failed to download NSIS source tarball from $src_url"
+        return 1
+    fi
+
+    # Extract and build only makensis (install-compiler target — no cross-compiler needed)
+    log_info "→ Extracting source..."
+    tar -xjf "$src_tar" -C "$work_dir"
+    local src_dir="$work_dir/nsis-${NSIS_VERSION}-src"
+
+    log_info "→ Building makensis via scons (install-compiler)..."
+    pushd "$src_dir" > /dev/null
+    # NSIS_CONFIG_CONST_DATA_PATH=no + PREFIX pointing at extracted zip lets makensis
+    # find stubs/plugins/includes at runtime from the precompiled package.
+    sudo scons \
+        SKIPSTUBS=all SKIPPLUGINS=all SKIPUTILS=all SKIPMISC=all \
+        NSIS_CONFIG_CONST_DATA_PATH=no \
+        PREFIX="$NSIS_PREFIX" \
+        install-compiler
+    popd > /dev/null
+
+    # Verify
+    local installed_ver
+    installed_ver=$(makensis -VERSION 2>/dev/null | sed 's/^v//')
+    if [[ -z "$installed_ver" ]]; then
+        log_error "makensis not found after install"
+        return 1
+    fi
+    log_success "NSIS $installed_ver installed successfully"
+}
+
 # === Setup: All ===
 setup_all() {
     echo ""
@@ -329,6 +413,7 @@ setup_all() {
     init_wine_prefix
     install_linux_dotnet
     install_dotnet_in_wine
+    install_nsis_from_source
 
     echo ""
     log_success "Build environment ready!"
@@ -339,12 +424,12 @@ setup_all() {
 step_restore() {
     log_step "Restoring NuGet packages (Linux .NET SDK)..."
     local restore_start=$(date +%s)
-    
+
     log_debug "Solution: $PROJECT_ROOT/Redball.v3.sln"
     log_debug "Linux .NET version: $(/usr/share/dotnet/dotnet --version 2>/dev/null || echo 'unknown')"
     log_debug "DOTNET_NUGET_SIGNATURE_VERIFICATION=false"
     log_debug "EnableWindowsTargeting=true"
-    
+
     linux_dotnet restore "$PROJECT_ROOT/Redball.v3.sln" \
         --verbosity minimal \
         -p:EnableWindowsTargeting=true
@@ -366,7 +451,7 @@ step_restore() {
 step_build_wpf() {
     log_step "Building WPF Application ($CONFIGURATION)..."
     local wpf_start=$(date +%s)
-    
+
     log_info "Configuration: $CONFIGURATION"
     log_info "Output directory: $WPF_PUBLISH_DIR"
     log_info "Wine prefix: $WINE_PREFIX"
@@ -409,7 +494,7 @@ step_build_wpf() {
 
     wpf_end=$(date +%s)
     log_success "WPF application published to $WPF_PUBLISH_DIR ($(( wpf_end - wpf_start ))s)"
-    
+
     log_step "Organizing DLLs into subdirectories..."
     log_debug "Published files: $(ls -1 "$WPF_PUBLISH_DIR" 2>/dev/null | wc -l) items"
 
@@ -555,14 +640,26 @@ step_build_custom_actions() {
 step_build_nsis() {
     if ! command -v makensis &>/dev/null; then
         log_warn "NSIS not installed — install with: apt-get install nsis"
-        log_warn "NSIS version needed: 3.x"
+        log_warn "NSIS version needed: 3.11+"
+        return 1
+    fi
+
+    # Enforce minimum NSIS version 3.11 (security fix for $PLUGINSDIR race condition)
+    local nsis_ver
+    nsis_ver=$(makensis -VERSION 2>/dev/null | sed 's/^v//')
+    local nsis_major nsis_minor
+    nsis_major=$(echo "$nsis_ver" | cut -d. -f1)
+    nsis_minor=$(echo "$nsis_ver" | cut -d. -f2)
+    if [[ "$nsis_major" -lt 3 ]] || { [[ "$nsis_major" -eq 3 ]] && [[ "$nsis_minor" -lt 11 ]]; }; then
+        log_warn "NSIS $nsis_ver detected — version 3.11+ is required"
+        log_warn "Install NSIS 3.11: https://nsis.sourceforge.io/Download"
         return 1
     fi
 
     log_step "Building NSIS Installer (Modern EXE with features)..."
     log_info "→ Creating Windows installer package..."
     local nsis_start=$(date +%s)
-    log_info "NSIS version: $(makensis -VERSION 2>/dev/null)"
+    log_info "NSIS version: $nsis_ver"
 
     # Read version
     local version
@@ -574,7 +671,7 @@ step_build_nsis() {
 
     # NSIS script path
     local nsi_path="$PROJECT_ROOT/installer/Redball.nsi"
-    
+
     # Check if NSIS script exists
     if [[ ! -f "$nsi_path" ]]; then
         log_warn "NSIS script not found: $nsi_path"
@@ -584,7 +681,7 @@ step_build_nsis() {
     # Create NSIS bitmaps from existing BMPs (NSIS uses 150x57 header, 164x314 welcome)
     log_info "→ Creating NSIS installer graphics..."
     local installer_dir="$PROJECT_ROOT/installer"
-    
+
     # Use ImageMagick to resize if available, otherwise copy existing
     # NSIS requires 24-bit BMPs with Windows 3.x format (BMP3), not Windows 98/2000 format
     if command -v convert &>/dev/null; then
@@ -616,7 +713,7 @@ step_build_nsis() {
     # Download .NET 10 runtime for bundling (avoids download failures during installation)
     local dotnet_installer="windowsdesktop-runtime-10.0.5-win-x64.exe"
     local dotnet_url="https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.5/windowsdesktop-runtime-10.0.5-win-x64.exe"
-    
+
     if [[ ! -f "$installer_dir/$dotnet_installer" ]]; then
         log_step "Downloading .NET 10 runtime for bundling..."
         if command -v curl &>/dev/null; then
@@ -631,7 +728,7 @@ step_build_nsis() {
     else
         log_info ".NET 10 runtime already downloaded (cached)"
     fi
-    
+
     # Copy .NET installer to publish directory if available
     if [[ -f "$installer_dir/$dotnet_installer" ]]; then
         cp "$installer_dir/$dotnet_installer" "$WPF_PUBLISH_DIR/"
@@ -655,7 +752,7 @@ step_build_nsis() {
     popd > /dev/null
 
     local nsis_end=$(date +%s)
-    
+
     if [[ $nsis_exit -eq 0 && -f "$WPF_PUBLISH_DIR/Redball-${version}-Setup.exe" ]]; then
         mv "$WPF_PUBLISH_DIR/Redball-${version}-Setup.exe" "$DIST_DIR/"
         cp "$DIST_DIR/Redball-${version}-Setup.exe" "$DIST_DIR/Redball-Setup.exe"
@@ -682,16 +779,16 @@ step_build_zip() {
     fi
 
     log_step "Creating portable ZIP package..."
-    
+
     local zip_name="Redball-${version}.zip"
     local zip_path="$DIST_DIR/$zip_name"
-    
+
     # Create ZIP from published WPF directory
     if command -v zip &>/dev/null; then
         pushd "$WPF_PUBLISH_DIR" > /dev/null
         zip -r "$zip_path" . -x "*.nsi" -x "*.bmp" -x "Redball.nsi" -x "nsis-*.bmp" > /dev/null
         popd > /dev/null
-        
+
         if [[ -f "$zip_path" ]]; then
             local size
             size=$(du -h "$zip_path" | cut -f1)
@@ -716,11 +813,11 @@ generate_manifest() {
     fi
 
     log_step "Generating manifest.json for differential updates..."
-    
+
     local manifest_path="$WPF_PUBLISH_DIR/manifest.json"
     local timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
     local temp_entries="$(mktemp)"
-    
+
     # Generate file entries
     find "$WPF_PUBLISH_DIR" -type f ! -name "manifest.json" ! -name "*.nsi" ! -name "nsis-*.bmp" -print0 | while IFS= read -r -d '' file; do
         local rel_path="${file#$WPF_PUBLISH_DIR/}"
@@ -728,14 +825,14 @@ generate_manifest() {
         local size=$(stat -c%s "$file")
         printf '%s\t%s\t%s\n' "$rel_path" "$hash" "$size"
     done > "$temp_entries"
-    
+
     # Build JSON
     {
         echo "{"
         echo "  \"version\": \"$version\","
         echo "  \"timestamp\": \"$timestamp\","
         echo '  "files": ['
-        
+
         local first=true
         while IFS=$'\t' read -r rel_path hash size; do
             if [[ "$first" == "true" ]]; then
@@ -749,14 +846,14 @@ generate_manifest() {
             echo "      \"size\": $size"
             echo -n "    }"
         done < "$temp_entries"
-        
+
         echo ""
         echo "  ]"
         echo "}"
     } > "$manifest_path"
-    
+
     rm -f "$temp_entries"
-    
+
     if [[ -f "$manifest_path" ]]; then
         local file_count=$(grep -c '"name":' "$manifest_path" || echo "0")
         log_success "Manifest generated with $file_count files: $manifest_path"
@@ -779,7 +876,7 @@ generate_checksums() {
     [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] && files_to_checksum="$files_to_checksum Redball-${version}-Setup.exe"
     [[ -f "$DIST_DIR/Redball-Setup.exe" ]] && files_to_checksum="$files_to_checksum Redball-Setup.exe"
     [[ -f "$DIST_DIR/Redball-${version}.zip" ]] && files_to_checksum="$files_to_checksum Redball-${version}.zip"
-    
+
     if [[ -n "$files_to_checksum" ]]; then
         (cd "$DIST_DIR" && sha256sum $files_to_checksum > SHA256SUMS)
         log_success "SHA256SUMS generated"
@@ -846,7 +943,7 @@ main() {
         ls -lh "$WPF_PUBLISH_DIR/Redball.UI.WPF.exe" "$DIST_DIR"/*.zip 2>/dev/null | awk '{print "    " $NF " (" $5 ")"}'
     fi
     echo ""
-    
+
     log_info "Full artifact listing:"
     # Simple ls instead of find to avoid hangs
     ls -lh "$DIST_DIR"/* 2>/dev/null | head -20 | while IFS= read -r line; do log_detail "$line"; done || true

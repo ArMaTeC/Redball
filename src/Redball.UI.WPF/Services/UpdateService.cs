@@ -522,7 +522,8 @@ public class UpdateService : IUpdateService
                             {
                                 Version = serverManifest.Version,
                                 Files = serverManifest.Files
-                                    .Where(f => !f.Name.EndsWith("-Setup.exe", StringComparison.OrdinalIgnoreCase))
+                                    .Where(f => !f.Name.EndsWith("-Setup.exe", StringComparison.OrdinalIgnoreCase)
+                                                && !f.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
                                     .Select(f => new FileUpdateInfo
                                     {
                                         Name = f.Name,
@@ -530,7 +531,7 @@ public class UpdateService : IUpdateService
                                         Size = f.Size,
                                         Signature = f.Signature,
                                         DownloadUrl = (!string.IsNullOrEmpty(_updateServerUrl) && IsServerServedFile(f.Name))
-                                            ? $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/files/{Uri.EscapeDataString(f.Name)}"
+                                            ? $"{_updateServerUrl.TrimEnd('/')}/downloads/{latestNormalized}/{Uri.EscapeDataString(f.Name)}"
                                             : (latestRelease.Assets.Find(a => a.Name.Equals(Path.GetFileName(f.Name), StringComparison.OrdinalIgnoreCase))?.DownloadUrl ?? "")
                                     }).ToList()
                             };
