@@ -50,7 +50,12 @@ public partial class MainWindow
 
             if (File.Exists(logPath))
             {
-                DiagnosticsRecentLogText.Text = string.Join(Environment.NewLine, File.ReadLines(logPath).TakeLast(30));
+                using var fs = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(fs);
+                var lines = new List<string>();
+                while (!reader.EndOfStream)
+                    lines.Add(reader.ReadLine()!);
+                DiagnosticsRecentLogText.Text = string.Join(Environment.NewLine, lines.TakeLast(30));
             }
             else
             {
@@ -169,13 +174,13 @@ public partial class MainWindow
                     Duration = TimeSpan.FromMilliseconds(100),
                     EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
                 };
-                
+
                 fadeOut.Completed += (s, e) =>
                 {
                     panel.Visibility = Visibility.Collapsed;
                     panel.Opacity = 0;
                 };
-                
+
                 panel.BeginAnimation(UIElement.OpacityProperty, fadeOut);
             }
             else

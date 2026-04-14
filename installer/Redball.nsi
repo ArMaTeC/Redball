@@ -147,7 +147,7 @@ Var DotNetDownloaded
 
 Function CheckDotNet
     ; Check multiple registry locations for .NET 10 Windows Desktop Runtime
-    
+
     ; Method 1: Check Windows Desktop App 10.0.x (specific version)
     ClearErrors
     ReadRegStr $0 HKLM "SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App" "10.0.5"
@@ -156,7 +156,7 @@ Function CheckDotNet
         DetailPrint ".NET 10 Windows Desktop Runtime found (10.0.5)"
         Return
     ${EndIf}
-    
+
     ; Method 2: Check for any 10.0.x version
     ClearErrors
     ReadRegStr $0 HKLM "SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App" "10.0.0"
@@ -165,7 +165,7 @@ Function CheckDotNet
         DetailPrint ".NET 10 Windows Desktop Runtime found (10.0.0)"
         Return
     ${EndIf}
-    
+
     ; Method 3: Check WOW64 node for 32-bit registry on 64-bit Windows
     ClearErrors
     ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App" "10.0.5"
@@ -174,7 +174,7 @@ Function CheckDotNet
         DetailPrint ".NET 10 Windows Desktop Runtime found (WOW64)"
         Return
     ${EndIf}
-    
+
     ; Method 4: Check if dotnet.exe exists and can report version
     ClearErrors
     nsExec::ExecToStack '"$ProgramFiles64\dotnet\dotnet.exe" --version'
@@ -187,14 +187,14 @@ Function CheckDotNet
             Return
         ${EndIf}
     ${EndIf}
-    
+
     ; Method 5: Check for self-contained flag
     ${If} ${FileExists} "$INSTDIR\.selfcontained"
         StrCpy $DotNetInstalled 1
         DetailPrint "Self-contained build detected"
         Return
     ${EndIf}
-    
+
     StrCpy $DotNetInstalled 0
     DetailPrint ".NET 10 Windows Desktop Runtime not found"
 FunctionEnd
@@ -204,7 +204,7 @@ Function InstallDotNet
         DetailPrint ".NET already installed, skipping"
         Return
     ${EndIf}
-    
+
     ; Use the embedded installer from $PLUGINSDIR
     ${If} ${FileExists} "$PLUGINSDIR\${DOTNET_INSTALLER}"
         DetailPrint "Installing bundled .NET 10 Runtime..."
@@ -218,11 +218,11 @@ Function InstallDotNet
         ${EndIf}
         Return
     ${EndIf}
-    
+
     ; Fallback: Download .NET installer (shouldn't happen with embedded)
     DetailPrint "Downloading .NET 10 Windows Desktop Runtime (~${DOTNET_SIZE_MB} MB)..."
     DetailPrint "This may take a few minutes depending on your connection..."
-    
+
     NSISdl::download "${DOTNET_DOWNLOAD_URL}" "$TEMP\${DOTNET_INSTALLER}"
     Pop $0
     ${If} $0 != "success"
@@ -230,13 +230,13 @@ Function InstallDotNet
         MessageBox MB_OK|MB_ICONEXCLAMATION "Failed to download .NET 10 Runtime ($0). Please install it manually from https://dotnet.microsoft.com/download/dotnet/10.0"
         Return
     ${EndIf}
-    
+
     StrCpy $DotNetDownloaded 1
     DetailPrint "Download complete. Installing .NET 10..."
-    
+
     ; Install .NET
     ExecWait '"$TEMP\${DOTNET_INSTALLER}" /install /quiet /norestart' $0
-    
+
     ${If} $0 == 0
         DetailPrint ".NET 10 installed successfully"
         StrCpy $DotNetInstalled 1
@@ -244,7 +244,7 @@ Function InstallDotNet
         DetailPrint ".NET installation failed (code: $0)"
         MessageBox MB_OK|MB_ICONEXCLAMATION ".NET 10 installation failed (code: $0). You may need to install it manually from https://dotnet.microsoft.com/download"
     ${EndIf}
-    
+
     ; Clean up downloaded file
     Delete "$TEMP\${DOTNET_INSTALLER}"
 FunctionEnd
@@ -254,11 +254,11 @@ FunctionEnd
 ; ============================================================================
 Section ".NET 10 Runtime (Embedded)" SecDotNet
     SectionIn RO
-    
+
     ; Extract embedded .NET installer to plugins directory
     SetOutPath "$PLUGINSDIR"
     File "${PROJECT_ROOT}\dist\wpf-publish\${DOTNET_INSTALLER}"
-    
+
     Call CheckDotNet
     ${If} $DotNetInstalled == 0
         Call InstallDotNet
@@ -273,31 +273,31 @@ LangString DESC_SecDotNet ${LANG_ENGLISH} ".NET 10 Windows Desktop Runtime (~64 
 
 Section "!${PRODUCT_NAME} Application" SecApp
     SectionIn RO
-    
+
     DetailPrint "Installing ${PRODUCT_NAME}..."
     SetOutPath "$INSTDIR"
     SetOverwrite on
-    
+
     ; Main executable and DLLs
     File "${PROJECT_ROOT}\dist\wpf-publish\Redball.UI.WPF.exe"
     File "${PROJECT_ROOT}\dist\wpf-publish\Redball.UI.WPF.dll"
     File "${PROJECT_ROOT}\dist\wpf-publish\Redball.UI.WPF.deps.json"
     File "${PROJECT_ROOT}\dist\wpf-publish\Redball.UI.WPF.runtimeconfig.json"
     File "Redball.json"
-    
+
     ; Copy DLL folder (contains dependency assemblies resolved via dll/ subfolder)
     SetOutPath "$INSTDIR\dll"
     File /r "${PROJECT_ROOT}\dist\wpf-publish\dll\*.*"
     SetOutPath "$INSTDIR"
-    
+
     ; Copy Assets folder (animations, icons, themes)
     SetOutPath "$INSTDIR\Assets"
     File /r "Assets\*.*"
     SetOutPath "$INSTDIR"
-    
+
     ; Create logs directory
     CreateDirectory "$INSTDIR\logs"
-    
+
     ; Create comprehensive README
     FileOpen $0 "$INSTDIR\README.txt" w
     FileWrite $0 "================================================================================$\r$\n"
@@ -486,13 +486,13 @@ Section "!${PRODUCT_NAME} Application" SecApp
     FileWrite $0 "  ${PRODUCT_PUBLISHER} | ${PRODUCT_WEB_SITE}$\r$\n"
     FileWrite $0 "================================================================================$\r$\n"
     FileClose $0
-    
+
     ; Register application
     WriteRegStr HKCU "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\Redball.UI.WPF.exe"
     WriteRegStr HKCU "${PRODUCT_REGISTRY_KEY}" "" "$INSTDIR"
     WriteRegStr HKCU "${PRODUCT_REGISTRY_KEY}" "Version" "${PRODUCT_VERSION}"
     WriteRegStr HKCU "${PRODUCT_REGISTRY_KEY}" "InstallDate" "${PRODUCT_VERSION}"
-    
+
     ; Uninstall information
     WriteRegStr HKCU "${PRODUCT_UNINST_KEY}" "DisplayName" "${PRODUCT_NAME}"
     WriteRegStr HKCU "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\uninstall.exe"
@@ -505,28 +505,28 @@ Section "!${PRODUCT_NAME} Application" SecApp
     WriteRegStr HKCU "${PRODUCT_UNINST_KEY}" "InstallLocation" "$INSTDIR"
     WriteRegDWORD HKCU "${PRODUCT_UNINST_KEY}" "NoModify" 1
     WriteRegDWORD HKCU "${PRODUCT_UNINST_KEY}" "NoRepair" 1
-    
+
     ; Write uninstaller
     WriteUninstaller "$INSTDIR\uninstall.exe"
-    
+
     DetailPrint "${PRODUCT_NAME} installed successfully"
 SectionEnd
 
 Section /o "Background Service" SecService
     SectionIn 2
-    
+
     DetailPrint "Installing Background Service..."
     SetOutPath "$INSTDIR"
-    
+
     ; Stop existing service before copying files to prevent file lock
     DetailPrint "Checking for existing service..."
     nsExec::Exec 'sc stop "Redball Input Service"'
     nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
     Sleep 2000
-    
+
     ; Copy service files (single-file published, no separate DLL)
     File "${PROJECT_ROOT}\dist\wpf-publish\Redball.Service.exe"
-    
+
     ; Install service (requires admin - skip if not elevated)
     UserInfo::GetAccountType
     Pop $0
@@ -538,7 +538,7 @@ Section /o "Background Service" SecService
             StrCpy $ServiceInstalled 1
             WriteRegDWORD HKCU "${PRODUCT_REGISTRY_KEY}" "ServiceInstalled" 1
             DetailPrint "Service installed successfully"
-            
+
             ; Set service description for Windows Services manager
             DetailPrint "Setting service description..."
             nsExec::Exec 'sc description "Redball Input Service" "Provides secure input injection for Redball keep-alive functionality. Supports automatic updates and can be safely upgraded while running."'
@@ -553,28 +553,28 @@ SectionEnd
 
 Section "Start Menu Shortcuts" SecStartMenu
     SectionIn 1 2
-    
+
     DetailPrint "Creating Start Menu shortcuts..."
     CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
     CreateShortcut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk" "$INSTDIR\Redball.UI.WPF.exe"
     CreateShortcut "$SMPROGRAMS\${PRODUCT_NAME}\README.lnk" "$INSTDIR\README.txt"
     CreateShortcut "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe"
-    
+
     WriteRegStr HKCU "${PRODUCT_REGISTRY_KEY}" "StartMenuShortcuts" "1"
 SectionEnd
 
 Section /o "Desktop Shortcut" SecDesktop
     SectionIn 1 2
-    
+
     DetailPrint "Creating Desktop shortcut..."
     CreateShortcut "$DESKTOP\${PRODUCT_NAME}.lnk" "$INSTDIR\Redball.UI.WPF.exe"
-    
+
     WriteRegStr HKCU "${PRODUCT_REGISTRY_KEY}" "DesktopShortcut" "1"
 SectionEnd
 
 Section /o "Start with Windows" SecStartup
     SectionIn 2
-    
+
     DetailPrint "Configuring auto-start..."
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCT_NAME}" "$INSTDIR\Redball.UI.WPF.exe --minimized"
     WriteRegDWORD HKCU "${PRODUCT_REGISTRY_KEY}" "AutoStart" 1
@@ -586,7 +586,7 @@ SectionEnd
 
 Section "Uninstall"
     DetailPrint "Removing ${PRODUCT_NAME}..."
-    
+
     ; Stop service if installed
     ReadRegDWORD $0 HKCU "${PRODUCT_REGISTRY_KEY}" "ServiceInstalled"
     ${If} $0 == 1
@@ -596,10 +596,10 @@ Section "Uninstall"
         nsExec::Exec 'sc delete "Redball Input Service"'
         Sleep 1000
     ${EndIf}
-    
+
     ; Remove auto-start
     DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCT_NAME}"
-    
+
     ; Remove shortcuts
     ReadRegDWORD $0 HKCU "${PRODUCT_REGISTRY_KEY}" "StartMenuShortcuts"
     ${If} $0 == 1
@@ -608,30 +608,30 @@ Section "Uninstall"
         Delete "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall.lnk"
         RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
     ${EndIf}
-    
+
     ReadRegDWORD $0 HKCU "${PRODUCT_REGISTRY_KEY}" "DesktopShortcut"
     ${If} $0 == 1
         Delete "$DESKTOP\${PRODUCT_NAME}.lnk"
     ${EndIf}
-    
+
     ; Stop running process more aggressively
     DetailPrint "Stopping ${PRODUCT_NAME}..."
-    
+
     ; 1. Try graceful close via window message first
     System::Call 'user32::FindWindowW(i 0, w "Redball") i .r1'
     ${If} $1 != 0
         System::Call 'user32::PostMessageW(i r1, i 16, i 0, i 0) i .r0'
         Sleep 1000
     ${EndIf}
-    
+
     ; 2. Stop service
     nsExec::Exec 'sc stop "Redball Input Service"'
-    
+
     ; 3. Force kill binaries
     nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
     nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
     Sleep 2000
-    
+
     ; Remove files
     DetailPrint "Removing files..."
     Delete "$INSTDIR\Redball.UI.WPF.exe"
@@ -641,24 +641,24 @@ Section "Uninstall"
     Delete "$INSTDIR\Redball.Service.exe"
     Delete "$INSTDIR\README.txt"
     Delete "$INSTDIR\uninstall.exe"
-    
+
     ; Remove DLL folder
     RMDir /r "$INSTDIR\dll"
-    
+
     ; Remove Assets folder
     RMDir /r "$INSTDIR\Assets"
-    
+
     ; Remove logs folder
     RMDir /r "$INSTDIR\logs"
-    
+
     ; Remove installation directory
     RMDir "$INSTDIR"
-    
+
     ; Remove registry keys
     DeleteRegKey HKCU "${PRODUCT_DIR_REGKEY}"
     DeleteRegKey HKCU "${PRODUCT_REGISTRY_KEY}"
     DeleteRegKey HKCU "${PRODUCT_UNINST_KEY}"
-    
+
     DetailPrint "${PRODUCT_NAME} has been removed"
 SectionEnd
 
@@ -668,10 +668,10 @@ SectionEnd
 Function CheckAndKillRedball
     Push $R0
     Push $R1
-    
+
 retry_check:
     StrCpy $R0 0
-    
+
     ; Primary check: use tasklist CSV output and look for the actual EXE name in the output.
     ; tasklist always outputs text — "INFO: No tasks..." when empty — so we must search
     ; for the process name string, not just test for non-empty output.
@@ -685,7 +685,7 @@ retry_check:
     StrCpy $R0 1
 wpf_not_found:
     ClearErrors
-    
+
     ; Check for service process
     nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.Service.exe" /FO CSV /NH'
     Pop $0  ; exit code
@@ -696,7 +696,7 @@ wpf_not_found:
     StrCpy $R0 1
 svc_not_found:
     ClearErrors
-    
+
     ; Secondary check: find window by exact title "Redball" (main window)
     ${If} $R0 == 0
         System::Call 'user32::FindWindowW(i 0, w "Redball") i .r0'
@@ -704,7 +704,7 @@ svc_not_found:
             StrCpy $R0 1
         ${EndIf}
     ${EndIf}
-    
+
     ; Tertiary check: file lock on the EXE (only if previously installed)
     ${If} $R0 == 0
         ${If} ${FileExists} "$INSTDIR\Redball.UI.WPF.exe"
@@ -718,39 +718,39 @@ svc_not_found:
             ${EndIf}
         ${EndIf}
     ${EndIf}
-    
+
     ; If running, ask user what to do (Silent Default: IDYES to ensure updates proceed)
     ${If} $R0 != 0
         MessageBox MB_YESNOCANCEL|MB_ICONQUESTION "${PRODUCT_NAME} is currently running. Would you like to close it and continue with installation? (Yes=Close, No=Continue, Cancel=Abort)" /SD IDYES IDYES kill_process IDNO continue_install
         Goto abort_install
-        
+
 kill_process:
             DetailPrint "Attempting to close ${PRODUCT_NAME}..."
-            
+
             ; 1. Stop service first if installed (properly through SCM)
             DetailPrint "Stopping background service..."
             nsExec::Exec 'sc stop "Redball Input Service"'
             Sleep 1000
-            
+
             ; 2. Try graceful close using taskkill without /F (sends WM_CLOSE)
             DetailPrint "Requesting graceful shutdown..."
             nsExec::Exec 'taskkill /IM Redball.UI.WPF.exe /T'
             nsExec::Exec 'taskkill /IM Redball.Service.exe /T'
             Sleep 2000
-            
+
             ; 3. Use System call to close window by title as backup
             System::Call 'user32::FindWindowW(i 0, w "Redball") i .r0'
             ${If} $0 != 0
                 System::Call 'user32::PostMessageW(i r0, i 16, i 0, i 0) i .r1'
                 Sleep 1000
             ${EndIf}
-            
+
             ; 4. Force kill if still running
             DetailPrint "Ensuring process is stopped (force kill)..."
             nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
             nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
             Sleep 2000
-            
+
             ; 5. Final check loop (up to 3 times)
             StrCpy $R1 0
         final_check_loop:
@@ -758,37 +758,54 @@ kill_process:
             ${If} $R1 > 3
                 Goto process_failure
             ${EndIf}
-            
+
+            ; Check WPF process
             nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.UI.WPF.exe" /FO CSV /NH'
             Pop $0
             Pop $1
             ${WordFind} "$1" "Redball.UI.WPF.exe" "E+1{" $2
             IfErrors +3
-                DetailPrint "Process still detected, retrying force kill ($R1)..."
+                DetailPrint "WPF process still detected, retrying force kill ($R1)..."
                 nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
                 Sleep 1000
                 Goto final_check_loop
-            
             ClearErrors
+
+            ; Check service process
+            nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.Service.exe" /FO CSV /NH'
+            Pop $0
+            Pop $1
+            ${WordFind} "$1" "Redball.Service.exe" "E+1{" $2
+            IfErrors +3
+                DetailPrint "Service process still detected, retrying force kill ($R1)..."
+                nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
+                Sleep 1000
+                Goto final_check_loop
+            ClearErrors
+
             Goto process_killed
 
         process_failure:
-            MessageBox MB_RETRYCANCEL|MB_ICONSTOP "Failed to close ${PRODUCT_NAME}. Please close it manually and click Retry." IDRETRY retry_check
-            Abort
+            ; Processes did not stop cleanly — do one last force kill and proceed rather
+            ; than prompting the user with a retry dialog.
+            DetailPrint "Force killing all ${PRODUCT_NAME} processes and continuing..."
+            nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
+            nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
+            Sleep 1500
 
         process_killed:
             DetailPrint "${PRODUCT_NAME} stopped successfully"
             Goto done
-            
+
 continue_install:
             DetailPrint "Continuing without closing ${PRODUCT_NAME} (may fail if files locked)"
             Goto done
-            
+
 abort_install:
             DetailPrint "Installation aborted by user"
             Abort
     ${EndIf}
-    
+
 done:
     DetailPrint "Process check complete - ${PRODUCT_NAME} is not running"
     Pop $R1
@@ -802,20 +819,20 @@ Function .onInit
     StrCpy $DotNetInstalled 0
     StrCpy $DotNetDownloaded 0
     StrCpy $ServiceInstalled 0
-    
+
     ; Check if installer is already running
     System::Call 'kernel32::CreateMutexW(i 0, i 0, w "${PRODUCT_NAME}Setup") i .r0'
     ${If} $0 == 0
         MessageBox MB_OK|MB_ICONEXCLAMATION "${PRODUCT_NAME} installer is already running."
         Abort
     ${EndIf}
-    
+
     ; Check if Redball is running and offer to kill it
     Call CheckAndKillRedball
-    
+
     ; Check .NET runtime status
     Call CheckDotNet
-    
+
     ; Extract version from command line if provided
     ${GetParameters} $R0
     ClearErrors
@@ -823,7 +840,7 @@ Function .onInit
     ${IfNot} ${Errors}
         ; Override version
     ${EndIf}
-    
+
     ; Set installation directory from registry if exists
     ReadRegStr $0 HKCU "${PRODUCT_REGISTRY_KEY}" ""
     ${If} $0 != ""
@@ -851,7 +868,7 @@ Function un.onInit
     cancel:
         Abort
     continue:
-    
+
     ; Stop service first if installed
     ReadRegDWORD $0 HKCU "${PRODUCT_REGISTRY_KEY}" "ServiceInstalled"
     ${If} $0 == 1
@@ -861,7 +878,7 @@ Function un.onInit
         nsExec::Exec 'sc delete "Redball Input Service"'
         Sleep 1000
     ${EndIf}
-    
+
     ; Kill all Redball processes during uninstall (with graceful close first)
     Call un.KillAllRedballProcesses
 FunctionEnd
@@ -869,18 +886,18 @@ FunctionEnd
 ; Uninstaller process kill function
 Function un.KillAllRedballProcesses
     DetailPrint "Stopping Redball processes..."
-    
+
     ; Try graceful close first (taskkill without /F sends WM_CLOSE)
     DetailPrint "Requesting graceful shutdown..."
     nsExec::Exec 'taskkill /IM Redball.UI.WPF.exe /T'
     nsExec::Exec 'taskkill /IM Redball.Service.exe /T'
     Sleep 3000
-    
+
     ; Force kill if still running
     nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
     nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
     Sleep 2000
-    
+
     DetailPrint "Processes stopped"
 FunctionEnd
 
