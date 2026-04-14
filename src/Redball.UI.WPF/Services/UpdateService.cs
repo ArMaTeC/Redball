@@ -117,8 +117,9 @@ public class FileHashCache
                 LastWriteTimeUtc = info.LastWriteTimeUtc.ToString("O")
             };
         }
-        SaveCache();
     }
+
+    public void Flush() => SaveCache();
 
     private class FileHashEntry
     {
@@ -512,21 +513,26 @@ public class UpdateService : IUpdateService
                         if (serverManifest?.Files != null && manifest == null)
                         {
                             Logger.Info("UpdateService", "[DELTA] Using server manifest as primary source");
+                            static bool IsServerServedFile(string name)
+                            {
+                                var ext = Path.GetExtension(name).ToLowerInvariant();
+                                return ext is ".dll" or ".exe" or ".json";
+                            }
                             manifest = new UpdateManifest
                             {
                                 Version = serverManifest.Version,
                                 Files = serverManifest.Files
                                     .Where(f => !f.Name.EndsWith("-Setup.exe", StringComparison.OrdinalIgnoreCase))
                                     .Select(f => new FileUpdateInfo
-                                {
-                                    Name = f.Name,
-                                    Hash = f.Hash,
-                                    Size = f.Size,
-                                    Signature = f.Signature,
-                                    DownloadUrl = !string.IsNullOrEmpty(_updateServerUrl)
-                                        ? $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/files/{Uri.EscapeDataString(f.Name)}"
-                                        : ""
-                                }).ToList()
+                                    {
+                                        Name = f.Name,
+                                        Hash = f.Hash,
+                                        Size = f.Size,
+                                        Signature = f.Signature,
+                                        DownloadUrl = (!string.IsNullOrEmpty(_updateServerUrl) && IsServerServedFile(f.Name))
+                                            ? $"{_updateServerUrl.TrimEnd('/')}/api/releases/{latestNormalized}/files/{Uri.EscapeDataString(f.Name)}"
+                                            : (latestRelease.Assets.Find(a => a.Name.Equals(Path.GetFileName(f.Name), StringComparison.OrdinalIgnoreCase))?.DownloadUrl ?? "")
+                                    }).ToList()
                             };
                         }
 
@@ -558,7 +564,7 @@ public class UpdateService : IUpdateService
                     int filesProcessed = 0;
                     var lockObj = new object();
 
-                    await Parallel.ForEachAsync(manifest.Files, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount, CancellationToken = cancellationToken }, async (file, ct) =>
+                    await Parallel.ForEachAsync(manifest.Files, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = cancellationToken }, async (file, ct) =>
                     {
                         var normalizedName = NormalizeRelativeUpdatePath(file.Name);
                         var localPath = Path.Combine(appDir, normalizedName);
@@ -659,6 +665,7 @@ public class UpdateService : IUpdateService
                             }
                         }
                     });
+                    hashCache.Flush();
 
                     int filesNeedUpdate = filesToUpdate.Count;
                     int filesUpToDate = totalFiles - filesNeedUpdate;
