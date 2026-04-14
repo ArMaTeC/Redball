@@ -668,44 +668,6 @@ public partial class App : Application
         }), System.Windows.Threading.DispatcherPriority.Normal);
     }
 
-    /// <summary>
-    /// Fallback method to activate an existing window using Win32 when named pipe fails.
-    /// </summary>
-    private static void TryActivateExistingWindow()
-    {
-        try
-        {
-            // Find the main window by class name and title
-            var hwnd = FindWindow(null, "Redball");
-            if (hwnd == IntPtr.Zero)
-            {
-                // Try finding by partial title match
-                hwnd = FindWindowByPartialTitle("Redball");
-            }
-
-            if (hwnd != IntPtr.Zero)
-            {
-                // Restore if minimized
-                if (IsIconic(hwnd))
-                {
-                    ShowWindow(hwnd, SW_RESTORE);
-                }
-
-                // Bring to front
-                SetForegroundWindow(hwnd);
-                FlashWindowWin32(hwnd);
-                Services.Logger.Info("App", "Activated existing window via Win32");
-            }
-            else
-            {
-                Services.Logger.Warning("App", "Could not find existing window to activate");
-            }
-        }
-        catch (Exception ex)
-        {
-            Services.Logger.Error("App", "Error activating existing window", ex);
-        }
-    }
 
     private static void FlashWindow(Window window)
     {
@@ -750,11 +712,8 @@ public partial class App : Application
     }
 
     // Win32 imports
-    private const uint FLASHW_STOP = 0;
-    private const uint FLASHW_CAPTION = 1;
     private const uint FLASHW_TRAY = 2;
     private const uint FLASHW_ALL = 3;
-    private const uint FLASHW_TIMER = 4;
     private const uint FLASHW_TIMERNOFG = 12;
     private const int SW_RESTORE = 9;
 

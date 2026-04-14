@@ -269,9 +269,4 @@ public partial class MainWindow
     {
         await CheckForUpdatesAsync();
     }
-
-    private async void MainCheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
-    {
-        await CheckForUpdatesAsync();
-    }
 }

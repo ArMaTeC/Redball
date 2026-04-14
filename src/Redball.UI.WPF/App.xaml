@@ -1,7 +1,7 @@
 <Application x:Class="Redball.UI.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:converters="clr-namespace:Redball.UI.Converters">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:Redball.UI.Converters">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -12,13 +12,11 @@
                 <!-- Existing style/animation dictionaries -->
                 <ResourceDictionary Source="/Themes/Controls.xaml"/>
                 <ResourceDictionary Source="/Themes/Animations.xaml"/>
-                <ResourceDictionary Source="/Themes/AcrylicEffects.xaml"/>
                 <ResourceDictionary Source="/Themes/MainWindowStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
-            <converters:SliderValueToWidthConverter x:Key="SliderValueToWidthConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

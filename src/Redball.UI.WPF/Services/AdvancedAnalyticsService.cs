@@ -23,7 +23,7 @@ public class AdvancedAnalyticsService
     {
         _stats = SessionStatsService.Instance;
         _audit = AuditLogService.Instance;
-        
+
         Logger.Verbose("AdvancedAnalyticsService", "Initialized");
     }
 
@@ -43,7 +43,7 @@ public class AdvancedAnalyticsService
             // Get session data
             var sessions = await _stats.GetSessionHistoryAsync(
                 (int)(endDate - startDate).TotalDays);
-            
+
             // Calculate metrics
             report.UsageMetrics = CalculateUsageMetrics(sessions, startDate, endDate);
             report.Predictions = await GeneratePredictions(sessions);
@@ -67,24 +67,24 @@ public class AdvancedAnalyticsService
     {
         var today = DateTime.Now;
         var weekStart = today.AddDays(-(int)today.DayOfWeek);
-        
+
         // Get last 4 weeks of data
         var last4Weeks = Enumerable.Range(0, 4)
             .Select(i => weekStart.AddDays(-7 * i))
             .ToList();
 
         var predictions = new List<DailyPrediction>();
-        
+
         for (int day = 0; day < 7; day++)
         {
             var targetDate = today.AddDays(day);
             var dayOfWeek = targetDate.DayOfWeek;
-            
+
             // Calculate average for this day of week
             var historicalDays = last4Weeks
                 .Select(week => week.AddDays((int)dayOfWeek))
                 .ToList();
-            
+
             var prediction = new DailyPrediction
             {
                 Date = targetDate,
@@ -92,7 +92,7 @@ public class AdvancedAnalyticsService
                 PredictedActiveHours = 2.5, // Default baseline
                 Confidence = 0.5
             };
-            
+
             predictions.Add(prediction);
         }
 
@@ -110,7 +110,7 @@ public class AdvancedAnalyticsService
     public async Task<BatteryOptimizationSuggestions> GetBatterySuggestionsAsync()
     {
         var suggestions = new BatteryOptimizationSuggestions();
-        
+
         if (!BatteryMonitorService.Instance.IsBatteryMonitoringAvailable)
         {
             suggestions.IsAvailable = false;
@@ -119,7 +119,7 @@ public class AdvancedAnalyticsService
 
         var battery = BatteryMonitorService.Instance;
         var sessions = await _stats.GetSessionHistoryAsync(30);
-        
+
         if (sessions.Count == 0)
         {
             suggestions.Suggestions.Add(new BatterySuggestion
@@ -179,7 +179,7 @@ public class AdvancedAnalyticsService
     {
         var endDate = DateTime.Now;
         var startDate = endDate.AddDays(-days);
-        
+
         var sessions = await _stats.GetSessionHistoryAsync(days);
         var auditEntries = _audit.GetEntries(startDate, endDate, AuditEventType.Session);
 
@@ -190,7 +190,7 @@ public class AdvancedAnalyticsService
             TotalActiveHours = sessions
                 .Where(s => s.Duration.HasValue)
                 .Sum(s => s.Duration!.Value.TotalHours),
-            AverageSessionLength = sessions.Any() 
+            AverageSessionLength = sessions.Any()
                 ? sessions.Where(s => s.Duration.HasValue).Average(s => s.Duration!.Value.TotalMinutes)
                 : 0,
             ConsistencyScore = CalculateConsistency(sessions, days),
@@ -198,9 +198,9 @@ public class AdvancedAnalyticsService
         };
 
         // Overall score (0-100)
-        score.OverallScore = Math.Min(100, 
-            (score.ConsistencyScore * 0.4) + 
-            (score.FocusScore * 0.3) + 
+        score.OverallScore = Math.Min(100,
+            (score.ConsistencyScore * 0.4) +
+            (score.FocusScore * 0.3) +
             (Math.Min(score.TotalSessions / 20.0, 1.0) * 30));
 
         return score;
@@ -209,7 +209,7 @@ public class AdvancedAnalyticsService
     private UsageMetrics CalculateUsageMetrics(IReadOnlyList<SessionStatsService.SessionRecord> sessions, DateTime start, DateTime end)
     {
         var days = (end - start).TotalDays;
-        
+
         return new UsageMetrics
         {
             TotalSessions = sessions.Count,
@@ -232,15 +232,15 @@ public class AdvancedAnalyticsService
     {
         if (sessions.Count < 5)
         {
-            return new UsagePredictions 
-            { 
+            return new UsagePredictions
+            {
                 Confidence = 0,
                 Note = "Insufficient data for accurate predictions (need 5+ sessions)"
             };
         }
 
         var nextWeekPrediction = await PredictUpcomingWeekAsync();
-        
+
         return new UsagePredictions
         {
             NextWeek = nextWeekPrediction,
@@ -344,7 +344,7 @@ public class AdvancedAnalyticsService
     private List<DetectedPattern> FindUsagePatterns(IReadOnlyList<SessionStatsService.SessionRecord> sessions)
     {
         var patterns = new List<DetectedPattern>();
-        
+
         // Time patterns
         var hourGroups = sessions.GroupBy(s => s.StartTime.Hour)
             .Select(g => new { Hour = g.Key, Count = g.Count() })
@@ -417,12 +417,12 @@ public class AdvancedAnalyticsService
     private double CalculateConsistency(IReadOnlyList<SessionStatsService.SessionRecord> sessions, int days)
     {
         if (sessions.Count == 0) return 0;
-        
+
         var daysWithSessions = sessions
             .Select(s => s.StartTime.Date)
             .Distinct()
             .Count();
-        
+
         return Math.Min(1.0, daysWithSessions / (double)days);
     }
 
@@ -434,7 +434,7 @@ public class AdvancedAnalyticsService
             .Select(e => ExtractDuration(e.Details))
             .DefaultIfEmpty(0)
             .Average();
-        
+
         // Score based on session length (30-120 min is ideal)
         if (avgSessionDuration >= 30 && avgSessionDuration <= 120)
             return 0.9;
@@ -447,15 +447,21 @@ public class AdvancedAnalyticsService
     private double ExtractDuration(string? details)
     {
         if (string.IsNullOrEmpty(details)) return 0;
-        
+
         var match = System.Text.RegularExpressions.Regex.Match(details, @"(\d+(?:\.\d+)?)\s*min");
         if (match.Success && double.TryParse(match.Groups[1].Value, out var minutes))
         {
             return minutes;
         }
-        
+
         return 0;
     }
+}
+
+public class DateRange
+{
+    public DateTime Start { get; set; }
+    public DateTime End { get; set; }
 }
 
 // Data models

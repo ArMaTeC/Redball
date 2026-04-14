@@ -31,29 +31,13 @@ public sealed class StartupOptimizer
         Logger.Info("StartupOptimizer", "Startup optimization begun");
 
         // Register heavy services for lazy initialization
-        RegisterLazyService("AdvancedAnalytics", () => AdvancedAnalyticsService.Instance, 
-            priority: LazyLoadPriority.Background, 
+        RegisterLazyService("AdvancedAnalytics", () => AdvancedAnalyticsService.Instance,
+            priority: LazyLoadPriority.Background,
             delay: TimeSpan.FromSeconds(5));
 
         RegisterLazyService("ScheduleLearning", () => ScheduleLearningService.Instance,
             priority: LazyLoadPriority.Background,
             delay: TimeSpan.FromSeconds(10));
-
-        RegisterLazyService("MobileCompanion", () => MobileCompanionApiService.Instance,
-            priority: LazyLoadPriority.OnDemand,
-            condition: () => true); // Always available
-
-        RegisterLazyService("VoiceCommand", () => VoiceCommandService.Instance,
-            priority: LazyLoadPriority.OnDemand,
-            condition: () => true); // Always available
-
-        RegisterLazyService("Windows11Widget", () => Windows11WidgetService.Instance,
-            priority: LazyLoadPriority.Background,
-            delay: TimeSpan.FromSeconds(3),
-            condition: () => Environment.OSVersion.Version.Build >= 22000);
-
-        RegisterLazyService("DesignTokenPipeline", () => DesignTokenPipelineService.Instance,
-            priority: LazyLoadPriority.OnDemand);
 
         RegisterLazyService("DiagnosticsExport", () => DiagnosticsExportService.Instance,
             priority: LazyLoadPriority.OnDemand);
@@ -110,7 +94,7 @@ public sealed class StartupOptimizer
         return false;
     }
 
-    private void RegisterLazyService(string name, Func<object> factory, 
+    private void RegisterLazyService(string name, Func<object> factory,
         LazyLoadPriority priority = LazyLoadPriority.Background,
         TimeSpan? delay = null,
         Func<bool>? condition = null)
@@ -143,7 +127,7 @@ public sealed class StartupOptimizer
             {
                 await Task.Delay(service.Delay.Value);
             }
-            
+
             await service.InitializeAsync();
         }
 
@@ -196,11 +180,11 @@ public class LazyService
     public LazyLoadPriority Priority { get; }
     public TimeSpan? Delay { get; }
     public Func<bool>? Condition { get; }
-    
+
     public bool IsInitialized { get; private set; }
     public TimeSpan? InitializationDuration { get; private set; }
 
-    public LazyService(string name, Func<object> factory, 
+    public LazyService(string name, Func<object> factory,
         LazyLoadPriority priority, TimeSpan? delay, Func<bool>? condition)
     {
         Name = name;
@@ -225,20 +209,20 @@ public class LazyService
             if (IsInitialized) return _instance!;
 
             var sw = Stopwatch.StartNew();
-            
+
             try
             {
                 _instance = Factory();
-                
+
                 // If the instance has an async init method, call it
                 if (_instance is IInitializable initializable)
                 {
                     await initializable.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
                 }
-                
+
                 IsInitialized = true;
                 InitializationDuration = sw.Elapsed;
-                
+
                 Logger.Debug("StartupOptimizer", $"Service {Name} initialized in {sw.Elapsed.TotalMilliseconds:F0}ms");
             }
             catch (Exception ex)

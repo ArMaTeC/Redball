@@ -37,9 +37,9 @@ public class SecurityPolicyService
         _policyCachePath = Path.Combine(appData, "Redball", "security-policy.json");
         _violationLog = new List<SecurityViolation>();
         _currentPolicy = new SecurityPolicy(); // Initialize to default before loading
-        
+
         LoadCachedPolicy();
-        
+
         Logger.Verbose("SecurityPolicyService", "Initialized");
     }
 
@@ -53,9 +53,9 @@ public class SecurityPolicyService
 
         var oldPolicy = _currentPolicy;
         _currentPolicy = policy;
-        
+
         SaveCachedPolicy();
-        
+
         PolicyChanged?.Invoke(this, new PolicyChangedEventArgs
         {
             OldPolicy = oldPolicy,
@@ -64,7 +64,7 @@ public class SecurityPolicyService
         });
 
         Logger.Info("SecurityPolicyService", $"Loaded security policy: {policy.PolicyName}");
-        
+
         // Run initial compliance check
         await RunComplianceCheckAsync();
     }
@@ -86,10 +86,10 @@ public class SecurityPolicyService
         {
             var encryptionCheck = CheckConfigEncryption();
             report.Checks.Add(encryptionCheck);
-            
+
             if (!encryptionCheck.IsCompliant)
             {
-                LogViolation(SecurityViolationType.ConfigNotEncrypted, 
+                LogViolation(SecurityViolationType.ConfigNotEncrypted,
                     "Configuration files are not encrypted");
             }
         }
@@ -99,7 +99,7 @@ public class SecurityPolicyService
         {
             var installCheck = CheckSecureInstallation();
             report.Checks.Add(installCheck);
-            
+
             if (!installCheck.IsCompliant)
             {
                 LogViolation(SecurityViolationType.InsecureInstallPath,
@@ -112,7 +112,7 @@ public class SecurityPolicyService
         {
             var tamperCheck = await CheckTamperProtectionAsync();
             report.Checks.Add(tamperCheck);
-            
+
             if (!tamperCheck.IsCompliant)
             {
                 LogViolation(SecurityViolationType.TamperingDetected,
@@ -125,7 +125,7 @@ public class SecurityPolicyService
         {
             var auditCheck = CheckAuditLogging();
             report.Checks.Add(auditCheck);
-            
+
             if (!auditCheck.IsCompliant)
             {
                 LogViolation(SecurityViolationType.AuditLoggingDisabled,
@@ -138,7 +138,7 @@ public class SecurityPolicyService
         {
             var softwareCheck = CheckProhibitedSoftware();
             report.Checks.Add(softwareCheck);
-            
+
             if (!softwareCheck.IsCompliant)
             {
                 LogViolation(SecurityViolationType.ProhibitedSoftwareDetected,
@@ -150,7 +150,7 @@ public class SecurityPolicyService
         report.IsCompliant = report.Checks.All(c => c.IsCompliant);
         report.ComplianceScore = (double)report.Checks.Count(c => c.IsCompliant) / report.Checks.Count;
 
-        Logger.Info("SecurityPolicyService", 
+        Logger.Info("SecurityPolicyService",
             $"Compliance check completed: {report.ComplianceScore:P0} compliant");
 
         return report;
@@ -197,8 +197,8 @@ public class SecurityPolicyService
             case SecurityAction.ExceedMaxDuration:
                 if (_currentPolicy.MaxSessionDurationMinutes.HasValue && context != null)
                 {
-                    if (context.TryGetValue("DurationMinutes", out var durationObj) && 
-                        durationObj is int duration && 
+                    if (context.TryGetValue("DurationMinutes", out var durationObj) &&
+                        durationObj is int duration &&
                         duration > _currentPolicy.MaxSessionDurationMinutes.Value)
                     {
                         result.IsAllowed = false;
@@ -226,7 +226,7 @@ public class SecurityPolicyService
 
         if (!result.IsAllowed)
         {
-            LogViolation(SecurityViolationType.PolicyViolation, 
+            LogViolation(SecurityViolationType.PolicyViolation,
                 $"Action '{action}' blocked: {result.Reason}");
         }
 
@@ -293,7 +293,7 @@ public class SecurityPolicyService
     public async Task<string> ExportComplianceReportAsync()
     {
         var report = await RunComplianceCheckAsync();
-        
+
         var export = new ComplianceExport
         {
             GeneratedAt = DateTime.UtcNow,
@@ -343,7 +343,7 @@ public class SecurityPolicyService
         // Not secure if in temp or downloads
         var tempPath = Path.GetTempPath();
         var downloadsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
-        
+
         if (installPath.StartsWith(tempPath, StringComparison.OrdinalIgnoreCase) ||
             installPath.StartsWith(downloadsPath, StringComparison.OrdinalIgnoreCase))
         {
@@ -364,7 +364,7 @@ public class SecurityPolicyService
         // Compute hash of critical files
         var criticalFiles = new[] { "Redball.exe", "Redball.Core.dll", "Redball.UI.WPF.dll" };
         var installPath = AppContext.BaseDirectory;
-        
+
         var allValid = true;
         var details = new List<string>();
 
@@ -396,7 +396,7 @@ public class SecurityPolicyService
     private ComplianceCheck CheckAuditLogging()
     {
         var auditEnabled = ConfigService.Instance.Config.EnableAuditLogging;
-        
+
         return new ComplianceCheck
         {
             Name = "Audit Logging",
@@ -512,7 +512,7 @@ public class SecurityPolicyService
         var machineName = Environment.MachineName;
         var userName = Environment.UserName;
         var combined = $"{machineName}:{userName}";
-        
+
         using var sha = SHA256.Create();
         var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(combined));
         return Convert.ToHexString(hash).Substring(0, 16).ToLower();
@@ -528,26 +528,26 @@ public class SecurityPolicy
     public DateTime IssuedAt { get; set; } = DateTime.UtcNow;
     public DateTime? ExpiresAt { get; set; }
     public bool IsEnforced { get; set; }
-    
+
     // Security requirements
     public bool RequireConfigEncryption { get; set; }
     public bool RequireSecureInstallPath { get; set; }
     public bool EnableTamperProtection { get; set; }
     public bool RequireAuditLogging { get; set; }
-    
+
     // Feature restrictions
     public bool AllowUserConfigChanges { get; set; } = true;
     public bool AllowDataExport { get; set; } = true;
     public bool AllowThirdPartyPlugins { get; set; } = true;
-    
+
     // Operational policies
     public bool RequireBatteryAware { get; set; }
     public bool RequireIdleDetection { get; set; }
     public int? MaxSessionDurationMinutes { get; set; }
-    
+
     // Software restrictions
     public List<string>? ProhibitedSoftware { get; set; }
-    
+
     // Audit settings
     public int AuditRetentionDays { get; set; } = 90;
 }
@@ -655,4 +655,56 @@ public class PolicyChangedEventArgs : EventArgs
 public class SecurityViolationEventArgs : EventArgs
 {
     public SecurityViolation Violation { get; set; } = new();
+}
+
+public class ComplianceReport
+{
+    public DateTime CheckedAt { get; set; }
+    public string PolicyName { get; set; } = string.Empty;
+    public bool IsCompliant { get; set; }
+    public double ComplianceScore { get; set; }
+    public List<ComplianceCheck> Checks { get; set; } = new();
+    public DateRange Period { get; set; } = new();
+    public DateTime GeneratedAt { get; set; }
+    public int TotalEvents { get; set; }
+    public int FailedActions { get; set; }
+    public int UserActionCount { get; set; }
+    public int ConfigChangeCount { get; set; }
+    public int SecurityEventCount { get; set; }
+    public int SystemEventCount { get; set; }
+    public int SessionEventCount { get; set; }
+    public int UniqueUsers { get; set; }
+    public List<ComplianceViolation> Violations { get; set; } = new();
+    public DataRetentionStatus DataRetentionStatus { get; set; } = new();
+    public EncryptionStatus EncryptionStatus { get; set; } = new();
+}
+
+public enum ViolationSeverity
+{
+    Info,
+    Warning,
+    Error,
+    Critical
+}
+
+public class ComplianceViolation
+{
+    public string Type { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int Count { get; set; }
+    public ViolationSeverity Severity { get; set; }
+}
+
+public class DataRetentionStatus
+{
+    public int AuditLogRetentionDays { get; set; }
+    public DateTime LastCleanup { get; set; }
+    public bool IsCompliant { get; set; }
+}
+
+public class EncryptionStatus
+{
+    public bool ConfigEncrypted { get; set; }
+    public bool SaltPresent { get; set; }
+    public string OverallStatus { get; set; } = "Unknown";
 }
