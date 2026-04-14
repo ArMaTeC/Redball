@@ -7,7 +7,9 @@
     <title>Redball OS • Admin Core</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -51,7 +53,7 @@
             bottom: 0;
             z-index: -1;
             background: radial-gradient(circle at 0% 0%, rgba(0, 217, 163, 0.03) 0%, transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(232, 68, 58, 0.03) 0%, transparent 50%);
+                radial-gradient(circle at 100% 100%, rgba(232, 68, 58, 0.03) 0%, transparent 50%);
         }
 
         /* Login Overlay */
@@ -167,8 +169,17 @@
         }
 
         @keyframes breathe {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
         }
 
         .logo-text {
@@ -235,8 +246,15 @@
             background: var(--text-secondary);
         }
 
-        .connection-dot.connected { background: var(--success); box-shadow: 0 0 10px var(--success); }
-        .connection-dot.disconnected { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+        .connection-dot.connected {
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        .connection-dot.disconnected {
+            background: var(--danger);
+            box-shadow: 0 0 10px var(--danger);
+        }
 
         /* Main Content */
         .main {
@@ -250,11 +268,20 @@
             animation: fadeIn 0.4s ease-out;
         }
 
-        .section.active { display: block; }
+        .section.active {
+            display: block;
+        }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Stats Grid */
@@ -344,7 +371,9 @@
         }
 
         @media (max-width: 1100px) {
-            .build-layout { grid-template-columns: 1fr; }
+            .build-layout {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* Pipeline Visual */
@@ -440,7 +469,9 @@
             transition: color 0.3s;
         }
 
-        .pipeline-step.active .step-label { color: var(--accent); }
+        .pipeline-step.active .step-label {
+            color: var(--accent);
+        }
 
         .step-pulse {
             position: absolute;
@@ -459,8 +490,15 @@
         }
 
         @keyframes nodePulse {
-            0% { transform: scale(1); opacity: 0.6; }
-            100% { transform: scale(2); opacity: 0; }
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
         }
 
         /* Terminal Redesign */
@@ -489,10 +527,23 @@
             gap: 6px;
         }
 
-        .t-dot { width: 10px; height: 10px; border-radius: 50%; }
-        .t-dot.r { background: #ff5f56; }
-        .t-dot.y { background: #ffbd2e; }
-        .t-dot.g { background: #27c93f; }
+        .t-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .t-dot.r {
+            background: #ff5f56;
+        }
+
+        .t-dot.y {
+            background: #ffbd2e;
+        }
+
+        .t-dot.g {
+            background: #27c93f;
+        }
 
         .terminal-body {
             padding: 1.5rem;
@@ -504,12 +555,39 @@
         }
 
         /* Terminal line styles */
-        .t-line { margin: 2px 0; white-space: pre-wrap; word-break: break-all; }
-        .t-line.dim { opacity: 0.4; }
-        .t-line.success { color: var(--success); font-weight: 600; }
-        .t-line.error { color: var(--danger); font-weight: 600; }
-        .t-line.phase { color: var(--accent); font-weight: 700; margin-top: 10px; border-left: 2px solid var(--accent); padding-left: 10px; }
-        .t-line.time { color: #4b5563; font-size: 0.75rem; margin-right: 8px; }
+        .t-line {
+            margin: 2px 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .t-line.dim {
+            opacity: 0.4;
+        }
+
+        .t-line.success {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .t-line.error {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .t-line.phase {
+            color: var(--accent);
+            font-weight: 700;
+            margin-top: 10px;
+            border-left: 2px solid var(--accent);
+            padding-left: 10px;
+        }
+
+        .t-line.time {
+            color: #4b5563;
+            font-size: 0.75rem;
+            margin-right: 8px;
+        }
 
         /* Build Insights */
         .insights-grid {
@@ -622,21 +700,41 @@
         .meter-fill::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             animation: meterShimmer 2s infinite;
         }
 
         @keyframes meterShimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
         }
 
         /* Scrollbar Customization */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
 
         /* Current Operation Alert */
         .operation-pill {
@@ -650,23 +748,42 @@
             gap: 1rem;
         }
 
-        .op-text { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
+        .op-text {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
 
         /* Tables */
-        .table-container { overflow-x: auto; }
-        .r-table { width: 100%; border-collapse: collapse; }
-        .r-table th { 
-            text-align: left; 
-            padding: 1.25rem 1.5rem; 
-            background: rgba(255,255,255,0.02); 
-            font-size: 0.75rem; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            letter-spacing: 0.1rem; 
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .r-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .r-table th {
+            text-align: left;
+            padding: 1.25rem 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1rem;
             color: var(--text-secondary);
         }
-        .r-table td { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-        .r-table tr:hover { background: rgba(255,255,255,0.01); }
+
+        .r-table td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        .r-table tr:hover {
+            background: rgba(255, 255, 255, 0.01);
+        }
 
         .badge {
             padding: 4px 10px;
@@ -675,8 +792,16 @@
             font-weight: 800;
             font-family: 'JetBrains Mono', monospace;
         }
-        .badge-ver { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
-        .badge-dl { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+
+        .badge-ver {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-dl {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
 
         .logout-btn {
             background: transparent;
@@ -688,7 +813,12 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .logout-btn:hover { background: var(--danger); color: white; }
+
+        .logout-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+
         /* Config Grid */
         .config-grid {
             display: grid;
@@ -729,20 +859,66 @@
             box-shadow: 0 0 15px var(--accent-glow);
         }
 
-        .group-title { font-weight: 700; font-size: 1.15rem; }
-
-        .config-field { display: flex; flex-direction: column; gap: 0.5rem; }
-        .config-field label { font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
-        .config-field input, .config-field select {
-            width: 100%; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem 1rem; color: white; transition: all 0.3s;
+        .group-title {
+            font-weight: 700;
+            font-size: 1.15rem;
         }
-        .config-field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
 
-        .config-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .config-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
 
-        .cb-field { display: flex; align-items: center; gap: 1rem; cursor: pointer; padding: 0.5rem 0; }
-        .cb-field input { width: 18px; height: 18px; accent-color: var(--accent); }
-        .cb-field span { font-size: 0.9rem; font-weight: 600; }
+        .config-field label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .config-field input,
+        .config-field select {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .config-field input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .config-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .cb-field {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            padding: 0.5rem 0;
+        }
+
+        .cb-field input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        .cb-field span {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -839,67 +1015,83 @@
         <!-- Build Section -->
         <section id="build-section" class="section">
             <div class="pipeline-container">
-                                <div class="pipeline" id="pipeline-steps">
-                                    <div class="pipeline-progress" id="pipeline-progress" style="width: 0%"></div>
-                                    <div class="pipeline-step" data-stage="setup">
-                                        <div class="step-node">⚙️<div class="step-pulse"></div></div>
-                                        <div class="step-label">Init</div>
-                                    </div>
-                                    <div class="pipeline-step" data-stage="version">
-                                        <div class="step-node">🏷️<div class="step-pulse"></div></div>
-                                        <div class="step-label">Version</div>
-                                    </div>
-                                    <div class="pipeline-step" data-stage="restore">
-                                        <div class="step-node">📦<div class="step-pulse"></div></div>
-                                        <div class="step-label">Restore</div>
-                                    </div>
-                                    <div class="pipeline-step" data-stage="wpf-build">
-                                        <div class="step-node">🖥️<div class="step-pulse"></div></div>
-                                        <div class="step-label">WPF App</div>
-                                    </div>
-                                    <div class="pipeline-step" data-stage="service-build">
-                                        <div class="step-node">🛠️<div class="step-pulse"></div></div>
-                                        <div class="step-label">Service</div>
-                                    </div>
-                                    <div class="pipeline-step" data-stage="installer">
-                                        <div class="step-node">🔨<div class="step-pulse"></div></div>
-                                        <div class="step-label">Installer</div>
-                                    </div>
-                                    <div class="pipeline-step" data-stage="publish">
-                                        <div class="step-node">☁️<div class="step-pulse"></div></div>
-                                        <div class="step-label">Publish</div>
-                                    </div>
-                                    <div class="pipeline-step" data-stage="github">
-                                        <div class="step-node">🚀<div class="step-pulse"></div></div>
-                                        <div class="step-label">GitHub</div>
-                                    </div>
-                                    <div class="pipeline-step" data-stage="restart">
-                                        <div class="step-node">🔄<div class="step-pulse"></div></div>
-                                        <div class="step-label">Restart</div>
-                                    </div>
-                                    <div class="pipeline-step" data-stage="health">
-                                        <div class="step-node">🏥<div class="step-pulse"></div></div>
-                                        <div class="step-label">Health</div>
-                                    </div>
-                                </div>
-                            </div>
+                <div class="pipeline" id="pipeline-steps">
+                    <div class="pipeline-progress" id="pipeline-progress" style="width: 0%"></div>
+                    <div class="pipeline-step" data-stage="setup">
+                        <div class="step-node">⚙️<div class="step-pulse"></div>
+                        </div>
+                        <div class="step-label">Init</div>
+                    </div>
+                    <div class="pipeline-step" data-stage="version">
+                        <div class="step-node">🏷️<div class="step-pulse"></div>
+                        </div>
+                        <div class="step-label">Version</div>
+                    </div>
+                    <div class="pipeline-step" data-stage="restore">
+                        <div class="step-node">📦<div class="step-pulse"></div>
+                        </div>
+                        <div class="step-label">Restore</div>
+                    </div>
+                    <div class="pipeline-step" data-stage="wpf-build">
+                        <div class="step-node">🖥️<div class="step-pulse"></div>
+                        </div>
+                        <div class="step-label">WPF App</div>
+                    </div>
+                    <div class="pipeline-step" data-stage="service-build">
+                        <div class="step-node">🛠️<div class="step-pulse"></div>
+                        </div>
+                        <div class="step-label">Service</div>
+                    </div>
+                    <div class="pipeline-step" data-stage="installer">
+                        <div class="step-node">🔨<div class="step-pulse"></div>
+                        </div>
+                        <div class="step-label">Installer</div>
+                    </div>
+                    <div class="pipeline-step" data-stage="publish">
+                        <div class="step-node">☁️<div class="step-pulse"></div>
+                        </div>
+                        <div class="step-label">Publish</div>
+                    </div>
+                    <div class="pipeline-step" data-stage="github">
+                        <div class="step-node">🚀<div class="step-pulse"></div>
+                        </div>
+                        <div class="step-label">GitHub</div>
+                    </div>
+                    <div class="pipeline-step" data-stage="restart">
+                        <div class="step-node">🔄<div class="step-pulse"></div>
+                        </div>
+                        <div class="step-label">Restart</div>
+                    </div>
+                    <div class="pipeline-step" data-stage="health">
+                        <div class="step-node">🏥<div class="step-pulse"></div>
+                        </div>
+                        <div class="step-label">Health</div>
+                    </div>
+                </div>
+            </div>
 
             <div class="build-layout">
                 <div class="terminal">
                     <div class="terminal-toolbar">
                         <div class="terminal-actions">
-                            <div class="t-dot r"></div><div class="t-dot y"></div><div class="t-dot g"></div>
-                            <span style="font-size: 0.7rem; color: #666; font-weight: 700; margin-left: 10px;">CORE_BUILD_LOG</span>
+                            <div class="t-dot r"></div>
+                            <div class="t-dot y"></div>
+                            <div class="t-dot g"></div>
+                            <span
+                                style="font-size: 0.7rem; color: #666; font-weight: 700; margin-left: 10px;">CORE_BUILD_LOG</span>
                         </div>
-                        <div id="build-timer" style="font-size: 0.75rem; font-weight: 700; color: var(--accent);">00:00</div>
+                        <div id="build-timer" style="font-size: 0.75rem; font-weight: 700; color: var(--accent);">00:00
+                        </div>
                     </div>
                     <div class="terminal-body" id="terminal-out">
                     </div>
                 </div>
 
                 <div class="controls-card">
-                    <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 2rem; border-left: 4px solid var(--accent); padding-left: 1rem;">Operations Control</h3>
-                    
+                    <h3
+                        style="font-size: 1.5rem; font-weight: 800; margin-bottom: 2rem; border-left: 4px solid var(--accent); padding-left: 1rem;">
+                        Operations Control</h3>
+
                     <div id="initial-controls">
                         <button class="btn btn-build" id="start-btn" onclick="startBuild()">
                             <span style="font-size: 1.4rem">▶</span> Initialize Full Build
@@ -928,12 +1120,12 @@
 
                     <div class="insights-grid" style="grid-template-columns: 1fr 1fr; margin-top: 2rem;">
                         <div class="insight-card">
-                             <div class="insight-label">Last Build</div>
-                             <div class="insight-value" id="last-status" style="font-size: 1.2rem;">READY</div>
+                            <div class="insight-label">Last Build</div>
+                            <div class="insight-value" id="last-status" style="font-size: 1.2rem;">READY</div>
                         </div>
                         <div class="insight-card">
-                             <div class="insight-label">Architecture</div>
-                             <div class="insight-value" style="font-size: 1.2rem;">x64/x86</div>
+                            <div class="insight-label">Architecture</div>
+                            <div class="insight-value" style="font-size: 1.2rem;">x64/x86</div>
                         </div>
                     </div>
                 </div>
@@ -969,11 +1161,14 @@
             <div class="panel">
                 <div class="panel-header">
                     <h3 class="panel-title">System Settings & Client Profiles</h3>
-                    <button class="btn btn-build" onclick="saveConfiguration()" style="width: auto; padding: 0.75rem 2rem;">Apply System-Wide</button>
+                    <button class="btn btn-build" onclick="saveConfiguration()"
+                        style="width: auto; padding: 0.75rem 2rem;">Apply System-Wide</button>
                 </div>
                 <div class="panel-body">
                     <div id="config-root" class="config-grid">
-                        <div class="loading-state" style="grid-column: 1/-1; padding: 5rem; text-align: center; color: var(--text-secondary);">Synchronizing configuration cluster...</div>
+                        <div class="loading-state"
+                            style="grid-column: 1/-1; padding: 5rem; text-align: center; color: var(--text-secondary);">
+                            Synchronizing configuration cluster...</div>
                     </div>
                 </div>
             </div>
@@ -1221,7 +1416,7 @@
             try {
                 const res = await fetch('/api/config', {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Authorization': 'Bearer ' + token,
                         'Content-Type': 'application/json'
                     },
@@ -1253,7 +1448,7 @@
             const u = document.getElementById('username').value;
             const p = document.getElementById('password').value;
             try {
-                const res = await fetch('/api/login', {
+                const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: u, password: p })
@@ -1288,7 +1483,7 @@
                     const data = await res.json();
                     document.getElementById('stat-downloads').innerText = data.totalDownloads.toLocaleString();
                     document.getElementById('stat-version').innerText = 'v' + data.latestVersion;
-                    
+
                     const tbody = document.getElementById('releases-body');
                     tbody.innerHTML = data.releases.map(r => `
                         <tr>
@@ -1347,17 +1542,21 @@
 
         function handleMessage(msg) {
             switch (msg.type) {
+                case 'state':
+                    // Initial state on WebSocket connect
+                    syncState(msg.data);
+                    break;
                 case 'build-started':
                     syncState(msg.data);
                     break;
                 case 'build-output':
                     appendLog(msg.data.line);
-                    updatePipeline(msg.data.stage, msg.data.progress, msg.data.status);
-                    
+                    updatePipeline(msg.data.stage, msg.data.progress, buildRunning ? 'running' : 'idle');
+
                     // Update current operation display with clean text
                     const cleanOp = cleanAnsi(msg.data.line).trim();
                     if (cleanOp && !cleanOp.startsWith('[') && cleanOp.length < 100 && !/^\([0-9.]+s\)$/.test(cleanOp)) {
-                         document.getElementById('current-op').innerText = cleanOp;
+                        document.getElementById('current-op').innerText = cleanOp;
                     }
                     break;
                 case 'build-complete':
@@ -1379,7 +1578,7 @@
             document.getElementById('stat-active').innerText = isRunning ? '1' : '0';
             document.getElementById('start-btn').disabled = isRunning;
             document.getElementById('stop-btn').disabled = !isRunning;
-            
+
             document.getElementById('initial-controls').style.display = isRunning ? 'none' : 'block';
             document.getElementById('active-controls').style.display = isRunning ? 'block' : 'none';
 
@@ -1402,7 +1601,7 @@
             } else {
                 stopTimer();
                 if (state.stage === 'complete' || state.status === 'success') {
-                     document.getElementById('current-op').innerText = 'System idle. Readiness 100%';
+                    document.getElementById('current-op').innerText = 'System idle. Readiness 100%';
                 }
             }
         }
@@ -1425,7 +1624,7 @@
             steps.forEach(step => {
                 const s = step.dataset.stage;
                 step.classList.remove('active', 'complete', 'error');
-                
+
                 if (stage === 'complete' && status !== 'failed') {
                     step.classList.add('complete');
                     return;
@@ -1459,10 +1658,10 @@
         function appendLog(line) {
             const terminal = document.getElementById('terminal-out');
             const div = document.createElement('div');
-            
+
             // Comprehensive ANSI cleaning
             const cleanLine = cleanAnsi(line).trim();
-            if (!cleanLine || /^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]*[a-zA-Z]/.test(cleanLine)) return; 
+            if (!cleanLine || /^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]*[a-zA-Z]/.test(cleanLine)) return;
 
             div.className = 't-line';
             if (cleanLine.includes('ERROR') || cleanLine.includes('failed')) div.className += ' error';
@@ -1472,14 +1671,14 @@
 
             const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
             div.innerHTML = `<span class="t-line time">[${time}]</span>${cleanLine}`;
-            
+
             terminal.appendChild(div);
             terminal.scrollTop = terminal.scrollHeight;
         }
 
         async function startBuild() {
-             document.getElementById('terminal-out').innerHTML = '';
-             fetch('/api/admin/build', {
+            document.getElementById('terminal-out').innerHTML = '';
+            fetch('/api/admin/build', {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + token }
             });
