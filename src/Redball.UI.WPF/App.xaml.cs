@@ -37,7 +37,7 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
         DispatcherUnhandledException += OnDispatcherUnhandledException;
-        
+
         Services.Logger.Debug("App", "Exception handlers registered");
     }
 
@@ -75,7 +75,7 @@ public partial class App : Application
         var ex = e.ExceptionObject as Exception;
         Services.Logger.Fatal("App", "FATAL: Unhandled exception in AppDomain", ex ?? new Exception("Unknown exception"));
         Services.Logger.WriteCrashDump(ex ?? new Exception("Unknown"), "AppDomain.UnhandledException");
-        
+
         // Write emergency crash log
         try
         {
@@ -99,12 +99,12 @@ public partial class App : Application
     {
         Services.Logger.Fatal("App", "FATAL: Dispatcher exception", e.Exception);
         Services.Logger.WriteCrashDump(e.Exception, "DispatcherUnhandledException");
-        
+
         // Prevent default crash dialog for known recoverable exceptions
         if (e.Exception is System.Windows.Markup.XamlParseException xamlEx)
         {
             Services.Logger.Fatal("App", $"XAML parse error: {xamlEx.Message}", xamlEx);
-            
+
             bool isTest = Array.Exists(Environment.GetCommandLineArgs(), arg => arg.Equals("--smoke-test", StringComparison.Ordinal) || arg.Equals("--test-mode", StringComparison.Ordinal));
             if (isTest)
             {
@@ -112,14 +112,14 @@ public partial class App : Application
                 Environment.Exit(1);
             }
         }
-        
+
         e.Handled = true; // Prevent crash dialog, but log it
     }
 
     protected override void OnStartup(StartupEventArgs e)
     {
         Services.Logger.Info("App", "=== OnStartup Begin (Modern Threaded Startup) ===");
-        
+
         // SECURITY: Log app launch event
         Services.SecurityAuditService.Instance.LogEvent("Lifecycle", "Application Startup initiated");
 
@@ -206,6 +206,9 @@ public partial class App : Application
         var sw = Stopwatch.StartNew();
         Services.Logger.Info("App", "Background initialization started...");
 
+        // Begin startup optimisation timing and lazy-service registration
+        Services.StartupOptimizer.Instance.BeginStartup();
+
         // SECURITY: Anti-Tamper check (10/10 Hardening Suggestion)
         if (IsDebuggerPresent() && !args.Contains("--test-mode"))
         {
@@ -221,13 +224,13 @@ public partial class App : Application
         // 2. Load configuration (Disc IO)
         var configLoaded = Services.ConfigService.Instance.Load();
         var cfg = Services.ConfigService.Instance.Config;
-        
+
         // 3. One-time installer hidden option
         TryApplyInstallerHidOption();
 
         // 4. Build DI container (CPU)
         var serviceProvider = Services.ServiceLocator.BuildServiceProvider(cfg);
-        
+
         // 5. Initialize Core Services (Parallelizable)
         Parallel.Invoke(
             () => Services.KeepAwakeService.Instance.Initialize(),
@@ -245,12 +248,12 @@ public partial class App : Application
 
         sw.Stop();
         Services.Logger.Info("App", $"Background initialization complete in {sw.ElapsedMilliseconds}ms");
-        
-        return new BackgroundInitResult 
-        { 
-            Config = cfg, 
-            ServiceProvider = serviceProvider, 
-            Restored = restored 
+
+        return new BackgroundInitResult
+        {
+            Config = cfg,
+            ServiceProvider = serviceProvider,
+            Restored = restored
         };
     }
 
@@ -292,7 +295,7 @@ public partial class App : Application
             // Create and show MainWindow
             Services.Logger.Info("App", "Creating MainWindow...");
             _mainWindow = new Views.MainWindow();
-            
+
             if (isTestMode)
             {
                 _mainWindow.Title += " (Test Mode)";
@@ -338,6 +341,9 @@ public partial class App : Application
             StartupDuration = _startupStopwatch.Elapsed;
             Services.Logger.Info("App", $"Startup complete (took {StartupDuration.TotalSeconds:F2}s)");
 
+            // Mark startup complete — triggers deferred background service initialisation
+            Services.StartupOptimizer.Instance.MarkStartupComplete();
+
             // Intelligent Monitoring start
             StartIntelligentMonitoring(cfg);
         }
@@ -355,12 +361,12 @@ public partial class App : Application
         analytics.TrackFunnel("onboarding", "shown");
         var onboarding = new Views.OnboardingWindow();
         var result = onboarding.ShowDialog();
-        
+
         if (result == true)
         {
             analytics.TrackFunnel("onboarding", "completed");
         }
-        
+
         cfg.FirstRun = false;
         Services.ConfigService.Instance.Save();
         Services.Logger.Info("App", "FirstRun flag cleared");
@@ -369,14 +375,14 @@ public partial class App : Application
     private void StartIntelligentMonitoring(RedballConfig cfg)
     {
         Services.Logger.Info("App", "Starting intelligent awareness services...");
-        
+
         // Webcam Awareness (10/10 Strategy suggestion)
-        var webcamTimer = new System.Windows.Threading.DispatcherTimer 
-        { 
-            Interval = TimeSpan.FromSeconds(5) 
+        var webcamTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(5)
         };
-        
-        webcamTimer.Tick += (s, e) => 
+
+        webcamTimer.Tick += (s, e) =>
         {
             bool inUse = Services.WebcamDetectionService.Instance.CheckWebcamStatus();
             if (inUse && Services.KeepAwakeService.Instance.IsActive)
@@ -444,11 +450,11 @@ public partial class App : Application
             if (queryResult.ExitCode == 0)
             {
                 Services.Logger.Info("App", "Service already exists, stopping and removing for clean installation...");
-                
+
                 // Stop the service first
                 RunProcessAsAdmin("sc.exe", "stop RedballInputService");
                 System.Threading.Thread.Sleep(1000); // Give service time to stop
-                
+
                 // Delete the service
                 var deleteResult = RunProcessAsAdmin("sc.exe", "delete RedballInputService");
                 if (deleteResult.ExitCode != 0)
@@ -755,31 +761,31 @@ public partial class App : Application
     [System.Runtime.InteropServices.LibraryImport("user32.dll")]
     [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
     private static partial bool FlashWindowEx(ref FLASHWINFO pwfi);
- 
+
     [System.Runtime.InteropServices.LibraryImport("user32.dll")]
     [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
     private static partial bool ShowWindow(IntPtr hWnd, int nCmdShow);
- 
+
     [System.Runtime.InteropServices.LibraryImport("user32.dll")]
     [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
     private static partial bool IsIconic(IntPtr hWnd);
- 
+
     [System.Runtime.InteropServices.LibraryImport("user32.dll")]
     [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
     private static partial bool SetForegroundWindow(IntPtr hWnd);
- 
+
     [System.Runtime.InteropServices.LibraryImport("user32.dll", EntryPoint = "FindWindowW", StringMarshalling = System.Runtime.InteropServices.StringMarshalling.Utf16)]
     private static partial IntPtr FindWindow(string? lpClassName, string? lpWindowName);
- 
+
     [System.Runtime.InteropServices.LibraryImport("user32.dll")]
     [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
     private static partial bool EnumWindows(EnumWindowsCallback lpEnumFunc, IntPtr lParam);
- 
+
 #pragma warning disable SYSLIB1054
     [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
     private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
 #pragma warning restore SYSLIB1054
- 
+
     [System.Runtime.InteropServices.LibraryImport("user32.dll", EntryPoint = "GetWindowTextLengthW")]
     private static partial int GetWindowTextLength(IntPtr hWnd);
 
@@ -807,7 +813,7 @@ public partial class App : Application
     {
         Services.Logger.Info("App", $"=== OnExit Begin (code: {e.ApplicationExitCode}) ===");
         Services.Logger.LogMemoryStats("App");
-        
+
         try
         {
             var analytics = this._serviceProvider?.GetService<Services.IAnalyticsService>();
@@ -835,7 +841,7 @@ public partial class App : Application
         {
             Services.Logger.Error("App", "Error during shutdown cleanup", ex);
         }
-        
+
         base.OnExit(e);
         Services.Logger.Info("App", "=== Application Exit Complete ===");
     }
