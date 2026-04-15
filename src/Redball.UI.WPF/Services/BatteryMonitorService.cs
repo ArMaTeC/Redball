@@ -50,7 +50,11 @@ public class BatteryMonitorService
             {
                 var chargePercent = Convert.ToInt32(battery["EstimatedChargeRemaining"] ?? 0);
                 var batteryStatus = Convert.ToInt32(battery["BatteryStatus"] ?? 0);
-                // BatteryStatus: 1=Discharging, 2=AC, 3-5=various charging states
+                // BatteryStatus: 0=Unknown, 1=Discharging, 2=AC (no battery), 3-9=charging states
+                // Skip phantom entries: unknown status or AC-only with 0% charge
+                if (batteryStatus == 0 || (batteryStatus == 2 && chargePercent == 0))
+                    continue;
+
                 var isOnBattery = batteryStatus == 1;
 
                 _cachedStatus = new BatteryStatus

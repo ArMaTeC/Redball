@@ -183,12 +183,26 @@ public partial class MiniWidgetWindow : Window
 
     private string GetBatteryIcon(int percent, bool onBattery)
     {
-        if (!onBattery) return "\uEBA1"; // Charging
-        if (percent > 90) return "\uEBAA"; // Full
-        if (percent > 70) return "\uEBA8";
-        if (percent > 50) return "\uEBA6";
-        if (percent > 30) return "\uEBA4";
-        return "\uEBA0"; // Low
+        if (onBattery)
+        {
+            // MobBattery0–MobBattery10 (EBA0–EBAA) — discharging
+            if (percent > 90) return "\uEBAA"; // MobBattery10
+            if (percent > 70) return "\uEBA8"; // MobBattery8
+            if (percent > 50) return "\uEBA6"; // MobBattery6
+            if (percent > 30) return "\uEBA4"; // MobBattery4
+            if (percent > 10) return "\uEBA2"; // MobBattery2
+            return "\uEBA0";                   // MobBattery0 — critical
+        }
+        else
+        {
+            // MobBatteryCharging0–MobBatteryCharging10 (EBAB–EBB5) — plugged in
+            if (percent > 90) return "\uEBB5"; // MobBatteryCharging10
+            if (percent > 70) return "\uEBB3"; // MobBatteryCharging8
+            if (percent > 50) return "\uEBB1"; // MobBatteryCharging6
+            if (percent > 30) return "\uEBAF"; // MobBatteryCharging4
+            if (percent > 10) return "\uEBAD"; // MobBatteryCharging2
+            return "\uEBAB";                   // MobBatteryCharging0
+        }
     }
 
     private void UpdateProgressRing(double percentage)
