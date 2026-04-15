@@ -2051,7 +2051,7 @@
         }
 
         async function fetchStatus() {
-            const res = await fetch('/api/admin/status', {
+            const res = await fetch('/api/build/status', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             if (res.ok) {
@@ -2208,7 +2208,7 @@
 
         async function startBuild() {
             document.getElementById('terminal-out').innerHTML = '';
-            fetch('/api/admin/build', {
+            fetch('/api/build/start', {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + token }
             });

@@ -301,7 +301,7 @@ app.post('/api/build/start', authenticateToken, (req, res) => {
   if (buildState.status === 'running') {
     return res.status(409).json({ error: 'Build already in progress' });
   }
-  startBuild(req.body.type || 'windows');
+  startBuild((req.body && req.body.type) || 'windows');
   res.json({ status: 'started' });
 });
 
