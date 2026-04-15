@@ -477,6 +477,23 @@ auto_release() {
         fi
     fi
 
+    # 6.1 Update GitHub Wiki
+    log_step "Phase 6.1: Updating GitHub wiki..."
+    if [[ $DRY_RUN == true ]]; then
+        log_info "[DRY RUN] Would sync wiki/ to GitHub wiki"
+    else
+        local wiki_script="$PROJECT_ROOT/scripts/update-wiki.sh"
+        if [[ -f "$wiki_script" ]]; then
+            if bash "$wiki_script" "Release ${version}: update wiki documentation" 2>&1 | while IFS= read -r line; do log_detail "$line"; done; then
+                log_success "Wiki updated"
+            else
+                log_warn "Wiki update failed (non-fatal)"
+            fi
+        else
+            log_warn "update-wiki.sh not found, skipping wiki update"
+        fi
+    fi
+
     # 7. Restart Update Server
     log_step "Phase 7: Restarting update server..."
     if [[ $DRY_RUN == true ]]; then
