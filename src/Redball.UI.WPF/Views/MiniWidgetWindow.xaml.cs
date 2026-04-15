@@ -163,7 +163,7 @@ public partial class MiniWidgetWindow : Window
         if (batteryStatus.HasBattery)
         {
             BatteryIcon.Visibility = Visibility.Visible;
-            BatteryIcon.Text = GetBatteryIcon(batteryStatus.ChargePercent, batteryStatus.IsOnBattery);
+            BatteryIcon.Text = GetBatteryIcon(batteryStatus.ChargePercent, batteryStatus.IsOnBattery, batteryStatus.IsFullyCharged);
             BatteryIcon.Foreground = batteryStatus.ChargePercent <= 20 && batteryStatus.IsOnBattery
                 ? new SolidColorBrush(Color.FromRgb(220, 53, 69)) // Red for low
                 : (SolidColorBrush)FindResource("ForegroundSecondaryBrush");
@@ -181,8 +181,11 @@ public partial class MiniWidgetWindow : Window
         VpnIcon.Visibility = isVpn ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private string GetBatteryIcon(int percent, bool onBattery)
+    private string GetBatteryIcon(int percent, bool onBattery, bool fullyCharged)
     {
+        if (fullyCharged)
+            return "\uEBAA"; // MobBattery10 — full, plugged in, no lightning bolt needed
+
         if (onBattery)
         {
             // MobBattery0–MobBattery10 (EBA0–EBAA) — discharging
@@ -195,7 +198,7 @@ public partial class MiniWidgetWindow : Window
         }
         else
         {
-            // MobBatteryCharging0–MobBatteryCharging10 (EBAB–EBB5) — plugged in
+            // MobBatteryCharging0–MobBatteryCharging10 (EBAB–EBB5) — charging (lightning bolt)
             if (percent > 90) return "\uEBB5"; // MobBatteryCharging10
             if (percent > 70) return "\uEBB3"; // MobBatteryCharging8
             if (percent > 50) return "\uEBB1"; // MobBatteryCharging6

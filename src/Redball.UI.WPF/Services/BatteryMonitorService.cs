@@ -56,11 +56,13 @@ public class BatteryMonitorService
                     continue;
 
                 var isOnBattery = batteryStatus == 1;
+                var isFullyCharged = batteryStatus == 3 || (chargePercent >= 100 && !isOnBattery);
 
                 _cachedStatus = new BatteryStatus
                 {
                     HasBattery = true,
                     IsOnBattery = isOnBattery,
+                    IsFullyCharged = isFullyCharged,
                     ChargePercent = chargePercent
                 };
                 _lastCheck = DateTime.Now;
@@ -120,5 +122,6 @@ public class BatteryStatus
 {
     public bool HasBattery { get; set; }
     public bool IsOnBattery { get; set; }
+    public bool IsFullyCharged { get; set; }
     public int ChargePercent { get; set; }
 }
