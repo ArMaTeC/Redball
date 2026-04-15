@@ -168,10 +168,10 @@ public class RedballUIAutomationTests
 
     [TestMethod]
     [TestCategory("UI")]
-    public void UseHeartbeat_CheckBox_CanBeToggled()
+    public void HeartbeatInputMode_ComboBox_CanBeSet()
     {
         // Act
-        _ui!.ToggleCheckBox("UseHeartbeatCheckBox", true);
+        _ui!.SelectComboBoxItem("HeartbeatInputModeComboBox", "F15");
 
         // Assert - toggle completed
     }
@@ -200,14 +200,14 @@ public class RedballUIAutomationTests
 
     [TestMethod]
     [TestCategory("UI")]
-    public void HeartbeatIntervalTextBox_CanAcceptInput()
+    public void DurationSlider_CanAcceptInput()
     {
         // Act
-        _ui!.SetTextBoxValue("HeartbeatIntervalTextBox", "30");
-        var value = _ui.GetTextBoxValue("HeartbeatIntervalTextBox");
+        _ui!.SetSliderValue("DurationSlider", 30);
+        var value = _ui.GetSliderValue("DurationSlider");
 
         // Assert
-        Assert.IsTrue(value.Contains("30"), "Heartbeat interval textbox should accept the input");
+        Assert.IsTrue(Math.Abs(value - 30) < 1, "Duration slider should accept the input");
     }
 
     [TestMethod]
@@ -272,9 +272,9 @@ public class RedballUIAutomationTests
         Assert.IsTrue(_ui.WaitForElement("SettingsDialog", TimeSpan.FromSeconds(2)));
 
         // Act
-        _ui.SetTextBoxValue("HeartbeatIntervalTextBox", "45");
+        _ui.SetSliderValue("DurationSlider", 45);
         _ui.ToggleCheckBox("PreventDisplaySleepCheckBox", true);
-        
+
         // Try to save (if Save button exists)
         try
         {
@@ -300,9 +300,9 @@ public class RedballUIAutomationTests
             "ToggleButton",
             "SettingsButton",
             "PreventDisplaySleepCheckBox",
-            "UseHeartbeatCheckBox",
+            "HeartbeatInputModeComboBox",
             "DurationTextBox",
-            "HeartbeatIntervalTextBox"
+            "DurationSlider"
         };
 
         var missingIds = new List<string>();

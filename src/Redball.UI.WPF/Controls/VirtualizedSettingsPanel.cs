@@ -17,9 +17,9 @@ public class VirtualizedSettingsPanel : VirtualizingPanel, IScrollInfo
     private const double _itemHeight = 48; // Standard setting row height
     private const double _groupHeaderHeight = 32;
     private readonly Dictionary<int, Rect> _containerLayouts = new();
-    
-    public static readonly DependencyProperty ItemHeightProperty = 
-        DependencyProperty.Register(nameof(ItemHeight), typeof(double), typeof(VirtualizedSettingsPanel), 
+
+    public static readonly DependencyProperty ItemHeightProperty =
+        DependencyProperty.Register(nameof(ItemHeight), typeof(double), typeof(VirtualizedSettingsPanel),
             new FrameworkPropertyMetadata(48.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     public double ItemHeight
@@ -44,7 +44,7 @@ public class VirtualizedSettingsPanel : VirtualizingPanel, IScrollInfo
         foreach (UIElement child in InternalChildren)
         {
             var index = InternalChildren.IndexOf(child);
-            
+
             if (index >= firstVisible && index < firstVisible + visibleCount && index < itemCount)
             {
                 child.Measure(new Size(availableSize.Width, ItemHeight));
@@ -79,12 +79,12 @@ public class VirtualizedSettingsPanel : VirtualizingPanel, IScrollInfo
         foreach (UIElement child in InternalChildren)
         {
             var index = InternalChildren.IndexOf(child);
-            
+
             if (index >= firstVisible && index < firstVisible + visibleCount && index < itemCount)
             {
                 var y = index * ItemHeight - VerticalOffset;
                 var rect = new Rect(0, y, finalSize.Width, ItemHeight);
-                
+
                 child.Arrange(rect);
                 _containerLayouts[index] = rect;
             }
@@ -106,12 +106,12 @@ public class VirtualizedSettingsPanel : VirtualizingPanel, IScrollInfo
 
     public bool CanHorizontallyScroll { get; set; } = false;
     public bool CanVerticallyScroll { get; set; } = true;
-    
+
     public double ExtentWidth => _extent.Width;
     public double ExtentHeight => _extent.Height;
     public double ViewportWidth => _viewport.Width;
     public double ViewportHeight => _viewport.Height;
-    
+
     public double HorizontalOffset => _offset.X;
     public double VerticalOffset => _offset.Y;
 
@@ -182,7 +182,7 @@ public class OptimizedSettingsList : ItemsControl
 
     static OptimizedSettingsList()
     {
-        DefaultStyleKeyProperty.OverrideMetadata(typeof(OptimizedSettingsList), 
+        DefaultStyleKeyProperty.OverrideMetadata(typeof(OptimizedSettingsList),
             new FrameworkPropertyMetadata(typeof(OptimizedSettingsList)));
     }
 
@@ -204,7 +204,7 @@ public class OptimizedSettingsList : ItemsControl
 
         // Group settings by category
         var grouped = settings.GroupBy(s => s.Category);
-        
+
         foreach (var group in grouped.OrderBy(g => g.Key))
         {
             // Add group header
@@ -238,7 +238,7 @@ public class OptimizedSettingsList : ItemsControl
             return;
         }
 
-        var filtered = _flatSettings.Where(s => 
+        var filtered = _flatSettings.Where(s =>
             s.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
             s.Description?.Contains(query, StringComparison.OrdinalIgnoreCase) == true ||
             s.Category.Contains(query, StringComparison.OrdinalIgnoreCase)
@@ -264,7 +264,7 @@ public class OptimizedSettingsList : ItemsControl
             var visibleItems = new List<SettingItem>();
             string? currentGroup = null;
             bool currentGroupExpanded = true;
-            
+
             foreach (var item in _flatSettings)
             {
                 if (item.IsHeader)
@@ -304,11 +304,11 @@ public class OptimizedSettingsList : ItemsControl
         if (header != null)
         {
             header.IsExpanded = !header.IsExpanded;
-            
+
             // Refresh view
             var visibleItems = new List<SettingItem>();
             bool includeItems = true;
-            
+
             foreach (var item in _flatSettings)
             {
                 if (item.IsHeader)
@@ -372,7 +372,7 @@ public class SettingContainer : ContentControl
 {
     static SettingContainer()
     {
-        DefaultStyleKeyProperty.OverrideMetadata(typeof(SettingContainer), 
+        DefaultStyleKeyProperty.OverrideMetadata(typeof(SettingContainer),
             new FrameworkPropertyMetadata(typeof(SettingContainer)));
     }
 
@@ -443,15 +443,15 @@ public class SettingContainer : ContentControl
         UIElement? valueControl = item.Type switch
         {
             SettingType.Toggle => new CheckBox { IsChecked = (bool?)item.Value },
-            SettingType.Slider => new Slider 
-            { 
-                Value = Convert.ToDouble(item.Value ?? 0), 
-                Minimum = item.Min ?? 0, 
+            SettingType.Slider => new Slider
+            {
+                Value = double.TryParse(item.Value?.ToString(), out var parsedSliderValue) ? parsedSliderValue : (item.Min ?? 0),
+                Minimum = item.Min ?? 0,
                 Maximum = item.Max ?? 100,
                 Width = 150
             },
-            SettingType.Dropdown => new ComboBox 
-            { 
+            SettingType.Dropdown => new ComboBox
+            {
                 ItemsSource = item.Options,
                 SelectedValue = item.Value,
                 Width = 150

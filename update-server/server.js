@@ -238,21 +238,33 @@ function authenticateToken(req, res, next) {
   });
 }
 
+// Disk usage cache — avoids synchronous recursive I/O on every /api/system/config request
+const DIR_SIZE_CACHE_TTL = 60 * 1000; // 60 seconds
+const dirSizeCache = {};
+
 function getDirSize(dirPath) {
-  if (!fs.existsSync(dirPath)) return 0;
+  const now = Date.now();
+  if (dirSizeCache[dirPath] && (now - dirSizeCache[dirPath].ts) < DIR_SIZE_CACHE_TTL) {
+    return dirSizeCache[dirPath].size;
+  }
   let size = 0;
-  try {
-    const files = fs.readdirSync(dirPath);
-    for (const file of files) {
-      const filePath = path.join(dirPath, file);
-      const stat = fs.statSync(filePath);
-      if (stat.isDirectory()) {
-        size += getDirSize(filePath);
-      } else {
-        size += stat.size;
+  if (fs.existsSync(dirPath)) {
+    try {
+      const files = fs.readdirSync(dirPath);
+      for (const file of files) {
+        const filePath = path.join(dirPath, file);
+        const stat = fs.statSync(filePath);
+        if (stat.isDirectory()) {
+          size += getDirSize(filePath);
+        } else {
+          size += stat.size;
+        }
       }
+    } catch (e) {
+      console.error('[DirSize] Failed to calculate directory size for', dirPath, ':', e.message);
     }
-  } catch (e) { }
+  }
+  dirSizeCache[dirPath] = { size, ts: now };
   return size;
 }
 
@@ -282,28 +294,36 @@ function loadBuildState() {
       }
       return saved;
     }
-  } catch (e) { }
+  } catch (e) {
+    console.error('[BuildState] Failed to load build state:', e.message);
+  }
   return defaultState;
 }
 
 function saveBuildState() {
   try {
     fs.writeFileSync(BUILD_STATE_FILE, JSON.stringify(buildState, null, 2));
-  } catch (e) { }
+  } catch (e) {
+    console.error('[BuildState] Failed to save build state:', e.message);
+  }
 }
 
 let downloadCounts = loadDownloadCounts();
 function loadDownloadCounts() {
   try {
     if (fs.existsSync(DOWNLOADS_DB)) return JSON.parse(fs.readFileSync(DOWNLOADS_DB, 'utf8'));
-  } catch (e) { }
+  } catch (e) {
+    console.error('[Downloads] Failed to load download counts:', e.message);
+  }
   return { files: {}, total: 0, byVersion: {} };
 }
 
 function saveDownloadCounts() {
   try {
     fs.writeFileSync(DOWNLOADS_DB, JSON.stringify(downloadCounts, null, 2));
-  } catch (e) { }
+  } catch (e) {
+    console.error('[Downloads] Failed to save download counts:', e.message);
+  }
 }
 
 function trackDownload(version, filename) {
@@ -324,6 +344,15 @@ const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   message: { error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Dedicated rate limiter for authentication endpoints (stricter)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 login attempts per 15 minutes
+  message: { error: 'Too many login attempts, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -584,7 +613,7 @@ app.get('/api/releases/:version/manifest', async (req, res) => {
 });
 
 // --- Create a new release ---
-app.post('/api/releases', (req, res) => {
+app.post('/api/releases', authenticateToken, (req, res) => {
   const { version, notes, channel } = req.body;
   if (!version) return res.status(400).json({ error: 'Version is required' });
 
@@ -616,7 +645,7 @@ app.post('/api/releases', (req, res) => {
 });
 
 // --- Upload files to a release ---
-app.post('/api/releases/:version/upload', uploadLimiter, upload.array('files', 5), async (req, res) => {
+app.post('/api/releases/:version/upload', authenticateToken, uploadLimiter, upload.array('files', 5), async (req, res) => {
   const db = loadDB();
   let release = db.releases.find(r => r.version === req.params.version);
 
@@ -665,7 +694,7 @@ app.post('/api/releases/:version/upload', uploadLimiter, upload.array('files', 5
 });
 
 // --- Delete a release ---
-app.delete('/api/releases/:version', (req, res) => {
+app.delete('/api/releases/:version', authenticateToken, (req, res) => {
   const db = loadDB();
   const idx = db.releases.findIndex(r => r.version === req.params.version);
   if (idx < 0) return res.status(404).json({ error: 'Release not found' });
@@ -683,7 +712,7 @@ app.delete('/api/releases/:version', (req, res) => {
 });
 
 // --- Update release notes ---
-app.patch('/api/releases/:version', (req, res) => {
+app.patch('/api/releases/:version', authenticateToken, (req, res) => {
   const db = loadDB();
   const release = db.releases.find(r => r.version === req.params.version);
   if (!release) return res.status(404).json({ error: 'Release not found' });
@@ -695,7 +724,7 @@ app.patch('/api/releases/:version', (req, res) => {
 });
 
 // --- Publish from build output (used by build script) ---
-app.post('/api/publish', uploadLimiter, (req, res, next) => {
+app.post('/api/publish', authenticateToken, uploadLimiter, (req, res, next) => {
   upload.array('files', 200)(req, res, (err) => {
     if (err) {
       console.error('[Upload Error]', err.message);
@@ -953,7 +982,7 @@ app.get('/api/config', (req, res) => {
 });
 
 // --- Update default client configuration ---
-app.post('/api/config', (req, res) => {
+app.post('/api/config', authenticateToken, (req, res) => {
   const currentConfig = loadClientConfig();
   const newConfig = { ...currentConfig, ...req.body };
 
@@ -1009,20 +1038,26 @@ app.get('/api/releases/:version/patches', (req, res) => {
 
 // --- Download a patch file ---
 app.get('/downloads/:version/patches/:filename', (req, res) => {
-  // SECURITY: Sanitize filename to prevent path traversal
+  // SECURITY: Sanitize version and filename to prevent path traversal
+  const sanitizedVersion = req.params.version.replace(/[^a-zA-Z0-9._-]/g, '');
+  if (sanitizedVersion !== req.params.version) {
+    console.warn('[UpdateServer] Invalid version parameter blocked:', req.params.version);
+    return res.status(400).json({ error: 'Invalid version' });
+  }
+
   const sanitizedFilename = path.basename(req.params.filename);
   if (sanitizedFilename !== req.params.filename) {
-    Logger.Warning("UpdateServer", `Path traversal attempt blocked: ${req.params.filename}`);
+    console.warn('[UpdateServer] Path traversal attempt blocked:', req.params.filename);
     return res.status(400).json({ error: 'Invalid filename' });
   }
 
-  const filePath = path.join(RELEASES_DIR, req.params.version, 'patches', sanitizedFilename);
+  const filePath = path.join(RELEASES_DIR, sanitizedVersion, 'patches', sanitizedFilename);
 
   // SECURITY: Verify resolved path is within allowed directory
   const resolvedPath = path.resolve(filePath);
-  const allowedDir = path.resolve(path.join(RELEASES_DIR, req.params.version, 'patches'));
+  const allowedDir = path.resolve(path.join(RELEASES_DIR, sanitizedVersion, 'patches'));
   if (!resolvedPath.startsWith(allowedDir)) {
-    Logger.Warning("UpdateServer", `Path escape attempt blocked: ${req.params.filename}`);
+    console.warn('[UpdateServer] Path escape attempt blocked:', req.params.filename);
     return res.status(400).json({ error: 'Invalid path' });
   }
 
@@ -1032,7 +1067,7 @@ app.get('/downloads/:version/patches/:filename', (req, res) => {
 });
 
 // --- Trigger patch generation for all versions ---
-app.post('/api/admin/generate-patches', async (req, res) => {
+app.post('/api/admin/generate-patches', authenticateToken, async (req, res) => {
   // Run in background
   res.json({ message: 'Patch generation started in background' });
 
@@ -1131,18 +1166,6 @@ async function generatePatchesForRelease(newVersion) {
   } catch (err) {
     console.error('[PATCH] Error generating patches:', err);
   }
-}
-
-// === Helper: Compare versions ===
-function compareVersions(a, b) {
-  const pa = a.split('.').map(Number);
-  const pb = b.split('.').map(Number);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const na = pa[i] || 0;
-    const nb = pb[i] || 0;
-    if (na !== nb) return na - nb;
-  }
-  return 0;
 }
 
 // === Helpers ===
@@ -1312,8 +1335,11 @@ wss.on('connection', (ws, req) => {
 
 
 // Admin Auth Routes
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authLimiter, async (req, res) => {
   const { username, password } = req.body;
+  if (!username || typeof username !== 'string' || !password || typeof password !== 'string') {
+    return res.status(400).json({ error: 'Username and password are required' });
+  }
   const admin = getAdminUser();
 
   if (username === admin.username && await bcrypt.compare(password, admin.passwordHash)) {

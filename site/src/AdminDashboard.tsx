@@ -71,7 +71,8 @@ export const AdminDashboard: React.FC = () => {
   // Setup WebSocket for real-time build output
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const token = localStorage.getItem('token') || '';
+    const wsUrl = `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
@@ -455,16 +456,24 @@ const LoginPanel: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
     <div className="glass-card" style={{ maxWidth: '400px', margin: '100px auto', padding: '40px' }}>
       <h2 style={{ marginBottom: '24px', textAlign: 'center' }}>Admin Login</h2>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <label htmlFor="login-username" style={{ fontSize: '13px', color: 'var(--text-dim)' }}>Username</label>
         <input
+          id="login-username"
           type="text"
           placeholder="Username"
+          aria-label="Username"
+          autoComplete="username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)' }}
         />
+        <label htmlFor="login-password" style={{ fontSize: '13px', color: 'var(--text-dim)' }}>Password</label>
         <input
+          id="login-password"
           type="password"
           placeholder="Password"
+          aria-label="Password"
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)' }}

@@ -452,7 +452,7 @@
                                                 <CheckBox x:Name="MainPreventDisplaySleepCheck" Content="Prevent display sleep" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" AutomationProperties.AutomationId="PreventDisplaySleepCheckBox"/>
 
                                                 <TextBlock Text="Heartbeat Input Mode" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
-                                                <ComboBox x:Name="MainHeartbeatInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,10" SelectionChanged="MainComboSettingChanged" AutomationProperties.AutomationId="UseHeartbeatCheckBox">
+                                                <ComboBox x:Name="MainHeartbeatInputModeCombo" Style="{DynamicResource ModernComboBox}" Margin="0,0,0,10" SelectionChanged="MainComboSettingChanged" AutomationProperties.AutomationId="HeartbeatInputModeComboBox">
                                                     <ComboBoxItem Content="Disabled"/>
                                                     <ComboBoxItem Content="F13"/>
                                                     <ComboBoxItem Content="F14"/>
@@ -461,7 +461,7 @@
                                                 </ComboBox>
 
                                                 <TextBlock Text="Default Duration (minutes)" FontWeight="Medium" Margin="0,2,0,6" Foreground="{DynamicResource ForegroundBrush}"/>
-                                                <Slider x:Name="MainDurationSlider" Minimum="1" Maximum="1440" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainDurationSlider_ValueChanged" AutomationProperties.AutomationId="HeartbeatIntervalTextBox"/>
+                                                <Slider x:Name="MainDurationSlider" Minimum="1" Maximum="1440" TickFrequency="1" IsSnapToTickEnabled="True" Style="{DynamicResource ModernSlider}" ValueChanged="MainDurationSlider_ValueChanged" AutomationProperties.AutomationId="DurationSlider"/>
                                                 <TextBox x:Name="MainDurationCustomBox" Style="{DynamicResource ModernTextBox}" Margin="0,8,0,8" TextChanged="MainDurationCustomBox_TextChanged" AutomationProperties.AutomationId="DurationTextBox"/>
 
                                                 <CheckBox x:Name="MainAutoExitOnCompleteCheck" Content="Auto-exit when timed session completes" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,10" Checked="MainSettingChanged" Unchecked="MainSettingChanged"/>

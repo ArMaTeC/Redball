@@ -101,10 +101,10 @@ public partial class MiniWidgetWindow : Window
         var customQuickMinutes = Math.Clamp(config.MiniWidgetCustomQuickMinutes, 1, 720);
         QuickAddCustomBtn.Content = $"+{customQuickMinutes}m";
         QuickAddCustomBtn.ToolTip = $"Start or extend timed session by {customQuickMinutes} minutes";
-        
+
         // Status Text & Color
         StatusText.Text = ka.GetStatusText();
-        
+
         if (ka.IsActive)
         {
             StatusDot.Fill = ka.Until.HasValue
@@ -129,7 +129,7 @@ public partial class MiniWidgetWindow : Window
 
                 if (remaining.TotalSeconds > 0)
                 {
-                    TimeText.Text = remaining.TotalMinutes >= 1 
+                    TimeText.Text = remaining.TotalMinutes >= 1
                         ? $"{(int)remaining.TotalMinutes}m remaining"
                         : $"{(int)remaining.TotalSeconds}s remaining";
                     UpdateProgressRing(total > 0 ? elapsed / total : 1);
@@ -176,7 +176,7 @@ public partial class MiniWidgetWindow : Window
         // Network Icon
         var isVpn = StaticNetworkMonitor.IsVpnConnected();
         var isConnected = StaticNetworkMonitor.IsConnected();
-        
+
         NetworkIcon.Text = isConnected ? "\uE774" : "\uEB55"; // Check or Disconnected
         VpnIcon.Visibility = isVpn ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -195,22 +195,22 @@ public partial class MiniWidgetWindow : Window
     {
         percentage = Math.Clamp(percentage, 0, 0.999);
         ProgressRing.Visibility = Visibility.Visible;
-        
+
         double radius = 15;
         double angle = percentage * 360;
-        
+
         var startPoint = new Point(16, 1);
         var endPoint = new Point(
             16 + radius * Math.Sin(angle * Math.PI / 180),
             16 - radius * Math.Cos(angle * Math.PI / 180));
 
         bool isLargeArc = angle > 180;
-        
+
         var geometry = new PathGeometry();
         var figure = new PathFigure { StartPoint = startPoint, IsClosed = false };
         figure.Segments.Add(new ArcSegment(endPoint, new Size(radius, radius), 0, isLargeArc, SweepDirection.Clockwise, true));
         geometry.Figures.Add(figure);
-        
+
         ProgressRing.Data = geometry;
     }
 
@@ -527,11 +527,10 @@ public partial class MiniWidgetWindow : Window
     }
 }
 
-// Static helpers to avoid creating new service instances or if services are accessible via Instance
-internal static class StaticBatteryMonitor 
+// Static helpers — delegate to singleton service instances
+internal static class StaticBatteryMonitor
 {
-    private static readonly BatteryMonitorService _monitor = new();
-    public static BatteryStatus GetStatus() => _monitor.GetStatus();
+    public static BatteryStatus GetStatus() => BatteryMonitorService.Instance.GetStatus();
 }
 
 internal static class StaticNetworkMonitor

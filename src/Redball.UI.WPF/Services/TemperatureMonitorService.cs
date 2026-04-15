@@ -9,7 +9,7 @@ using LibreHardwareMonitor.Hardware;
 namespace Redball.UI.Services;
 
 /// <summary>
-/// Monitors CPU temperature via multiple methods (LibreHardwareMonitor, WMI, Performance Counters, MSR) 
+/// Monitors CPU temperature via multiple methods (LibreHardwareMonitor, WMI, Performance Counters, MSR)
 /// and optionally auto-pauses keep-awake if temperature exceeds a configured threshold (thermal protection).
 /// LibreHardwareMonitor provides the most reliable detection across modern CPUs and motherboards.
 /// </summary>
@@ -25,7 +25,7 @@ public class TemperatureMonitorService : IDisposable
     private int _consecutiveFailures;
     private bool _hasLoggedAllMethodsFailed;
     private bool _libreHardwareInitialized;
-    private readonly string[] _wmiClassesToTry = 
+    private readonly string[] _wmiClassesToTry =
     {
         "MSAcpi_ThermalZoneTemperature",
         "Win32_PerfFormattedData_Counters_ThermalZoneInformation",
@@ -46,7 +46,7 @@ public class TemperatureMonitorService : IDisposable
 
         // Offload heavy initialization to background
         Task.Run(() => InitializeHardwareAsync());
-        
+
         Logger.Verbose("TemperatureMonitorService", "Instance created");
     }
 
@@ -74,7 +74,7 @@ public class TemperatureMonitorService : IDisposable
 
         // Initial poll after hardware setup
         await Task.Run(() => PollTemperature());
-        
+
         // Start the timer on the UI thread for reliability
         await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => {
             _pollTimer.Start();
@@ -164,25 +164,25 @@ public class TemperatureMonitorService : IDisposable
         try
         {
             if (_computer == null) return null;
-            
+
             // Update hardware tree to get fresh readings
             _computer.Accept(new UpdateVisitor());
-            
+
             // Look for CPU temperature sensors
             foreach (var hardware in _computer.Hardware)
             {
                 if (hardware.HardwareType == HardwareType.Cpu)
                 {
                     hardware.Update();
-                    
+
                     // Check CPU package temperature first (most accurate)
                     foreach (var sensor in hardware.Sensors)
                     {
-                        if (sensor.SensorType == SensorType.Temperature && 
+                        if (sensor.SensorType == SensorType.Temperature &&
                             sensor.Value.HasValue)
                         {
                             var name = sensor.Name?.ToLower() ?? "";
-                            
+
                             // Prioritize package/core average over individual cores
                             if (name.Contains("package") || name.Contains("tdie") || name.Contains("tctl"))
                             {
@@ -196,11 +196,11 @@ public class TemperatureMonitorService : IDisposable
                             }
                         }
                     }
-                    
+
                     // Fallback to any CPU temperature sensor
                     foreach (var sensor in hardware.Sensors)
                     {
-                        if (sensor.SensorType == SensorType.Temperature && 
+                        if (sensor.SensorType == SensorType.Temperature &&
                             sensor.Value.HasValue)
                         {
                             var celsius = sensor.Value.Value;
@@ -214,7 +214,7 @@ public class TemperatureMonitorService : IDisposable
                     }
                 }
             }
-            
+
             // Check motherboard sensors (some report CPU temp via Super I/O)
             foreach (var hardware in _computer.Hardware)
             {
@@ -226,7 +226,7 @@ public class TemperatureMonitorService : IDisposable
                         subHardware.Update();
                         foreach (var sensor in subHardware.Sensors)
                         {
-                            if (sensor.SensorType == SensorType.Temperature && 
+                            if (sensor.SensorType == SensorType.Temperature &&
                                 sensor.Value.HasValue)
                             {
                                 var name = sensor.Name?.ToLower() ?? "";
@@ -276,6 +276,7 @@ public class TemperatureMonitorService : IDisposable
 
             foreach (ManagementObject obj in searcher.Get().Cast<ManagementObject>())
             {
+                if (obj["CurrentTemperature"] == null) continue;
                 var tempKelvin = Convert.ToDouble(obj["CurrentTemperature"]);
                 // WMI returns temperature in tenths of Kelvin
                 var tempCelsius = (tempKelvin / 10.0) - 273.15;
@@ -315,7 +316,7 @@ public class TemperatureMonitorService : IDisposable
                         return celsius;
                     }
                 }
-                
+
                 temp = obj["Temperature"];
                 if (temp != null)
                 {
@@ -352,7 +353,7 @@ public class TemperatureMonitorService : IDisposable
                     if (celsius > 0 && celsius < 150)
                     {
                         var name = obj["Name"]?.ToString() ?? "";
-                        if (name.Contains("CPU", StringComparison.OrdinalIgnoreCase) || 
+                        if (name.Contains("CPU", StringComparison.OrdinalIgnoreCase) ||
                             name.Contains("Processor", StringComparison.OrdinalIgnoreCase))
                         {
                             Logger.Verbose("TemperatureMonitor", $"Got temp from CIM_Sensor ({name}): {celsius:F1}C");

@@ -518,18 +518,6 @@ public partial class MainWindow
         SetMiniWidgetPresetSelection(MiniWidgetPresetService.Custom);
     }
 
-    private void UpdateAutoUpdateIntervalText(int minutes)
-    {
-        // TODO: Re-add MainAutoUpdateIntervalText control
-        // if (MainAutoUpdateIntervalText == null) return;
-        // if (minutes >= 60 && minutes % 60 == 0)
-        //     MainAutoUpdateIntervalText.Text = minutes == 60 ? "Interval: every hour" : $"Interval: every {minutes / 60} hours";
-        // else if (minutes > 60)
-        //     MainAutoUpdateIntervalText.Text = $"Interval: every {minutes / 60}h {minutes % 60}m";
-        // else
-        //     MainAutoUpdateIntervalText.Text = $"Interval: every {minutes} minutes";
-    }
-
     private void MainSettingChanged(object sender, RoutedEventArgs e)
     {
         // Update settings are now handled by UpdatesSectionView with auto-save

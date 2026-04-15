@@ -70,7 +70,7 @@ public class RedballUIAutomation : IDisposable
         }
 
         _automation = new UIA3Automation();
-        
+
         try
         {
             var startInfo = new ProcessStartInfo
@@ -87,12 +87,12 @@ public class RedballUIAutomation : IDisposable
             Thread.Sleep(1500);
 
             _mainWindow = GetWindowByProcessId(_app.ProcessId, TimeSpan.FromSeconds(30));
-            
+
             if (_mainWindow == null)
             {
                 throw new InvalidOperationException("Could not find main window. Application may have crashed or failed to start.");
             }
-            
+
             EnsureWindowIsVisible(_mainWindow);
         }
         catch (Exception ex)
@@ -147,10 +147,10 @@ public class RedballUIAutomation : IDisposable
             {
                 // Keep polling until timeout.
             }
-            
+
             Thread.Sleep(200);
         }
-        
+
         return null;
     }
 
@@ -327,6 +327,34 @@ public class RedballUIAutomation : IDisposable
         }
 
         items[index].Select();
+    }
+
+    /// <summary>
+    /// Sets the value of a slider by its automation ID.
+    /// </summary>
+    public void SetSliderValue(string automationId, double value)
+    {
+        var slider = FindElementByAutomationId(automationId)?.AsSlider();
+        if (slider == null)
+        {
+            throw new InvalidOperationException($"Slider '{automationId}' was not found.");
+        }
+
+        slider.Value = value;
+    }
+
+    /// <summary>
+    /// Gets the current value of a slider by its automation ID.
+    /// </summary>
+    public double GetSliderValue(string automationId)
+    {
+        var slider = FindElementByAutomationId(automationId)?.AsSlider();
+        if (slider == null)
+        {
+            throw new InvalidOperationException($"Slider '{automationId}' was not found.");
+        }
+
+        return slider.Value;
     }
 
     /// <summary>

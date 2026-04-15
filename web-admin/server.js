@@ -21,6 +21,36 @@ const BUILD_LOG_FILE = path.join(__dirname, 'logs', 'build.log');
 const AUTH_FILE = path.join(__dirname, 'logs', 'auth.json');
 const DOWNLOADS_DB = path.join(__dirname, 'logs', 'downloads.json');
 
+// Disk usage cache — avoids synchronous recursive I/O on every /api/system/config request
+const DIR_SIZE_CACHE_TTL = 60 * 1000; // 60 seconds
+const dirSizeCache = {};
+
+function getDirSize(dirPath) {
+  const now = Date.now();
+  if (dirSizeCache[dirPath] && (now - dirSizeCache[dirPath].ts) < DIR_SIZE_CACHE_TTL) {
+    return dirSizeCache[dirPath].size;
+  }
+  let size = 0;
+  if (fs.existsSync(dirPath)) {
+    try {
+      const files = fs.readdirSync(dirPath);
+      for (const file of files) {
+        const filePath = path.join(dirPath, file);
+        const stat = fs.statSync(filePath);
+        if (stat.isDirectory()) {
+          size += getDirSize(filePath);
+        } else {
+          size += stat.size;
+        }
+      }
+    } catch (e) {
+      console.error('[DirSize] Failed to calculate size for', dirPath, ':', e.message);
+    }
+  }
+  dirSizeCache[dirPath] = { size, ts: now };
+  return size;
+}
+
 // Download tracking database
 let downloadCounts = loadDownloadCounts();
 
@@ -132,9 +162,9 @@ function authenticateToken(req, res, next) {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
-    server: 'web-admin', 
+  res.json({
+    status: 'healthy',
+    server: 'web-admin',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
@@ -325,23 +355,6 @@ app.get('/api/download/:version/:file', (req, res) => {
 // System Config endpoints
 app.get('/api/system/config', authenticateToken, (req, res) => {
   try {
-    // Calculate disk usage
-    const getDirSize = (dirPath) => {
-      if (!fs.existsSync(dirPath)) return 0;
-      let size = 0;
-      const files = fs.readdirSync(dirPath);
-      for (const file of files) {
-        const filePath = path.join(dirPath, file);
-        const stat = fs.statSync(filePath);
-        if (stat.isDirectory()) {
-          size += getDirSize(filePath);
-        } else {
-          size += stat.size;
-        }
-      }
-      return size;
-    };
-
     const releaseCount = fs.existsSync(RELEASES_DIR)
       ? fs.readdirSync(RELEASES_DIR).filter(d => /^\d+\.\d+\.\d+$/.test(d)).length
       : 0;
@@ -511,8 +524,26 @@ app.get(/.*/, (req, res) => {
 });
 
 // WebSocket
-wss.on('connection', (ws) => {
-  console.log('[WS] Client connected');
+wss.on('connection', (ws, req) => {
+  // Authenticate WebSocket connection using token from query string
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const token = url.searchParams.get('token');
+
+  if (!token) {
+    console.log('[WS] Rejected connection: no token provided');
+    ws.close(1008, 'Authentication required');
+    return;
+  }
+
+  try {
+    jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    console.log('[WS] Rejected connection: invalid token');
+    ws.close(1008, 'Invalid token');
+    return;
+  }
+
+  console.log('[WS] New authenticated client connected');
 
   ws.send(JSON.stringify({ type: 'state', data: buildState }));
 
@@ -648,9 +679,9 @@ function parseBuildStage(line) {
   for (const s of stages) {
     if (s.pattern.test(line)) return s;
   }
-  
+
   if (/error|failed|abort|unexpected failure/i.test(line)) {
-      return { name: buildState.stage, progress: buildState.progress, status: 'failed' };
+    return { name: buildState.stage, progress: buildState.progress, status: 'failed' };
   }
   return null;
 }
