@@ -16,7 +16,7 @@ const { generatePatches, formatBytes } = require('./lib/delta-patches');
 const app = express();
 app.set('trust proxy', 1); // Enable trust proxy for rate limiting (needed behind Cloudflare/reverse proxy)
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, path: '/ws' });
 
 const PORT = process.env.PORT || 3500;
 const PROJECT_ROOT = path.join(__dirname, '..');

@@ -19,14 +19,14 @@
   "UpdateRepoName": "Redball",
   "UpdateChannel": "stable",
   "VerifyUpdateSignature": true,
-  "Theme": "Cyberpunk",
+  "Theme": "System",
   "Locale": "en-GB",
   "MinimizeToTray": true,
   "MinimizeOnStart": false,
   "ShowNotifications": true,
   "ShowBalloonOnStart": true,
   "VerboseLogging": false,
-  "EnableTelemetry": false,
+  "EnableTelemetry": true,
   "EnablePerformanceMetrics": true,
   "MaxLogSizeMB": 10
 }

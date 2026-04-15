@@ -1181,6 +1181,58 @@
         let buildRunning = false;
         let timerInterval;
 
+        // --- Toast Notifications ---
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                padding: 14px 24px;
+                border-radius: 10px;
+                font-weight: 500;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(148, 163, 184, 0.12);
+                max-width: 320px;
+                word-wrap: break-word;
+            `;
+            if (type === 'success') {
+                toast.style.background = 'rgba(16, 185, 129, 0.15)';
+                toast.style.color = '#34d399';
+                toast.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            } else if (type === 'error') {
+                toast.style.background = 'rgba(239, 68, 68, 0.15)';
+                toast.style.color = '#f87171';
+                toast.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+            } else {
+                toast.style.background = 'rgba(45, 127, 249, 0.15)';
+                toast.style.color = '#5a9dff';
+                toast.style.borderColor = 'rgba(45, 127, 249, 0.3)';
+            }
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Add slide animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(400px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
         // --- Sections ---
         function showSection(id, btn) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -1509,7 +1561,7 @@
         // --- Socket & Build ---
         function initSocket() {
             const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            socket = new WebSocket(`${protocol}//${location.host}?token=${token}`);
+            socket = new WebSocket(`${protocol}//${location.host}/ws?token=${token}`);
 
             socket.onopen = () => {
                 document.getElementById('connection-dot').className = 'connection-dot connected';
