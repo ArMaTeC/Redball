@@ -280,7 +280,7 @@ public partial class MainWindow
         {
             UpdateTrayIconState(isActive);
             UpdateTrayIconCountdown();
-            
+
             // Show sleek HUD feedback for hotkey/UI changes
             var status = isActive ? "ACTIVATED" : "PAUSED";
             var icon = isActive ? "🚀" : "⏸️";
@@ -299,9 +299,9 @@ public partial class MainWindow
         {
             // Calculate pulse alpha based on frame (breathe effect)
             int intensity = (int)(180 + 75 * Math.Sin(Math.PI * _animationFrame / (AnimationMaxFrames / 2.0)));
-            
+
             var until = KeepAwakeService.Instance.Until;
-            
+
             // Check higher priority states
             if (GamingModeService.Instance.IsGaming)
             {
@@ -316,7 +316,7 @@ public partial class MainWindow
             else if (BatteryMonitorService.Instance.IsOnBattery && BatteryMonitorService.Instance.BatteryPercent < 25)
             {
                 _trayIcon.ToolTipText = $"Redball {versionStr} — Active (Battery Low: {BatteryMonitorService.Instance.BatteryPercent}%)";
-                SetGeneratedTrayIcon(GenerateColorizedIcon(_originalTrayIcon, System.Drawing.Color.Red, intensity)); // Red ball pulse
+                SetGeneratedTrayIcon(GenerateColorizedIcon(_originalTrayIcon, System.Drawing.Color.OrangeRed, intensity)); // Orange-red ring + dot (visible against red ball)
             }
             else if (until.HasValue)
             {
@@ -334,7 +334,7 @@ public partial class MainWindow
         else
         {
             _trayIcon.ToolTipText = $"Redball {versionStr} — Paused";
-            SetGeneratedTrayIcon(GenerateColorizedIcon(_originalTrayIcon, System.Drawing.Color.Gray, 120)); // Dimmed Gray
+            SetGeneratedTrayIcon(GenerateDimmedIcon(_originalTrayIcon)); // Red ball dimmed with gray dot
         }
     }
 
@@ -390,33 +390,32 @@ public partial class MainWindow
         }
     }
 
-    private static Icon GenerateColorizedIcon(Icon baseIcon, System.Drawing.Color targetColor, int alpha)
+    private static Icon GenerateColorizedIcon(Icon baseIcon, System.Drawing.Color statusColor, int alpha)
     {
         try
         {
             using var bmp = new Bitmap(16, 16);
             using var g = Graphics.FromImage(bmp);
-            
-            // ColorMatrix to tint the icon
-            float r = targetColor.R / 255f;
-            float gVal = targetColor.G / 255f;
-            float b = targetColor.B / 255f;
-            float a = alpha / 255f;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-            var cm = new System.Drawing.Imaging.ColorMatrix(new float[][]
-            {
-                new float[] {r, 0, 0, 0, 0},
-                new float[] {0, gVal, 0, 0, 0},
-                new float[] {0, 0, b, 0, 0},
-                new float[] {0, 0, 0, a, 0},
-                new float[] {0, 0, 0, 0, 1}
-            });
-
-            using var ia = new System.Drawing.Imaging.ImageAttributes();
-            ia.SetColorMatrix(cm);
-
+            // 1. Draw the original red ball at full opacity so it always shows through
             using var baseBmp = baseIcon.ToBitmap();
-            g.DrawImage(baseBmp, new System.Drawing.Rectangle(0, 0, 16, 16), 0, 0, baseBmp.Width, baseBmp.Height, System.Drawing.GraphicsUnit.Pixel, ia);
+            g.DrawImage(baseBmp, 0, 0, 16, 16);
+
+            // 2. Overlay a semi-transparent status colour ring around the ball
+            //    so the red ball identity is always preserved underneath
+            int ringAlpha = Math.Clamp(alpha * 2 / 3, 60, 180);
+            using var ringPen = new System.Drawing.Pen(
+                System.Drawing.Color.FromArgb(ringAlpha, statusColor.R, statusColor.G, statusColor.B), 2f);
+            g.DrawEllipse(ringPen, 1, 1, 13, 13);
+
+            // 3. Small filled status dot in bottom-right corner
+            int dotAlpha = Math.Clamp(alpha, 160, 255);
+            using var dotBrush = new SolidBrush(
+                System.Drawing.Color.FromArgb(dotAlpha, statusColor.R, statusColor.G, statusColor.B));
+            g.FillEllipse(dotBrush, 10, 10, 5, 5);
+            using var dotOutline = new System.Drawing.Pen(System.Drawing.Color.FromArgb(180, 0, 0, 0), 0.8f);
+            g.DrawEllipse(dotOutline, 10, 10, 5, 5);
 
             var handle = bmp.GetHicon();
             using var tempIcon = System.Drawing.Icon.FromHandle(handle);
@@ -427,6 +426,41 @@ public partial class MainWindow
         catch (Exception ex)
         {
             Logger.Debug("MainWindow", $"Failed to colorize icon: {ex.Message}");
+            return baseIcon;
+        }
+    }
+
+    private static Icon GenerateDimmedIcon(Icon baseIcon)
+    {
+        try
+        {
+            using var bmp = new Bitmap(16, 16);
+            using var g = Graphics.FromImage(bmp);
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            // 1. Draw the original red ball
+            using var baseBmp = baseIcon.ToBitmap();
+            g.DrawImage(baseBmp, 0, 0, 16, 16);
+
+            // 2. Dark semi-transparent overlay to dim the ball (reads as "inactive")
+            using var dimBrush = new SolidBrush(System.Drawing.Color.FromArgb(140, 0, 0, 0));
+            g.FillEllipse(dimBrush, 1, 1, 14, 14);
+
+            // 3. Small gray dot bottom-right to signal paused state
+            using var dotBrush = new SolidBrush(System.Drawing.Color.FromArgb(220, 160, 160, 160));
+            g.FillEllipse(dotBrush, 10, 10, 5, 5);
+            using var dotOutline = new System.Drawing.Pen(System.Drawing.Color.FromArgb(180, 0, 0, 0), 0.8f);
+            g.DrawEllipse(dotOutline, 10, 10, 5, 5);
+
+            var handle = bmp.GetHicon();
+            using var tempIcon = System.Drawing.Icon.FromHandle(handle);
+            var clonedIcon = (Icon)tempIcon.Clone();
+            DestroyIcon(handle);
+            return clonedIcon;
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug("MainWindow", $"Failed to generate dimmed icon: {ex.Message}");
             return baseIcon;
         }
     }
@@ -480,8 +514,8 @@ public partial class MainWindow
             using var baseBmp = baseIcon.ToBitmap();
             g.DrawImage(baseBmp, 0, 0, 16, 16);
 
-            // Draw semi-transparent background for text using state color
-            using var bgBrush = new SolidBrush(System.Drawing.Color.FromArgb(bgColor.A, bgColor.R, bgColor.G, bgColor.B));
+            // Draw semi-transparent background for text — partial opacity keeps red ball visible
+            using var bgBrush = new SolidBrush(System.Drawing.Color.FromArgb(Math.Clamp(bgColor.A * 3 / 4, 100, 200), bgColor.R, bgColor.G, bgColor.B));
             g.FillRectangle(bgBrush, 0, 7, 16, 9);
 
             // Draw countdown text
