@@ -357,9 +357,38 @@ auto_release() {
             log_warn "No distribution files found to publish"
         else
             log_info "Uploading files to update-server..."
+
+            # Obtain a JWT for the publish call
+            local update_server_token=""
+            local update_server_password
+            update_server_password=$(node -e "
+              const fs=require('fs'),path=require('path');
+              const f=path.join('$PROJECT_ROOT','update-server','logs','admin.json');
+              if(fs.existsSync(f)){const d=JSON.parse(fs.readFileSync(f,'utf8'));process.stdout.write(d.password||'')}
+            " 2>/dev/null || true)
+            if [[ -n "$update_server_password" ]]; then
+                local login_resp
+                login_resp=$(curl -s -X POST "http://localhost:3500/api/auth/login" \
+                    -H "Content-Type: application/json" \
+                    -d "{\"username\":\"admin\",\"password\":\"${update_server_password}\"}" 2>/dev/null || true)
+                update_server_token=$(echo "$login_resp" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8');try{const j=JSON.parse(d);process.stdout.write(j.token||'')}catch{}" 2>/dev/null || true)
+            fi
+            # Fall back: generate token directly from secret if login unavailable
+            if [[ -z "$update_server_token" ]]; then
+                update_server_token=$(node -e "
+                  const fs=require('fs'),path=require('path'),jwt=require('$PROJECT_ROOT/update-server/node_modules/jsonwebtoken');
+                  const sf=path.join('$PROJECT_ROOT','update-server','logs','.jwt-secret');
+                  if(fs.existsSync(sf)){const s=fs.readFileSync(sf,'utf8').trim();process.stdout.write(jwt.sign({username:'build',role:'admin'},s,{expiresIn:'1h'}))}
+                " 2>/dev/null || true)
+            fi
+
+            local auth_header=()
+            [[ -n "$update_server_token" ]] && auth_header=("-H" "Authorization: Bearer ${update_server_token}")
+
             local publish_response
             publish_response=$(curl -s --connect-timeout 10 --max-time 120 -w "\n%{http_code}" -X POST \
                 "http://localhost:3500/api/publish?version=${version}" \
+                "${auth_header[@]}" \
                 -F "version=${version}" \
                 -F "notes=Release ${version} (${CHANNEL} channel)" \
                 ${channel_flag} \

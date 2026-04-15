@@ -571,7 +571,14 @@ app.get('/downloads/:version/:filename', (req, res) => {
 // --- Get manifest.json for a release (differential updates) ---
 app.get('/api/releases/:version/manifest', async (req, res) => {
   const db = loadDB();
-  const release = db.releases.find(r => r.version === req.params.version);
+  let release = db.releases.find(r => r.version === req.params.version);
+
+  // Fall back to GitHub cache if not in local DB (e.g. published before DB was seeded)
+  if (!release) {
+    const cached = await fetchGitHubReleases();
+    release = cached.find(r => r.version === req.params.version);
+  }
+
   if (!release) return res.status(404).json({ error: 'Release not found' });
 
   // Build manifest.json compatible with UpdateService.cs
