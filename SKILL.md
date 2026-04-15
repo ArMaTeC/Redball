@@ -15,7 +15,7 @@ Redball is a .NET 10 WPF desktop application for Windows that prevents system sl
 
 - [ ] **Windows Requirements**: Windows 10/11 (8.1+ minimum)
 - [ ] **.NET 10 SDK**: Installed for building
-- [ ] **WiX Toolset v4**: For MSI creation (install via `dotnet tool install --global wix`)
+- [ ] **NSIS v3.0+**: For EXE installer creation (install via package manager)
 - [ ] **Code Signing Certificate**: PFX file with password (optional for dev, required for release)
 - [ ] **GitHub Secrets**: `CODE_SIGNING_CERT` and `CODE_SIGNING_PASSWORD` for CI signing
 
@@ -27,17 +27,17 @@ Redball is a .NET 10 WPF desktop application for Windows that prevents system sl
 
 ## Deployment Methods
 
-### Method 1: MSI Installer (Recommended)
+### Method 1: NSIS Installer (Recommended)
 
 ```powershell
-# Full deploy pipeline (build WPF, create MSI, sign)
-.\installer\Deploy-Redball.ps1
+# Full deploy pipeline (build WPF, create installer, sign)
+.\scripts\build.ps1 all
 
-# Build MSI only with specific version
-.\installer\Build-MSI.ps1 -Version "3.0.0"
+# Build installer only with specific version
+.\scripts\build.ps1 windows -Version "2.1.654"
 ```
 
-The MSI:
+The NSIS installer:
 - Installs to `%LocalAppData%\Redball` (per-user, no admin required)
 - Creates Start Menu and Desktop shortcuts
 - Optional startup shortcut via Registry Run key
@@ -81,11 +81,10 @@ dotnet run --project src/Redball.UI.WPF/
 # Full build with default version from version.txt
 .\scripts\build.ps1
 
-# Skip specific steps
-.\scripts\build.ps1 -SkipTests       # Skip test execution
-.\scripts\build.ps1 -SkipLint       # Skip PSScriptAnalyzer
-.\scripts\build.ps1 -SkipWPF       # Skip WPF build
-.\scripts\build.ps1 -SkipMSI       # Skip MSI creation
+# Build specific targets
+.\scripts\build.ps1 windows     # Build Windows artifacts only
+.\scripts\build.ps1 update-server # Build update-server only
+.\scripts\build.ps1 website     # Build website only
 
 # Release with custom message
 .\scripts\build.ps1 -ReleaseMessage "chore(release): v3.1.0"
@@ -97,13 +96,14 @@ dotnet run --project src/Redball.UI.WPF/
 
 ### Version Management
 
-Version is synchronized between:
-1. `src/Redball.UI.WPF/Redball.UI.WPF.csproj` - `<Version>`, `<FileVersion>`, `<AssemblyVersion>`
-2. `scripts/version.txt` - fallback version
+Version is centralized in `Directory.Build.props` and shared across all projects.
 
 ```powershell
-# Bump version across all files
-.\scripts\Bump-Version.ps1 -NewVersion "3.1.0"
+# Bump version using the version script
+.\scripts\windows\Bump-Version.ps1 -NewVersion "2.1.655"
+
+# Or manually edit Directory.Build.props:
+# <Version>2.1.654</Version>
 ```
 
 ## Code Signing
@@ -129,10 +129,10 @@ signtool.exe sign /f cert.pfx /p password `
   /tr http://timestamp.digicert.com /td sha256 `
   /fd sha256 Redball.UI.WPF.exe
 
-# Sign MSI
+# Sign installer
 signtool.exe sign /f cert.pfx /p password `
   /tr http://timestamp.digicert.com /td sha256 `
-  /fd sha256 Redball.msi
+  /fd sha256 Redball-*-Setup.exe
 ```
 
 ## CI/CD Workflows
@@ -147,10 +147,10 @@ signtool.exe sign /f cert.pfx /p password `
 ### `release.yml` - Release Automation
 
 - Triggers on push to `main`
-- Builds and signs EXE
-- Builds branded MSI with WiX
-- Signs MSI
-- Creates GitHub Release with MSI attached
+- Builds and signs WPF EXE
+- Builds branded NSIS installer
+- Signs installer
+- Creates GitHub Release with installer attached
 
 ### `virustotal.yml` - Security Scan
 
@@ -171,7 +171,7 @@ signtool.exe sign /f cert.pfx /p password `
 
 ### Build Issues
 
-- **WiX not found**: `dotnet tool install --global wix`
+- **NSIS not found**: Install NSIS from https://nsis.sourceforge.io/
 - **Missing .NET 10**: Download from https://dotnet.microsoft.com/
 - **Signing fails**: Check certificate validity and password
 
@@ -194,9 +194,9 @@ Get-Process Redball.UI.WPF | Stop-Process -Force
 | `dotnet build src/Redball.UI.WPF/` | Build WPF app |
 | `dotnet test tests/` | Run unit tests |
 | `.\scripts\build.ps1` | Full build pipeline |
-| `.\installer\Build-MSI.ps1` | Create MSI only |
-| `.\installer\Deploy-Redball.ps1` | Deploy with signing |
-| `.\scripts\Bump-Version.ps1` | Update version |
+| `.\scripts\build.ps1 windows` | Build Windows artifacts |
+| `.\scripts\build.ps1 all` | Full build with signing |
+| `.\scripts\windows\Bump-Version.ps1` | Update version |
 
 ---
 

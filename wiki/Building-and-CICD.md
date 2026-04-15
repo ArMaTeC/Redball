@@ -54,7 +54,7 @@ For release builds, the build script commits and pushes the version bump before 
 
 ```powershell
 # Release build with specific version
-.\scripts\build.ps1 publish -Version "2.1.500"
+.\scripts\build.ps1 publish -Version "2.1.654"
 
 # Beta release
 .\scripts\build.ps1 publish -Beta
@@ -162,7 +162,7 @@ Build artifacts are placed in the `dist/` directory:
 The version is centralized in `Directory.Build.props`:
 
 ```xml
-<Version>2.1.492</Version>
+<Version>2.1.654</Version>
 ```
 
 This version is shared across all projects in the solution. The CI release workflow reads the version from this file to create the Git tag and GitHub Release.

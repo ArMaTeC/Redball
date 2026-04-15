@@ -1,6 +1,6 @@
 # Architecture
 
-> **v2.1.492** — Pure C# WPF architecture. All functionality runs natively with no PowerShell dependency.
+> **v2.1.654** — Pure C# WPF architecture. All functionality runs natively with no PowerShell dependency.
 
 ## Project Structure
 
@@ -67,7 +67,7 @@ Redball/
 │   │   ├── Themes/                  # Dark/Light base XAML + Controls
 │   │   ├── Converters/              # WPF value converters
 │   │   ├── Assets/redball.ico       # Application icon
-│   │   ├── ThemeManager.cs          # 14-theme switching engine
+│   │   ├── ThemeService.cs          # 14-theme switching engine
 │   │   ├── App.xaml / App.xaml.cs   # Application entry point
 │   │   └── Redball.UI.WPF.csproj    # Project file
 │   │
@@ -85,7 +85,7 @@ Redball/
 │   │
 │   └── Redball.macOS/               # macOS application (future)
 │
-├── installer/                       # NSIS installer (not WiX)
+├── installer/                       # NSIS installer files
 ├── scripts/                         # Build scripts (build.ps1, build.sh)
 ├── tests/                           # Unit test suite
 ├── tests-e2e/                       # E2E tests
@@ -104,7 +104,7 @@ App.xaml.cs (entry point)
   ├── SingletonService        — Mutex check (first thing)
   ├── CrashRecoveryService    — Crash flag check
   ├── ConfigService           — Load config from registry + UserData file copy
-  ├── ThemeManager            — Apply saved theme (14 themes)
+  ├── ThemeService            — Apply saved theme (14 themes)
   ├── KeepAwakeService        — Initialize + SetActive + StartMonitoring
   │     ├── HeartbeatTimer    — SetThreadExecutionState + F13–F16 (every Ns)
   │     └── DurationTimer     — 1s tick driving all monitors:
@@ -137,7 +137,7 @@ App.xaml.cs (entry point)
 5. CrashRecoveryService.SetCrashFlag() — mark this session
 6. ConfigService.Load() — load config (registry-first)
 7. ConfigService.Validate() — check config ranges
-8. ThemeManager.Initialize() — apply saved theme
+8. ThemeService.Initialize() — apply saved theme
 9. KeepAwakeService.Initialize() — create timers, configure monitors
 10. SessionStateService.Restore() — restore previous state (or SetActive(true))
 11. KeepAwakeService.StartMonitoring() — start duration timer

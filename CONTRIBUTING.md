@@ -57,20 +57,20 @@ dotnet test tests/Redball.Tests.csproj
 2. **Create a branch** from `main`: `git checkout -b feature/my-feature`
 3. **Make your changes** following the coding standards below
 4. **Add tests** for new functionality
-5. **Run the full test suite**: `.\build.ps1 -SkipWPF -SkipMSI`
+5. **Run the full test suite**: `dotnet test tests/`
 6. **Commit** with a clear message: `git commit -m "Add: brief description"`
 7. **Push** to your fork: `git push origin feature/my-feature`
 8. **Open a Pull Request** against `main`
 
 ## Coding Standards
 
-### PowerShell (Redball.ps1)
+### PowerShell (Build Scripts)
 
 - Follow [PSScriptAnalyzer](https://github.com/PowerShell/PSScriptAnalyzer) recommendations
 - Use `Verb-Noun` naming for functions (approved verbs only)
 - Add comment-based help (`.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER`) to all public functions
 - Use `[CmdletBinding()]` on functions that modify state
-- Log all state changes via `Write-RedballLog`
+- Log all state changes via `Write-Host` with structured format
 - Handle errors gracefully — never let exceptions bubble to the user
 
 ### C# / WPF (src/Redball.UI.WPF)
@@ -102,10 +102,10 @@ Fixes #123
 
 ## Testing
 
-- All new features must include Pester tests (or NUnit/Playwright tests depending on the component)
+- All new features must include unit tests (MSTest/xUnit) or Playwright E2E tests depending on the component
 - All bug fixes should include a regression test
-- Run the full suite before submitting: `Invoke-Pester -Path tests\Redball.Tests.ps1` or run the comprehensive `pwsh ./scripts/Get-CodeCoverage.ps1`
-- Target: 100% code coverage across statement, branch, and line metrics. No changes will be merged that degrade this standard.
+- Run the full suite before submitting: `dotnet test tests/`
+- Target: Maintain or improve code coverage. No changes will be merged that degrade existing test coverage.
 
 ## Pull Request Process
 

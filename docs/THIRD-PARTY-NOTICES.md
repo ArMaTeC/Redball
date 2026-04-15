@@ -25,19 +25,19 @@ This file contains the licenses and notices for third-party software used by Red
 
 ## Build Dependencies
 
-### WiX Toolset v4
+### NSIS (Nullsoft Scriptable Install System)
 
-- **Source:** WiX Toolset Team
-- **License:** Microsoft Reciprocal License (MS-RL)
-- **URL:** <https://wixtoolset.org/>
-- **Usage:** MSI installer generation
+- **Source:** NSIS Team
+- **License:** zlib/libpng License
+- **URL:** <https://nsis.sourceforge.io/>
+- **Usage:** EXE installer generation
 
 ### SignPath
 
 - **Source:** SignPath GmbH
 - **License:** Commercial (free for OSS)
 - **URL:** <https://signpath.io/>
-- **Usage:** Code signing of MSI installers in CI/CD
+- **Usage:** Code signing of EXE installers in CI/CD
 
 ## Test Dependencies
 

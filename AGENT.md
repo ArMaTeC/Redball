@@ -31,8 +31,8 @@ This document provides context and guidelines for AI agents working on the Redba
 
 ### Installer
 
-- **Tool**: WiX Toolset v4
-- **Output**: Code-signed MSI with branded UI
+- **Tool**: NSIS (Nullsoft Scriptable Install System) v3.0+
+- **Output**: Code-signed EXE installer with branded UI
 - **Install Location**: `%LocalAppData%\Redball` (per-user)
 
 ### CI/CD
@@ -61,10 +61,10 @@ Redball/
 ├── tests-e2e/                      # E2E tests
 ├── tests-integration/              # Integration tests
 ├── tests-ui-automation/            # UI automation tests
-├── installer/                      # WiX installer files
+├── installer/                      # NSIS installer files
 ├── scripts/                        # PowerShell build scripts
 │   ├── build.ps1                 # Main build script
-│   └── Bump-Version.ps1          # Version management
+│   └── windows/Bump-Version.ps1  # Version management
 ├── docs/                           # Documentation
 └── wiki/                           # GitHub wiki content
 ```
@@ -137,7 +137,7 @@ dotnet run --project tests/Redball.Benchmarks --configuration Release
 
 - **Adding a service**: Create in `Services/`, register in `ServiceLocator`, inject where needed
 - **Modifying UI**: Edit XAML in `Views/`, bind to ViewModel properties
-- **Adding a theme**: Create in `Themes/`, register in `ThemeManager`
+- **Adding a theme**: Create in `Themes/`, register in theme service
 - **Updating config**: Modify `Models/RedballConfig.cs`, update `ConfigService` validation
 
 ## Security-Focused Development
