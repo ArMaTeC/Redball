@@ -39,7 +39,6 @@ Based on codebase analysis, the 13,000 detections are estimated to fall into the
 
 **Files**:
 
-- `@/root/Redball/src/Redball.Service/InputInjectionEngine.cs:209`
 - `@/root/Redball/src/Redball.UI.WPF/Services/PowerPlanService.cs`
 - `@/root/Redball/src/Redball.UI.WPF/Services/BlueGreenUpdateService.cs`
 - `@/root/Redball/src/Redball.UI.WPF/Services/WindowsShellIntegrationService.cs`
@@ -79,7 +78,7 @@ var startInfo = new ProcessStartInfo
 
 **Files**:
 
-- `@/root/Redball/src/Redball.Service/IpcServer.cs`
+- `@/root/Redball/src/Redball.UI.WPF/Services/UpdateService.cs`
 
 **Issues**:
 
@@ -131,7 +130,7 @@ public static class SecurePathValidator
         var fullBase = Path.GetFullPath(baseDir);
         return fullPath.StartsWith(fullBase, StringComparison.OrdinalIgnoreCase);
     }
-    
+
     public static void ValidateNoTraversal(string path)
     {
         if (path.Contains("..") || Path.IsPathRooted(path))
@@ -161,7 +160,6 @@ public static class SecurePathValidator
 
 **Files**:
 
-- `@/root/Redball/src/Redball.Service/IpcServer.cs:166`
 - `@/root/Redball/src/Redball.UI.WPF/Services/MobileCompanionApiService.cs:176-214`
 - `@/root/Redball/src/Redball.UI.WPF/Services/UpdateService.cs:684`
 
@@ -187,7 +185,7 @@ public static class SecureJsonSerializer
         MaxDepth = 32,  // Limit nesting depth
         NumberHandling = JsonNumberHandling.Strict
     };
-    
+
     public static T? Deserialize<T>(string json) where T : class
     {
         return JsonSerializer.Deserialize<T>(json, _strictOptions);
@@ -209,7 +207,6 @@ public static class SecureJsonSerializer
 **Files**:
 
 - `@/root/Redball/src/Redball.UI.WPF/Interop/NativeMethods.cs`
-- `@/root/Redball/src/Redball.Service/InputInjectionEngine.cs`
 - All DllImport declarations
 
 **Issues**:
@@ -320,8 +317,8 @@ Properly using parameterized queries with `@param` syntax.
 
 ```csharp
 // Add timeouts to all regex operations
-var match = Regex.Match(input, pattern, 
-    RegexOptions.None, 
+var match = Regex.Match(input, pattern,
+    RegexOptions.None,
     TimeSpan.FromMilliseconds(100));
 ```
 
@@ -342,7 +339,6 @@ var match = Regex.Match(input, pattern,
 
 **Files**:
 
-- `@/root/Redball/src/Redball.Service/InputInjectionEngine.cs`
 - `@/root/Redball/src/Redball.UI.WPF/Interop/NativeMethods.cs`
 
 **Actions**:

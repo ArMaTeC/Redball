@@ -12,7 +12,7 @@ The installer is built with [NSIS (Nullsoft Scriptable Install System)](https://
 # Full deploy pipeline (builds everything)
 .\scripts\build.ps1 all
 
-# Build Windows artifacts only (WPF, Service, Setup, ZIP)
+# Build Windows artifacts only (WPF, Setup, ZIP)
 .\scripts\build.ps1 windows
 
 # Build with specific channel
@@ -65,12 +65,11 @@ For release builds, the build script commits and pushes the version bump before 
 The build script automatically:
 
 1. Builds the WPF application via `dotnet publish`
-2. Builds the Windows Service (`Redball.Service`)
-3. Creates an NSIS installer (`Redball-{version}-Setup.exe`)
-4. Creates a portable ZIP archive
-5. Publishes to update-server and generates delta patches
-6. Validates the update-server
-7. Signs artifacts with a code-signing certificate (creates self-signed cert if none exists)
+2. Creates an NSIS installer (`Redball-{version}-Setup.exe`)
+3. Creates a portable ZIP archive
+4. Publishes to update-server and generates delta patches
+5. Validates the update-server
+6. Signs artifacts with a code-signing certificate (creates self-signed cert if none exists)
 
 ### Installer Features
 
@@ -79,7 +78,6 @@ The NSIS installer provides:
 - Per-user installation to `%LocalAppData%\Redball`
 - Start Menu and Desktop shortcuts
 - Optional "Start with Windows" option
-- Service installation for input injection
 - Auto-launch after install
 - Silent install support (`/S`)
 - Optional default behaviour features via registry defaults
@@ -148,12 +146,11 @@ The installer uses modern dark-themed graphics:
 
 Build artifacts are placed in the `dist/` directory:
 
-| File                          | Description                         |
-| ----------------------------- | ----------------------------------- |
-| `Redball.UI.WPF.exe`          | WPF executable                      |
-| `Redball.Service.exe`         | Windows Service for input injection |
-| `Redball-{version}-Setup.exe` | NSIS installer                      |
-| `redball-portable.zip`        | Portable ZIP archive                |
+| File                          | Description          |
+| ----------------------------- | -------------------- |
+| `Redball.UI.WPF.exe`          | WPF executable       |
+| `Redball-{version}-Setup.exe` | NSIS installer       |
+| `redball-portable.zip`        | Portable ZIP archive |
 
 ---
 

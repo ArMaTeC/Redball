@@ -18,22 +18,17 @@ These capabilities trigger CodeQL security alerts, but are required for core fun
 
 ### 1. Input Injection (Keep-Alive)
 
-**Detection**: `cs/input-injection`  
-**Files**: `InputInjectionEngine.cs`, `SessionHelper/Program.cs`
+**Detection**: `cs/input-injection`
+**Files**: `NativeMethods.cs` (SendInput P/Invoke)
 
 **Justification**:
-Input injection is the **core functionality** of Redball. The application prevents Windows from sleeping by sending synthetic F15 key presses. This requires:
-
-1. `SendInput` Win32 API for local session injection
-2. `CreateProcessAsUser` for cross-session RDP scenarios
-3. Named pipe IPC for UI-to-Service communication
+Input injection is the **core functionality** of Redball. The application prevents Windows from sleeping by sending synthetic F15 key presses using the `SendInput` Win32 API.
 
 **Security Controls Implemented**:
 
-- Command-line arguments are Base64-encoded to prevent injection
-- Path validation ensures only `Redball.SessionHelper.exe` is executed
-- IPC messages are rate-limited (60 msg/min) and size-limited (1MB)
-- Named pipes restrict access to administrators and interactive users only
+- Input is sent only to the current foreground window
+- Key presses use scan codes for reliable injection
+- Rate limiting prevents excessive input
 
 **CodeQL Suppression Format**:
 
@@ -47,7 +42,7 @@ public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
 ### 2. Native API Access (P/Invoke)
 
-**Detection**: `cs/dll-import-of-unmanaged-code`  
+**Detection**: `cs/dll-import-of-unmanaged-code`
 **Files**: `NativeMethods.cs`, `InputInjectionEngine.cs`
 
 **Justification**:
@@ -71,7 +66,7 @@ Native API access is required for Windows system integration that is not availab
 
 ### 3. Process Execution
 
-**Detection**: `cs/command-line-injection`  
+**Detection**: `cs/command-line-injection`
 **File**: `InputInjectionEngine.cs`
 
 **Justification**:
@@ -88,7 +83,7 @@ Process execution via `CreateProcessAsUser` is required for RDP session injectio
 
 ### 4. Named Pipe IPC
 
-**Detection**: `cs/named-pipe`  
+**Detection**: `cs/named-pipe`
 **File**: `IpcServer.cs`
 
 **Justification**:
@@ -113,14 +108,14 @@ Named pipes provide secure local-only IPC between the WPF UI and Windows Service
 
 ### SQL Parameterised Queries
 
-**Detection**: Dynamic SQL construction  
+**Detection**: Dynamic SQL construction
 **File**: `SqliteOutboxStore.cs`
 
 **Analysis**: The dynamic IN clause at line 165 constructs parameter names (`@id0`, `@id1`), **not** values. All values are passed via `AddWithValue()` which properly escapes them. This is secure parameterised query usage, not SQL injection.
 
 ### Regex Timeout
 
-**Detection**: Potential ReDoS  
+**Detection**: Potential ReDoS
 **Files**: `ClipboardSanitiser.cs`, `SecurityCIGatesService.cs`
 
 **Analysis**: All regex operations now include a timeout (100-500ms) to prevent ReDoS attacks. Patterns are pre-compiled with `RegexOptions.Compiled` and tested against known-bad inputs.

@@ -256,31 +256,6 @@ Plugin loading and management via `IRedballPlugin` interface.
 
 ---
 
----
-
-### ServiceInputProvider
-
-Provides service-based keyboard input injection for RDP and elevated process compatibility.
-
-**Properties:**
-
-| Property             | Type   | Description                                    |
-| -------------------- | ------ | ---------------------------------------------- |
-| `IsServiceInstalled` | bool   | Whether the Redball Input Service is installed |
-| `IsReady`            | bool   | Whether service is ready to send keystrokes    |
-| `LastErrorSummary`   | string | Last initialization or runtime error           |
-
-**Methods:**
-
-| Method                           | Parameters | Description                                        |
-| -------------------------------- | ---------- | -------------------------------------------------- |
-| `RefreshServiceInstalledState()` | -          | Check if service is installed and running          |
-| `GetDetailedServiceState()`      | -          | Get detailed service status information            |
-| `InstallService()`               | -          | Install the Redball Input Service (requires admin) |
-| `UninstallService()`             | -          | Uninstall the service                              |
-
----
-
 ### CalendarIntegrationService
 
 Auto-activates during meetings based on local JSON calendar data.

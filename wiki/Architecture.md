@@ -45,7 +45,6 @@ Redball/
 │   │   │   ├── PluginService.cs         # Plugin loading + management
 │   │   │   ├── WebApiService.cs         # Local REST API
 │   │   │   ├── ProfileService.cs        # WiFi-based config profiles
-│   │   │   ├── ServiceInputProvider.cs  # Service-based input for RDP/UAC
 │   │   │   ├── ForegroundAppService.cs  # Foreground app tracking
 │   │   │   ├── TextToSpeechService.cs   # TTS for TypeThing
 │   │   │   ├── TemplateService.cs       # Named text templates
@@ -77,11 +76,6 @@ Redball/
 │   │   ├── Performance/             # Performance monitoring
 │   │   ├── Sync/                    # Synchronization primitives
 │   │   └── Telemetry/               # Core telemetry
-│   │
-│   ├── Redball.Service/             # Windows Service for input injection
-│   │   ├── InputInjectionService.cs
-│   │   ├── InputInjectionEngine.cs
-│   │   └── IpcServer.cs
 │   │
 │   └── Redball.macOS/               # macOS application (future)
 │
@@ -118,7 +112,6 @@ App.xaml.cs (entry point)
   │           ├── SessionLockService          (session events)
   │           └── TemperatureMonitorService   (CPU temp checks)
   ├── AnalyticsService        — Feature tracking + session analytics
-  ├── ServiceInputProvider    — Service-based input injection (for RDP/UAC)
   ├── SessionStateService     — Restore previous session
   ├── DataExportService       — User data packaging service
   ├── HealthCheckService      — App self-monitoring
