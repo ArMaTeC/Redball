@@ -68,8 +68,6 @@ public class RedballConfig
     public string Theme { get; set; } = "Dark";
     public string AccentColor { get; set; } = "Blue";
     public bool FollowSystemTheme { get; set; } = true;
-    public DriverSelection TypeThingDriverSelection { get; set; } = DriverSelection.Service;
-
 
     // Process Watcher
     public bool ProcessWatcherEnabled { get; set; }

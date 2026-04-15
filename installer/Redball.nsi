@@ -128,7 +128,6 @@ SetCompressorDictSize 32
 ; ============================================================================
 
 LangString DESC_SecApp ${LANG_ENGLISH} "The main Redball application (required)"
-LangString DESC_SecService ${LANG_ENGLISH} "Background service for advanced features (optional)"
 LangString DESC_SecStartMenu ${LANG_ENGLISH} "Add Redball to your Start Menu"
 LangString DESC_SecDesktop ${LANG_ENGLISH} "Add Redball shortcut to your Desktop"
 LangString DESC_SecStartup ${LANG_ENGLISH} "Start Redball automatically when Windows starts"
@@ -137,7 +136,6 @@ LangString DESC_SecStartup ${LANG_ENGLISH} "Start Redball automatically when Win
 ; Variables
 ; ============================================================================
 
-Var ServiceInstalled
 Var DotNetInstalled
 Var DotNetDownloaded
 
@@ -512,45 +510,6 @@ Section "!${PRODUCT_NAME} Application" SecApp
     DetailPrint "${PRODUCT_NAME} installed successfully"
 SectionEnd
 
-Section /o "Background Service" SecService
-    SectionIn 2
-
-    DetailPrint "Installing Background Service..."
-    SetOutPath "$INSTDIR"
-
-    ; Stop existing service before copying files to prevent file lock
-    DetailPrint "Checking for existing service..."
-    nsExec::Exec 'sc stop "Redball Input Service"'
-    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
-    Sleep 2000
-
-    ; Copy service files (single-file published, no separate DLL)
-    File "${PROJECT_ROOT}\dist\wpf-publish\Redball.Service.exe"
-
-    ; Install service (requires admin - skip if not elevated)
-    UserInfo::GetAccountType
-    Pop $0
-    ${If} $0 == "Admin"
-        DetailPrint "Registering Windows Service..."
-        nsExec::Exec '"$INSTDIR\Redball.Service.exe" install'
-        Pop $0
-        ${If} $0 == 0
-            StrCpy $ServiceInstalled 1
-            WriteRegDWORD HKCU "${PRODUCT_REGISTRY_KEY}" "ServiceInstalled" 1
-            DetailPrint "Service installed successfully"
-
-            ; Set service description for Windows Services manager
-            DetailPrint "Setting service description..."
-            nsExec::Exec 'sc description "Redball Input Service" "Provides secure input injection for Redball keep-alive functionality. Supports automatic updates and can be safely upgraded while running."'
-        ${Else}
-            DetailPrint "Service installation failed (code: $0)"
-        ${EndIf}
-    ${Else}
-        DetailPrint "Admin rights required for service installation - skipped"
-        WriteRegDWORD HKCU "${PRODUCT_REGISTRY_KEY}" "ServiceSkipped" 1
-    ${EndIf}
-SectionEnd
-
 Section "Start Menu Shortcuts" SecStartMenu
     SectionIn 1 2
 
@@ -587,16 +546,6 @@ SectionEnd
 Section "Uninstall"
     DetailPrint "Removing ${PRODUCT_NAME}..."
 
-    ; Stop service if installed
-    ReadRegDWORD $0 HKCU "${PRODUCT_REGISTRY_KEY}" "ServiceInstalled"
-    ${If} $0 == 1
-        DetailPrint "Stopping service..."
-        nsExec::Exec 'sc stop "Redball Input Service"'
-        Sleep 3000
-        nsExec::Exec 'sc delete "Redball Input Service"'
-        Sleep 1000
-    ${EndIf}
-
     ; Remove auto-start
     DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCT_NAME}"
 
@@ -624,12 +573,8 @@ Section "Uninstall"
         Sleep 1000
     ${EndIf}
 
-    ; 2. Stop service
-    nsExec::Exec 'sc stop "Redball Input Service"'
-
-    ; 3. Force kill binaries
+    ; Force kill binaries
     nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
-    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
     Sleep 2000
 
     ; Remove files
@@ -638,7 +583,6 @@ Section "Uninstall"
     Delete "$INSTDIR\Redball.UI.WPF.dll"
     Delete "$INSTDIR\Redball.UI.WPF.deps.json"
     Delete "$INSTDIR\Redball.UI.WPF.runtimeconfig.json"
-    Delete "$INSTDIR\Redball.Service.exe"
     Delete "$INSTDIR\README.txt"
     Delete "$INSTDIR\uninstall.exe"
 
@@ -686,17 +630,6 @@ retry_check:
 wpf_not_found:
     ClearErrors
 
-    ; Check for service process
-    nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.Service.exe" /FO CSV /NH'
-    Pop $0  ; exit code
-    Pop $1  ; stdout
-    ${WordFind} "$1" "Redball.Service.exe" "E+1{" $2
-    IfErrors 0 +2
-        Goto svc_not_found
-    StrCpy $R0 1
-svc_not_found:
-    ClearErrors
-
     ; Secondary check: find window by exact title "Redball" (main window)
     ${If} $R0 == 0
         System::Call 'user32::FindWindowW(i 0, w "Redball") i .r0'
@@ -727,31 +660,24 @@ svc_not_found:
 kill_process:
             DetailPrint "Attempting to close ${PRODUCT_NAME}..."
 
-            ; 1. Stop service first if installed (properly through SCM)
-            DetailPrint "Stopping background service..."
-            nsExec::Exec 'sc stop "Redball Input Service"'
-            Sleep 1000
-
-            ; 2. Try graceful close using taskkill without /F (sends WM_CLOSE)
+            ; Try graceful close using taskkill without /F (sends WM_CLOSE)
             DetailPrint "Requesting graceful shutdown..."
             nsExec::Exec 'taskkill /IM Redball.UI.WPF.exe /T'
-            nsExec::Exec 'taskkill /IM Redball.Service.exe /T'
             Sleep 2000
 
-            ; 3. Use System call to close window by title as backup
+            ; Use System call to close window by title as backup
             System::Call 'user32::FindWindowW(i 0, w "Redball") i .r0'
             ${If} $0 != 0
                 System::Call 'user32::PostMessageW(i r0, i 16, i 0, i 0) i .r1'
                 Sleep 1000
             ${EndIf}
 
-            ; 4. Force kill if still running
+            ; Force kill if still running
             DetailPrint "Ensuring process is stopped (force kill)..."
             nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
-            nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
             Sleep 2000
 
-            ; 5. Final check loop (up to 3 times)
+            ; Final check loop (up to 3 times)
             StrCpy $R1 0
         final_check_loop:
             IntOp $R1 $R1 + 1
@@ -771,26 +697,13 @@ kill_process:
                 Goto final_check_loop
             ClearErrors
 
-            ; Check service process
-            nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq Redball.Service.exe" /FO CSV /NH'
-            Pop $0
-            Pop $1
-            ${WordFind} "$1" "Redball.Service.exe" "E+1{" $2
-            IfErrors +3
-                DetailPrint "Service process still detected, retrying force kill ($R1)..."
-                nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
-                Sleep 1000
-                Goto final_check_loop
-            ClearErrors
-
             Goto process_killed
 
         process_failure:
             ; Processes did not stop cleanly — do one last force kill and proceed rather
             ; than prompting the user with a retry dialog.
-            DetailPrint "Force killing all ${PRODUCT_NAME} processes and continuing..."
+            DetailPrint "Force killing ${PRODUCT_NAME} and continuing..."
             nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
-            nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
             Sleep 1500
 
         process_killed:
@@ -818,7 +731,6 @@ Function .onInit
     ; Initialize variables
     StrCpy $DotNetInstalled 0
     StrCpy $DotNetDownloaded 0
-    StrCpy $ServiceInstalled 0
 
     ; Check if installer is already running
     System::Call 'kernel32::CreateMutexW(i 0, i 0, w "${PRODUCT_NAME}Setup") i .r0'
@@ -869,16 +781,6 @@ Function un.onInit
         Abort
     continue:
 
-    ; Stop service first if installed
-    ReadRegDWORD $0 HKCU "${PRODUCT_REGISTRY_KEY}" "ServiceInstalled"
-    ${If} $0 == 1
-        DetailPrint "Stopping background service..."
-        nsExec::Exec 'sc stop "Redball Input Service"'
-        Sleep 3000
-        nsExec::Exec 'sc delete "Redball Input Service"'
-        Sleep 1000
-    ${EndIf}
-
     ; Kill all Redball processes during uninstall (with graceful close first)
     Call un.KillAllRedballProcesses
 FunctionEnd
@@ -890,12 +792,10 @@ Function un.KillAllRedballProcesses
     ; Try graceful close first (taskkill without /F sends WM_CLOSE)
     DetailPrint "Requesting graceful shutdown..."
     nsExec::Exec 'taskkill /IM Redball.UI.WPF.exe /T'
-    nsExec::Exec 'taskkill /IM Redball.Service.exe /T'
     Sleep 3000
 
     ; Force kill if still running
     nsExec::Exec 'taskkill /F /IM Redball.UI.WPF.exe /T'
-    nsExec::Exec 'taskkill /F /IM Redball.Service.exe /T'
     Sleep 2000
 
     DetailPrint "Processes stopped"
@@ -908,7 +808,6 @@ FunctionEnd
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
     !insertmacro MUI_DESCRIPTION_TEXT ${SecDotNet} $(DESC_SecDotNet)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecApp} $(DESC_SecApp)
-    !insertmacro MUI_DESCRIPTION_TEXT ${SecService} $(DESC_SecService)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecStartMenu} $(DESC_SecStartMenu)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecDesktop} $(DESC_SecDesktop)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecStartup} $(DESC_SecStartup)

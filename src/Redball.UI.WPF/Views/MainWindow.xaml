@@ -667,24 +667,6 @@
                                                 <CheckBox x:Name="MainEnableTypeThingCheck" Content="Enable TypeThing" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Enable the TypeThing feature to paste clipboard content as typed keystrokes. When enabled, you can use hotkeys to type text instead of pasting."/>
                                                 <CheckBox x:Name="MainUseLowLevelHotkeyCheck" Content="Use low-level hotkey registration" Style="{DynamicResource ModernCheckBox}" Margin="0,0,0,8" Checked="MainSettingChanged" Unchecked="MainSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Register hotkeys at the system level for better reliability. Required for global hotkeys to work when app is not focused. May trigger antivirus warnings due to low-level keyboard hook."/>
 
-                                                <TextBlock Text="Input Mode" FontWeight="Medium" Margin="0,4,0,8" Foreground="{DynamicResource ForegroundBrush}"/>
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <ComboBox x:Name="MainTypeThingInputModeCombo" Grid.Column="0" Style="{DynamicResource ModernComboBox}" Margin="0,0,8,10" SelectionChanged="MainComboSettingChanged" ToolTipService.ShowDuration="12000" ToolTip="Select input method: SendInput (standard Windows API) or Service (works over RDP).">
-                                                        <ComboBoxItem Content="SendInput" ToolTip="Standard Windows input - works everywhere"/>
-                                                        <ComboBoxItem Content="Service" ToolTip="Windows Service input - works over RDP, requires service installation"/>
-                                                    </ComboBox>
-                                                    <WrapPanel Grid.Column="1" Orientation="Horizontal">
-                                                        <Button x:Name="MainInstallServiceBtn" Content="Install Service" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainInstallServiceBtn_Click"/>
-                                                        <Button x:Name="MainUninstallServiceBtn" Content="Uninstall Service" Style="{DynamicResource ModernButton}" Margin="0,0,8,8" Click="MainUninstallServiceBtn_Click"/>
-                                                    </WrapPanel>
-                                                </Grid>
-
-                                                <TextBlock x:Name="MainServiceAdminHintText" Text="Administrator approval (UAC) is required to install or uninstall the Input Service." FontSize="12" Foreground="{DynamicResource WarningBrush}" Margin="0,4,0,8" TextWrapping="Wrap" Visibility="Collapsed"/>
-
                                                 <TextBlock Text="Start Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="Global hotkey to start TypeThing typing. Click the box and press your desired key combination. Works even when Redball is not focused."/>
                                                 <TextBox x:Name="MainStartHotkeyBox" Style="{DynamicResource ModernTextBox}" Margin="0,0,0,8" PreviewKeyDown="MainHotkeyBox_PreviewKeyDown" GotFocus="MainStartHotkeyBox_GotFocus" LostFocus="MainHotkeyBox_LostFocus" Tag="Click here and press your desired hotkey combination..." ToolTipService.ShowDuration="12000" ToolTip="Press your desired hotkey combination to set the start hotkey."/>
                                                 <TextBlock Text="Stop Hotkey" FontWeight="Medium" Margin="0,0,0,4" Foreground="{DynamicResource ForegroundBrush}" ToolTipService.ShowDuration="12000" ToolTip="Global hotkey to immediately stop TypeThing typing. Useful if typing goes wrong or you need to abort. Click and press your key combination."/>

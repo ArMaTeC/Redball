@@ -836,9 +836,9 @@ build_all() {
         [[ -f "$DIST_DIR/Redball-${version}.zip" ]] && cp "$DIST_DIR/Redball-${version}.zip" "$update_server_release_dir/"
         [[ -f "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" ]] && cp "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" "$update_server_release_dir/Redball-${version}.exe"
 
-        # Copy binaries for delta patching (Service is single-file, no separate DLL)
+        # Copy binaries for delta patching
         # Only copy required runtime files, excluding NSIS build artifacts
-        for file in Redball.UI.WPF.exe Redball.UI.WPF.dll Redball.Service.exe Redball.UI.WPF.runtimeconfig.json Redball.UI.WPF.deps.json Redball.json; do
+        for file in Redball.UI.WPF.exe Redball.UI.WPF.dll Redball.UI.WPF.runtimeconfig.json Redball.UI.WPF.deps.json Redball.json; do
             [[ -f "$DIST_DIR/wpf-publish/$file" ]] && cp "$DIST_DIR/wpf-publish/$file" "$update_server_release_dir/binaries/"
         done
         [[ -d "$DIST_DIR/wpf-publish/dll" ]] && cp "$DIST_DIR/wpf-publish/dll"/*.dll "$update_server_release_dir/binaries/" 2>/dev/null || true

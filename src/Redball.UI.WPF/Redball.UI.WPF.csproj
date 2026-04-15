@@ -75,27 +75,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Redball.Core\Redball.Core.csproj" />
-    <ProjectReference Include="..\Redball.Service\Redball.Service.csproj">
-      <Private>false</Private>
-      <ExcludeAssets>all</ExcludeAssets>
-    </ProjectReference>
   </ItemGroup>
-
-  <!-- Copy Redball.Service.exe to output after build -->
-  <Target Name="CopyServiceExecutable" AfterTargets="Build">
-    <ItemGroup>
-      <ServiceExecutable Include="..\Redball.Service\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\Redball.Service.exe" />
-    </ItemGroup>
-    <Copy SourceFiles="@(ServiceExecutable)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
-  </Target>
-
-  <!-- Copy Redball.Service.exe to publish directory -->
-  <Target Name="CopyServiceExecutableToPublish" AfterTargets="Publish">
-    <ItemGroup>
-      <ServiceExecutable Include="..\Redball.Service\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\Redball.Service.exe" />
-    </ItemGroup>
-    <Copy SourceFiles="@(ServiceExecutable)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
-  </Target>
 
   <!-- App.xaml must be listed as ApplicationDefinition since we disabled the default -->
   <ItemGroup>

@@ -108,7 +108,6 @@ public class ResourceBudgetService
     private static readonly Dictionary<string, (double cpu, long ram, bool critical)> DefaultBudgets = new()
     {
         { "KeepAwakeService", (10.0, 400, true) },           // Core functionality - shared process memory
-        { "ServiceInputProvider", (15.0, 400, true) },       // Service input operations - shared process memory
         { "AnalyticsService", (5.0, 400, false) },           // Background telemetry - shared process memory
         { "UpdateService", (20.0, 400, false) },             // Occasional heavy operations - shared process memory
         { "ConfigService", (5.0, 400, true) },               // Config management - shared process memory

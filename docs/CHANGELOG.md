@@ -43,6 +43,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed from e2e navigation tests.
   - Updated documentation to remove all SLO Dashboard references.
 
+- **Redball Input Service**: Removed the Windows Service-based input injection system.
+  - Deleted `src/Redball.Service/` folder containing the service executable source.
+  - Deleted `src/Redball.SessionHelper/` folder containing the RDP session helper.
+  - Deleted `src/Redball.UI.WPF/Services/ServiceInputProvider.cs` and `InputServiceClient.cs`.
+  - Removed service installation UI (`MainTypeThingInputModeCombo`, install/uninstall buttons) from `MainWindow.xaml`.
+  - Removed service install/uninstall logic from `MainWindow.Settings.cs`.
+  - Removed service-related command-line arguments (`--install-service`, `--uninstall-service`, `--start-service`) from `App.xaml.cs`.
+  - Removed service installation methods from `MainViewModel.cs`.
+  - Deleted `scripts/windows/Install-Service.ps1` and `Uninstall-Service.ps1`.
+  - Removed `DriverSelection` enum and `TypeThingInputMode.Service` option.
+  - Updated build scripts to remove service build steps.
+  - TypeThing now exclusively uses `SendInput` API which works reliably without requiring service installation.
+
 ### Fixed (Unreleased 2)
 
 - **Build Script: Fixed PSScriptAnalyzer Directory Lint Warning**: Fixed "Object reference not set to an instance of an object" warning in `scripts/build.ps1`.

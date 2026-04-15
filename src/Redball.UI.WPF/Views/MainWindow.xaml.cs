@@ -30,6 +30,7 @@ public partial class MainWindow : Window
 
     private Views.AboutWindow? _aboutWindow;
     private HotkeyService? _hotkeyService;
+    private DispatcherTimer? _hotkeyReloadDebounceTimer;
     private bool _isTyping;
     private bool _isLoadingSettings = true;
     private bool _isExiting;
@@ -54,7 +55,7 @@ public partial class MainWindow : Window
         Title = $"Redball v{version?.Major}.{version?.Minor}.{version?.Build}";
 
         SyncWindowChromeButtons();
-        
+
         try
         {
             // 1. CRITICAL UI ELEMENTS (Must be instant)
@@ -73,7 +74,7 @@ public partial class MainWindow : Window
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 Logger.Debug("MainWindow", "Starting background service initialization...");
-                
+
                 if (DataContext == null)
                 {
                     Logger.Debug("MainWindow", "Creating MainViewModel on background priority...");
@@ -90,7 +91,7 @@ public partial class MainWindow : Window
                 InitializeMemoryPressureMonitoring();
 
                 Logger.Info("MainWindow", "Background initialization complete");
-                
+
                 // Entrance animation - only if window is actually shown
                 if (IsVisible && WindowState != WindowState.Minimized)
                 {
@@ -110,13 +111,13 @@ public partial class MainWindow : Window
         {
             var micaValue = (int)NativeMethods.DWM_SYSTEMBACKDROP_TYPE.DWMSBT_MAINWINDOW;
             var darkMode = ConfigService.Instance.Config.Theme == "Dark" ? 1 : 0;
-            
+
             // Set Immersive Dark Mode attribute for title bar
             NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
-            
+
             // Set Mica background (Windows 11 22H2+)
             NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_SYSTEMBACKDROP_TYPE, ref micaValue, sizeof(int));
-            
+
             Logger.Info("MainWindow", "DWM Mica backdrop applied");
         }
         catch (Exception dwmEx)
@@ -277,15 +278,15 @@ public partial class MainWindow : Window
         base.OnKeyDown(e);
 
         // Global Command Palette Shortcuts
-        if (e.Key == Key.P && 
-            (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && 
+        if (e.Key == Key.P &&
+            (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control &&
             (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
         {
             ShowCommandPalette();
             e.Handled = true;
         }
         // Ctrl+K shortcut for Command Palette
-        else if (e.Key == Key.K && 
+        else if (e.Key == Key.K &&
             (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
         {
             ShowCommandPalette();

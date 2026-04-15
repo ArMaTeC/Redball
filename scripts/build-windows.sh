@@ -123,8 +123,6 @@ clean_build() {
     rm -rf "$DIST_DIR"
     rm -rf "$PROJECT_ROOT/src/Redball.UI.WPF/bin"
     rm -rf "$PROJECT_ROOT/src/Redball.UI.WPF/obj"
-    rm -rf "$PROJECT_ROOT/src/Redball.Service/bin"
-    rm -rf "$PROJECT_ROOT/src/Redball.Service/obj"
     rm -rf "$PROJECT_ROOT/src/Redball.Core/bin"
     rm -rf "$PROJECT_ROOT/src/Redball.Core/obj"
     rm -rf "$PROJECT_ROOT/installer/Redball.Installer.CustomActions/bin"
@@ -460,14 +458,6 @@ step_restore() {
         -p:EnableWindowsTargeting=true
     log_success "Solution packages restored"
 
-    # Also restore with win-x64 runtime packs (needed for self-contained Service publish)
-    log_step "Restoring runtime packs for win-x64..."
-    log_debug "Project: $PROJECT_ROOT/src/Redball.Service/Redball.Service.csproj"
-    linux_dotnet restore "$PROJECT_ROOT/src/Redball.Service/Redball.Service.csproj" \
-        --verbosity minimal \
-        -p:EnableWindowsTargeting=true \
-        --runtime win-x64
-
     local restore_end=$(date +%s)
     log_success "All packages restored ($(( restore_end - restore_start ))s)"
 }
@@ -599,37 +589,6 @@ step_build_wpf() {
         log_error "Executable not found after publish!"
         exit 1
     fi
-}
-
-# === Build: Service ===
-step_build_service() {
-    log_step "Building Redball Service..."
-    local svc_start=$(date +%s)
-    log_debug "Project: $PROJECT_ROOT/src/Redball.Service/Redball.Service.csproj"
-
-    local service_dir="$DIST_DIR/Redball.Service"
-    mkdir -p "$service_dir"
-
-    # Service is published as single-file to bundle all dependencies into the executable.
-    # Compression is disabled because compression requires self-contained=true.
-    # The Windows runtime is expected to be present on target machines.
-    wine_dotnet publish "Z:$PROJECT_ROOT/src/Redball.Service/Redball.Service.csproj" \
-        --configuration "$CONFIGURATION" \
-        --output "Z:$service_dir" \
-        --self-contained false \
-        --runtime win-x64 \
-        -p:PublishSingleFile=true \
-        --no-restore
-
-    # Copy service files to WPF publish dir (only main files, dependencies are bundled)
-    for f in "$service_dir"/Redball.Service*; do
-        [[ -f "$f" ]] && cp "$f" "$WPF_PUBLISH_DIR/"
-    done
-
-    local svc_end=$(date +%s)
-    log_success "Service built ($(( svc_end - svc_start ))s)"
-    log_debug "Service files copied to WPF publish dir:"
-    ls -la "$WPF_PUBLISH_DIR"/Redball.Service* 2>/dev/null | while IFS= read -r line; do log_detail "$line"; done
 }
 
 # === Build: Custom Actions DLL ===
@@ -967,7 +926,6 @@ main() {
     # Build steps
     step_restore
     step_build_wpf
-    step_build_service
     generate_manifest
     step_build_zip
 

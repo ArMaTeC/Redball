@@ -123,9 +123,6 @@ public partial class App : Application
         // SECURITY: Log app launch event
         Services.SecurityAuditService.Instance.LogEvent("Lifecycle", "Application Startup initiated");
 
-        // Handle service installation elevation (synchronous as they exit immediately)
-        if (HandleElevatedServiceArgs(e.Args)) return;
-
         // Start background initialization task IMMEDIATELY
         var backgroundInitTask = Task.Run(() => InitializeBackgroundServices(e.Args));
 
@@ -161,37 +158,6 @@ public partial class App : Application
             Services.Logger.Fatal("App", "Fast-path OnStartup failed", ex);
             throw;
         }
-    }
-
-    private bool HandleElevatedServiceArgs(string[] args)
-    {
-        if (args.Length == 0) return false;
-
-        if (args[0] == "--install-service")
-        {
-            Services.Logger.Info("App", "Running in elevated service installation mode");
-            var success = InstallServiceInElevatedMode();
-            Environment.Exit(success ? 0 : 1);
-            return true;
-        }
-
-        if (args[0] == "--uninstall-service")
-        {
-            Services.Logger.Info("App", "Running in elevated service uninstall mode");
-            var success = UninstallServiceInElevatedMode();
-            Environment.Exit(success ? 0 : 1);
-            return true;
-        }
-
-        if (args[0] == "--start-service")
-        {
-            Services.Logger.Info("App", "Running in elevated service start mode");
-            var success = StartServiceInElevatedMode();
-            Environment.Exit(success ? 0 : 1);
-            return true;
-        }
-
-        return false;
     }
 
     private struct BackgroundInitResult
@@ -437,183 +403,11 @@ public partial class App : Application
         Services.Logger.Info("App", "MainWindow Unloaded event fired");
     }
 
-    #region Elevated Service Installation Helpers
+    #region Single Instance Window Activation
 
     /// <summary>
-    /// Installs the Redball Input Service when running in elevated mode.
-    /// Called when the app is relaunched with --install-service argument.
+    /// Called when another instance requests this instance to show its main window.
     /// </summary>
-    private static bool InstallServiceInElevatedMode()
-    {
-        try
-        {
-            var servicePath = GetServiceExecutablePath();
-            if (!System.IO.File.Exists(servicePath))
-            {
-                Services.Logger.Error("App", $"Service executable not found: {servicePath}");
-                return false;
-            }
-
-            // Check if service already exists
-            var queryResult = RunProcessAsAdmin("sc.exe", "query RedballInputService");
-            if (queryResult.ExitCode == 0)
-            {
-                Services.Logger.Info("App", "Service already exists, stopping and removing for clean installation...");
-
-                // Stop the service first
-                RunProcessAsAdmin("sc.exe", "stop RedballInputService");
-                System.Threading.Thread.Sleep(1000); // Give service time to stop
-
-                // Delete the service
-                var deleteResult = RunProcessAsAdmin("sc.exe", "delete RedballInputService");
-                if (deleteResult.ExitCode != 0)
-                {
-                    Services.Logger.Warning("App", $"Failed to delete existing service: {deleteResult.StdErr}");
-                    // Continue anyway - might be permissions issue but create might still work
-                }
-                else
-                {
-                    Services.Logger.Info("App", "Existing service removed successfully");
-                    System.Threading.Thread.Sleep(500); // Give SCM time to process
-                }
-            }
-
-            // Create the service fresh
-            var createResult = RunProcessAsAdmin("sc.exe", $"create RedballInputService binPath= \"{servicePath}\" start= auto");
-            if (createResult.ExitCode != 0)
-            {
-                Services.Logger.Error("App", $"Failed to create service: {createResult.StdErr} {createResult.StdOut}");
-                return false;
-            }
-            Services.Logger.Info("App", "Service created successfully");
-
-            // Set service description (allows updating of currently installed services)
-            var descResult = RunProcessAsAdmin("sc.exe", "description RedballInputService \"Provides secure input injection for Redball keep-alive functionality. Supports automatic updates and can be safely upgraded while running.\"");
-            if (descResult.ExitCode != 0)
-            {
-                Services.Logger.Warning("App", $"Failed to set service description: {descResult.StdErr}");
-            }
-
-            // Start the service
-            var startResult = RunProcessAsAdmin("sc.exe", "start RedballInputService");
-            if (startResult.ExitCode != 0)
-            {
-                Services.Logger.Warning("App", $"Service created but failed to start: {startResult.StdErr}");
-                // Don't fail if service was created but couldn't start - it might need manual start
-            }
-            else
-            {
-                Services.Logger.Info("App", "Service started successfully");
-            }
-
-            Services.Logger.Info("App", "Redball Input Service installed successfully");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Services.Logger.Error("App", "Service installation failed in elevated mode", ex);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Uninstalls the Redball Input Service when running in elevated mode.
-    /// Called when the app is relaunched with --uninstall-service argument.
-    /// </summary>
-    private static bool UninstallServiceInElevatedMode()
-    {
-        try
-        {
-            // Stop the service first
-            RunProcessAsAdmin("sc.exe", "stop RedballInputService");
-
-            // Delete the service
-            var deleteResult = RunProcessAsAdmin("sc.exe", "delete RedballInputService");
-            if (deleteResult.ExitCode != 0 && !deleteResult.StdErr.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
-            {
-                Services.Logger.Error("App", $"Failed to delete service: {deleteResult.StdErr}");
-                return false;
-            }
-
-            Services.Logger.Info("App", "Redball Input Service uninstalled successfully");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Services.Logger.Error("App", "Service uninstallation failed in elevated mode", ex);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Starts the Redball Input Service when running in elevated mode.
-    /// Called when the app is relaunched with --start-service argument.
-    /// </summary>
-    private static bool StartServiceInElevatedMode()
-    {
-        try
-        {
-            var startResult = RunProcessAsAdmin("sc.exe", "start RedballInputService");
-            if (startResult.ExitCode != 0)
-            {
-                Services.Logger.Error("App", $"Failed to start service: {startResult.StdErr}");
-                return false;
-            }
-
-            Services.Logger.Info("App", "Redball Input Service started successfully");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Services.Logger.Error("App", "Service start failed in elevated mode", ex);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Gets the path to the service executable.
-    /// </summary>
-    private static string GetServiceExecutablePath()
-    {
-        var candidates = new[]
-        {
-            System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.Service.exe"),
-            System.IO.Path.Combine(AppContext.BaseDirectory, "Redball.Input.Service.exe")
-        };
-
-        foreach (var candidate in candidates)
-        {
-            if (System.IO.File.Exists(candidate))
-            {
-                return candidate;
-            }
-        }
-
-        return candidates[0];
-    }
-
-    /// <summary>
-    /// Runs a process with redirected output (for use when already elevated).
-    /// </summary>
-    private static (int ExitCode, string StdOut, string StdErr) RunProcessAsAdmin(string fileName, string arguments)
-    {
-        var psi = new System.Diagnostics.ProcessStartInfo
-        {
-            FileName = fileName,
-            Arguments = arguments,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
-        };
-
-        using var process = System.Diagnostics.Process.Start(psi)!;
-        var stdout = process.StandardOutput.ReadToEnd();
-        var stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit();
-        return (process.ExitCode, stdout, stderr);
-    }
-
     #endregion
 
     #region Single Instance Window Activation

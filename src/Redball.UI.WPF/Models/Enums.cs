@@ -1,17 +1,6 @@
 namespace Redball.UI.Services;
 
 /// <summary>
-/// Driver selection for input mode.
-/// </summary>
-public enum DriverSelection
-{
-    /// <summary>No driver/service selected.</summary>
-    None = 0,
-    /// <summary>Windows Service-based input (no driver signing required).</summary>
-    Service = 1
-}
-
-/// <summary>
 /// Heartbeat input mode for keep-awake keypress simulation.
 /// </summary>
 public enum HeartbeatInputMode
@@ -29,9 +18,7 @@ public enum HeartbeatInputMode
 public enum TypeThingInputMode
 {
     /// <summary>Standard Win32 SendInput with scan codes (default, works locally).</summary>
-    SendInput = 0,
-    /// <summary>Windows Service-based input injection (works over RDP, no driver signing required).</summary>
-    Service = 1
+    SendInput = 0
 }
 
 /// <summary>

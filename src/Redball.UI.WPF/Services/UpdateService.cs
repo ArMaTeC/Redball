@@ -1980,6 +1980,20 @@ public class UpdateService : IUpdateService
             sb.AppendLine("    Write-Host 'Installing update...'");
             sb.AppendLine("    Start-Sleep -Seconds 2");
             sb.AppendLine();
+            sb.AppendLine("    # Stop Redball Service if running");
+            sb.AppendLine("    $serviceName = 'Redball Input Service'");
+            sb.AppendLine("    try {");
+            sb.AppendLine("        $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue");
+            sb.AppendLine("        if ($service -and $service.Status -eq 'Running') {");
+            sb.AppendLine("            Write-Host 'Stopping Redball Input Service...'");
+            sb.AppendLine("            Stop-Service -Name $serviceName -Force -ErrorAction Stop");
+            sb.AppendLine("            Start-Sleep -Seconds 2");
+            sb.AppendLine("            Write-Host 'Service stopped successfully'");
+            sb.AppendLine("        }");
+            sb.AppendLine("    } catch {");
+            sb.AppendLine("        Write-Warning ('Failed to stop service: ' + $_)");
+            sb.AppendLine("    }");
+            sb.AppendLine();
             sb.AppendLine("    $sourceRoot = [System.IO.Path]::GetFullPath($sourceDir)");
             sb.AppendLine("    if (-not $sourceRoot.EndsWith([System.IO.Path]::DirectorySeparatorChar.ToString())) {");
             sb.AppendLine("        $sourceRoot += [System.IO.Path]::DirectorySeparatorChar");
@@ -2224,7 +2238,7 @@ public class UpdateService : IUpdateService
 
             var script = $@"
 $ErrorActionPreference = 'SilentlyContinue'
-$processes = @('Redball.UI.WPF', 'Redball.Service')
+$processes = @('Redball.UI.WPF')
 
 # Wait for processes to exit gracefully
 $timeout = (Get-Date).AddSeconds(5)

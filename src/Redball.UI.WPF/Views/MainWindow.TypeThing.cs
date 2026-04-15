@@ -176,7 +176,7 @@ public partial class MainWindow
         TemplateCombo.Items.Clear();
         foreach (var name in TemplateService.Instance.GetTemplateNames())
             TemplateCombo.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = name });
-        
+
         // Try to restore selection or clear preview if no templates
         if (selected != null && TemplateCombo.Items.Count > 0)
         {
@@ -210,7 +210,7 @@ public partial class MainWindow
     private void UpdateTemplatePreview(string? templateName)
     {
         if (TemplatePreviewText == null) return;
-        
+
         if (string.IsNullOrEmpty(templateName))
         {
             TemplatePreviewText.Text = "Select a template to preview its content...";
@@ -238,7 +238,7 @@ public partial class MainWindow
             {
                 TemplatePreviewText.Text = content;
             }
-            
+
             if (TemplatePreviewStats != null)
             {
                 var lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Length;
@@ -519,48 +519,17 @@ public partial class MainWindow
             {
                 Logger.Error("MainWindow", "TypeThing error", ex);
                 _analytics.TrackFeature("typething.failed_exception");
-                CleanupTypeThingServiceSession("TypeThing exception");
                 MarkTypeThingOperationFinished();
             }
         });
     }
-
-    private bool _useServiceInput;
 
     private void TypeText(string text)
     {
         var isRdp = IsRemoteSession();
         var config = ConfigService.Instance.Config;
 
-        // Determine input mode: Service or SendInput (default)
-        _useServiceInput = false;
-        
-        if (Enum.TryParse<TypeThingInputMode>(config.TypeThingInputMode, true, out var inputMode))
-        {
-            if (inputMode == TypeThingInputMode.Service)
-            {
-                var serviceProvider = ServiceInputProvider.Instance;
-                if (serviceProvider.IsReady || serviceProvider.Initialize())
-                {
-                    _useServiceInput = true;
-                    Logger.Info("MainWindow", "TypeThing: Using Windows Service-based input");
-                }
-                else
-                {
-                    Logger.Warning("MainWindow", $"TypeThing: Service mode requested but not available ({serviceProvider.LastErrorSummary}), falling back to SendInput");
-                    NotificationService.Instance.ShowWarning("TypeThing", $"Service input not available ({serviceProvider.LastErrorSummary}). Falling back to SendInput mode.");
-                    
-                    if (serviceProvider.ConsecutiveFailures >= 3)
-                    {
-                        config.TypeThingInputMode = "SendInput";
-                        ConfigService.Instance.Save();
-                        NotificationService.Instance.ShowWarning("Service Input", "Switched to SendInput after repeated service initialization failures. Install the service to use this feature.");
-                    }
-                }
-            }
-        }
-
-        Logger.Info("MainWindow", $"TypeThing: Begin typing {text.Length} chars (RDP: {isRdp}, Service: {_useServiceInput})");
+        Logger.Info("MainWindow", $"TypeThing: Begin typing {text.Length} chars (RDP: {isRdp})");
         var index = 0;
         var minDelay = Math.Max(1, config.TypeThingMinDelayMs);
         var maxDelay = Math.Max(minDelay, config.TypeThingMaxDelayMs);
@@ -576,7 +545,6 @@ public partial class MainWindow
                 _typeThingTimer?.Stop();
                 _typeThingTimer = null;
                 HideTypeThingProgress();
-                CleanupTypeThingServiceSession("TypeThing stopped by user");
                 Logger.Info("MainWindow", "TypeThing: Typing stopped by user");
                 _analytics.TrackFeature("typething.stopped");
                 NotificationService.Instance.ShowInfo("TypeThing", "Typing stopped.");
@@ -588,14 +556,13 @@ public partial class MainWindow
                 _typeThingTimer?.Stop();
                 _typeThingTimer = null;
                 HideTypeThingProgress();
-                CleanupTypeThingServiceSession("TypeThing complete");
                 MarkTypeThingOperationFinished();
                 Logger.Info("MainWindow", "TypeThing: Typing complete");
                 _analytics.TrackFeature("typething.completed");
-                
+
                 // Report stats to ViewModel for home tab display
                 _viewModel?.ReportTypeThingUsage(text.Length);
-                
+
                 NotificationService.Instance.ShowInfo("TypeThing", $"Done! Typed {text.Length} characters.");
                 return;
             }
@@ -635,34 +602,7 @@ public partial class MainWindow
             }
             else
             {
-                // Use retry logic for Service to improve reliability
-                if (_useServiceInput)
-                {
-                    if (!ServiceInputProvider.Instance.SendCharacterWithRetry(ch))
-                    {
-                        Logger.Warning("MainWindow", $"TypeThing: Service SendCharacterWithRetry failed for '{ch}', attempting one silent re-init");
-                        
-                        // Attempt one silent re-initialization
-                        ServiceInputProvider.Instance.ReleaseResources("Silent re-init on failure");
-                        if (ServiceInputProvider.Instance.Initialize())
-                        {
-                            Logger.Info("MainWindow", "TypeThing: Service silent re-init successful, retrying character");
-                            if (ServiceInputProvider.Instance.SendCharacterWithRetry(ch))
-                            {
-                                goto character_sent;
-                            }
-                        }
-
-                        Logger.Warning("MainWindow", $"TypeThing: Service re-init failed or send still failed, falling back to SendInput");
-                        SendCharacter(ch);
-                    }
-                }
-                else
-                {
-                    SendCharacter(ch);
-                }
-
-                character_sent:
+                SendCharacter(ch);
                 index++;
             }
 
@@ -750,32 +690,10 @@ public partial class MainWindow
             _typeThingTimer?.Stop();
             _typeThingTimer = null;
             HideTypeThingProgress();
-            CleanupTypeThingServiceSession("StopTypeThing requested");
             MarkTypeThingOperationFinished();
             _analytics.TrackFeature("typething.stop_requested");
             NotificationService.Instance.ShowInfo("TypeThing", "TypeThing stopped.");
         });
-    }
-
-    private void CleanupTypeThingServiceSession(string reason)
-    {
-        if (!_useServiceInput)
-        {
-            return;
-        }
-
-        try
-        {
-            ServiceInputProvider.Instance.ReleaseResources(reason);
-        }
-        catch (Exception ex)
-        {
-            Logger.Debug("MainWindow", $"CleanupTypeThingServiceSession failed: {ex.Message}");
-        }
-        finally
-        {
-            _useServiceInput = false;
-        }
     }
 
     public void ReloadHotkeys()
@@ -791,6 +709,26 @@ public partial class MainWindow
         {
             Logger.Error("MainWindow", "Failed to reload hotkeys", ex);
         }
+    }
+
+    /// <summary>
+    /// Debounced hotkey reload to prevent spam when multiple settings change rapidly.
+    /// Waits 500ms after the last change before reloading hotkeys.
+    /// </summary>
+    public void DebounceReloadHotkeys()
+    {
+        _hotkeyReloadDebounceTimer?.Stop();
+        _hotkeyReloadDebounceTimer = new DispatcherTimer(
+            TimeSpan.FromMilliseconds(500),
+            DispatcherPriority.Background,
+            (s, e) =>
+            {
+                _hotkeyReloadDebounceTimer?.Stop();
+                _hotkeyReloadDebounceTimer = null;
+                ReloadHotkeys();
+            },
+            Dispatcher.CurrentDispatcher);
+        _hotkeyReloadDebounceTimer.Start();
     }
 
     public void SuspendHotkeys()
@@ -989,14 +927,6 @@ public partial class MainWindow
 
     private void SendKeyPress(ushort vk)
     {
-        // Route through service provider if active
-        if (_useServiceInput)
-        {
-            if (ServiceInputProvider.Instance.SendVirtualKey(vk))
-                return;
-            Logger.Debug("MainWindow", $"TypeThing: Service SendVirtualKey failed for VK 0x{vk:X4}, falling back to SendInput");
-        }
-
         // Send using wVk (virtual key code) for control keys like Enter/Tab.
         // KEYEVENTF_SCANCODE tells Windows to ignore wVk, which causes many apps
         // to silently drop the keystroke for non-printable keys. Populate wScan
@@ -1017,14 +947,6 @@ public partial class MainWindow
 
     private void SendCharacter(char ch)
     {
-        // Route through service provider if active
-        if (_useServiceInput)
-        {
-            if (ServiceInputProvider.Instance.SendCharacter(ch))
-                return;
-            Logger.Debug("MainWindow", $"TypeThing: Service SendCharacter failed for '{ch}', falling back to SendInput");
-        }
-
         // Try hardware scan code approach — works with VMware, fullscreen/maximized apps
         var vkResult = VkKeyScanW(ch);
         var isDeadKeyResult = (vkResult & unchecked((short)0x8000)) != 0;
