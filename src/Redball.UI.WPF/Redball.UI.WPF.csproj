@@ -47,7 +47,6 @@
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.142" />
     <PackageReference Include="System.Management" Version="10.0.5" />
     <PackageReference Include="System.Speech" Version="10.0.5" />
-    <PackageReference Include="InputInterceptor" Version="2.2.1" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.5" />
     <PackageReference Include="Obfuscar" Version="2.2.40">
       <PrivateAssets>all</PrivateAssets>

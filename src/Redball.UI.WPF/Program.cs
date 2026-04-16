@@ -72,7 +72,7 @@ public static class Program
             return null;
         };
 
-        // Also handle native DLL resolution (e.g. InputInterceptor)
+        // Handle native DLL resolution from the dll subdirectory
         NativeLibrary.SetDllImportResolver(typeof(Program).Assembly, (libraryName, assembly, searchPath) =>
         {
             var nativePath = Path.Combine(dllDir, libraryName);

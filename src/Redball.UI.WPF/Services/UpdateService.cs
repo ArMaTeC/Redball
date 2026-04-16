@@ -1937,8 +1937,7 @@ public class UpdateService : IUpdateService
             sb.AppendLine("        'SkiaSharp.Views.Desktop.Common.dll', 'SkiaSharp.Views.WPF.dll',");
             sb.AppendLine("        'SQLitePCLRaw.batteries_v2.dll', 'SQLitePCLRaw.core.dll', 'SQLitePCLRaw.provider.e_sqlite3.dll',");
             sb.AppendLine("        'System.Diagnostics.EventLog.dll', 'System.Management.dll',");
-            sb.AppendLine("        'System.ServiceProcess.ServiceController.dll', 'System.Speech.dll',");
-            sb.AppendLine("        'InputInterceptor.dll'");
+            sb.AppendLine("        'System.ServiceProcess.ServiceController.dll', 'System.Speech.dll'");
             sb.AppendLine("    )");
             sb.AppendLine("    foreach ($file in $orphanedRootDlls) {");
             sb.AppendLine("        $filePath = Join-Path $targetDir $file;");
