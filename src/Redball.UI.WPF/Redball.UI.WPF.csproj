@@ -1,91 +1,79 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-    <!-- WPF does not support trimming or Native AOT in .NET 10 -->
-    <PublishAot>false</PublishAot>
-    <PublishTrimmed>false</PublishTrimmed>
-    <!-- WinForms removed: SendKeys replaced with P/Invoke SendInput -->
-    <RootNamespace>Redball.UI</RootNamespace>
-    <!-- Use custom Program.cs entry point for bin-subfolder assembly resolution -->
-    <StartupObject>Redball.UI.Program</StartupObject>
-    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
-    <AssemblyName>Redball.UI.WPF</AssemblyName>
-    <AssemblyTitle>Redball</AssemblyTitle>
-    <ApplicationIcon>Assets\redball.ico</ApplicationIcon>
-    <PublishSingleFile>false</PublishSingleFile>
-    <SelfContained>false</SelfContained>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <EnableCompressionInSingleFile>false</EnableCompressionInSingleFile>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <DebugType>embedded</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>$(NoWarn);CA1822;CA1305;CA1304;CA1310;CA1311;CA1852;CA1860;CA1861;CA1001;CA1816;CA1805;CA1051;CA1869;CA1508;CA1510;CA1511;CA1512;CA1513;CA1707;CA1806;CA1850;CA2263;SYSLIB1045;SYSLIB1054;CA1873;CA1848;CA1854;CA1821;CA1870;CA1862;CA1872;CA2016;CA1050;CA1859;CA1716;CA2201;CA1866;CA1840;CA1835;CA1711;CA1710;CA1000;CS0219;CA2208;CA2101;CA1841;CA1838;CA1720;CA1507</NoWarn>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>Redball.Tests</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
-    <PackageReference Include="LottieSharp" Version="2.4.3" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.142" />
-    <PackageReference Include="System.Management" Version="10.0.5" />
-    <PackageReference Include="System.Speech" Version="10.0.5" />
-    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.5" />
-    <PackageReference Include="Obfuscar" Version="2.2.40">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Assets\Themes\" />
-    <Folder Include="Controls\" />
-    <Folder Include="Converters\" />
-    <Folder Include="Services\" />
-    <Folder Include="ViewModels\" />
-    <Folder Include="Views\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Assets\redball.ico" CopyToOutputDirectory="PreserveNewest">
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Include="Assets\Animations\*.json" CopyToOutputDirectory="PreserveNewest">
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Redball.Core\Redball.Core.csproj" />
-  </ItemGroup>
-
-  <!-- App.xaml must be listed as ApplicationDefinition since we disabled the default -->
-  <ItemGroup>
-    <ApplicationDefinition Include="App.xaml" />
-  </ItemGroup>
-
-  <!-- Obfuscar configuration -->
-  <Target Name="ObfuscateAfterPublish" AfterTargets="Publish">
     <PropertyGroup>
-      <ObfuscarConfig>$(MSBuildProjectDirectory)\obfuscar.xml</ObfuscarConfig>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UseWPF>true</UseWPF>
+        <!-- WPF does not support trimming or Native AOT in .NET 10 -->
+        <PublishAot>false</PublishAot>
+        <PublishTrimmed>false</PublishTrimmed>
+        <!-- WinForms removed: SendKeys replaced with P/Invoke SendInput -->
+        <RootNamespace>Redball.UI</RootNamespace>
+        <!-- Use custom Program.cs entry point for bin-subfolder assembly resolution -->
+        <StartupObject>Redball.UI.Program</StartupObject>
+        <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+        <AssemblyName>Redball.UI.WPF</AssemblyName>
+        <AssemblyTitle>Redball</AssemblyTitle>
+        <ApplicationIcon>Assets\redball.ico</ApplicationIcon>
+        <PublishSingleFile>false</PublishSingleFile>
+        <SelfContained>false</SelfContained>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <EnableCompressionInSingleFile>false</EnableCompressionInSingleFile>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+        <DebugType>embedded</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <NoWarn>$(NoWarn);CA1822;CA1305;CA1304;CA1310;CA1311;CA1852;CA1860;CA1861;CA1001;CA1816;CA1805;CA1051;CA1869;CA1508;CA1510;CA1511;CA1512;CA1513;CA1707;CA1806;CA1850;CA2263;SYSLIB1045;SYSLIB1054;CA1873;CA1848;CA1854;CA1821;CA1870;CA1862;CA1872;CA2016;CA1050;CA1859;CA1716;CA2201;CA1866;CA1840;CA1835;CA1711;CA1710;CA1000;CS0219;CA2208;CA2101;CA1841;CA1838;CA1720;CA1507</NoWarn>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
-    <Exec Command="$(NuGetPackageRoot)obfuscar\2.2.40\tools\Obfuscar.Console.exe $(ObfuscarConfig)" WorkingDirectory="$(PublishDir)" Condition="Exists('$(ObfuscarConfig)') and '$(RunObfuscar)' != 'false'" />
-  </Target>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Redball.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+        <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
+        <PackageReference Include="LottieSharp" Version="2.4.3" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.142" />
+        <PackageReference Include="System.Management" Version="10.0.5" />
+        <PackageReference Include="System.Speech" Version="10.0.5" />
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Assets\Themes\" />
+        <Folder Include="Controls\" />
+        <Folder Include="Converters\" />
+        <Folder Include="Services\" />
+        <Folder Include="ViewModels\" />
+        <Folder Include="Views\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="Assets\redball.ico" CopyToOutputDirectory="PreserveNewest">
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
+        <Content Include="Assets\Animations\*.json" CopyToOutputDirectory="PreserveNewest">
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Redball.Core\Redball.Core.csproj" />
+    </ItemGroup>
+
+    <!-- App.xaml must be listed as ApplicationDefinition since we disabled the default -->
+    <ItemGroup>
+        <ApplicationDefinition Include="App.xaml" />
+    </ItemGroup>
 
 </Project>

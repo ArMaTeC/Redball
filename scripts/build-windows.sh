@@ -492,7 +492,6 @@ step_build_wpf() {
     wine_dotnet build "Z:$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" \
         --configuration "$CONFIGURATION" \
         --runtime win-x64 \
-        -p:RunObfuscar=false \
         --no-restore
     log_info "→ Build completed successfully"
 
@@ -504,7 +503,6 @@ step_build_wpf() {
         --runtime win-x64 \
         -p:PublishSingleFile=false \
         -p:PublishTrimmed=false \
-        -p:RunObfuscar=false \
         --no-restore
 
     wpf_end=$(date +%s)
