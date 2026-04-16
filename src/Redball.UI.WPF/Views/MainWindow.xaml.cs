@@ -249,8 +249,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (_windowHwndSource != null)
-            NativeMethods.BeginNativeDrag(_windowHwndSource.Handle);
+        try { DragMove(); }
+        catch (InvalidOperationException) { }
     }
 
     private void MinimizeWindowButton_Click(object sender, RoutedEventArgs e)
