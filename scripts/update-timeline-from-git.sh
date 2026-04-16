@@ -28,7 +28,7 @@ log_error() {
 }
 
 # Keywords that indicate major features
-MAJOR_KEYWORDS="feat:|feature:|add:|implement:|introduce:|rewrite:|refactor:|WPF|KMDF|driver|service|delta|analytics|dashboard|theme|winget|scoop|chocolatey|installer|SendInput|MVVM|TypeThing"
+MAJOR_KEYWORDS="feat:|feature:|add:|implement:|introduce:|rewrite:|refactor:|WPF|service|delta|analytics|dashboard|theme|winget|scoop|chocolatey|installer|SendInput|MVVM|TypeThing"
 
 # Get significant commits (not version bumps or build releases)
 get_major_commits() {
@@ -65,12 +65,12 @@ extract_period() {
 check_timeline_freshness() {
     local last_commit_date=$(git -C "$PROJECT_ROOT" log --format="%ai" --all -1 | cut -d' ' -f1)
     local last_timeline_update=$(grep -oP '\d{4}-\d{2}-\d{2}' "$TIMELINE_FILE" | head -1 || echo "")
-    
+
     if [[ -z "$last_timeline_update" ]]; then
         log_warn "Could not determine last timeline update date"
         return 1
     fi
-    
+
     if [[ "$last_commit_date" > "$last_timeline_update" ]]; then
         log_info "New commits detected since last timeline update"
         return 0
@@ -83,14 +83,14 @@ check_timeline_freshness() {
 # Generate timeline entries from commits
 generate_timeline_entries() {
     log_info "Analyzing git history for major milestones..."
-    
+
     declare -A period_events
-    
+
     while IFS='|' read -r hash date message; do
         period=$(extract_period "$date")
-        
+
         # Categorize the commit
-        if [[ "$message" =~ (?i)KMDF|driver|HID|interception ]]; then
+        if [[ "$message" =~ (?i)HID|interception ]]; then
             category="Driver"
         elif [[ "$message" =~ (?i)WPF|UI|theme|MVVM|ModernUI ]]; then
             category="UI"
@@ -107,7 +107,7 @@ generate_timeline_entries() {
         else
             category="Core"
         fi
-        
+
         # Add to period events
         if [[ -z "${period_events[$period]}" ]]; then
             period_events[$period]="$category"
@@ -115,7 +115,7 @@ generate_timeline_entries() {
             period_events[$period]="${period_events[$period]}, $category"
         fi
     done < <(get_major_commits)
-    
+
     # Print summary
     log_info "Major development periods detected:"
     for period in "${!period_events[@]}"; do
@@ -133,32 +133,32 @@ update_memory() {
 main() {
     log_info "Redball Timeline Updater"
     log_info "=========================="
-    
+
     if [[ ! -f "$TIMELINE_FILE" ]]; then
         log_error "Timeline file not found: $TIMELINE_FILE"
         exit 1
     fi
-    
+
     # Check if we're in a git repo
     if ! git -C "$PROJECT_ROOT" rev-parse --git-dir > /dev/null 2>&1; then
         log_error "Not a git repository: $PROJECT_ROOT"
         exit 1
     fi
-    
+
     generate_timeline_entries
-    
+
     log_info ""
     log_info "Manual update required for website timeline at:"
     log_info "  $TIMELINE_FILE"
     log_info ""
     log_info "Key milestones to consider adding:"
-    
+
     # Show recent major commits for manual review
     git -C "$PROJECT_ROOT" log --format="  %h | %ai | %s" --all | \
         grep -vE "Bump version|Build release|chore\(release\)" | \
         grep -iE "$MAJOR_KEYWORDS" | \
         head -5
-    
+
     update_memory
 }
 

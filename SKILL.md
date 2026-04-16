@@ -165,7 +165,6 @@ signtool.exe sign /f cert.pfx /p password `
 | Config | `%LocalAppData%\Redball\UserData\Redball.json` |
 | Logs | `%LocalAppData%\Redball\Logs\` |
 | Crash Flag | `%LocalAppData%\Redball\UserData\crash.flag` |
-| Driver (optional) | `%SystemRoot%\System32\drivers\Redball.KMDF.sys` |
 
 ## Troubleshooting
 

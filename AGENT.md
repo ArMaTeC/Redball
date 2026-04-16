@@ -27,7 +27,6 @@ This document provides context and guidelines for AI agents working on the Redba
 - **Architecture**: Self-contained single-file EXE (~3.3MB compressed)
 - **Platform**: Windows 8.1+ (Windows 10/11 recommended)
 - **Input Simulation**: P/Invoke `SendInput` (no WinForms dependency)
-- **Driver**: Optional KMDF driver for HID-level input (`Redball.KMDF.sys`)
 
 ### Installer
 
@@ -55,8 +54,7 @@ Redball/
 │   │   └── Interop/              # Win32 P/Invoke declarations
 │   ├── Redball.Core/             # Core shared library
 │   ├── Redball.Service/          # Windows Service components
-│   ├── Redball.SessionHelper/    # Session helper executable
-│   └── Redball.Driver/             # KMDF driver source
+│   └── Redball.SessionHelper/    # Session helper executable
 ├── tests/                          # Unit tests (xUnit)
 ├── tests-e2e/                      # E2E tests
 ├── tests-integration/              # Integration tests

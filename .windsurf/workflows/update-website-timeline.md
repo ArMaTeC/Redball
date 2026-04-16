@@ -24,7 +24,7 @@ Run this workflow after:
    ```
 
 2. **Review detected milestones**
-   - Look for commits with keywords: `feat:`, `feature:`, `add:`, `implement:`, `WPF`, `KMDF`, `driver`, `delta`, `analytics`, `winget`, etc.
+   - Look for commits with keywords: `feat:`, `feature:`, `add:`, `implement:`, `WPF`, `delta`, `analytics`, `winget`, etc.
    - Exclude: version bumps, build releases, chore commits
 
 3. **Update the memory database**
@@ -53,7 +53,6 @@ Run this workflow after:
 
 | Category      | Keywords                                      |
 | ------------- | --------------------------------------------- |
-| Driver/HID    | KMDF, driver, interception, HID               |
 | UI/Themes     | WPF, theme, MVVM, ModernUI, Hacker            |
 | Core Features | TypeThing, clipboard, typing, SendInput       |
 | Services      | Service mode, analytics, dashboard, telemetry |

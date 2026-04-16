@@ -231,7 +231,6 @@ internal static partial class NativeMethods
 
     /// <summary>
     /// Checks if Windows Test Signing (Test Mode) is enabled.
-    /// This allows unverified custom drivers like Redball.KMDF to load.
     /// </summary>
     public static bool IsTestModeEnabled()
     {
