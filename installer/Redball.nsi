@@ -9,7 +9,6 @@
 ;;   - Custom component selection
 ;   - Auto-start with Windows option
 ;   - Desktop & Start Menu shortcuts
-;   - Service installation
 ;   - Auto-launch after install
 ;   - Silent install support (/S)
 ;   - Windows 10/11 themed

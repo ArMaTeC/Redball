@@ -344,13 +344,20 @@ auto_release() {
         [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] && curl_files+=("-F" "files=@$DIST_DIR/Redball-${version}-Setup.exe")
         [[ -f "$DIST_DIR/Redball-${version}.zip" ]] && curl_files+=("-F" "files=@$DIST_DIR/Redball-${version}.zip")
 
-        # Add individual binaries from wpf-publish to enable delta updates
+        # Add only the application binaries needed for delta updates — not NSIS artefacts, bitmaps, runtime installers, etc.
+        local delta_binaries=(
+            "Redball.UI.WPF.exe"
+            "Redball.UI.WPF.dll"
+            "Redball.UI.WPF.deps.json"
+            "Redball.UI.WPF.runtimeconfig.json"
+            "Redball.Core.dll"
+        )
         if [[ -d "$DIST_DIR/wpf-publish" ]]; then
-            log_info "Collecting individual binaries for delta update manifest..."
-            # Use process substitution to avoid subshell array issues
-            while read -r f; do
-                [[ -f "$f" ]] && curl_files+=("-F" "files=@$f")
-            done < <(find "$DIST_DIR/wpf-publish" -maxdepth 1 -type f -not -name "*.pdb" -not -name "*.xml")
+            log_info "Collecting application binaries for delta update manifest..."
+            for bin in "${delta_binaries[@]}"; do
+                local bin_path="$DIST_DIR/wpf-publish/$bin"
+                [[ -f "$bin_path" ]] && curl_files+=("-F" "files=@$bin_path")
+            done
         fi
 
         if [[ ${#curl_files[@]} -eq 0 ]]; then
@@ -915,9 +922,8 @@ build_all() {
         [[ -f "$DIST_DIR/Redball-${version}.zip" ]] && cp "$DIST_DIR/Redball-${version}.zip" "$update_server_release_dir/"
         [[ -f "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" ]] && cp "$DIST_DIR/wpf-publish/Redball.UI.WPF.exe" "$update_server_release_dir/Redball-${version}.exe"
 
-        # Copy binaries for delta patching
-        # Only copy required runtime files, excluding NSIS build artifacts
-        for file in Redball.UI.WPF.exe Redball.UI.WPF.dll Redball.UI.WPF.runtimeconfig.json Redball.UI.WPF.deps.json Redball.json; do
+        # Copy binaries for delta patching — app executables/libraries only, no NSIS artefacts or config files
+        for file in Redball.UI.WPF.exe Redball.UI.WPF.dll Redball.UI.WPF.runtimeconfig.json Redball.UI.WPF.deps.json Redball.Core.dll; do
             [[ -f "$DIST_DIR/wpf-publish/$file" ]] && cp "$DIST_DIR/wpf-publish/$file" "$update_server_release_dir/binaries/"
         done
         [[ -d "$DIST_DIR/wpf-publish/dll" ]] && cp "$DIST_DIR/wpf-publish/dll"/*.dll "$update_server_release_dir/binaries/" 2>/dev/null || true
