@@ -272,4 +272,26 @@ internal static partial class NativeMethods
     [LibraryImport("psapi.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static partial bool EmptyWorkingSet(IntPtr hProcess);
+
+    // --- Native window dragging (user32.dll) ---
+
+    private const int WM_NCLBUTTONDOWN = 0xA1;
+    private const int HTCAPTION = 0x2;
+
+    [LibraryImport("user32.dll")]
+    private static partial IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool ReleaseCapture();
+
+    /// <summary>
+    /// Initiates a native OS-level window drag via WM_NCLBUTTONDOWN/HTCAPTION.
+    /// Smoother than WPF's DragMove() as it bypasses the managed input pipeline.
+    /// </summary>
+    public static void BeginNativeDrag(IntPtr hwnd)
+    {
+        ReleaseCapture();
+        SendMessage(hwnd, WM_NCLBUTTONDOWN, new IntPtr(HTCAPTION), IntPtr.Zero);
+    }
 }

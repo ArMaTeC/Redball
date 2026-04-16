@@ -142,11 +142,8 @@ public partial class UpdateAvailableWindow : Window
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        try { DragMove(); }
-        catch (InvalidOperationException ex)
-        {
-            Logger.Debug("UpdateAvailableWindow", $"DragMove failed: {ex.Message}");
-        }
+        var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+        Redball.UI.Interop.NativeMethods.BeginNativeDrag(hwnd);
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)

@@ -24,7 +24,11 @@ public partial class UpdateProgressWindow : Window
     /// <summary>
     /// Allows the borderless window to be dragged.
     /// </summary>
-    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => DragMove();
+    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+        Redball.UI.Interop.NativeMethods.BeginNativeDrag(hwnd);
+    }
 
     /// <summary>
     /// Updates the UI with detailed progress info.
@@ -106,7 +110,7 @@ public partial class UpdateProgressWindow : Window
             {
                 if (_logBuilder.Length > 0) _logBuilder.AppendLine();
                 _logBuilder.Append(cleanedEntry);
-                
+
                 // Keep only the last 10,000 characters to prevent junk build-up
                 if (_logBuilder.Length > 10000)
                 {
@@ -144,8 +148,8 @@ public partial class UpdateProgressWindow : Window
         var failedBrush = new SolidColorBrush(Color.FromRgb(0xE7, 0x4C, 0x3C));
 
         // Define the visual stage sequence
-        var stages = new[] 
-        { 
+        var stages = new[]
+        {
             (StageChecking, Connector1, UpdateStage.Checking),
             (StageDownloading, Connector2, UpdateStage.Downloading),
             (StagePatching, Connector3, UpdateStage.Patching),
@@ -165,7 +169,7 @@ public partial class UpdateProgressWindow : Window
         foreach (var (indicator, connector, stageType) in stages)
         {
             var icon = (System.Windows.Controls.TextBlock)indicator.Child;
-            
+
             if (stageType == effectiveCurrent)
             {
                 reachedCurrent = true;

@@ -1,37 +1,16 @@
 <Window x:Class="Redball.UI.Views.MiniWidgetWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Redball Widget"
-        Width="232" Height="118"
-        WindowStyle="None"
-        AllowsTransparency="True"
-        Background="Transparent"
-        Topmost="True"
-        ShowInTaskbar="False"
-        ResizeMode="NoResize"
-        Focusable="True"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown"
-        KeyDown="Window_KeyDown"
-        MouseDoubleClick="Window_MouseDoubleClick">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Redball Widget" Width="232" Height="118" WindowStyle="None" AllowsTransparency="True" Background="Transparent" Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize" Focusable="True" MouseLeftButtonDown="Window_MouseLeftButtonDown" MouseLeftButtonUp="Window_MouseLeftButtonUp" KeyDown="Window_KeyDown" MouseDoubleClick="Window_MouseDoubleClick">
     <Window.Resources>
         <!-- Heartbeat pulse animation -->
         <Storyboard x:Key="HeartbeatStoryboard">
-            <DoubleAnimation Storyboard.TargetName="HeartbeatDot"
-                             Storyboard.TargetProperty="Opacity"
-                             From="0" To="1" Duration="0:0:0.2" AutoReverse="True"/>
-            <DoubleAnimation Storyboard.TargetName="HeartbeatDot"
-                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                             From="0.5" To="1.5" Duration="0:0:0.2" AutoReverse="True"/>
-            <DoubleAnimation Storyboard.TargetName="HeartbeatDot"
-                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                             From="0.5" To="1.5" Duration="0:0:0.2" AutoReverse="True"/>
+            <DoubleAnimation Storyboard.TargetName="HeartbeatDot" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.2" AutoReverse="True"/>
+            <DoubleAnimation Storyboard.TargetName="HeartbeatDot" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" From="0.5" To="1.5" Duration="0:0:0.2" AutoReverse="True"/>
+            <DoubleAnimation Storyboard.TargetName="HeartbeatDot" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.5" To="1.5" Duration="0:0:0.2" AutoReverse="True"/>
         </Storyboard>
     </Window.Resources>
-    
-    <Border BorderBrush="{DynamicResource BorderBrush}"
-            BorderThickness="1"
-            CornerRadius="14"
-            ClipToBounds="True">
+
+    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="14" ClipToBounds="True">
         <Border.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                 <GradientStop Color="{DynamicResource BackgroundColor}" Offset="0"/>
@@ -65,10 +44,10 @@
                 <!-- Outer Ring (Progress for timed sessions) -->
                 <Ellipse Width="32" Height="32" Stroke="{DynamicResource BorderBrush}" StrokeThickness="2" Opacity="0.3"/>
                 <Path x:Name="ProgressRing" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Visibility="Collapsed"/>
-                
+
                 <!-- Inner Dot -->
                 <Ellipse x:Name="StatusDot" Width="14" Height="14" Fill="#4CAF50" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                
+
                 <!-- Heartbeat Flash -->
                 <Ellipse x:Name="HeartbeatDot" Width="14" Height="14" Fill="White" Opacity="0" VerticalAlignment="Center" HorizontalAlignment="Center">
                     <Ellipse.RenderTransform>
@@ -80,88 +59,29 @@
             <!-- Title and Active Timer -->
             <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="Redball" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource ForegroundBrush}"/>
-                <Border x:Name="PresetBadgeBorder"
-                        Margin="6,0,0,0"
-                        Padding="5,1"
-                        CornerRadius="7"
-                        Background="#30414B5A"
-                        BorderBrush="#806B7280"
-                        BorderThickness="1">
-                    <TextBlock x:Name="PresetBadgeText"
-                               Text="CUSTOM"
-                               FontSize="8.5"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
+                <Border x:Name="PresetBadgeBorder" Margin="6,0,0,0" Padding="5,1" CornerRadius="7" Background="#30414B5A" BorderBrush="#806B7280" BorderThickness="1">
+                    <TextBlock x:Name="PresetBadgeText" Text="CUSTOM" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundSecondaryBrush}"/>
                 </Border>
                 <TextBlock x:Name="TimeText" Margin="6,0,0,0" FontSize="10" Foreground="{DynamicResource ForegroundSecondaryBrush}" VerticalAlignment="Bottom"/>
             </StackPanel>
 
             <!-- Status text -->
-            <TextBlock x:Name="StatusText" Grid.Column="1" Grid.Row="1"
-                       FontSize="10.5" Margin="0,2,0,0"
-                       Foreground="{DynamicResource ForegroundSecondaryBrush}"
-                       TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+            <TextBlock x:Name="StatusText" Grid.Column="1" Grid.Row="1" FontSize="10.5" Margin="0,2,0,0" Foreground="{DynamicResource ForegroundSecondaryBrush}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
 
             <!-- Action Buttons -->
             <StackPanel Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="0" Grid.RowSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button x:Name="ToggleBtn" 
-                        Content="&#xE768;" FontFamily="Segoe Fluent Icons" FontSize="16"
-                        Background="Transparent" BorderThickness="0"
-                        Foreground="{DynamicResource ForegroundBrush}"
-                        Width="32" Height="32" Click="ToggleBtn_Click" Cursor="Hand"
-                        ToolTip="Toggle session"/>
-                <Button x:Name="OpenDashboardBtn" Margin="4,0,0,0"
-                        Content="&#xE80F;" FontFamily="Segoe Fluent Icons" FontSize="12"
-                        Background="Transparent" BorderThickness="0"
-                        Foreground="{DynamicResource ForegroundSecondaryBrush}"
-                        Width="24" Height="24" Cursor="Hand"
-                        Click="OpenDashboardBtn_Click"
-                        ToolTip="Open dashboard"/>
-                <Button x:Name="LockPositionBtn" Margin="4,0,0,0"
-                        Content="&#xE72E;" FontFamily="Segoe Fluent Icons" FontSize="12"
-                        Background="Transparent" BorderThickness="0"
-                        Foreground="{DynamicResource ForegroundSecondaryBrush}"
-                        Width="24" Height="24" Cursor="Hand"
-                        Click="LockPositionBtn_Click"
-                        ToolTip="Lock/unlock widget position"/>
-                <Button Click="CloseBtn_Click" Margin="4,0,0,0"
-                        Content="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="12"
-                        Background="Transparent" BorderThickness="0"
-                        Foreground="{DynamicResource ForegroundSecondaryBrush}"
-                        Width="24" Height="24" Cursor="Hand"
-                        ToolTip="Close widget"/>
+                <Button x:Name="ToggleBtn" Content="&#xE768;" FontFamily="Segoe Fluent Icons" FontSize="16" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource ForegroundBrush}" Width="32" Height="32" Click="ToggleBtn_Click" Cursor="Hand" ToolTip="Toggle session"/>
+                <Button x:Name="OpenDashboardBtn" Margin="4,0,0,0" Content="&#xE80F;" FontFamily="Segoe Fluent Icons" FontSize="12" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource ForegroundSecondaryBrush}" Width="24" Height="24" Cursor="Hand" Click="OpenDashboardBtn_Click" ToolTip="Open dashboard"/>
+                <Button x:Name="LockPositionBtn" Margin="4,0,0,0" Content="&#xE72E;" FontFamily="Segoe Fluent Icons" FontSize="12" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource ForegroundSecondaryBrush}" Width="24" Height="24" Cursor="Hand" Click="LockPositionBtn_Click" ToolTip="Lock/unlock widget position"/>
+                <Button Click="CloseBtn_Click" Margin="4,0,0,0" Content="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="12" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource ForegroundSecondaryBrush}" Width="24" Height="24" Cursor="Hand" ToolTip="Close widget"/>
             </StackPanel>
 
             <!-- Quick Actions -->
             <StackPanel x:Name="QuickActionsPanel" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" Margin="0,4,0,0">
-                <Button Content="+15m"
-                        Click="QuickAdd15mBtn_Click"
-                        Style="{DynamicResource ModernButton}"
-                        FontSize="10"
-                        Padding="8,2"
-                        Margin="0,0,6,0"
-                        ToolTip="Start or extend timed session by 15 minutes"/>
-                <Button Content="+60m"
-                        Click="QuickAdd60mBtn_Click"
-                        Style="{DynamicResource ModernButton}"
-                        FontSize="10"
-                        Padding="8,2"
-                        Margin="0,0,6,0"
-                        ToolTip="Start or extend timed session by 60 minutes"/>
-                <Button x:Name="QuickAddCustomBtn"
-                        Content="+30m"
-                        Click="QuickAddCustomBtn_Click"
-                        Style="{DynamicResource ModernButton}"
-                        FontSize="10"
-                        Padding="8,2"
-                        Margin="0,0,6,0"
-                        ToolTip="Start or extend timed session by your custom amount"/>
-                <Button Content="Reset"
-                        Click="QuickResetPositionBtn_Click"
-                        Style="{DynamicResource ModernButton}"
-                        FontSize="10"
-                        Padding="8,2"
-                        ToolTip="Reset widget position"/>
+                <Button Content="+15m" Click="QuickAdd15mBtn_Click" Style="{DynamicResource ModernButton}" FontSize="10" Padding="8,2" Margin="0,0,6,0" ToolTip="Start or extend timed session by 15 minutes"/>
+                <Button Content="+60m" Click="QuickAdd60mBtn_Click" Style="{DynamicResource ModernButton}" FontSize="10" Padding="8,2" Margin="0,0,6,0" ToolTip="Start or extend timed session by 60 minutes"/>
+                <Button x:Name="QuickAddCustomBtn" Content="+30m" Click="QuickAddCustomBtn_Click" Style="{DynamicResource ModernButton}" FontSize="10" Padding="8,2" Margin="0,0,6,0" ToolTip="Start or extend timed session by your custom amount"/>
+                <Button Content="Reset" Click="QuickResetPositionBtn_Click" Style="{DynamicResource ModernButton}" FontSize="10" Padding="8,2" ToolTip="Reset widget position"/>
             </StackPanel>
 
             <!-- Bottom Status Icons Row -->

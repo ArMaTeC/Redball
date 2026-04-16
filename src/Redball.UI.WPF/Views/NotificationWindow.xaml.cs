@@ -26,7 +26,11 @@ public partial class NotificationWindow : Window
 
         // Draggable
         MouseDown += (s, e) => {
-            if (e.ChangedButton == MouseButton.Left) DragMove();
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                Redball.UI.Interop.NativeMethods.BeginNativeDrag(hwnd);
+            }
         };
     }
 

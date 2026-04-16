@@ -2,9 +2,11 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using Redball.UI.Interop;
 using Redball.UI.Services;
 
 namespace Redball.UI.Views;
@@ -408,16 +410,19 @@ public partial class MiniWidgetWindow : Window
             Focus();
 
             if (ConfigService.Instance.Config.MiniWidgetLockPosition)
-            {
                 return;
-            }
 
-            DragMove();
+            var hwnd = new WindowInteropHelper(this).Handle;
+            NativeMethods.BeginNativeDrag(hwnd);
+        }
+    }
 
+    private void Window_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left && !ConfigService.Instance.Config.MiniWidgetLockPosition)
+        {
             if (ConfigService.Instance.Config.MiniWidgetSnapToScreenEdges)
-            {
                 SnapToWorkArea();
-            }
 
             SavePosition();
         }
