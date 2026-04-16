@@ -115,11 +115,11 @@
                             <!-- Window controls -->
                         </Grid.ColumnDefinitions>
 
-                        <!-- Traffic Light Dots (macOS-inspired) -->
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Ellipse Width="12" Height="12" Fill="#FFFF5F56" Margin="0,0,6,0" Cursor="Hand"/>
-                            <Ellipse Width="12" Height="12" Fill="#FFFFBD2E" Margin="0,0,6,0" Cursor="Hand"/>
-                            <Ellipse Width="12" Height="12" Fill="#FF27C93F" Cursor="Hand"/>
+                        <!-- Traffic Light Dots (macOS-inspired, decorative only) -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" IsHitTestVisible="False">
+                            <Ellipse Width="12" Height="12" Fill="#FFFF5F56" Margin="0,0,6,0"/>
+                            <Ellipse Width="12" Height="12" Fill="#FFFFBD2E" Margin="0,0,6,0"/>
+                            <Ellipse Width="12" Height="12" Fill="#FF27C93F"/>
                         </StackPanel>
 
                         <!-- Centered Logo + Branding -->
