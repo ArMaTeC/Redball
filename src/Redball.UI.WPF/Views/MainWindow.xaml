@@ -7,7 +7,7 @@
     xmlns:views="clr-namespace:Redball.UI.Views" Title="Redball" Height="780" Width="1200" WindowStartupLocation="CenterScreen" ShowInTaskbar="True" Style="{DynamicResource ModernWindow}" Background="{DynamicResource BackgroundBrush}" Foreground="{DynamicResource ForegroundBrush}" WindowStyle="None" ResizeMode="CanResize" AllowsTransparency="False">
 
     <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="8" CornerRadius="14" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
+        <shell:WindowChrome CaptionHeight="48" ResizeBorderThickness="8" CornerRadius="14" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
     </shell:WindowChrome.WindowChrome>
 
     <Border Margin="8" CornerRadius="14" Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" SnapsToDevicePixels="True">
@@ -104,7 +104,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Cyberpunk Title Bar -->
-                <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" CornerRadius="14,14,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" CornerRadius="14,14,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <Grid Margin="14,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -131,17 +131,17 @@
 
                         <!-- Window Controls -->
                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button x:Name="MinimizeWindowButton" Content="—" Click="MinimizeWindowButton_Click" FontSize="12" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarButtonStyle}">
+                            <Button x:Name="MinimizeWindowButton" Content="—" Click="MinimizeWindowButton_Click" FontSize="12" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarButtonStyle}" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                                 <Button.ToolTip>
                                     <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Minimize Redball to the taskbar."/>
                                 </Button.ToolTip>
                             </Button>
-                            <Button x:Name="MaximizeWindowButton" Content="□" Click="MaximizeWindowButton_Click" FontSize="12" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarButtonStyle}">
+                            <Button x:Name="MaximizeWindowButton" Content="□" Click="MaximizeWindowButton_Click" FontSize="12" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarButtonStyle}" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                                 <Button.ToolTip>
                                     <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Maximize or restore the Redball window."/>
                                 </Button.ToolTip>
                             </Button>
-                            <Button x:Name="CloseWindowButton" Content="✕" Click="CloseWindowButton_Click" FontSize="12" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarCloseButtonStyle}">
+                            <Button x:Name="CloseWindowButton" Content="✕" Click="CloseWindowButton_Click" FontSize="12" ToolTipService.ShowDuration="12000" Style="{StaticResource TitleBarCloseButtonStyle}" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                                 <Button.ToolTip>
                                     <ToolTip Style="{StaticResource AppToolTipStyle}" Content="Hide Redball back to tray mode."/>
                                 </Button.ToolTip>
