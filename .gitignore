@@ -116,3 +116,6 @@ web-admin/node_modules/
 
 .fake
 cleanup_report.txt
+
+# Native build output
+x64/
