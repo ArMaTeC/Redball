@@ -27,7 +27,7 @@ public sealed class DeltaUpdateService
         var newBytes = await File.ReadAllBytesAsync(newFilePath, ct);
 
         var patch = await CreatePatchAsync(oldBytes, newBytes, ct);
-        
+
         patch.OldFileHash = ComputeHash(oldBytes);
         patch.NewFileHash = ComputeHash(newBytes);
         patch.OldFileSize = oldBytes.Length;
@@ -44,7 +44,7 @@ public sealed class DeltaUpdateService
     {
         // For production, this would use VCDIFF or bsdiff algorithm
         // This is a simplified implementation for demonstration
-        
+
         using var ms = new MemoryStream();
         using var writer = new BinaryWriter(ms);
 
@@ -62,14 +62,14 @@ public sealed class DeltaUpdateService
         // Write new data that's different
         int newStart = commonPrefix;
         int newLength = newData.Length - commonPrefix - commonSuffix;
-        
+
         writer.Write(newLength);
         writer.Write(newData, newStart, newLength);
 
         writer.Flush();
-        
+
         var patchData = ms.ToArray();
-        
+
         // Compress the patch
         var compressed = await CompressAsync(patchData, ct);
 
@@ -92,10 +92,10 @@ public sealed class DeltaUpdateService
     {
         Logger.Info("DeltaUpdateService", $"[PATCH] Starting patch application: oldData={oldData.Length} bytes, patchData={patch.Data?.Length ?? 0} bytes");
         Logger.Debug("DeltaUpdateService", $"[PATCH] Expected old hash: {patch.OldFileHash}, new hash: {patch.NewFileHash}, new size: {patch.NewFileSize}");
-        
+
         // Verify old data hash
         var actualHash = ComputeHash(oldData);
-        if (actualHash != patch.OldFileHash)
+        if (!string.Equals(actualHash, patch.OldFileHash, StringComparison.OrdinalIgnoreCase))
         {
             Logger.Error("DeltaUpdateService", $"[PATCH] ✗ Old file hash mismatch! Expected: {patch.OldFileHash}, Actual: {actualHash}");
             throw new InvalidOperationException("Old file hash mismatch - cannot apply patch");
@@ -117,7 +117,7 @@ public sealed class DeltaUpdateService
         int commonPrefix = reader.ReadInt32();
         int commonSuffix = reader.ReadInt32();
         int newDataLength = reader.ReadInt32();
-        
+
         Logger.Debug("DeltaUpdateService", $"[PATCH] Header: oldSize={oldSize}, newSize={newSize}, commonPrefix={commonPrefix}, commonSuffix={commonSuffix}, newDataLength={newDataLength}");
 
         if (oldSize != oldData.Length)
@@ -128,14 +128,14 @@ public sealed class DeltaUpdateService
 
         // Reconstruct new data
         var result = new byte[newSize];
-        
+
         // Copy common prefix
         Buffer.BlockCopy(oldData, 0, result, 0, commonPrefix);
-        
+
         // Read and copy new data section
         var newSection = reader.ReadBytes(newDataLength);
         Buffer.BlockCopy(newSection, 0, result, commonPrefix, newDataLength);
-        
+
         // Copy common suffix
         int suffixStartOld = oldData.Length - commonSuffix;
         int suffixStartNew = newSize - commonSuffix;
@@ -144,7 +144,7 @@ public sealed class DeltaUpdateService
         // Verify result
         var resultHash = ComputeHash(result);
         Logger.Debug("DeltaUpdateService", $"[PATCH] Result hash: {resultHash}, expected: {patch.NewFileHash}");
-        if (resultHash != patch.NewFileHash)
+        if (!string.Equals(resultHash, patch.NewFileHash, StringComparison.OrdinalIgnoreCase))
         {
             Logger.Error("DeltaUpdateService", $"[PATCH] ✗ Hash mismatch! Expected: {patch.NewFileHash}, Actual: {resultHash}");
             throw new InvalidOperationException("Patch application failed: hash mismatch");
@@ -158,7 +158,7 @@ public sealed class DeltaUpdateService
     /// Generates a differential update manifest for multiple files.
     /// </summary>
     public async Task<DeltaUpdateManifest> CreateUpdateManifestAsync(
-        string oldVersionDir, 
+        string oldVersionDir,
         string newVersionDir,
         string version,
         CancellationToken ct)
@@ -189,8 +189,8 @@ public sealed class DeltaUpdateService
             if (File.Exists(oldFile))
             {
                 var oldHash = ComputeHash(await File.ReadAllBytesAsync(oldFile, ct));
-                
-                if (oldHash != entry.NewHash)
+
+                if (!string.Equals(oldHash, entry.NewHash, StringComparison.OrdinalIgnoreCase))
                 {
                     // File changed - create delta
                     var patch = await CreatePatchAsync(oldFile, newFile, ct);
@@ -198,7 +198,7 @@ public sealed class DeltaUpdateService
                     entry.PatchSize = patch.PatchSize;
                     entry.CompressionSavings = 1.0 - patch.CompressionRatio;
                     entry.DownloadUrl = $"patches/{version}/{relativePath}.patch";
-                    
+
                     // Store patch
                     await StorePatchAsync(patch, entry.DownloadUrl);
                 }
@@ -222,7 +222,7 @@ public sealed class DeltaUpdateService
         var totalNewSize = manifest.Files.Sum(f => f.NewSize);
         var totalPatchSize = manifest.Files.Where(f => !f.Unchanged && !f.IsNew).Sum(f => f.PatchSize);
         var totalFullSize = manifest.Files.Where(f => f.IsNew).Sum(f => f.NewSize);
-        
+
         manifest.TotalPatchSize = totalPatchSize + totalFullSize;
         manifest.TotalSavings = totalNewSize - manifest.TotalPatchSize;
         manifest.SavingsPercentage = (double)manifest.TotalSavings / totalNewSize * 100;
@@ -242,12 +242,12 @@ public sealed class DeltaUpdateService
     {
         using var input = new MemoryStream(data);
         using var output = new MemoryStream();
-        
+
         await using (var gzip = new GZipStream(output, CompressionLevel.Optimal, true))
         {
             await input.CopyToAsync(gzip, ct);
         }
-        
+
         return output.ToArray();
     }
 
@@ -255,12 +255,12 @@ public sealed class DeltaUpdateService
     {
         using var input = new MemoryStream(data);
         using var output = new MemoryStream();
-        
+
         await using (var gzip = new GZipStream(input, CompressionMode.Decompress, true))
         {
             await gzip.CopyToAsync(output, ct);
         }
-        
+
         return output.ToArray();
     }
 
@@ -269,7 +269,7 @@ public sealed class DeltaUpdateService
         var fullPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Redball", "Updates", path);
-        
+
         Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
         await File.WriteAllBytesAsync(fullPath, patch.Data);
     }
