@@ -510,17 +510,50 @@ auto_release() {
     log_step "Phase 6.1: Updating GitHub wiki..."
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would sync wiki/ to GitHub wiki"
+    elif [[ ! -d "$PROJECT_ROOT/wiki" ]]; then
+        log_warn "wiki/ directory not found, skipping wiki update"
+    elif ! command -v gh &>/dev/null; then
+        log_warn "gh CLI not found, skipping wiki update"
     else
-        local wiki_script="$PROJECT_ROOT/scripts/update-wiki.sh"
-        if [[ -f "$wiki_script" ]]; then
-            if bash "$wiki_script" "Release ${version}: update wiki documentation" 2>&1 | while IFS= read -r line; do log_detail "$line"; done; then
-                log_success "Wiki updated"
-            else
-                log_warn "Wiki update failed (non-fatal)"
-            fi
+        local wiki_src="$PROJECT_ROOT/wiki"
+        local wiki_tmp
+        wiki_tmp="$(mktemp -d)"
+        local wiki_failed=false
+
+        # Determine repo and build authenticated clone URL
+        local wiki_repo_slug
+        wiki_repo_slug=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || echo "ArMaTeC/Redball")
+        local wiki_clone_url="https://$(gh auth token 2>/dev/null)@github.com/${wiki_repo_slug}.wiki.git"
+
+        log_info "Cloning wiki repo for ${wiki_repo_slug}..."
+        if ! git clone --quiet "$wiki_clone_url" "$wiki_tmp" 2>/dev/null; then
+            log_warn "Could not clone wiki (ensure it has been initialised on GitHub)"
+            wiki_failed=true
         else
-            log_warn "update-wiki.sh not found, skipping wiki update"
+            # Copy all markdown files from wiki/ into the cloned repo
+            cp "$wiki_src"/*.md "$wiki_tmp/" 2>/dev/null || true
+
+            cd "$wiki_tmp"
+            git config user.email "$(git -C "$PROJECT_ROOT" config user.email 2>/dev/null || echo 'build@redball')"
+            git config user.name  "$(git -C "$PROJECT_ROOT" config user.name  2>/dev/null || echo 'Redball Build')"
+
+            if git diff --quiet && git diff --cached --quiet; then
+                log_info "Wiki already up to date, no changes to push"
+            else
+                git add -A
+                git commit -m "Release ${version}: update wiki documentation" --quiet
+                if git push origin master 2>/dev/null || git push origin main 2>/dev/null; then
+                    log_success "Wiki updated: https://github.com/${wiki_repo_slug}/wiki"
+                else
+                    log_warn "Wiki push failed (non-fatal)"
+                    wiki_failed=true
+                fi
+            fi
+            cd "$PROJECT_ROOT"
         fi
+
+        rm -rf "$wiki_tmp"
+        [[ $wiki_failed == true ]] && log_warn "Wiki update completed with errors (non-fatal)"
     fi
 
     # 7. Restart Update Server
