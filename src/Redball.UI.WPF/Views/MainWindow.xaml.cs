@@ -244,7 +244,13 @@ public partial class MainWindow : Window
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ClickCount == 2)
+        {
             ToggleWindowState();
+            return;
+        }
+
+        if (_windowHwndSource != null)
+            NativeMethods.BeginNativeDrag(_windowHwndSource.Handle);
     }
 
     private void MinimizeWindowButton_Click(object sender, RoutedEventArgs e)

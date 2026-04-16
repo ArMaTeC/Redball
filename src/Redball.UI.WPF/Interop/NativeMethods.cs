@@ -283,15 +283,19 @@ internal static partial class NativeMethods
 
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool PostMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool ReleaseCapture();
 
     /// <summary>
     /// Initiates a native OS-level window drag via WM_NCLBUTTONDOWN/HTCAPTION.
-    /// Smoother than WPF's DragMove() as it bypasses the managed input pipeline.
+    /// Uses PostMessage (non-blocking) so the UI thread is not held during the drag.
     /// </summary>
     public static void BeginNativeDrag(IntPtr hwnd)
     {
         ReleaseCapture();
-        SendMessage(hwnd, WM_NCLBUTTONDOWN, new IntPtr(HTCAPTION), IntPtr.Zero);
+        PostMessage(hwnd, WM_NCLBUTTONDOWN, new IntPtr(HTCAPTION), IntPtr.Zero);
     }
 }
