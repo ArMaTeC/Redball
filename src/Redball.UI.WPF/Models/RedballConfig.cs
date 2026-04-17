@@ -14,6 +14,12 @@ public class RedballConfig
     public int DefaultDuration { get; set; } = 60;
     public string LogPath { get; set; } = "Redball.log";
     public int MaxLogSizeMB { get; set; } = 10;
+
+    // Log Rotation Settings
+    public bool LogRotationEnabled { get; set; } = true;
+    public int MaxLogFiles { get; set; } = 5;
+    public bool CompressRotatedLogs { get; set; } = true;
+    public int LogRetentionDays { get; set; } = 30;
     public bool ShowBalloonOnStart { get; set; } = true;
     public string Locale { get; set; } = "en";
     public bool MinimizeOnStart { get; set; }

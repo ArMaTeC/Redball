@@ -36,6 +36,14 @@ public static class Logger
     private static EventLog? _eventLog;
     private static bool _eventLogEnabled = false;
 
+    // Log rotation configuration
+    private static bool _rotationEnabled = true;
+    private static int _maxLogFiles = 5;
+    private static bool _compressRotatedLogs = true;
+    private static int _logRetentionDays = 30;
+    private static long _maxLogSizeBytes = 10 * 1024 * 1024;
+    private static DateTime _lastRotationCheck = DateTime.MinValue;
+
     public static string LogPath => _logPath;
 
     public static int CurrentLogLevel => _logLevel;
@@ -52,7 +60,7 @@ public static class Logger
             if (_initialized) return;
 
             _logPath = logPath ?? Path.Combine(AppContext.BaseDirectory, "logs", "Redball.UI.log");
-            
+
             try
             {
                 // Ensure directory exists
@@ -186,8 +194,22 @@ public static class Logger
         }
 
         SetLogLevel(config.VerboseLogging ? 0 : 2);
-        RotateLog(config.MaxLogSizeMB * 1024L * 1024L);
-        Info("Logger", $"Logger configuration applied: Level={_logLevel}, MaxSizeMB={config.MaxLogSizeMB}");
+
+        // Apply rotation settings
+        _rotationEnabled = config.LogRotationEnabled;
+        _maxLogFiles = Math.Max(1, config.MaxLogFiles);
+        _compressRotatedLogs = config.CompressRotatedLogs;
+        _logRetentionDays = Math.Max(1, config.LogRetentionDays);
+        _maxLogSizeBytes = Math.Max(1, config.MaxLogSizeMB) * 1024L * 1024L;
+
+        // Perform initial rotation check if enabled
+        if (_rotationEnabled)
+        {
+            PerformLogRotation();
+            CleanupOldLogs();
+        }
+
+        Info("Logger", $"Logger configuration applied: Level={_logLevel}, RotationEnabled={_rotationEnabled}, MaxFiles={_maxLogFiles}, Compress={_compressRotatedLogs}, RetentionDays={_logRetentionDays}");
     }
 
     public static string GetLogDirectory()
@@ -357,7 +379,7 @@ public static class Logger
                 sb.AppendLine($"  Inner Stack: {ex.InnerException.StackTrace}");
             }
         }
-        
+
         // Try to get loader exceptions for reflection type load exceptions
         if (ex is System.Reflection.ReflectionTypeLoadException rtle)
         {
@@ -369,7 +391,7 @@ public static class Logger
                 }
             }
         }
-        
+
         Write("FTL", component, sb.ToString().TrimEnd());
     }
 
@@ -402,7 +424,7 @@ public static class Logger
             sb.AppendLine("--- STACK TRACE ---");
             sb.AppendLine(ex.StackTrace);
             sb.AppendLine();
-            
+
             if (ex.InnerException != null)
             {
                 sb.AppendLine("--- INNER EXCEPTION ---");
@@ -448,7 +470,7 @@ public static class Logger
             {
                 try
                 {
-                    var loc = asm.IsDynamic ? "[Dynamic]" : 
+                    var loc = asm.IsDynamic ? "[Dynamic]" :
                         (string.IsNullOrEmpty(asm.Location) ? "[Bundled/Single-file]" : asm.Location);
                     sb.AppendLine($"  {asm.FullName} -> {loc}");
                 }
@@ -465,7 +487,7 @@ public static class Logger
             sb.AppendLine("========================================");
 
             File.WriteAllText(crashPath, sb.ToString());
-            
+
             // Also write to main log
             Fatal("CrashDumper", $"Crash dump written to: {crashPath}");
         }
@@ -485,7 +507,8 @@ public static class Logger
     }
 
     /// <summary>
-    /// Rotate log file if it exceeds max size (10MB default).
+    /// Legacy single-backup rotation for backward compatibility.
+    /// Consider using PerformLogRotation() for full multi-file rotation.
     /// </summary>
     public static void RotateLog(long maxSizeBytes = 10 * 1024 * 1024)
     {
@@ -495,21 +518,168 @@ public static class Logger
             var info = new FileInfo(_logPath);
             if (info.Length < maxSizeBytes) return;
 
-            var backup = _logPath + ".old";
-            try
-            {
-                File.Delete(backup); // Safe to call even if file doesn't exist
-            }
-            catch (Exception ex)
-            {
-                SysDebug.WriteLine($"[Logger] Failed to delete old backup: {ex.Message}");
-            }
-            File.Move(_logPath, backup);
-            Info("Logger", $"Log rotated (was {info.Length / 1024 / 1024}MB)");
+            PerformLogRotation();
         }
         catch (Exception ex)
         {
             Error("Logger", "Failed to rotate log", ex);
+        }
+    }
+
+    /// <summary>
+    /// Comprehensive log rotation with multi-file backup and optional compression.
+    /// Shifts existing backups (.1 -> .2, .2 -> .3, etc.) and compresses if enabled.
+    /// </summary>
+    public static void PerformLogRotation()
+    {
+        try
+        {
+            if (!_rotationEnabled) return;
+            if (!File.Exists(_logPath)) return;
+
+            // Throttle rotation checks to once per minute
+            var now = DateTime.Now;
+            if ((now - _lastRotationCheck).TotalMinutes < 1) return;
+            _lastRotationCheck = now;
+
+            var info = new FileInfo(_logPath);
+            if (info.Length < _maxLogSizeBytes) return;
+
+            // Shift existing backups: .3 -> .4, .2 -> .3, .1 -> .2
+            for (int i = _maxLogFiles - 1; i >= 1; i--)
+            {
+                var srcPath = GetRotatedLogPath(i);
+                var dstPath = GetRotatedLogPath(i + 1);
+
+                if (File.Exists(srcPath))
+                {
+                    try
+                    {
+                        // Delete oldest if at limit
+                        if (i >= _maxLogFiles)
+                        {
+                            File.Delete(srcPath);
+                            // Also delete compressed version if exists
+                            var compressed = srcPath + ".gz";
+                            if (File.Exists(compressed)) File.Delete(compressed);
+                        }
+                        else
+                        {
+                            File.Move(srcPath, dstPath, overwrite: true);
+                            // Move compressed version too
+                            var srcCompressed = srcPath + ".gz";
+                            var dstCompressed = dstPath + ".gz";
+                            if (File.Exists(srcCompressed))
+                            {
+                                File.Move(srcCompressed, dstCompressed, overwrite: true);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        SysDebug.WriteLine($"[Logger] Failed to shift backup {i}: {ex.Message}");
+                    }
+                }
+            }
+
+            // Move current log to .1
+            var backupPath = GetRotatedLogPath(1);
+            File.Move(_logPath, backupPath, overwrite: true);
+
+            // Compress the rotated log if enabled
+            if (_compressRotatedLogs)
+            {
+                try
+                {
+                    CompressLogFile(backupPath);
+                }
+                catch (Exception ex)
+                {
+                    SysDebug.WriteLine($"[Logger] Failed to compress log: {ex.Message}");
+                }
+            }
+
+            Info("Logger", $"Log rotated (was {info.Length / 1024 / 1024}MB), backups kept: {_maxLogFiles}, compression: {_compressRotatedLogs}");
+        }
+        catch (Exception ex)
+        {
+            Error("Logger", "Failed to perform log rotation", ex);
+        }
+    }
+
+    /// <summary>
+    /// Gets the path for a numbered rotated log file.
+    /// </summary>
+    private static string GetRotatedLogPath(int number)
+    {
+        var basePath = Path.ChangeExtension(_logPath, null);
+        var ext = Path.GetExtension(_logPath);
+        return $"{basePath}.{number}{ext}";
+    }
+
+    /// <summary>
+    /// Compresses a log file using GZip and deletes the original if successful.
+    /// </summary>
+    private static void CompressLogFile(string filePath)
+    {
+        var compressedPath = filePath + ".gz";
+        using (var inputStream = File.OpenRead(filePath))
+        using (var outputStream = File.Create(compressedPath))
+        using (var gzipStream = new System.IO.Compression.GZipStream(outputStream, System.IO.Compression.CompressionLevel.Optimal))
+        {
+            inputStream.CopyTo(gzipStream);
+        }
+
+        // Delete original after successful compression
+        File.Delete(filePath);
+    }
+
+    /// <summary>
+    /// Deletes log files older than the configured retention period.
+    /// </summary>
+    public static void CleanupOldLogs()
+    {
+        try
+        {
+            if (!_rotationEnabled || _logRetentionDays <= 0) return;
+
+            var cutoffDate = DateTime.Now.AddDays(-_logRetentionDays);
+            var logDir = Path.GetDirectoryName(_logPath);
+            if (string.IsNullOrEmpty(logDir)) return;
+
+            var baseName = Path.GetFileNameWithoutExtension(_logPath);
+            var ext = Path.GetExtension(_logPath);
+
+            // Pattern: Redball.UI.1.log, Redball.UI.1.log.gz, etc.
+            var pattern = $"{baseName}.*{ext}*";
+            var files = Directory.GetFiles(logDir, pattern);
+
+            int deletedCount = 0;
+            foreach (var file in files)
+            {
+                try
+                {
+                    var fileInfo = new FileInfo(file);
+                    if (fileInfo.LastWriteTime < cutoffDate)
+                    {
+                        File.Delete(file);
+                        deletedCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    SysDebug.WriteLine($"[Logger] Failed to delete old log {file}: {ex.Message}");
+                }
+            }
+
+            if (deletedCount > 0)
+            {
+                Debug("Logger", $"Cleaned up {deletedCount} old log files older than {_logRetentionDays} days");
+            }
+        }
+        catch (Exception ex)
+        {
+            SysDebug.WriteLine($"[Logger] Log cleanup failed: {ex.Message}");
         }
     }
 
@@ -593,10 +763,12 @@ public static class Logger
 
     /// <summary>
     /// Background task that drains the log channel and writes to disk in batches.
+    /// Also performs periodic log rotation checks.
     /// </summary>
     private static async Task BackgroundWriterAsync(CancellationToken ct)
     {
         var batch = new List<string>(32);
+        var batchCounter = 0;
         try
         {
             while (await _channel!.Reader.WaitToReadAsync(ct).ConfigureAwait(false))
@@ -621,6 +793,12 @@ public static class Logger
                         {
                             SysDebug.WriteLine($"[Logger] Background writer failed to write: {ex.Message}");
                         }
+                    }
+
+                    // Periodic rotation check (every ~100 batches to avoid overhead)
+                    if (++batchCounter % 100 == 0 && _rotationEnabled)
+                    {
+                        PerformLogRotation();
                     }
                 }
             }
