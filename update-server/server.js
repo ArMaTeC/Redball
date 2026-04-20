@@ -14,6 +14,9 @@ const { loadDB, saveDB, compareVersions, trackDownload, getDownloadCounts } = re
 const { getAdminUser, getJwtSecret, generateToken, verifyToken, verifyPassword } = require('./lib/auth');
 const { apiLimiter, authLimiter, uploadLimiter } = require('./middleware/rateLimiter');
 const { authenticateToken } = require('./middleware/auth');
+const releaseRoutes = require('./routes/api/releases');
+const authRoutes = require('./routes/api/auth');
+const buildRoutes = require('./routes/api/build');
 
 const app = express();
 app.set('trust proxy', 1); // Enable trust proxy for rate limiting (needed behind Cloudflare/reverse proxy)
@@ -192,6 +195,12 @@ function getDirSize(dirPath) {
 
 
 let buildState = loadBuildState();
+
+// Inject build state and control functions into build routes module
+// This must happen before routes are mounted but after functions are defined
+setTimeout(() => {
+    buildRoutes.setBuildState(buildState, startBuild, stopBuild);
+}, 0);
 
 // Broadcast throttling - accumulate messages and send in batches
 let _broadcastTimeout = null;
@@ -379,8 +388,18 @@ const upload = multer({
 // Apply API rate limiting to all API routes
 app.use('/api/', apiLimiter);
 
+// Mount modular API routes
+// Inject shared dependencies into route modules
+releaseRoutes.setGithubCache(githubCache);
+app.use('/api/releases', releaseRoutes.router);
+app.use('/api/github', releaseRoutes.router); // Mount GitHub-compatible endpoint
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/build', authenticateToken, buildRoutes.router);
+app.use('/api/admin', authenticateToken, buildRoutes.router); // Alias for build routes
+
+// Legacy routes - these will be migrated in subsequent phases
 // --- List all releases (from GitHub with cache) ---
-app.get('/api/releases', async (req, res) => {
+app.get('/api/releases-legacy', async (req, res) => {
     try {
         const releases = await fetchGitHubReleases();
         res.json(releases);
