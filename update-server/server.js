@@ -802,6 +802,7 @@ app.get('/api/stats', async (req, res) => {
         }
 
         // Add local download tracking data if available
+        const downloadCounts = getDownloadCounts();
         for (const [key, count] of Object.entries(downloadCounts.files || {})) {
             const filename = key.split('/').pop();
             if (byFile[filename]) {
@@ -1335,6 +1336,7 @@ app.get('/api/admin/status', authenticateToken, (req, res) => {
 
 async function getSystemStats() {
     const releases = await fetchGitHubReleases();
+    const downloadCounts = getDownloadCounts();
     return {
         totalDownloads: downloadCounts.total || 0,
         latestVersion: releases[0]?.version || '0.0.0',
