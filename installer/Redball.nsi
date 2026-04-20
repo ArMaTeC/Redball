@@ -612,7 +612,6 @@ Function CheckAndKillRedball
     Push $R0
     Push $R1
 
-retry_check:
     StrCpy $R0 0
 
     ; Primary check: use tasklist CSV output and look for the actual EXE name in the output.
