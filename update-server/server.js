@@ -4,18 +4,29 @@ const pty = require('node-pty');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const multer = require('multer');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
 
 const { generatePatches, formatBytes } = require('./lib/delta-patches');
+const config = require('./config');
+const { loadDB, saveDB, compareVersions, trackDownload, getDownloadCounts } = require('./lib/db');
+const { getAdminUser, getJwtSecret, generateToken, verifyToken, verifyPassword } = require('./lib/auth');
+const { apiLimiter, authLimiter, uploadLimiter } = require('./middleware/rateLimiter');
+const { authenticateToken } = require('./middleware/auth');
 
 const app = express();
 app.set('trust proxy', 1); // Enable trust proxy for rate limiting (needed behind Cloudflare/reverse proxy)
 const server = http.createServer(app);
+
+// Destructure config for local use
+const {
+    PORT, PROJECT_ROOT, RELEASES_DIR, DATA_DIR, LOGS_DIR,
+    BUILD_STATE_FILE, AUTH_FILE, GITHUB_CACHE_TTL,
+    BROADCAST_BATCH_INTERVAL, BUILD_STATE_DEBOUNCE_MS,
+    CLEANUP_INTERVAL, WS_HEARTBEAT_INTERVAL
+} = config;
+
 // WebSocket server with optimized settings to reduce CPU usage at idle
 // - perMessageDeflate: false (disables compression which saves CPU)
 // - skipUTF8Validation: true (skips expensive UTF-8 validation)
@@ -26,29 +37,13 @@ const wss = new WebSocketServer({
     skipUTF8Validation: true,
     clientTracking: true,
     // Ping clients every 30s to keep connections alive (not too aggressive)
-    heartbeatInterval: 30000
+    heartbeatInterval: WS_HEARTBEAT_INTERVAL
 });
 
-const PORT = process.env.PORT || 3500;
-const PROJECT_ROOT = path.join(__dirname, '..');
-const RELEASES_DIR = path.join(__dirname, 'releases');
-const DATA_DIR = path.join(__dirname, 'data');
-const DB_PATH = path.join(DATA_DIR, 'releases.json');
-const LOGS_DIR = path.join(__dirname, 'logs');
-
-// Build State & Auth Files (migrated from web-admin)
-const BUILD_STATE_FILE = path.join(LOGS_DIR, 'build-state.json');
-const AUTH_FILE = path.join(LOGS_DIR, 'auth.json');
-const DOWNLOADS_DB = path.join(LOGS_DIR, 'downloads.json');
-
-// Ensure logs dir exists
-if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
 
 
 
-
-// GitHub cache configuration
-const GITHUB_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+// GitHub cache
 let githubCache = {
     releases: null,
     latest: null,
@@ -155,32 +150,6 @@ async function fetchGitHubLatest() {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
-// === Database helpers ===
-function loadDB() {
-    if (!fs.existsSync(DB_PATH)) return { releases: [] };
-    try {
-        return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
-    } catch {
-        return { releases: [] };
-    }
-}
-
-function saveDB(db) {
-    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
-}
-
-function compareVersions(a, b) {
-    const pa = a.split('.').map(Number);
-    const pb = b.split('.').map(Number);
-    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-        const na = pa[i] || 0;
-        const nb = pb[i] || 0;
-        if (na > nb) return 1;
-        if (na < nb) return -1;
-    }
-    return 0;
-}
-
 function sha256File(filePath) {
     return new Promise((resolve, reject) => {
         const hash = crypto.createHash('sha256');
@@ -188,64 +157,6 @@ function sha256File(filePath) {
         stream.on('data', d => hash.update(d));
         stream.on('end', () => resolve(hash.digest('hex')));
         stream.on('error', reject);
-    });
-}
-
-// === Unified Auth & State Management (Migrated from web-admin) ===
-
-const JWT_SECRET = loadOrCreateJwtSecret();
-
-function loadOrCreateJwtSecret() {
-    const secretFile = path.join(LOGS_DIR, '.jwt-secret');
-    try {
-        if (fs.existsSync(secretFile)) {
-            return fs.readFileSync(secretFile, 'utf8').trim();
-        }
-    } catch (e) { }
-
-    const secret = crypto.randomBytes(64).toString('hex');
-    try {
-        fs.writeFileSync(secretFile, secret, { mode: 0o600 });
-    } catch (e) {
-        console.error('[AUTH] Warning: Could not save JWT secret to file');
-    }
-    return secret;
-}
-
-function getAdminUser() {
-    const defaultUser = {
-        username: 'admin',
-        passwordHash: '$2b$10$NH.q4MEoGZUuC4kHmv8B2uLh4OXdPVwa2Q/CKp/ORwSMG2XvhGQ8e'
-    };
-    try {
-        if (fs.existsSync(AUTH_FILE)) {
-            const auth = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf8'));
-            return auth.admin || defaultUser;
-        }
-    } catch (e) {
-        console.error('[AUTH] Error loading auth file:', e.message);
-    }
-    saveAdminUser(defaultUser);
-    return defaultUser;
-}
-
-function saveAdminUser(user) {
-    try {
-        fs.writeFileSync(AUTH_FILE, JSON.stringify({ admin: user }, null, 2), { mode: 0o600 });
-    } catch (e) {
-        console.error('[AUTH] Error saving auth file:', e.message);
-    }
-}
-
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'Access denied. No token provided.' });
-
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: 'Invalid or expired token' });
-        req.user = user;
-        next();
     });
 }
 
@@ -285,7 +196,6 @@ let buildState = loadBuildState();
 // Broadcast throttling - accumulate messages and send in batches
 let _broadcastTimeout = null;
 let _pendingBroadcasts = [];
-const BROADCAST_BATCH_INTERVAL = 100; // ms
 
 function broadcastThrottled(message) {
     _pendingBroadcasts.push(message);
@@ -383,68 +293,15 @@ function saveBuildStateImmediate() {
     }
 }
 
-let downloadCounts = loadDownloadCounts();
-function loadDownloadCounts() {
-    try {
-        if (fs.existsSync(DOWNLOADS_DB)) return JSON.parse(fs.readFileSync(DOWNLOADS_DB, 'utf8'));
-    } catch (e) {
-        console.error('[Downloads] Failed to load download counts:', e.message);
-    }
-    return { files: {}, total: 0, byVersion: {} };
-}
-
-function saveDownloadCounts() {
-    try {
-        fs.writeFileSync(DOWNLOADS_DB, JSON.stringify(downloadCounts, null, 2));
-    } catch (e) {
-        console.error('[Downloads] Failed to save download counts:', e.message);
-    }
-}
-
-function trackDownload(version, filename) {
-    const key = `${version}/${filename}`;
-    if (!downloadCounts.files[key]) downloadCounts.files[key] = 0;
-    downloadCounts.files[key]++;
-    downloadCounts.total++;
-    if (!downloadCounts.byVersion[version]) downloadCounts.byVersion[version] = 0;
-    downloadCounts.byVersion[version]++;
-    saveDownloadCounts();
-    return downloadCounts.files[key];
-}
-
-
 // === Security Middleware ===
-// Rate limiting for API endpoints
-const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: { error: 'Too many requests, please try again later' },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-// Dedicated rate limiter for authentication endpoints (stricter)
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // limit each IP to 10 login attempts per 15 minutes
-    message: { error: 'Too many login attempts, please try again later' },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-// Stricter rate limiting for upload endpoints
-const uploadLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 10, // limit each IP to 10 uploads per hour
-    message: { error: 'Too many uploads, please try again later' },
-});
 
 // Only use morgan logging if TTY is available (not in background)
 if (process.stdin.isTTY) {
     app.use(morgan('short'));
 }
 
-app.use(express.json({ limit: '10mb' })); // Limit JSON payload size
+const { JSON_PAYLOAD_LIMIT } = config;
+app.use(express.json({ limit: JSON_PAYLOAD_LIMIT })); // Limit JSON payload size
 app.use(express.static(path.join(__dirname, 'public')));
 
 // SECURITY: Validate file extensions for uploads
@@ -1643,7 +1500,6 @@ app.get(/^(?!\/api|\/downloads).*/, (req, res, next) => {
 
 // --- Scheduled Cleanup Job ---
 const { cleanupReleases } = require('./scripts/cleanup-releases');
-const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000;
 
 function scheduleCleanup() {
     console.log('[SCHEDULER] Release cleanup scheduled');
