@@ -1,6 +1,6 @@
 /**
  * Delta Patch Generator for Redball Update Server
- * 
+ *
  * Generates binary delta patches between file versions using
  * a simplified XOR+run-length encoding algorithm compatible
  * with the C# DeltaUpdateService client.
@@ -272,7 +272,9 @@ async function generatePatches(oldVersionDir, newVersionDir, patchesDir, options
         patchSize: patch.patchSize,
         originalSize: newData.length,
         savings: savings,
-        savingsPercent: savingsPercent.toFixed(1) + '%'
+        savingsPercent: savingsPercent.toFixed(1) + '%',
+        oldHash: patch.oldFileHash,
+        newHash: patch.newFileHash
       });
 
       console.log(`[PATCH] ✓ ${relativePath}: ${savingsPercent.toFixed(1)}% savings (${formatBytes(savings)} saved)`);

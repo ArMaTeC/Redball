@@ -643,9 +643,21 @@ public class UpdateService : IUpdateService
                                 {
                                     if (serverPatch.PatchSize > 0 && serverPatch.PatchSize < file.Size)
                                     {
-                                        fileInfo.PatchUrl = $"{_updateServerUrl.TrimEnd('/')}/downloads/{latestNormalized}/patches/{serverPatch.PatchFile}";
-                                        fileInfo.PatchSize = serverPatch.PatchSize;
-                                        patchFound = true;
+                                        // Only offer the patch if the server knows which source version it targets
+                                        // and the local file matches that source (pre-validate to avoid applying wrong patch)
+                                        bool patchApplicable = true;
+                                        if (!string.IsNullOrEmpty(serverPatch.OldHash) && !string.IsNullOrEmpty(localHash))
+                                        {
+                                            patchApplicable = string.Equals(localHash, serverPatch.OldHash, StringComparison.OrdinalIgnoreCase);
+                                            if (!patchApplicable)
+                                                Logger.Warning("UpdateService", $"[DELTA] Skipping patch for {normalizedName}: local hash {localHash} does not match patch source {serverPatch.OldHash}, will use full download");
+                                        }
+                                        if (patchApplicable)
+                                        {
+                                            fileInfo.PatchUrl = $"{_updateServerUrl.TrimEnd('/')}/downloads/{latestNormalized}/patches/{serverPatch.PatchFile}";
+                                            fileInfo.PatchSize = serverPatch.PatchSize;
+                                            patchFound = true;
+                                        }
                                     }
                                 }
                             }
@@ -2376,6 +2388,10 @@ public class PatchInfo
     public long OriginalSize { get; set; }
     [System.Text.Json.Serialization.JsonPropertyName("savings")]
     public long Savings { get; set; }
+    [System.Text.Json.Serialization.JsonPropertyName("oldHash")]
+    public string OldHash { get; set; } = ""; // Hash of the source file this patch was built from
+    [System.Text.Json.Serialization.JsonPropertyName("newHash")]
+    public string NewHash { get; set; } = ""; // Expected hash after patch is applied
 }
 
 public class FileUpdateInfo
