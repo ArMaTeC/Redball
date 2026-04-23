@@ -20,6 +20,7 @@ public partial class App : Application
     private Services.SingleInstanceMessenger? _instanceMessenger;
     private System.IServiceProvider? _serviceProvider;
     private bool _isStartupTestMode;
+    private bool _startupMinimizeToTaskbar;
     private readonly Stopwatch _startupStopwatch = Stopwatch.StartNew();
     public static TimeSpan StartupDuration { get; private set; }
 
@@ -270,9 +271,19 @@ public partial class App : Application
                 _mainWindow.Show();
                 Services.Logger.Info("App", "MainWindow shown directly for test-mode");
             }
+            else if (cfg.MinimizeOnStart)
+            {
+                // MinimizeOnStart: show as minimized button in the taskbar
+                _startupMinimizeToTaskbar = true;
+                _mainWindow.WindowState = WindowState.Minimized;
+                _mainWindow.ShowInTaskbar = true;
+                _mainWindow.Show();
+                Services.Logger.Debug("App", "MainWindow initialized minimized to taskbar (MinimizeOnStart)");
+            }
             else
             {
-                // Tray-only mode
+                // Default: tray-only, no taskbar entry
+                _startupMinimizeToTaskbar = false;
                 _mainWindow.WindowState = WindowState.Minimized;
                 _mainWindow.ShowInTaskbar = false;
                 _mainWindow.Show();
@@ -378,9 +389,9 @@ public partial class App : Application
         Services.Logger.Info("App", "MainWindow Loaded event fired");
         try
         {
-            if (_isStartupTestMode)
+            if (_isStartupTestMode || _startupMinimizeToTaskbar)
             {
-                Services.Logger.Debug("App", "MainWindow kept visible for test-mode startup");
+                Services.Logger.Debug("App", "MainWindow kept visible at startup (test-mode or MinimizeOnStart)");
                 return;
             }
 
