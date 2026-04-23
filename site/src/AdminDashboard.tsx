@@ -31,6 +31,13 @@ interface Stats {
   totalFiles: number;
   latestVersion: string;
   releases: Release[];
+  buildStatus?: string;
+}
+
+interface BuildLogEntry {
+  type: 'success' | 'error' | 'info';
+  msg: string;
+  time: string;
 }
 
 const formatNumber = (num: number): string => {
@@ -47,12 +54,25 @@ const formatBytes = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
+// eslint-disable-next-line no-control-regex
+const ANSI_REGEX = /[\x1B\x9B][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><~]/g;
+const stripAnsi = (str: string): string => str.replace(ANSI_REGEX, '');
+
+const formatTimeAgo = (timestampMs: number): string => {
+  const diff = Math.floor((Date.now() - timestampMs) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+};
+
 export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [buildLogs, setBuildLogs] = useState<string[]>(['[IDLE] System ready for build...']);
   const [isBuilding, setIsBuilding] = useState(false);
   const [stats, setStats] = useState<Stats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [recentLogs, setRecentLogs] = useState<BuildLogEntry[]>([]);
   const wsRef = React.useRef<WebSocket | null>(null);
 
   const fetchLogs = async () => {
@@ -85,13 +105,22 @@ export const AdminDashboard: React.FC = () => {
         const msg = JSON.parse(event.data);
         if (msg.type === 'build-output' && msg.data?.line) {
           setBuildLogs(prev => [...prev.slice(-199), msg.data.line]);
+        } else if (msg.type === 'build-output-batch' && msg.data?.lines) {
+          setBuildLogs(prev => [...prev.slice(-(200 - msg.data.lines.length)), ...msg.data.lines]);
         } else if (msg.type === 'build-started') {
           setIsBuilding(true);
           setBuildLogs(['[BUILD] Build engine starting...']);
         } else if (msg.type === 'build-complete') {
           setIsBuilding(false);
-          const duration = msg.data?.duration?.toFixed(1) || '?';
+          const duration = ((msg.data?.duration || 0) / 1000).toFixed(1);
           setBuildLogs(prev => [...prev, `[SUCCESS] Build completed in ${duration}s`]);
+          fetchStats();
+        } else if (msg.type === 'state') {
+          setIsBuilding(msg.data?.status === 'running');
+          if (msg.data?.log?.length) {
+            setBuildLogs(msg.data.log.slice(-200).map((e: { message: string } | string) =>
+              typeof e === 'string' ? e : e.message).filter(Boolean));
+          }
         }
       } catch (e) {
         console.error('[WebSocket] Failed to parse message:', e);
@@ -113,10 +142,39 @@ export const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchStats();
+    fetchRecentBuildActivity();
     if (activeTab === 'build') {
       fetchLogs();
     }
   }, [activeTab]);
+
+  const fetchRecentBuildActivity = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/admin/status', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      if (!res.ok) return;
+      const state = await res.json();
+      setIsBuilding(state.status === 'running');
+      if (state.log?.length) {
+        const raw: Array<{ message: string } | string> = state.log.slice(-5);
+        const entries: BuildLogEntry[] = raw
+          .map(e => typeof e === 'string' ? e : e.message)
+          .filter(Boolean)
+          .map(msg => ({
+            type: msg.toLowerCase().includes('error') || msg.toLowerCase().includes('fail')
+              ? 'error'
+              : msg.toLowerCase().includes('success') || msg.toLowerCase().includes('complet')
+                ? 'success'
+                : 'info',
+            msg: stripAnsi(msg).trim(),
+            time: state.endTime ? formatTimeAgo(state.endTime) : 'recent'
+          }));
+        setRecentLogs(entries);
+      }
+    } catch (e) { console.error('Failed to fetch build activity', e); }
+  };
 
   const fetchStats = async () => {
     try {
@@ -228,21 +286,49 @@ export const AdminDashboard: React.FC = () => {
             />
 
             <div className="glass-card" style={{ gridColumn: 'span 2', padding: '30px', height: '300px' }}>
-              <h3 style={{ marginBottom: '20px' }}>Deployment History</h3>
-              {/* Chart Placeholder */}
-              <div style={{ width: '100%', height: '200px', display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
-                {[40, 60, 45, 90, 65, 80, 50, 70].map((h, i) => (
-                  <div key={i} style={{ flex: 1, height: `${h}%`, background: 'linear-gradient(to top, var(--primary), var(--primary-glow))', borderRadius: '4px 4px 0 0' }}></div>
-                ))}
-              </div>
+              <h3 style={{ marginBottom: '4px' }}>Deployment History</h3>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '16px' }}>Downloads per release (newest right)</p>
+              {statsLoading ? (
+                <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)' }}>Loading...</div>
+              ) : (() => {
+                const chartReleases = (stats?.releases ?? []).slice().reverse().slice(-8);
+                const maxDl = Math.max(1, ...chartReleases.map(r => r.totalDownloads || 0));
+                return (
+                  <div style={{ width: '100%', height: '200px', display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+                    {chartReleases.map((r) => {
+                      const pct = Math.max(4, Math.round(((r.totalDownloads || 0) / maxDl) * 100));
+                      return (
+                        <div key={r.version} title={`v${r.version}: ${formatNumber(r.totalDownloads || 0)} downloads`}
+                          style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', height: '100%', justifyContent: 'flex-end' }}>
+                          <span style={{ fontSize: '0.6rem', color: 'var(--text-dim)', writingMode: 'vertical-rl', transform: 'rotate(180deg)', maxHeight: '60px', overflow: 'hidden' }}>
+                            v{r.version}
+                          </span>
+                          <div style={{ width: '100%', height: `${pct}%`, background: 'linear-gradient(to top, var(--primary), var(--primary-glow))', borderRadius: '4px 4px 0 0', transition: 'height 0.4s ease' }} />
+                        </div>
+                      );
+                    })}
+                    {chartReleases.length === 0 && (
+                      <div style={{ flex: 1, textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.875rem', alignSelf: 'center' }}>No release data yet</div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="glass-card" style={{ padding: '30px' }}>
-              <h3 style={{ marginBottom: '20px' }}>Recent Logs</h3>
+              <h3 style={{ marginBottom: '4px' }}>Recent Build Activity</h3>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '16px' }}>Last build log entries</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <LogItem type="success" msg="Build #472 published" time="12m ago" />
-                <LogItem type="error" msg="RDP service failed" time="45m ago" />
-                <LogItem type="info" msg="Config updated by admin" time="1h ago" />
+                {recentLogs.length > 0
+                  ? recentLogs.slice(-5).map((entry, i) => (
+                    <LogItem key={i} type={entry.type} msg={entry.msg} time={entry.time} />
+                  ))
+                  : (
+                    <div style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>
+                      {stats?.buildStatus === 'running' ? 'Build in progress...' : 'No recent build activity'}
+                    </div>
+                  )
+                }
               </div>
             </div>
           </div>

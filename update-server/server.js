@@ -813,14 +813,17 @@ app.get('/api/stats', async (req, res) => {
         }
 
         const totalDownloads = Object.values(byFile).reduce((sum, f) => sum + f.downloads, 0);
+        const totalFiles = releases.reduce((sum, r) => sum + (r.files?.length || 0), 0);
 
         res.json({
             totalReleases,
             totalDownloads,
+            totalFiles,
             latestVersion,
             byFile,
             releases,
-            activeBuilds: buildState.status === 'running' ? 1 : 0
+            activeBuilds: buildState.status === 'running' ? 1 : 0,
+            buildStatus: buildState.status
         });
     } catch (err) {
         console.error('[API] Error fetching stats:', err);
@@ -1292,6 +1295,15 @@ wss.on('connection', (ws, req) => {
     ws.on('close', () => console.log('[WS] Client disconnected'));
 });
 
+
+// --- Build log endpoint (returns last N lines of build log as plain text) ---
+app.get('/api/build/log', authenticateToken, (req, res) => {
+    const lines = (buildState.log || [])
+        .slice(-200)
+        .map(entry => (typeof entry === 'string' ? entry : entry.message))
+        .filter(Boolean);
+    res.type('text/plain').send(lines.join('\n'));
+});
 
 // Admin Auth Routes
 app.post('/api/auth/login', authLimiter, async (req, res) => {
