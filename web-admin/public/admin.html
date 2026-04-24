@@ -2374,37 +2374,39 @@
         // --- Identity & Access ---
         async function loadUsers() {
             try {
-                const res = await fetch('/api/auth/users', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
+                const res = await fetch('/api/auth/users', { headers: { 'Authorization': 'Bearer ' + token } });
                 if (res.ok) {
                     const users = await res.json();
+                    console.log('[Users] Loaded:', users.length);
                     const tbody = document.getElementById('users-table-body');
-                    tbody.innerHTML = users.map(u => `
-                        <tr>
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 0.8rem">
-                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-glow); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800">
-                                        ${u.username[0].toUpperCase()}
+                    if (tbody) {
+                        tbody.innerHTML = users.map(u => `
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.8rem">
+                                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-glow); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800">
+                                            ${u.username[0].toUpperCase()}
+                                        </div>
+                                        <span>${u.username}</span>
                                     </div>
-                                    <span>${u.username}</span>
-                                </div>
-                            </td>
-                            <td><span class="badge" style="background: ${u.role === 'admin' ? 'rgba(0, 217, 163, 0.1)' : 'rgba(255,255,255,0.05)'}; color: ${u.role === 'admin' ? 'var(--accent)' : 'var(--text-secondary)'}">${u.role.toUpperCase()}</span></td>
-                            <td><span class="badge" style="background: ${u.mfaEnabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${u.mfaEnabled ? 'var(--success)' : 'var(--error)'}">${u.mfaEnabled ? 'ENFORCED' : 'UNSECURED'}</span></td>
-                            <td>${new Date(u.createdAt).toLocaleDateString()}</td>
-                            <td>
-                                <button class="btn btn-sm" onclick="deleteUser('${u.username}')" style="padding: 0.4rem; background: transparent; border-color: rgba(239, 68, 68, 0.3); color: var(--error); width: auto;">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('');
+                                </td>
+                                <td><span class="badge" style="background: ${u.role === 'admin' ? 'rgba(0, 217, 163, 0.1)' : 'rgba(255,255,255,0.05)'}; color: ${u.role === 'admin' ? 'var(--accent)' : 'var(--text-secondary)'}">${u.role.toUpperCase()}</span></td>
+                                <td><span class="badge" style="background: ${u.mfaEnabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${u.mfaEnabled ? 'var(--success)' : 'var(--error)'}">${u.mfaEnabled ? 'ENFORCED' : 'UNSECURED'}</span></td>
+                                <td>${new Date(u.createdAt).toLocaleDateString()}</td>
+                                <td>
+                                    <button class="btn btn-sm" onclick="deleteUser('${u.username}')" style="padding: 0.4rem; background: transparent; border-color: rgba(239, 68, 68, 0.3); color: var(--error); width: auto;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
 
                     // Update current user MFA status in the side panel
                     if (currentUser) {
                         const self = users.find(u => u.username === currentUser.username);
                         if (self) {
+                            console.log('[MFA] Status for', self.username, ':', self.mfaEnabled);
                             const statusVal = document.getElementById('mfa-status-value');
                             const statusLbl = document.getElementById('mfa-status-label');
                             const statusBtn = document.getElementById('mfa-setup-btn');
@@ -2422,11 +2424,18 @@
                                 statusBtn.innerText = 'Setup MFA Protocol';
                                 statusBtn.onclick = initMfaSetup;
                             }
+                        } else {
+                            console.warn('[MFA] Current user not found in user list:', currentUser.username);
                         }
+                    }
+                } else {
+                    console.error('[Users] Failed to load:', res.status);
+                    if (res.status === 401 || res.status === 403) {
+                        showToast('Session expired or access denied', 'error');
                     }
                 }
             } catch (e) {
-                console.error(e);
+                console.error('[Users] Error:', e);
             }
         }
 

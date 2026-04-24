@@ -16,9 +16,10 @@ const {
     deleteUser
 } = require('../../lib/auth');
 const { authenticateToken, requireAdmin } = require('../../middleware/auth');
+const { authLimiter } = require('../../middleware/rateLimiter');
 
 // POST /api/auth/login - Authenticate and get token
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required' });
@@ -40,7 +41,7 @@ router.post('/login', async (req, res) => {
 });
 
 // POST /api/auth/mfa/verify - Verify MFA during login
-router.post('/mfa/verify', authenticateToken, async (req, res) => {
+router.post('/mfa/verify', authLimiter, authenticateToken, async (req, res) => {
     const { token: mfaCode } = req.body;
     if (!mfaCode) return res.status(400).json({ error: 'MFA code is required' });
 
@@ -116,14 +117,13 @@ router.post('/change-password', authenticateToken, async (req, res) => {
 // --- User Management (Admin only) ---
 
 // GET /api/auth/users - List all users
-router.get('/users', authenticateToken, requireAdmin, (req, res) => {
-    const users = getUsers().map(u => ({
-        username: u.username,
-        role: u.role,
-        mfaEnabled: u.mfaEnabled,
-        createdAt: u.createdAt
-    }));
-    res.json(users);
+router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const users = await getUsers();
+        res.json(users);
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to retrieve users' });
+    }
 });
 
 // POST /api/auth/users - Add a new user

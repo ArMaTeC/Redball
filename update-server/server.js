@@ -410,7 +410,8 @@ app.use('/api/', apiLimiter);
 releaseRoutes.setGithubCache(githubCache);
 app.use('/api/releases', releaseRoutes.router);
 app.use('/api/github', releaseRoutes.router); // Mount GitHub-compatible endpoint
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authRoutes);
+
 app.use('/api/build', authenticateToken, buildRoutes.router);
 app.use('/api/admin', authenticateToken, buildRoutes.router); // Alias for build routes
 

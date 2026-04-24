@@ -44,7 +44,7 @@ const WS_HEARTBEAT_INTERVAL = 30000; // 30 seconds
 // Rate limiting
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const RATE_LIMIT_MAX = 100;
-const AUTH_RATE_LIMIT_MAX = 10;
+const AUTH_RATE_LIMIT_MAX = 30;
 const UPLOAD_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const UPLOAD_RATE_LIMIT_MAX = 10;
 
