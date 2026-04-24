@@ -10,6 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
         rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -1190,6 +1191,15 @@
             color: var(--text-primary);
         }
 
+        /* Analytics Specific */
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+        .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
+        .stat-trend { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; }
+        .mini-list { display: flex; flex-direction: column; gap: 0.8rem; }
+        .mini-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 8px; font-size: 0.85rem; }
+        .mini-label { font-weight: 600; }
+        .mini-value { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+
         /* Tables */
         .table-container {
             overflow-x: auto;
@@ -1408,6 +1418,7 @@
         <div class="nav">
             <button class="nav-btn active" onclick="showSection('dashboard', this)">Infrastructure</button>
             <button class="nav-btn" onclick="showSection('build', this)">Build Pipeline</button>
+            <button class="nav-btn" onclick="showSection('analytics', this)">Visitor Analytics</button>
             <button class="nav-btn" onclick="showSection('releases', this)">Release Control</button>
             <button class="nav-btn" onclick="showSection('users', this)">Identity & Access</button>
             <button class="nav-btn" onclick="showSection('config', this)">System Config</button>
@@ -1602,6 +1613,78 @@
                 </div>
             </div>
         </section>
+        
+        <!-- Visitor Analytics Section -->
+        <section id="analytics-section" class="section">
+            <div class="section-header">
+                <div>
+                    <h2 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;">Visitor Analytics</h2>
+                    <p style="color: var(--text-secondary);">Monitor global engagement and download trends.</p>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <select id="analytics-range" class="btn" style="width: auto; background: var(--bg-card); border: 1px solid var(--border); padding: 0.5rem 1.5rem;" onchange="loadAnalytics()">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Site Visits</div>
+                    <div id="ana-total-visits" class="stat-value">0</div>
+                    <div class="stat-trend" id="ana-visits-trend">Loading analytics cluster...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Unique Visitors</div>
+                    <div id="ana-unique-visitors" class="stat-value">0</div>
+                    <div class="stat-trend">IP-based identity tracking</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Downloads</div>
+                    <div id="ana-downloads" class="stat-value">0</div>
+                    <div class="stat-trend">Package & Delta delivery</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg. Engagement</div>
+                    <div id="ana-avg-time" class="stat-value">0s</div>
+                    <div class="stat-trend">Mean session duration</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--accent); font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase;">Traffic & Download Trends</h3>
+                    <div style="height: 350px">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--accent); font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase;">Geo-Distribution</h3>
+                    <div style="height: 350px">
+                        <canvas id="geoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+                <div class="card">
+                    <h3 style="margin-bottom: 1.2rem; font-size: 0.75rem; opacity: 0.6; letter-spacing: 0.1em; text-transform: uppercase;">Top Browsers</h3>
+                    <div id="browser-list" class="mini-list"></div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom: 1.2rem; font-size: 0.75rem; opacity: 0.6; letter-spacing: 0.1em; text-transform: uppercase;">Operating Systems</h3>
+                    <div id="os-list" class="mini-list"></div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom: 1.2rem; font-size: 0.75rem; opacity: 0.6; letter-spacing: 0.1em; text-transform: uppercase;">Top Geographic Regions</h3>
+                    <div id="geo-list" class="mini-list"></div>
+                </div>
+            </div>
+        </section>
 
         <!-- Releases -->
         <section id="releases-section" class="section">
@@ -1777,6 +1860,7 @@
             if (id === 'dashboard' || id === 'releases') fetchStats();
             if (id === 'config') loadConfiguration();
             if (id === 'users') loadUsers();
+            if (id === 'analytics') loadAnalytics();
         }
 
         // --- Configuration ---
@@ -2609,6 +2693,139 @@
             } catch (e) {
                 console.error(e);
             }
+        }
+
+        // --- Analytics ---
+        let trendChart = null;
+        let geoChart = null;
+
+        async function loadAnalytics() {
+            const range = document.getElementById('analytics-range').value;
+            try {
+                const res = await fetch(`/api/analytics/stats?days=${range}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    updateAnalyticsUI(data);
+                }
+            } catch (e) {
+                console.error('[Analytics] Fetch failed:', e);
+                showToast('Failed to load analytics cluster', 'error');
+            }
+        }
+
+        function updateAnalyticsUI(data) {
+            document.getElementById('ana-total-visits').innerText = (data.totalVisits || 0).toLocaleString();
+            document.getElementById('ana-unique-visitors').innerText = (data.uniqueVisitorsCount || 0).toLocaleString();
+            document.getElementById('ana-downloads').innerText = (data.downloads || 0).toLocaleString();
+            document.getElementById('ana-avg-time').innerText = Math.round(data.avgTimeOnSite || 0) + 's';
+            
+            // Trends List
+            document.getElementById('ana-visits-trend').innerText = `Active trends in last ${document.getElementById('analytics-range').value} days`;
+
+            // Render Charts
+            renderTrendChart(data.trends || {}, data.downloadTrends || {});
+            renderGeoChart(data.geoDistribution || {});
+
+            // Mini Lists
+            renderMiniList('browser-list', data.browsers || {});
+            renderMiniList('os-list', data.os || {});
+            renderMiniList('geo-list', data.geoDistribution || {});
+        }
+
+        function renderMiniList(id, stats) {
+            const el = document.getElementById(id);
+            const sorted = Object.entries(stats).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            if (sorted.length === 0) {
+                el.innerHTML = '<div style="opacity: 0.3; font-size: 0.8rem;">No data available</div>';
+                return;
+            }
+            el.innerHTML = sorted.map(([label, value]) => `
+                <div class="mini-item">
+                    <span class="mini-label">${label}</span>
+                    <span class="mini-value">${value.toLocaleString()}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderTrendChart(trends, dlTrends) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            const labels = Object.keys(trends).sort();
+            const visitData = labels.map(l => trends[l]);
+            const downloadData = labels.map(l => dlTrends[l] || 0);
+
+            if (trendChart) trendChart.destroy();
+
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Site Visits',
+                            data: visitData,
+                            borderColor: '#00d9a3',
+                            backgroundColor: 'rgba(0, 217, 163, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Downloads',
+                            data: downloadData,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#94a3b8', font: { family: 'Outfit' } } }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+        }
+
+        function renderGeoChart(geo) {
+            const ctx = document.getElementById('geoChart').getContext('2d');
+            const labels = Object.keys(geo);
+            const values = Object.values(geo);
+
+            if (geoChart) geoChart.destroy();
+
+            if (labels.length === 0) {
+                // Placeholder
+                return;
+            }
+
+            geoChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: [
+                            '#00d9a3', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'Outfit' } } }
+                    }
+                }
+            });
         }
 
         // --- Startup ---

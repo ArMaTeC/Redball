@@ -12,6 +12,7 @@ const { generatePatches, formatBytes } = require('./lib/delta-patches');
 const config = require('./config');
 const { loadDB, saveDB, compareVersions, trackDownload, getDownloadCounts } = require('./lib/db');
 const { getAdminUser, getJwtSecret, generateToken, verifyToken, verifyPassword } = require('./lib/auth');
+const { trackEvent, getAnalytics } = require('./lib/analytics');
 const { apiLimiter, authLimiter, uploadLimiter } = require('./middleware/rateLimiter');
 const { authenticateToken } = require('./middleware/auth');
 const releaseRoutes = require('./routes/api/releases');
@@ -411,9 +412,19 @@ releaseRoutes.setGithubCache(githubCache);
 app.use('/api/releases', releaseRoutes.router);
 app.use('/api/github', releaseRoutes.router); // Mount GitHub-compatible endpoint
 app.use('/api/auth', authRoutes);
-
 app.use('/api/build', authenticateToken, buildRoutes.router);
 app.use('/api/admin', authenticateToken, buildRoutes.router); // Alias for build routes
+
+// GET /api/analytics/stats - Get aggregated analytics
+app.get('/api/analytics/stats', authenticateToken, async (req, res) => {
+    try {
+        const days = parseInt(req.query.days) || 30;
+        const stats = await getAnalytics(days);
+        res.json(stats || { error: 'No analytics data available' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // Legacy routes - these will be migrated in subsequent phases
 // --- List all releases (from GitHub with cache) ---
@@ -786,6 +797,7 @@ app.get('/api/download/:version/:filename', async (req, res) => {
 
     // 1. Track the download in our local DB
     trackDownload(version, filename);
+    trackEvent(req, 'download', { version, filename });
 
     // 2. Find the source URL
     const releases = await fetchGitHubReleases();
@@ -1544,6 +1556,19 @@ app.get('/api/health', (req, res) => {
 // === Unified Static Serving ===
 const ADMIN_PUBLIC = path.join(PROJECT_ROOT, 'web-admin', 'public');
 const SITE_PUBLIC = path.join(PROJECT_ROOT, 'site', 'dist');
+
+// Analytics Tracking for main site
+app.use((req, res, next) => {
+    // Only track page views for the main site (root or path without extensions)
+    if (req.method === 'GET' && req.path.startsWith('/') && !req.path.startsWith('/api') && !req.path.startsWith('/admin') && !req.path.startsWith('/downloads')) {
+        // Only track if it's a page load (no file extension or .html)
+        const hasExtension = /\.[a-z0-9]+$/i.test(req.path);
+        if (!hasExtension || req.path.endsWith('.html')) {
+            trackEvent(req, 'view');
+        }
+    }
+    next();
+});
 
 app.use('/admin', express.static(ADMIN_PUBLIC, { index: 'admin.html' }));
 app.use('/downloads', express.static(RELEASES_DIR));
