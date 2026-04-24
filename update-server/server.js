@@ -324,9 +324,7 @@ function saveBuildStateImmediate() {
 // === Security Middleware ===
 
 // Only use morgan logging if TTY is available (not in background)
-if (process.stdin.isTTY) {
-    app.use(morgan('short'));
-}
+app.use(morgan('short'));
 
 const { JSON_PAYLOAD_LIMIT } = config;
 app.use(express.json({ limit: JSON_PAYLOAD_LIMIT })); // Limit JSON payload size

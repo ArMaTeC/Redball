@@ -2402,24 +2402,26 @@
                     `).join('');
 
                     // Update current user MFA status in the side panel
-                    const self = users.find(u => u.username === currentUser.username);
-                    if (self) {
-                        const statusVal = document.getElementById('mfa-status-value');
-                        const statusLbl = document.getElementById('mfa-status-label');
-                        const statusBtn = document.getElementById('mfa-setup-btn');
-                        
-                        if (self.mfaEnabled) {
-                            statusVal.innerText = 'Active';
-                            statusVal.style.color = 'var(--success)';
-                            statusLbl.innerText = 'Security Verified';
-                            statusBtn.innerText = 'Disable MFA Protocol';
-                            statusBtn.onclick = disableMfa;
-                        } else {
-                            statusVal.innerText = 'Inactive';
-                            statusVal.style.color = 'var(--error)';
-                            statusLbl.innerText = 'Multi-Factor Status';
-                            statusBtn.innerText = 'Setup MFA Protocol';
-                            statusBtn.onclick = initMfaSetup;
+                    if (currentUser) {
+                        const self = users.find(u => u.username === currentUser.username);
+                        if (self) {
+                            const statusVal = document.getElementById('mfa-status-value');
+                            const statusLbl = document.getElementById('mfa-status-label');
+                            const statusBtn = document.getElementById('mfa-setup-btn');
+                            
+                            if (self.mfaEnabled) {
+                                statusVal.innerText = 'Active';
+                                statusVal.style.color = 'var(--success)';
+                                statusLbl.innerText = 'Security Verified';
+                                statusBtn.innerText = 'Disable MFA Protocol';
+                                statusBtn.onclick = disableMfa;
+                            } else {
+                                statusVal.innerText = 'Inactive';
+                                statusVal.style.color = 'var(--error)';
+                                statusLbl.innerText = 'Multi-Factor Status';
+                                statusBtn.innerText = 'Setup MFA Protocol';
+                                statusBtn.onclick = initMfaSetup;
+                            }
                         }
                     }
                 }
@@ -2447,7 +2449,7 @@
                     showToast(data.error || 'Failed to initialize MFA setup', 'error');
                 }
             } catch (e) {
-                console.error(e);
+                console.error('[MFA Setup Error]', e);
                 showToast('Network error during MFA setup', 'error');
             }
         }
