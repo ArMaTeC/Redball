@@ -1851,17 +1851,93 @@
         `;
         document.head.appendChild(style);
 
-        // --- Sections ---
-        function showSection(id, btn) {
+        // --- Sections & Deep Linking ---
+        function showSection(id, btn, pushState = true) {
+            const section = document.getElementById(id + '-section');
+            if (!section) return;
+
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id + '-section').classList.add('active');
-            btn.classList.add('active');
+            
+            section.classList.add('active');
+            
+            if (btn) {
+                btn.classList.add('active');
+            } else {
+                // Find button by onclick handler if not provided
+                const btns = document.querySelectorAll('.nav-btn');
+                for (const b of btns) {
+                    if (b.getAttribute('onclick')?.includes(`'${id}'`)) {
+                        b.classList.add('active');
+                        break;
+                    }
+                }
+            }
+
+            if (pushState) {
+                const url = new URL(window.location);
+                url.searchParams.set('tab', id);
+                window.history.pushState({}, '', url);
+            }
+
             if (id === 'dashboard' || id === 'releases') fetchStats();
             if (id === 'config') loadConfiguration();
             if (id === 'users') loadUsers();
             if (id === 'analytics') loadAnalytics();
+            
+            resetIdleTimer();
         }
+
+        window.onpopstate = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab') || 'dashboard';
+            showSection(tab, null, false);
+        };
+
+        // --- Activity Tracking & Live Polling ---
+        let lastActivity = Date.now();
+        let isIdle = false;
+        let pollInterval = null;
+        const IDLE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+        const POLL_INTERVAL = 15 * 1000; // 15 seconds
+
+        function resetIdleTimer() {
+            lastActivity = Date.now();
+            if (isIdle) {
+                isIdle = false;
+                console.log('[System] Activity detected. Resuming telemetry.');
+                startPolling();
+                showToast('Activity detected. Live updates resumed.', 'info');
+            }
+        }
+
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(() => {
+                if (Date.now() - lastActivity > IDLE_THRESHOLD) {
+                    isIdle = true;
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    console.log('[System] Idle detected. Pausing telemetry.');
+                    showToast('System idle. Pausing live updates.', 'info');
+                    return;
+                }
+
+                // Selective polling based on active tab
+                const active = document.querySelector('.section.active');
+                if (!active) return;
+                
+                const id = active.id.replace('-section', '');
+                if (id === 'dashboard' || id === 'releases') fetchStats();
+                if (id === 'analytics') loadAnalytics();
+                if (id === 'build' && buildRunning) fetchStatus();
+            }, POLL_INTERVAL);
+        }
+
+        // Listen for user interaction
+        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(type => {
+            document.addEventListener(type, resetIdleTimer, { passive: true });
+        });
 
         // --- Configuration ---
         let currentConfig = {};
@@ -2112,7 +2188,12 @@
                 document.getElementById('login-overlay').classList.remove('hidden');
             } else {
                 initSocket();
-                fetchStats();
+                startPolling();
+                
+                // Handle deep linking on startup
+                const urlParams = new URLSearchParams(window.location.search);
+                const tab = urlParams.get('tab') || 'dashboard';
+                showSection(tab, null, false);
             }
         }
 
