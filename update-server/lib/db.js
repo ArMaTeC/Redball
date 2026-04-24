@@ -5,16 +5,26 @@
 const fs = require('fs');
 const { DB_PATH, DOWNLOADS_DB } = require('../config');
 
+let dbCache = null;
+
 /**
  * Load the releases database
  * @returns {{releases: Array}} Database object
  */
-function loadDB() {
-    if (!fs.existsSync(DB_PATH)) return { releases: [] };
+function loadDB(force = false) {
+    if (dbCache && !force) return dbCache;
+    
+    if (!fs.existsSync(DB_PATH)) {
+        dbCache = { releases: [] };
+        return dbCache;
+    }
+    
     try {
-        return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+        dbCache = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+        return dbCache;
     } catch {
-        return { releases: [] };
+        dbCache = { releases: [] };
+        return dbCache;
     }
 }
 
@@ -23,6 +33,7 @@ function loadDB() {
  * @param {*} db - Database object to save
  */
 function saveDB(db) {
+    dbCache = db;
     fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
 }
 

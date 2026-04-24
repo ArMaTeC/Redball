@@ -38,10 +38,29 @@ const wss = new WebSocketServer({
     path: '/ws',
     perMessageDeflate: false,
     skipUTF8Validation: true,
-    clientTracking: true,
-    // Ping clients every 30s to keep connections alive (not too aggressive)
-    heartbeatInterval: WS_HEARTBEAT_INTERVAL
+    clientTracking: true
 });
+
+// Demand-driven WebSocket heartbeat - only runs when clients are connected
+let _heartbeatInterval = null;
+
+function startHeartbeat() {
+    if (_heartbeatInterval) return;
+    console.log('[WS] Starting demand-driven heartbeat');
+    _heartbeatInterval = setInterval(() => {
+        if (wss.clients.size === 0) {
+            console.log('[WS] Stopping heartbeat (no clients)');
+            clearInterval(_heartbeatInterval);
+            _heartbeatInterval = null;
+            return;
+        }
+        wss.clients.forEach(ws => {
+            if (ws.isAlive === false) return ws.terminate();
+            ws.isAlive = false;
+            ws.ping();
+        });
+    }, WS_HEARTBEAT_INTERVAL);
+}
 
 
 
@@ -599,6 +618,9 @@ app.post('/api/releases', authenticateToken, (req, res) => {
     githubCache.releases = null;
     githubCache.lastFetch = 0;
 
+    // Trigger cleanup manually
+    try { cleanupReleases(); } catch (e) { }
+
     res.status(201).json(release);
 });
 
@@ -752,6 +774,9 @@ app.post('/api/publish', authenticateToken, uploadLimiter, (req, res, next) => {
     // Invalidate cache
     githubCache.releases = null;
     githubCache.lastFetch = 0;
+
+    // Trigger cleanup manually
+    try { cleanupReleases(); } catch (e) { }
 
     res.status(201).json({ published: version, files: release.files.length });
 });
@@ -1256,6 +1281,10 @@ function broadcast(msg) {
 }
 
 wss.on('connection', (ws, req) => {
+    ws.isAlive = true;
+    ws.on('pong', () => { ws.isAlive = true; });
+    startHeartbeat();
+
     // Authenticate WebSocket connection using token from query string
     const url = new URL(req.url, `http://${req.headers.host}`);
     const token = url.searchParams.get('token');
@@ -1534,13 +1563,6 @@ app.get(/^(?!\/api|\/downloads).*/, (req, res, next) => {
 // --- Scheduled Cleanup Job ---
 const { cleanupReleases } = require('./scripts/cleanup-releases');
 
-function scheduleCleanup() {
-    console.log('[SCHEDULER] Release cleanup scheduled');
-    setTimeout(() => { try { cleanupReleases(); } catch (e) { } }, 5000);
-    setInterval(() => { try { cleanupReleases(); } catch (e) { } }, CLEANUP_INTERVAL);
-}
-
-
 // === Start ===
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`\n  ╔══════════════════════════════════════════════════╗`);
@@ -1549,6 +1571,4 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`  ║  http://0.0.0.0:${PORT}                            ║`);
     console.log(`  ║  Dashboard: http://localhost:${PORT}/admin       ║`);
     console.log(`  ╚══════════════════════════════════════════════════╝\n`);
-
-    scheduleCleanup();
 });
