@@ -1,12 +1,14 @@
 /**
  * Authentication utilities for the update server
- * JWT secret management and admin user operations
+ * JWT secret management, User management, and MFA (TOTP)
  */
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { authenticator } = require('otplib');
+const qrcode = require('qrcode');
 const { LOGS_DIR, AUTH_FILE } = require('../config');
 
 const JWT_SECRET_FILE = path.join(LOGS_DIR, '.jwt-secret');
@@ -16,18 +18,15 @@ let jwtSecretCache = null;
 
 /**
  * Load or create JWT secret
- * @returns {string} JWT secret
  */
 function loadOrCreateJwtSecret() {
     if (jwtSecretCache) return jwtSecretCache;
-
     try {
         if (fs.existsSync(JWT_SECRET_FILE)) {
             jwtSecretCache = fs.readFileSync(JWT_SECRET_FILE, 'utf8').trim();
             return jwtSecretCache;
         }
     } catch (e) { }
-
     const secret = crypto.randomBytes(64).toString('hex');
     try {
         fs.writeFileSync(JWT_SECRET_FILE, secret, { mode: 0o600 });
@@ -38,68 +37,123 @@ function loadOrCreateJwtSecret() {
     return secret;
 }
 
-/**
- * Get JWT secret (lazy loaded)
- * @returns {string} JWT secret
- */
 function getJwtSecret() {
-    if (!jwtSecretCache) {
-        jwtSecretCache = loadOrCreateJwtSecret();
-    }
+    if (!jwtSecretCache) jwtSecretCache = loadOrCreateJwtSecret();
     return jwtSecretCache;
 }
 
 /**
- * Default admin user
+ * User Management
  */
 const DEFAULT_USER = {
     username: 'admin',
-    passwordHash: '$2b$10$NH.q4MEoGZUuC4kHmv8B2uLh4OXdPVwa2Q/CKp/ORwSMG2XvhGQ8e'
+    passwordHash: '$2b$10$vbyR65jpIlk9tN99d.p33u4A7mdwXcdarb.5iR72VlJScEF9CJaQi', // 'admin'
+    role: 'admin',
+    mfaEnabled: false,
+    mfaSecret: null,
+    createdAt: new Date().toISOString()
 };
 
-/**
- * Load admin user from file or create default
- * @returns {{username: string, passwordHash: string}} Admin user
- */
-function getAdminUser() {
+function loadAuthData() {
     try {
         if (fs.existsSync(AUTH_FILE)) {
-            const auth = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf8'));
-            return auth.admin || DEFAULT_USER;
+            const data = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf8'));
+            // Support legacy format or new format
+            if (data.users) return data;
+            if (data.admin) return { users: [ { ...data.admin, role: 'admin', mfaEnabled: false, createdAt: new Date().toISOString() } ] };
         }
     } catch (e) {
         console.error('[AUTH] Error loading auth file:', e.message);
     }
-    saveAdminUser(DEFAULT_USER);
-    return DEFAULT_USER;
+    const initialData = { users: [DEFAULT_USER] };
+    saveAuthData(initialData);
+    return initialData;
 }
 
-/**
- * Save admin user to file
- * @param {{username: string, passwordHash: string}} user - User to save
- */
-function saveAdminUser(user) {
+function saveAuthData(data) {
     try {
-        fs.writeFileSync(AUTH_FILE, JSON.stringify({ admin: user }, null, 2), { mode: 0o600 });
+        fs.writeFileSync(AUTH_FILE, JSON.stringify(data, null, 2), { mode: 0o600 });
     } catch (e) {
         console.error('[AUTH] Error saving auth file:', e.message);
     }
 }
 
-/**
- * Generate JWT token for user
- * @param {string} username - Username to encode in token
- * @returns {string} JWT token
- */
-function generateToken(username) {
-    return jwt.sign({ username }, getJwtSecret(), { expiresIn: '24h' });
+function getUsers() {
+    return loadAuthData().users;
+}
+
+function getUserByUsername(username) {
+    return getUsers().find(u => u.username === username);
+}
+
+async function addUser(username, password, role = 'viewer') {
+    const data = loadAuthData();
+    if (data.users.find(u => u.username === username)) throw new Error('User already exists');
+    
+    const passwordHash = await bcrypt.hash(password, 10);
+    const newUser = {
+        username,
+        passwordHash,
+        role,
+        mfaEnabled: false,
+        mfaSecret: null,
+        createdAt: new Date().toISOString()
+    };
+    
+    data.users.push(newUser);
+    saveAuthData(data);
+    return newUser;
+}
+
+async function updateUser(username, updates) {
+    const data = loadAuthData();
+    const idx = data.users.findIndex(u => u.username === username);
+    if (idx === -1) throw new Error('User not found');
+    
+    if (updates.password) {
+        updates.passwordHash = await bcrypt.hash(updates.password, 10);
+        delete updates.password;
+    }
+    
+    data.users[idx] = { ...data.users[idx], ...updates };
+    saveAuthData(data);
+    return data.users[idx];
+}
+
+function deleteUser(username) {
+    const data = loadAuthData();
+    data.users = data.users.filter(u => u.username !== username);
+    saveAuthData(data);
 }
 
 /**
- * Verify JWT token
- * @param {string} token - Token to verify
- * @returns {Object|null} Decoded token payload or null if invalid
+ * MFA (TOTP)
  */
+function generateMfaSecret(username) {
+    const secret = authenticator.generateSecret();
+    const otpauth = authenticator.keyuri(username, 'Redball Admin', secret);
+    return { secret, otpauth };
+}
+
+async function generateQrCode(otpauth) {
+    return qrcode.toDataURL(otpauth);
+}
+
+function verifyMfaToken(token, secret) {
+    return authenticator.check(token, secret);
+}
+
+/**
+ * JWT
+ */
+function generateToken(user, mfaVerified = false) {
+    return jwt.sign({ 
+        username: user.username, 
+        role: user.role,
+        mfaRequired: user.mfaEnabled && !mfaVerified
+    }, getJwtSecret(), { expiresIn: '24h' });
+}
+
 function verifyToken(token) {
     try {
         return jwt.verify(token, getJwtSecret());
@@ -108,20 +162,20 @@ function verifyToken(token) {
     }
 }
 
-/**
- * Verify password against hash
- * @param {string} password - Plain text password
- * @param {string} hash - Bcrypt hash
- * @returns {Promise<boolean>} Whether password matches
- */
 async function verifyPassword(password, hash) {
     return bcrypt.compare(password, hash);
 }
 
 module.exports = {
     getJwtSecret,
-    getAdminUser,
-    saveAdminUser,
+    getUsers,
+    getUserByUsername,
+    addUser,
+    updateUser,
+    deleteUser,
+    generateMfaSecret,
+    generateQrCode,
+    verifyMfaToken,
     generateToken,
     verifyToken,
     verifyPassword,

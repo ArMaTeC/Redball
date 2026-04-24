@@ -1296,14 +1296,27 @@ wss.on('connection', (ws, req) => {
     }
 
     try {
-        jwt.verify(token, JWT_SECRET);
+        const user = verifyToken(token);
+        if (!user) {
+            console.log('[WS] Rejected connection: invalid token');
+            ws.close(1008, 'Invalid token');
+            return;
+        }
+        
+        if (user.mfaRequired) {
+            console.log('[WS] Rejected connection: MFA verification required');
+            ws.close(1008, 'MFA verification required');
+            return;
+        }
+        
+        ws.user = user;
     } catch (err) {
-        console.log('[WS] Rejected connection: invalid token');
-        ws.close(1008, 'Invalid token');
+        console.log('[WS] Rejected connection: token error', err.message);
+        ws.close(1008, 'Authentication error');
         return;
     }
 
-    console.log('[WS] New authenticated client connected');
+    console.log(`[WS] New authenticated client connected: ${ws.user.username} (${ws.user.role})`);
     ws.send(JSON.stringify({ type: 'state', data: buildState }));
 
     ws.on('message', (message) => {
@@ -1334,25 +1347,8 @@ app.get('/api/build/log', authenticateToken, (req, res) => {
     res.type('text/plain').send(lines.join('\n'));
 });
 
-// Admin Auth Routes
-app.post('/api/auth/login', authLimiter, async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || typeof username !== 'string' || !password || typeof password !== 'string') {
-        return res.status(400).json({ error: 'Username and password are required' });
-    }
-    const admin = getAdminUser();
-
-    if (username === admin.username && await bcrypt.compare(password, admin.passwordHash)) {
-        const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '24h' });
-        res.json({ token, user: { username } });
-    } else {
-        res.status(401).json({ error: 'Invalid credentials' });
-    }
-});
-
-app.get('/api/auth/me', authenticateToken, (req, res) => {
-    res.json({ user: req.user });
-});
+// Authentication routes are now handled in routes/api/auth.js
+// Mounted as: app.use('/api/auth', authLimiter, authRoutes);
 
 
 // Build Trigger (Aliased for compatibility)

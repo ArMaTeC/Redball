@@ -1376,9 +1376,17 @@
             </div>
             <h2>Authentication Required</h2>
             <p>Enter your administrator credentials to access the Redball Core System.</p>
-            <input type="text" id="username" placeholder="Username" autocomplete="username">
-            <input type="password" id="password" placeholder="Key Password" autocomplete="current-password">
-            <button onclick="handleLogin()">Unlock Access</button>
+            <div id="login-fields">
+                <input type="text" id="username" placeholder="Username" autocomplete="username">
+                <input type="password" id="password" placeholder="Key Password" autocomplete="current-password">
+                <button onclick="handleLogin()">Unlock Access</button>
+            </div>
+            <div id="mfa-fields" class="hidden">
+                <p>MFA is enabled for this account. Enter your verification code.</p>
+                <input type="text" id="mfa-token" placeholder="000000" maxlength="6" autocomplete="one-time-code" style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem">
+                <button onclick="handleMfaLogin()">Verify & Unlock</button>
+                <button onclick="cancelMfa()" style="margin-top: 1rem; background: transparent; color: var(--text-secondary); border: 1px solid var(--border)">Back to Login</button>
+            </div>
             <div id="login-error" class="login-error">Invalid authorization key</div>
         </div>
     </div>
@@ -1393,6 +1401,7 @@
             <button class="nav-btn active" onclick="showSection('dashboard', this)">Infrastructure</button>
             <button class="nav-btn" onclick="showSection('build', this)">Build Pipeline</button>
             <button class="nav-btn" onclick="showSection('releases', this)">Release Control</button>
+            <button class="nav-btn" onclick="showSection('users', this)">Identity & Access</button>
             <button class="nav-btn" onclick="showSection('config', this)">System Config</button>
         </div>
 
@@ -1687,6 +1696,9 @@
         `;
         document.head.appendChild(style);
 
+        // --- Identity & Access ---
+
+
         // --- Sections ---
         function showSection(id, btn) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -1695,6 +1707,7 @@
             btn.classList.add('active');
             if (id === 'dashboard' || id === 'releases') fetchStats();
             if (id === 'config') loadConfiguration();
+            if (id === 'users') loadUsers();
         }
 
         // --- Configuration ---
@@ -1953,25 +1966,78 @@
         async function handleLogin() {
             const u = document.getElementById('username').value;
             const p = document.getElementById('password').value;
+            const errEl = document.getElementById('login-error');
+            errEl.classList.remove('show');
+            
             try {
                 const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: u, password: p })
                 });
+                const data = await res.json();
+                
                 if (res.ok) {
-                    const data = await res.json();
-                    token = data.token;
-                    localStorage.setItem('redball_admin_token', token);
-                    document.getElementById('login-overlay').classList.add('hidden');
-                    initSocket();
-                    fetchStats();
+                    if (data.mfaRequired) {
+                        // Switch to MFA view
+                        tempToken = data.tempToken;
+                        document.getElementById('login-fields').classList.add('hidden');
+                        document.getElementById('mfa-fields').classList.remove('hidden');
+                    } else {
+                        loginSuccess(data);
+                    }
                 } else {
-                    document.getElementById('login-error').classList.add('show');
+                    errEl.innerText = data.error || 'Invalid authorization key';
+                    errEl.classList.add('show');
+                }
+            } catch (e) {
+                console.error(e);
+                errEl.innerText = 'Network error';
+                errEl.classList.add('show');
+            }
+        }
+
+        async function handleMfaLogin() {
+            const code = document.getElementById('mfa-token').value;
+            const errEl = document.getElementById('login-error');
+            
+            try {
+                const res = await fetch('/api/auth/mfa/verify', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + tempToken
+                    },
+                    body: JSON.stringify({ token: code })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    loginSuccess(data);
+                } else {
+                    errEl.innerText = data.error || 'Invalid MFA code';
+                    errEl.classList.add('show');
                 }
             } catch (e) {
                 console.error(e);
             }
+        }
+
+        function loginSuccess(data) {
+            token = data.token;
+            currentUser = data.user;
+            localStorage.setItem('redball_admin_token', token);
+            document.getElementById('login-overlay').classList.add('hidden');
+            initSocket();
+            fetchStats();
+            showToast(`Welcome back, ${currentUser.username}`, 'success');
+        }
+
+        function cancelMfa() {
+            tempToken = null;
+            document.getElementById('mfa-fields').classList.add('hidden');
+            document.getElementById('login-fields').classList.remove('hidden');
+            document.getElementById('login-error').classList.remove('show');
         }
 
         function handleLogout() {
@@ -2236,10 +2302,228 @@
             clearInterval(timerInterval);
         }
 
-        // Start
-        checkAuth();
+        // --- Identity & Access ---
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/auth/users', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    const users = await res.json();
+                    const tbody = document.getElementById('users-table-body');
+                    tbody.innerHTML = users.map(u => `
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.8rem">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-glow); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800">
+                                        ${u.username[0].toUpperCase()}
+                                    </div>
+                                    <span>${u.username}</span>
+                                </div>
+                            </td>
+                            <td><span class="badge" style="background: ${u.role === 'admin' ? 'rgba(0, 217, 163, 0.1)' : 'rgba(255,255,255,0.05)'}; color: ${u.role === 'admin' ? 'var(--accent)' : 'var(--text-secondary)'}">${u.role.toUpperCase()}</span></td>
+                            <td><span class="badge" style="background: ${u.mfaEnabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${u.mfaEnabled ? 'var(--success)' : 'var(--error)'}">${u.mfaEnabled ? 'ENFORCED' : 'UNSECURED'}</span></td>
+                            <td>${new Date(u.createdAt).toLocaleDateString()}</td>
+                            <td>
+                                <button class="btn btn-sm" onclick="deleteUser('${u.username}')" style="padding: 0.4rem; background: transparent; border-color: rgba(239, 68, 68, 0.3); color: var(--error)">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    
+                    // Update current user MFA status in the side panel
+                    const self = users.find(u => u.username === currentUser.username);
+                    if (self) {
+                        const statusVal = document.getElementById('mfa-status-value');
+                        const statusLbl = document.getElementById('mfa-status-label');
+                        const statusBtn = document.getElementById('mfa-setup-btn');
+                        
+                        if (self.mfaEnabled) {
+                            statusVal.innerText = 'Active';
+                            statusVal.style.color = 'var(--success)';
+                            statusLbl.innerText = 'Security Verified';
+                            statusBtn.innerText = 'Disable MFA Protocol';
+                            statusBtn.onclick = disableMfa;
+                        } else {
+                            statusVal.innerText = 'Inactive';
+                            statusVal.style.color = 'var(--error)';
+                            statusLbl.innerText = 'Multi-Factor Status';
+                            statusBtn.innerText = 'Setup MFA Protocol';
+                            statusBtn.onclick = initMfaSetup;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        let mfaSecret = null;
+        async function initMfaSetup() {
+            try {
+                const res = await fetch('/api/auth/mfa/setup', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    mfaSecret = data.secret;
+                    document.getElementById('mfa-qr-img').src = data.qrCode;
+                    document.getElementById('mfa-qr-container').classList.remove('hidden');
+                    document.getElementById('mfa-setup-controls').classList.add('hidden');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function verifyMfaSetup() {
+            const code = document.getElementById('mfa-setup-token').value;
+            try {
+                const res = await fetch('/api/auth/mfa/verify-setup', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ secret: mfaSecret, token: code })
+                });
+                if (res.ok) {
+                    showToast('MFA enabled successfully', 'success');
+                    document.getElementById('mfa-qr-container').classList.add('hidden');
+                    document.getElementById('mfa-setup-controls').classList.remove('hidden');
+                    loadUsers();
+                } else {
+                    showToast('Invalid MFA code', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function disableMfa() {
+            if (!confirm('Are you sure you want to disable MFA? This will reduce your account security.')) return;
+            const code = prompt('Enter current MFA code to confirm:');
+            if (!code) return;
+            
+            try {
+                const res = await fetch('/api/auth/mfa/disable', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ token: code })
+                });
+                if (res.ok) {
+                    showToast('MFA disabled', 'success');
+                    loadUsers();
+                } else {
+                    showToast('Failed to disable MFA', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function deleteUser(username) {
+            if (!confirm(`Are you sure you want to revoke access for ${username}?`)) return;
+            try {
+                const res = await fetch(`/api/auth/users/${username}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    showToast('Identity revoked', 'success');
+                    loadUsers();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function showAddUserModal() {
+            const username = prompt('Enter username:');
+            if (!username) return;
+            const password = prompt('Enter temporary password:');
+            if (!password) return;
+            const role = prompt('Enter role (admin/viewer):', 'viewer');
+            
+            addUser(username, password, role);
+        }
+
+        async function addUser(username, password, role) {
+            try {
+                const res = await fetch('/api/auth/users', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password, role })
+                });
+                if (res.ok) {
+                    showToast('Identity created', 'success');
+                    loadUsers();
+                } else {
+                    const data = await res.json();
+                    showToast(data.error || 'Failed to create identity', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // --- Start ---
+        let currentUser = null;
+        let tempToken = null;
+
+        // Load token from storage
+        const savedToken = localStorage.getItem('redball_admin_token');
+        if (savedToken) {
+            token = savedToken;
+            // Verify token and get user info
+            fetch('/api/auth/me', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            }).then(res => {
+                if (res.ok) return res.json();
+                else throw new Error('Token expired');
+            }).then(data => {
+                currentUser = data.user;
+                checkAuth();
+            }).catch(err => {
+                token = null;
+                localStorage.removeItem('redball_admin_token');
+                checkAuth();
+            });
+        } else {
+            checkAuth();
+        }
+
+        function showSection(id, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id + '-section').classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            if (id === 'dashboard') fetchStats();
+            if (id === 'releases') loadReleases();
+            if (id === 'config') loadConfiguration();
+            if (id === 'users') loadUsers();
+        }
+
+        // Initialize tooltips/toasts if any
+        function showToast(message, type = 'info') {
+            console.log(`[TOAST] ${type.toUpperCase()}: ${message}`);
+            // Simple alert fallback if toast system is not implemented
+            // alert(message);
+        }
+
         setInterval(() => {
-            document.getElementById('live-time').innerText = 'LIVE: ' + new Date().toLocaleTimeString();
+            const timeEl = document.getElementById('live-time');
+            if (timeEl) timeEl.innerText = 'LIVE: ' + new Date().toLocaleTimeString();
         }, 1000);
     </script>
 </body>
