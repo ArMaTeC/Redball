@@ -35,6 +35,10 @@
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         }
 
+        .hidden {
+            display: none !important;
+        }
+
         body {
             font-family: 'Outfit', sans-serif;
             background: var(--bg-dark);
@@ -1619,6 +1623,70 @@
             </div>
         </section>
 
+        <!-- Identity & Access -->
+        <section id="users-section" class="section">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2 class="panel-title">Identity & Access</h2>
+                        <p class="panel-subtitle">Manage system users, roles, and security protocols</p>
+                    </div>
+                    <button class="btn btn-build" style="width: auto; padding: 0.75rem 2rem;" onclick="showAddUserModal()">+ Create Identity</button>
+                </div>
+
+                <div class="grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; padding: 2.5rem;">
+                    <div style="margin-bottom: 0;">
+                        <div class="panel-header" style="margin-bottom: 1rem; border: none; background: transparent; padding: 0;">
+                            <h3 style="font-size: 1rem;">Registered Identities</h3>
+                        </div>
+                        <div class="table-container">
+                            <table class="r-table">
+                                <thead>
+                                    <tr>
+                                        <th>Identity</th>
+                                        <th>Role</th>
+                                        <th>Security</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                    <!-- Users will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 0;">
+                        <div class="panel-header" style="margin-bottom: 1.5rem; border: none; background: transparent; padding: 0;">
+                            <h3 style="font-size: 1rem;">Security Protocol (MFA)</h3>
+                        </div>
+                        <div id="mfa-status-card" class="stat-card" style="margin-bottom: 1.5rem; padding: 1.5rem;">
+                            <div id="mfa-status-label" class="stat-label">Multi-Factor Status</div>
+                            <div id="mfa-status-value" class="stat-value" style="color: var(--danger); font-size: 1.5rem;">Inactive</div>
+                            <p id="mfa-status-desc" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Enhance your account security by enabling TOTP authentication.</p>
+                        </div>
+                        
+                        <div id="mfa-setup-controls" style="padding: 0; display: flex; flex-direction: column; gap: 0.75rem;">
+                            <button id="mfa-setup-btn" class="btn btn-build" style="width: 100%" onclick="initMfaSetup()">Setup MFA Protocol</button>
+                            <button class="btn btn-sm" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-secondary)" onclick="changePassword()">Change Access Key</button>
+                        </div>
+                        
+                        <div id="mfa-qr-container" class="hidden" style="text-align: center; background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; border: 1px dashed var(--border);">
+                            <p style="font-size: 0.8rem; margin-bottom: 1rem;">Scan this QR code with your authenticator app:</p>
+                            <img id="mfa-qr-img" src="" alt="MFA QR Code" style="width: 150px; height: 150px; background: white; padding: 10px; border-radius: 8px;">
+                            <div style="margin-top: 1.5rem;">
+                                <input type="text" id="mfa-setup-token" placeholder="Enter 6-digit code" style="width: 100%; text-align: center; margin-bottom: 0.5rem; padding: 0.75rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: white;">
+                                <button class="btn btn-build" style="width: 100%" onclick="verifyMfaSetup()">Verify & Enable</button>
+                                <button class="btn btn-sm" style="width: 100%; margin-top: 0.5rem; background: transparent; border: 1px solid var(--border); color: var(--text-secondary)" onclick="cancelMfaSetup()">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
         <!-- System Configuration -->
         <section id="config-section" class="section">
             <div class="panel">
@@ -1695,9 +1763,6 @@
             }
         `;
         document.head.appendChild(style);
-
-        // --- Identity & Access ---
-
 
         // --- Sections ---
         function showSection(id, btn) {
@@ -2088,7 +2153,11 @@
         // --- Keyboard ---
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !document.getElementById('login-overlay').classList.contains('hidden')) {
-                handleLogin();
+                if (!document.getElementById('mfa-fields').classList.contains('hidden')) {
+                    handleMfaLogin();
+                } else {
+                    handleLogin();
+                }
             }
         });
 
@@ -2325,13 +2394,13 @@
                             <td><span class="badge" style="background: ${u.mfaEnabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${u.mfaEnabled ? 'var(--success)' : 'var(--error)'}">${u.mfaEnabled ? 'ENFORCED' : 'UNSECURED'}</span></td>
                             <td>${new Date(u.createdAt).toLocaleDateString()}</td>
                             <td>
-                                <button class="btn btn-sm" onclick="deleteUser('${u.username}')" style="padding: 0.4rem; background: transparent; border-color: rgba(239, 68, 68, 0.3); color: var(--error)">
+                                <button class="btn btn-sm" onclick="deleteUser('${u.username}')" style="padding: 0.4rem; background: transparent; border-color: rgba(239, 68, 68, 0.3); color: var(--error); width: auto;">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                                 </button>
                             </td>
                         </tr>
                     `).join('');
-                    
+
                     // Update current user MFA status in the side panel
                     const self = users.find(u => u.username === currentUser.username);
                     if (self) {
@@ -2372,10 +2441,21 @@
                     document.getElementById('mfa-qr-img').src = data.qrCode;
                     document.getElementById('mfa-qr-container').classList.remove('hidden');
                     document.getElementById('mfa-setup-controls').classList.add('hidden');
+                    showToast('MFA Secret generated. Scan the QR code.', 'success');
+                } else {
+                    const data = await res.json();
+                    showToast(data.error || 'Failed to initialize MFA setup', 'error');
                 }
             } catch (e) {
                 console.error(e);
+                showToast('Network error during MFA setup', 'error');
             }
+        }
+
+        function cancelMfaSetup() {
+            document.getElementById('mfa-qr-container').classList.add('hidden');
+            document.getElementById('mfa-setup-controls').classList.remove('hidden');
+            mfaSecret = null;
         }
 
         async function verifyMfaSetup() {
@@ -2391,8 +2471,7 @@
                 });
                 if (res.ok) {
                     showToast('MFA enabled successfully', 'success');
-                    document.getElementById('mfa-qr-container').classList.add('hidden');
-                    document.getElementById('mfa-setup-controls').classList.remove('hidden');
+                    cancelMfaSetup();
                     loadUsers();
                 } else {
                     showToast('Invalid MFA code', 'error');
@@ -2404,7 +2483,7 @@
 
         async function disableMfa() {
             if (!confirm('Are you sure you want to disable MFA? This will reduce your account security.')) return;
-            const code = prompt('Enter current MFA code to confirm:');
+            const code = prompt('Enter current 6-digit MFA code to confirm:');
             if (!code) return;
             
             try {
@@ -2420,14 +2499,51 @@
                     showToast('MFA disabled', 'success');
                     loadUsers();
                 } else {
-                    showToast('Failed to disable MFA', 'error');
+                    const data = await res.json();
+                    showToast(data.error || 'Failed to disable MFA', 'error');
                 }
             } catch (e) {
                 console.error(e);
             }
         }
 
+        async function changePassword() {
+            const currentPassword = prompt('Enter CURRENT access key:');
+            if (!currentPassword) return;
+            const newPassword = prompt('Enter NEW access key:');
+            if (!newPassword) return;
+            const confirmPass = prompt('Confirm NEW access key:');
+            if (newPassword !== confirmPass) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                if (res.ok) {
+                    showToast('Access key updated successfully', 'success');
+                } else {
+                    const data = await res.json();
+                    showToast(data.error || 'Failed to update access key', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Network error', 'error');
+            }
+        }
+
         async function deleteUser(username) {
+            if (username === currentUser.username) {
+                showToast('Cannot delete self', 'error');
+                return;
+            }
             if (!confirm(`Are you sure you want to revoke access for ${username}?`)) return;
             try {
                 const res = await fetch(`/api/auth/users/${username}`, {
@@ -2475,15 +2591,13 @@
             }
         }
 
-        // --- Start ---
+        // --- Startup ---
         let currentUser = null;
         let tempToken = null;
 
-        // Load token from storage
         const savedToken = localStorage.getItem('redball_admin_token');
         if (savedToken) {
             token = savedToken;
-            // Verify token and get user info
             fetch('/api/auth/me', {
                 headers: { 'Authorization': 'Bearer ' + token }
             }).then(res => {
@@ -2499,26 +2613,6 @@
             });
         } else {
             checkAuth();
-        }
-
-        function showSection(id, btn) {
-            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(id + '-section').classList.remove('hidden');
-            
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            if (id === 'dashboard') fetchStats();
-            if (id === 'releases') loadReleases();
-            if (id === 'config') loadConfiguration();
-            if (id === 'users') loadUsers();
-        }
-
-        // Initialize tooltips/toasts if any
-        function showToast(message, type = 'info') {
-            console.log(`[TOAST] ${type.toUpperCase()}: ${message}`);
-            // Simple alert fallback if toast system is not implemented
-            // alert(message);
         }
 
         setInterval(() => {

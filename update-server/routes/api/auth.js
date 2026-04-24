@@ -99,6 +99,20 @@ router.post('/mfa/disable', authenticateToken, async (req, res) => {
     res.json({ message: 'MFA disabled successfully' });
 });
 
+// POST /api/auth/change-password - Change own password
+router.post('/change-password', authenticateToken, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Current and new password are required' });
+
+    const user = getUserByUsername(req.user.username);
+    if (!user || !(await verifyPassword(currentPassword, user.passwordHash))) {
+        return res.status(401).json({ error: 'Incorrect current password' });
+    }
+
+    await updateUser(req.user.username, { password: newPassword });
+    res.json({ message: 'Password updated successfully' });
+});
+
 // --- User Management (Admin only) ---
 
 // GET /api/auth/users - List all users

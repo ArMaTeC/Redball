@@ -60,7 +60,11 @@ function loadAuthData() {
             const data = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf8'));
             // Support legacy format or new format
             if (data.users) return data;
-            if (data.admin) return { users: [ { ...data.admin, role: 'admin', mfaEnabled: false, createdAt: new Date().toISOString() } ] };
+            if (data.admin) {
+                const migrated = { users: [ { ...data.admin, role: 'admin', mfaEnabled: !!data.admin.mfaEnabled, createdAt: data.admin.createdAt || new Date().toISOString() } ] };
+                saveAuthData(migrated);
+                return migrated;
+            }
         }
     } catch (e) {
         console.error('[AUTH] Error loading auth file:', e.message);
