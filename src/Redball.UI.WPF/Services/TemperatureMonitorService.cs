@@ -21,6 +21,9 @@ public class TemperatureMonitorService : IDisposable
     private string _lastError = "";
     private int _consecutiveFailures;
     private bool _hasLoggedAllMethodsFailed;
+    private bool _pollingDisabled;
+    private Func<double?>[]? _sensorMethods;
+    private int _successfulMethodIndex = -1;
     private readonly string[] _wmiClassesToTry =
     {
         "MSAcpi_ThermalZoneTemperature",
@@ -58,6 +61,8 @@ public class TemperatureMonitorService : IDisposable
 
     private void PollTimer_Tick(object? sender, EventArgs e)
     {
+        if (_pollingDisabled) return;
+
         // Offload polling to background to prevent UI micro-stutters
         Task.Run(() => {
             PollTemperature();
@@ -67,17 +72,47 @@ public class TemperatureMonitorService : IDisposable
 
     private void PollTemperature()
     {
+        if (_pollingDisabled) return;
+
         _lastError = "";
         double? temp = null;
 
-        temp ??= TryMsrDirect();  // Intel/AMD MSR registers
-        temp ??= TryPerformanceCounters();
-        temp ??= TryWmi_MSAcpiThermalZone();
-        temp ??= TryWmi_ThermalZoneInfo();
-        temp ??= TryWmi_CimSensor();
-        temp ??= TryWmi_TemperatureProbe();
-        temp ??= TryWmi_AmdProcessor();
-        temp ??= TryWmi_IntelProcessor();
+        if (_sensorMethods == null)
+        {
+            _sensorMethods = new Func<double?>[]
+            {
+                TryMsrDirect,
+                TryPerformanceCounters,
+                TryWmi_MSAcpiThermalZone,
+                TryWmi_ThermalZoneInfo,
+                TryWmi_CimSensor,
+                TryWmi_TemperatureProbe,
+                TryWmi_AmdProcessor,
+                TryWmi_IntelProcessor
+            };
+        }
+
+        if (_successfulMethodIndex >= 0)
+        {
+            temp = _sensorMethods[_successfulMethodIndex]();
+            if (!temp.HasValue)
+            {
+                _successfulMethodIndex = -1; // Fallback if active method fails
+            }
+        }
+
+        if (!temp.HasValue)
+        {
+            for (int i = 0; i < _sensorMethods.Length; i++)
+            {
+                temp = _sensorMethods[i]();
+                if (temp.HasValue)
+                {
+                    _successfulMethodIndex = i;
+                    break;
+                }
+            }
+        }
 
         if (temp.HasValue)
         {
@@ -92,11 +127,12 @@ public class TemperatureMonitorService : IDisposable
             if (_consecutiveFailures >= 3)
             {
                 CurrentCpuTemp = null;
+                _pollingDisabled = true;
             }
             // Only log once when all methods fail, not every poll
             if (!_hasLoggedAllMethodsFailed && _consecutiveFailures >= 3)
             {
-                Logger.Debug("TemperatureMonitor", "No temperature sensors available (all methods failed)");
+                Logger.Debug("TemperatureMonitor", "No temperature sensors available (all methods failed). Disabling polling to save CPU.");
                 _hasLoggedAllMethodsFailed = true;
             }
         }
