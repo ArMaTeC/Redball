@@ -1388,6 +1388,10 @@
             <div id="mfa-fields" class="hidden">
                 <p>MFA is enabled for this account. Enter your verification code.</p>
                 <input type="text" id="mfa-token" placeholder="000000" maxlength="6" autocomplete="one-time-code" style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem">
+                <label class="cb-field" style="margin: 1.2rem 0; justify-content: center;">
+                    <input type="checkbox" id="mfa-remember">
+                    <span style="font-size: 0.8rem; opacity: 0.8">Remember this device for 30 days</span>
+                </label>
                 <button onclick="handleMfaLogin()">Verify & Unlock</button>
                 <button onclick="cancelMfa()" style="margin-top: 1rem; background: transparent; color: var(--text-secondary); border: 1px solid var(--border)">Back to Login</button>
             </div>
@@ -2029,16 +2033,17 @@
         }
 
         async function handleLogin() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
             const errEl = document.getElementById('login-error');
             errEl.classList.remove('show');
             
             try {
+                const tdt = localStorage.getItem('redball_tdt_' + user);
                 const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: u, password: p })
+                    body: JSON.stringify({ username: user, password: pass, tdt })
                 });
                 const data = await res.json();
                 
@@ -2067,17 +2072,21 @@
             const errEl = document.getElementById('login-error');
             
             try {
+                const remember = document.getElementById('mfa-remember').checked;
                 const res = await fetch('/api/auth/mfa/verify', {
                     method: 'POST',
                     headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + tempToken
+                        'Authorization': 'Bearer ' + tempToken,
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ token: code })
+                    body: JSON.stringify({ token: code, rememberDevice: remember })
                 });
                 const data = await res.json();
                 
                 if (res.ok) {
+                    if (data.tdt) {
+                        localStorage.setItem('redball_tdt_' + data.user.username, data.tdt);
+                    }
                     loginSuccess(data);
                 } else {
                     errEl.innerText = data.error || 'Invalid MFA code';

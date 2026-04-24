@@ -175,6 +175,27 @@ async function verifyPassword(password, hash) {
     return bcrypt.compare(password, hash);
 }
 
+/**
+ * Trusted Device Tokens (TDT)
+ * Allows bypassing MFA on remembered browsers for 30 days
+ */
+function generateTrustedDeviceToken(username) {
+    return jwt.sign({ 
+        username,
+        type: 'trusted_device'
+    }, getJwtSecret(), { expiresIn: '30d' });
+}
+
+function verifyTrustedDeviceToken(token, username) {
+    if (!token) return false;
+    try {
+        const decoded = jwt.verify(token, getJwtSecret());
+        return decoded.username === username && decoded.type === 'trusted_device';
+    } catch (err) {
+        return false;
+    }
+}
+
 module.exports = {
     getJwtSecret,
     getUsers,
@@ -188,5 +209,7 @@ module.exports = {
     generateToken,
     verifyToken,
     verifyPassword,
+    generateTrustedDeviceToken,
+    verifyTrustedDeviceToken,
     DEFAULT_USER
 };

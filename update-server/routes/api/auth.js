@@ -13,14 +13,16 @@ const {
     updateUser,
     getUsers,
     addUser,
-    deleteUser
+    deleteUser,
+    generateTrustedDeviceToken,
+    verifyTrustedDeviceToken
 } = require('../../lib/auth');
 const { authenticateToken, requireAdmin } = require('../../middleware/auth');
 const { authLimiter } = require('../../middleware/rateLimiter');
 
 // POST /api/auth/login - Authenticate and get token
 router.post('/login', authLimiter, async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, tdt } = req.body;
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required' });
     }
@@ -28,6 +30,12 @@ router.post('/login', authLimiter, async (req, res) => {
     const user = getUserByUsername(username);
     if (user && await verifyPassword(password, user.passwordHash)) {
         if (user.mfaEnabled) {
+            // Check if device is trusted (bypass MFA)
+            if (verifyTrustedDeviceToken(tdt, username)) {
+                const token = generateToken(user, true);
+                return res.json({ token, user: { username: user.username, role: user.role } });
+            }
+
             // Return temporary token that only allows MFA verification
             const mfaToken = generateToken(user, false);
             return res.json({ mfaRequired: true, tempToken: mfaToken });
@@ -42,7 +50,7 @@ router.post('/login', authLimiter, async (req, res) => {
 
 // POST /api/auth/mfa/verify - Verify MFA during login
 router.post('/mfa/verify', authLimiter, authenticateToken, async (req, res) => {
-    const { token: mfaCode } = req.body;
+    const { token: mfaCode, rememberDevice } = req.body;
     if (!mfaCode) return res.status(400).json({ error: 'MFA code is required' });
 
     const user = getUserByUsername(req.user.username);
@@ -50,7 +58,14 @@ router.post('/mfa/verify', authLimiter, authenticateToken, async (req, res) => {
 
     if (verifyMfaToken(mfaCode, user.mfaSecret)) {
         const token = generateToken(user, true);
-        res.json({ token, user: { username: user.username, role: user.role } });
+        const response = { token, user: { username: user.username, role: user.role } };
+        
+        // Generate Trusted Device Token if requested
+        if (rememberDevice) {
+            response.tdt = generateTrustedDeviceToken(user.username);
+        }
+        
+        res.json(response);
     } else {
         res.status(401).json({ error: 'Invalid MFA code' });
     }
