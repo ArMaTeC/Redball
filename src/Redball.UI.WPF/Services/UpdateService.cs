@@ -715,6 +715,7 @@ public class UpdateService : IUpdateService
                         Logger.Info("UpdateService", $"[DELTA] Total download size: {FormatBytes(filesToUpdate.Sum(f => f.PatchUrl != null ? f.PatchSize : f.Size))}");
                         _consecutiveFailures = 0;
                         var totalBytes = filesToUpdate.Sum(f => f.DownloadSize);
+                        var bestAssetFallback = FindBestAsset(latestRelease);
                         return new UpdateInfo
                         {
                             CurrentVersion = currentNormalized,
@@ -723,6 +724,7 @@ public class UpdateService : IUpdateService
                             ReleaseNotes = latestRelease.Body,
                             ReleaseDate = latestRelease.PublishedAt,
                             DownloadUrl = zipAsset?.DownloadUrl ?? "",
+                            FullInstallerUrl = bestAssetFallback?.DownloadUrl ?? "",
                             FileName = zipAsset?.Name ?? "",
                             TotalDownloadBytes = totalBytes
                         };
@@ -819,222 +821,231 @@ public class UpdateService : IUpdateService
 
             if (updateInfo.FilesToUpdate != null && updateInfo.FilesToUpdate.Count > 0)
             {
-                var totalFiles = updateInfo.FilesToUpdate.Count;
-                Logger.Info("UpdateService", $"[DELTA-APPLY] Starting differential update of {totalFiles} files...");
-                int completed = 0;
-                long totalBytesSaved = 0;
-                var appDir = AppDomain.CurrentDomain.BaseDirectory;
-
-                // Check if any files have individual download URLs
-                bool hasIndividualAssets = updateInfo.FilesToUpdate.Any(f => !string.IsNullOrEmpty(f.DownloadUrl));
-                bool hasPatches = updateInfo.FilesToUpdate.Any(f => !string.IsNullOrEmpty(f.PatchUrl));
-
-                Logger.Info("UpdateService", $"[DELTA-APPLY] hasIndividualAssets={hasIndividualAssets}, hasPatches={hasPatches}, zipUrl={!string.IsNullOrEmpty(updateInfo.DownloadUrl)}");
-                Logger.Info("UpdateService", $"[DELTA-APPLY] Patch breakdown: {updateInfo.FilesToUpdate.Count(f => !string.IsNullOrEmpty(f.PatchUrl))} with patches, {updateInfo.FilesToUpdate.Count(f => string.IsNullOrEmpty(f.PatchUrl) && !string.IsNullOrEmpty(f.DownloadUrl))} with full file URLs, {updateInfo.FilesToUpdate.Count(f => string.IsNullOrEmpty(f.PatchUrl) && string.IsNullOrEmpty(f.DownloadUrl))} with no source");
-
-                // If no individual assets or patches, download ZIP once and extract changed files
-                string? extractedZipDir = null;
-                if (!hasIndividualAssets && !hasPatches && !string.IsNullOrEmpty(updateInfo.DownloadUrl))
+                try
                 {
-                    ReportProgress(progress, UpdateStage.Downloading, 0, $"Downloading update package...",
-                        logEntry: $"Downloading ZIP for differential extraction ({totalFiles} files need updating)...",
-                        isDelta: true);
+                    var totalFiles = updateInfo.FilesToUpdate.Count;
+                    Logger.Info("UpdateService", $"[DELTA-APPLY] Starting differential update of {totalFiles} files...");
+                    int completed = 0;
+                    long totalBytesSaved = 0;
+                    var appDir = AppDomain.CurrentDomain.BaseDirectory;
 
-                    var zipPath = Path.Combine(tempDir, updateInfo.FileName);
-                    if (!await DownloadFileAsync(updateInfo.DownloadUrl, zipPath, progress, cancellationToken))
-                        return false;
+                    // Check if any files have individual download URLs
+                    bool hasIndividualAssets = updateInfo.FilesToUpdate.Any(f => !string.IsNullOrEmpty(f.DownloadUrl));
+                    bool hasPatches = updateInfo.FilesToUpdate.Any(f => !string.IsNullOrEmpty(f.PatchUrl));
 
-                    ReportProgress(progress, UpdateStage.Patching, 30, "Extracting changed files from update package...",
-                        logEntry: "ZIP downloaded. Extracting changed files only...", isDelta: true);
+                    Logger.Info("UpdateService", $"[DELTA-APPLY] hasIndividualAssets={hasIndividualAssets}, hasPatches={hasPatches}, zipUrl={!string.IsNullOrEmpty(updateInfo.DownloadUrl)}");
+                    Logger.Info("UpdateService", $"[DELTA-APPLY] Patch breakdown: {updateInfo.FilesToUpdate.Count(f => !string.IsNullOrEmpty(f.PatchUrl))} with patches, {updateInfo.FilesToUpdate.Count(f => string.IsNullOrEmpty(f.PatchUrl) && !string.IsNullOrEmpty(f.DownloadUrl))} with full file URLs, {updateInfo.FilesToUpdate.Count(f => string.IsNullOrEmpty(f.PatchUrl) && string.IsNullOrEmpty(f.DownloadUrl))} with no source");
 
-                    extractedZipDir = Path.Combine(tempDir, "zip-extract");
-                    if (!ExtractZip(zipPath, extractedZipDir))
-                        return false;
-
-                    // Clean up ZIP to save disk space
-                    TryDeleteFile(zipPath);
-
-                    ReportProgress(progress, UpdateStage.Patching, 35, "Applying differential updates...",
-                        logEntry: $"Extracted. Copying {totalFiles} changed files to staging...", isDelta: true);
-                }
-
-                foreach (var file in updateInfo.FilesToUpdate)
-                {
-                    var normalizedName = NormalizeRelativeUpdatePath(file.Name);
-                    var destPath = Path.Combine(stagingDir, normalizedName);
-                    var destDir = Path.GetDirectoryName(destPath);
-                    if (destDir != null && !Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
-
-                    completed++;
-                    var fileShortName = Path.GetFileName(normalizedName);
-
-                    // Try binary delta patch first if available
-                    Logger.Debug("UpdateService", $"[DELTA-APPLY] Processing file {completed}/{totalFiles}: {normalizedName}, PatchUrl={!string.IsNullOrEmpty(file.PatchUrl)}, PatchSize={file.PatchSize}, DownloadUrl={!string.IsNullOrEmpty(file.DownloadUrl)}");
-
-                    if (!string.IsNullOrEmpty(file.PatchUrl) && file.PatchSize > 0)
+                    // If no individual assets or patches, download ZIP once and extract changed files
+                    string? extractedZipDir = null;
+                    if (!hasIndividualAssets && !hasPatches && !string.IsNullOrEmpty(updateInfo.DownloadUrl))
                     {
-                        Logger.Info("UpdateService", $"[DELTA-APPLY] Attempting delta patch for {fileShortName} from {file.PatchUrl}");
-                        try
-                        {
-                            var localFilePath = Path.Combine(appDir, normalizedName);
-                            if (File.Exists(localFilePath))
-                            {
-                                Logger.Info("UpdateService", $"[DELTA-APPLY] Local file exists for patching: {localFilePath}");
-                                ReportProgress(progress, UpdateStage.Downloading, 35 + (completed * 50 / totalFiles),
-                                    $"Downloading patch {completed}/{totalFiles}: {fileShortName}",
-                                    logEntry: $"  [{completed}/{totalFiles}] Downloading delta patch: {fileShortName}",
-                                    currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
+                        ReportProgress(progress, UpdateStage.Downloading, 0, $"Downloading update package...",
+                            logEntry: $"Downloading ZIP for differential extraction ({totalFiles} files need updating)...",
+                            isDelta: true);
 
-                                var patchPath = Path.Combine(tempDir, normalizedName + ".patch");
-                                var patchDir2 = Path.GetDirectoryName(patchPath);
-                                if (patchDir2 != null && !Directory.Exists(patchDir2)) Directory.CreateDirectory(patchDir2);
+                        var zipPath = Path.Combine(tempDir, updateInfo.FileName);
+                        if (!await DownloadFileAsync(updateInfo.DownloadUrl, zipPath, progress, cancellationToken))
+                            throw new Exception("Failed to download ZIP for differential update");
 
-                                Logger.Info("UpdateService", $"[DELTA-APPLY] Downloading patch to: {patchPath}");
-                                if (await DownloadFileAsync(file.PatchUrl, patchPath, progress, cancellationToken))
-                                {
-                                    ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
-                                        $"Patching {completed}/{totalFiles}: {fileShortName}",
-                                        logEntry: $"  [{completed}/{totalFiles}] Applying delta patch: {fileShortName}",
-                                        currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
+                        ReportProgress(progress, UpdateStage.Patching, 30, "Extracting changed files from update package...",
+                            logEntry: "ZIP downloaded. Extracting changed files only...", isDelta: true);
 
-                                    var oldData = await File.ReadAllBytesAsync(localFilePath, cancellationToken);
-                                    var patchData = await File.ReadAllBytesAsync(patchPath, cancellationToken);
+                        extractedZipDir = Path.Combine(tempDir, "zip-extract");
+                        if (!ExtractZip(zipPath, extractedZipDir))
+                            throw new Exception("Failed to extract ZIP for differential update");
 
-                                    var patch = new DeltaPatch
-                                    {
-                                        Data = patchData,
-                                        OldFileHash = file.OldHash,
-                                        NewFileHash = file.Hash,
-                                        NewFileSize = file.Size
-                                    };
+                        // Clean up ZIP to save disk space
+                        TryDeleteFile(zipPath);
 
-                                    Logger.Info("UpdateService", $"[DELTA-APPLY] Applying patch to {fileShortName}: oldData={oldData.Length} bytes, patch={patchData.Length} bytes");
-                                    var newData = await DeltaUpdateService.Instance.ApplyPatchAsync(oldData, patch, cancellationToken);
-                                    Logger.Info("UpdateService", $"[DELTA-APPLY] Patch applied, newData={newData.Length} bytes, writing to {destPath}");
-                                    await File.WriteAllBytesAsync(destPath, newData, cancellationToken);
-
-                                    // Verify hash
-                                    var actualHash = await CalculateHashAsync(destPath);
-                                    Logger.Info("UpdateService", $"[DELTA-APPLY] Hash verification: expected={file.Hash}, actual={actualHash}");
-                                    if (!actualHash.Equals(file.Hash, StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        Logger.Warning("UpdateService", $"[DELTA-APPLY] Patch result hash mismatch for {normalizedName}, falling back");
-                                        File.Delete(destPath);
-                                        throw new InvalidOperationException("Patch hash mismatch");
-                                    }
-
-                                    totalBytesSaved += (file.Size - file.PatchSize);
-                                    Logger.Info("UpdateService", $"[DELTA-APPLY] ✓ Successfully patched {fileShortName}");
-                                    ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
-                                        $"Patched {completed}/{totalFiles}: {fileShortName}",
-                                        logEntry: $"  [{completed}/{totalFiles}] ✓ Patched: {fileShortName} (saved {FormatBytes(file.Size - file.PatchSize)})",
-                                        currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
-
-                                    TryDeleteFile(patchPath);
-                                    continue; // Skip full download
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Warning("UpdateService", $"[DELTA-APPLY] ✗ Delta patch failed for {normalizedName}: {ex.Message}");
-                            Logger.Debug("UpdateService", $"[DELTA-APPLY] Patch failure stack trace: {ex.StackTrace}");
-                            ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
-                                $"Patch failed for {fileShortName}, using fallback...",
-                                logEntry: $"  [{completed}/{totalFiles}] ⚠ Patch failed: {fileShortName}, falling back",
-                                currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
-                        }
+                        ReportProgress(progress, UpdateStage.Patching, 35, "Applying differential updates...",
+                            logEntry: $"Extracted. Copying {totalFiles} changed files to staging...", isDelta: true);
                     }
 
-                    // Try extracting from downloaded ZIP if available
-                    if (extractedZipDir != null)
+                    foreach (var file in updateInfo.FilesToUpdate)
                     {
-                        var zipSourcePath = FindFileInExtractedZip(extractedZipDir, normalizedName);
-                        if (zipSourcePath != null)
-                        {
-                            File.Copy(zipSourcePath, destPath, overwrite: true);
+                        var normalizedName = NormalizeRelativeUpdatePath(file.Name);
+                        var destPath = Path.Combine(stagingDir, normalizedName);
+                        var destDir = Path.GetDirectoryName(destPath);
+                        if (destDir != null && !Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
 
-                            ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
-                                $"Staged {completed}/{totalFiles}: {fileShortName}",
-                                logEntry: $"  [{completed}/{totalFiles}] ✓ Extracted: {fileShortName}",
+                        completed++;
+                        var fileShortName = Path.GetFileName(normalizedName);
+
+                        // Try binary delta patch first if available
+                        Logger.Debug("UpdateService", $"[DELTA-APPLY] Processing file {completed}/{totalFiles}: {normalizedName}, PatchUrl={!string.IsNullOrEmpty(file.PatchUrl)}, PatchSize={file.PatchSize}, DownloadUrl={!string.IsNullOrEmpty(file.DownloadUrl)}");
+
+                        if (!string.IsNullOrEmpty(file.PatchUrl) && file.PatchSize > 0)
+                        {
+                            Logger.Info("UpdateService", $"[DELTA-APPLY] Attempting delta patch for {fileShortName} from {file.PatchUrl}");
+                            try
+                            {
+                                var localFilePath = Path.Combine(appDir, normalizedName);
+                                if (File.Exists(localFilePath))
+                                {
+                                    Logger.Info("UpdateService", $"[DELTA-APPLY] Local file exists for patching: {localFilePath}");
+                                    ReportProgress(progress, UpdateStage.Downloading, 35 + (completed * 50 / totalFiles),
+                                        $"Downloading patch {completed}/{totalFiles}: {fileShortName}",
+                                        logEntry: $"  [{completed}/{totalFiles}] Downloading delta patch: {fileShortName}",
+                                        currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
+
+                                    var patchPath = Path.Combine(tempDir, normalizedName + ".patch");
+                                    var patchDir2 = Path.GetDirectoryName(patchPath);
+                                    if (patchDir2 != null && !Directory.Exists(patchDir2)) Directory.CreateDirectory(patchDir2);
+
+                                    Logger.Info("UpdateService", $"[DELTA-APPLY] Downloading patch to: {patchPath}");
+                                    if (await DownloadFileAsync(file.PatchUrl, patchPath, progress, cancellationToken))
+                                    {
+                                        ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
+                                            $"Patching {completed}/{totalFiles}: {fileShortName}",
+                                            logEntry: $"  [{completed}/{totalFiles}] Applying delta patch: {fileShortName}",
+                                            currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
+
+                                        var oldData = await File.ReadAllBytesAsync(localFilePath, cancellationToken);
+                                        var patchData = await File.ReadAllBytesAsync(patchPath, cancellationToken);
+
+                                        var patch = new DeltaPatch
+                                        {
+                                            Data = patchData,
+                                            OldFileHash = file.OldHash,
+                                            NewFileHash = file.Hash,
+                                            NewFileSize = file.Size
+                                        };
+
+                                        Logger.Info("UpdateService", $"[DELTA-APPLY] Applying patch to {fileShortName}: oldData={oldData.Length} bytes, patch={patchData.Length} bytes");
+                                        var newData = await DeltaUpdateService.Instance.ApplyPatchAsync(oldData, patch, cancellationToken);
+                                        Logger.Info("UpdateService", $"[DELTA-APPLY] Patch applied, newData={newData.Length} bytes, writing to {destPath}");
+                                        await File.WriteAllBytesAsync(destPath, newData, cancellationToken);
+
+                                        // Verify hash
+                                        var actualHash = await CalculateHashAsync(destPath);
+                                        Logger.Info("UpdateService", $"[DELTA-APPLY] Hash verification: expected={file.Hash}, actual={actualHash}");
+                                        if (!actualHash.Equals(file.Hash, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            Logger.Warning("UpdateService", $"[DELTA-APPLY] Patch result hash mismatch for {normalizedName}, falling back");
+                                            File.Delete(destPath);
+                                            throw new InvalidOperationException("Patch hash mismatch");
+                                        }
+
+                                        totalBytesSaved += (file.Size - file.PatchSize);
+                                        Logger.Info("UpdateService", $"[DELTA-APPLY] ✓ Successfully patched {fileShortName}");
+                                        ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
+                                            $"Patched {completed}/{totalFiles}: {fileShortName}",
+                                            logEntry: $"  [{completed}/{totalFiles}] ✓ Patched: {fileShortName} (saved {FormatBytes(file.Size - file.PatchSize)})",
+                                            currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
+
+                                        TryDeleteFile(patchPath);
+                                        continue; // Skip full download
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Warning("UpdateService", $"[DELTA-APPLY] ✗ Delta patch failed for {normalizedName}: {ex.Message}");
+                                Logger.Debug("UpdateService", $"[DELTA-APPLY] Patch failure stack trace: {ex.StackTrace}");
+                                ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
+                                    $"Patch failed for {fileShortName}, using fallback...",
+                                    logEntry: $"  [{completed}/{totalFiles}] ⚠ Patch failed: {fileShortName}, falling back",
+                                    currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
+                            }
+                        }
+
+                        // Try extracting from downloaded ZIP if available
+                        if (extractedZipDir != null)
+                        {
+                            var zipSourcePath = FindFileInExtractedZip(extractedZipDir, normalizedName);
+                            if (zipSourcePath != null)
+                            {
+                                File.Copy(zipSourcePath, destPath, overwrite: true);
+
+                                ReportProgress(progress, UpdateStage.Patching, 35 + (completed * 50 / totalFiles),
+                                    $"Staged {completed}/{totalFiles}: {fileShortName}",
+                                    logEntry: $"  [{completed}/{totalFiles}] ✓ Extracted: {fileShortName}",
+                                    currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
+                                continue;
+                            }
+                            else
+                            {
+                                Logger.Warning("UpdateService", $"File not found in ZIP: {normalizedName}");
+                            }
+                        }
+
+                        // Full file download (fallback or individual asset available)
+                        if (!string.IsNullOrEmpty(file.DownloadUrl))
+                        {
+                            ReportProgress(progress, UpdateStage.Downloading, 35 + (completed * 50 / totalFiles),
+                                $"Downloading {completed}/{totalFiles}: {fileShortName}",
+                                logEntry: $"  [{completed}/{totalFiles}] Downloading: {fileShortName}",
                                 currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
-                            continue;
+
+                            if (!await DownloadFileAsync(file.DownloadUrl, destPath, progress, cancellationToken))
+                                throw new Exception($"Failed to download {fileShortName}");
                         }
                         else
                         {
-                            Logger.Warning("UpdateService", $"File not found in ZIP: {normalizedName}");
+                            Logger.Error("UpdateService", $"No download source available for {normalizedName}");
+                            throw new Exception($"No download source available for {fileShortName}");
                         }
-                    }
 
-                    // Full file download (fallback or individual asset available)
-                    if (!string.IsNullOrEmpty(file.DownloadUrl))
-                    {
-                        ReportProgress(progress, UpdateStage.Downloading, 35 + (completed * 50 / totalFiles),
-                            $"Downloading {completed}/{totalFiles}: {fileShortName}",
-                            logEntry: $"  [{completed}/{totalFiles}] Downloading: {fileShortName}",
-                            currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
-
-                        if (!await DownloadFileAsync(file.DownloadUrl, destPath, progress, cancellationToken))
-                            return false;
-                    }
-                    else
-                    {
-                        Logger.Error("UpdateService", $"No download source available for {normalizedName}");
-                        return false;
-                    }
-
-                    // --- SECURITY: Hash/Signature Verification ---
-                    if (_verifySignature && !string.IsNullOrEmpty(file.Signature))
-                    {
-                        ReportProgress(progress, UpdateStage.Verifying, 85 + (completed * 10 / totalFiles),
-                            $"Verifying {fileShortName}...",
-                            logEntry: $"  [{completed}/{totalFiles}] Verifying integrity: {fileShortName}",
-                            currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
-
-                        var actualHash = await CalculateHashAsync(destPath);
-                        if (!actualHash.Equals(file.Hash, StringComparison.OrdinalIgnoreCase))
+                        // --- SECURITY: Hash/Signature Verification ---
+                        if (_verifySignature && !string.IsNullOrEmpty(file.Signature))
                         {
-                            Logger.Error("UpdateService", $"SECURITY ALERT: Integrity check failed for {normalizedName}! Expected {file.Hash}, got {actualHash}");
-                            ReportProgress(progress, UpdateStage.Failed, 0, $"Integrity check failed for {fileShortName}",
-                                logEntry: $"  ✗ FAILED integrity check: {fileShortName}", isDelta: true);
-                            return false;
+                            ReportProgress(progress, UpdateStage.Verifying, 85 + (completed * 10 / totalFiles),
+                                $"Verifying {fileShortName}...",
+                                logEntry: $"  [{completed}/{totalFiles}] Verifying integrity: {fileShortName}",
+                                currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
+
+                            var actualHash = await CalculateHashAsync(destPath);
+                            if (!actualHash.Equals(file.Hash, StringComparison.OrdinalIgnoreCase))
+                            {
+                                Logger.Error("UpdateService", $"SECURITY ALERT: Integrity check failed for {normalizedName}! Expected {file.Hash}, got {actualHash}");
+                                throw new Exception($"Integrity check failed for {fileShortName}");
+                            }
+                            Logger.Info("UpdateService", $"Integrity verified for {normalizedName}");
                         }
-                        Logger.Info("UpdateService", $"Integrity verified for {normalizedName}");
                     }
+
+                    Logger.Info("UpdateService", $"[DELTA-APPLY] Completed processing {completed} files, total bytes saved: {FormatBytes(totalBytesSaved)}");
+
+                    if (totalBytesSaved > 0)
+                    {
+                        Logger.Info("UpdateService", $"[DELTA-APPLY] Delta patching saved {FormatBytes(totalBytesSaved)} total");
+                        ReportProgress(progress, UpdateStage.Staging, 90, "Preparing to apply update...",
+                            logEntry: $"Delta patching saved {FormatBytes(totalBytesSaved)} in bandwidth.", isDelta: true);
+                    }
+
+                    // Clean up extracted ZIP directory
+                    if (extractedZipDir != null)
+                    {
+                        try { Directory.Delete(extractedZipDir, true); } catch { /* best effort */ }
+                    }
+
+                    ReportProgress(progress, UpdateStage.Applying, 95, "Applying update...",
+                        logEntry: $"All {totalFiles} files staged. Launching update script...", isDelta: true);
+
+                    var scriptPath = CreateUpdateScript(stagingDir);
+                    if (scriptPath == null) throw new Exception("Failed to create update script");
+
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = $"-ExecutionPolicy Bypass -WindowStyle Normal -File \"{scriptPath}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = false
+                    });
+
+                    ReportProgress(progress, UpdateStage.Complete, 100, "Update ready — restarting...",
+                        logEntry: "Update script launched. Application will restart.", isDelta: true);
+                    return true;
                 }
-
-                Logger.Info("UpdateService", $"[DELTA-APPLY] Completed processing {completed} files, total bytes saved: {FormatBytes(totalBytesSaved)}");
-
-                if (totalBytesSaved > 0)
+                catch (Exception ex)
                 {
-                    Logger.Info("UpdateService", $"[DELTA-APPLY] Delta patching saved {FormatBytes(totalBytesSaved)} total");
-                    ReportProgress(progress, UpdateStage.Staging, 90, "Preparing to apply update...",
-                        logEntry: $"Delta patching saved {FormatBytes(totalBytesSaved)} in bandwidth.", isDelta: true);
+                    Logger.Warning("UpdateService", "Differential update failed, falling back to full installer", ex);
+                    ReportProgress(progress, UpdateStage.Downloading, 0, "Differential update failed. Falling back...",
+                        logEntry: $"⚠ Differential update failed: {ex.Message}. Falling back to full installer.");
+                    
+                    // Fall through to full installer download path
                 }
-
-                // Clean up extracted ZIP directory
-                if (extractedZipDir != null)
-                {
-                    try { Directory.Delete(extractedZipDir, true); } catch { /* best effort */ }
-                }
-
-                ReportProgress(progress, UpdateStage.Applying, 95, "Applying update...",
-                    logEntry: $"All {totalFiles} files staged. Launching update script...", isDelta: true);
-
-                var scriptPath = CreateUpdateScript(stagingDir);
-                if (scriptPath == null) return false;
-
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "powershell.exe",
-                    Arguments = $"-ExecutionPolicy Bypass -WindowStyle Normal -File \"{scriptPath}\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = false
-                });
-
-                ReportProgress(progress, UpdateStage.Complete, 100, "Update ready — restarting...",
-                    logEntry: "Update script launched. Application will restart.", isDelta: true);
-                return true;
             }
 
             // Full installer download path
@@ -1055,7 +1066,21 @@ public class UpdateService : IUpdateService
             {
                 // Download the file
                 Logger.Info("UpdateService", "Downloading update file...");
-                if (!await DownloadFileAsync(updateInfo.DownloadUrl, downloadPath, progress, cancellationToken))
+                var downloadUrl = !string.IsNullOrEmpty(updateInfo.FullInstallerUrl) ? updateInfo.FullInstallerUrl : updateInfo.DownloadUrl;
+                
+                // If we are using the full installer URL, update the filename to match
+                if (!string.IsNullOrEmpty(updateInfo.FullInstallerUrl) && updateInfo.FullInstallerUrl != updateInfo.DownloadUrl)
+                {
+                    var uri = new Uri(updateInfo.FullInstallerUrl);
+                    var newFileName = Path.GetFileName(uri.LocalPath);
+                    if (!string.IsNullOrEmpty(newFileName))
+                    {
+                        updateInfo.FileName = newFileName;
+                        downloadPath = Path.Combine(tempDir, updateInfo.FileName);
+                    }
+                }
+
+                if (!await DownloadFileAsync(downloadUrl, downloadPath, progress, cancellationToken))
                     return false;
 
                 // Cache the downloaded file with its hash
@@ -2311,6 +2336,7 @@ public class UpdateInfo
     public Version CurrentVersion { get; set; } = new(0, 0, 0);
     public Version LatestVersion { get; set; } = new(0, 0, 0);
     public string DownloadUrl { get; set; } = "";
+    public string FullInstallerUrl { get; set; } = "";
     public string FileName { get; set; } = "";
     public string ReleaseNotes { get; set; } = "";
     public DateTime ReleaseDate { get; set; }

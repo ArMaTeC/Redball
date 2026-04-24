@@ -138,7 +138,6 @@ public sealed class DiagnosticsExportService
         try
         {
             var analytics = new { SessionCount = 0, TotalDuration = TimeSpan.Zero }; // Placeholder
-            // var analytics = AnalyticsService.Instance.GetSessionStats();
             var destPath = Path.Combine(targetDir, "analytics.json");
             var json = JsonSerializer.Serialize(analytics, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(destPath, json);
@@ -183,7 +182,6 @@ public sealed class DiagnosticsExportService
         try
         {
             info["PowerPlan"] = "Unknown"; // Placeholder
-            // info["PowerPlan"] = PowerPlanService.Instance.GetCurrentPlanName();
         }
         catch (Exception ex)
         {
@@ -200,7 +198,6 @@ public sealed class DiagnosticsExportService
         try
         {
             var state = new { Status = "Unknown" }; // Placeholder
-            // var state = SessionStateService.Instance.GetCurrentState();
             var destPath = Path.Combine(targetDir, "session_state.json");
             var json = JsonSerializer.Serialize(state, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(destPath, json);
@@ -251,10 +248,8 @@ public sealed class DiagnosticsExportService
                 ["BatteryMonitor"] = IsServiceRunning(typeof(BatteryMonitorService)),
                 ["NetworkMonitor"] = IsServiceRunning(typeof(NetworkMonitorService)),
                 ["IdleDetection"] = IsServiceRunning(typeof(IdleDetectionService)),
-                ["Schedule"] = IsServiceRunning(typeof(ScheduleService)),
-                // ["Hotkey"] = IsServiceRunning(typeof(HotkeyService))
+                ["Schedule"] = IsServiceRunning(typeof(ScheduleService))
             },
-            // ["LastUpdateCheck"] = UpdateService.Instance.GetLastCheckTime(),
             ["EncryptionTier"] = ConfigService.Instance.Config.EncryptConfig ? "Enabled" : "Disabled"
         };
 
