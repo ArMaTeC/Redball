@@ -274,11 +274,12 @@ public partial class App : Application
             else if (cfg.MinimizeOnStart)
             {
                 // MinimizeOnStart: show as minimized button in the taskbar
+                // Note: Don't minimize before Show() - at boot the shell may not be ready.
+                // The actual minimize happens in OnMainWindowLoaded after the window is loaded.
                 _startupMinimizeToTaskbar = true;
-                _mainWindow.WindowState = WindowState.Minimized;
                 _mainWindow.ShowInTaskbar = true;
                 _mainWindow.Show();
-                Services.Logger.Debug("App", "MainWindow initialized minimized to taskbar (MinimizeOnStart)");
+                Services.Logger.Debug("App", "MainWindow shown, will minimize after load (MinimizeOnStart)");
             }
             else
             {
@@ -389,9 +390,18 @@ public partial class App : Application
         Services.Logger.Info("App", "MainWindow Loaded event fired");
         try
         {
-            if (_isStartupTestMode || _startupMinimizeToTaskbar)
+            if (_isStartupTestMode)
             {
-                Services.Logger.Debug("App", "MainWindow kept visible at startup (test-mode or MinimizeOnStart)");
+                Services.Logger.Debug("App", "MainWindow kept visible at startup (test-mode)");
+                return;
+            }
+
+            if (_startupMinimizeToTaskbar && _mainWindow != null)
+            {
+                // Minimize after loaded - shell is now ready so this works reliably at boot
+                _mainWindow.WindowState = WindowState.Minimized;
+                _mainWindow.ShowInTaskbar = true;
+                Services.Logger.Debug("App", "MainWindow minimized to taskbar after load (MinimizeOnStart)");
                 return;
             }
 
