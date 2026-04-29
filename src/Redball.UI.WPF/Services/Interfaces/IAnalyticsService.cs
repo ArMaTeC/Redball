@@ -17,6 +17,7 @@ public interface IAnalyticsService : IDisposable
     void TrackSessionStart();
     void TrackSessionEnd();
     AnalyticsSummary GetSummary();
+    System.Collections.Generic.IReadOnlyList<int> GetFeatureDailyUsage(string featureName, int days);
     string Export();
     void Clear();
 }

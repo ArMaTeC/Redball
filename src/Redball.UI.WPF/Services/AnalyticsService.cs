@@ -585,6 +585,36 @@ public class AnalyticsService : IAnalyticsService
     }
 
     /// <summary>
+    /// Get daily usage array for a specific feature for the last N days.
+    /// </summary>
+    public IReadOnlyList<int> GetFeatureDailyUsage(string featureName, int days)
+    {
+        _lock.EnterReadLock();
+        try
+        {
+            var result = new List<int>(days);
+            var today = DateTime.UtcNow.Date;
+            if (_data.Features.TryGetValue(featureName, out var feature))
+            {
+                for (int i = days - 1; i >= 0; i--)
+                {
+                    var dayKey = GetDayKey(today.AddDays(-i));
+                    result.Add(feature.DailyUsage.GetValueOrDefault(dayKey));
+                }
+            }
+            else
+            {
+                for (int i = 0; i < days; i++) result.Add(0);
+            }
+            return result;
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    /// <summary>
     /// Export analytics data (for user to view or share)
     /// </summary>
     public string Export()

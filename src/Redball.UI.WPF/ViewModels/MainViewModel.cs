@@ -154,18 +154,16 @@ public class MainViewModel : ViewModelBase
                 AvgCharsPerMinute = 60000.0 / avgDelayMs;
             }
 
-            // For now, TypeThing session count is tracked via analytics
-            // We could add a proper TypeThingStatsService in the future
-            // For now, estimate based on clipboard history size if available
-            // or just show placeholder that updates occasionally
-            if (TypeThingSessionsToday == 0)
+            // Real TypeThing stats from Analytics and SessionStats
+            TypeThingSessionsToday = AnalyticsService.Instance.GetFeatureDailyUsage("typething.completed", 1)[0];
+            
+            if (_sessionStats.DailyCharsTyped.TryGetValue(today, out var chars))
             {
-                // Will be populated from MainWindow.TypeThingHistory when available
-                TypeThingSessionsToday = 0; // Placeholder until real tracking added
+                CharsTypedToday = chars;
             }
-            if (CharsTypedToday == 0)
+            else
             {
-                CharsTypedToday = 0; // Placeholder until real tracking added
+                CharsTypedToday = 0;
             }
 
             // Notify property changes for formatted display strings
@@ -188,8 +186,7 @@ public class MainViewModel : ViewModelBase
     /// </summary>
     public void ReportTypeThingUsage(int charsTyped)
     {
-        TypeThingSessionsToday++;
-        CharsTypedToday += charsTyped;
+        _sessionStats.RecordCharsTyped(charsTyped);
         UpdateHomeStats();
     }
 
@@ -206,11 +203,9 @@ public class MainViewModel : ViewModelBase
                 })
                 .ToArray();
 
-            var analyticsSummary = AnalyticsService.Instance.GetSummary();
-            var baseTypeThing = Math.Max(1, analyticsSummary.TypeThingCompletions);
-            var typeThingSeries = keepAwakeHours
-                .Select((hours, index) => Math.Max(0.25, (hours * 0.55) + ((index + 1) * baseTypeThing / 14.0)))
-                .ToArray();
+            // Real TypeThing historical data from analytics!
+            var typeThingDaily = AnalyticsService.Instance.GetFeatureDailyUsage("typething.completed", 7);
+            var typeThingSeries = typeThingDaily.Select(count => (double)count).ToArray();
 
             TypeThingChartPoints = BuildChartPoints(typeThingSeries, 270, 60);
             ActivityChartPoints = BuildChartPoints(keepAwakeHours, 400, 80);

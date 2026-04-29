@@ -47,6 +47,16 @@ public class SessionStatsService
         ? DateTime.Now - _currentSessionStart.Value
         : TimeSpan.Zero;
     public IReadOnlyDictionary<string, double> DailyHours => _data.DailyHours;
+    public IReadOnlyDictionary<string, int> DailyCharsTyped => _data.DailyCharsTyped;
+
+    public void RecordCharsTyped(int charsTyped)
+    {
+        var dayKey = DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        _data.DailyCharsTyped.TryGetValue(dayKey, out var existing);
+        _data.DailyCharsTyped[dayKey] = existing + charsTyped;
+        Save();
+        StatsUpdated?.Invoke(this, EventArgs.Empty);
+    }
 
     public void StartSession()
     {
@@ -181,4 +191,5 @@ public class SessionStatsData
     public TimeSpan TotalUptime { get; set; }
     public TimeSpan LongestSession { get; set; }
     public Dictionary<string, double> DailyHours { get; set; } = new();
+    public Dictionary<string, int> DailyCharsTyped { get; set; } = new();
 }
