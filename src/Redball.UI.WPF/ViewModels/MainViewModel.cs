@@ -41,6 +41,11 @@ public class MainViewModel : ViewModelBase
     private PointCollection _typeThingChartPoints = new();
     private PointCollection _activityChartPoints = new();
 
+    // Live scrolling chart data (60 points)
+    private readonly System.Collections.Generic.Queue<double> _liveKeepAwakeActivity = new(System.Linq.Enumerable.Repeat(0.0, 60));
+    private readonly System.Collections.Generic.Queue<double> _liveTypeThingActivity = new(System.Linq.Enumerable.Repeat(0.0, 60));
+    private double _typeThingBurst = 0;
+
     public bool PreventDisplaySleep
     {
         get => _keepAwake.PreventDisplaySleep;
@@ -114,8 +119,8 @@ public class MainViewModel : ViewModelBase
         _statusBarTimer.Tick += (_, _) => UpdateStatusBar();
         _statusBarTimer.Start();
 
-        // Home stats timer - updates every 30 seconds
-        _homeStatsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        // Home stats timer - updates frequently for live monitor
+        _homeStatsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _homeStatsTimer.Tick += (_, _) => UpdateHomeStats();
         _homeStatsTimer.Start();
         UpdateHomeStats(); // Initial load
@@ -143,6 +148,11 @@ public class MainViewModel : ViewModelBase
             else
             {
                 KeepAwakeTimeToday = TimeSpan.Zero;
+            }
+
+            if (_sessionStats.CurrentSessionStart.HasValue)
+            {
+                KeepAwakeTimeToday += _sessionStats.CurrentSessionDuration;
             }
 
             // TypeThing stats - calculate from typing speed settings
@@ -187,6 +197,7 @@ public class MainViewModel : ViewModelBase
     public void ReportTypeThingUsage(int charsTyped)
     {
         _sessionStats.RecordCharsTyped(charsTyped);
+        _typeThingBurst += charsTyped;
         UpdateHomeStats();
     }
 
@@ -194,21 +205,16 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var today = DateTime.Today;
-            var keepAwakeHours = Enumerable.Range(0, 7)
-                .Select(offset =>
-                {
-                    var day = today.AddDays(-(6 - offset)).ToString("yyyy-MM-dd");
-                    return _sessionStats.DailyHours.TryGetValue(day, out var hours) ? hours : 0;
-                })
-                .ToArray();
+            // Maintain 60-point scrolling live graph
+            _liveKeepAwakeActivity.Dequeue();
+            _liveKeepAwakeActivity.Enqueue(_isActive ? 1.0 : 0.0);
 
-            // Real TypeThing historical data from analytics!
-            var typeThingDaily = AnalyticsService.Instance.GetFeatureDailyUsage("typething.completed", 7);
-            var typeThingSeries = typeThingDaily.Select(count => (double)count).ToArray();
+            _liveTypeThingActivity.Dequeue();
+            _liveTypeThingActivity.Enqueue(_typeThingBurst);
+            _typeThingBurst = 0; // Reset after consuming
 
-            TypeThingChartPoints = BuildChartPoints(typeThingSeries, 270, 60);
-            ActivityChartPoints = BuildChartPoints(keepAwakeHours, 400, 80);
+            TypeThingChartPoints = BuildChartPoints(_liveTypeThingActivity.ToArray(), 270, 60);
+            ActivityChartPoints = BuildChartPoints(_liveKeepAwakeActivity.ToArray(), 400, 80);
         }
         catch (Exception ex)
         {
@@ -224,7 +230,8 @@ public class MainViewModel : ViewModelBase
             return points;
         }
 
-        var max = Math.Max(1, values.Max());
+        var maxVal = values.Max();
+        var max = maxVal > 0 ? maxVal * 1.2 : 1;
         var stepX = values.Count == 1 ? width : width / (values.Count - 1);
 
         for (var i = 0; i < values.Count; i++)

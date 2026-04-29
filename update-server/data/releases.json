@@ -1497,6 +1497,73 @@
         "totalPatches": 8,
         "totalSavings": 2826006
       }
+    },
+    {
+      "version": "2.1.717",
+      "notes": "Release 2.1.717 (stable channel)",
+      "channel": "stable",
+      "date": "2026-04-29T07:26:44.865Z",
+      "files": [
+        {
+          "name": "Redball-2.1.717-Setup.exe",
+          "size": 67053893,
+          "hash": "381ae95d346332da84cd9633632692cc6615f42efdd87e1774e9d9c3c40a3b15",
+          "downloads": 0,
+          "uploadedAt": "2026-04-29T07:26:44.979Z"
+        },
+        {
+          "name": "Redball-2.1.717.zip",
+          "size": 8074821,
+          "hash": "ec9e9bc04a9b31b5591a04f093e3a51e88d4034aa6c43c0125f1328a118bb994",
+          "downloads": 0,
+          "uploadedAt": "2026-04-29T07:26:45.000Z"
+        },
+        {
+          "name": "Redball.UI.WPF.exe",
+          "size": 373760,
+          "hash": "cb387e1da937716d74910d3b50d0e95214d9565d7ee8699525a1b991716b8c3c",
+          "downloads": 0,
+          "uploadedAt": "2026-04-29T07:26:45.001Z"
+        },
+        {
+          "name": "Redball.UI.WPF.dll",
+          "size": 1723392,
+          "hash": "156e461cacc6fc54b906e03964aad4b0212009aed520f78c003bbbd79a6ce841",
+          "downloads": 0,
+          "uploadedAt": "2026-04-29T07:26:45.004Z"
+        },
+        {
+          "name": "Redball.UI.WPF.deps.json",
+          "size": 42640,
+          "hash": "6c9c814abd62ddb864242a7505fb71ee006cb98cf12c4ed5c87003bcea9a4e15",
+          "downloads": 0,
+          "uploadedAt": "2026-04-29T07:26:45.004Z"
+        },
+        {
+          "name": "Redball.UI.WPF.runtimeconfig.json",
+          "size": 586,
+          "hash": "42bdf3ff1bc458718481097cb192e129babe98117bfdcb7da9ce75bb0af4fbb8",
+          "downloads": 0,
+          "uploadedAt": "2026-04-29T07:26:45.005Z"
+        },
+        {
+          "name": "patch-manifest.json.patch",
+          "size": 866,
+          "hash": "749a94ace895ca48a1b7b8825e9f1fda89c13afdb5e00184fcbd8f89264dd1ae",
+          "downloads": 0,
+          "uploadedAt": "2026-04-29T07:26:45.147Z",
+          "patchFor": "patches/patch-manifest.json",
+          "originalSize": 6630,
+          "savings": 5764
+        }
+      ],
+      "totalDownloads": 0,
+      "patchInfo": {
+        "fromVersion": "2.1.716",
+        "generatedAt": "2026-04-29T07:26:45.143Z",
+        "totalPatches": 1,
+        "totalSavings": 5764
+      }
     }
   ]
 }
