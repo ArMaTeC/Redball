@@ -84,7 +84,7 @@ jobs:
 
     - name: Attach SBOM to Release
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         files: sbom/_manifest/spdx_2.2/manifest.spdx.json
 
