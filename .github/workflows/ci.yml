@@ -28,7 +28,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup PowerShell
       shell: pwsh
@@ -77,7 +77,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Run Security Scan
       shell: pwsh
@@ -120,7 +120,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup .NET 10
       uses: actions/setup-dotnet@v5
@@ -177,7 +177,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup .NET 10
       uses: actions/setup-dotnet@v5
@@ -286,7 +286,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup .NET 10
       uses: actions/setup-dotnet@v5
@@ -334,7 +334,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Download WPF artifact
       uses: actions/download-artifact@v8
