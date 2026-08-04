@@ -1,0 +1,22 @@
+## ISS-012: `throw new Exception` in audit hash chain verification
+
+### File
+`/root/Redball/src/Redball.Core/Security/SecurityAuditService.cs`
+
+### Original
+```csharp
+                    var entry = JsonSerializer.Deserialize<AuditEntry>(line);
+                    if (entry == null) throw new Exception("Invalid JSON formatting");
+```
+
+### Replacement
+```csharp
+                    var entry = JsonSerializer.Deserialize<AuditEntry>(line);
+                    if (entry == null) throw new InvalidDataException("Invalid JSON formatting in audit log");
+```
+
+### Reason
+Uses `InvalidDataException` (or a custom audit exception) instead of the base `Exception`, improving exception classification and caller handling.
+
+### Verification
+`dotnet build src/Redball.Core/Redball.Core.csproj`

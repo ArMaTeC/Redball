@@ -1,0 +1,62 @@
+## ISS-010: Generic `throw new Exception` in update installer
+
+### File
+`/root/Redball/src/Redball.UI.WPF/Services/UpdateService.cs`
+
+### Original
+```csharp
+                        var zipPath = Path.Combine(tempDir, updateInfo.FileName);
+                        if (!await DownloadFileAsync(updateInfo.DownloadUrl, zipPath, progress, cancellationToken))
+                            throw new Exception("Failed to download ZIP for differential update");
+
+                        ReportProgress(progress, UpdateStage.Patching, 30, "Extracting changed files from update package...",
+                            logEntry: "ZIP downloaded. Extracting changed files only...", isDelta: true);
+
+                        extractedZipDir = Path.Combine(tempDir, "zip-extract");
+                        if (!ExtractZip(zipPath, extractedZipDir))
+                            throw new Exception("Failed to extract ZIP for differential update");
+```
+
+### Replacement
+```csharp
+                        var zipPath = Path.Combine(tempDir, updateInfo.FileName);
+                        if (!await DownloadFileAsync(updateInfo.DownloadUrl, zipPath, progress, cancellationToken))
+                            throw new HttpRequestException("Failed to download ZIP for differential update");
+
+                        ReportProgress(progress, UpdateStage.Patching, 30, "Extracting changed files from update package...",
+                            logEntry: "ZIP downloaded. Extracting changed files only...", isDelta: true);
+
+                        extractedZipDir = Path.Combine(tempDir, "zip-extract");
+                        if (!ExtractZip(zipPath, extractedZipDir))
+                            throw new InvalidOperationException("Failed to extract ZIP for differential update");
+```
+
+### Original (single-file download)
+```csharp
+                            if (!await DownloadFileAsync(file.DownloadUrl, destPath, progress, cancellationToken))
+                                throw new Exception($"Failed to download {fileShortName}");
+```
+
+### Replacement
+```csharp
+                            if (!await DownloadFileAsync(file.DownloadUrl, destPath, progress, cancellationToken))
+                                throw new HttpRequestException($"Failed to download {fileShortName}");
+```
+
+### Original (integrity failure)
+```csharp
+                                Logger.Error("UpdateService", $"SECURITY ALERT: Integrity check failed for {normalizedName}! Expected {file.Hash}, got {actualHash}");
+                                throw new Exception($"Integrity check failed for {fileShortName}");
+```
+
+### Replacement
+```csharp
+                                Logger.Error("UpdateService", $"SECURITY ALERT: Integrity check failed for {normalizedName}! Expected {file.Hash}, got {actualHash}");
+                                throw new InvalidDataException($"Integrity check failed for {fileShortName}");
+```
+
+### Reason
+Replaces base `Exception` with semantically correct types (`HttpRequestException`, `InvalidOperationException`, `InvalidDataException`) so callers can distinguish network, extraction, and integrity failures.
+
+### Verification
+`dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj`

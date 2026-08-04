@@ -1,0 +1,62 @@
+## ISS-006: update-server exposes build endpoint via pty.spawn
+
+### File
+`/root/Redball/update-server/server.js`
+
+### Original (auto-release argument)
+```javascript
+    const ptyProcess = pty.spawn('bash', [scriptPath, 'auto-release'], {
+        name: 'xterm-color',
+        cols: 120,
+        rows: 30,
+        cwd: PROJECT_ROOT,
+        env: { ...process.env, FORCE_COLOR: '1', BUILD_BY_SERVICE: '1' }
+    });
+```
+
+### Replacement
+```javascript
+    const allowedBuildTypes = ['windows', 'linux', 'macos', 'test'];
+    const buildType = allowedBuildTypes.includes(req.body?.type) ? req.body.type : 'windows';
+    const ptyProcess = pty.spawn('bash', [scriptPath, buildType], {
+        name: 'xterm-color',
+        cols: 120,
+        rows: 30,
+        cwd: PROJECT_ROOT,
+        env: { ...process.env, FORCE_COLOR: '1', BUILD_BY_SERVICE: '1' }
+    });
+```
+
+### Original (pm2 self-restart)
+```javascript
+        if (exitCode === 0 && restartNeeded) {
+            console.log('[BUILD] Restart signaled, scheduling self-restart in 5s...');
+            buildState.log.push({ timestamp: Date.now(), message: '[SYSTEM] Restarting server to apply updates...' });
+            saveBuildStateImmediate();
+
+            const { exec } = require('child_process');
+            setTimeout(() => {
+                exec('pm2 restart redball-update-server', (err) => {
+                    if (err) {
+                        console.error('[BUILD] Self-restart failed, exiting instead:', err);
+                        process.exit(0);
+                    }
+                });
+            }, 5000);
+        }
+```
+
+### Replacement
+```javascript
+        if (exitCode === 0 && restartNeeded) {
+            console.log('[BUILD] Restart signaled. Manual restart is required to apply the update.');
+            buildState.log.push({ timestamp: Date.now(), message: '[SYSTEM] Build succeeded; manual restart required.' });
+            saveBuildStateImmediate();
+        }
+```
+
+### Reason
+Removes the hardcoded `auto-release` build argument and the `pm2` shell execution path, reducing remote code execution risk. Validate build type and require a manual restart outside the PTY.
+
+### Verification
+Manual build-flow test on a staging server.

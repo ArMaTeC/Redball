@@ -52,9 +52,7 @@ Redball/
 │   │   ├── ViewModels/           # MVVM view models
 │   │   ├── Themes/               # Theme XAML dictionaries
 │   │   └── Interop/              # Win32 P/Invoke declarations
-│   ├── Redball.Core/             # Core shared library
-│   ├── Redball.Service/          # Windows Service components
-│   └── Redball.SessionHelper/    # Session helper executable
+│   └── Redball.Core/             # Core shared library
 ├── tests/                          # Unit tests (xUnit)
 ├── tests-e2e/                      # E2E tests
 ├── tests-integration/              # Integration tests

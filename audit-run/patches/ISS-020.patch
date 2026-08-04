@@ -1,0 +1,22 @@
+## ISS-020: NSIS installer version does not match build props
+
+### File
+`/root/Redball/installer/Redball.nsi`
+
+### Original
+```nsis
+!define PRODUCT_VERSION "2.1.443.0"
+!define PRODUCT_VERSION_SHORT "2.1.443"
+```
+
+### Replacement
+```nsis
+!define PRODUCT_VERSION "2.1.720.0"
+!define PRODUCT_VERSION_SHORT "2.1.720"
+```
+
+### Reason
+Aligns the NSIS installer version with `Directory.Build.props` so the published installer matches the assembly version.
+
+### Verification
+`grep PRODUCT_VERSION installer/Redball.nsi` and `grep Version Directory.Build.props` should show the same release.

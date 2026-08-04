@@ -1,0 +1,40 @@
+## ISS-002: Hardcoded default admin credentials in update-server
+
+### File
+`/root/Redball/update-server/lib/auth.js`
+
+### Original
+```javascript
+const DEFAULT_USER = {
+    username: 'admin',
+    passwordHash: '$2b$10$vbyR65jpIlk9tN99d.p33u4A7mdwXcdarb.5iR72VlJScEF9CJaQi', // 'admin'
+    role: 'admin',
+    mfaEnabled: false,
+    mfaSecret: null,
+    createdAt: new Date().toISOString()
+};
+```
+
+### Replacement
+```javascript
+const DEFAULT_USER = (() => {
+    const hash = process.env.REDADMIN_INITIAL_HASH;
+    if (!hash) {
+        throw new Error('REDADMIN_INITIAL_HASH environment variable is required for first-run admin setup');
+    }
+    return {
+        username: 'admin',
+        passwordHash: hash,
+        role: 'admin',
+        mfaEnabled: false,
+        mfaSecret: null,
+        createdAt: new Date().toISOString()
+    };
+})();
+```
+
+### Reason
+Eliminates a committed, known default admin password. The server now refuses to start unless an administrator explicitly supplies the initial password hash via an environment variable.
+
+### Verification
+`npm test` + manual login test with a known hash.

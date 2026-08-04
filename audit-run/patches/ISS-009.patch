@@ -1,0 +1,52 @@
+## ISS-009: Browser extension content script matches all URLs
+
+### File
+`/root/Redball/browser-extension/manifest.json`
+
+### Original
+```json
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+```
+
+### Replacement
+```json
+  "content_scripts": [
+    {
+      "matches": ["http://localhost:5000/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+```
+
+### Original (web_accessible_resources)
+```json
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+```
+
+### Replacement
+```json
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["http://localhost:5000/*"]
+    }
+  ]
+```
+
+### Reason
+Narrows the content script and web-accessible resource scope from every page to the local Redball API, reducing privacy exposure and store-review risk.
+
+### Verification
+Load extension in a browser and confirm the content script is only injected on `http://localhost:5000/*`.

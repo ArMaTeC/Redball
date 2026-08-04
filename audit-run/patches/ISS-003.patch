@@ -1,0 +1,62 @@
+## ISS-003: Hardcoded default admin credentials in web-admin
+
+### File
+`/root/Redball/web-admin/server.js`
+
+### Original
+```javascript
+function getAdminUser() {
+  const defaultUser = {
+    username: 'admin',
+    // Default password: 'redball2026' - change after first login
+    passwordHash: '$2b$10$NH.q4MEoGZUuC4kHmv8B2uLh4OXdPVwa2Q/CKp/ORwSMG2XvhGQ8e'
+  };
+
+  try {
+    if (fs.existsSync(AUTH_FILE)) {
+      const auth = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf8'));
+      return auth.admin || defaultUser;
+    }
+  } catch (e) {
+    console.error('[AUTH] Error loading auth file:', e.message);
+  }
+
+  // Save default user
+  saveAdminUser(defaultUser);
+  return defaultUser;
+}
+```
+
+### Replacement
+```javascript
+function getAdminUser() {
+  const initialHash = process.env.REDADMIN_INITIAL_HASH;
+  if (!initialHash) {
+    throw new Error('REDADMIN_INITIAL_HASH environment variable is required for first-run admin setup');
+  }
+
+  const defaultUser = {
+    username: 'admin',
+    passwordHash: initialHash
+  };
+
+  try {
+    if (fs.existsSync(AUTH_FILE)) {
+      const auth = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf8'));
+      return auth.admin || defaultUser;
+    }
+  } catch (e) {
+    console.error('[AUTH] Error loading auth file:', e.message);
+  }
+
+  // Save default user
+  saveAdminUser(defaultUser);
+  return defaultUser;
+}
+```
+
+### Reason
+Removes the hardcoded `redball2026` default and forces an explicit initial admin hash at startup, preventing out-of-the-box credential exposure.
+
+### Verification
+`npm test` + manual login test.

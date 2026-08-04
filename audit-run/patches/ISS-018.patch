@@ -1,0 +1,37 @@
+## ISS-018: web-admin package.json declares fake built-in dependencies
+
+### File
+`/root/Redball/web-admin/package.json`
+
+### Original
+```json
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "child_process": "^1.0.2",
+    "express": "^5.2.1",
+    "fs": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.3",
+    "node-pty": "^1.1.0",
+    "path": "^0.12.7",
+    "tail": "^2.2.6",
+    "ws": "^8.20.0"
+  },
+```
+
+### Replacement
+```json
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "node-pty": "^1.1.0",
+    "tail": "^2.2.6",
+    "ws": "^8.20.0"
+  },
+```
+
+### Reason
+`fs`, `path`, and `child_process` are Node.js built-ins. The npm packages with the same names are placeholders and introduce supply-chain risk.
+
+### Verification
+After applying, run `npm install` to regenerate `package-lock.json`, then `node -c server.js` and `npm test`.

@@ -1,0 +1,78 @@
+## ISS-007: Unsanitized `version` path parameter used in filesystem operations
+
+### File
+`/root/Redball/update-server/server.js`
+
+### Add helper near the top of the file
+Add the following function after the `config` destructuring:
+
+```javascript
+function isValidVersion(version) {
+    return /^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9._-]+)?$/.test(version);
+}
+
+function safeReleaseDir(version) {
+    if (!isValidVersion(version)) {
+        throw new Error('Invalid version format');
+    }
+    const releaseDir = path.join(RELEASES_DIR, version);
+    const resolved = path.resolve(releaseDir);
+    const allowed = path.resolve(path.join(RELEASES_DIR, version));
+    if (!resolved.startsWith(allowed)) {
+        throw new Error('Version escapes release directory');
+    }
+    return releaseDir;
+}
+```
+
+### Original (delete release)
+```javascript
+    // Remove files
+    const releaseDir = path.join(RELEASES_DIR, req.params.version);
+    if (fs.existsSync(releaseDir)) {
+        fs.rmSync(releaseDir, { recursive: true, force: true });
+    }
+```
+
+### Replacement
+```javascript
+    // Remove files
+    let releaseDir;
+    try {
+        releaseDir = safeReleaseDir(req.params.version);
+    } catch (err) {
+        return res.status(400).json({ error: err.message });
+    }
+    if (fs.existsSync(releaseDir)) {
+        fs.rmSync(releaseDir, { recursive: true, force: true });
+    }
+```
+
+### Original (patches list)
+```javascript
+    const patchesDir = path.join(RELEASES_DIR, req.params.version, 'patches');
+
+    if (!fs.existsSync(patchesDir)) {
+        return res.json({ patches: [], fromVersion: null });
+    }
+```
+
+### Replacement
+```javascript
+    let patchesDir;
+    try {
+        patchesDir = path.join(safeReleaseDir(req.params.version), 'patches');
+    } catch (err) {
+        return res.status(400).json({ error: err.message });
+    }
+
+    if (!fs.existsSync(patchesDir)) {
+        return res.json({ patches: [], fromVersion: null });
+    }
+```
+
+### Reason
+Prevents directory-traversal through the `version` parameter by validating the format and confirming the resolved path stays inside `RELEASES_DIR`.
+
+### Verification
+`npm test` + targeted curl tests with `..` and other malicious `version` values.

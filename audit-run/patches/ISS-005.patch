@@ -1,0 +1,39 @@
+## ISS-005: Error messages leaked to clients in web-admin
+
+### File
+`/root/Redball/web-admin/server.js`
+
+### Original (build stop handler)
+```javascript
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+```
+
+### Replacement
+```javascript
+    } catch (err) {
+      console.error('[BUILD] Failed to stop build:', err);
+      res.status(500).json({ error: 'Failed to stop build' });
+    }
+```
+
+### Original (releases handler)
+```javascript
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+```
+
+### Replacement
+```javascript
+  } catch (err) {
+    console.error('[RELEASES] Failed to fetch releases:', err);
+    res.status(500).json({ error: 'Failed to fetch releases' });
+  }
+```
+
+### Reason
+Internal `Error` messages can expose file paths, stack details, or implementation internals. Return generic client messages and log the details server-side.
+
+### Verification
+`npm test` + targeted `curl` requests to confirm `{ error: '...' }` no longer contains internal `err.message`.

@@ -1,0 +1,44 @@
+## ISS-014: Non-atomic session stats save
+
+### File
+`/root/Redball/src/Redball.UI.WPF/Services/SessionStatsService.cs`
+
+### Original
+```csharp
+    private void Save()
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(_data, SerializerOptions);
+            File.WriteAllText(_statsFile, json);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("SessionStatsService", "Failed to save stats", ex);
+        }
+    }
+```
+
+### Replacement
+```csharp
+    private void Save()
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(_data, SerializerOptions);
+            var tempFile = _statsFile + ".tmp";
+            File.WriteAllText(tempFile, json);
+            File.Move(tempFile, _statsFile, overwrite: true);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("SessionStatsService", "Failed to save stats", ex);
+        }
+    }
+```
+
+### Reason
+Adopts the same atomic temp-file + `File.Move` pattern used elsewhere to avoid corrupting session stats on a crash.
+
+### Verification
+`dotnet build ...` and unit test.

@@ -1,0 +1,39 @@
+## ISS-011: Empty catch block in `GamingModeService`
+
+### File
+`/root/Redball/src/Redball.UI.WPF/Services/GamingModeService.cs`
+
+### Original
+```csharp
+            try
+            {
+                using var proc = System.Diagnostics.Process.GetProcessById((int)processId);
+                processName = proc.ProcessName;
+            }
+            catch { }
+```
+
+### Replacement
+```csharp
+            try
+            {
+                using var proc = System.Diagnostics.Process.GetProcessById((int)processId);
+                processName = proc.ProcessName;
+            }
+            catch (ArgumentException)
+            {
+                // Process exited between detection and lookup
+                processName = "Unknown";
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug("GamingModeService", $"Unexpected process lookup error for PID {processId}: {ex.Message}");
+                processName = "Unknown";
+            }
+```
+
+### Reason
+Catches only the expected `ArgumentException` (process already exited) and logs unexpected exceptions instead of silently discarding all errors.
+
+### Verification
+`dotnet build ...` and runtime test.

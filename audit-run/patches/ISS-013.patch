@@ -1,0 +1,30 @@
+## ISS-013: Non-atomic analytics data flush risks file corruption
+
+### File
+`/root/Redball/src/Redball.UI.WPF/Services/AnalyticsService.cs`
+
+### Original
+```csharp
+            _lock.EnterReadLock();
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            var json = JsonSerializer.Serialize(_data, options);
+            File.WriteAllText(AnalyticsFile, json);
+            Logger.Debug("Analytics", "Analytics data flushed to disk");
+```
+
+### Replacement
+```csharp
+            _lock.EnterReadLock();
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            var json = JsonSerializer.Serialize(_data, options);
+            var tempFile = AnalyticsFile + ".tmp";
+            File.WriteAllText(tempFile, json);
+            File.Move(tempFile, AnalyticsFile, overwrite: true);
+            Logger.Debug("Analytics", "Analytics data flushed to disk");
+```
+
+### Reason
+Writes to a temporary file and then atomically replaces the target, preventing a half-written file if the process is killed.
+
+### Verification
+`dotnet build ...` and unit test.

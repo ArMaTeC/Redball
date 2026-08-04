@@ -1,0 +1,43 @@
+## ISS-004: No rate limiting on web-admin login endpoint
+
+### File
+`/root/Redball/web-admin/server.js`
+
+### Original (top imports)
+```javascript
+const express = require('express');
+```
+
+### Replacement (top imports)
+```javascript
+const express = require('express');
+const rateLimit = require('express-rate-limit');
+```
+
+### Original (login route registration)
+```javascript
+// Auth endpoints
+app.post('/api/auth/login', async (req, res) => {
+```
+
+### Replacement
+```javascript
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  standardHeaders: true,
+  message: { error: 'Too many login attempts, please try again later.' }
+});
+
+// Auth endpoints
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
+```
+
+### Also update
+`/root/Redball/web-admin/package.json` dependencies to add `"express-rate-limit": "^8.3.2"`, then run `npm install`.
+
+### Reason
+Prevents online brute-force attacks against the single admin account by limiting login attempts per IP.
+
+### Verification
+`npm install` + `npm test` + simulate rapid `/api/auth/login` requests and verify 429 responses after the limit.
