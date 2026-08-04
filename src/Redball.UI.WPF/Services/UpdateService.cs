@@ -846,14 +846,14 @@ public class UpdateService : IUpdateService
 
                         var zipPath = Path.Combine(tempDir, updateInfo.FileName);
                         if (!await DownloadFileAsync(updateInfo.DownloadUrl, zipPath, progress, cancellationToken))
-                            throw new Exception("Failed to download ZIP for differential update");
+                            throw new HttpRequestException("Failed to download ZIP for differential update");
 
                         ReportProgress(progress, UpdateStage.Patching, 30, "Extracting changed files from update package...",
                             logEntry: "ZIP downloaded. Extracting changed files only...", isDelta: true);
 
                         extractedZipDir = Path.Combine(tempDir, "zip-extract");
                         if (!ExtractZip(zipPath, extractedZipDir))
-                            throw new Exception("Failed to extract ZIP for differential update");
+                            throw new InvalidOperationException("Failed to extract ZIP for differential update");
 
                         // Clean up ZIP to save disk space
                         TryDeleteFile(zipPath);
@@ -979,7 +979,7 @@ public class UpdateService : IUpdateService
                                 currentFile: completed, totalFiles: totalFiles, currentFileName: fileShortName, isDelta: true);
 
                             if (!await DownloadFileAsync(file.DownloadUrl, destPath, progress, cancellationToken))
-                                throw new Exception($"Failed to download {fileShortName}");
+                                throw new HttpRequestException($"Failed to download {fileShortName}");
                         }
                         else
                         {
@@ -999,7 +999,7 @@ public class UpdateService : IUpdateService
                             if (!actualHash.Equals(file.Hash, StringComparison.OrdinalIgnoreCase))
                             {
                                 Logger.Error("UpdateService", $"SECURITY ALERT: Integrity check failed for {normalizedName}! Expected {file.Hash}, got {actualHash}");
-                                throw new Exception($"Integrity check failed for {fileShortName}");
+                                throw new InvalidDataException($"Integrity check failed for {fileShortName}");
                             }
                             Logger.Info("UpdateService", $"Integrity verified for {normalizedName}");
                         }
@@ -1043,7 +1043,7 @@ public class UpdateService : IUpdateService
                     Logger.Warning("UpdateService", "Differential update failed, falling back to full installer", ex);
                     ReportProgress(progress, UpdateStage.Downloading, 0, "Differential update failed. Falling back...",
                         logEntry: $"⚠ Differential update failed: {ex.Message}. Falling back to full installer.");
-                    
+
                     // Fall through to full installer download path
                 }
             }
@@ -1067,7 +1067,7 @@ public class UpdateService : IUpdateService
                 // Download the file
                 Logger.Info("UpdateService", "Downloading update file...");
                 var downloadUrl = !string.IsNullOrEmpty(updateInfo.FullInstallerUrl) ? updateInfo.FullInstallerUrl : updateInfo.DownloadUrl;
-                
+
                 // If we are using the full installer URL, update the filename to match
                 if (!string.IsNullOrEmpty(updateInfo.FullInstallerUrl) && updateInfo.FullInstallerUrl != updateInfo.DownloadUrl)
                 {

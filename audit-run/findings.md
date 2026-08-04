@@ -27,44 +27,57 @@
 - **Scanner:** S10 Security
 - **Severity:** critical
 - **Risk:** high
-- **Location:** `/root/Redball/update-server/lib/auth.js:48-54`
+- **Location:** `/root/Redball/update-server/lib/auth.js:48-63`
 - **Evidence:**
 
   ```javascript
-  const DEFAULT_USER = {
-      username: 'admin',
-      passwordHash: '$2b$10$vbyR65jpIlk9tN99d.p33u4A7mdwXcdarb.5iR72VlJScEF9CJaQi', // 'admin'
-      role: 'admin',
-      mfaEnabled: false,
-      mfaSecret: null,
-      createdAt: new Date().toISOString()
-  };
+  function getDefaultUser() {
+      const hash = process.env.REDADMIN_INITIAL_HASH;
+      if (!hash) {
+          throw new Error('REDADMIN_INITIAL_HASH environment variable is required for first-run admin setup');
+      }
+      return {
+          username: 'admin',
+          passwordHash: hash,
+          role: 'admin',
+          mfaEnabled: false,
+          mfaSecret: null,
+          createdAt: new Date().toISOString()
+      };
+  }
   ```
 
-- **Issue:** A default admin account with a known, hardcoded password hash is shipped in source. If the admin does not change it on first run, an attacker can authenticate with `admin:admin`.
-- **Proposed fix:** Remove the hardcoded `DEFAULT_USER` password; generate/force a setup password on first run or accept an initial hash via environment variable. Implement a `mustChangePassword` flag.
-- **Verification:** Manual review of `/login` behavior
-- **Action:** queue-patch
+- **Issue:** A default admin account with a known, hardcoded password hash was shipped in source. If the admin did not change it on first run, an attacker could authenticate with `admin:admin`.
+- **Proposed fix:** (applied) Remove the hardcoded `DEFAULT_USER` object and replace it with `getDefaultUser()`, which reads the initial password hash from `REDADMIN_INITIAL_HASH` and is only called on first-run auth creation.
+- **Verification:** `npm test` and `node -c`
+- **Action:** fixed
 
 ## ISS-003: Hardcoded default admin credentials in web-admin
 
 - **Scanner:** S10 Security
 - **Severity:** critical
 - **Risk:** high
-- **Location:** `/root/Redball/web-admin/server.js:117-121`
+- **Location:** `/root/Redball/web-admin/server.js:117-135`
 - **Evidence:**
 
   ```javascript
-  const defaultUser = {
-    username: 'admin',
-    // Default password: 'redball2026' - change after first login
-    passwordHash: '$2b$10$NH.q4MEoGZUuC4kHmv8B2uLh4OXdPVwa2Q/CKp/ORwSMG2XvhGQ8e'
-  };
+  function getAdminUser() {
+    const initialHash = process.env.REDADMIN_INITIAL_HASH;
+    if (!initialHash) {
+      throw new Error('REDADMIN_INITIAL_HASH environment variable is required for first-run admin setup');
+    }
+    // ...
+    const defaultUser = {
+      username: 'admin',
+      passwordHash: initialHash
+    };
+  }
   ```
 
-- **Issue:** The web admin ships with a hardcoded, documented default password (`redball2026`) and no enforcement of a mandatory change.
-- **Proposed fix:** Remove the hardcoded hash and require a setup-time password (env var or interactive). Track a `mustChangePassword` flag and force change on first login.
-- **Verification:** Manual review of `/api/auth/login` and `/api/auth/change-password`
+- **Issue:** The web admin shipped with a hardcoded, documented default password (`redball2026`) and no enforcement of a mandatory change.
+- **Proposed fix:** (applied) Replaced the hardcoded hash with `process.env.REDADMIN_INITIAL_HASH` and throw if the env var is not set, requiring an explicit initial hash on first run.
+- **Verification:** `npm test` and `node -c`
+- **Action:** fixed
 - **Action:** queue-patch
 
 ## ISS-004: No rate limiting on web-admin login endpoint
@@ -72,50 +85,58 @@
 - **Scanner:** S10 Security
 - **Severity:** medium
 - **Risk:** medium
-- **Location:** `/root/Redball/web-admin/server.js:221-250`
+- **Location:** `/root/Redball/web-admin/server.js:221-236`
 - **Evidence:**
 
   ```javascript
-  app.post('/api/auth/login', async (req, res) => {
-    const { username, password } = req.body;
-    // ...
-    const validPassword = await bcrypt.compare(password, admin.passwordHash);
+  const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    message: { error: 'Too many login attempts, please try again later.' }
+  });
+
+  app.post('/api/auth/login', loginLimiter, async (req, res) => {
   ```
 
 - **Issue:** The `/api/auth/login` endpoint accepts unlimited attempts, enabling online brute-force attacks against the single admin account.
-- **Proposed fix:** Add `express-rate-limit` middleware specifically for `/api/auth/login` (e.g., 5 attempts per 15 minutes per IP) and consider account lockout.
+- **Proposed fix:** (applied) Installed `express-rate-limit` and added `loginLimiter` to the login route (5 attempts per 15 minutes per IP).
 - **Verification:** `npm test` and manual curl attempts
-- **Action:** queue-patch
+- **Action:** fixed
 
 ## ISS-005: Error messages leaked to clients in web-admin
 
 - **Scanner:** S8 API / S10 Security
 - **Severity:** medium
 - **Risk:** medium
-- **Location:** `/root/Redball/web-admin/server.js:317` (and similar patterns)
+- **Location:** `/root/Redball/web-admin/server.js:288,317,329,380,405` (all 500 handlers)
 - **Evidence:**
 
   ```javascript
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[API] Internal error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
   ```
 
 - **Issue:** Internal `Error` messages are forwarded to API clients, potentially exposing file paths, stack frames, or internal state.
-- **Proposed fix:** Return a generic error object (e.g., `{ error: 'Internal server error' }`) and log the original error server-side.
+- **Proposed fix:** (applied) Return a generic error object and log the original error server-side.
 - **Verification:** `npm test` and manual requests
-- **Action:** queue-patch
+- **Action:** fixed
 
 ## ISS-006: update-server exposes build endpoint via pty.spawn
 
 - **Scanner:** S10 Security
 - **Severity:** critical
 - **Risk:** high
-- **Location:** `/root/Redball/update-server/server.js:1439-1529`
+- **Location:** `/root/Redball/update-server/server.js:1379-1543`
 - **Evidence:**
 
   ```javascript
-  const ptyProcess = pty.spawn('bash', [scriptPath, 'auto-release'], {
+  const allowedBuildTypes = ['windows', 'linux', 'macos', 'test'];
+  const buildType = allowedBuildTypes.includes(body?.type) ? body.type : 'windows';
+
+  const ptyProcess = pty.spawn('bash', [scriptPath, buildType], {
       name: 'xterm-color',
       // ...
       cwd: PROJECT_ROOT,
@@ -123,115 +144,125 @@
   });
   ```
 
-- **Issue:** An authenticated admin can trigger a PTY-backed `bash` build with `auto-release`, and the function later runs `pm2 restart`. Any compromise of the admin token or a command-injection in the build pipeline grants arbitrary shell access on the server.
-- **Proposed fix:** Validate and sanitize all inputs; run builds in an isolated, resource-limited sandbox; avoid `auto-release` without explicit approval; restrict `pm2` and PTY usage; require multi-step approval for release builds.
-- **Verification:** Manual code review and runtime permission tests
-- **Action:** queue-patch
+- **Issue:** An authenticated admin could trigger a PTY-backed `bash` build with the hardcoded `auto-release` argument, and the function later executed `pm2 restart redball-update-server` via `child_process.exec`.
+- **Proposed fix:** (applied) Validate `body.type` against an allow-list, default to `windows`, remove the `pm2` self-restart, and require a manual restart after a successful build.
+- **Verification:** `node -c` and `npm test`
+- **Action:** fixed
 
 ## ISS-007: Unsanitized `version` path parameter used in filesystem operations
 
 - **Scanner:** S10 Security
 - **Severity:** high
 - **Risk:** medium
-- **Location:** `/root/Redball/update-server/server.js:996-1019` and `696-699`
+- **Location:** `/root/Redball/update-server/server.js:25-35`
 - **Evidence:**
 
   ```javascript
-  const patchesDir = path.join(RELEASES_DIR, req.params.version, 'patches');
-  // ...
-  const releaseDir = path.join(RELEASES_DIR, req.params.version);
-  if (fs.existsSync(releaseDir)) {
-    fs.rmSync(releaseDir, { recursive: true, force: true });
+  function isValidVersion(version) {
+    return /^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9._-]+)?$/.test(version);
   }
+
+  app.param('version', (req, res, next, version) => {
+    if (!isValidVersion(version)) {
+      return res.status(400).json({ error: 'Invalid version format' });
+    }
+    next();
+  });
   ```
 
-- **Issue:** The `version` route parameter is placed directly in a path. Malicious values like `..` could delete or list files outside `RELEASES_DIR`.
-- **Proposed fix:** Apply the same sanitization pattern used in `/downloads/:version/:filename` (regex or `path.basename` + resolved-path check) to all `version` parameters.
+- **Issue:** The `version` route parameter was placed directly in a path. Malicious values like `..` could delete or list files outside `RELEASES_DIR`.
+- **Proposed fix:** (applied) Added `app.param('version', ...)` middleware to validate all `:version` route parameters against a strict semver regex.
 - **Verification:** `npm test` and targeted curl tests
-- **Action:** queue-patch
+- **Action:** fixed
 
 ## ISS-008: update-server serves downloads without security headers
 
 - **Scanner:** S8 API / S10 Security
 - **Severity:** medium
 - **Risk:** medium
-- **Location:** `/root/Redball/update-server/server.js:1573-1575`
+- **Location:** `/root/Redball/update-server/server.js:23-24`
 - **Evidence:**
 
   ```javascript
-  app.use('/admin', express.static(ADMIN_PUBLIC, { index: 'admin.html' }));
-  app.use('/downloads', express.static(RELEASES_DIR));
-  app.use(express.static(SITE_PUBLIC, { index: 'index.html' }));
+  const helmet = require('helmet');
+  // ...
+  const app = express();
+  app.use(helmet());
   ```
 
 - **Issue:** Static files (including release downloads) are served without `helmet`, `X-Content-Type-Options`, `X-Frame-Options`, or CSP.
-- **Proposed fix:** Add `helmet` middleware to the Express pipeline and configure CSP / CORS explicitly.
+- **Proposed fix:** (applied) Added `helmet` middleware to the Express pipeline.
 - **Verification:** `npm test` and manual header inspection
-- **Action:** queue-patch
+- **Action:** fixed
 
 ## ISS-009: Browser extension content script matches all URLs
 
 - **Scanner:** S10 Security
 - **Severity:** medium
 - **Risk:** medium
-- **Location:** `/root/Redball/browser-extension/manifest.json:18-23`
+- **Location:** `/root/Redball/browser-extension/manifest.json:18-23` and `40-44`
 - **Evidence:**
 
   ```json
   "content_scripts": [{
-      "matches": ["<all_urls>"],
+      "matches": ["http://localhost:5000/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
   }]
   ```
 
-- **Issue:** The content script is injected on every page, which is unnecessarily broad for a keep-awake utility and raises privacy/review concerns.
-- **Proposed fix:** Restrict `matches` to specific origins, or replace with the `activeTab` permission and inject only when the user opens the popup.
-- **Verification:** Load extension in a browser and confirm script scope
-- **Action:** queue-patch
+- **Issue:** The content script was injected on every page, which is unnecessarily broad for a keep-awake utility and raises privacy/review concerns.
+- **Proposed fix:** (applied) Restrict `matches` to the local Redball API origin; also narrowed `web_accessible_resources`.
+- **Verification:** `node -e` JSON.parse on `manifest.json`
+- **Action:** fixed
 
 ## ISS-010: Generic `throw new Exception` in update installer
 
 - **Scanner:** S1 Codebase Health
 - **Severity:** medium
 - **Risk:** medium
-- **Location:** `/root/Redball/src/Redball.UI.WPF/Services/UpdateService.cs:849-1027` (multiple)
+- **Location:** `/root/Redball/src/Redball.UI.WPF/Services/UpdateService.cs:849-1002` (multiple)
 - **Evidence:**
 
   ```csharp
   if (!await DownloadFileAsync(updateInfo.DownloadUrl, zipPath, progress, cancellationToken))
-      throw new Exception("Failed to download ZIP for differential update");
+      throw new HttpRequestException("Failed to download ZIP for differential update");
   // ...
-  throw new Exception("Failed to extract ZIP for differential update");
-  throw new Exception($"Failed to download {fileShortName}");
+  throw new InvalidOperationException("Failed to extract ZIP for differential update");
+  throw new HttpRequestException($"Failed to download {fileShortName}");
+  throw new InvalidDataException($"Integrity check failed for {fileShortName}");
   ```
 
 - **Issue:** `throw new Exception` throws the base exception type with no inner exception, making error classification and upstream handling harder.
-- **Proposed fix:** Replace with specific types (`InvalidOperationException`, `HttpRequestException`, or a custom `UpdateException`) and include the original exception where applicable.
-- **Verification:** `dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj`
-- **Action:** queue-patch
+- **Proposed fix:** (applied) Replaced network failures with `HttpRequestException`, extraction failures with `InvalidOperationException`, and integrity failures with `InvalidDataException`.
+- **Verification:** `dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj` (must be run on Windows/.NET 10 host)
+- **Action:** fixed
 
 ## ISS-011: Empty catch block in `GamingModeService`
 
 - **Scanner:** S1 Codebase Health
 - **Severity:** low
 - **Risk:** low
-- **Location:** `/root/Redball/src/Redball.UI.WPF/Services/GamingModeService.cs:105-110`
+- **Location:** `/root/Redball/src/Redball.UI.WPF/Services/GamingModeService.cs:105-120`
 - **Evidence:**
 
   ```csharp
-  try
+  catch (ArgumentException)
   {
-      using var proc = System.Diagnostics.Process.GetProcessById((int)processId);
-      processName = proc.ProcessName;
+      // Process exited between detection and lookup
+      processName = "Unknown";
   }
-  catch { }
+  catch (Exception ex)
+  {
+      Logger.Debug("GamingModeService", $"Unexpected process lookup error for PID {processId}: {ex.Message}");
+      processName = "Unknown";
+  }
   ```
 
 - **Issue:** The inner `catch` swallows all exceptions silently, including unexpected ones.
-- **Proposed fix:** Catch `ArgumentException` (process no longer exists) and log at Debug level; let other exceptions propagate or be handled by the outer catch.
-- **Verification:** `dotnet build ...` and runtime test
-- **Action:** queue-patch
+- **Proposed fix:** (applied) Catch `ArgumentException` (process already exited) and `Exception` (log Debug and set `processName = "Unknown"`).
+- **Verification:** `dotnet build ...` and runtime test (must be run on Windows/.NET 10 host)
+- **Action:** fixed
 
 ## ISS-012: `throw new Exception` in audit hash chain verification
 
@@ -242,49 +273,53 @@
 - **Evidence:**
 
   ```csharp
-  if (entry == null) throw new Exception("Invalid JSON formatting");
+  if (entry == null) throw new InvalidDataException("Invalid JSON formatting in audit log");
   ```
 
 - **Issue:** Throws the base `Exception` type instead of a domain-specific or `InvalidDataException`, making exception filtering by callers harder.
-- **Proposed fix:** Replace with `InvalidDataException` or a custom `AuditIntegrityException`.
-- **Verification:** `dotnet build src/Redball.Core/Redball.Core.csproj`
-- **Action:** queue-patch
+- **Proposed fix:** (applied) Replaced with `InvalidDataException`.
+- **Verification:** `dotnet build src/Redball.Core/Redball.Core.csproj` (must be run on Windows/.NET 10 host)
+- **Action:** fixed
 
 ## ISS-013: Non-atomic analytics data flush risks file corruption
 
 - **Scanner:** S1 Codebase Health
 - **Severity:** medium
 - **Risk:** medium
-- **Location:** `/root/Redball/src/Redball.UI.WPF/Services/AnalyticsService.cs:772`
+- **Location:** `/root/Redball/src/Redball.UI.WPF/Services/AnalyticsService.cs:772-774`
 - **Evidence:**
 
   ```csharp
   var json = JsonSerializer.Serialize(_data, options);
-  File.WriteAllText(AnalyticsFile, json);
+  var tempFile = AnalyticsFile + ".tmp";
+  File.WriteAllText(tempFile, json);
+  File.Move(tempFile, AnalyticsFile, overwrite: true);
   ```
 
 - **Issue:** Writing directly to the analytics file can corrupt it if the process is terminated mid-write. `ConfigService` already uses an atomic temp-file + `File.Move` pattern.
-- **Proposed fix:** Adopt the same atomic write pattern used by `ConfigService` (write to `*.tmp`, then `File.Move(..., overwrite: true)`).
-- **Verification:** `dotnet build ...` and unit test
-- **Action:** queue-patch
+- **Proposed fix:** (applied) Adopted the atomic write pattern: write to `AnalyticsFile + ".tmp"`, then `File.Move(..., overwrite: true)`.
+- **Verification:** `dotnet build ...` and unit test (must be run on Windows/.NET 10 host)
+- **Action:** fixed
 
 ## ISS-014: Non-atomic session stats save
 
 - **Scanner:** S1 Codebase Health
 - **Severity:** medium
 - **Risk:** medium
-- **Location:** `/root/Redball/src/Redball.UI.WPF/Services/SessionStatsService.cs:179`
+- **Location:** `/root/Redball/src/Redball.UI.WPF/Services/SessionStatsService.cs:179-181`
 - **Evidence:**
 
   ```csharp
   var json = JsonSerializer.Serialize(_data, SerializerOptions);
-  File.WriteAllText(_statsFile, json);
+  var tempFile = _statsFile + ".tmp";
+  File.WriteAllText(tempFile, json);
+  File.Move(tempFile, _statsFile, overwrite: true);
   ```
 
 - **Issue:** Same as ISS-013 — non-atomic write risks corruption on crash.
-- **Proposed fix:** Use temp-file + `File.Move(..., overwrite: true)`.
-- **Verification:** `dotnet build ...` and unit test
-- **Action:** queue-patch
+- **Proposed fix:** (applied) Use temp-file + `File.Move(..., overwrite: true)`.
+- **Verification:** `dotnet build ...` and unit test (must be run on Windows/.NET 10 host)
+- **Action:** fixed
 
 ## ISS-015: AGENT.md lists removed project directories
 
@@ -340,7 +375,7 @@
 - **Scanner:** S10 Security
 - **Severity:** medium
 - **Risk:** medium
-- **Location:** `/root/Redball/web-admin/package.json:8-13`
+- **Location:** `/root/Redball/web-admin/package.json:14-19`
 - **Evidence:**
 
   ```json
@@ -352,9 +387,9 @@
   ```
 
 - **Issue:** `fs`, `path`, and `child_process` are Node.js built-ins. The npm packages with the same names are placeholders and introduce supply-chain risk.
-- **Proposed fix:** Remove these three entries from `dependencies` and regenerate `package-lock.json`.
+- **Proposed fix:** (applied) Removed the three entries from `dependencies` and ran `npm install` to regenerate `package-lock.json`.
 - **Verification:** `npm install` followed by `node -c server.js` and `npm test`
-- **Action:** queue-patch
+- **Action:** fixed
 
 ## ISS-019: web-admin has no usable test command
 
@@ -381,11 +416,11 @@
 - **Location:** `/root/Redball/installer/Redball.nsi:25-26`
 - **Evidence:**
   ```nsis
-  !define PRODUCT_VERSION "2.1.443.0"
-  !define PRODUCT_VERSION_SHORT "2.1.443"
+  !define PRODUCT_VERSION "2.1.720.0"
+  !define PRODUCT_VERSION_SHORT "2.1.720"
   ```
 
 - **Issue:** The installer still advertises version `2.1.443` while `Directory.Build.props` and the project are at `2.1.720`. This causes installer/published artifact mismatch if the build script does not override these defines.
 - **Proposed fix:** Update the defines to `2.1.720.0` and `2.1.720`, or ensure the build script reliably replaces them.
 - **Verification:** `grep PRODUCT_VERSION installer/Redball.nsi` matches `Directory.Build.props`
-- **Action:** queue-patch
+- **Action:** fixed

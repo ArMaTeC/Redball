@@ -45,14 +45,20 @@ function getJwtSecret() {
 /**
  * User Management
  */
-const DEFAULT_USER = {
-    username: 'admin',
-    passwordHash: '$2b$10$vbyR65jpIlk9tN99d.p33u4A7mdwXcdarb.5iR72VlJScEF9CJaQi', // 'admin'
-    role: 'admin',
-    mfaEnabled: false,
-    mfaSecret: null,
-    createdAt: new Date().toISOString()
-};
+function getDefaultUser() {
+    const hash = process.env.REDADMIN_INITIAL_HASH;
+    if (!hash) {
+        throw new Error('REDADMIN_INITIAL_HASH environment variable is required for first-run admin setup');
+    }
+    return {
+        username: 'admin',
+        passwordHash: hash,
+        role: 'admin',
+        mfaEnabled: false,
+        mfaSecret: null,
+        createdAt: new Date().toISOString()
+    };
+}
 
 function loadAuthData() {
     try {
@@ -69,7 +75,7 @@ function loadAuthData() {
     } catch (e) {
         console.error('[AUTH] Error loading auth file:', e.message);
     }
-    const initialData = { users: [DEFAULT_USER] };
+    const initialData = { users: [getDefaultUser()] };
     saveAuthData(initialData);
     return initialData;
 }
@@ -93,7 +99,7 @@ function getUserByUsername(username) {
 async function addUser(username, password, role = 'viewer') {
     const data = loadAuthData();
     if (data.users.find(u => u.username === username)) throw new Error('User already exists');
-    
+
     const passwordHash = await bcrypt.hash(password, 10);
     const newUser = {
         username,
@@ -103,7 +109,7 @@ async function addUser(username, password, role = 'viewer') {
         mfaSecret: null,
         createdAt: new Date().toISOString()
     };
-    
+
     data.users.push(newUser);
     saveAuthData(data);
     return newUser;
@@ -113,12 +119,12 @@ async function updateUser(username, updates) {
     const data = loadAuthData();
     const idx = data.users.findIndex(u => u.username === username);
     if (idx === -1) throw new Error('User not found');
-    
+
     if (updates.password) {
         updates.passwordHash = await bcrypt.hash(updates.password, 10);
         delete updates.password;
     }
-    
+
     data.users[idx] = { ...data.users[idx], ...updates };
     saveAuthData(data);
     return data.users[idx];
@@ -151,8 +157,8 @@ function verifyMfaToken(token, secret) {
  * JWT
  */
 function generateToken(user, mfaVerified = false) {
-    return jwt.sign({ 
-        username: user.username, 
+    return jwt.sign({
+        username: user.username,
         role: user.role,
         mfaRequired: user.mfaEnabled && !mfaVerified
     }, getJwtSecret(), { expiresIn: '24h' });
@@ -175,7 +181,7 @@ async function verifyPassword(password, hash) {
  * Allows bypassing MFA on remembered browsers for 30 days
  */
 function generateTrustedDeviceToken(username) {
-    return jwt.sign({ 
+    return jwt.sign({
         username,
         type: 'trusted_device'
     }, getJwtSecret(), { expiresIn: '30d' });
@@ -206,5 +212,5 @@ module.exports = {
     verifyPassword,
     generateTrustedDeviceToken,
     verifyTrustedDeviceToken,
-    DEFAULT_USER
+    getDefaultUser
 };

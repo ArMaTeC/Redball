@@ -22,8 +22,8 @@
 !define PRODUCT_REGISTRY_KEY "Software\ArMaTeC\Redball"
 
 ; Version will be replaced by build script
-!define PRODUCT_VERSION "2.1.443.0"
-!define PRODUCT_VERSION_SHORT "2.1.443"
+!define PRODUCT_VERSION "2.1.720.0"
+!define PRODUCT_VERSION_SHORT "2.1.720"
 !define PROJECT_ROOT "..\.."
 
 ; Installer settings

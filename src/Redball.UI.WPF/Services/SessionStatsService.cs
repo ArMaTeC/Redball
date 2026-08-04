@@ -18,7 +18,7 @@ public class SessionStatsService
     private readonly string _statsFile;
     private SessionStatsData _data = new();
     private DateTime? _currentSessionStart;
- 
+
     private static readonly JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
 
     public event EventHandler? StatsUpdated;
@@ -137,7 +137,7 @@ public class SessionStatsService
     {
         public string Date { get; set; } = string.Empty;
         public double Hours { get; set; }
-        
+
         // For ScheduleLearningService and AdvancedAnalyticsService compatibility
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
@@ -176,7 +176,9 @@ public class SessionStatsService
         try
         {
             var json = JsonSerializer.Serialize(_data, SerializerOptions);
-            File.WriteAllText(_statsFile, json);
+            var tempFile = _statsFile + ".tmp";
+            File.WriteAllText(tempFile, json);
+            File.Move(tempFile, _statsFile, overwrite: true);
         }
         catch (Exception ex)
         {

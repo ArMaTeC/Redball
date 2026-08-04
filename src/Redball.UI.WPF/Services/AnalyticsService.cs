@@ -17,16 +17,16 @@ public class AnalyticsService : IAnalyticsService
     private bool _disposed;
     private static readonly Lazy<AnalyticsService> _instance = new(() => new AnalyticsService());
     public static AnalyticsService Instance => _instance.Value;
-    
+
     private static readonly string AnalyticsFile = Path.Combine(
         AppContext.BaseDirectory, "analytics.json");
     private const int TrendWindowDays = 7;
     private const int DataRetentionDays = 90;
-    
+
     private static readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion);
     private AnalyticsData _data = new();
     private Timer? _flushTimer;
-    
+
     // DEBOUNCE: Timer and tracking for high-frequency events
     private readonly Dictionary<string, Timer> _debounceTimers = new();
     private readonly Dictionary<string, int> _pendingEventCounts = new();
@@ -42,11 +42,11 @@ public class AnalyticsService : IAnalyticsService
         Load();
         // Auto-flush every 5 minutes
         _flushTimer = new Timer(_ => Flush(), null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
-        
+
         // PRIVACY: Clean up old analytics data on startup
         CleanupOldData();
     }
-    
+
     /// <summary>
     /// Removes analytics data older than the retention period (90 days default).
     /// Implements GDPR/CCPA data minimization principles.
@@ -56,36 +56,36 @@ public class AnalyticsService : IAnalyticsService
         try
         {
             _lock.EnterWriteLock();
-            
+
             var cutoffDate = DateTime.UtcNow.AddDays(-DataRetentionDays);
             var cutoffKey = GetDayKey(cutoffDate);
             var removedCount = 0;
-            
+
             // Clean up feature usage history
             foreach (var feature in _data.Features.Values)
             {
                 var keysToRemove = feature.DailyUsage.Keys
                     .Where(k => string.Compare(k, cutoffKey, StringComparison.Ordinal) < 0)
                     .ToList();
-                
+
                 foreach (var key in keysToRemove)
                 {
                     feature.DailyUsage.Remove(key);
                     removedCount++;
                 }
             }
-            
+
             // Clean up engagement history
             var engagementKeysToRemove = _data.SessionHistory.Keys
                 .Where(k => string.Compare(k, cutoffKey, StringComparison.Ordinal) < 0)
                 .ToList();
-            
+
             foreach (var key in engagementKeysToRemove)
             {
                 _data.SessionHistory.Remove(key);
                 removedCount++;
             }
-            
+
             if (removedCount > 0)
             {
                 Logger.Info("AnalyticsService", $"Cleaned up {removedCount} analytics entries older than {DataRetentionDays} days");
@@ -769,7 +769,9 @@ public class AnalyticsService : IAnalyticsService
             _lock.EnterReadLock();
             var options = new JsonSerializerOptions { WriteIndented = true };
             var json = JsonSerializer.Serialize(_data, options);
-            File.WriteAllText(AnalyticsFile, json);
+            var tempFile = AnalyticsFile + ".tmp";
+            File.WriteAllText(tempFile, json);
+            File.Move(tempFile, AnalyticsFile, overwrite: true);
             Logger.Debug("Analytics", "Analytics data flushed to disk");
         }
         catch (Exception ex)

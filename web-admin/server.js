@@ -6,6 +6,7 @@ const fs = require('fs');
 const http = require('http');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const server = http.createServer(app);
@@ -114,10 +115,14 @@ function loadOrCreateJwtSecret() {
 
 // Load or create admin user
 function getAdminUser() {
+  const initialHash = process.env.REDADMIN_INITIAL_HASH;
+  if (!initialHash) {
+    throw new Error('REDADMIN_INITIAL_HASH environment variable is required for first-run admin setup');
+  }
+
   const defaultUser = {
     username: 'admin',
-    // Default password: 'redball2026' - change after first login
-    passwordHash: '$2b$10$NH.q4MEoGZUuC4kHmv8B2uLh4OXdPVwa2Q/CKp/ORwSMG2XvhGQ8e'
+    passwordHash: initialHash
   };
 
   try {
@@ -218,7 +223,14 @@ app.use((req, res, next) => {
 });
 
 // Auth endpoints
-app.post('/api/auth/login', async (req, res) => {
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  standardHeaders: true,
+  message: { error: 'Too many login attempts, please try again later.' }
+});
+
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -285,7 +297,8 @@ app.get('/api/stats', (req, res) => {
     const stats = getDownloadStats();
     res.json(stats);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[API] Internal error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -314,7 +327,8 @@ app.post('/api/build/stop', authenticateToken, (req, res) => {
       broadcast({ type: 'build-stopped' });
       res.json({ status: 'stopped' });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      console.error('[API] Internal error:', err);
+    res.status(500).json({ error: 'Internal server error' });
     }
   } else {
     res.status(400).json({ error: 'No build running' });
@@ -326,7 +340,8 @@ app.get('/api/releases', (req, res) => {
     const stats = getDownloadStats();
     res.json(stats.releases || []);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[API] Internal error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -377,7 +392,8 @@ app.get('/api/system/config', authenticateToken, (req, res) => {
       }
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[API] Internal error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -402,7 +418,8 @@ app.post('/api/system/clear-logs', authenticateToken, (req, res) => {
     saveBuildState();
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[API] Internal error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

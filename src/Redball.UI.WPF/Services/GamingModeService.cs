@@ -77,7 +77,7 @@ public class GamingModeService
 
             // Basic check: is the window as big as the current monitor?
             // On multi-monitor, this works for the primary monitor
-            bool isFullScreen = width >= SystemParameters.PrimaryScreenWidth && 
+            bool isFullScreen = width >= SystemParameters.PrimaryScreenWidth &&
                                 height >= SystemParameters.PrimaryScreenHeight;
 
             if (isFullScreen)
@@ -99,7 +99,7 @@ public class GamingModeService
         {
             var title = new System.Text.StringBuilder(256);
             GetWindowText(hwnd, title, 256);
-            
+
             GetWindowThreadProcessId(hwnd, out uint processId);
             string processName = "Unknown";
             try
@@ -107,7 +107,16 @@ public class GamingModeService
                 using var proc = System.Diagnostics.Process.GetProcessById((int)processId);
                 processName = proc.ProcessName;
             }
-            catch { }
+            catch (ArgumentException)
+            {
+                // Process exited between detection and lookup
+                processName = "Unknown";
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug("GamingModeService", $"Unexpected process lookup error for PID {processId}: {ex.Message}");
+                processName = "Unknown";
+            }
 
             Logger.Debug("GamingModeService", $"Fullscreen detected: [{processName}.exe] \"{title}\" (PID: {processId})");
         }
@@ -121,7 +130,7 @@ public class GamingModeService
     {
         _isGaming = gaming;
         Logger.Info("GamingModeService", $"Gaming mode: {(gaming ? "ENABLED" : "DISABLED")}");
-        
+
         if (gaming)
         {
             OptimizeFootprint();
@@ -138,18 +147,18 @@ public class GamingModeService
         try
         {
             Logger.Verbose("GamingModeService", "Minimizing memory footprint...");
-            
+
             // Collect GC
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
 
             // Explicitly trim the working set (P/Invoke EmptyWorkingSet)
-            // Process.GetCurrentProcess().WorkingSet64 would still show "total", 
+            // Process.GetCurrentProcess().WorkingSet64 would still show "total",
             // but this hints Windows to swap out unused pages.
             var handle = System.Diagnostics.Process.GetCurrentProcess().Handle;
             EmptyWorkingSet(handle);
-            
+
             Logger.Info("GamingModeService", "Process memory footprint trimmed.");
         }
         catch (Exception ex)

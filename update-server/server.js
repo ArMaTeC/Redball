@@ -7,6 +7,7 @@ const http = require('http');
 const crypto = require('crypto');
 const multer = require('multer');
 const morgan = require('morgan');
+const helmet = require('helmet');
 
 const { generatePatches, formatBytes } = require('./lib/delta-patches');
 const config = require('./config');
@@ -20,6 +21,19 @@ const authRoutes = require('./routes/api/auth');
 const buildRoutes = require('./routes/api/build');
 
 const app = express();
+app.use(helmet());
+
+function isValidVersion(version) {
+  return /^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9._-]+)?$/.test(version);
+}
+
+app.param('version', (req, res, next, version) => {
+  if (!isValidVersion(version)) {
+    return res.status(400).json({ error: 'Invalid version format' });
+  }
+  next();
+});
+
 app.set('trust proxy', 1); // Enable trust proxy for rate limiting (needed behind Cloudflare/reverse proxy)
 const server = http.createServer(app);
 
@@ -1313,13 +1327,13 @@ wss.on('connection', (ws, req) => {
             ws.close(1008, 'Invalid token');
             return;
         }
-        
+
         if (user.mfaRequired) {
             console.log('[WS] Rejected connection: MFA verification required');
             ws.close(1008, 'MFA verification required');
             return;
         }
-        
+
         ws.user = user;
     } catch (err) {
         console.log('[WS] Rejected connection: token error', err.message);
@@ -1368,7 +1382,7 @@ app.post(['/api/admin/build', '/api/build/start'], authenticateToken, (req, res)
         return res.status(409).json({ error: 'Build already in progress' });
     }
 
-    startBuild();
+    startBuild(req.body);
     res.json({ message: 'Build started', status: 'running' });
 });
 
@@ -1423,7 +1437,7 @@ function parseBuildStage(line) {
     return null;
 }
 
-function startBuild() {
+function startBuild(body = {}) {
     buildState = {
         status: 'running',
         stage: 'setup',
@@ -1436,8 +1450,11 @@ function startBuild() {
     saveBuildStateImmediate();
     broadcast({ type: 'build-started', data: buildState });
 
+    const allowedBuildTypes = ['windows', 'linux', 'macos', 'test'];
+    const buildType = allowedBuildTypes.includes(body?.type) ? body.type : 'windows';
+
     const scriptPath = path.join(PROJECT_ROOT, 'scripts', 'build.sh');
-    const ptyProcess = pty.spawn('bash', [scriptPath, 'auto-release'], {
+    const ptyProcess = pty.spawn('bash', [scriptPath, buildType], {
         name: 'xterm-color',
         cols: 120,
         rows: 30,
@@ -1513,19 +1530,9 @@ function startBuild() {
         });
 
         if (exitCode === 0 && restartNeeded) {
-            console.log('[BUILD] Restart signaled, scheduling self-restart in 5s...');
-            buildState.log.push({ timestamp: Date.now(), message: '[SYSTEM] Restarting server to apply updates...' });
+            console.log('[BUILD] Restart signaled. Manual restart is required to apply the update.');
+            buildState.log.push({ timestamp: Date.now(), message: '[SYSTEM] Build succeeded; manual restart required.' });
             saveBuildStateImmediate();
-
-            const { exec } = require('child_process');
-            setTimeout(() => {
-                exec('pm2 restart redball-update-server', (err) => {
-                    if (err) {
-                        console.error('[BUILD] Self-restart failed, exiting instead:', err);
-                        process.exit(0);
-                    }
-                });
-            }, 5000);
         }
     });
 } function stopBuild() {

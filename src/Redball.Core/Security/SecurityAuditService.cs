@@ -20,7 +20,7 @@ public class SecurityAuditService
     {
         _logPath = logPath;
         Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
-        
+
         if (File.Exists(_logPath))
         {
             try { _lastHash = GetLastHashFromLog(); } catch { _lastHash = "COMPROMISED_OR_NEW"; }
@@ -56,7 +56,7 @@ public class SecurityAuditService
         {
             failedLine = 0;
             error = null;
-            
+
             if (!File.Exists(_logPath)) return true;
 
             string expectedPrevHash = "INITIAL_SEED";
@@ -70,7 +70,7 @@ public class SecurityAuditService
                 try
                 {
                     var entry = JsonSerializer.Deserialize<AuditEntry>(line);
-                    if (entry == null) throw new Exception("Invalid JSON formatting");
+                    if (entry == null) throw new InvalidDataException("Invalid JSON formatting in audit log");
 
                     // 1. Check if the claimed previous hash matches the anchor
                     if (entry.PreviousHash != expectedPrevHash)
