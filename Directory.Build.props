@@ -1,8 +1,8 @@
 <Project>
   <PropertyGroup>
-    <Version>2.1.720</Version>
-    <AssemblyVersion>2.1.720.0</AssemblyVersion>
-    <FileVersion>2.1.720.0</FileVersion>
+    <Version>2.1.721</Version>
+    <AssemblyVersion>2.1.721.0</AssemblyVersion>
+    <FileVersion>2.1.721.0</FileVersion>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 </Project>
