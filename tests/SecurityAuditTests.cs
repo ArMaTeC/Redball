@@ -1,10 +1,11 @@
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Redball.Core.Security;
 using System.IO;
 using System;
 
 namespace Redball.Tests;
 
+[TestClass]
 public class SecurityAuditTests : IDisposable
 {
     private readonly string _testLogPath;
@@ -19,7 +20,7 @@ public class SecurityAuditTests : IDisposable
         if (File.Exists(_testLogPath)) File.Delete(_testLogPath);
     }
 
-    [Fact]
+    [TestMethod]
     public void AuditService_LogEvents_MaintainsIntegrity()
     {
         var service = new SecurityAuditService(_testLogPath);
@@ -29,11 +30,11 @@ public class SecurityAuditTests : IDisposable
         
         var valid = service.VerifyIntegrity(out int failedLine, out string? error);
         
-        Assert.True(valid, $"Log should be valid: {error}");
-        Assert.Equal(0, failedLine);
+        Assert.IsTrue(valid, $"Log should be valid: {error}");
+        Assert.AreEqual(0, failedLine);
     }
 
-    [Fact]
+    [TestMethod]
     public void AuditService_TamperDetected_WhenLineModified()
     {
         var service = new SecurityAuditService(_testLogPath);
@@ -47,12 +48,12 @@ public class SecurityAuditTests : IDisposable
 
         var valid = service.VerifyIntegrity(out int failedLine, out string? error);
 
-        Assert.False(valid);
-        Assert.Equal(1, failedLine);
-        Assert.Contains("tamper detected", error?.ToLower() ?? "");
+        Assert.IsFalse(valid);
+        Assert.AreEqual(1, failedLine);
+        StringAssert.Contains(error?.ToLower() ?? "", "tamper detected");
     }
 
-    [Fact]
+    [TestMethod]
     public void AuditService_DeletionDetected_InMiddleOfChain()
     {
         var service = new SecurityAuditService(_testLogPath);
@@ -67,8 +68,8 @@ public class SecurityAuditTests : IDisposable
 
         var valid = service.VerifyIntegrity(out int failedLine, out string? error);
 
-        Assert.False(valid);
-        Assert.Equal(2, failedLine); // Line 2 (old Line 3) now has wrong PreviousHash
-        Assert.Contains("broken", error?.ToLower() ?? "");
+        Assert.IsFalse(valid);
+        Assert.AreEqual(2, failedLine); // Line 2 (old Line 3) now has wrong PreviousHash
+        StringAssert.Contains(error?.ToLower() ?? "", "broken");
     }
 }

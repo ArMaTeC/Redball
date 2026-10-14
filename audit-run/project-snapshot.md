@@ -18,16 +18,16 @@
 │       ├── ViewModels/         MVVM view models
 │       ├── Themes/             DarkTheme.xaml + LightTheme.xaml only; 11 variants applied programmatically
 │       └── Interop/            Win32 P/Invoke (NativeMethods.cs)
-├── tests/                      xUnit (csproj also refs MSTest/NUnit/Playwright.NUnit/FlaUI — ISS-037)
-│   └── Redball.Benchmarks/     BenchmarkDotNet — not in sln
-├── tests-e2e/                  Redball.E2E.Tests — not in sln
+├── tests/                      MSTest (consolidated — ISS-037; xUnit/NUnit/Playwright/FlaUI refs removed)
+│   └── Redball.Benchmarks/     BenchmarkDotNet — in sln
+├── tests-e2e/                  Redball.E2E.Tests — in sln
 ├── tests-integration/
 ├── tests-ui-automation/
 ├── tests-ui-headless/
-├── web-admin/                  Express admin dashboard (JWT auth, pty build control, :3500)
-├── update-server/              Express release/update server (JWT auth, multer uploads, delta patches)
-├── site/                       Vite/React/TS marketing site + site/server.js duplicate admin surface (ISS-039)
-├── browser-extension/          Manifest extension targeting localhost:5000 — dead surface (ISS-047)
+├── web-admin/                  Express admin dashboard (JWT auth + requireAdmin, pty build control, :3500)
+├── update-server/              Express release/update server (JWT auth + requireAdmin on mutating routes, multer uploads, delta patches)
+├── site/                       Vite/React/TS marketing site + site/server.js admin surface (ADMIN_TOKEN-gated — ISS-039/040)
+├── browser-extension/          Manifest extension — marked EXPERIMENTAL; localhost:5000 API does not exist (ISS-047 → OPP-001)
 ├── installer/                  NSIS script (Redball.nsi)
 ├── scripts/                    build.sh (DANGER: no-arg = auto-release), build.ps1, version tooling
 ├── audit-run/                  Audit artifacts (this directory)
@@ -45,8 +45,8 @@
 
 - Build: `dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj` (add `-p:EnableWindowsTargeting=true` on Linux)
 - Full solution: `dotnet build Redball.v3.sln -p:EnableWindowsTargeting=true`
-- Tests: `dotnet test tests/Redball.Tests.csproj` — **currently does not compile** (ISS-037)
-- Windows-side test run: `bash scripts/run-tests-via-wine.sh`
+- Tests: `dotnet test tests/Redball.Tests.csproj` — **compiles** (ISS-037 resolved); runtime needs Windows
+- Windows-side test run: `bash scripts/run-tests-via-wine.sh` — currently fails: `/root/.wine-redball/dotnet.exe` missing
 - **Never** run `bash scripts/build.sh` with no arguments — it auto-releases (version bump, commit, push, GitHub release).
 
 ### Node.js

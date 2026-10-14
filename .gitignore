@@ -122,3 +122,8 @@ x64/
 Roadmap_PC.md
 node_modules/
 audit-run/*
+
+# Build artifacts and crash dumps (ISS-045)
+/core.[0-9]*
+build.pid
+*_wpftmp.csproj

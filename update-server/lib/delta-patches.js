@@ -168,6 +168,77 @@ function findMatchingOldFile(oldVersionDir, newVersionDir, newFilePath) {
   return null;
 }
 
+async function savePatchFile(patchesDir, relativePath, patch) {
+  const patchFileName = `${path.basename(relativePath)}.patch`;
+  const patchPath = path.join(patchesDir, patchFileName);
+  const patchSubDir = path.dirname(patchPath);
+  if (!fs.existsSync(patchSubDir)) {
+    fs.mkdirSync(patchSubDir, { recursive: true });
+  }
+  await fsp.writeFile(patchPath, patch.data);
+  return patchFileName;
+}
+
+async function processPatchCandidate(newFile, ctx) {
+  const { oldVersionDir, newVersionDir, patchesDir, minSavingsPercent, maxPatchSizeRatio, results } = ctx;
+  const relativePath = path.relative(newVersionDir, newFile);
+  const oldFile = path.join(oldVersionDir, relativePath);
+
+  const newData = await fsp.readFile(newFile);
+  results.totalOriginalSize += newData.length;
+
+  if (newData.length < 1024) {
+    results.skipped.push({ file: relativePath, reason: 'too_small' });
+    return;
+  }
+
+  // If old file doesn't exist at exact path, try to find matching versioned file
+  const actualOldFile = fs.existsSync(oldFile)
+    ? oldFile
+    : findMatchingOldFile(oldVersionDir, newVersionDir, newFile);
+  if (!actualOldFile) {
+    results.skipped.push({ file: relativePath, reason: 'new_file' });
+    return;
+  }
+
+  const oldData = await fsp.readFile(actualOldFile);
+  if (computeHash(oldData) === computeHash(newData)) {
+    results.skipped.push({ file: relativePath, reason: 'unchanged' });
+    return;
+  }
+
+  console.log(`[PATCH] Generating patch for ${relativePath}...`);
+  const patch = await createPatch(oldData, newData);
+  const savingsPercent = ((newData.length - patch.patchSize) / newData.length) * 100;
+
+  if (savingsPercent < minSavingsPercent || patch.patchSize > newData.length * maxPatchSizeRatio) {
+    results.skipped.push({ file: relativePath, reason: 'not_worthwhile', savings: savingsPercent.toFixed(1) + '%' });
+    return;
+  }
+
+  const testResult = await applyPatch(oldData, patch.data);
+  if (computeHash(testResult) !== patch.newFileHash) {
+    results.errors.push({ file: relativePath, error: 'patch_verification_failed' });
+    return;
+  }
+
+  const patchFileName = await savePatchFile(patchesDir, relativePath, patch);
+  const savings = newData.length - patch.patchSize;
+  results.totalSavings += savings;
+  results.generated.push({
+    file: relativePath,
+    patchFile: patchFileName,
+    patchSize: patch.patchSize,
+    originalSize: newData.length,
+    savings: savings,
+    savingsPercent: savingsPercent.toFixed(1) + '%',
+    oldHash: patch.oldFileHash,
+    newHash: patch.newFileHash
+  });
+
+  console.log(`[PATCH] ✓ ${relativePath}: ${savingsPercent.toFixed(1)}% savings (${formatBytes(savings)} saved)`);
+}
+
 /**
  * Generate patches between two release versions
  */
@@ -189,99 +260,15 @@ async function generatePatches(oldVersionDir, newVersionDir, patchesDir, options
     fs.mkdirSync(patchesDir, { recursive: true });
   }
 
-  // Get all files in new version
-  const newFiles = getAllFiles(newVersionDir);
+  const ctx = { oldVersionDir, newVersionDir, patchesDir, minSavingsPercent, maxPatchSizeRatio, results };
 
-  for (const newFile of newFiles) {
-    let relativePath = '';
+  for (const newFile of getAllFiles(newVersionDir)) {
     try {
-      relativePath = path.relative(newVersionDir, newFile);
-      const oldFile = path.join(oldVersionDir, relativePath);
-
-      // ASYNC: Use non-blocking file read
-      const newData = await fsp.readFile(newFile);
-      results.totalOriginalSize += newData.length;
-
-      // Skip very small files
-      if (newData.length < 1024) {
-        results.skipped.push({ file: relativePath, reason: 'too_small' });
-        continue;
-      }
-
-      // If old file doesn't exist at exact path, try to find matching versioned file
-      let actualOldFile = oldFile;
-      if (!fs.existsSync(oldFile)) {
-        actualOldFile = findMatchingOldFile(oldVersionDir, newVersionDir, newFile);
-        if (!actualOldFile) {
-          results.skipped.push({ file: relativePath, reason: 'new_file' });
-          continue;
-        }
-      }
-
-      // ASYNC: Use non-blocking file read for old data too
-      const oldData = await fsp.readFile(actualOldFile);
-
-      // Check if files are identical
-      if (computeHash(oldData) === computeHash(newData)) {
-        results.skipped.push({ file: relativePath, reason: 'unchanged' });
-        continue;
-      }
-
-      // Generate patch
-      console.log(`[PATCH] Generating patch for ${relativePath}...`);
-      const patch = await createPatch(oldData, newData);
-
-      // Check if patch is worthwhile
-      const savingsPercent = ((newData.length - patch.patchSize) / newData.length) * 100;
-
-      if (savingsPercent < minSavingsPercent || patch.patchSize > newData.length * maxPatchSizeRatio) {
-        results.skipped.push({
-          file: relativePath,
-          reason: 'not_worthwhile',
-          savings: savingsPercent.toFixed(1) + '%'
-        });
-        continue;
-      }
-
-      // Verify patch works
-      const testResult = await applyPatch(oldData, patch.data);
-      if (computeHash(testResult) !== patch.newFileHash) {
-        results.errors.push({ file: relativePath, error: 'patch_verification_failed' });
-        continue;
-      }
-
-      // Save patch
-      const patchFileName = `${path.basename(relativePath)}.patch`;
-      const patchPath = path.join(patchesDir, patchFileName);
-
-      // Create subdirectory if needed
-      const patchSubDir = path.dirname(patchPath);
-      if (!fs.existsSync(patchSubDir)) {
-        fs.mkdirSync(patchSubDir, { recursive: true });
-      }
-
-      // ASYNC: Use non-blocking file write
-      await fsp.writeFile(patchPath, patch.data);
-
-      const savings = newData.length - patch.patchSize;
-      results.totalSavings += savings;
-
-      results.generated.push({
-        file: relativePath,
-        patchFile: patchFileName,
-        patchSize: patch.patchSize,
-        originalSize: newData.length,
-        savings: savings,
-        savingsPercent: savingsPercent.toFixed(1) + '%',
-        oldHash: patch.oldFileHash,
-        newHash: patch.newFileHash
-      });
-
-      console.log(`[PATCH] ✓ ${relativePath}: ${savingsPercent.toFixed(1)}% savings (${formatBytes(savings)} saved)`);
-
+      await processPatchCandidate(newFile, ctx);
     } catch (err) {
-      results.errors.push({ file: relativePath || newFile, error: err.message });
-      console.error(`[PATCH] ✗ Error patching ${relativePath || newFile}: ${err.message}`);
+      const file = path.relative(newVersionDir, newFile) || newFile;
+      results.errors.push({ file, error: err.message });
+      console.error(`[PATCH] ✗ Error patching ${file}: ${err.message}`);
     }
   }
 

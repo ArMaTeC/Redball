@@ -301,11 +301,11 @@ app.get('/api/stats', (req, res) => {
   }
 });
 
-app.get('/api/build/status', (req, res) => {
+app.get('/api/build/status', authenticateToken, (req, res) => {
   res.json(buildState);
 });
 
-app.get('/api/build/log', (req, res) => {
+app.get('/api/build/log', authenticateToken, (req, res) => {
   res.json({ log: buildState.log });
 });
 
@@ -347,10 +347,11 @@ app.get('/api/releases', (req, res) => {
 // Download tracking endpoint
 app.get('/api/download/:version/:file', (req, res) => {
   const { version, file } = req.params;
-  const filePath = path.join(RELEASES_DIR, version, file);
+  const filePath = path.resolve(RELEASES_DIR, version, file);
 
-  // Validate path to prevent directory traversal
-  if (!filePath.startsWith(RELEASES_DIR)) {
+  // Boundary check: path must resolve strictly inside RELEASES_DIR
+  const rel = path.relative(RELEASES_DIR, filePath);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) {
     return res.status(403).json({ error: 'Invalid path' });
   }
 
@@ -509,9 +510,33 @@ app.get('/api/config', authenticateToken, (req, res) => {
   res.json(config);
 });
 
+const CLIENT_CONFIG_SCHEMA = {
+  HeartbeatSeconds: 'number', DefaultDuration: 'number',
+  HeartbeatInputMode: 'string', PreventDisplaySleep: 'boolean',
+  UseHeartbeatKeypress: 'boolean', TypeThingEnabled: 'boolean',
+  TypeThingNotifications: 'boolean', TypeThingMinDelayMs: 'number',
+  TypeThingMaxDelayMs: 'number', TypeThingTheme: 'string',
+  IdleDetection: 'boolean', BatteryAware: 'boolean',
+  IdleThreshold: 'number', BatteryThreshold: 'number',
+  NetworkAware: 'boolean', PresentationModeDetection: 'boolean',
+  UpdateRepoOwner: 'string', UpdateRepoName: 'string',
+  UpdateChannel: 'string', VerifyUpdateSignature: 'boolean',
+  Theme: 'string', Locale: 'string', MinimizeToTray: 'boolean',
+  MinimizeOnStart: 'boolean', ShowNotifications: 'boolean',
+  ShowBalloonOnStart: 'boolean', VerboseLogging: 'boolean',
+  EnableTelemetry: 'boolean', EnablePerformanceMetrics: 'boolean',
+  MaxLogSizeMB: 'number'
+};
+
 app.post('/api/config', authenticateToken, (req, res) => {
   const currentConfig = loadClientConfig();
-  const newConfig = { ...currentConfig, ...req.body };
+  const patch = {};
+  for (const [key, value] of Object.entries(req.body || {})) {
+    if (CLIENT_CONFIG_SCHEMA[key] && typeof value === CLIENT_CONFIG_SCHEMA[key]) {
+      patch[key] = value;
+    }
+  }
+  const newConfig = { ...currentConfig, ...patch };
 
   if (saveClientConfig(newConfig)) {
     res.json({ success: true, config: newConfig });
@@ -701,7 +726,13 @@ function parseBuildStage(line) {
   return null;
 }
 
-function startBuild() {
+// Must match commands handled by scripts/build.sh's case statement.
+// Fail closed: unknown types fall back to 'windows', never 'auto-release'.
+const ALLOWED_BUILD_TYPES = ['auto-release', 'all', 'windows', 'update-server', 'website', 'publish', 'clean'];
+
+function startBuild(buildType = 'windows') {
+  if (!ALLOWED_BUILD_TYPES.includes(buildType)) buildType = 'windows';
+
   // Check if another build is already running externally
   if (buildState.status === 'running' && buildState.pid) {
     try {
@@ -728,7 +759,7 @@ function startBuild() {
   broadcast({ type: 'build-started', data: buildState });
 
   const scriptPath = path.join(PROJECT_ROOT, 'scripts', 'build.sh');
-  const ptyProcess = pty.spawn('bash', [scriptPath, 'auto-release'], {
+  const ptyProcess = pty.spawn('bash', [scriptPath, buildType], {
     name: 'xterm-color',
     cols: 120,
     rows: 30,

@@ -21,17 +21,17 @@ public class ServiceOrchestrationTests
         // 1. Logger should be first
         // 2. ConfigService should load before other services
         // 3. KeepAwakeService depends on ConfigService
-        
+
         var config = ConfigService.Instance;
         Assert.IsNotNull(config, "ConfigService should be initialized");
         Assert.IsNotNull(config.Config, "Config should be loaded");
-        
+
         var keepAwake = KeepAwakeService.Instance;
         Assert.IsNotNull(keepAwake, "KeepAwakeService should be available");
-        
+
         var analytics = AnalyticsService.Instance;
         Assert.IsNotNull(analytics, "AnalyticsService should be available");
-        
+
         var security = new SecurityService();
         Assert.IsNotNull(security, "SecurityService should be available");
     }
@@ -43,15 +43,15 @@ public class ServiceOrchestrationTests
         var config = ConfigService.Instance.Config;
         var originalPreventDisplaySleep = config.PreventDisplaySleep;
         var service = KeepAwakeService.Instance;
-        
+
         try
         {
             // Act
             config.PreventDisplaySleep = !originalPreventDisplaySleep;
             ConfigService.Instance.Save();
-            
+
             // Config changes are saved; no explicit reload needed
-            
+
             // Assert - Service should reflect config changes
             // Note: This depends on whether KeepAwakeService listens to config changes
             Assert.IsNotNull(service, "Service should exist after config reload");
@@ -70,21 +70,21 @@ public class ServiceOrchestrationTests
         // Arrange
         var config = ConfigService.Instance.Config;
         var service = KeepAwakeService.Instance;
-        
+
         // Track if config changes are being audited
-        var auditService = SecurityAuditService.Instance;
-        Assert.IsNotNull(auditService, "SecurityAuditService should be available");
-        
+        var auditService = AuditLogService.Instance;
+        Assert.IsNotNull(auditService, "AuditLogService should be available");
+
         // Act - Change a config value
         var originalValue = config.HeartbeatSeconds;
         config.HeartbeatSeconds = 120;
-        
+
         // Assert - Audit log should record the change
-        var recentEvents = auditService.QueryEvents(
-            DateTime.UtcNow.AddMinutes(-1), 
-            DateTime.UtcNow, 
+        var recentEvents = auditService.GetEntries(
+            DateTime.UtcNow.AddMinutes(-1),
+            DateTime.UtcNow,
             AuditEventType.ConfigChange);
-        
+
         // Cleanup
         config.HeartbeatSeconds = originalValue;
     }
@@ -104,7 +104,7 @@ public class ServiceOrchestrationTests
             LocalizationService.Instance,
             new HealthCheckService()
         };
-        
+
         foreach (var service in services)
         {
             Assert.IsNotNull(service, $"Service {service?.GetType().Name} should not be null");
@@ -118,15 +118,15 @@ public class ServiceOrchestrationTests
         var config1 = ConfigService.Instance;
         var config2 = ConfigService.Instance;
         Assert.AreSame(config1, config2, "ConfigService should be a singleton");
-        
+
         var keepAwake1 = KeepAwakeService.Instance;
         var keepAwake2 = KeepAwakeService.Instance;
         Assert.AreSame(keepAwake1, keepAwake2, "KeepAwakeService should be a singleton");
-        
+
         var analytics1 = AnalyticsService.Instance;
         var analytics2 = AnalyticsService.Instance;
         Assert.AreSame(analytics1, analytics2, "AnalyticsService should be a singleton");
-        
+
         // SecurityService is not a singleton, skip singleton test for it
     }
 
@@ -136,22 +136,22 @@ public class ServiceOrchestrationTests
         // Arrange
         var config = ConfigService.Instance;
         var encryptionService = ConfigEncryptionService.Instance;
-        
+
         // Act - Save config with encryption enabled
         var testConfig = new RedballConfig
         {
             Locale = "test_locale",
             Theme = "TestTheme"
         };
-        
+
         // Encrypt using the correct API
         var encrypted = encryptionService.EncryptConfig(testConfig, EncryptionTier.Maximum);
-        
+
         // Assert
         Assert.IsNotNull(encrypted, "Encryption should succeed");
-        Assert.IsTrue(encrypted.StartsWith("RBENC:") || encrypted.StartsWith("RBTPM:") || encrypted.StartsWith("RBNG:"), 
+        Assert.IsTrue(encrypted.StartsWith("RBENC:") || encrypted.StartsWith("RBTPM:") || encrypted.StartsWith("RBNG:"),
             "Encrypted data should have valid prefix");
-        
+
         // Decrypt and verify
         var decryptedConfig = encryptionService.DecryptConfig(encrypted);
         Assert.IsNotNull(decryptedConfig, "Decryption should succeed");
@@ -164,17 +164,17 @@ public class ServiceOrchestrationTests
         // Arrange
         var analytics = AnalyticsService.Instance;
         var config = ConfigService.Instance.Config;
-        
+
         // Act
         var originalTelemetry = config.EnableTelemetry;
         config.EnableTelemetry = true;
-        
+
         // Track a feature
         analytics.TrackFeature("test.integration.feature");
-        
+
         // Assert - Analytics should be enabled
         Assert.IsTrue(config.EnableTelemetry, "Telemetry should be enabled");
-        
+
         // Cleanup
         config.EnableTelemetry = originalTelemetry;
     }
@@ -185,10 +185,10 @@ public class ServiceOrchestrationTests
         // Arrange
         var notification = NotificationService.Instance;
         var localization = LocalizationService.Instance;
-        
+
         Assert.IsNotNull(notification, "NotificationService should be available");
         Assert.IsNotNull(localization, "LocalizationService should be available");
-        
+
         // Act & Assert - Verify localization is loaded
         var currentLocale = localization.CurrentLocale;
         Assert.IsNotNull(currentLocale, "Current locale should be set");
@@ -199,10 +199,10 @@ public class ServiceOrchestrationTests
     {
         // Arrange
         var healthCheck = new HealthCheckService();
-        
+
         // Act
         var result = healthCheck.CheckHealthAsync().GetAwaiter().GetResult();
-        
+
         // Assert
         Assert.IsNotNull(result, "Health check should return a result");
     }
@@ -214,13 +214,13 @@ public class ServiceOrchestrationTests
         // Note: UpdateService doesn't have singleton Instance property
         // It is instantiated with required parameters
         var updateService = new UpdateService("ArMaTeC", "Redball", "stable");
-        
+
         Assert.IsNotNull(updateService, "UpdateService should be creatable");
-        
+
         // Act - Verify update service exists
         // The actual trust validation is internal to the update process
         var repoOwner = updateService.GetType().GetField("_repoOwner", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(updateService);
-        
+
         // Assert - Should have correct configuration
         Assert.AreEqual("ArMaTeC", repoOwner, "UpdateService should have correct repo owner");
     }
@@ -230,13 +230,13 @@ public class ServiceOrchestrationTests
     {
         // This test verifies that services can be disposed in the correct order
         // without throwing exceptions
-        
+
         var servicesToDispose = new List<IDisposable>
         {
             // Note: We don't actually dispose singletons in tests
             // This is just a verification that they implement IDisposable
         };
-        
+
         // Verify services implement IDisposable where appropriate
         Assert.IsInstanceOfType<AnalyticsService>(AnalyticsService.Instance);
         // Note: Many services don't need disposal, which is fine
@@ -247,31 +247,31 @@ public class ServiceOrchestrationTests
     {
         // Arrange
         var configService = ConfigService.Instance;
-        
+
         // Act - Simulate config scenario
         var originalHeartbeat = configService.Config.HeartbeatSeconds;
         var testValue = 99;
         configService.Config.HeartbeatSeconds = testValue;
-        
+
         // Save
         configService.Save();
-        
+
         // Load fresh config to verify persistence
         var freshConfig = new RedballConfig();
         var configPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Redball", "UserData", "Redball.json");
-        
+
         if (File.Exists(configPath))
         {
             var json = File.ReadAllText(configPath);
             freshConfig = System.Text.Json.JsonSerializer.Deserialize<RedballConfig>(json) ?? freshConfig;
         }
-        
+
         // Assert - Value should persist in the saved file
         // Note: HeartbeatSeconds might be sanitized, so we just verify Save() works
         Assert.IsNotNull(freshConfig, "Config should be loadable from file");
-        
+
         // Cleanup
         configService.Config.HeartbeatSeconds = originalHeartbeat;
         configService.Save();
@@ -281,22 +281,21 @@ public class ServiceOrchestrationTests
     public void SecurityAudit_LogsServiceInteractions()
     {
         // Arrange
-        var auditService = SecurityAuditService.Instance;
-        
+        var auditService = AuditLogService.Instance;
+
         // Act - Trigger some service interactions
         var config = ConfigService.Instance;
         var originalValue = config.Config.VerboseLogging;
         config.Config.VerboseLogging = !originalValue;
         ConfigService.Instance.Save();
-        
+
         // Wait for async logging
         System.Threading.Thread.Sleep(100);
-        auditService.Flush();
-        
+
         // Assert - Should have logged the config change
-        var newEvents = auditService.QueryEvents(DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow);
+        var newEvents = auditService.GetEntries(DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow);
         Assert.IsTrue(newEvents.Count >= 0, "Audit log should contain service interaction events");
-        
+
         // Cleanup
         config.Config.VerboseLogging = originalValue;
         ConfigService.Instance.Save();
@@ -315,13 +314,13 @@ public class ServiceOrchestrationTests
             NotificationService.Instance,
             new HealthCheckService()
         };
-        
+
         foreach (var service in services)
         {
             var serviceType = service.GetType();
             var methods = serviceType.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
                 .Where(m => !m.IsSpecialName && m.DeclaringType == serviceType);
-            
+
             // Verify each public method has proper error handling
             // This is a conceptual check - in practice we'd analyze the IL or source
             Assert.IsNotNull(service, $"Service {serviceType.Name} should exist");

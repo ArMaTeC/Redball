@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Redball Companion",
   "version": "1.0.0",
-  "description": "Browser companion for Redball keep-awake application. Syncs with desktop app for web-based keep-awake and status monitoring.",
+  "description": "[EXPERIMENTAL] Browser companion for Redball keep-awake application. Requires a desktop-side localhost API on :5000 that is not yet shipped — see OPP-001 in audit-run/opportunities.md.",
   "permissions": [
     "storage",
     "activeTab",

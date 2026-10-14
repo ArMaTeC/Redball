@@ -7,8 +7,23 @@ const path = require('path');
 const fs = require('fs');
 const router = express.Router();
 const { loadDB, saveDB, compareVersions } = require('../../lib/db');
+const { authenticateToken, requireAdmin } = require('../../middleware/auth');
 const config = require('../../config');
 const { RELEASES_DIR } = config;
+
+// Version must be a simple dotted identifier — never a path fragment
+function isValidVersion(version) {
+    return typeof version === 'string'
+        && /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(version)
+        && !version.includes('..');
+}
+
+// Resolved path must stay strictly inside RELEASES_DIR
+function resolveReleaseDir(version) {
+    const dir = path.resolve(RELEASES_DIR, version);
+    const root = path.resolve(RELEASES_DIR);
+    return dir.startsWith(root + path.sep) ? dir : null;
+}
 
 // Shared githubCache reference - will be injected
 let githubCache = { releases: null, latest: null, lastFetch: 0 };
@@ -159,16 +174,19 @@ router.get('/:version', (req, res) => {
 });
 
 // POST /api/releases - Create a new release
-router.post('/', (req, res) => {
+router.post('/', authenticateToken, requireAdmin, (req, res) => {
     const { version, notes, channel } = req.body;
-    if (!version) return res.status(400).json({ error: 'Version is required' });
+    if (!isValidVersion(version)) {
+        return res.status(400).json({ error: 'Invalid or missing version' });
+    }
 
     const db = loadDB();
     if (db.releases.find(r => r.version === version)) {
         return res.status(409).json({ error: 'Release already exists' });
     }
 
-    const releaseDir = path.join(RELEASES_DIR, version);
+    const releaseDir = resolveReleaseDir(version);
+    if (!releaseDir) return res.status(400).json({ error: 'Invalid version' });
     if (!fs.existsSync(releaseDir)) fs.mkdirSync(releaseDir, { recursive: true });
 
     const release = {
@@ -191,14 +209,14 @@ router.post('/', (req, res) => {
 });
 
 // DELETE /api/releases/:version - Delete a release
-router.delete('/:version', (req, res) => {
+router.delete('/:version', authenticateToken, requireAdmin, (req, res) => {
     const db = loadDB();
     const idx = db.releases.findIndex(r => r.version === req.params.version);
     if (idx < 0) return res.status(404).json({ error: 'Release not found' });
 
     // Remove files from disk
-    const releaseDir = path.join(RELEASES_DIR, req.params.version);
-    if (fs.existsSync(releaseDir)) {
+    const releaseDir = resolveReleaseDir(req.params.version);
+    if (releaseDir && fs.existsSync(releaseDir)) {
         try {
             fs.rmSync(releaseDir, { recursive: true, force: true });
         } catch (e) {

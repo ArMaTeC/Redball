@@ -229,111 +229,117 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
 // ============================
 // LIVE DATA SYNC FROM API
 // ============================
+const escapeHtml = (value) => String(value ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const safeUrl = (url) => {
+    const s = String(url ?? '');
+    return (s.startsWith('/') || s.startsWith('https://') || s.startsWith('http://')) ? s : '#';
+};
+
+const fetchJson = (url) => fetch(url).then(r => r.ok ? r.json() : null).catch(() => null);
+
+function setCounter(selector, value) {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    if (!el.dataset.animated) {
+        el.dataset.target = value || 0;
+    } else {
+        el.textContent = (value || 0).toLocaleString();
+    }
+}
+
+function releaseListItem(release) {
+    const date = new Date(release.date).toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'short', year: 'numeric'
+    });
+    const downloads = release.totalDownloads || 0;
+    const setupFile = release.files?.find(f => f.name.includes('Setup') || f.name.endsWith('.exe'));
+    const downloadUrl = safeUrl(setupFile
+        ? (setupFile.url || `/releases/${release.version}/${setupFile.name}`)
+        : `https://github.com/ArMaTeC/Redball/releases/download/v${release.version}/Redball-${release.version}-Setup.exe`);
+
+    return `
+        <a href="${escapeHtml(downloadUrl)}" class="version-item" style="background:var(--grad-card);border:1px solid var(--border-subtle);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;text-decoration:none;transition:all 0.3s ease">
+            <div style="display:flex;align-items:center;gap:16px">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:600;color:var(--primary-light)">v${escapeHtml(release.version)}</span>
+                <span style="color:var(--text-muted);font-size:0.85rem">${date}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:20px">
+                <span style="color:var(--text-secondary);font-size:0.875rem;display:flex;align-items:center;gap:6px">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;opacity:0.6">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    ${downloads.toLocaleString()} downloads
+                </span>
+                <span style="color:var(--primary);font-size:0.875rem;font-weight:500;display:flex;align-items:center;gap:4px">
+                    Download
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                    </svg>
+                </span>
+            </div>
+        </a>
+    `;
+}
+
+function renderVersionHistory(stats) {
+    const versionList = document.getElementById('version-list');
+    if (versionList && stats.releases && stats.releases.length > 0) {
+        versionList.innerHTML = stats.releases.slice(0, 6).map(releaseListItem).join('');
+    }
+}
+
+function setLatestVersionText(ver) {
+    document.getElementById('hero-version').textContent = ver;
+    document.getElementById('stat-latest-ver').textContent = 'v' + ver;
+    document.getElementById('dl-ver-exe').textContent = 'v' + ver;
+    document.getElementById('dl-ver-zip').textContent = 'v' + ver;
+}
+
+function applyLatestRelease(latest) {
+    const ver = latest.version;
+    setLatestVersionText(ver);
+
+    const exeFile = latest.files?.find(f => f.name.includes('Setup') || f.name.endsWith('.exe'));
+    const zipFile = latest.files?.find(f => f.name.endsWith('.zip'));
+
+    if (exeFile) {
+        document.getElementById('dl-btn-exe').href = safeUrl(exeFile.url || `https://github.com/ArMaTeC/Redball/releases/download/v${ver}/${exeFile.name}`);
+    }
+    if (zipFile) {
+        document.getElementById('dl-btn-zip').href = safeUrl(zipFile.url || `https://github.com/ArMaTeC/Redball/releases/download/v${ver}/${zipFile.name}`);
+    }
+}
+
+async function applyLatestFromGitHub() {
+    const ghData = await fetchJson('https://api.github.com/repos/ArMaTeC/Redball/releases/latest');
+    if (!ghData) return;
+
+    setLatestVersionText(ghData.tag_name.replace('v', ''));
+
+    const exe = ghData.assets.find(a => a.name.includes('Setup') || a.name.endsWith('.exe'));
+    const zip = ghData.assets.find(a => a.name.endsWith('.zip'));
+    if (exe) document.getElementById('dl-btn-exe').href = exe.browser_download_url;
+    if (zip) document.getElementById('dl-btn-zip').href = zip.browser_download_url;
+}
+
 async function syncData() {
     try {
         // Try local API first
-        const stats = await fetch('/api/stats').then(r => r.ok ? r.json() : null).catch(() => null);
-        const latest = await fetch('/api/releases/latest').then(r => r.ok ? r.json() : null).catch(() => null);
+        const stats = await fetchJson('/api/stats');
+        const latest = await fetchJson('/api/releases/latest');
 
         if (stats) {
-            // Update download counter target
-            const dlCounter = document.querySelector('#stat-downloads .counter');
-            if (dlCounter && !dlCounter.dataset.animated) {
-                dlCounter.dataset.target = stats.totalDownloads || 0;
-            } else if (dlCounter) {
-                dlCounter.textContent = (stats.totalDownloads || 0).toLocaleString();
-            }
-
-            const relCounter = document.querySelector('#stat-releases-count .counter');
-            if (relCounter && !relCounter.dataset.animated) {
-                relCounter.dataset.target = stats.totalReleases || 0;
-            } else if (relCounter) {
-                relCounter.textContent = (stats.totalReleases || 0).toLocaleString();
-            }
-
-            const escapeHtml = (value) => String(value ?? '')
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-            const safeUrl = (url) => {
-                const s = String(url ?? '');
-                return (s.startsWith('/') || s.startsWith('https://') || s.startsWith('http://')) ? s : '#';
-            };
-
-            // Update version history (last 6 versions)
-            const versionList = document.getElementById('version-list');
-            if (versionList && stats.releases && stats.releases.length > 0) {
-                const recentReleases = stats.releases.slice(0, 6);
-                versionList.innerHTML = recentReleases.map(release => {
-                    const date = new Date(release.date).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                    });
-                    const downloads = release.totalDownloads || 0;
-                    const setupFile = release.files?.find(f => f.name.includes('Setup') || f.name.endsWith('.exe'));
-                    const downloadUrl = safeUrl(setupFile ?
-                        (setupFile.url || `/releases/${release.version}/${setupFile.name}`) :
-                        `https://github.com/ArMaTeC/Redball/releases/download/v${release.version}/Redball-${release.version}-Setup.exe`);
-
-                    return `
-                        <a href="${escapeHtml(downloadUrl)}" class="version-item" style="background:var(--grad-card);border:1px solid var(--border-subtle);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;text-decoration:none;transition:all 0.3s ease">
-                            <div style="display:flex;align-items:center;gap:16px">
-                                <span style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:600;color:var(--primary-light)">v${escapeHtml(release.version)}</span>
-                                <span style="color:var(--text-muted);font-size:0.85rem">${date}</span>
-                            </div>
-                            <div style="display:flex;align-items:center;gap:20px">
-                                <span style="color:var(--text-secondary);font-size:0.875rem;display:flex;align-items:center;gap:6px">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;opacity:0.6">
-                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                                    </svg>
-                                    ${downloads.toLocaleString()} downloads
-                                </span>
-                                <span style="color:var(--primary);font-size:0.875rem;font-weight:500;display:flex;align-items:center;gap:4px">
-                                    Download
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
-                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-                                    </svg>
-                                </span>
-                            </div>
-                        </a>
-                    `;
-                }).join('');
-            }
+            setCounter('#stat-downloads .counter', stats.totalDownloads);
+            setCounter('#stat-releases-count .counter', stats.totalReleases);
+            renderVersionHistory(stats);
         }
 
         if (latest) {
-            const ver = latest.version;
-            document.getElementById('hero-version').textContent = ver;
-            document.getElementById('stat-latest-ver').textContent = 'v' + ver;
-            document.getElementById('dl-ver-exe').textContent = 'v' + ver;
-            document.getElementById('dl-ver-zip').textContent = 'v' + ver;
-
-            // Update download URLs
-            const exeFile = latest.files?.find(f => f.name.includes('Setup') || f.name.endsWith('.exe'));
-            const zipFile = latest.files?.find(f => f.name.endsWith('.zip'));
-
-            if (exeFile) {
-                document.getElementById('dl-btn-exe').href = safeUrl(exeFile.url || `https://github.com/ArMaTeC/Redball/releases/download/v${ver}/${exeFile.name}`);
-            }
-            if (zipFile) {
-                document.getElementById('dl-btn-zip').href = safeUrl(zipFile.url || `https://github.com/ArMaTeC/Redball/releases/download/v${ver}/${zipFile.name}`);
-            }
+            applyLatestRelease(latest);
         } else {
-            // Fallback to GitHub API
-            const ghRes = await fetch('https://api.github.com/repos/ArMaTeC/Redball/releases/latest');
-            if (ghRes.ok) {
-                const ghData = await ghRes.json();
-                const ver = ghData.tag_name.replace('v', '');
-                document.getElementById('hero-version').textContent = ver;
-                document.getElementById('stat-latest-ver').textContent = 'v' + ver;
-                document.getElementById('dl-ver-exe').textContent = 'v' + ver;
-                document.getElementById('dl-ver-zip').textContent = 'v' + ver;
-
-                const exe = ghData.assets.find(a => a.name.includes('Setup') || a.name.endsWith('.exe'));
-                const zip = ghData.assets.find(a => a.name.endsWith('.zip'));
-                if (exe) document.getElementById('dl-btn-exe').href = exe.browser_download_url;
-                if (zip) document.getElementById('dl-btn-zip').href = zip.browser_download_url;
-            }
+            await applyLatestFromGitHub();
         }
     } catch (err) {
         console.warn('[SYNC] Data sync warning:', err.message);

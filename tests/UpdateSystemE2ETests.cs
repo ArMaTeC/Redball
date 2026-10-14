@@ -110,7 +110,7 @@ public class UpdateSystemE2ETests
         var needsUpdate = latestNormalized > currentNormalized;
 
         // Assert
-        Assert.AreEqual(shouldUpdate, needsUpdate, 
+        Assert.AreEqual(shouldUpdate, needsUpdate,
             $"Version comparison failed: {current} vs {latest} should {(shouldUpdate ? "" : "not ")}trigger update");
     }
 
@@ -163,7 +163,7 @@ public class UpdateSystemE2ETests
 
         foreach (var priority in priorities)
         {
-            selected = assets.Find(a => 
+            selected = assets.Find(a =>
                 a.Name.Contains(priority, StringComparison.OrdinalIgnoreCase) &&
                 !a.Name.Contains("debug", StringComparison.OrdinalIgnoreCase));
             if (selected != null) break;
@@ -291,7 +291,7 @@ Write-Host 'Update complete'
         };
 
         var updateChannel = "stable";
-        var selected = releases.Where(r => 
+        var selected = releases.Where(r =>
             !r.IsPreRelease || updateChannel == "beta" || updateChannel == "alpha")
             .OrderByDescending(r => r.Tag)
             .FirstOrDefault();
@@ -361,7 +361,7 @@ Write-Host 'Update complete'
         // Create test file with hash
         var content = "Test update file content";
         await File.WriteAllTextAsync(cachedFile, content);
-        
+
         using var sha256 = SHA256.Create();
         var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(content));
         var hashString = BitConverter.ToString(hash).Replace("-", "").ToLower();
@@ -388,7 +388,7 @@ Write-Host 'Update complete'
         // Arrange
         var currentVersion = new Version(2, 1, 100);
         var latestVersion = new Version(2, 1, 110);
-        
+
         var releases = new[]
         {
             new { Version = "v2.1.110", Notes = "Latest features", Date = DateTime.UtcNow },
@@ -435,11 +435,11 @@ Write-Host 'Update complete'
                 .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
             var isPathRooted = Path.IsPathRooted(normalized);
-            var hasTraversal = normalized.Contains(".." + Path.DirectorySeparatorChar) || 
+            var hasTraversal = normalized.Contains(".." + Path.DirectorySeparatorChar) ||
                               normalized.Contains(Path.DirectorySeparatorChar + "..");
             var isValid = !isPathRooted && !hasTraversal;
 
-            Assert.AreEqual(shouldBeValid, isValid, 
+            Assert.AreEqual(shouldBeValid, isValid,
                 $"Path '{path}' should {(shouldBeValid ? "" : "not ")}be valid");
         }
     }
@@ -483,7 +483,7 @@ Write-Host 'Update complete'
         var appData = Path.Combine(_testDir, "bg_test");
         Directory.CreateDirectory(appData);
         var markerPath = Path.Combine(appData, "active_slot.txt");
-        
+
         // Start with blue slot
         File.WriteAllText(markerPath, "blue");
 
@@ -561,7 +561,7 @@ Write-Host 'Update complete'
         // Act & Assert - should handle cancellation gracefully
         try
         {
-            await service.CheckForUpdateAsync(null, cts.Token);
+            await service.CheckForUpdateAsync(false, null, cts.Token);
             // Either returns null or throws OperationCanceledException - both are valid
             Assert.IsTrue(true);
         }
@@ -608,7 +608,7 @@ Write-Host 'Update complete'
                     {
                         var context = _mockServer.GetContext();
                         var response = context.Response;
-                        
+
                         // Mock GitHub API response - use simple string without special chars
                         var mockJson = "[{\"tag_name\":\"v99.99.99\",\"body\":\"Mock release\",\"published_at\":\"2026-01-01T00:00:00Z\",\"draft\":false,\"prerelease\":false,\"assets\":[{\"name\":\"Redball.msi\",\"browser_download_url\":\"http://localhost:" + _mockServerPort + "/download/Redball.msi\",\"size\":15000000}]}]";
 

@@ -1,6 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
-using Redball.Services;
+using Redball.UI.Services;
 
 namespace Redball.Benchmarks;
 

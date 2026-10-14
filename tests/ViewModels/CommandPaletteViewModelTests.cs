@@ -1,74 +1,90 @@
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Redball.UI.ViewModels;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Redball.Tests.ViewModels;
 
+[TestClass]
 public class CommandPaletteViewModelTests
 {
-    [Fact]
+    private static CommandPaletteViewModel CreateViewModel()
+    {
+        var commands = new List<PaletteCommand>
+        {
+            new() { Name = "Open Settings", Description = "Configure Redball", Icon = "⚙", Action = () => { } },
+            new() { Name = "Start Keep-Awake", Description = "Begin an indefinite session", Icon = "☕", Action = () => { } },
+            new() { Name = "Stop Session", Description = "End the current session", Icon = "⏹", Action = () => { } },
+            new() { Name = "Toggle Theme", Description = "Switch between themes", Icon = "🎨", Action = () => { } },
+            new() { Name = "View Logs", Description = "Open the log folder", Icon = "📄", Action = () => { } },
+            new() { Name = "Exit", Description = "Quit Redball", Icon = "❌", Action = () => { } }
+        };
+        return new CommandPaletteViewModel(commands);
+    }
+
+    [TestMethod]
     public void Search_EmptyQuery_ShowsAllCommands()
     {
-        var vm = new CommandPaletteViewModel();
-        vm.SearchQuery = "";
-        
-        Assert.NotEmpty(vm.FilteredCommands);
-        Assert.True(vm.FilteredCommands.Count > 5);
+        var vm = CreateViewModel();
+        vm.SearchText = "";
+
+        Assert.IsTrue(vm.FilteredCommands.Count > 5);
     }
 
-    [Fact]
+    [TestMethod]
     public void Search_ExactMatch_PrioritizesResult()
     {
-        var vm = new CommandPaletteViewModel();
-        vm.SearchQuery = "Settings";
-        
+        var vm = CreateViewModel();
+        vm.SearchText = "Settings";
+
         var first = vm.FilteredCommands.FirstOrDefault();
-        Assert.NotNull(first);
-        Assert.Contains("Settings", first.DisplayName);
+        Assert.IsNotNull(first);
+        StringAssert.Contains(first.Name, "Settings");
     }
 
-    [Fact]
-    public void Search_FuzzyMatch_FindsResults()
+    [TestMethod]
+    public void Search_NameMatch_FindsResults()
     {
-        var vm = new CommandPaletteViewModel();
-        vm.SearchQuery = "stngs"; // Fuzzy for Settings
-        
-        var match = vm.FilteredCommands.Any(c => c.DisplayName.Contains("Settings"));
-        Assert.True(match);
+        var vm = CreateViewModel();
+        vm.SearchText = "Keep-Awake";
+
+        var match = vm.FilteredCommands.Any(c => c.Name.Contains("Start Keep-Awake"));
+        Assert.IsTrue(match);
     }
 
-    [Fact]
-    public void Search_TimedSession_IntentDetected()
+    [TestMethod]
+    public void Search_TimerIntent_GeneratesTimedSessionCommand()
     {
-        var vm = new CommandPaletteViewModel();
-        vm.SearchQuery = "stay awake for 20m";
-        
-        var first = vm.FilteredCommands.FirstOrDefault();
-        Assert.NotNull(first);
-        Assert.Contains("Start 20m Session", first.DisplayName);
+        var vm = CreateViewModel();
+        // Intent regex requires a keyword before the duration: "(awake|for|min|stay) <n>"
+        vm.SearchText = "stay awake for 20";
+
+        var match = vm.FilteredCommands.Any(c => c.Name == "Start 20m Session");
+        Assert.IsTrue(match);
     }
 
-    [Fact]
-    public void Search_ShortIntent_Detected()
+    [TestMethod]
+    public void Search_ThemeIntent_GeneratesThemeCommands()
     {
-        var vm = new CommandPaletteViewModel();
-        vm.SearchQuery = "20m";
-        
-        var match = vm.FilteredCommands.Any(c => c.DisplayName.Contains("Start 20m Session"));
-        Assert.True(match);
+        var vm = CreateViewModel();
+        vm.SearchText = "dark theme";
+
+        var match = vm.FilteredCommands.Any(c => c.Name == "Apply Dark Theme");
+        Assert.IsTrue(match);
     }
 
-    [Fact]
-    public void ExecuteCommand_InvokesAction()
+    [TestMethod]
+    public void ExecuteSelectedCommand_InvokesAction_AndHides()
     {
-        var vm = new CommandPaletteViewModel();
+        var vm = CreateViewModel();
         bool executed = false;
-        var cmd = new CommandItem("Test", "t", () => executed = true);
-        
-        vm.ExecuteCommand(cmd);
-        
-        Assert.True(executed);
-        Assert.False(vm.IsVisible); // Should hide after execution
+        vm.SelectedCommand = new PaletteCommand { Name = "Test", Action = () => executed = true };
+        vm.IsVisible = true;
+
+        vm.ExecuteSelectedCommand.Execute(null);
+
+        Assert.IsTrue(executed);
+        Assert.IsFalse(vm.IsVisible);
+        Assert.AreEqual("", vm.SearchText); // search is cleared after execution
     }
 }

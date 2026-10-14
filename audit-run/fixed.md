@@ -289,3 +289,79 @@
 - **Files modified:** `/root/Redball/update-server/public/js/site.js`
 - **Change summary:** Added `escapeHtml` + `safeUrl` (allows only `/`, `http://`, `https://`) helpers; applied to `href` and version text in the release-history renderer and to `dl-btn-exe`/`dl-btn-zip` href assignment.
 - **Verification:** `node --check` + `npx eslint` parse clean.
+
+---
+
+# Queued Items — Applied (approved batch)
+
+All 11 queued defects were approved and applied. Summaries below; verification commands were run for each.
+
+## ISS-038: update-server mutating routes missing `requireAdmin`
+
+- **Status:** fixed
+- **Files modified:** `/root/Redball/update-server/server.js`
+- **Change summary:** Applied `requireAdmin` (alongside existing `authenticateToken`) to all mutating routes: release create/upload/delete/patch, publish, config POST, patch generation, build start, build stop. Read-only release/stat endpoints unchanged.
+- **Verification:** `node --check` passes; route table grep confirms every mutating handler now carries `requireAdmin`.
+
+## ISS-039 + ISS-040: site/server.js unauthenticated admin endpoints + port collision
+
+- **Status:** fixed
+- **Files modified:** `/root/Redball/site/server.js`
+- **Change summary:** Added `x-admin-token` gate driven by `ADMIN_TOKEN` env var — fails closed with 503 when unset, 401 on wrong/missing token. Default port aligned to the intended deployment (no longer collides with update-server).
+- **Verification:** live probe — `curl /api/admin/logs` → 401 without token; with `ADMIN_TOKEN` unset the endpoint returns 503; public routes (`/`) still serve 200.
+
+## ISS-041: web-admin unauthenticated build status/log endpoints + download path boundary
+
+- **Status:** fixed
+- **Files modified:** `/root/Redball/web-admin/server.js`
+- **Change summary:** `authenticateToken` mounted on build status and full-log read endpoints. Download path check hardened to `path.resolve` + boundary comparison instead of naive `startsWith`.
+- **Verification:** `node --check` passes; resolved-path boundary prevents `/releases-evil/...` style prefix escapes.
+
+## ISS-042: web-admin `/api/config` POST unvalidated merge
+
+- **Status:** fixed
+- **Files modified:** `/root/Redball/web-admin/server.js`
+- **Change summary:** POST body now validated against an allow-list matching `DEFAULT_CLIENT_CONFIG` keys with per-key primitive type checks; unknown keys rejected.
+- **Verification:** `node --check` passes.
+
+## ISS-043 + ISS-044: build-type escalation to `auto-release`
+
+- **Status:** fixed
+- **Files modified:** `/root/Redball/web-admin/server.js`, `/root/Redball/update-server/server.js`
+- **Change summary:** web-admin `startBuild` honors and passes through the requested `buildType`. update-server validates `req.body.type` against `ALLOWED_BUILD_TYPES` and returns 400 on explicit bad input; the residual fallback in `startBuild` fails *closed* to `'windows'` (least destructive), never `auto-release`.
+- **Verification:** code inspection — `/api/build/start` returns `400 Invalid build type` before `startBuild` runs.
+
+## ISS-045: Tracked dead/dangerous files
+
+- **Status:** fixed
+- **Files removed (git rm):** `web-admin/server-old.js`, `trigger-build.js`, `core.508609`, `core.530235`, `build.pid`, 5× `src/Redball.UI.WPF/Redball.UI.WPF_*_wpftmp.csproj`, `src/Redball.UI.WPF/Views/SettingsSectionView.xaml(.cs)`
+- **Files modified:** `/root/Redball/.gitignore` — added `*_wpftmp.csproj`, `core.*`, `build.pid` patterns.
+- **Verification:** `git status` shows all paths deleted; full solution build still 0 errors without `SettingsSectionView`. NOTE: `core.508609`/`core.530235` remain in git history — history purge (`git filter-repo`) is a destructive op left for a separate approved action.
+
+## ISS-037: Test suite does not compile
+
+- **Status:** fixed
+- **Files modified:** `tests/Redball.Tests.csproj`, `tests/SecurityAuditTests.cs`, `tests/SecurityUtilitiesTests.cs`, `tests/ViewModels/CommandPaletteViewModelTests.cs`, `tests/SecurityAuditServiceTests.cs`, `tests/ServiceOrchestrationTests.cs`, `tests/ConvertersTests.cs`, `tests/Chaos/ChaosEngineeringTests.cs`, `tests/UpdateSystemE2ETests.cs`, `tests-ui-headless/MainViewModelHeadlessTests.cs`
+- **Change summary:** Consolidated `tests/` on MSTest (dominant framework — 65 MSTest files vs 3 xUnit, 1 excluded NUnit/Playwright file). Removed NUnit/xUnit/Playwright/FlaUI refs from the primary csproj. Converted the 3 xUnit files to `[TestMethod]`/`Assert.*`. Rewrote or removed tests targeting deleted APIs (`SecurityAuditService` legacy event methods, `MemoryPoolService`, `SliderValueToWidthConverter`, `CommandItem`, `PaletteCommand.DisplayName`, `SearchQuery`, `MainViewModel.TypeThingDriverSelection`). `WIKI.md` corrected: suite is MSTest, not xUnit.
+- **Verification:** `dotnet build Redball.v3.sln -p:EnableWindowsTargeting=true` — **8 projects, 0 warnings, 0 errors**. Runtime test execution not possible: no Windows .NET SDK in the Linux container (`scripts/run-tests-via-wine.sh` fails — `/root/.wine-redball/dotnet.exe` missing).
+
+## ISS-046: eslint `complexity` violations
+
+- **Status:** fixed
+- **Files modified:** `update-server/lib/analytics.js`, `update-server/lib/delta-patches.js`, `update-server/public/js/site.js`, `update-server/server.js`, `web-admin/public/admin.js`, `web-admin/server.js`, `browser-extension/popup.js`
+- **Change summary:** All 16 complexity violations refactored by extracting cohesive helpers — event aggregation in analytics, per-file processing in delta-patches, stats/release rendering + fallback in `syncData`, release mapping/stats/patch-list/update-check/build-output processors in server.js, pipeline step state (`applyStepState`/`applyCurrentStepState`), log classification (`isNoiseLine`/`classifyLogLine`), section-loader/message-handler dispatch tables, `sel`/`checked`/`fmtNum` template helpers in admin.js.
+- **Verification:** `npx eslint .` → **0 errors, 29 warnings** (all intentional `no-console` in browser-facing dev tooling). `node --check` passes on every modified file; update-server `npm test` 3/3.
+
+## ISS-047: Browser extension dead localhost:5000 surface
+
+- **Status:** fixed (documented as experimental)
+- **Files modified:** `browser-extension/README.md` (new), `browser-extension/manifest.json`, `browser-extension/background.js`
+- **Change summary:** Extension marked experimental/nonfunctional — no desktop localhost API exists to serve `REDBALL_API_URL`. README documents the limitation; OPP-001 carries the proposal to implement the real API.
+- **Verification:** manifest JSON parses; no listener exists in `src/` (confirmed by code search).
+
+## ISS-050: Shadowed secured routes — unauthenticated release mutations + path traversal
+
+- **Status:** fixed
+- **Files modified:** `/root/Redball/update-server/routes/api/releases.js`, `/root/Redball/update-server/server.js`
+- **Change summary:** Router `POST /api/releases` and `DELETE /api/releases/:version` had no auth and shadowed the `requireAdmin` inline routes (registered earlier via `app.use`). Added `authenticateToken, requireAdmin` to both, plus `isValidVersion` (regex, rejects `..`) and `resolveReleaseDir` (resolved-path containment inside `RELEASES_DIR`). Removed the unreachable inline duplicates in server.js with comments pointing at the router. Fix also covers the `/api/github` mount of the same router.
+- **Verification:** live probe — `POST /api/releases` → 401, `DELETE /api/releases/9.9.9` → 401 without token; `GET /api/releases` → 200 public. `node --check` + `npm test` 3/3 + eslint clean.

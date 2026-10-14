@@ -57,6 +57,19 @@ style.textContent = `
 document.head.appendChild(style);
 
 // --- Sections & Deep Linking ---
+const SECTION_LOADERS = {
+    dashboard: fetchStats,
+    releases: fetchStats,
+    config: loadConfiguration,
+    users: loadUsers,
+    analytics: loadAnalytics
+};
+
+function activateNavButton(id, btn) {
+    const target = btn || document.querySelector(`.nav-btn[data-section="${id}"]`);
+    if (target) target.classList.add('active');
+}
+
 function showSection(id, btn, pushState = true) {
     const section = document.getElementById(id + '-section');
     if (!section) return;
@@ -65,14 +78,7 @@ function showSection(id, btn, pushState = true) {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
 
     section.classList.add('active');
-
-    if (btn) {
-        btn.classList.add('active');
-    } else {
-        // Find button by data-section attribute if not provided
-        const target = document.querySelector(`.nav-btn[data-section="${id}"]`);
-        if (target) target.classList.add('active');
-    }
+    activateNavButton(id, btn);
 
     if (pushState) {
         const url = new URL(window.location);
@@ -80,11 +86,7 @@ function showSection(id, btn, pushState = true) {
         window.history.pushState({}, '', url);
     }
 
-    if (id === 'dashboard' || id === 'releases') fetchStats();
-    if (id === 'config') loadConfiguration();
-    if (id === 'users') loadUsers();
-    if (id === 'analytics') loadAnalytics();
-
+    SECTION_LOADERS[id]?.();
     resetIdleTimer();
 }
 
@@ -151,6 +153,10 @@ async function loadConfiguration() {
     } catch (e) { console.error(e); }
 }
 
+// Template helpers — keep the ternaries out of renderConfig
+const sel = (cond) => cond ? 'selected' : '';
+const checked = (cond) => cond ? 'checked' : '';
+
 function renderConfig() {
     const root = document.getElementById('config-root');
     root.innerHTML = `
@@ -172,18 +178,18 @@ function renderConfig() {
             <div class="config-field">
                 <label>Heartbeat Input Mode</label>
                 <select id="cfg-HeartbeatInputMode">
-                    <option value="F15" ${currentConfig.HeartbeatInputMode === 'F15' ? 'selected' : ''}>F15 (Ghost Key)</option>
-                    <option value="F24" ${currentConfig.HeartbeatInputMode === 'F24' ? 'selected' : ''}>F24 (Phantom Key)</option>
-                    <option value="Mouse" ${currentConfig.HeartbeatInputMode === 'Mouse' ? 'selected' : ''}>Mouse Jiggle</option>
+                    <option value="F15" ${sel(currentConfig.HeartbeatInputMode === 'F15')}>F15 (Ghost Key)</option>
+                    <option value="F24" ${sel(currentConfig.HeartbeatInputMode === 'F24')}>F24 (Phantom Key)</option>
+                    <option value="Mouse" ${sel(currentConfig.HeartbeatInputMode === 'Mouse')}>Mouse Jiggle</option>
                 </select>
             </div>
             <div class="config-row">
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-PreventDisplaySleep" ${currentConfig.PreventDisplaySleep ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-PreventDisplaySleep" ${checked(currentConfig.PreventDisplaySleep)}>
                     <span>Prevent System Hibernation</span>
                 </label>
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-UseHeartbeatKeypress" ${currentConfig.UseHeartbeatKeypress ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-UseHeartbeatKeypress" ${checked(currentConfig.UseHeartbeatKeypress)}>
                     <span>Simulate User Activity</span>
                 </label>
             </div>
@@ -196,11 +202,11 @@ function renderConfig() {
             </div>
             <div class="config-row">
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-TypeThingEnabled" ${currentConfig.TypeThingEnabled ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-TypeThingEnabled" ${checked(currentConfig.TypeThingEnabled)}>
                     <span>Enable Virtual Input Logic</span>
                 </label>
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-TypeThingNotifications" ${currentConfig.TypeThingNotifications ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-TypeThingNotifications" ${checked(currentConfig.TypeThingNotifications)}>
                     <span>Virtual Input Notifications</span>
                 </label>
             </div>
@@ -217,18 +223,18 @@ function renderConfig() {
             <div class="config-field">
                 <label>Input Theme</label>
                 <select id="cfg-TypeThingTheme">
-                    <option value="dark" ${currentConfig.TypeThingTheme === 'dark' ? 'selected' : ''}>Dark</option>
-                    <option value="light" ${currentConfig.TypeThingTheme === 'light' ? 'selected' : ''}>Light</option>
+                    <option value="dark" ${sel(currentConfig.TypeThingTheme === 'dark')}>Dark</option>
+                    <option value="light" ${sel(currentConfig.TypeThingTheme === 'light')}>Light</option>
                 </select>
             </div>
             <hr style="border: 1px solid var(--border); margin: 0.5rem 0;">
             <div class="config-row">
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-IdleDetection" ${currentConfig.IdleDetection ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-IdleDetection" ${checked(currentConfig.IdleDetection)}>
                     <span>Automatic Idle Migration</span>
                 </label>
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-BatteryAware" ${currentConfig.BatteryAware ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-BatteryAware" ${checked(currentConfig.BatteryAware)}>
                     <span>Battery Mode Awareness</span>
                 </label>
             </div>
@@ -244,11 +250,11 @@ function renderConfig() {
             </div>
             <div class="config-row">
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-NetworkAware" ${currentConfig.NetworkAware ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-NetworkAware" ${checked(currentConfig.NetworkAware)}>
                     <span>Network Context Awareness</span>
                 </label>
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-PresentationModeDetection" ${currentConfig.PresentationModeDetection ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-PresentationModeDetection" ${checked(currentConfig.PresentationModeDetection)}>
                     <span>Suppress in Presentation Mode</span>
                 </label>
             </div>
@@ -272,13 +278,13 @@ function renderConfig() {
             <div class="config-field">
                 <label>Update Channel</label>
                 <select id="cfg-UpdateChannel">
-                    <option value="stable" ${currentConfig.UpdateChannel === 'stable' ? 'selected' : ''}>Stable (Production)</option>
-                    <option value="beta" ${currentConfig.UpdateChannel === 'beta' ? 'selected' : ''}>Beta (Preview)</option>
-                    <option value="dev" ${currentConfig.UpdateChannel === 'dev' ? 'selected' : ''}>Development</option>
+                    <option value="stable" ${sel(currentConfig.UpdateChannel === 'stable')}>Stable (Production)</option>
+                    <option value="beta" ${sel(currentConfig.UpdateChannel === 'beta')}>Beta (Preview)</option>
+                    <option value="dev" ${sel(currentConfig.UpdateChannel === 'dev')}>Development</option>
                 </select>
             </div>
             <label class="cb-field">
-                <input type="checkbox" id="cfg-VerifyUpdateSignature" ${currentConfig.VerifyUpdateSignature ? 'checked' : ''}>
+                <input type="checkbox" id="cfg-VerifyUpdateSignature" ${checked(currentConfig.VerifyUpdateSignature)}>
                 <span>Strict Binary Signature Verification</span>
             </label>
         </div>
@@ -292,9 +298,9 @@ function renderConfig() {
                 <div class="config-field">
                     <label>System Theme</label>
                     <select id="cfg-Theme">
-                        <option value="System" ${currentConfig.Theme === 'System' ? 'selected' : ''}>System Default</option>
-                        <option value="Dark" ${currentConfig.Theme === 'Dark' ? 'selected' : ''}>Dark Mode</option>
-                        <option value="Light" ${currentConfig.Theme === 'Light' ? 'selected' : ''}>Light Mode</option>
+                        <option value="System" ${sel(currentConfig.Theme === 'System')}>System Default</option>
+                        <option value="Dark" ${sel(currentConfig.Theme === 'Dark')}>Dark Mode</option>
+                        <option value="Light" ${sel(currentConfig.Theme === 'Light')}>Light Mode</option>
                     </select>
                 </div>
                 <div class="config-field">
@@ -304,21 +310,21 @@ function renderConfig() {
             </div>
             <div class="config-row">
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-MinimizeToTray" ${currentConfig.MinimizeToTray ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-MinimizeToTray" ${checked(currentConfig.MinimizeToTray)}>
                     <span>Minimize to Tray</span>
                 </label>
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-MinimizeOnStart" ${currentConfig.MinimizeOnStart ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-MinimizeOnStart" ${checked(currentConfig.MinimizeOnStart)}>
                     <span>Minimize on Start</span>
                 </label>
             </div>
             <div class="config-row">
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-ShowNotifications" ${currentConfig.ShowNotifications ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-ShowNotifications" ${checked(currentConfig.ShowNotifications)}>
                     <span>Show Notifications</span>
                 </label>
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-ShowBalloonOnStart" ${currentConfig.ShowBalloonOnStart ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-ShowBalloonOnStart" ${checked(currentConfig.ShowBalloonOnStart)}>
                     <span>Show Balloon on Start</span>
                 </label>
             </div>
@@ -331,16 +337,16 @@ function renderConfig() {
             </div>
             <div class="config-row">
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-VerboseLogging" ${currentConfig.VerboseLogging ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-VerboseLogging" ${checked(currentConfig.VerboseLogging)}>
                     <span>Verbose Logging</span>
                 </label>
                 <label class="cb-field">
-                    <input type="checkbox" id="cfg-EnableTelemetry" ${currentConfig.EnableTelemetry ? 'checked' : ''}>
+                    <input type="checkbox" id="cfg-EnableTelemetry" ${checked(currentConfig.EnableTelemetry)}>
                     <span>Enable Telemetry</span>
                 </label>
             </div>
             <label class="cb-field">
-                <input type="checkbox" id="cfg-EnablePerformanceMetrics" ${currentConfig.EnablePerformanceMetrics ? 'checked' : ''}>
+                <input type="checkbox" id="cfg-EnablePerformanceMetrics" ${checked(currentConfig.EnablePerformanceMetrics)}>
                 <span>Collect Performance Metrics</span>
             </label>
             <div class="config-field">
@@ -570,47 +576,57 @@ async function fetchStatus() {
     }
 }
 
+// Show the latest meaningful build line as the "current operation"
+function updateCurrentOp(rawLine) {
+    const cleanLine = cleanAnsi(rawLine).trim();
+    if (cleanLine && !cleanLine.startsWith('[') && cleanLine.length < 100 && !/^\([0-9.]+s\)$/.test(cleanLine)) {
+        document.getElementById('current-op').innerText = cleanLine;
+    }
+}
+
+function onBuildOutput(data) {
+    appendLog(data.line);
+    updatePipeline(data.stage, data.progress, buildRunning ? 'running' : 'idle', data.error);
+    updateCurrentOp(data.line);
+}
+
+function onBuildOutputBatch(data) {
+    // Server batches output bursts every ~100ms; render each line and
+    // apply the stage/progress carried by the batch's last message
+    (data.lines || []).forEach(l => appendLog(l));
+    updatePipeline(data.stage, data.progress, buildRunning ? 'running' : 'idle', data.error);
+    updateCurrentOp(data.lines?.[data.lines.length - 1] || '');
+}
+
+function onBuildComplete(data) {
+    syncState({ status: data.status, progress: 100, stage: 'complete' });
+    // Render the terminal state of the build that just ran this session
+    updatePipeline(data.status === 'failed' ? liveStage : 'complete', 100, data.status);
+    stopTimer();
+    fetchStats(); // Update stats grid
+}
+
+const MESSAGE_HANDLERS = {
+    'state': (d) => syncState(d),           // Initial state on WebSocket connect
+    'build-started': (d) => syncState(d),
+    'build-output': onBuildOutput,
+    'build-output-batch': onBuildOutputBatch,
+    'build-complete': onBuildComplete,
+    'build-stopped': (d) => { syncState(d); stopTimer(); }
+};
+
 function handleMessage(msg) {
-    switch (msg.type) {
-        case 'state':
-            // Initial state on WebSocket connect
-            syncState(msg.data);
-            break;
-        case 'build-started':
-            syncState(msg.data);
-            break;
-        case 'build-output':
-            appendLog(msg.data.line);
-            updatePipeline(msg.data.stage, msg.data.progress, buildRunning ? 'running' : 'idle', msg.data.error);
+    MESSAGE_HANDLERS[msg.type]?.(msg.data);
+}
 
-            // Update current operation display with clean text
-            const cleanOp = cleanAnsi(msg.data.line).trim();
-            if (cleanOp && !cleanOp.startsWith('[') && cleanOp.length < 100 && !/^\([0-9.]+s\)$/.test(cleanOp)) {
-                document.getElementById('current-op').innerText = cleanOp;
-            }
-            break;
-        case 'build-output-batch':
-            // Server batches output bursts every ~100ms; render each line and
-            // apply the stage/progress carried by the batch's last message
-            (msg.data.lines || []).forEach(l => appendLog(l));
-            updatePipeline(msg.data.stage, msg.data.progress, buildRunning ? 'running' : 'idle', msg.data.error);
-
-            const lastLine = cleanAnsi(msg.data.lines?.[msg.data.lines.length - 1] || '').trim();
-            if (lastLine && !lastLine.startsWith('[') && lastLine.length < 100 && !/^\([0-9.]+s\)$/.test(lastLine)) {
-                document.getElementById('current-op').innerText = lastLine;
-            }
-            break;
-        case 'build-complete':
-            syncState({ status: msg.data.status, progress: 100, stage: 'complete' });
-            // Render the terminal state of the build that just ran this session
-            updatePipeline(msg.data.status === 'failed' ? liveStage : 'complete', 100, msg.data.status);
-            stopTimer();
-            fetchStats(); // Update stats grid
-            break;
-        case 'build-stopped':
-            syncState(msg.data);
-            stopTimer();
-            break;
+function updateLastStatus(status) {
+    const el = document.getElementById('last-status');
+    if (status === 'success') {
+        el.innerText = 'SUCCESS';
+        el.style.color = 'var(--success)';
+    } else if (status === 'failed') {
+        el.innerText = 'FAILED';
+        el.style.color = 'var(--danger)';
     }
 }
 
@@ -632,14 +648,11 @@ function syncState(state) {
     } else {
         resetPipeline();
     }
-    if (state.status === 'success') {
-        document.getElementById('last-status').innerText = 'SUCCESS';
-        document.getElementById('last-status').style.color = 'var(--success)';
-    } else if (state.status === 'failed') {
-        document.getElementById('last-status').innerText = 'FAILED';
-        document.getElementById('last-status').style.color = 'var(--danger)';
-    }
+    updateLastStatus(state.status);
+    syncTimerAndTerminal(state, isRunning);
+}
 
+function syncTimerAndTerminal(state, isRunning) {
     if (isRunning) {
         if (state.log) {
             const terminal = document.getElementById('terminal-out');
@@ -687,29 +700,35 @@ function updatePipeline(stage, progress, status, hasError) {
         fill.style.background = 'linear-gradient(90deg, var(--accent), #10b981)';
     }
 
-    steps.forEach((step, i) => {
-        step.classList.remove('active', 'complete', 'error');
+    steps.forEach((step, i) => applyStepState(step, i, stageIndex, stage, status, progress, hasError));
+}
 
-        if (stage === 'complete' && status !== 'failed') {
-            step.classList.add('complete');
-            return;
-        }
+function applyStepState(step, i, stageIndex, stage, status, progress, hasError) {
+    step.classList.remove('active', 'complete', 'error');
 
-        // Unknown stage (e.g. stale persisted state) -> leave all steps neutral
-        if (stageIndex === -1) return;
+    if (stage === 'complete' && status !== 'failed') {
+        step.classList.add('complete');
+        return;
+    }
 
-        if (i < stageIndex) {
-            step.classList.add('complete');
-        } else if (i === stageIndex) {
-            if (status === 'failed' || (hasError && status !== 'success')) {
-                step.classList.add('error');
-            } else if (status === 'success' || progress === 100) {
-                step.classList.add('complete');
-            } else {
-                step.classList.add('active');
-            }
-        }
-    });
+    // Unknown stage (e.g. stale persisted state) -> leave all steps neutral
+    if (stageIndex === -1) return;
+
+    if (i < stageIndex) {
+        step.classList.add('complete');
+    } else if (i === stageIndex) {
+        applyCurrentStepState(step, status, progress, hasError);
+    }
+}
+
+function applyCurrentStepState(step, status, progress, hasError) {
+    if (status === 'failed' || (hasError && status !== 'success')) {
+        step.classList.add('error');
+    } else if (status === 'success' || progress === 100) {
+        step.classList.add('complete');
+    } else {
+        step.classList.add('active');
+    }
 }
 
 function cleanAnsi(text) {
@@ -732,20 +751,28 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+// Filter whole-line ANSI fragments only — a prefix like [STEP] must survive
+function isNoiseLine(cleanLine) {
+    return !cleanLine || /^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]+[a-zA-Z]$/.test(cleanLine);
+}
+
+function classifyLogLine(cleanLine) {
+    if (cleanLine.includes('ERROR') || cleanLine.includes('failed')) return ' error';
+    if (cleanLine.includes('OK') || cleanLine.includes('success')) return ' success';
+    if (cleanLine.includes('Phase')) return ' phase';
+    if (cleanLine.startsWith('↳') || cleanLine.startsWith('  [')) return ' dim';
+    return '';
+}
+
 function appendLog(line) {
     const terminal = document.getElementById('terminal-out');
     const div = document.createElement('div');
 
     // Comprehensive ANSI cleaning
     const cleanLine = cleanAnsi(line).trim();
-    // Filter whole-line ANSI fragments only — a prefix like [STEP] must survive
-    if (!cleanLine || /^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]+[a-zA-Z]$/.test(cleanLine)) return;
+    if (isNoiseLine(cleanLine)) return;
 
-    div.className = 't-line new';
-    if (cleanLine.includes('ERROR') || cleanLine.includes('failed')) div.className += ' error';
-    else if (cleanLine.includes('OK') || cleanLine.includes('success')) div.className += ' success';
-    else if (cleanLine.includes('Phase')) div.className += ' phase';
-    else if (cleanLine.startsWith('↳') || cleanLine.startsWith('  [')) div.className += ' dim';
+    div.className = 't-line new' + classifyLogLine(cleanLine);
 
     const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
     div.innerHTML = `<span class="t-line time">[${time}]</span>${escapeHtml(cleanLine)}`;
@@ -1040,10 +1067,12 @@ async function loadAnalytics() {
     }
 }
 
+const fmtNum = (v) => (v || 0).toLocaleString();
+
 function updateAnalyticsUI(data) {
-    document.getElementById('ana-total-visits').innerText = (data.totalVisits || 0).toLocaleString();
-    document.getElementById('ana-unique-visitors').innerText = (data.uniqueVisitorsCount || 0).toLocaleString();
-    document.getElementById('ana-downloads').innerText = (data.downloads || 0).toLocaleString();
+    document.getElementById('ana-total-visits').innerText = fmtNum(data.totalVisits);
+    document.getElementById('ana-unique-visitors').innerText = fmtNum(data.uniqueVisitorsCount);
+    document.getElementById('ana-downloads').innerText = fmtNum(data.downloads);
     document.getElementById('ana-avg-time').innerText = Math.round(data.avgTimeOnSite || 0) + 's';
 
     // Trends List

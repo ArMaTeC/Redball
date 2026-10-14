@@ -15,7 +15,7 @@ const { loadDB, saveDB, compareVersions, trackDownload, getDownloadCounts } = re
 const { verifyToken } = require('./lib/auth');
 const { trackEvent, getAnalytics } = require('./lib/analytics');
 const { apiLimiter, uploadLimiter } = require('./middleware/rateLimiter');
-const { authenticateToken } = require('./middleware/auth');
+const { authenticateToken, requireAdmin } = require('./middleware/auth');
 const releaseRoutes = require('./routes/api/releases');
 const authRoutes = require('./routes/api/auth');
 const buildRoutes = require('./routes/api/build');
@@ -93,6 +93,50 @@ let githubCache = {
     lastFetch: 0
 };
 
+function mapAssetFiles(r, version, localRelease) {
+    const localFile = (name) => localRelease?.files?.find(lf => lf.name === name);
+    return r.assets.map(a => ({
+        name: a.name,
+        size: a.size,
+        hash: localFile(a.name)?.hash || '',
+        downloads: (localFile(a.name)?.downloads || 0) + a.download_count,
+        url: `/api/download/${version}/${a.name}`,
+        sourceUrl: a.browser_download_url
+    }));
+}
+
+// Merge in local files that aren't on GitHub (e.g. manifest.json, patches)
+function mergeLocalFiles(files, version, localRelease) {
+    for (const lf of (localRelease?.files || [])) {
+        if (!files.some(f => f.name === lf.name)) {
+            files.push({
+                ...lf,
+                url: `/api/download/${version}/${lf.name}`,
+                sourceUrl: `/downloads/${version}/${lf.name}`
+            });
+        }
+    }
+}
+
+// Map a GitHub release to our shape, merged with local release metadata
+function mapGitHubRelease(r, localReleases) {
+    const version = r.tag_name.replace(/^v/, '');
+    const localRelease = localReleases.find(lr => lr.version === version);
+    const files = mapAssetFiles(r, version, localRelease);
+    mergeLocalFiles(files, version, localRelease);
+
+    return {
+        version,
+        channel: r.prerelease ? 'beta' : 'stable',
+        date: r.published_at,
+        notes: r.body || '',
+        files,
+        totalDownloads: (localRelease?.totalDownloads || 0) + r.assets.reduce((sum, a) => sum + a.download_count, 0),
+        githubUrl: r.html_url,
+        patchInfo: localRelease?.patchInfo || null
+    };
+}
+
 // GitHub API fetch with caching - merged with local patch data
 async function fetchGitHubReleases() {
     const now = Date.now();
@@ -116,43 +160,7 @@ async function fetchGitHubReleases() {
     const localReleases = db.releases || [];
 
     // Transform GitHub releases and merge with local data
-    const mappedGitHub = ghReleases.map(r => {
-        const version = r.tag_name.replace(/^v/, '');
-        const localRelease = localReleases.find(lr => lr.version === version);
-
-        const files = r.assets.map(a => ({
-            name: a.name,
-            size: a.size,
-            hash: localRelease?.files?.find(lf => lf.name === a.name)?.hash || '',
-            downloads: (localRelease?.files?.find(lf => lf.name === a.name)?.downloads || 0) + a.download_count,
-            url: `/api/download/${version}/${a.name}`,
-            sourceUrl: a.browser_download_url
-        }));
-
-        // Merge in local files that aren't on GitHub (e.g. manifest.json, patches)
-        if (localRelease?.files) {
-            for (const lf of localRelease.files) {
-                if (!files.some(f => f.name === lf.name)) {
-                    files.push({
-                        ...lf,
-                        url: `/api/download/${version}/${lf.name}`,
-                        sourceUrl: `/downloads/${version}/${lf.name}`
-                    });
-                }
-            }
-        }
-
-        return {
-            version,
-            channel: r.prerelease ? 'beta' : 'stable',
-            date: r.published_at,
-            notes: r.body || '',
-            files,
-            totalDownloads: (localRelease?.totalDownloads || 0) + r.assets.reduce((sum, a) => sum + a.download_count, 0),
-            githubUrl: r.html_url,
-            patchInfo: localRelease?.patchInfo || null
-        };
-    });
+    const mappedGitHub = ghReleases.map(r => mapGitHubRelease(r, localReleases));
 
     // Include local releases that aren't on GitHub yet
     const localOnly = localReleases
@@ -419,8 +427,8 @@ app.use('/api/', apiLimiter);
 releaseRoutes.setGithubCache(githubCache);
 app.use('/api/releases', releaseRoutes.router);
 app.use('/api/auth', authRoutes);
-app.use('/api/build', authenticateToken, buildRoutes.router);
-app.use('/api/admin', authenticateToken, buildRoutes.router); // Alias for build routes
+app.use('/api/build', authenticateToken, requireAdmin, buildRoutes.router);
+app.use('/api/admin', authenticateToken, requireAdmin, buildRoutes.router); // Alias for build routes
 
 // GET /api/analytics/stats - Get aggregated analytics
 app.get('/api/analytics/stats', authenticateToken, async (req, res) => {
@@ -611,42 +619,12 @@ app.get('/api/releases/:version/manifest', async (req, res) => {
 });
 
 // --- Create a new release ---
-app.post('/api/releases', authenticateToken, (req, res) => {
-    const { version, notes, channel } = req.body;
-    if (!version) return res.status(400).json({ error: 'Version is required' });
-
-    const db = loadDB();
-    if (db.releases.find(r => r.version === version)) {
-        return res.status(409).json({ error: 'Release already exists' });
-    }
-
-    const releaseDir = path.join(RELEASES_DIR, version);
-    if (!fs.existsSync(releaseDir)) fs.mkdirSync(releaseDir, { recursive: true });
-
-    const release = {
-        version,
-        notes: notes || '',
-        channel: channel || 'stable',
-        date: new Date().toISOString(),
-        files: [],
-        totalDownloads: 0
-    };
-
-    db.releases.push(release);
-    saveDB(db);
-
-    // Invalidate cache
-    githubCache.releases = null;
-    githubCache.lastFetch = 0;
-
-    // Trigger cleanup manually
-    try { cleanupReleases(); } catch { }
-
-    res.status(201).json(release);
-});
+// POST /api/releases lives in routes/api/releases.js (mounted router wins —
+// this path is registered after that mount, so an inline duplicate would be
+// dead code). Mutation is auth-gated there.
 
 // --- Upload files to a release ---
-app.post('/api/releases/:version/upload', authenticateToken, uploadLimiter, upload.array('files', 5), async (req, res) => {
+app.post('/api/releases/:version/upload', authenticateToken, requireAdmin, uploadLimiter, upload.array('files', 5), async (req, res) => {
     const db = loadDB();
     let release = db.releases.find(r => r.version === req.params.version);
 
@@ -694,26 +672,11 @@ app.post('/api/releases/:version/upload', authenticateToken, uploadLimiter, uplo
     res.json({ uploaded: req.files.length, release });
 });
 
-// --- Delete a release ---
-app.delete('/api/releases/:version', authenticateToken, (req, res) => {
-    const db = loadDB();
-    const idx = db.releases.findIndex(r => r.version === req.params.version);
-    if (idx < 0) return res.status(404).json({ error: 'Release not found' });
-
-    db.releases.splice(idx, 1);
-    saveDB(db);
-
-    // Remove files
-    const releaseDir = path.join(RELEASES_DIR, req.params.version);
-    if (fs.existsSync(releaseDir)) {
-        fs.rmSync(releaseDir, { recursive: true, force: true });
-    }
-
-    res.json({ deleted: req.params.version });
-});
+// DELETE /api/releases/:version lives in routes/api/releases.js (same shadowing
+// reason as POST above).
 
 // --- Update release notes ---
-app.patch('/api/releases/:version', authenticateToken, (req, res) => {
+app.patch('/api/releases/:version', authenticateToken, requireAdmin, (req, res) => {
     const db = loadDB();
     const release = db.releases.find(r => r.version === req.params.version);
     if (!release) return res.status(404).json({ error: 'Release not found' });
@@ -725,7 +688,7 @@ app.patch('/api/releases/:version', authenticateToken, (req, res) => {
 });
 
 // --- Publish from build output (used by build script) ---
-app.post('/api/publish', authenticateToken, uploadLimiter, (req, res, next) => {
+app.post('/api/publish', authenticateToken, requireAdmin, uploadLimiter, (req, res, next) => {
     upload.array('files', 200)(req, res, (err) => {
         if (err) {
             console.error('[Upload Error]', err.message);
@@ -738,56 +701,18 @@ app.post('/api/publish', authenticateToken, uploadLimiter, (req, res, next) => {
     if (!version) return res.status(400).json({ error: 'Version is required' });
 
     const db = loadDB();
-    let release = db.releases.find(r => r.version === version);
-
-    if (!release) {
-        release = {
-            version,
-            notes: req.body.notes || '',
-            channel: req.body.channel || 'stable',
-            date: new Date().toISOString(),
-            files: [],
-            totalDownloads: 0
-        };
-        db.releases.push(release);
-    }
+    const release = getOrCreateRelease(db, version, req.body);
 
     // Move uploaded files to release directory
     const releaseDir = path.join(RELEASES_DIR, version);
     if (!fs.existsSync(releaseDir)) fs.mkdirSync(releaseDir, { recursive: true });
 
     for (const file of (req.files || [])) {
-        const destPath = path.join(releaseDir, file.originalname);
-        if (file.path !== destPath) {
-            fs.copyFileSync(file.path, destPath);
-        }
-        const hash = await sha256File(destPath);
-        const existing = release.files.findIndex(f => f.name === file.originalname);
-        const fileEntry = {
-            name: file.originalname,
-            size: file.size,
-            hash,
-            downloads: 0,
-            uploadedAt: new Date().toISOString()
-        };
-        if (existing >= 0) release.files[existing] = fileEntry;
-        else release.files.push(fileEntry);
+        await storeUploadedFile(file, releaseDir, release);
     }
 
     saveDB(db);
-
-    // Auto-generate manifest.json in the release directory if it doesn't exist
-    // We prefer the detailed manifest generated by the build script
-    const manifestPath = path.join(releaseDir, 'manifest.json');
-    if (!fs.existsSync(manifestPath)) {
-        const manifest = {
-            version,
-            files: release.files
-                .filter(f => !f.name.endsWith('.msi') && !f.name.endsWith('.zip') && !f.name.includes('-Setup') && f.name !== 'manifest.json' && f.name !== 'SHA256SUMS' && !f.name.endsWith('.patch'))
-                .map(f => ({ name: f.name, hash: f.hash, size: f.size, signature: '' }))
-        };
-        fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-    }
+    ensureReleaseManifest(releaseDir, version, release);
 
     // Auto-generate delta patches from previous version
     generatePatchesForRelease(version);
@@ -801,6 +726,57 @@ app.post('/api/publish', authenticateToken, uploadLimiter, (req, res, next) => {
 
     res.status(201).json({ published: version, files: release.files.length });
 });
+
+function getOrCreateRelease(db, version, body) {
+    let release = db.releases.find(r => r.version === version);
+    if (!release) {
+        release = {
+            version,
+            notes: body.notes || '',
+            channel: body.channel || 'stable',
+            date: new Date().toISOString(),
+            files: [],
+            totalDownloads: 0
+        };
+        db.releases.push(release);
+    }
+    return release;
+}
+
+async function storeUploadedFile(file, releaseDir, release) {
+    const destPath = path.join(releaseDir, file.originalname);
+    if (file.path !== destPath) {
+        fs.copyFileSync(file.path, destPath);
+    }
+    const hash = await sha256File(destPath);
+    const existing = release.files.findIndex(f => f.name === file.originalname);
+    const fileEntry = {
+        name: file.originalname,
+        size: file.size,
+        hash,
+        downloads: 0,
+        uploadedAt: new Date().toISOString()
+    };
+    if (existing >= 0) release.files[existing] = fileEntry;
+    else release.files.push(fileEntry);
+}
+
+// Auto-generate manifest.json in the release directory if it doesn't exist.
+// We prefer the detailed manifest generated by the build script.
+function ensureReleaseManifest(releaseDir, version, release) {
+    const manifestPath = path.join(releaseDir, 'manifest.json');
+    if (fs.existsSync(manifestPath)) return;
+    const isDistributable = (f) => !f.name.endsWith('.msi') && !f.name.endsWith('.zip')
+        && !f.name.includes('-Setup') && f.name !== 'manifest.json'
+        && f.name !== 'SHA256SUMS' && !f.name.endsWith('.patch');
+    const manifest = {
+        version,
+        files: release.files
+            .filter(isDistributable)
+            .map(f => ({ name: f.name, hash: f.hash, size: f.size, signature: '' }))
+    };
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+}
 
 // --- Server stats (Unified for public and admin) ---
 app.get('/api/download/:version/:filename', async (req, res) => {
@@ -827,37 +803,43 @@ app.get('/api/download/:version/:filename', async (req, res) => {
     }
 });
 
+function tallyFileStats(releases) {
+    const byFile = {};
+    for (const r of releases) {
+        for (const f of (r.files || [])) {
+            if (!byFile[f.name]) {
+                byFile[f.name] = { downloads: 0, versions: [] };
+            }
+            byFile[f.name].downloads += (f.downloads || 0);
+            if (!byFile[f.name].versions.includes(r.version)) {
+                byFile[f.name].versions.push(r.version);
+            }
+        }
+    }
+    return byFile;
+}
+
+// Fold the locally-tracked download counts into the per-file tallies
+function mergeLocalDownloadCounts(byFile) {
+    const downloadCounts = getDownloadCounts();
+    for (const [key, count] of Object.entries(downloadCounts.files || {})) {
+        const filename = key.split('/').pop();
+        if (byFile[filename]) {
+            byFile[filename].downloads += count;
+        } else {
+            byFile[filename] = { downloads: count, versions: [key.split('/')[0]] };
+        }
+    }
+}
+
 app.get('/api/stats', async (req, res) => {
     try {
         const releases = await fetchGitHubReleases();
         const totalReleases = releases.length;
         const latestVersion = releases.length > 0 ? releases[0].version : '0.0.0';
 
-        // Detailed file-level stats
-        const byFile = {};
-        for (const r of releases) {
-            if (!r.files) continue;
-            for (const f of r.files) {
-                if (!byFile[f.name]) {
-                    byFile[f.name] = { downloads: 0, versions: [] };
-                }
-                byFile[f.name].downloads += (f.downloads || 0);
-                if (!byFile[f.name].versions.includes(r.version)) {
-                    byFile[f.name].versions.push(r.version);
-                }
-            }
-        }
-
-        // Add local download tracking data if available
-        const downloadCounts = getDownloadCounts();
-        for (const [key, count] of Object.entries(downloadCounts.files || {})) {
-            const filename = key.split('/').pop();
-            if (byFile[filename]) {
-                byFile[filename].downloads += count;
-            } else {
-                byFile[filename] = { downloads: count, versions: [key.split('/')[0]] };
-            }
-        }
+        const byFile = tallyFileStats(releases);
+        mergeLocalDownloadCounts(byFile);
 
         const totalDownloads = Object.values(byFile).reduce((sum, f) => sum + f.downloads, 0);
         const totalFiles = releases.reduce((sum, r) => sum + (r.files?.length || 0), 0);
@@ -1002,6 +984,33 @@ app.post('/api/config', authenticateToken, (req, res) => {
     }
 });
 
+// Read patch manifest if it exists; null on missing/corrupt
+function readPatchManifest(patchesDir) {
+    const manifestPath = path.join(patchesDir, 'patch-manifest.json');
+    if (!fs.existsSync(manifestPath)) return null;
+    try {
+        return JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    } catch {
+        return null;
+    }
+}
+
+function collectPatchFiles(patchesDir, manifest) {
+    const patches = [];
+    for (const file of fs.readdirSync(patchesDir)) {
+        if (!file.endsWith('.patch')) continue;
+        const stat = fs.statSync(path.join(patchesDir, file));
+        const patchInfo = manifest?.patches?.find(p => p.patchFile === file);
+        patches.push({
+            name: file,
+            size: stat.size,
+            targetFile: file.replace('.patch', ''),
+            ...patchInfo
+        });
+    }
+    return patches;
+}
+
 // --- Get delta patches for a version ---
 app.get('/api/releases/:version/patches', (req, res) => {
     const patchesDir = path.join(RELEASES_DIR, req.params.version, 'patches');
@@ -1010,32 +1019,8 @@ app.get('/api/releases/:version/patches', (req, res) => {
         return res.json({ patches: [], fromVersion: null });
     }
 
-    // Read patch manifest if exists
-    const manifestPath = path.join(patchesDir, 'patch-manifest.json');
-    let manifest = null;
-    if (fs.existsSync(manifestPath)) {
-        try {
-            manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-        } catch {
-            // ignore
-        }
-    }
-
-    // Get all patch files
-    const patches = [];
-    const files = fs.readdirSync(patchesDir);
-    for (const file of files) {
-        if (file.endsWith('.patch')) {
-            const stat = fs.statSync(path.join(patchesDir, file));
-            const patchInfo = manifest?.patches?.find(p => p.patchFile === file);
-            patches.push({
-                name: file,
-                size: stat.size,
-                targetFile: file.replace('.patch', ''),
-                ...patchInfo
-            });
-        }
-    }
+    const manifest = readPatchManifest(patchesDir);
+    const patches = collectPatchFiles(patchesDir, manifest);
 
     res.json({
         version: req.params.version,
@@ -1076,7 +1061,7 @@ app.get('/downloads/:version/patches/:filename', (req, res) => {
 });
 
 // --- Trigger patch generation for all versions ---
-app.post('/api/admin/generate-patches', authenticateToken, async (req, res) => {
+app.post('/api/admin/generate-patches', authenticateToken, requireAdmin, async (req, res) => {
     // Run in background
     res.json({ message: 'Patch generation started in background' });
 
@@ -1196,6 +1181,64 @@ function guessMimeType(filename) {
     return types[ext] || 'application/octet-stream';
 }
 
+// Include full installer info as fallback for silent update
+function addInstallerInfo(response, latest) {
+    const installerFile = latest.files.find(f => f.name.includes('Setup.exe') || f.name.endsWith('.exe'));
+    if (!installerFile) return;
+    response.fullInstaller = {
+        name: installerFile.name,
+        size: installerFile.size,
+        url: installerFile.url,
+        hash: installerFile.hash || ''
+    };
+    response.silentUpdateSupported = installerFile.name.includes('Setup.exe');
+}
+
+function buildUpdateResponse(latest, currentVersion, patchInfo, patchDownloadUrl) {
+    const patchAvailable = patchInfo !== null;
+    const response = {
+        updateAvailable: true,
+        currentVersion,
+        latestVersion: latest.version,
+        channel: latest.channel,
+        releaseDate: latest.date,
+        releaseNotes: latest.notes,
+        downloadUrl: latest.files.find(f => f.name.endsWith('.exe') || f.name.endsWith('.zip'))?.url || null,
+        githubUrl: latest.githubUrl,
+        patchAvailable,
+        updateMethod: patchAvailable ? 'delta' : 'full',
+        message: patchAvailable
+            ? `Delta update available: ${currentVersion} → ${latest.version}`
+            : `Full installer update: ${currentVersion} → ${latest.version}`
+    };
+
+    if (patchAvailable) {
+        response.patchInfo = patchInfo;
+        response.patchDownloadUrl = patchDownloadUrl;
+    }
+
+    addInstallerInfo(response, latest);
+    return response;
+}
+
+// Find a delta-patch manifest bridging from currentVersion to latestVersion
+function findPatchInfo(latestVersion, currentVersion) {
+    const manifestPath = path.join(RELEASES_DIR, latestVersion, 'patches', 'patch-manifest.json');
+    if (!fs.existsSync(manifestPath)) return null;
+    try {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        if (manifest.fromVersion !== currentVersion) return null;
+        return {
+            fromVersion: manifest.fromVersion,
+            toVersion: manifest.toVersion,
+            totalSavings: manifest.totalSavings,
+            patches: manifest.patches
+        };
+    } catch {
+        return null; // ignore parse errors
+    }
+}
+
 // --- Check for update with delta patch support and fallback to full installer ---
 app.get('/api/check-update', async (req, res) => {
     const { currentVersion, channel = 'stable' } = req.query;
@@ -1215,9 +1258,7 @@ app.get('/api/check-update', async (req, res) => {
             });
         }
 
-        // Check if update is needed
-        const versionCompare = compareVersions(latest.version, currentVersion);
-        if (versionCompare <= 0) {
+        if (compareVersions(latest.version, currentVersion) <= 0) {
             return res.json({
                 updateAvailable: false,
                 currentVersion,
@@ -1226,65 +1267,9 @@ app.get('/api/check-update', async (req, res) => {
             });
         }
 
-        // Check if delta patch is available
-        const patchesDir = path.join(RELEASES_DIR, latest.version, 'patches');
-        const patchManifestPath = path.join(patchesDir, 'patch-manifest.json');
-        let patchAvailable = false;
-        let patchInfo = null;
-
-        if (fs.existsSync(patchManifestPath)) {
-            try {
-                const patchManifest = JSON.parse(fs.readFileSync(patchManifestPath, 'utf8'));
-                // Check if patch is from this specific version
-                if (patchManifest.fromVersion === currentVersion) {
-                    patchAvailable = true;
-                    patchInfo = {
-                        fromVersion: patchManifest.fromVersion,
-                        toVersion: patchManifest.toVersion,
-                        totalSavings: patchManifest.totalSavings,
-                        patches: patchManifest.patches
-                    };
-                }
-            } catch {
-                // ignore parse errors
-            }
-        }
-
-        // Build response
-        const response = {
-            updateAvailable: true,
-            currentVersion,
-            latestVersion: latest.version,
-            channel: latest.channel,
-            releaseDate: latest.date,
-            releaseNotes: latest.notes,
-            downloadUrl: latest.files.find(f => f.name.endsWith('.exe') || f.name.endsWith('.zip'))?.url || null,
-            githubUrl: latest.githubUrl,
-            patchAvailable,
-            updateMethod: patchAvailable ? 'delta' : 'full',
-            message: patchAvailable
-                ? `Delta update available: ${currentVersion} → ${latest.version}`
-                : `Full installer update: ${currentVersion} → ${latest.version}`
-        };
-
-        if (patchAvailable && patchInfo) {
-            response.patchInfo = patchInfo;
-            response.patchDownloadUrl = `${req.protocol}://${req.get('host')}/downloads/${latest.version}/patches/`;
-        }
-
-        // Include full installer info as fallback for silent update
-        const installerFile = latest.files.find(f => f.name.includes('Setup.exe') || f.name.endsWith('.exe'));
-        if (installerFile) {
-            response.fullInstaller = {
-                name: installerFile.name,
-                size: installerFile.size,
-                url: installerFile.url,
-                hash: installerFile.hash || ''
-            };
-            response.silentUpdateSupported = installerFile.name.includes('Setup.exe');
-        }
-
-        res.json(response);
+        const patchInfo = findPatchInfo(latest.version, currentVersion);
+        const patchDownloadUrl = `${req.protocol}://${req.get('host')}/downloads/${latest.version}/patches/`;
+        res.json(buildUpdateResponse(latest, currentVersion, patchInfo, patchDownloadUrl));
 
     } catch (err) {
         console.error('[API] Error checking for update:', err);
@@ -1374,16 +1359,19 @@ app.get('/api/build/log', authenticateToken, (req, res) => {
 
 
 // Build Trigger (Aliased for compatibility)
-app.post(['/api/admin/build', '/api/build/start'], authenticateToken, (req, res) => {
+app.post(['/api/admin/build', '/api/build/start'], authenticateToken, requireAdmin, (req, res) => {
     if (buildState.status === 'running') {
         return res.status(409).json({ error: 'Build already in progress' });
     }
 
+    if (req.body?.type && !ALLOWED_BUILD_TYPES.includes(req.body.type)) {
+        return res.status(400).json({ error: `Invalid build type. Allowed: ${ALLOWED_BUILD_TYPES.join(', ')}` });
+    }
     startBuild(req.body);
     res.json({ message: 'Build started', status: 'running' });
 });
 
-app.post('/api/build/stop', authenticateToken, (req, res) => {
+app.post('/api/build/stop', authenticateToken, requireAdmin, (req, res) => {
     stopBuild();
     res.json({ message: 'Build stopping', status: 'stopping' });
 });
@@ -1397,6 +1385,9 @@ app.get('/api/admin/status', authenticateToken, (req, res) => {
 
 
 // --- Build Orchestration Logic ---
+// Must match commands handled by scripts/build.sh's case statement.
+const ALLOWED_BUILD_TYPES = ['auto-release', 'all', 'windows', 'update-server', 'website', 'publish', 'clean'];
+
 function parseBuildStage(line) {
     const stages = [
         { name: 'setup', pattern: /Checking build dependencies|Repairing missing.*Wine/i, progress: 3 },
@@ -1444,11 +1435,9 @@ function startBuild(body = {}) {
     saveBuildStateImmediate();
     broadcast({ type: 'build-started', data: buildState });
 
-    // Must match commands handled by scripts/build.sh's case statement.
-    // Default is the full auto-release so the dashboard button actually
-    // builds AND publishes (update-server release dir, patches, GitHub).
-    const allowedBuildTypes = ['auto-release', 'all', 'windows', 'update-server', 'website', 'publish', 'clean'];
-    const buildType = allowedBuildTypes.includes(body?.type) ? body.type : 'auto-release';
+    // Fail closed: an unrecognized type becomes the least destructive build,
+    // never the release pipeline. Explicit bad types are rejected in the route.
+    const buildType = ALLOWED_BUILD_TYPES.includes(body?.type) ? body.type : 'windows';
 
     const scriptPath = path.join(PROJECT_ROOT, 'scripts', 'build.sh');
     const ptyProcess = pty.spawn('bash', [scriptPath, buildType], {
@@ -1462,63 +1451,68 @@ function startBuild(body = {}) {
     let restartNeeded = false;
     buildState.pid = ptyProcess.pid;
 
+    // Apply a parsed stage line to the build state.
+    // Monotonic: never let a late low-progress line regress the stage.
+    function applyBuildStage(stage) {
+        if (!stage) return;
+        if (stage.error) {
+            buildState.error = true;
+        } else if (stage.progress >= buildState.progress) {
+            buildState.stage = stage.name;
+            buildState.progress = stage.progress;
+        }
+    }
+
+    // Process one raw output line: log it, track stage/progress, broadcast.
+    // Returns true when the build signaled RESTART_NEEDED.
+    function processBuildLine(line) {
+        if (!line.trim()) return false;
+
+        // Strip ANSI codes before parsing stage to ensure regex matches correctly
+        const cleanLine = line.replace(/\u001b\[[0-9;?]*[a-zA-Z]/g, '').trim();
+        if (!cleanLine) return false;
+
+        // Ignore noise lines like MSBuild progress timer (1.4s) or left-over ANSI fragments.
+        // The fragment pattern must be end-anchored and require digits, otherwise real
+        // log prefixes like [STEP], [INFO], [ERROR] would be silently dropped.
+        if (/^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]+[a-zA-Z]$/.test(cleanLine)) return false;
+
+        buildState.log.push({ timestamp: Date.now(), message: line });
+        const stage = parseBuildStage(cleanLine);
+        applyBuildStage(stage);
+
+        // Efficient log truncation: remove oldest entries instead of slicing
+        if (buildState.log.length > 5000) {
+            buildState.log.splice(0, 2500);
+        }
+
+        // Debounced save (every 50 entries or on stage change)
+        if (buildState.log.length % 50 === 0 || stage) {
+            saveBuildState();
+        }
+
+        // Use throttled broadcast to reduce CPU/network overhead
+        broadcastThrottled({
+            type: 'build-output',
+            data: {
+                line,
+                stage: buildState.stage,
+                progress: buildState.progress,
+                error: buildState.error
+            }
+        });
+
+        return cleanLine.includes('[SIGNAL] RESTART_NEEDED');
+    }
+
     ptyProcess.onData((data) => {
         const rawContent = data.toString();
         if (!rawContent.trim()) return;
 
         // Split into individual lines to ensure we don't skip stages if they arrive in a single burst
         // Also handle \r (carriage return) which is often used for in-place progress updates
-        const lines = rawContent.split(/\r?\n|\r/);
-
-        for (const line of lines) {
-            if (!line.trim()) continue;
-
-            // Strip ANSI codes before parsing stage to ensure regex matches correctly
-            const cleanLine = line.replace(/\u001b\[[0-9;?]*[a-zA-Z]/g, '').trim();
-            if (!cleanLine) continue;
-
-            // Ignore noise lines like MSBuild progress timer (1.4s) or left-over ANSI fragments.
-            // The fragment pattern must be end-anchored and require digits, otherwise real
-            // log prefixes like [STEP], [INFO], [ERROR] would be silently dropped.
-            if (/^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]+[a-zA-Z]$/.test(cleanLine)) continue;
-
-            buildState.log.push({ timestamp: Date.now(), message: line });
-            const stage = parseBuildStage(cleanLine);
-            if (stage) {
-                if (stage.error) {
-                    buildState.error = true;
-                } else if (stage.progress >= buildState.progress) {
-                    // Monotonic: never let a late low-progress line regress the stage
-                    buildState.stage = stage.name;
-                    buildState.progress = stage.progress;
-                }
-            }
-
-            // Efficient log truncation: remove oldest entries instead of slicing
-            if (buildState.log.length > 5000) {
-                // Remove first 2500 entries (more efficient than slice which creates new array)
-                buildState.log.splice(0, 2500);
-            }
-
-            // Debounced save (every 50 entries or on stage change)
-            if (buildState.log.length % 50 === 0 || stage) {
-                saveBuildState();
-            }
-
-            if (cleanLine.includes('[SIGNAL] RESTART_NEEDED')) {
-                restartNeeded = true;
-            }
-
-            // Use throttled broadcast to reduce CPU/network overhead
-            broadcastThrottled({
-                type: 'build-output',
-                data: {
-                    line,
-                    stage: buildState.stage,
-                    progress: buildState.progress,
-                    error: buildState.error
-                }
-            });
+        for (const line of rawContent.split(/\r?\n|\r/)) {
+            if (processBuildLine(line)) restartNeeded = true;
         }
     });
 

@@ -8,9 +8,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3500;
+const PORT = process.env.PORT || 3600;
 
 app.use(express.json());
+
+// Minimal auth for the admin API: require the ADMIN_TOKEN env var.
+// Fails closed — if the token isn't configured, admin endpoints return 503.
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+app.use('/api/admin', (req, res, next) => {
+  if (!ADMIN_TOKEN) return res.status(503).json({ error: 'Admin API disabled: ADMIN_TOKEN not set' });
+  if (req.headers['x-admin-token'] !== ADMIN_TOKEN) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+});
 
 // Serve static files from the React dist directory (built site)
 app.use(express.static(path.join(__dirname, 'dist')));

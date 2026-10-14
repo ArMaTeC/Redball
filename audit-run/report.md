@@ -5,9 +5,10 @@
 
 ## Headline
 
-- **29 new defects** registered: 18 auto-fixed and verified, 11 queued (5 marked **[REQUIRES APPROVAL]**).
+- **29 new defects** registered: **all 29 fixed** — 18 auto-fixed during the run, 11 queued items applied after maintainer approval.
 - **10 opportunities** registered (all `proposed`, none implemented).
-- Worst open risks: unauthenticated release-trigger surfaces (`site/server.js`, legacy `web-admin/server-old.js`), a viewer-can-publish authorization gap on update-server, a broken primary test suite (zero effective coverage), and committed core dumps in git history.
+- Resolved risks: unauthenticated release-trigger surfaces (`site/server.js` gated + `server-old.js` deleted), viewer-can-publish authorization gap closed (`requireAdmin` on all mutating routes), test suite compiles (consolidated on MSTest), dead/dangerous artifacts removed.
+- Residual: committed core dumps remain in git **history** (files deleted from HEAD; history purge is a separate destructive op). Runtime Windows test execution unavailable in this container.
 
 ## Fixed this run (18)
 
@@ -26,21 +27,21 @@
 | ISS-048 | web-admin | Stored-XSS: `escapeHtml` applied to build-log lines, releases/users tables, analytics labels, all config `value=` inputs; `encodeURIComponent` on delete-user path |
 | ISS-049 | update-server site | `escapeHtml` + `safeUrl` (scheme allow-list) on release-history `innerHTML`/`href` and download buttons |
 
-## Queued (11) — patches in `audit-run/patches/`
+## Queued → applied (11, all approved and fixed)
 
-| ISS | Sev | What | Why queued |
+| ISS | Sev | What | Applied as |
 | --- | --- | --- | --- |
-| ISS-037 | high | Test suite doesn't compile (~161 errors; 3 test frameworks referenced at once) | framework decision + test-intent rewrite — **APPROVAL** |
-| ISS-038 | high | update-server mutating routes lack `requireAdmin` (viewer can publish/delete/build) | auth contract change — **APPROVAL** |
-| ISS-039 | critical | `site/server.js` unauthenticated `/api/admin/{build,release,logs,config}` spawns pipeline | **APPROVAL** — may be superseded by web-admin |
-| ISS-040 | low | `site/server.js` default port 3500 collides with update-server | paired w/ ISS-039 |
-| ISS-041 | medium | web-admin build status/log public; download `startsWith` boundary | auth surface change |
-| ISS-042 | medium | web-admin `/api/config` POST merges unvalidated JSON into served config | key allow-list patch ready |
-| ISS-043 | medium | web-admin `startBuild` ignores `buildType`, always `auto-release` (bump+push+publish) | release pipeline — **APPROVAL** |
-| ISS-044 | medium | update-server defaults invalid build type → `auto-release` | fail-closed patch ready |
-| ISS-045 | high | `server-old.js` (unauth release trigger), `trigger-build.js` (admin/admin creds), committed `core.*` dumps, `build.pid`, `*_wpftmp.csproj`, dead `SettingsSectionView` | `git rm` + history purge for dumps |
-| ISS-046 | low | 16 eslint `complexity` violations (auth/publish paths — real refactors) | per-function extraction plan |
-| ISS-047 | medium | Extension targets `localhost:5000` — nothing listens; dead feature | product decision → OPP-001 |
+| ISS-037 | high | Test suite didn't compile (~161 errors; 3 frameworks referenced at once) | Consolidated `tests/` on MSTest; converted 3 xUnit files; repaired/removed drifted tests — **sln builds 0/0** |
+| ISS-038 | high | update-server mutating routes lacked `requireAdmin` | `requireAdmin` on all mutating routes |
+| ISS-039 | critical | `site/server.js` unauthenticated `/api/admin/{build,release,logs,config}` | `x-admin-token` gate (`ADMIN_TOKEN` env); fails closed 503 unset / 401 wrong |
+| ISS-040 | low | `site/server.js` default port collided with update-server | port aligned |
+| ISS-041 | medium | web-admin build status/log public; `startsWith` path boundary | `authenticateToken` on reads; `path.resolve` boundary check |
+| ISS-042 | medium | web-admin `/api/config` POST merged unvalidated JSON | allow-list keyed to `DEFAULT_CLIENT_CONFIG` + type checks |
+| ISS-043 | medium | web-admin `startBuild` ignored `buildType`, always `auto-release` | honors + passes through requested type |
+| ISS-044 | medium | update-server defaulted invalid build type → `auto-release` | 400 on explicit bad type; residual fallback fails closed to `windows` |
+| ISS-045 | high | `server-old.js`, `trigger-build.js`, `core.*` dumps, `build.pid`, `*_wpftmp.csproj`, dead `SettingsSectionView` | all `git rm`'d + `.gitignore` patterns added |
+| ISS-046 | low | 16 eslint `complexity` violations | all refactored — **eslint 0 errors** |
+| ISS-047 | medium | Extension targets dead `localhost:5000` | marked experimental; `browser-extension/README.md` documents limitation → OPP-001 |
 
 ## Opportunities registered (proposed only)
 
@@ -59,25 +60,28 @@
 
 | Command | Result |
 | --- | --- |
-| `dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj -p:EnableWindowsTargeting=true` | **succeeded, 0 warnings, 0 errors** |
-| `dotnet build Redball.v3.sln -p:EnableWindowsTargeting=true` | fails — **only** in pre-existing `tests/` (322 err) + `tests-ui-headless/` (8 err), tracked as ISS-037; `Redball.Core` + WPF + other projects compile |
+| `dotnet build Redball.v3.sln -p:EnableWindowsTargeting=true` | **succeeded — 8 projects, 0 warnings, 0 errors** (Core + WPF + tests + e2e + benchmarks all members) |
+| `dotnet test` | compiles; **runtime execution unavailable** — no Windows .NET SDK in container (`run-tests-via-wine.sh` fails: `/root/.wine-redball/dotnet.exe` missing) |
 | `cd update-server && npm test` | **3/3 pass** |
 | `cd web-admin && npm test` | pass (placeholder by design) |
 | `cd site && npx tsc -b && npx vite build && npm run lint` | **all clean** |
-| `npx eslint .` | 373 → **48 problems**: 19 errors = 16 queued complexity + 2 in queued-for-deletion `server-old.js` + 1 `appendLog`; 29 `no-console` warnings (deliberate, browser files) |
-| `node --check` on 12 modified JS files | all parse |
+| `npx eslint .` | 373 → **0 errors, 29 warnings** (all deliberate `no-console` in browser-facing files) |
+| `node --check` on all modified JS files | all parse |
+| Live probe: `site/server.js` admin endpoints | 401 without token; 503 when `ADMIN_TOKEN` unset; public `/` 200 |
 | `python3 -m json.tool browser-extension/manifest.json` | valid |
 
 ## Improvement roadmap
 
-1. **This week (security):** apply ISS-039/041 (unauth surfaces), ISS-038 (`requireAdmin`), ISS-045 (delete `server-old.js`, purge core dumps, remove `trigger-build.js`), ISS-043/044 (auto-release footguns).
-2. **Next:** ISS-037 test-suite rehab (OPP-009 program) — nothing else is safely verifiable until tests compile; then finish ISS-035 by adding tests-e2e/Benchmarks to the sln.
-3. **Then hardening:** OPP-008 headers, OPP-005 signature verification, ISS-042 config allow-list, ISS-046 complexity passes.
-4. **Strategic:** OPP-003 dashboard consolidation, OPP-001 extension API (or retire it), OPP-002 `AtomicFileWriter`, OPP-006 theme tokens.
+All queued defects are now applied. Remaining work is opportunity-level (see `opportunities.md`):
+
+1. **Hardening:** OPP-008 (helmet/CSP headers), OPP-005 (update signature verification), OPP-002 (`AtomicFileWriter` in Core — kills the whole ISS-013/022–028 class).
+2. **Strategic:** OPP-003 (consolidate 3 Node dashboards), OPP-001 (localhost control API to revive the extension — or retire it), OPP-006 (theme tokens), OPP-009 (CI test gate so ISS-037 can't regress).
+3. **Repo hygiene (destructive — needs explicit approval):** purge `core.508609`/`core.530235` from git history via `git filter-repo` if they may contain secrets.
 
 ## Not fixed / honest caveats
 
+- `core.508609`/`core.530235` deleted from HEAD but remain in git history — history purge needs explicit approval (rewrites history).
 - `Redball.nsi` version (2.1.720) lags build props (2.1.724) — release pipeline regenerates it; left alone.
-- Browser `console.*` warnings retained deliberately (29) — triage under ISS-046.
-- WPF runtime behavior not exercised — no Windows host; all C# verification is compile-level.
+- 29 `no-console` warnings retained deliberately in browser-facing JS.
+- Windows runtime behavior not exercised — no Windows host/SDK; all .NET verification is compile-level. Runtime test pass still owed on a Windows machine.
 - `update-server/data/releases.json` had pre-existing local modifications — untouched.

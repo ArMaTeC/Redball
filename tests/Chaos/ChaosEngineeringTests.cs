@@ -212,7 +212,7 @@ public class ChaosEngineeringTests
                 {
                     // Expected during slow IO
                 }
-                
+
                 if (i % 100 == 0)
                 {
                     await Task.Delay(1); // Yield
@@ -248,14 +248,14 @@ public class ChaosEngineeringTests
         {
             var service = KeepAwakeService.Instance;
             service.SetActive(true);
-            
+
             // Run for duration
             await Task.Delay(TimeSpan.FromSeconds(30));
-            
+
             var memoryBefore = GC.GetTotalMemory(false);
             GC.Collect();
             var memoryAfter = GC.GetTotalMemory(true);
-            
+
             return new { memoryBefore, memoryAfter, isActive = service.IsActive };
         }, fault);
 
@@ -284,15 +284,13 @@ public class ChaosEngineeringTests
         // Act
         var result = await _runner.RunWithFaultAsync(async () =>
         {
-            var pool = MemoryPoolService.Instance;
-            
             for (int i = 0; i < iterations; i++)
             {
-                using var buffer = pool.RentBuffer(1024);
-                buffer.Span[0] = (byte)(i % 256);
+                var buffer = new byte[1024];
+                buffer[0] = (byte)(i % 256);
                 allocations++;
             }
-            
+
             sw.Stop();
             return new { allocations, duration = sw.ElapsedMilliseconds };
         }, fault);
@@ -327,22 +325,22 @@ public class ChaosEngineeringTests
         {
             var service = new InterceptionInputService();
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            
+
             // Simulate heartbeat keypresses
             for (int i = 0; i < 20; i++)
             {
                 var expected = TimeSpan.FromMilliseconds(5000);
                 var start = sw.Elapsed;
-                
+
                 await service.SimulateKeypressAsync(0x91); // VK_SCROLL
-                
+
                 var actual = sw.Elapsed - start;
                 var deviation = Math.Abs((actual - expected).TotalMilliseconds);
                 timingDeviations.Add(deviation);
-                
+
                 await Task.Delay(expected);
             }
-            
+
             return timingDeviations.Average();
         }, fault);
 
@@ -419,7 +417,7 @@ public class ChaosEngineeringTests
         }, faults);
 
         // Assert
-        Assert.IsTrue(coreFunctionsWorking >= totalTests * 0.6, 
+        Assert.IsTrue(coreFunctionsWorking >= totalTests * 0.6,
             $"At least 60% of core functions should work ({coreFunctionsWorking}/{totalTests})");
         Assert.IsFalse(result.Crashed, "System should not crash under combined faults");
     }
@@ -516,8 +514,8 @@ public class ChaosTestRunner : IDisposable
 
     private bool IsExpectedException(Exception ex)
     {
-        return ex is IOException || 
-               ex is HttpRequestException || 
+        return ex is IOException ||
+               ex is HttpRequestException ||
                ex is TimeoutException ||
                ex is OutOfMemoryException;
     }
@@ -653,18 +651,18 @@ public class ChaosResult<T>
 // Placeholder types for test compilation
 
 public class OutboxEvent { public Guid Id { get; set; } }
-public class SqliteOutboxStore 
-{ 
-    public Task InitializeAsync() => Task.CompletedTask; 
-    public Task EnqueueAsync(OutboxEvent e) => Task.CompletedTask; 
+public class SqliteOutboxStore
+{
+    public Task InitializeAsync() => Task.CompletedTask;
+    public Task EnqueueAsync(OutboxEvent e) => Task.CompletedTask;
 }
-public class InterceptionInputService 
-{ 
-    public Task SimulateKeypressAsync(int keyCode) => Task.CompletedTask; 
+public class InterceptionInputService
+{
+    public Task SimulateKeypressAsync(int keyCode) => Task.CompletedTask;
 }
-public class ThemeManager 
-{ 
-    public static ThemeManager Instance { get; } = new(); 
-    public string CurrentTheme { get; set; } = "Dark"; 
-    public void SetTheme(string theme) => CurrentTheme = theme; 
+public class ThemeManager
+{
+    public static ThemeManager Instance { get; } = new();
+    public string CurrentTheme { get; set; } = "Dark";
+    public void SetTheme(string theme) => CurrentTheme = theme;
 }

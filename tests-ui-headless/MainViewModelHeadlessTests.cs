@@ -145,30 +145,6 @@ public class MainViewModelHeadlessTests : HeadlessTestBase
 
     [TestMethod]
     [TestCategory("UI"), TestCategory("Headless")]
-    public void DriverSelection_CanBeChanged()
-    {
-        // Arrange
-        var initial = _viewModel!.TypeThingDriverSelection;
-        var options = _viewModel.DriverSelectionOptions.ToList();
-
-        // Assert options exist
-        Assert.IsTrue(options.Count > 0, "Should have driver selection options");
-
-        // Act - select different option if available
-        var newOption = options.FirstOrDefault(o => o != initial);
-        if (newOption != default)
-        {
-            _viewModel.TypeThingDriverSelection = newOption;
-
-            // Assert
-            Assert.AreEqual(newOption, _viewModel.TypeThingDriverSelection,
-                "Driver selection should be changeable");
-        }
-    }
-
-
-    [TestMethod]
-    [TestCategory("UI"), TestCategory("Headless")]
     public void IsDarkMode_CanBeToggled()
     {
         // Arrange

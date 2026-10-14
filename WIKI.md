@@ -121,7 +121,7 @@ Redball is committed to being an inclusive tool for all users.
 
 We aim for 100% statement and branch coverage.
 
-- **Unit Tests**: xUnit suites for core services.
+- **Unit Tests**: MSTest suites for core services.
 - **E2E Tests**: Playwright scripts for the Update Server and Admin Dashboard.
 - **UI Tests**: FlaUI integration for WPF control validation.
 

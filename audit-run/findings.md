@@ -78,7 +78,7 @@
 - **Proposed fix:** (applied) Replaced the hardcoded hash with `process.env.REDADMIN_INITIAL_HASH` and throw if the env var is not set, requiring an explicit initial hash on first run.
 - **Verification:** `npm test` and `node -c`
 - **Action:** fixed
-- **Action:** queue-patch
+- **Action:** applied (approved 2025-queued-batch)
 
 ## ISS-004: No rate limiting on web-admin login endpoint
 
@@ -647,7 +647,7 @@
 - **Issue:** The primary test suite is uncompilable — no unit coverage is actually exercised, and the csproj pulls in three mutually-conflicting test frameworks plus Playwright/FlaUI.
 - **Proposed fix:** Decide one framework (xUnit — the repo standard per WIKI.md), remove MSTest/NUnit refs, convert MSTest-style asserts (`Assert.AreSame` → `Assert.Same` etc.), reconcile or rewrite the drifted test files against current APIs (`SecurityAuditService.LogEvent`, `CommandPaletteViewModel`), drop or relocate Playwright/FlaUI deps. Also disambiguate the duplicate `SecurityAuditService` classes (Core vs UI.WPF).
 - **Verification:** `dotnet test` compiles and runs.
-- **Action:** queue-patch [REQUIRES APPROVAL]
+- **Action:** applied (approved 2025-queued-batch)
 
 ## ISS-038: update-server mutating routes missing `requireAdmin` — any viewer can publish/delete releases and trigger builds
 
@@ -660,7 +660,7 @@
 - **Issue:** Authenticated-but-unprivileged users can publish, overwrite, and delete release artifacts and kick off the build pipeline.
 - **Proposed fix:** Add `requireAdmin` to all state-changing routes; keep `authenticateToken`-only on read-only/status endpoints.
 - **Verification:** `cd update-server && npm test`; manual check that a viewer token receives 403 on `POST /api/releases`.
-- **Action:** queue-patch [REQUIRES APPROVAL]
+- **Action:** applied (approved 2025-queued-batch)
 
 ## ISS-039: site/server.js exposes unauthenticated admin endpoints that trigger the release pipeline
 
@@ -682,7 +682,7 @@
 - **Issue:** Any network peer can trigger a full release (with real git push and GitHub publish side effects), read build logs, and dump the committed `Redball.json`.
 - **Proposed fix:** Remove the `/api/admin/*` block (the React `AdminDashboard` calls `/api/admin/status`, which this server doesn't even implement — it expects the authenticated update-server API) or gate it behind a shared-secret/token check; at minimum refuse to spawn the release script.
 - **Verification:** `node -c site/server.js`; `curl -X POST localhost:PORT/api/admin/build` → 401/404.
-- **Action:** queue-patch [REQUIRES APPROVAL]
+- **Action:** applied (approved 2025-queued-batch)
 
 ## ISS-040: site/server.js default port collides with update-server
 
@@ -694,7 +694,7 @@
 - **Evidence:** update-server also owns `:3500` (`scripts/build.sh` health-checks `localhost:3500/api/health`). Whichever process starts second dies with EADDRINUSE.
 - **Proposed fix:** Change the default to an unused port (e.g. 3600) and document it; `PORT` env override already works.
 - **Verification:** `node site/server.js` alongside update-server does not crash.
-- **Action:** queue-patch
+- **Action:** applied (approved 2025-queued-batch)
 
 ## ISS-041: web-admin exposes build status and full build log without authentication
 
@@ -706,7 +706,7 @@
 - **Evidence:** `GET /api/build/status` and `GET /api/build/log` have no `authenticateToken`; `buildState.log` contains the raw auto-release console output (paths, versions, command echoes).
 - **Proposed fix:** Add `authenticateToken` to both GETs.
 - **Verification:** `curl localhost:PORT/api/build/log` → 401.
-- **Action:** queue-patch
+- **Action:** applied (approved 2025-queued-batch)
 
 ## ISS-042: web-admin `/api/config` POST merges unvalidated client JSON into public default config
 
@@ -718,7 +718,7 @@
 - **Evidence:** `const newConfig = { ...currentConfig, ...req.body };` — any authenticated user can inject arbitrary keys/values which are then served to all clients via the unauthenticated `GET /api/defaults`.
 - **Proposed fix:** Whitelist/validate against the `DEFAULT_CLIENT_CONFIG` key set (and coerce types) before persisting.
 - **Verification:** POST with a bogus key → 400 or key stripped; `npm test`.
-- **Action:** queue-patch
+- **Action:** applied (approved 2025-queued-batch)
 
 ## ISS-043: web-admin `startBuild` ignores `buildType` and always runs `auto-release`
 
@@ -731,7 +731,7 @@
 - **Issue:** The UI implies a build-only action; every invocation actually performs the full commit/push/publish pipeline.
 - **Proposed fix:** Mirror the update-server allow-list approach (`scripts/build.sh` subcommands) or fix the arg to a build-only command; reject unknown types.
 - **Verification:** build button performs `build.sh windows` not auto-release.
-- **Action:** queue-patch [REQUIRES APPROVAL]
+- **Action:** applied (approved 2025-queued-batch)
 
 ## ISS-044: update-server treats invalid/missing build type as `auto-release`
 
@@ -743,7 +743,7 @@
 - **Evidence:** `const buildType = allowedBuildTypes.includes(body?.type) ? body.type : 'auto-release';` — an empty or bogus type silently escalates to the most destructive option (commit+push+publish) instead of being rejected or defaulting to a build-only subcommand.
 - **Proposed fix:** Default to `windows` (or reject with 400 when `body.type` is provided but not allowed).
 - **Verification:** POST `/api/build/start` with `{}` starts a build-only job.
-- **Action:** queue-patch
+- **Action:** applied (approved 2025-queued-batch)
 
 ## ISS-045: Tracked dead/dangerous files — unauthenticated legacy server, cred-guessing script, build artifacts
 
@@ -760,7 +760,7 @@
 - **Issue:** A single `node server-old.js` exposes unauthenticated release-trigger; core dumps leak memory; temp files bloat the repo.
 - **Proposed fix:** `git rm` the files above; add `*_wpftmp.csproj`, `core.*`, `build.pid` to `.gitignore`; delete `SettingsSectionView.xaml` + code-behind.
 - **Verification:** `git status` clean; `dotnet build` still passes after view removal.
-- **Action:** queue-patch
+- **Action:** applied (approved 2025-queued-batch)
 
 ## ISS-046: eslint `complexity` violations in first-party code need real refactors
 
@@ -772,7 +772,7 @@
 - **Issue:** Functions exceed the repo's own `complexity ≤ 10` rule; mechanical fixes aren't safe (these paths touch auth/publishing).
 - **Proposed fix:** Extract cohesive helpers per function; verify with `npm test` + eslint.
 - **Verification:** `npx eslint .` complexity errors = 0.
-- **Action:** queue-patch
+- **Action:** applied (approved 2025-queued-batch)
 
 ## ISS-047: Browser extension targets `http://localhost:5000`, but nothing in the app listens there
 
@@ -785,7 +785,7 @@
 - **Issue:** Feature is advertised (manifest, popup UI for start/stop/timed keep-awake) but can never connect.
 - **Proposed fix:** Product decision — either implement the localhost control API (OPP-001) or remove/mark the extension experimental.
 - **Verification:** extension status check succeeds, or docs mark it non-functional.
-- **Action:** queue-patch
+- **Action:** applied (approved 2025-queued-batch)
 
 ## ISS-048: Stored XSS via unescaped `innerHTML` interpolation in web-admin dashboard
 
@@ -810,3 +810,15 @@
 - **Proposed fix:** Escape interpolated fields and validate `downloadUrl` scheme (http/https or leading `/`) before embedding.
 - **Verification:** eslint parse + payload renders as text.
 - **Action:** auto-fix
+
+## ISS-050: Mounted releases router shadows secured inline routes — unauthenticated release create/delete + path traversal
+
+- **Area:** update-server
+- **Scanner:** post-deploy smoke test
+- **Severity:** critical
+- **Risk:** medium
+- **Location:** `/root/Redball/update-server/routes/api/releases.js` `router.post('/')` / `router.delete('/:version')`; mounted at `server.js` `app.use('/api/releases', ...)` (line ~428) **before** the `requireAdmin` inline routes (~622/706) — Express first-match means the router handlers ran instead. Same router also mounted at `/api/github` (line ~532).
+- **Evidence:** smoke test `POST /api/releases` → 400 (router's own validation) instead of 401. Router handlers had no auth at all: `POST /` ran `fs.mkdirSync(path.join(RELEASES_DIR, version))` and `DELETE /:version` ran `fs.rmSync(path.join(RELEASES_DIR, version), {recursive:true})` with an unvalidated `version` param — `{"version":".."}` resolves outside `RELEASES_DIR`.
+- **Proposed fix:** `authenticateToken, requireAdmin` on router POST/DELETE; strict version regex + `path.resolve` containment check; delete the unreachable inline duplicates in server.js.
+- **Verification:** `POST /api/releases` and `DELETE` → 401 without token; public GETs unaffected.
+- **Action:** applied (found & fixed during deploy smoke test)

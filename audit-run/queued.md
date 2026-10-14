@@ -1,10 +1,9 @@
 # Queued Patches
 
-Run 2 (v7.0.0-redball). All entries below are `queue-patch`; items marked **[REQUIRES APPROVAL]** touch security/auth/release contracts and must not be applied without maintainer sign-off. Patch proposals live in `audit-run/patches/ISS-NNN.patch`; multi-file reconciliations are documented as patch plans inline.
+Run 2 (v7.0.0-redball). **All queued items were approved and applied** — see `fixed.md` for per-item change summaries and verification. The entries below are retained as the historical record of what was queued; original patch proposals remain in `audit-run/patches/`.
 
----
 
-## ISS-037: Unit test project does not compile — ~161 errors from API drift and triple-framework references **[REQUIRES APPROVAL]**
+## ISS-037: Unit test project does not compile — ~161 errors from API drift and triple-framework references
 
 - **Severity:** high | **Risk:** high | **Area:** tests
 - **Location:** `/root/Redball/tests/` — `SecurityAuditServiceTests.cs`, `SecurityUtilitiesTests.cs`, `ServiceOrchestrationTests.cs`, `ConvertersTests.cs`, `Chaos/ChaosEngineeringTests.cs`, `UpdateSystemE2ETests.cs`, `ViewModels/CommandPaletteViewModelTests.cs`; also `tests-ui-headless/` (8 errors — same drift)
@@ -18,7 +17,7 @@ Run 2 (v7.0.0-redball). All entries below are `queue-patch`; items marked **[REQ
   5. Then add `tests-e2e` + `tests/Redball.Benchmarks` to the sln (completes ISS-035).
 - **Verification:** `dotnet test tests/Redball.Tests.csproj` compiles and runs green.
 
-## ISS-038: update-server mutating routes missing `requireAdmin` **[REQUIRES APPROVAL]**
+## ISS-038: update-server mutating routes missing `requireAdmin`
 
 - **Severity:** high | **Risk:** medium | **Area:** update-server
 - **Location:** `/root/Redball/update-server/routes/api/releases.js` + `/root/Redball/update-server/server.js` route mounts
@@ -26,7 +25,7 @@ Run 2 (v7.0.0-redball). All entries below are `queue-patch`; items marked **[REQ
 - **Patch:** `patches/ISS-038.patch` — inserts a `requireAdmin` middleware and applies it to mutating routes. Approval needed because role enforcement changes the auth contract for existing non-admin users.
 - **Verification:** `npm test`; manual check that a non-admin JWT gets 403 on `POST /api/releases`.
 
-## ISS-039: site/server.js exposes unauthenticated admin endpoints that trigger the release pipeline **[REQUIRES APPROVAL]**
+## ISS-039: site/server.js exposes unauthenticated admin endpoints that trigger the release pipeline
 
 - **Severity:** critical | **Risk:** medium | **Area:** site
 - **Location:** `/root/Redball/site/server.js` — `POST /api/admin/build`, `POST /api/admin/release`, `GET /api/admin/logs`, `GET /api/admin/config` (all spawn processes or expose config with no auth)
@@ -55,7 +54,7 @@ Run 2 (v7.0.0-redball). All entries below are `queue-patch`; items marked **[REQ
 - **Summary:** Type/shape isn't validated; arbitrary keys (and strings later rendered into `value=` attributes — now escaped by ISS-048) flow into the canonical config file the desktop app downloads.
 - **Patch:** `patches/ISS-042.patch` — allow-lists writable keys and enforces primitive type checks per key.
 
-## ISS-043: web-admin `startBuild` ignores `buildType` and always runs `auto-release` **[REQUIRES APPROVAL]**
+## ISS-043: web-admin `startBuild` ignores `buildType` and always runs `auto-release`
 
 - **Severity:** medium | **Risk:** medium | **Area:** web-admin
 - **Location:** `/root/Redball/web-admin/server.js` — build-spawn handler
