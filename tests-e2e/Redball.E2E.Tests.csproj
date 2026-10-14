@@ -10,6 +10,7 @@
     <GenerateProgramFile>false</GenerateProgramFile>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
+      <NoWarn>$(NoWarn);CA1001;CA1304;CA1305;CA1310;CA1311;CA1707;CA1805;CA1816;CA1822;CA1846;CA1847;CA1852;CA1861;CA1862;CA1866;CA1869;CA1872;CA2201;CA2263;NUnit2045;SYSLIB1054;CS8625</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

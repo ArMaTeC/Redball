@@ -486,12 +486,28 @@ step_build_wpf() {
 
     mkdir -p "$WPF_PUBLISH_DIR"
 
-    # Build all projects first so intermediate DLLs + artifacts exist
+    # Mixed Linux/Wine incremental state poisons the Wine build: if MSBuild
+    # decides csc is up-to-date it skips emitting Redball.Core.dll entirely,
+    # and the generated *_wpftmp project then fails with CS0006 when it can't
+    # find the referenced assembly. Wipe Release intermediates for src/ so the
+    # Wine build always does a real compile. (project.assets.json lives in
+    # obj/, not obj/Release/, so --no-restore still works.)
+    rm -rf "$PROJECT_ROOT/src/Redball.Core/bin/Release" \
+           "$PROJECT_ROOT/src/Redball.Core/bin/x64" \
+           "$PROJECT_ROOT/src/Redball.Core/obj/Release" \
+           "$PROJECT_ROOT/src/Redball.Core/obj/x64" \
+           "$PROJECT_ROOT/src/Redball.UI.WPF/bin/Release" \
+           "$PROJECT_ROOT/src/Redball.UI.WPF/obj/Release" 2>/dev/null || true
+
+    # Build all projects first so intermediate DLLs + artifacts exist.
+    # NOTE: do NOT pass --runtime here — the Windows SDK then infers Platform=x64
+    # and Redball.Core lands in bin\x64\Release\ while the generated *_wpftmp
+    # project resolves the reference at bin\Release\ (AnyCPU) → CS0006.
+    # RuntimeIdentifier is already pinned in the csproj; publish adds it too.
     log_info "Compiling WPF project via Wine .NET SDK..."
     log_info "→ Running: dotnet build (this may take 2-3 minutes)..."
     wine_dotnet build "Z:$PROJECT_ROOT/src/Redball.UI.WPF/Redball.UI.WPF.csproj" \
         --configuration "$CONFIGURATION" \
-        --runtime win-x64 \
         --no-restore
     log_info "→ Build completed successfully"
 

@@ -48,12 +48,13 @@ function Write-HostSafe {
     Write-Host $Object -ForegroundColor $ForegroundColor
 }
 
-$projectRoot = Split-Path $PSScriptRoot -Parent
+# Script lives in scripts/windows/ — repo root is two levels up
+$projectRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $srcDir = Join-Path $projectRoot 'src'
 $wpfDir = Join-Path $srcDir 'Redball.UI.WPF'
 $wpfProjectPath = Join-Path $wpfDir 'Redball.UI.WPF.csproj'
 $propsPath = Join-Path $projectRoot 'Directory.Build.props'
-$versionFilePath = Join-Path $PSScriptRoot 'version.txt'
+$versionFilePath = Join-Path $projectRoot 'scripts/version.txt'
 
 $targetPath = $propsPath
 if (-not (Test-Path $targetPath)) {

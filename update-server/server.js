@@ -1331,7 +1331,7 @@ wss.on('connection', (ws, req) => {
             const data = JSON.parse(message);
             if (data.action === 'start-build') {
                 if (buildState.status !== 'running') {
-                    startBuild();
+                    startBuild(data);
                 }
             } else if (data.action === 'stop-build') {
                 stopBuild();
@@ -1418,6 +1418,27 @@ function parseBuildStage(line) {
     return null;
 }
 
+const BUILD_CHANNELS = ['stable', 'beta', 'dev'];
+const BUMP_RE = /^(major|minor|patch|\d+\.\d+\.\d+)$/;
+
+// Append a flag only when the value passes its allow-list/pattern.
+function pushValidatedFlag(args, flag, value, rule) {
+    const ok = Array.isArray(rule) ? rule.includes(value) : rule.test(String(value ?? ''));
+    if (ok) args.push(flag, value);
+}
+
+// Assemble the build.sh argv from a request body.
+// Every value is strictly validated — fail closed to the safe default.
+function buildScriptArgs(scriptPath, body = {}) {
+    const buildType = ALLOWED_BUILD_TYPES.includes(body?.type) ? body.type : 'windows';
+    const args = [scriptPath, buildType];
+    pushValidatedFlag(args, '--channel', body?.channel, BUILD_CHANNELS);
+    pushValidatedFlag(args, '--bump', body?.bump, BUMP_RE);
+    if (body?.register === true) args.push('--register');
+    if (body?.dryRun === true) args.push('--dry-run');
+    return args;
+}
+
 function startBuild(body = {}) {
     // Mutate in place — routes/api/build.js holds a reference to this object
     // via setBuildState(), so reassigning `buildState` would orphan it and the
@@ -1435,12 +1456,8 @@ function startBuild(body = {}) {
     saveBuildStateImmediate();
     broadcast({ type: 'build-started', data: buildState });
 
-    // Fail closed: an unrecognized type becomes the least destructive build,
-    // never the release pipeline. Explicit bad types are rejected in the route.
-    const buildType = ALLOWED_BUILD_TYPES.includes(body?.type) ? body.type : 'windows';
-
     const scriptPath = path.join(PROJECT_ROOT, 'scripts', 'build.sh');
-    const ptyProcess = pty.spawn('bash', [scriptPath, buildType], {
+    const ptyProcess = pty.spawn('bash', buildScriptArgs(scriptPath, body), {
         name: 'xterm-color',
         cols: 120,
         rows: 30,

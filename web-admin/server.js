@@ -313,7 +313,7 @@ app.post('/api/build/start', authenticateToken, (req, res) => {
   if (buildState.status === 'running') {
     return res.status(409).json({ error: 'Build already in progress' });
   }
-  startBuild((req.body && req.body.type) || 'windows');
+  startBuild(req.body || {});
   res.json({ status: 'started' });
 });
 
@@ -592,7 +592,7 @@ wss.on('connection', (ws, req) => {
     try {
       const data = JSON.parse(message);
       if (data.action === 'start-build' && buildState.status !== 'running') {
-        startBuild(data.buildType || 'windows');
+        startBuild({ ...data, type: data.buildType });
       } else if (data.action === 'stop-build' && buildState.pid) {
         process.kill(buildState.pid, 'SIGTERM');
       }
@@ -730,8 +730,28 @@ function parseBuildStage(line) {
 // Fail closed: unknown types fall back to 'windows', never 'auto-release'.
 const ALLOWED_BUILD_TYPES = ['auto-release', 'all', 'windows', 'update-server', 'website', 'publish', 'clean'];
 
-function startBuild(buildType = 'windows') {
-  if (!ALLOWED_BUILD_TYPES.includes(buildType)) buildType = 'windows';
+const BUILD_CHANNELS = ['stable', 'beta', 'dev'];
+const BUMP_RE = /^(major|minor|patch|\d+\.\d+\.\d+)$/;
+
+// Append a flag only when the value passes its allow-list/pattern.
+function pushValidatedFlag(args, flag, value, rule) {
+  const ok = Array.isArray(rule) ? rule.includes(value) : rule.test(String(value ?? ''));
+  if (ok) args.push(flag, value);
+}
+
+// Assemble the build.sh argv from request options — strictly validated,
+// fail closed to the safe default for every field.
+function buildScriptArgs(scriptPath, options = {}) {
+  const buildType = ALLOWED_BUILD_TYPES.includes(options.type) ? options.type : 'windows';
+  const args = [scriptPath, buildType];
+  pushValidatedFlag(args, '--channel', options?.channel, BUILD_CHANNELS);
+  pushValidatedFlag(args, '--bump', options?.bump, BUMP_RE);
+  if (options?.register === true) args.push('--register');
+  if (options?.dryRun === true) args.push('--dry-run');
+  return args;
+}
+
+function startBuild(options = {}) {
 
   // Check if another build is already running externally
   if (buildState.status === 'running' && buildState.pid) {
@@ -759,7 +779,7 @@ function startBuild(buildType = 'windows') {
   broadcast({ type: 'build-started', data: buildState });
 
   const scriptPath = path.join(PROJECT_ROOT, 'scripts', 'build.sh');
-  const ptyProcess = pty.spawn('bash', [scriptPath, buildType], {
+  const ptyProcess = pty.spawn('bash', buildScriptArgs(scriptPath, options), {
     name: 'xterm-color',
     cols: 120,
     rows: 30,

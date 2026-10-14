@@ -28,7 +28,7 @@ router.post('/start', (req, res) => {
         return res.status(409).json({ error: 'Build already in progress' });
     }
     if (startBuildFn) {
-        startBuildFn();
+        startBuildFn(req.body);
     }
     res.json({ message: 'Build started', status: 'running' });
 });
@@ -52,7 +52,7 @@ router.post('/admin/build', (req, res) => {
         return res.status(409).json({ error: 'Build already in progress' });
     }
     if (startBuildFn) {
-        startBuildFn();
+        startBuildFn(req.body);
     }
     res.json({ message: 'Build started', status: 'running' });
 });

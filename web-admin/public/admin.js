@@ -786,11 +786,30 @@ function appendLog(line) {
     setTimeout(() => div.classList.remove('new'), 500);
 }
 
+function resolveBumpOption() {
+    if (!document.getElementById('opt-bump')?.checked) return null;
+    const component = document.getElementById('opt-bump-component')?.value;
+    return component === 'custom'
+        ? document.getElementById('opt-bump-version')?.value.trim() || null
+        : component;
+}
+
+function collectBuildOptions() {
+    return {
+        type: document.getElementById('opt-type')?.value || 'windows',
+        channel: document.getElementById('opt-channel')?.value || 'stable',
+        bump: resolveBumpOption(),
+        register: document.getElementById('opt-register')?.checked || false,
+        dryRun: document.getElementById('opt-dry-run')?.checked || false
+    };
+}
+
 async function startBuild() {
     document.getElementById('terminal-out').innerHTML = '';
     fetch('/api/build/start', {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token }
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify(collectBuildOptions())
     });
 }
 
@@ -1217,6 +1236,18 @@ document.addEventListener('click', (e) => {
 
 const analyticsRange = document.getElementById('analytics-range');
 if (analyticsRange) analyticsRange.addEventListener('change', loadAnalytics);
+
+// Build-option visibility: component select follows the bump checkbox,
+// free-text version follows the 'custom' component choice
+const optBump = document.getElementById('opt-bump');
+const optBumpComponent = document.getElementById('opt-bump-component');
+const optBumpVersion = document.getElementById('opt-bump-version');
+function syncBumpInputs() {
+    if (optBumpComponent) optBumpComponent.style.display = optBump?.checked ? '' : 'none';
+    if (optBumpVersion) optBumpVersion.style.display = (optBump?.checked && optBumpComponent?.value === 'custom') ? '' : 'none';
+}
+if (optBump) optBump.addEventListener('change', syncBumpInputs);
+if (optBumpComponent) optBumpComponent.addEventListener('change', syncBumpInputs);
 
 // Default MFA button handler (loadUsers() reassigns .onclick based on MFA state)
 const mfaSetupBtn = document.getElementById('mfa-setup-btn');

@@ -31,6 +31,8 @@
 #   --beta               Shortcut for --channel beta
 #   --version VERSION    Specify version for publish
 #   --skip-windows       Skip Windows build in 'all' command
+#   --bump COMPONENT     Bump version before building (major|minor|patch|X.Y.Z)
+#   --register           Register the built release on the update-server
 #   --dry-run            Show what would happen without making changes
 #   -h, --help           Show this help
 # ============================================================================
@@ -105,7 +107,9 @@ echo "" >> "$BUILD_LOG"
 COMMAND=""
 CHANNEL="stable"
 VERSION=""
+BUMP=""
 SKIP_WINDOWS=false
+REGISTER=false
 DRY_RUN=false
 VERBOSE=true  # always verbose now
 BUILD_BY_SERVICE="${BUILD_BY_SERVICE:-}"
@@ -131,6 +135,18 @@ while [[ $# -gt 0 ]]; do
             ;;
         --skip-windows)
             SKIP_WINDOWS=true
+            shift
+            ;;
+        --bump)
+            if [[ ! "${2:-}" =~ ^(major|minor|patch|[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+                log_error "Invalid --bump value: ${2:-<missing>} (use major, minor, patch, or X.Y.Z)"
+                exit 1
+            fi
+            BUMP="$2"
+            shift 2
+            ;;
+        --register)
+            REGISTER=true
             shift
             ;;
         --dry-run)
@@ -229,6 +245,109 @@ start_server_background() {
 }
 
 # Full auto-release workflow
+# Register the built artifacts as a release on the update-server.
+# Used by auto-release (Phase 5) and by plain builds when --register is passed.
+register_with_update_server() {
+    if [[ $DRY_RUN == true ]]; then
+        log_info "[DRY RUN] Would publish to update-server"
+        return 0
+    fi
+
+    export PUBLISH_TO_UPDATE_SERVER=1
+    log_info "Publishing to update-server via API..."
+
+    local version
+    version=$(get_version)
+    local channel_flag=""
+    [[ "$CHANNEL" == "beta" ]] && channel_flag="--form channel=beta"
+
+    # Build curl command with files that exist
+    local curl_files=()
+    [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] && curl_files+=("-F" "files=@$DIST_DIR/Redball-${version}-Setup.exe")
+    [[ -f "$DIST_DIR/Redball-${version}.zip" ]] && curl_files+=("-F" "files=@$DIST_DIR/Redball-${version}.zip")
+
+    # Add only the application binaries needed for delta updates — not NSIS artefacts, bitmaps, runtime installers, etc.
+    local delta_binaries=(
+        "Redball.UI.WPF.exe"
+        "Redball.UI.WPF.dll"
+        "Redball.UI.WPF.deps.json"
+        "Redball.UI.WPF.runtimeconfig.json"
+        "Redball.Core.dll"
+    )
+    if [[ -d "$DIST_DIR/wpf-publish" ]]; then
+        log_info "Collecting application binaries for delta update manifest..."
+        for bin in "${delta_binaries[@]}"; do
+            local bin_path="$DIST_DIR/wpf-publish/$bin"
+            [[ -f "$bin_path" ]] && curl_files+=("-F" "files=@$bin_path")
+        done
+    fi
+
+    if [[ ${#curl_files[@]} -eq 0 ]]; then
+        log_warn "No distribution files found to publish"
+    else
+        log_info "Uploading files to update-server..."
+
+        # Obtain a JWT for the publish call
+        local update_server_token=""
+        local update_server_password
+        update_server_password=$(node -e "
+          const fs=require('fs'),path=require('path');
+          const f=path.join('$PROJECT_ROOT','update-server','logs','admin.json');
+          if(fs.existsSync(f)){const d=JSON.parse(fs.readFileSync(f,'utf8'));process.stdout.write(d.password||'')}
+        " 2>/dev/null || true)
+        if [[ -n "$update_server_password" ]]; then
+            local login_resp
+            login_resp=$(curl -s -X POST "http://localhost:3500/api/auth/login" \
+                -H "Content-Type: application/json" \
+                -d "{\"username\":\"admin\",\"password\":\"${update_server_password}\"}" 2>/dev/null || true)
+            update_server_token=$(echo "$login_resp" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8');try{const j=JSON.parse(d);process.stdout.write(j.token||'')}catch{}" 2>/dev/null || true)
+        fi
+        # Fall back: generate token directly from secret if login unavailable
+        if [[ -z "$update_server_token" ]]; then
+            update_server_token=$(node -e "
+              const fs=require('fs'),path=require('path'),jwt=require('$PROJECT_ROOT/update-server/node_modules/jsonwebtoken');
+              const sf=path.join('$PROJECT_ROOT','update-server','logs','.jwt-secret');
+              if(fs.existsSync(sf)){const s=fs.readFileSync(sf,'utf8').trim();process.stdout.write(jwt.sign({username:'build',role:'admin'},s,{expiresIn:'1h'}))}
+            " 2>/dev/null || true)
+        fi
+
+        local auth_header=()
+        [[ -n "$update_server_token" ]] && auth_header=("-H" "Authorization: Bearer ${update_server_token}")
+
+        local publish_response
+        publish_response=$(curl -s --connect-timeout 10 --max-time 120 -w "\n%{http_code}" -X POST \
+            "http://localhost:3500/api/publish?version=${version}" \
+            "${auth_header[@]}" \
+            -F "version=${version}" \
+            -F "notes=Release ${version} (${CHANNEL} channel)" \
+            ${channel_flag} \
+            "${curl_files[@]}" 2>&1)
+        local curl_exit_code=$?
+
+        local http_code=$(echo "$publish_response" | tail -n1)
+        local response_body=$(echo "$publish_response" | sed '$d')
+
+        if [[ $curl_exit_code -ne 0 ]]; then
+            log_warn "Failed to connect to update-server (curl exit code: $curl_exit_code)"
+            log_detail "Response: $response_body"
+        elif [[ "$http_code" == "201" ]]; then
+            log_success "Published to update-server (HTTP $http_code)"
+            log_detail "Response: $response_body"
+        else
+            log_warn "Update-server publish returned HTTP $http_code"
+            log_detail "Response: $response_body"
+        fi
+    fi
+}
+
+# Run registration only when --register was passed (plain windows/all builds).
+register_if_requested() {
+    if [[ $REGISTER == true ]]; then
+        log_step "Registering release on update-server (channel: $CHANNEL)..."
+        register_with_update_server
+    fi
+}
+
 auto_release() {
     log_step "========================================"
     log_step "Starting FULL AUTO-RELEASE workflow"
@@ -252,7 +371,7 @@ auto_release() {
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would bump version number"
     else
-        local bump_arg="patch"
+        local bump_arg="${BUMP:-patch}"
         if [[ -n "$VERSION" ]]; then bump_arg="$VERSION"; fi
         if bash "$SCRIPT_DIR/bump-version.sh" "$bump_arg"; then
             log_info "Version set/bumped to $(get_version)"
@@ -328,95 +447,7 @@ auto_release() {
 
     # 5. Publish to update-server
     log_step "Phase 5: Publishing to update-server..."
-    if [[ $DRY_RUN == true ]]; then
-        log_info "[DRY RUN] Would publish to update-server"
-    else
-        export PUBLISH_TO_UPDATE_SERVER=1
-        log_info "Publishing to update-server via API..."
-
-        local version
-        version=$(get_version)
-        local channel_flag=""
-        [[ "$CHANNEL" == "beta" ]] && channel_flag="--form channel=beta"
-
-        # Build curl command with files that exist
-        local curl_files=()
-        [[ -f "$DIST_DIR/Redball-${version}-Setup.exe" ]] && curl_files+=("-F" "files=@$DIST_DIR/Redball-${version}-Setup.exe")
-        [[ -f "$DIST_DIR/Redball-${version}.zip" ]] && curl_files+=("-F" "files=@$DIST_DIR/Redball-${version}.zip")
-
-        # Add only the application binaries needed for delta updates — not NSIS artefacts, bitmaps, runtime installers, etc.
-        local delta_binaries=(
-            "Redball.UI.WPF.exe"
-            "Redball.UI.WPF.dll"
-            "Redball.UI.WPF.deps.json"
-            "Redball.UI.WPF.runtimeconfig.json"
-            "Redball.Core.dll"
-        )
-        if [[ -d "$DIST_DIR/wpf-publish" ]]; then
-            log_info "Collecting application binaries for delta update manifest..."
-            for bin in "${delta_binaries[@]}"; do
-                local bin_path="$DIST_DIR/wpf-publish/$bin"
-                [[ -f "$bin_path" ]] && curl_files+=("-F" "files=@$bin_path")
-            done
-        fi
-
-        if [[ ${#curl_files[@]} -eq 0 ]]; then
-            log_warn "No distribution files found to publish"
-        else
-            log_info "Uploading files to update-server..."
-
-            # Obtain a JWT for the publish call
-            local update_server_token=""
-            local update_server_password
-            update_server_password=$(node -e "
-              const fs=require('fs'),path=require('path');
-              const f=path.join('$PROJECT_ROOT','update-server','logs','admin.json');
-              if(fs.existsSync(f)){const d=JSON.parse(fs.readFileSync(f,'utf8'));process.stdout.write(d.password||'')}
-            " 2>/dev/null || true)
-            if [[ -n "$update_server_password" ]]; then
-                local login_resp
-                login_resp=$(curl -s -X POST "http://localhost:3500/api/auth/login" \
-                    -H "Content-Type: application/json" \
-                    -d "{\"username\":\"admin\",\"password\":\"${update_server_password}\"}" 2>/dev/null || true)
-                update_server_token=$(echo "$login_resp" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8');try{const j=JSON.parse(d);process.stdout.write(j.token||'')}catch{}" 2>/dev/null || true)
-            fi
-            # Fall back: generate token directly from secret if login unavailable
-            if [[ -z "$update_server_token" ]]; then
-                update_server_token=$(node -e "
-                  const fs=require('fs'),path=require('path'),jwt=require('$PROJECT_ROOT/update-server/node_modules/jsonwebtoken');
-                  const sf=path.join('$PROJECT_ROOT','update-server','logs','.jwt-secret');
-                  if(fs.existsSync(sf)){const s=fs.readFileSync(sf,'utf8').trim();process.stdout.write(jwt.sign({username:'build',role:'admin'},s,{expiresIn:'1h'}))}
-                " 2>/dev/null || true)
-            fi
-
-            local auth_header=()
-            [[ -n "$update_server_token" ]] && auth_header=("-H" "Authorization: Bearer ${update_server_token}")
-
-            local publish_response
-            publish_response=$(curl -s --connect-timeout 10 --max-time 120 -w "\n%{http_code}" -X POST \
-                "http://localhost:3500/api/publish?version=${version}" \
-                "${auth_header[@]}" \
-                -F "version=${version}" \
-                -F "notes=Release ${version} (${CHANNEL} channel)" \
-                ${channel_flag} \
-                "${curl_files[@]}" 2>&1)
-            local curl_exit_code=$?
-
-            local http_code=$(echo "$publish_response" | tail -n1)
-            local response_body=$(echo "$publish_response" | sed '$d')
-
-            if [[ $curl_exit_code -ne 0 ]]; then
-                log_warn "Failed to connect to update-server (curl exit code: $curl_exit_code)"
-                log_detail "Response: $response_body"
-            elif [[ "$http_code" == "201" ]]; then
-                log_success "Published to update-server (HTTP $http_code)"
-                log_detail "Response: $response_body"
-            else
-                log_warn "Update-server publish returned HTTP $http_code"
-                log_detail "Response: $response_body"
-            fi
-        fi
-    fi
+    register_with_update_server
 
     # 5.5 Generate delta patches for differential updates
     log_step "Phase 5.5: Generating delta patches..."
@@ -751,6 +782,18 @@ build_windows() {
     log_step "Building Windows artifacts..."
     log_info "This step takes 3-5 minutes. Streaming output in real-time..."
     local win_start=$(date +%s)
+
+    # auto-release already bumps at Phase 0 — skip to avoid a double bump
+    if [[ -n "$BUMP" && "$COMMAND" != "auto-release" ]]; then
+        log_step "Bumping version ($BUMP)..."
+        if [[ $DRY_RUN == true ]]; then
+            log_info "[DRY RUN] Would bump version ($BUMP)"
+        elif bash "$SCRIPT_DIR/bump-version.sh" "$BUMP"; then
+            log_info "Version set to $(get_version)"
+        else
+            log_warn "Version bump failed, continuing with current version"
+        fi
+    fi
 
     if [[ $DRY_RUN == true ]]; then
         log_info "[DRY RUN] Would run: $SCRIPT_DIR/build-windows.sh"
@@ -1129,7 +1172,7 @@ main() {
     echo ""
 
     log_debug "Script:       $0"
-    log_debug "Arguments:    $COMMAND ${CHANNEL:+--channel $CHANNEL} ${VERSION:+--version $VERSION}"
+    log_debug "Arguments:    $COMMAND ${CHANNEL:+--channel $CHANNEL} ${VERSION:+--version $VERSION} ${BUMP:+--bump $BUMP} ${DRY_RUN:+--dry-run}"
     log_debug "Project root: $PROJECT_ROOT"
     log_debug "Dist dir:     $DIST_DIR"
     log_debug "Server dir:   $UPDATE_SERVER_DIR"
@@ -1157,10 +1200,10 @@ main() {
             auto_release
             ;;
         all)
-            build_all
+            build_all && register_if_requested
             ;;
         windows)
-            build_windows
+            build_windows && register_if_requested
             ;;
         update-server)
             build_update_server

@@ -1381,6 +1381,22 @@
             font-size: 0.9rem;
             font-weight: 600;
         }
+
+        .build-options {
+            margin-bottom: 1.5rem;
+        }
+
+        .build-flags {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            align-items: start;
+            margin-top: 0.75rem;
+        }
+
+        .build-flags .cb-field {
+            padding: 0.8rem 0;
+        }
     </style>
 </head>
 
@@ -1591,6 +1607,53 @@
                         Operations Control</h3>
 
                     <div id="initial-controls">
+                        <div class="build-options">
+                            <div class="config-row">
+                                <div class="config-field">
+                                    <label>Build Type</label>
+                                    <select id="opt-type">
+                                        <option value="windows">Windows artifacts</option>
+                                        <option value="all">All (Windows + server + site)</option>
+                                        <option value="update-server">Update server only</option>
+                                        <option value="website">Website only</option>
+                                    </select>
+                                </div>
+                                <div class="config-field">
+                                    <label>Release Channel</label>
+                                    <select id="opt-channel">
+                                        <option value="stable">stable</option>
+                                        <option value="beta">beta</option>
+                                        <option value="dev">dev</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="build-flags">
+                                <div>
+                                    <label class="cb-field">
+                                        <input type="checkbox" id="opt-bump">
+                                        <span>Bump version before build</span>
+                                    </label>
+                                    <select id="opt-bump-component" style="display: none; margin-top: 0.5rem; width: 100%; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem 1rem; color: white;">
+                                        <option value="patch">patch (x.y.Z+1)</option>
+                                        <option value="minor">minor (x.Y+1.0)</option>
+                                        <option value="major">major (X+1.0.0)</option>
+                                        <option value="custom">custom version…</option>
+                                    </select>
+                                    <input type="text" id="opt-bump-version" placeholder="e.g. 2.2.0"
+                                        style="display: none; margin-top: 0.5rem; width: 100%; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem 1rem; color: white;">
+                                </div>
+                                <div>
+                                    <label class="cb-field">
+                                        <input type="checkbox" id="opt-register">
+                                        <span>Register release on update server</span>
+                                    </label>
+                                    <label class="cb-field">
+                                        <input type="checkbox" id="opt-dry-run">
+                                        <span>Dry run (log only, no changes)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                         <button class="btn btn-build" id="start-btn" data-action="start-build">
                             <span style="font-size: 1.4rem">▶</span> Initialize Full Build
                         </button>
