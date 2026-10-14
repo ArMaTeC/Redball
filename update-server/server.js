@@ -424,7 +424,6 @@ app.use('/api/', apiLimiter);
 // Inject shared dependencies into route modules
 releaseRoutes.setGithubCache(githubCache);
 app.use('/api/releases', releaseRoutes.router);
-app.use('/api/github', releaseRoutes.router); // Mount GitHub-compatible endpoint
 app.use('/api/auth', authRoutes);
 app.use('/api/build', authenticateToken, buildRoutes.router);
 app.use('/api/admin', authenticateToken, buildRoutes.router); // Alias for build routes
@@ -525,6 +524,10 @@ app.get('/api/github/releases', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch releases' });
     }
 });
+
+// Mount GitHub-compatible endpoint AFTER /api/github/releases so the router's
+// '/:version' route doesn't swallow the literal 'releases' segment
+app.use('/api/github', releaseRoutes.router);
 
 // --- Download a file ---
 app.get('/downloads/:version/:filename', (req, res) => {
