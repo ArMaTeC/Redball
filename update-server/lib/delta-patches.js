@@ -182,6 +182,14 @@ async function savePatchFile(patchesDir, relativePath, patch) {
 async function processPatchCandidate(newFile, ctx) {
   const { oldVersionDir, newVersionDir, patchesDir, minSavingsPercent, maxPatchSizeRatio, results } = ctx;
   const relativePath = path.relative(newVersionDir, newFile);
+
+  // Patch metadata and previously generated patches are not update payload —
+  // skip them silently (don't patch a patch).
+  if (relativePath.startsWith('patches' + path.sep) ||
+      relativePath === 'manifest.json' ||
+      relativePath === 'SHA256SUMS') {
+    return;
+  }
   const oldFile = path.join(oldVersionDir, relativePath);
 
   const newData = await fsp.readFile(newFile);
@@ -307,7 +315,74 @@ function formatBytes(bytes) {
 }
 
 /**
- * Generate patches for all consecutive versions
+ * Generate patches for a single release against the last N base versions.
+ * Multi-source deltas let clients that skipped versions still patch instead
+ * of falling back to full downloads. Patches land in patches/from-{base}/ and
+ * the manifest lists fromVersion per patch entry.
+ */
+async function generatePatchesForVersion(releasesDir, newVersion, options = {}) {
+  const { baseCount = 3 } = options;
+
+  const versions = fs.readdirSync(releasesDir)
+    .filter(v => fs.statSync(path.join(releasesDir, v)).isDirectory())
+    .sort(compareVersions);
+
+  const newIndex = versions.indexOf(newVersion);
+  if (newIndex <= 0) {
+    console.log(`[PATCH] No previous version found for ${newVersion}`);
+    return null;
+  }
+
+  const newDir = path.join(releasesDir, newVersion);
+  const patchesDir = path.join(newDir, 'patches');
+  const sourceVersions = versions.slice(Math.max(0, newIndex - baseCount), newIndex);
+
+  const allGenerated = [];
+  const allSkipped = [];
+  let totalSavings = 0;
+  let totalOriginalSize = 0;
+
+  for (const oldVersion of sourceVersions) {
+    console.log(`[PATCH] Generating patches: ${oldVersion} → ${newVersion}`);
+    const sourceResults = await generatePatches(
+      path.join(releasesDir, oldVersion),
+      newDir,
+      path.join(patchesDir, `from-${oldVersion}`),
+      options
+    );
+    for (const p of sourceResults.generated) {
+      p.fromVersion = oldVersion;
+      p.patchFile = `from-${oldVersion}/${p.patchFile}`;
+    }
+    allGenerated.push(...sourceResults.generated);
+    allSkipped.push(...sourceResults.skipped.map(s => ({ ...s, fromVersion: oldVersion })));
+    totalSavings += sourceResults.totalSavings;
+    totalOriginalSize += sourceResults.totalOriginalSize;
+  }
+
+  const manifest = {
+    fromVersion: sourceVersions[sourceVersions.length - 1],
+    fromVersions: sourceVersions,
+    toVersion: newVersion,
+    generatedAt: new Date().toISOString(),
+    patches: allGenerated,
+    skipped: allSkipped.filter(s => s.reason !== 'unchanged'),
+    totalSavings,
+    totalOriginalSize
+  };
+
+  fs.writeFileSync(
+    path.join(patchesDir, 'patch-manifest.json'),
+    JSON.stringify(manifest, null, 2)
+  );
+
+  console.log(`[PATCH] ${newVersion}: ${allGenerated.length} patches from ${sourceVersions.length} base versions (${formatBytes(totalSavings)} saved)`);
+
+  return { generated: allGenerated, skipped: allSkipped, totalSavings, totalOriginalSize, manifest };
+}
+
+/**
+ * Generate patches for all releases (backfill)
  */
 async function generateAllPatches(releasesDir) {
   const versions = fs.readdirSync(releasesDir)
@@ -321,38 +396,8 @@ async function generateAllPatches(releasesDir) {
 
   console.log(`[PATCH] Found ${versions.length} versions: ${versions.join(', ')}`);
 
-  // Generate patches between consecutive versions
-  for (let i = 0; i < versions.length - 1; i++) {
-    const oldVersion = versions[i];
-    const newVersion = versions[i + 1];
-
-    console.log(`\n[PATCH] Generating patches: ${oldVersion} → ${newVersion}`);
-
-    const oldDir = path.join(releasesDir, oldVersion);
-    const newDir = path.join(releasesDir, newVersion);
-    const patchesDir = path.join(releasesDir, newVersion, 'patches');
-
-    const results = await generatePatches(oldDir, newDir, patchesDir);
-
-    console.log(`[PATCH] Generated ${results.generated.length} patches`);
-    console.log(`[PATCH] Skipped ${results.skipped.length} files`);
-    console.log(`[PATCH] Total savings: ${formatBytes(results.totalSavings)}`);
-
-    // Save patch manifest
-    const manifest = {
-      fromVersion: oldVersion,
-      toVersion: newVersion,
-      generatedAt: new Date().toISOString(),
-      patches: results.generated,
-      skipped: results.skipped.filter(s => s.reason !== 'unchanged'),
-      totalSavings: results.totalSavings,
-      totalOriginalSize: results.totalOriginalSize
-    };
-
-    fs.writeFileSync(
-      path.join(patchesDir, 'patch-manifest.json'),
-      JSON.stringify(manifest, null, 2)
-    );
+  for (let i = 1; i < versions.length; i++) {
+    await generatePatchesForVersion(releasesDir, versions[i]);
   }
 }
 
@@ -374,6 +419,7 @@ module.exports = {
   createPatch,
   applyPatch,
   generatePatches,
+  generatePatchesForVersion,
   generateAllPatches,
   computeHash,
   formatBytes

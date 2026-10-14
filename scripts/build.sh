@@ -258,8 +258,6 @@ register_with_update_server() {
 
     local version
     version=$(get_version)
-    local channel_flag=""
-    [[ "$CHANNEL" == "beta" ]] && channel_flag="--form channel=beta"
 
     # Build curl command with files that exist
     local curl_files=()
@@ -277,8 +275,13 @@ register_with_update_server() {
     if [[ -d "$DIST_DIR/wpf-publish" ]]; then
         log_info "Collecting application binaries for delta update manifest..."
         for bin in "${delta_binaries[@]}"; do
-            local bin_path="$DIST_DIR/wpf-publish/$bin"
-            [[ -f "$bin_path" ]] && curl_files+=("-F" "files=@$bin_path")
+            # Publish layout puts class libraries under dll/ — check both roots
+            for bin_path in "$DIST_DIR/wpf-publish/$bin" "$DIST_DIR/wpf-publish/dll/$bin"; do
+                if [[ -f "$bin_path" ]]; then
+                    curl_files+=("-F" "files=@$bin_path")
+                    break
+                fi
+            done
         done
     fi
 
@@ -314,13 +317,14 @@ register_with_update_server() {
         local auth_header=()
         [[ -n "$update_server_token" ]] && auth_header=("-H" "Authorization: Bearer ${update_server_token}")
 
-        local publish_response
+        local publish_response release_notes
+        release_notes=$(generate_release_notes "$version")
         publish_response=$(curl -s --connect-timeout 10 --max-time 120 -w "\n%{http_code}" -X POST \
             "http://localhost:3500/api/publish?version=${version}" \
             "${auth_header[@]}" \
             -F "version=${version}" \
-            -F "notes=Release ${version} (${CHANNEL} channel)" \
-            ${channel_flag} \
+            -F "channel=${CHANNEL}" \
+            -F "notes=${release_notes}" \
             "${curl_files[@]}" 2>&1)
         local curl_exit_code=$?
 
@@ -338,6 +342,60 @@ register_with_update_server() {
             log_detail "Response: $response_body"
         fi
     fi
+}
+
+# Build markdown release notes for a version.
+# Prefers the matching "## [X.Y.Z]" section in docs/CHANGELOG.md; falls back to
+# commits since the previous release tag (noise filtered, deduped, bulleted).
+generate_release_notes() {
+    local version="$1"
+    local changelog="$PROJECT_ROOT/docs/CHANGELOG.md"
+    local notes=""
+
+    # 1) CHANGELOG section for this exact version
+    if [[ -f "$changelog" ]]; then
+        notes=$(awk -v v="$version" '
+            /^## / {
+                if (in_section) exit
+                in_section = ($0 ~ "\\[?" v "\\]?")
+                next
+            }
+            in_section { print }
+        ' "$changelog" | sed -e 's/[[:space:]]*$//' -e '/./,$!d' | sed -e :a -e '/^\n*$/{$d;N;ba}')
+    fi
+
+    # 2) Fallback: commit subjects since the previous release tag
+    if [[ -z "${notes//[[:space:]]/}" ]]; then
+        local prev_tag range
+        prev_tag=$(git -C "$PROJECT_ROOT" describe --tags --abbrev=0 2>/dev/null || true)
+        range="HEAD"; [[ -n "$prev_tag" ]] && range="$prev_tag..HEAD"
+
+        local grouped
+        grouped=$(git -C "$PROJECT_ROOT" log "$range" --pretty=format:'%s' 2>/dev/null \
+            | grep -vEi '^(chore:\s*bump|build release|merge\b|release v?[0-9])' \
+            | sed -E 's/^([a-zA-Z]+)(\([^)]*\))?!?:\s*//I' \
+            | awk 'NF' | sort -u | sed 's/^/- /' || true)
+
+        if [[ -n "$grouped" ]]; then
+            notes="## What's Changed"$'\n\n'"$grouped"
+            if [[ -n "$prev_tag" ]]; then
+                local slug
+                slug=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || echo "ArMaTeC/Redball")
+                notes+=$'\n\n'"**Full Changelog**: https://github.com/${slug}/compare/${prev_tag}...v${version}"
+            fi
+        fi
+    fi
+
+    [[ -z "${notes//[[:space:]]/}" ]] && notes="Release ${version} (${CHANNEL} channel)"
+    printf '%s' "$notes"
+}
+
+# Write release notes to a temp file and echo the path (for gh --notes-file).
+release_notes_file() {
+    local version="$1" f
+    f=$(mktemp /tmp/redball-notes-XXXXXX.md)
+    generate_release_notes "$version" > "$f"
+    echo "$f"
 }
 
 # Run registration only when --register was passed (plain windows/all builds).
@@ -529,16 +587,19 @@ auto_release() {
         fi
 
         if command -v gh &>/dev/null; then
+            local notes_file
+            notes_file=$(release_notes_file "$version")
             if gh release create "v${version}" \
                 "${gh_assets[@]}" \
                 --title "Redball v${version}" \
-                --notes "Release ${version} (${CHANNEL} channel)" \
+                --notes-file "$notes_file" \
                 $([[ "$CHANNEL" == "beta" ]] && echo "--prerelease" || true) \
                 2>&1 | while IFS= read -r line; do log_detail "$line"; done; then
                 log_success "Published to GitHub with $((${#gh_assets[@]}-2)) delta assets"
             else
                 log_warn "GitHub release may have failed"
             fi
+            rm -f "$notes_file"
         else
             log_warn "gh CLI not found, skipping GitHub release"
         fi
@@ -1069,18 +1130,22 @@ publish_release() {
     # Publish to GitHub using gh CLI
     if command -v gh &>/dev/null; then
         log_info "Creating GitHub release v${version}..."
+        local notes_file
+        notes_file=$(release_notes_file "$version")
         if gh release create "v${version}" \
             "$DIST_DIR/Redball-${version}-Setup.exe" \
             "$DIST_DIR/Redball-${version}.zip" \
             --title "Redball v${version}" \
-            --notes "Release ${version} (${CHANNEL} channel)" \
+            --notes-file "$notes_file" \
             $([[ "$CHANNEL" == "beta" ]] && echo "--prerelease" || true) \
             2>&1 | while IFS= read -r line; do log_detail "$line"; done; then
             log_success "Published to GitHub: v${version}"
         else
             log_error "GitHub release failed"
+            rm -f "$notes_file"
             return 1
         fi
+        rm -f "$notes_file"
     else
         log_warn "gh CLI not found, skipping GitHub release"
         log_info "Artifacts available at: $DIST_DIR"
@@ -1172,7 +1237,10 @@ main() {
     echo ""
 
     log_debug "Script:       $0"
-    log_debug "Arguments:    $COMMAND ${CHANNEL:+--channel $CHANNEL} ${VERSION:+--version $VERSION} ${BUMP:+--bump $BUMP} ${DRY_RUN:+--dry-run}"
+    local reg_flag="" dry_flag=""
+    $REGISTER && reg_flag="--register"
+    $DRY_RUN && dry_flag="--dry-run"
+    log_debug "Arguments:    $COMMAND --channel $CHANNEL${VERSION:+ --version $VERSION}${BUMP:+ --bump $BUMP}${reg_flag:+ $reg_flag}${dry_flag:+ $dry_flag}"
     log_debug "Project root: $PROJECT_ROOT"
     log_debug "Dist dir:     $DIST_DIR"
     log_debug "Server dir:   $UPDATE_SERVER_DIR"

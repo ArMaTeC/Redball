@@ -636,10 +636,14 @@ public class UpdateService : IUpdateService
 
                             if (serverManifest?.Patches != null)
                             {
+                                // Match the patch for this file whose source baseline matches the
+                                // local file's hash — multi-source manifests list one patch per
+                                // file per supported base version.
                                 var serverPatch = serverManifest.Patches.Find(p =>
-                                    p.File.Equals(file.Name, StringComparison.OrdinalIgnoreCase) ||
-                                    p.File.Equals("binaries/" + file.Name, StringComparison.OrdinalIgnoreCase) ||
-                                    p.PatchFile.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase));
+                                    (p.File.Equals(file.Name, StringComparison.OrdinalIgnoreCase) ||
+                                     p.File.Equals("binaries/" + file.Name, StringComparison.OrdinalIgnoreCase) ||
+                                     p.PatchFile.Equals(expectedPatchName, StringComparison.OrdinalIgnoreCase)) &&
+                                    (string.IsNullOrEmpty(p.OldHash) || string.Equals(p.OldHash, localHash, StringComparison.OrdinalIgnoreCase)));
 
                                 if (serverPatch != null && !string.IsNullOrEmpty(_updateServerUrl))
                                 {
@@ -658,6 +662,7 @@ public class UpdateService : IUpdateService
                                         {
                                             fileInfo.PatchUrl = $"{_updateServerUrl.TrimEnd('/')}/downloads/{latestNormalized}/patches/{serverPatch.PatchFile}";
                                             fileInfo.PatchSize = serverPatch.PatchSize;
+                                            fileInfo.OldHash = serverPatch.OldHash ?? "";
                                             patchFound = true;
                                         }
                                     }

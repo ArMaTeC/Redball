@@ -9,7 +9,7 @@ const multer = require('multer');
 const morgan = require('morgan');
 const helmet = require('helmet');
 
-const { generatePatches, formatBytes } = require('./lib/delta-patches');
+const { generatePatchesForVersion } = require('./lib/delta-patches');
 const config = require('./config');
 const { loadDB, saveDB, compareVersions, trackDownload, getDownloadCounts } = require('./lib/db');
 const { verifyToken } = require('./lib/auth');
@@ -87,7 +87,7 @@ function startHeartbeat() {
 
 
 // GitHub cache
-let githubCache = {
+const githubCache = {
     releases: null,
     latest: null,
     lastFetch: 0
@@ -181,11 +181,9 @@ async function fetchGitHubReleases() {
     // Combine and sort by version (newest first)
     const combined = [...mappedGitHub, ...localOnly].sort((a, b) => compareVersions(b.version, a.version));
 
-    githubCache = {
-        releases: combined,
-        latest: combined[0] || null,
-        lastFetch: now
-    };
+    githubCache.releases = combined;
+    githubCache.latest = combined[0] || null;
+    githubCache.lastFetch = now;
 
     return combined;
 }
@@ -606,7 +604,10 @@ app.get('/api/releases/:version/manifest', async (req, res) => {
                     patchFile: p.patchFile,
                     patchSize: p.patchSize,
                     originalSize: p.originalSize,
-                    savings: p.savings
+                    savings: p.savings,
+                    oldHash: p.oldHash,
+                    newHash: p.newHash,
+                    fromVersion: p.fromVersion
                 }));
                 manifest.totalSavings = patchManifest.totalSavings;
             } catch {
@@ -739,6 +740,9 @@ function getOrCreateRelease(db, version, body) {
             totalDownloads: 0
         };
         db.releases.push(release);
+    } else {
+        if (body.channel) release.channel = body.channel;
+        if (body.notes) release.notes = body.notes;
     }
     return release;
 }
@@ -1075,45 +1079,17 @@ app.post('/api/admin/generate-patches', authenticateToken, requireAdmin, async (
 });
 
 // === Helper: Generate patches for a release ===
+const PATCH_BASE_VERSIONS = 3;
+
 async function generatePatchesForRelease(newVersion) {
     try {
-        // Find previous version
-        const versions = fs.readdirSync(RELEASES_DIR)
-            .filter(v => fs.statSync(path.join(RELEASES_DIR, v)).isDirectory())
-            .sort(compareVersions);
-
-        const newIndex = versions.indexOf(newVersion);
-        if (newIndex <= 0) {
-            console.log(`[PATCH] No previous version found for ${newVersion}`);
-            return;
-        }
-
-        const oldVersion = versions[newIndex - 1];
-        console.log(`[PATCH] Generating patches: ${oldVersion} → ${newVersion}`);
-
-        const oldDir = path.join(RELEASES_DIR, oldVersion);
         const newDir = path.join(RELEASES_DIR, newVersion);
         const patchesDir = path.join(newDir, 'patches');
 
-        const results = await generatePatches(oldDir, newDir, patchesDir);
-
-        console.log(`[PATCH] Generated ${results.generated.length} patches (${formatBytes(results.totalSavings)} saved)`);
-
-        // Save manifest
-        const manifest = {
-            fromVersion: oldVersion,
-            toVersion: newVersion,
-            generatedAt: new Date().toISOString(),
-            patches: results.generated,
-            skipped: results.skipped,
-            totalSavings: results.totalSavings,
-            totalOriginalSize: results.totalOriginalSize
-        };
-
-        fs.writeFileSync(
-            path.join(patchesDir, 'patch-manifest.json'),
-            JSON.stringify(manifest, null, 2)
-        );
+        // Generate deltas from the last N releases so clients that skipped
+        // versions can still patch instead of falling back to full downloads.
+        const results = await generatePatchesForVersion(RELEASES_DIR, newVersion, { baseCount: PATCH_BASE_VERSIONS });
+        if (!results) return;
 
         // Update release files in database with patch info
         const db = loadDB();
@@ -1148,8 +1124,9 @@ async function generatePatchesForRelease(newVersion) {
             }
 
             release.patchInfo = {
-                fromVersion: oldVersion,
-                generatedAt: manifest.generatedAt,
+                fromVersion: results.manifest.fromVersion,
+                fromVersions: results.manifest.fromVersions,
+                generatedAt: results.manifest.generatedAt,
                 totalPatches: results.generated.length,
                 totalSavings: results.totalSavings
             };

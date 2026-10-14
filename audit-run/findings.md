@@ -822,3 +822,26 @@
 - **Proposed fix:** `authenticateToken, requireAdmin` on router POST/DELETE; strict version regex + `path.resolve` containment check; delete the unreachable inline duplicates in server.js.
 - **Verification:** `POST /api/releases` and `DELETE` → 401 without token; public GETs unaffected.
 - **Action:** applied (found & fixed during deploy smoke test)
+
+## ISS-051: Shared `githubCache` reference severed on first fetch — newly published releases invisible in `GET /api/releases`
+
+- **Area:** update-server
+- **Scanner:** live beta-build investigation
+- **Severity:** high (functional)
+- **Risk:** low
+- **Location:** `/root/Redball/update-server/routes/api/releases.js` `fetchGitHubReleases` (cache write ~line 116) and `/root/Redball/update-server/server.js` `fetchGitHubReleases` (~line 184).
+- **Evidence:** `setGithubCache` injects server.js's `githubCache` object into the router, but both modules' fetch functions *reassign* their local binding (`githubCache = {...}`) on the first fetch — severing the shared reference. Afterwards `/api/publish`'s invalidation (`githubCache.releases = null` in server.js scope) clears the wrong object, so the router kept serving a stale list: a release published via `POST /api/publish` did not appear in `GET /api/releases` until TTL expiry.
+- **Proposed fix:** Mutate the shared object's fields (`githubCache.releases/latest/lastFetch = ...`) instead of rebinding in both modules.
+- **Verification:** live probe — `POST /api/publish` with `channel=beta` → release visible in `GET /api/releases` immediately; re-publish of an existing version updates channel (`getOrCreateRelease` now applies `body.channel`/`body.notes` on the existing entry); `DELETE` cleans it.
+- **Action:** applied
+
+## ISS-052: Delta patch system could never succeed — missing source hashes + consecutive-only baselines
+
+- **Area:** update-server + WPF client
+- **Scanner:** user report ("patch always fails, falls back to full download")
+- **Severity:** medium (functional; bandwidth feature dead in practice)
+- **Location:** `update-server/server.js` `/api/releases/:version/manifest` patches mapping; `generatePatchesForRelease`; `UpdateService.cs` patch lookup.
+- **Evidence:** (1) Manifest patches lacked `oldHash`/`newHash`, so the client's pre-validation never ran and `ApplyPatchAsync` verified `oldData` against `FileUpdateInfo.OldHash` (self-hash of the local file — trivially passes), then failed at oldSize/newHash for anyone not on the exact prior version. (2) `generatePatchesForRelease` only patched `versions[i-1] → i`, so the patch baseline almost never matches an installed client. Result: "patch failed" → full-file fallback on every update.
+- **Fix:** manifest now sends `oldHash`/`newHash`/`fromVersion`; patches generated against the last 3 baselines into `patches/from-{base}/` with a merged manifest (`generatePatchesForVersion` in `lib/delta-patches.js`, shared by publish hook + CLI backfill); `patch/` metadata dirs excluded from patch candidates; client `Find` matches on name AND `oldHash == localHash`, setting `FileUpdateInfo.OldHash` for apply-time verification.
+- **Verification:** regenerated all releases — multi-source manifests live (`/api/releases/2.2.5/manifest` lists from-2.2.3 + from-2.2.4 entries); nested patch download 200; round-trip apply reproduces target hash.
+- **Action:** applied. NOTE: requires new client build — installed clients keep old behavior (name-only match → may pick wrong baseline → falls back; no regression).

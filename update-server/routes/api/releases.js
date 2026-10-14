@@ -113,11 +113,9 @@ async function fetchGitHubReleases() {
     // Combine and sort by version (newest first)
     const combined = [...mappedGitHub, ...localOnly].sort((a, b) => compareVersions(b.version, a.version));
 
-    githubCache = {
-        releases: combined,
-        latest: combined[0] || null,
-        lastFetch: now
-    };
+    githubCache.releases = combined;
+    githubCache.latest = combined[0] || null;
+    githubCache.lastFetch = now;
 
     return combined;
 }
