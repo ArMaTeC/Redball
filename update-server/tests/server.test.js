@@ -46,7 +46,7 @@ test.after(() => {
     if (serverProcess) serverProcess.kill();
 });
 
-test('GET /api/health returns healthy status', async (t) => {
+test('GET /api/health returns healthy status', async () => {
     return new Promise((resolve, reject) => {
         http.get(`http://localhost:${TEST_PORT}/api/health`, (res) => {
             assert.strictEqual(res.statusCode, 200);
@@ -61,7 +61,7 @@ test('GET /api/health returns healthy status', async (t) => {
     });
 });
 
-test('GET /api/releases returns an array', async (t) => {
+test('GET /api/releases returns an array', async () => {
     return new Promise((resolve, reject) => {
         http.get(`http://localhost:${TEST_PORT}/api/releases`, (res) => {
             assert.strictEqual(res.statusCode, 200);
@@ -76,7 +76,7 @@ test('GET /api/releases returns an array', async (t) => {
     });
 });
 
-test('GET /api/stats returns server metrics', async (t) => {
+test('GET /api/stats returns server metrics', async () => {
     return new Promise((resolve, reject) => {
         http.get(`http://localhost:${TEST_PORT}/api/stats`, (res) => {
             assert.strictEqual(res.statusCode, 200);

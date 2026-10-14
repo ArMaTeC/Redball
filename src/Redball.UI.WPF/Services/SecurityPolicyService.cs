@@ -484,7 +484,9 @@ public class SecurityPolicyService
         try
         {
             var json = JsonSerializer.Serialize(_currentPolicy, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_policyCachePath, json);
+            var tempFile = _policyCachePath + ".tmp";
+            File.WriteAllText(tempFile, json);
+            File.Move(tempFile, _policyCachePath, overwrite: true);
         }
         catch (Exception ex)
         {

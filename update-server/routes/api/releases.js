@@ -197,7 +197,6 @@ router.delete('/:version', (req, res) => {
     if (idx < 0) return res.status(404).json({ error: 'Release not found' });
 
     // Remove files from disk
-    const release = db.releases[idx];
     const releaseDir = path.join(RELEASES_DIR, req.params.version);
     if (fs.existsSync(releaseDir)) {
         try {

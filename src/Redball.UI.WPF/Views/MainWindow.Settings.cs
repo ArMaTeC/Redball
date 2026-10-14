@@ -151,6 +151,7 @@ public partial class MainWindow
             "Cyberpunk" => 10,
             "Coffee" => 11,
             "ArcticFrost" => 12,
+            "HighContrast" => 13,
             _ => 1
         };
 
@@ -298,6 +299,7 @@ public partial class MainWindow
                 10 => "Cyberpunk",
                 11 => "Coffee",
                 12 => "ArcticFrost",
+                13 => "HighContrast",
                 2 => "Light",
                 _ => "Dark"
             };

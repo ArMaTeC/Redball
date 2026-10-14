@@ -7,7 +7,6 @@
     const ctx = canvas.getContext('2d');
     let particles = [];
     let mouseX = 0, mouseY = 0;
-    let animId;
 
     function resize() {
         canvas.width = canvas.offsetWidth;
@@ -83,7 +82,7 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         particles.forEach(p => { p.update(); p.draw(); });
         drawConnections();
-        animId = requestAnimationFrame(animate);
+        requestAnimationFrame(animate);
     }
 
     window.addEventListener('resize', () => { init(); });
@@ -165,7 +164,6 @@
 // ANIMATED COUNTERS
 // ============================
 function animateCounter(el, target, duration = 2000) {
-    let start = 0;
     const startTime = performance.now();
     function update(now) {
         const elapsed = now - startTime;
@@ -229,27 +227,6 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
 });
 
 // ============================
-// DEMO FORM
-// ============================
-function handleDemoSubmit(event) {
-    event.preventDefault();
-    const btn = document.getElementById('form-submit-btn');
-    btn.textContent = 'Sending...';
-    btn.disabled = true;
-    // Simulate submission
-    setTimeout(() => {
-        btn.textContent = '✓ Demo Requested!';
-        btn.style.background = 'linear-gradient(135deg, #10b981, #34d399)';
-        setTimeout(() => {
-            btn.textContent = 'Request Demo';
-            btn.style.background = '';
-            btn.disabled = false;
-            document.getElementById('demo-form').reset();
-        }, 3000);
-    }, 1200);
-}
-
-// ============================
 // LIVE DATA SYNC FROM API
 // ============================
 async function syncData() {
@@ -274,6 +251,14 @@ async function syncData() {
                 relCounter.textContent = (stats.totalReleases || 0).toLocaleString();
             }
 
+            const escapeHtml = (value) => String(value ?? '')
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const safeUrl = (url) => {
+                const s = String(url ?? '');
+                return (s.startsWith('/') || s.startsWith('https://') || s.startsWith('http://')) ? s : '#';
+            };
+
             // Update version history (last 6 versions)
             const versionList = document.getElementById('version-list');
             if (versionList && stats.releases && stats.releases.length > 0) {
@@ -286,14 +271,14 @@ async function syncData() {
                     });
                     const downloads = release.totalDownloads || 0;
                     const setupFile = release.files?.find(f => f.name.includes('Setup') || f.name.endsWith('.exe'));
-                    const downloadUrl = setupFile ?
+                    const downloadUrl = safeUrl(setupFile ?
                         (setupFile.url || `/releases/${release.version}/${setupFile.name}`) :
-                        `https://github.com/ArMaTeC/Redball/releases/download/v${release.version}/Redball-${release.version}-Setup.exe`;
+                        `https://github.com/ArMaTeC/Redball/releases/download/v${release.version}/Redball-${release.version}-Setup.exe`);
 
                     return `
-                        <a href="${downloadUrl}" class="version-item" style="background:var(--grad-card);border:1px solid var(--border-subtle);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;text-decoration:none;transition:all 0.3s ease">
+                        <a href="${escapeHtml(downloadUrl)}" class="version-item" style="background:var(--grad-card);border:1px solid var(--border-subtle);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;text-decoration:none;transition:all 0.3s ease">
                             <div style="display:flex;align-items:center;gap:16px">
-                                <span style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:600;color:var(--primary-light)">v${release.version}</span>
+                                <span style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:600;color:var(--primary-light)">v${escapeHtml(release.version)}</span>
                                 <span style="color:var(--text-muted);font-size:0.85rem">${date}</span>
                             </div>
                             <div style="display:flex;align-items:center;gap:20px">
@@ -328,10 +313,10 @@ async function syncData() {
             const zipFile = latest.files?.find(f => f.name.endsWith('.zip'));
 
             if (exeFile) {
-                document.getElementById('dl-btn-exe').href = exeFile.url || `https://github.com/ArMaTeC/Redball/releases/download/v${ver}/${exeFile.name}`;
+                document.getElementById('dl-btn-exe').href = safeUrl(exeFile.url || `https://github.com/ArMaTeC/Redball/releases/download/v${ver}/${exeFile.name}`);
             }
             if (zipFile) {
-                document.getElementById('dl-btn-zip').href = zipFile.url || `https://github.com/ArMaTeC/Redball/releases/download/v${ver}/${zipFile.name}`;
+                document.getElementById('dl-btn-zip').href = safeUrl(zipFile.url || `https://github.com/ArMaTeC/Redball/releases/download/v${ver}/${zipFile.name}`);
             }
         } else {
             // Fallback to GitHub API

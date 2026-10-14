@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
  * End-to-End Tests for Delta Patch System
- * 
+ *
  * Tests the patch generation and application system that must be
  * compatible with the C# DeltaUpdateService client.
- * 
+ *
  * Run with: node tests/delta-patches.e2e.test.js
  */
 
@@ -165,14 +165,12 @@ async function testHashMismatchDetection() {
   const corruptedOldData = Buffer.from(oldData);
   corruptedOldData[0] = corruptedOldData[0] ^ 0xFF;
 
-  let threw = false;
   try {
     // This should fail because we're not passing the patch object with hashes
     // The applyPatch function in Node.js doesn't verify hashes like C# does
     // But we can test the format is correct
     await applyPatch(corruptedOldData, patch.data);
   } catch (err) {
-    threw = true;
     logInfo(`Expected error caught: ${err.message}`);
   }
 

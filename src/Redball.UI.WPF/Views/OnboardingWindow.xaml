@@ -131,11 +131,12 @@
                         <ComboBoxItem Content="Ocean Blue"/>
                         <ComboBoxItem Content="Sunset Orange"/>
                         <ComboBoxItem Content="Royal Purple"/>
-                        <ComboBoxItem Content="Slate Grey"/>
+                        <ComboBoxItem Content="Slate Gray"/>
                         <ComboBoxItem Content="Rose Gold"/>
                         <ComboBoxItem Content="Cyberpunk"/>
                         <ComboBoxItem Content="Coffee"/>
                         <ComboBoxItem Content="Arctic Frost"/>
+                        <ComboBoxItem Content="High Contrast"/>
                     </ComboBox>
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                         <Border Width="24" Height="16" CornerRadius="3" Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,3,0"/>

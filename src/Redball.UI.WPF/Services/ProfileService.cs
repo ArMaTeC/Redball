@@ -61,7 +61,9 @@ public class ProfileService
             var sanitized = SanitizeFileName(name);
             var path = Path.Combine(_profilesDir, sanitized + ".json");
             var json = JsonSerializer.Serialize(ConfigService.Instance.Config, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(path, json);
+            var tempPath = path + ".tmp";
+            File.WriteAllText(tempPath, json);
+            File.Move(tempPath, path, overwrite: true);
             ActiveProfileName = name;
             ProfileChanged?.Invoke(this, EventArgs.Empty);
             Logger.Info("ProfileService", $"Profile saved: {name}");

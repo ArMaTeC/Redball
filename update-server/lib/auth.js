@@ -26,11 +26,11 @@ function loadOrCreateJwtSecret() {
             jwtSecretCache = fs.readFileSync(JWT_SECRET_FILE, 'utf8').trim();
             return jwtSecretCache;
         }
-    } catch (e) { }
+    } catch { }
     const secret = crypto.randomBytes(64).toString('hex');
     try {
         fs.writeFileSync(JWT_SECRET_FILE, secret, { mode: 0o600 });
-    } catch (e) {
+    } catch {
         console.error('[AUTH] Warning: Could not save JWT secret to file');
     }
     jwtSecretCache = secret;
@@ -154,7 +154,7 @@ function verifyMfaToken(token, secret) {
         // epochTolerance of 30s allows one time-step of clock drift in each direction
         const result = verifySync({ secret, token: String(token), epochTolerance: 30 });
         return result.valid === true;
-    } catch (e) {
+    } catch {
         return false;
     }
 }
@@ -173,7 +173,7 @@ function generateToken(user, mfaVerified = false) {
 function verifyToken(token) {
     try {
         return jwt.verify(token, getJwtSecret());
-    } catch (err) {
+    } catch {
         return null;
     }
 }
@@ -198,7 +198,7 @@ function verifyTrustedDeviceToken(token, username) {
     try {
         const decoded = jwt.verify(token, getJwtSecret());
         return decoded.username === username && decoded.type === 'trusted_device';
-    } catch (err) {
+    } catch {
         return false;
     }
 }

@@ -30,7 +30,7 @@ public partial class SettingsWindow : Window
         LoadConfigIntoUI();
         SetVersionText();
         _isDirty = false;
-        
+
         // Initialize update service with config
         var cfg = ConfigService.Instance.Config;
         _updateService = new UpdateService(
@@ -61,12 +61,12 @@ public partial class SettingsWindow : Window
 
         var progress = new Progress<UpdateCheckProgress>(p => progressWindow.UpdateProgress(p));
         var updateInfo = await _updateService.CheckForUpdateAsync(true, progress);
-        
+
         progressWindow.Close();
-        
+
         if (updateInfo == null)
         {
-            NotificationWindow.Show("Up to Date", "You're running the latest version of Redball.", "\uE73E"); 
+            NotificationWindow.Show("Up to Date", "You're running the latest version of Redball.", "\uE73E");
             return;
         }
 
@@ -99,6 +99,7 @@ public partial class SettingsWindow : Window
                 Theme.Cyberpunk => 10,
                 Theme.Coffee => 11,
                 Theme.ArcticFrost => 12,
+                Theme.HighContrast => 13,
                 _ => 1
             };
             ThemeCombo.SelectionChanged += ThemeCombo_SelectionChanged;
@@ -290,6 +291,7 @@ public partial class SettingsWindow : Window
                 10 => "Cyberpunk",
                 11 => "Coffee",
                 12 => "ArcticFrost",
+                13 => "HighContrast",
                 _ => "Dark"
             };
         }
@@ -376,6 +378,7 @@ public partial class SettingsWindow : Window
             10 => Theme.Cyberpunk,
             11 => Theme.Coffee,
             12 => Theme.ArcticFrost,
+            13 => Theme.HighContrast,
             _ => Theme.Dark
         };
         ThemeManager.SetTheme(theme);
@@ -638,7 +641,7 @@ public partial class SettingsWindow : Window
         NewCmdName.Text = "";
         NewCmdDesc.Text = "";
         NewCmdPath.Text = "";
-        
+
         RefreshCustomCommandsList();
         _isDirty = true;
     }

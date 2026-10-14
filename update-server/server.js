@@ -12,9 +12,9 @@ const helmet = require('helmet');
 const { generatePatches, formatBytes } = require('./lib/delta-patches');
 const config = require('./config');
 const { loadDB, saveDB, compareVersions, trackDownload, getDownloadCounts } = require('./lib/db');
-const { getAdminUser, getJwtSecret, generateToken, verifyToken, verifyPassword } = require('./lib/auth');
+const { verifyToken } = require('./lib/auth');
 const { trackEvent, getAnalytics } = require('./lib/analytics');
-const { apiLimiter, authLimiter, uploadLimiter } = require('./middleware/rateLimiter');
+const { apiLimiter, uploadLimiter } = require('./middleware/rateLimiter');
 const { authenticateToken } = require('./middleware/auth');
 const releaseRoutes = require('./routes/api/releases');
 const authRoutes = require('./routes/api/auth');
@@ -47,9 +47,8 @@ const server = http.createServer(app);
 // Destructure config for local use
 const {
     PORT, PROJECT_ROOT, RELEASES_DIR, DATA_DIR, LOGS_DIR,
-    BUILD_STATE_FILE, AUTH_FILE, GITHUB_CACHE_TTL,
-    BROADCAST_BATCH_INTERVAL, BUILD_STATE_DEBOUNCE_MS,
-    CLEANUP_INTERVAL, WS_HEARTBEAT_INTERVAL
+    BUILD_STATE_FILE, GITHUB_CACHE_TTL,
+    BROADCAST_BATCH_INTERVAL, WS_HEARTBEAT_INTERVAL
 } = config;
 
 // WebSocket server with optimized settings to reduce CPU usage at idle
@@ -235,7 +234,7 @@ function getDirSize(dirPath) {
 }
 
 
-let buildState = loadBuildState();
+const buildState = loadBuildState();
 
 // Inject build state and control functions into build routes module
 // This must happen before routes are mounted but after functions are defined
@@ -313,16 +312,13 @@ function loadBuildState() {
 
 // Debounced async save to prevent blocking the event loop
 let _saveBuildStateTimeout = null;
-let _pendingSave = false;
 
 function saveBuildState() {
-    _pendingSave = true;
     // Debounce: wait 500ms after last call before actually saving
     if (_saveBuildStateTimeout) {
         clearTimeout(_saveBuildStateTimeout);
     }
     _saveBuildStateTimeout = setTimeout(() => {
-        _pendingSave = false;
         try {
             fs.writeFileSync(BUILD_STATE_FILE, JSON.stringify(buildState, null, 2));
         } catch (e) {
@@ -336,7 +332,6 @@ function saveBuildStateImmediate() {
     if (_saveBuildStateTimeout) {
         clearTimeout(_saveBuildStateTimeout);
     }
-    _pendingSave = false;
     try {
         fs.writeFileSync(BUILD_STATE_FILE, JSON.stringify(buildState, null, 2));
     } catch (e) {
@@ -355,15 +350,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // SECURITY: Validate file extensions for uploads
 const ALLOWED_EXTENSIONS = ['.zip', '.msi', '.exe', '.patch', '.json', '.md', '.txt', '.bmp', '.png', '.jpg', '.ico', '.dll', '.nsi', '.config'];
-const ALLOWED_MIME_TYPES = [
-    'application/zip',
-    'application/x-msi',
-    'application/x-msdownload',
-    'application/octet-stream',
-    'application/json',
-    'text/plain',
-    'text/markdown'
-];
 
 function validateFileUpload(file) {
     const ext = path.extname(file.originalname).toLowerCase();
@@ -654,7 +640,7 @@ app.post('/api/releases', authenticateToken, (req, res) => {
     githubCache.lastFetch = 0;
 
     // Trigger cleanup manually
-    try { cleanupReleases(); } catch (e) { }
+    try { cleanupReleases(); } catch { }
 
     res.status(201).json(release);
 });
@@ -811,7 +797,7 @@ app.post('/api/publish', authenticateToken, uploadLimiter, (req, res, next) => {
     githubCache.lastFetch = 0;
 
     // Trigger cleanup manually
-    try { cleanupReleases(); } catch (e) { }
+    try { cleanupReleases(); } catch { }
 
     res.status(201).json({ published: version, files: release.files.length });
 });
@@ -1407,17 +1393,6 @@ app.get('/api/admin/status', authenticateToken, (req, res) => {
     res.json(buildState);
 });
 
-async function getSystemStats() {
-    const releases = await fetchGitHubReleases();
-    const downloadCounts = getDownloadCounts();
-    return {
-        totalDownloads: downloadCounts.total || 0,
-        latestVersion: releases[0]?.version || '0.0.0',
-        totalReleases: releases.length,
-        activeBuilds: buildState.status === 'running' ? 1 : 0
-    };
-}
-
 // Note: Consolidated into public /api/stats above
 
 
@@ -1495,7 +1470,7 @@ function startBuild(body = {}) {
         // Also handle \r (carriage return) which is often used for in-place progress updates
         const lines = rawContent.split(/\r?\n|\r/);
 
-        for (let line of lines) {
+        for (const line of lines) {
             if (!line.trim()) continue;
 
             // Strip ANSI codes before parsing stage to ensure regex matches correctly
@@ -1616,7 +1591,7 @@ app.use(express.static(SITE_PUBLIC, { index: 'index.html' }));
 
 // SPA Fallbacks
 app.get(/^\/admin\/(.*)/, (req, res) => res.sendFile(path.join(ADMIN_PUBLIC, 'admin.html')));
-app.get(/^(?!\/api|\/downloads).*/, (req, res, next) => {
+app.get(/^(?!\/api|\/downloads).*/, (req, res) => {
     res.sendFile(path.join(SITE_PUBLIC, 'index.html'));
 });
 

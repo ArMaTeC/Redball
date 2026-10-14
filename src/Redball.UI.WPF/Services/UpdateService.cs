@@ -74,7 +74,9 @@ public class FileHashCache
             var dir = Path.GetDirectoryName(_cacheFilePath);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
             var json = JsonSerializer.Serialize(_cache, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_cacheFilePath, json);
+            var tempFile = _cacheFilePath + ".tmp";
+            File.WriteAllText(tempFile, json);
+            File.Move(tempFile, _cacheFilePath, overwrite: true);
         }
         catch (Exception ex)
         {
@@ -984,7 +986,7 @@ public class UpdateService : IUpdateService
                         else
                         {
                             Logger.Error("UpdateService", $"No download source available for {normalizedName}");
-                            throw new Exception($"No download source available for {fileShortName}");
+                            throw new InvalidOperationException($"No download source available for {fileShortName}");
                         }
 
                         // --- SECURITY: Hash/Signature Verification ---
@@ -1024,7 +1026,7 @@ public class UpdateService : IUpdateService
                         logEntry: $"All {totalFiles} files staged. Launching update script...", isDelta: true);
 
                     var scriptPath = CreateUpdateScript(stagingDir);
-                    if (scriptPath == null) throw new Exception("Failed to create update script");
+                    if (scriptPath == null) throw new InvalidOperationException("Failed to create update script");
 
                     Process.Start(new ProcessStartInfo
                     {

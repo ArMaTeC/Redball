@@ -47,7 +47,9 @@ public class SessionStateService : ISessionStateService
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
-            File.WriteAllText(statePath, json);
+            var tempPath = statePath + ".tmp";
+            File.WriteAllText(tempPath, json);
+            File.Move(tempPath, statePath, overwrite: true);
             Logger.Info("SessionState", "State saved successfully");
             return true;
         }

@@ -3,11 +3,11 @@
  */
 const express = require('express');
 const router = express.Router();
-const { 
-    getUserByUsername, 
-    verifyPassword, 
-    generateToken, 
-    generateMfaSecret, 
+const {
+    getUserByUsername,
+    verifyPassword,
+    generateToken,
+    generateMfaSecret,
     generateQrCode,
     verifyMfaToken,
     updateUser,
@@ -40,7 +40,7 @@ router.post('/login', authLimiter, async (req, res) => {
             const mfaToken = generateToken(user, false);
             return res.json({ mfaRequired: true, tempToken: mfaToken });
         }
-        
+
         const token = generateToken(user, true);
         res.json({ token, user: { username: user.username, role: user.role } });
     } else {
@@ -59,12 +59,12 @@ router.post('/mfa/verify', authLimiter, authenticateToken, async (req, res) => {
     if (verifyMfaToken(mfaCode, user.mfaSecret)) {
         const token = generateToken(user, true);
         const response = { token, user: { username: user.username, role: user.role } };
-        
+
         // Generate Trusted Device Token if requested
         if (rememberDevice) {
             response.tdt = generateTrustedDeviceToken(user.username);
         }
-        
+
         res.json(response);
     } else {
         res.status(401).json({ error: 'Invalid MFA code' });
@@ -82,7 +82,7 @@ router.get('/me', authenticateToken, (req, res) => {
 router.post('/mfa/setup', authenticateToken, async (req, res) => {
     const { secret, otpauth } = generateMfaSecret(req.user.username);
     const qrCode = await generateQrCode(otpauth);
-    
+
     // Store secret temporarily in memory or just return it for the client to send back
     res.json({ secret, qrCode });
 });
@@ -104,7 +104,7 @@ router.post('/mfa/verify-setup', authenticateToken, async (req, res) => {
 router.post('/mfa/disable', authenticateToken, async (req, res) => {
     const { token: mfaCode } = req.body;
     const user = getUserByUsername(req.user.username);
-    
+
     if (user.mfaEnabled) {
         if (!mfaCode || !verifyMfaToken(mfaCode, user.mfaSecret)) {
             return res.status(401).json({ error: 'Invalid MFA code' });
@@ -136,7 +136,7 @@ router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const users = await getUsers();
         res.json(users);
-    } catch (e) {
+    } catch {
         res.status(500).json({ error: 'Failed to retrieve users' });
     }
 });
@@ -146,9 +146,9 @@ router.post('/users', authenticateToken, requireAdmin, async (req, res) => {
     const { username, password, role } = req.body;
     try {
         const user = await addUser(username, password, role);
-        res.status(201).json({ 
-            username: user.username, 
-            role: user.role, 
+        res.status(201).json({
+            username: user.username,
+            role: user.role,
             mfaEnabled: user.mfaEnabled,
             createdAt: user.createdAt
         });
@@ -161,7 +161,7 @@ router.post('/users', authenticateToken, requireAdmin, async (req, res) => {
 router.delete('/users/:username', authenticateToken, requireAdmin, (req, res) => {
     const { username } = req.params;
     if (username === req.user.username) return res.status(400).json({ error: 'Cannot delete yourself' });
-    
+
     deleteUser(username);
     res.json({ message: 'User deleted' });
 });

@@ -18,7 +18,6 @@ const RELEASES_JSON = path.join(PROJECT_ROOT, 'update-server', 'data', 'releases
 const RELEASES_DIR = path.join(PROJECT_ROOT, 'update-server', 'releases');
 const PUBLIC_DIR = path.join(PROJECT_ROOT, 'site', 'dist');
 const BUILD_STATE_FILE = path.join(__dirname, 'logs', 'build-state.json');
-const BUILD_LOG_FILE = path.join(__dirname, 'logs', 'build.log');
 const AUTH_FILE = path.join(__dirname, 'logs', 'auth.json');
 const DOWNLOADS_DB = path.join(__dirname, 'logs', 'downloads.json');
 
@@ -101,13 +100,13 @@ function loadOrCreateJwtSecret() {
     if (fs.existsSync(secretFile)) {
       return fs.readFileSync(secretFile, 'utf8').trim();
     }
-  } catch (e) { }
+  } catch { }
 
   // Generate new secret
   const secret = require('crypto').randomBytes(64).toString('hex');
   try {
     fs.writeFileSync(secretFile, secret, { mode: 0o600 });
-  } catch (e) {
+  } catch {
     console.error('[AUTH] Warning: Could not save JWT secret to file');
   }
   return secret;
@@ -554,7 +553,7 @@ wss.on('connection', (ws, req) => {
 
   try {
     jwt.verify(token, JWT_SECRET);
-  } catch (err) {
+  } catch {
     console.log('[WS] Rejected connection: invalid token');
     ws.close(1008, 'Invalid token');
     return;
@@ -610,7 +609,6 @@ function getDownloadStats() {
       if (stat.isDirectory()) {
         const files = fs.readdirSync(versionPath);
         const fileList = [];
-        let totalDownloads = 0;
 
         files.forEach(file => {
           const filePath = path.join(versionPath, file);
@@ -703,14 +701,14 @@ function parseBuildStage(line) {
   return null;
 }
 
-function startBuild(buildType = 'windows') {
+function startBuild() {
   // Check if another build is already running externally
   if (buildState.status === 'running' && buildState.pid) {
     try {
       process.kill(buildState.pid, 0); // Check if process exists
       console.log('[BUILD] Build already running with PID:', buildState.pid);
       return; // Build is still running
-    } catch (e) {
+    } catch {
       // Process doesn't exist, reset state
       console.log('[BUILD] Stale build detected, resetting state');
     }

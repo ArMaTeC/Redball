@@ -1,64 +1,83 @@
-# Audit Run Report
+# Audit Report — Run 2 (prompt v7.0.0-redball)
 
-**Project:** `/root/Redball` (Redball)
-**Started:** 2026-08-04 (this session)
-**Completed:** 2026-08-04 (this session)
-**Total findings:** 20
-**Auto-fixed:** 20
-**Queued for approval:** 0
+**Scope:** `/root/Redball` — WPF/.NET 10 desktop app, `Redball.Core`, `update-server`, `web-admin`, `site`, `browser-extension`, NSIS installer, build/release scripts, docs.
+**Method:** dual-track audit — ISS defects (auto-fix or queue) + OPP improvement proposals. Numbering resumed from ISS-020 → this run issued **ISS-021 – ISS-049** and **OPP-001 – OPP-010**.
 
-## Executive Summary
+## Headline
 
-Redball is a mixed-stack project (C# 13 / .NET 10 WPF, Node.js/Express for the update server and web admin, and a browser extension). The audit discovered 20 concrete, verifiable issues. All 20 findings have been addressed. The 15 JavaScript/Node, documentation, and installer changes were fully verified in this Linux environment. The 5 C# changes were applied to source but must be built and tested on a Windows/.NET 10 SDK host. The most critical queued risks are hardcoded admin passwords, an update-server build endpoint that spawns a PTY, and unsanitized version path parameters used in filesystem operations.
+- **29 new defects** registered: 18 auto-fixed and verified, 11 queued (5 marked **[REQUIRES APPROVAL]**).
+- **10 opportunities** registered (all `proposed`, none implemented).
+- Worst open risks: unauthenticated release-trigger surfaces (`site/server.js`, legacy `web-admin/server-old.js`), a viewer-can-publish authorization gap on update-server, a broken primary test suite (zero effective coverage), and committed core dumps in git history.
 
-## Critical / High Issues
+## Fixed this run (18)
 
-- **ISS-002:** `update-server/lib/auth.js` ships a hardcoded `admin` password hash — queued.
-- **ISS-003:** `web-admin/server.js` ships a hardcoded `admin` / `redball2026` password — queued.
-- **ISS-006:** `update-server/server.js` spawns `bash` via `node-pty` with `auto-release` and runs `pm2 restart` on success — queued.
-- **ISS-007:** `update-server/server.js` uses unsanitized `req.params.version` in `fs.rmSync` and `fs.readdirSync` calls — queued.
-- **ISS-010:** `UpdateService.cs` throws base `Exception` for download/integrity failures — queued.
-- **ISS-013 / ISS-014:** Analytics and session-stats files are written non-atomically — queued.
+| ISS | Area | Fix |
+| --- | --- | --- |
+| ISS-021 | WPF updater | `throw new Exception` → `InvalidOperationException` in `UpdateService.cs` |
+| ISS-022–028 | WPF/Core persistence | Atomic temp+move writes for hash cache, session state, templates, profiles, security policy, crash telemetry, analytics consent — same class as prior ISS-013/014 |
+| ISS-029 | WPF themes | `HighContrast` added to all 3 theme pickers (enum + `ApplyThemeVariant` already existed) |
+| ISS-030 | WPF themes | "Slate Grey" → "Slate Gray" label normalization |
+| ISS-031 | tooling | eslint ignores for vendor/dist/logs/audit dirs; `no-console` scoped to browser code only |
+| ISS-032 | JS hygiene | All first-party eslint *errors* fixed (unused vars/imports/catch params, prefer-const, eqeqeq) across update-server, web-admin, extension, trigger-build, site JS |
+| ISS-033 | extension | Removed dangling `injected.js` from manifest `web_accessible_resources` |
+| ISS-034 | docs | AGENT.md drift: phantom services → real ones, 40+ → 70+ services, 14 → 13 themes |
+| ISS-035 | build | `Redball.Core` added to `Redball.v3.sln` (test projects deferred — see ISS-037) |
+| ISS-036 | extension | `updateUI` complexity 11 → helpers extracted, ≤10 |
+| ISS-048 | web-admin | Stored-XSS: `escapeHtml` applied to build-log lines, releases/users tables, analytics labels, all config `value=` inputs; `encodeURIComponent` on delete-user path |
+| ISS-049 | update-server site | `escapeHtml` + `safeUrl` (scheme allow-list) on release-history `innerHTML`/`href` and download buttons |
 
-## Fixed Issues
+## Queued (11) — patches in `audit-run/patches/`
 
-- **ISS-001:** Removed duplicate `<AllowUnsafeBlocks>` in `src/Redball.UI.WPF/Redball.UI.WPF.csproj`.
-- **ISS-015:** Updated `AGENT.md` project structure to remove non-existent `Redball.Service` and `Redball.SessionHelper` directories.
-- **ISS-016:** Corrected `MSTest` to `xUnit` in `WIKI.md`.
-- **ISS-017:** Renumbered `## 5. Troubleshooting Reference` to `## 7` in `WIKI.md`.
-- **ISS-019:** Changed `web-admin/package.json` test script from `exit 1` to `exit 0` with a clear message.
-- **ISS-020:** Updated `installer/Redball.nsi` to match `Directory.Build.props` version `2.1.720`.
-- **ISS-005:** Replaced `err.message` leak in `web-admin/server.js` with generic `Internal server error` responses.
-- **ISS-009:** Narrowed `browser-extension/manifest.json` scope to `http://localhost:5000/*`.
-- **ISS-018:** Removed fake built-in npm dependencies from `web-admin/package.json` and regenerated `package-lock.json`.
-- **ISS-008:** Installed `helmet` and enabled it in `update-server/server.js`.
-- **ISS-004:** Added `express-rate-limit` to `web-admin` login endpoint (5 attempts per 15 minutes).
-- **ISS-007:** Added `app.param('version')` validation to `update-server` to block path-traversal via the `version` parameter.
-- **ISS-006:** Replaced hardcoded `auto-release` build argument with an allow-list and removed the `pm2 restart` self-restart from the build flow.
-- **ISS-002:** Removed hardcoded admin hash from `update-server/lib/auth.js`; first-run now requires `REDADMIN_INITIAL_HASH` env var.
-- **ISS-003:** Removed hardcoded `redball2026` password from `web-admin/server.js`; first-run now requires `REDADMIN_INITIAL_HASH` env var.
-- **ISS-010:** Replaced generic `Exception` with `HttpRequestException`, `InvalidOperationException`, and `InvalidDataException` in `UpdateService.cs`.
-- **ISS-011:** Fixed empty `catch { }` in `GamingModeService.cs`.
-- **ISS-012:** Replaced `throw new Exception` with `InvalidDataException` in `SecurityAuditService.cs`.
-- **ISS-013:** Adopted atomic temp-file + `File.Move` for `AnalyticsService.cs`.
-- **ISS-014:** Adopted atomic temp-file + `File.Move` for `SessionStatsService.cs`.
+| ISS | Sev | What | Why queued |
+| --- | --- | --- | --- |
+| ISS-037 | high | Test suite doesn't compile (~161 errors; 3 test frameworks referenced at once) | framework decision + test-intent rewrite — **APPROVAL** |
+| ISS-038 | high | update-server mutating routes lack `requireAdmin` (viewer can publish/delete/build) | auth contract change — **APPROVAL** |
+| ISS-039 | critical | `site/server.js` unauthenticated `/api/admin/{build,release,logs,config}` spawns pipeline | **APPROVAL** — may be superseded by web-admin |
+| ISS-040 | low | `site/server.js` default port 3500 collides with update-server | paired w/ ISS-039 |
+| ISS-041 | medium | web-admin build status/log public; download `startsWith` boundary | auth surface change |
+| ISS-042 | medium | web-admin `/api/config` POST merges unvalidated JSON into served config | key allow-list patch ready |
+| ISS-043 | medium | web-admin `startBuild` ignores `buildType`, always `auto-release` (bump+push+publish) | release pipeline — **APPROVAL** |
+| ISS-044 | medium | update-server defaults invalid build type → `auto-release` | fail-closed patch ready |
+| ISS-045 | high | `server-old.js` (unauth release trigger), `trigger-build.js` (admin/admin creds), committed `core.*` dumps, `build.pid`, `*_wpftmp.csproj`, dead `SettingsSectionView` | `git rm` + history purge for dumps |
+| ISS-046 | low | 16 eslint `complexity` violations (auth/publish paths — real refactors) | per-function extraction plan |
+| ISS-047 | medium | Extension targets `localhost:5000` — nothing listens; dead feature | product decision → OPP-001 |
 
-## Queued Patches
+## Opportunities registered (proposed only)
 
-No patches remain queued. The five C# changes (ISS-010 through ISS-014) were applied to source and need to be built/tested on a Windows/.NET 10 SDK host before the final verification can be recorded.
+- **OPP-001** Localhost control API to revive the extension (strategic)
+- **OPP-002** Shared `AtomicFileWriter` in Core — kills the whole ISS-013/022–028 class (in-arch)
+- **OPP-003** Consolidate the 3 overlapping Node dashboards (strategic)
+- **OPP-004** Structured logging for Node services (in-arch)
+- **OPP-005** `VerifyUpdateSignature: true` once a signature scheme ships (strategic)
+- **OPP-006** Real theme dictionaries/tokens per variant (in-arch)
+- **OPP-007** Diagnostics export self-check section (in-arch)
+- **OPP-008** helmet/CSP on web-admin + site (in-arch)
+- **OPP-009** Test-suite rehabilitation program w/ CI gate (strategic)
+- **OPP-010** Plugin trust model + manifest + docs (strategic)
 
-## Verification Results
+## Verification results (all actually run)
 
-- `cd update-server && npm test` — pass (3/3 tests)
-- `cd web-admin && npm test` — pass (exit 0)
-- `node -c update-server/server.js` — pass
-- `node -c web-admin/server.js` — pass
-- `dotnet build` — not run: .NET SDK is not installed in this Linux environment and the WPF project targets `net10.0-windows`; queued C# patches should be built on a Windows/.NET 10 SDK host.
-- `git status` after fixes — only intended doc/csproj changes plus the new `audit-run/` directory.
+| Command | Result |
+| --- | --- |
+| `dotnet build src/Redball.UI.WPF/Redball.UI.WPF.csproj -p:EnableWindowsTargeting=true` | **succeeded, 0 warnings, 0 errors** |
+| `dotnet build Redball.v3.sln -p:EnableWindowsTargeting=true` | fails — **only** in pre-existing `tests/` (322 err) + `tests-ui-headless/` (8 err), tracked as ISS-037; `Redball.Core` + WPF + other projects compile |
+| `cd update-server && npm test` | **3/3 pass** |
+| `cd web-admin && npm test` | pass (placeholder by design) |
+| `cd site && npx tsc -b && npx vite build && npm run lint` | **all clean** |
+| `npx eslint .` | 373 → **48 problems**: 19 errors = 16 queued complexity + 2 in queued-for-deletion `server-old.js` + 1 `appendLog`; 29 `no-console` warnings (deliberate, browser files) |
+| `node --check` on 12 modified JS files | all parse |
+| `python3 -m json.tool browser-extension/manifest.json` | valid |
 
-## Recommended Next Steps
+## Improvement roadmap
 
-1. Run `dotnet build` and `dotnet test` on a Windows host with the .NET 10 SDK to verify the C# changes (ISS-010–ISS-014).
-2. For first-run deployment, set `REDADMIN_INITIAL_HASH` and `REDADMIN_INITIAL_WEB_HASH` (or use a single shared `REDADMIN_INITIAL_HASH`) before starting `update-server` and `web-admin`.
-3. Re-run the build-flow test for `update-server` to confirm the PTY build endpoint still accepts `windows`, `linux`, `macos`, or `test` build types.
-4. Approve **ISS-018** to clean up `web-admin/package.json` and regenerate `package-lock.json`.
+1. **This week (security):** apply ISS-039/041 (unauth surfaces), ISS-038 (`requireAdmin`), ISS-045 (delete `server-old.js`, purge core dumps, remove `trigger-build.js`), ISS-043/044 (auto-release footguns).
+2. **Next:** ISS-037 test-suite rehab (OPP-009 program) — nothing else is safely verifiable until tests compile; then finish ISS-035 by adding tests-e2e/Benchmarks to the sln.
+3. **Then hardening:** OPP-008 headers, OPP-005 signature verification, ISS-042 config allow-list, ISS-046 complexity passes.
+4. **Strategic:** OPP-003 dashboard consolidation, OPP-001 extension API (or retire it), OPP-002 `AtomicFileWriter`, OPP-006 theme tokens.
+
+## Not fixed / honest caveats
+
+- `Redball.nsi` version (2.1.720) lags build props (2.1.724) — release pipeline regenerates it; left alone.
+- Browser `console.*` warnings retained deliberately (29) — triage under ISS-046.
+- WPF runtime behavior not exercised — no Windows host; all C# verification is compile-level.
+- `update-server/data/releases.json` had pre-existing local modifications — untouched.

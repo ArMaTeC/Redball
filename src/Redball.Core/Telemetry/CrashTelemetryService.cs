@@ -22,7 +22,7 @@ public sealed class CrashTelemetryService
     private bool _consentConfigured;
     private string? _endpointUrl;
     private string? _apiKey;
- 
+
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
     private CrashTelemetryService()
@@ -102,7 +102,9 @@ public sealed class CrashTelemetryService
                 ConfiguredAt = DateTime.UtcNow
             };
             var json = JsonSerializer.Serialize(config, _jsonOptions);
-            File.WriteAllText(_consentFilePath, json);
+            var tempFile = _consentFilePath + ".tmp";
+            File.WriteAllText(tempFile, json);
+            File.Move(tempFile, _consentFilePath, overwrite: true);
         }
         catch (Exception ex)
         {
@@ -165,7 +167,9 @@ public sealed class CrashTelemetryService
             // Save to local crash store
             var crashFile = Path.Combine(_crashStorePath, $"{envelope.ReportId}.json");
             var json = JsonSerializer.Serialize(envelope, _jsonOptions);
-            File.WriteAllText(crashFile, json);
+            var tempCrashFile = crashFile + ".tmp";
+            File.WriteAllText(tempCrashFile, json);
+            File.Move(tempCrashFile, crashFile, overwrite: true);
 
             Logger.Error("CrashTelemetry", $"Crash recorded: {envelope.ExceptionType} (Fingerprint: {envelope.StackFingerprint})", ex);
 
@@ -173,7 +177,9 @@ public sealed class CrashTelemetryService
             if (_consentGranted && !string.IsNullOrEmpty(_endpointUrl))
             {
                 var queueFile = Path.Combine(_uploadQueuePath, $"{envelope.ReportId}.json");
-                File.WriteAllText(queueFile, json);
+                var tempQueueFile = queueFile + ".tmp";
+                File.WriteAllText(tempQueueFile, json);
+                File.Move(tempQueueFile, queueFile, overwrite: true);
             }
         }
         catch (Exception telemetryEx)

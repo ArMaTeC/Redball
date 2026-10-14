@@ -90,7 +90,9 @@ public class TemplateService
         try
         {
             var json = JsonSerializer.Serialize(_templates, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_templatesFile, json);
+            var tempFile = _templatesFile + ".tmp";
+            File.WriteAllText(tempFile, json);
+            File.Move(tempFile, _templatesFile, overwrite: true);
         }
         catch (Exception ex)
         {

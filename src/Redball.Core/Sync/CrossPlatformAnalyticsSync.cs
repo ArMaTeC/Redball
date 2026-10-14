@@ -50,7 +50,7 @@ public class CrossPlatformAnalyticsSync
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         _analyticsDirectory = Path.Combine(appData, "Redball", "Analytics");
         _consentFilePath = Path.Combine(appData, "Redball", "analytics_consent.json");
-        
+
         _jsonOptions = new JsonSerializerOptions
         {
             WriteIndented = true,
@@ -102,7 +102,9 @@ public class CrossPlatformAnalyticsSync
                 ConfiguredAt = DateTime.UtcNow
             };
             var json = JsonSerializer.Serialize(config, _jsonOptions);
-            File.WriteAllText(_consentFilePath, json);
+            var tempFile = _consentFilePath + ".tmp";
+            File.WriteAllText(tempFile, json);
+            File.Move(tempFile, _consentFilePath, overwrite: true);
         }
         catch (Exception ex)
         {
@@ -152,10 +154,10 @@ public class CrossPlatformAnalyticsSync
         try
         {
             var platformName = platform ?? GetCurrentPlatform();
-            
+
             // PRIVACY: Sanitize properties to prevent PII leakage
             var sanitizedProperties = SanitizeProperties(properties);
-            
+
             var eventData = new CrossPlatformAnalyticsEvent
             {
                 Timestamp = DateTime.UtcNow,
@@ -186,20 +188,20 @@ public class CrossPlatformAnalyticsSync
     private static bool ShouldSampleEvent(string eventName)
     {
         var random = Random.Shared.Next(100);
-        
+
         // Mouse movement: 1% sampling
         if (eventName.Contains("mouse.move", StringComparison.OrdinalIgnoreCase) ||
             eventName.Contains("mouse.drag", StringComparison.OrdinalIgnoreCase))
         {
             return random < 1;
         }
-        
+
         // Scroll events: 10% sampling
         if (eventName.Contains("scroll", StringComparison.OrdinalIgnoreCase))
         {
             return random < 10;
         }
-        
+
         // All other events (clicks, etc.): 100% sampling
         return true;
     }
@@ -216,7 +218,7 @@ public class CrossPlatformAnalyticsSync
         }
 
         var sanitized = new Dictionary<string, object>();
-        
+
         // Whitelist of allowed property names (case-insensitive)
         var allowedProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -332,7 +334,7 @@ public class CrossPlatformAnalyticsSync
                 SyncedAt = DateTime.UtcNow
             });
 
-            Logger.Info("CrossPlatformAnalyticsSync", 
+            Logger.Info("CrossPlatformAnalyticsSync",
                 $"Aggregated analytics: {aggregated.TotalEvents} events across {aggregated.PlatformBreakdown.Count} platforms");
         }
         catch (Exception ex)
@@ -349,7 +351,7 @@ public class CrossPlatformAnalyticsSync
     public async Task<string> ExportAnalyticsReportAsync(int days = 30)
     {
         var aggregated = await AggregateAnalyticsAsync(days);
-        
+
         var report = new AnalyticsReport
         {
             GeneratedAt = DateTime.UtcNow,
@@ -410,7 +412,7 @@ public class CrossPlatformAnalyticsSync
                 var count = platform.Value.EventBreakdown
                     .Where(e => e.Key.Contains(feature, StringComparison.OrdinalIgnoreCase))
                     .Sum(e => e.Value);
-                
+
                 featureUsage.PlatformUsage[platform.Key] = count;
             }
 
@@ -434,7 +436,7 @@ public class CrossPlatformAnalyticsSync
         try
         {
             var files = Directory.GetFiles(_analyticsDirectory, "analytics_*.json");
-            
+
             foreach (var file in files)
             {
                 var fileInfo = new FileInfo(file);
@@ -528,7 +530,7 @@ public class CrossPlatformAnalyticsSync
         try
         {
             var files = Directory.GetFiles(_analyticsDirectory, "analytics_*.json");
-            
+
             foreach (var file in files)
             {
                 var lines = await File.ReadAllLinesAsync(file);
@@ -587,7 +589,7 @@ public class CrossPlatformAnalyticsSync
         var machineName = Environment.MachineName;
         var userName = Environment.UserName;
         var combined = $"{machineName}:{userName}";
-        
+
         using var sha = System.Security.Cryptography.SHA256.Create();
         var hash = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(combined));
         return Convert.ToHexString(hash).Substring(0, 16);
@@ -611,7 +613,7 @@ public class CrossPlatformAnalyticsSync
         {
             Logger.Debug("CrossPlatformAnalyticsSync", $"Failed to parse file date: {ex.Message}");
         }
-        
+
         return true; // Include if we can't parse
     }
 }
@@ -687,17 +689,17 @@ public class FeatureUsage
     private double CalculateParityScore()
     {
         if (PlatformUsage.Count < 2) return 1.0;
-        
+
         var values = PlatformUsage.Values.ToList();
         if (values.All(v => v == 0)) return 1.0;
-        
+
         var avg = values.Average();
         if (avg == 0) return 1.0;
-        
+
         // Lower variance = higher parity
         var variance = values.Average(v => Math.Pow(v - avg, 2));
         var stdDev = Math.Sqrt(variance);
-        
+
         return Math.Max(0, 1 - (stdDev / avg));
     }
 }

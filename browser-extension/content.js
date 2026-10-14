@@ -16,26 +16,26 @@
         init() {
             // Track user activity
             this.trackActivity();
-            
+
             // Listen for messages from background
             chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 return this.handleMessage(message, sender, sendResponse);
             });
-            
+
             // Notify background that content script is ready
             this.sendToBackground({ type: 'CONTENT_SCRIPT_READY' });
         }
 
         trackActivity() {
             const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-            
+
             events.forEach(event => {
                 document.addEventListener(event, () => {
                     this.lastActivity = Date.now();
                     this.notifyActivity();
                 }, { passive: true });
             });
-            
+
             // Check for inactivity periodically
             setInterval(() => this.checkInactivity(), 60000); // Every minute
         }
@@ -43,7 +43,7 @@
         checkInactivity() {
             const idleTime = Date.now() - this.lastActivity;
             const IDLE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
-            
+
             if (idleTime > IDLE_THRESHOLD && this.isActive) {
                 this.isActive = false;
                 this.sendToBackground({
@@ -63,7 +63,7 @@
             if (this.activityTimeout) {
                 clearTimeout(this.activityTimeout);
             }
-            
+
             this.activityTimeout = setTimeout(() => {
                 this.sendToBackground({
                     type: 'USER_ACTIVITY',
@@ -77,7 +77,7 @@
                 case 'PING':
                     sendResponse({ success: true, lastActivity: this.lastActivity });
                     break;
-                    
+
                 case 'GET_ACTIVITY_STATUS':
                     const idleTime = Date.now() - this.lastActivity;
                     sendResponse({
@@ -87,11 +87,11 @@
                         isActive: idleTime < 5 * 60 * 1000
                     });
                     break;
-                    
+
                 default:
                     sendResponse({ success: false, error: 'Unknown message type' });
             }
-            
+
             return true;
         }
 
@@ -100,7 +100,7 @@
                 chrome.runtime.sendMessage(message).catch(() => {
                     // Background may not be available - ignore
                 });
-            } catch (error) {
+            } catch {
                 // Extension context may be invalidated
             }
         }

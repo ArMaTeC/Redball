@@ -71,6 +71,7 @@
                                     <ComboBoxItem Content="Cyberpunk"/>
                                     <ComboBoxItem Content="Coffee"/>
                                     <ComboBoxItem Content="Arctic Frost"/>
+                                    <ComboBoxItem Content="High Contrast"/>
                                 </ComboBox>
 
                                 <TextBlock Text="Language" FontWeight="Medium" Margin="0,16,0,8"/>

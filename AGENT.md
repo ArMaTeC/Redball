@@ -4,7 +4,7 @@ This document provides context and guidelines for AI agents working on the Redba
 
 ## Project Overview
 
-**Redball** is a Windows system tray utility that prevents your computer from sleeping, with style. It's a native WPF desktop application built with .NET 10, featuring 14 custom themes, smart monitoring, and extensive automation capabilities.
+**Redball** is a Windows system tray utility that prevents your computer from sleeping, with style. It's a native WPF desktop application built with .NET 10, featuring 13 custom themes, smart monitoring, and extensive automation capabilities.
 
 ### Core Features
 
@@ -12,7 +12,7 @@ This document provides context and guidelines for AI agents working on the Redba
 - **Heartbeat System**: Sends invisible F13-F16 keypresses via `SendInput` to prevent idle detection
 - **Smart Monitoring**: Battery, network, idle, schedule, presentation mode, thermal protection, process watching, VPN detection
 - **TypeThing**: Clipboard typer with human-like keystroke simulation and optional TTS
-- **14 Custom Themes**: From System/Dark/Light to Cyberpunk, Rose Gold, High Contrast
+- **13 Custom Themes**: From System/Dark/Light to Cyberpunk, Rose Gold, High Contrast
 - **Mini Widget**: Floating quick-access window with customizable presets
 - **Auto-Updater**: Automatic background update checks from GitHub Releases
 - **Analytics Dashboard**: Built-in session tracking and feature metrics
@@ -47,7 +47,7 @@ This document provides context and guidelines for AI agents working on the Redba
 Redball/
 ├── src/
 │   ├── Redball.UI.WPF/           # Main WPF application
-│   │   ├── Services/             # 40+ singleton services
+│   │   ├── Services/             # 70+ singleton services
 │   │   ├── Views/                # XAML views (MainWindow, Settings, etc.)
 │   │   ├── ViewModels/           # MVVM view models
 │   │   ├── Themes/               # Theme XAML dictionaries
@@ -79,7 +79,7 @@ Redball/
 | `UpdateService`            | GitHub Release auto-updater                 |
 | `HotkeyService`            | Global hotkey registration                  |
 | `NotificationService`      | Tray/toast notifications                    |
-| `InterceptionInputService` | Driver-level HID input simulation           |
+| `LowLevelKeyboardHook`     | Low-level keyboard hook for hotkeys/input   |
 
 ## Coding Standards
 
@@ -140,7 +140,7 @@ dotnet run --project tests/Redball.Benchmarks --configuration Release
 
 - **Input Validation**: Validate all user inputs before processing
 - **Path Traversal**: Never use user input directly in file paths
-- **Secrets**: Store sensitive data in Windows Credential Manager via `SecretManagerService`
+- **Secrets**: Store sensitive data via `SecureConfigProvider`/`ConfigEncryptionService`
 - **Code Signing**: All releases must be signed (handled in CI)
 - **Config Encryption**: Support optional AES-256 config encryption
 

@@ -162,11 +162,11 @@ function renderConfig() {
             <div class="config-row">
                 <div class="config-field">
                     <label>Heartbeat Sync (Seconds)</label>
-                    <input type="number" id="cfg-HeartbeatSeconds" value="${currentConfig.HeartbeatSeconds}">
+                    <input type="number" id="cfg-HeartbeatSeconds" value="${escapeHtml(currentConfig.HeartbeatSeconds)}">
                 </div>
                 <div class="config-field">
                     <label>Default Op Duration (Min)</label>
-                    <input type="number" id="cfg-DefaultDuration" value="${currentConfig.DefaultDuration}">
+                    <input type="number" id="cfg-DefaultDuration" value="${escapeHtml(currentConfig.DefaultDuration)}">
                 </div>
             </div>
             <div class="config-field">
@@ -207,11 +207,11 @@ function renderConfig() {
             <div class="config-row">
                 <div class="config-field">
                     <label>Min Key Delay (ms)</label>
-                    <input type="number" id="cfg-TypeThingMinDelayMs" value="${currentConfig.TypeThingMinDelayMs}">
+                    <input type="number" id="cfg-TypeThingMinDelayMs" value="${escapeHtml(currentConfig.TypeThingMinDelayMs)}">
                 </div>
                 <div class="config-field">
                     <label>Max Key Delay (ms)</label>
-                    <input type="number" id="cfg-TypeThingMaxDelayMs" value="${currentConfig.TypeThingMaxDelayMs}">
+                    <input type="number" id="cfg-TypeThingMaxDelayMs" value="${escapeHtml(currentConfig.TypeThingMaxDelayMs)}">
                 </div>
             </div>
             <div class="config-field">
@@ -235,11 +235,11 @@ function renderConfig() {
             <div class="config-row">
                 <div class="config-field">
                     <label>Idle Threshold (Sec)</label>
-                    <input type="number" id="cfg-IdleThreshold" value="${currentConfig.IdleThreshold}">
+                    <input type="number" id="cfg-IdleThreshold" value="${escapeHtml(currentConfig.IdleThreshold)}">
                 </div>
                 <div class="config-field">
                     <label>Battery Threshold (%)</label>
-                    <input type="number" id="cfg-BatteryThreshold" value="${currentConfig.BatteryThreshold}">
+                    <input type="number" id="cfg-BatteryThreshold" value="${escapeHtml(currentConfig.BatteryThreshold)}">
                 </div>
             </div>
             <div class="config-row">
@@ -262,11 +262,11 @@ function renderConfig() {
             <div class="config-row">
                 <div class="config-field">
                     <label>GitHub Repository Owner</label>
-                    <input type="text" id="cfg-UpdateRepoOwner" value="${currentConfig.UpdateRepoOwner}">
+                    <input type="text" id="cfg-UpdateRepoOwner" value="${escapeHtml(currentConfig.UpdateRepoOwner)}">
                 </div>
                 <div class="config-field">
                     <label>GitHub Repository Name</label>
-                    <input type="text" id="cfg-UpdateRepoName" value="${currentConfig.UpdateRepoName}">
+                    <input type="text" id="cfg-UpdateRepoName" value="${escapeHtml(currentConfig.UpdateRepoName)}">
                 </div>
             </div>
             <div class="config-field">
@@ -299,7 +299,7 @@ function renderConfig() {
                 </div>
                 <div class="config-field">
                     <label>Locale</label>
-                    <input type="text" id="cfg-Locale" value="${currentConfig.Locale}">
+                    <input type="text" id="cfg-Locale" value="${escapeHtml(currentConfig.Locale)}">
                 </div>
             </div>
             <div class="config-row">
@@ -345,7 +345,7 @@ function renderConfig() {
             </label>
             <div class="config-field">
                 <label>Max Log Size (MB)</label>
-                <input type="number" id="cfg-MaxLogSizeMB" value="${currentConfig.MaxLogSizeMB}">
+                <input type="number" id="cfg-MaxLogSizeMB" value="${escapeHtml(currentConfig.MaxLogSizeMB)}">
             </div>
         </div>
     `;
@@ -513,7 +513,7 @@ async function fetchStats() {
             const tbody = document.getElementById('releases-body');
             tbody.innerHTML = data.releases.map(r => `
                 <tr>
-                    <td><span class="badge badge-ver">v${r.version}</span></td>
+                    <td><span class="badge badge-ver">v${escapeHtml(r.version)}</span></td>
                     <td>${new Date(r.date).toLocaleDateString()}</td>
                     <td><span class="badge badge-dl">${r.totalDownloads.toLocaleString()} dl</span></td>
                     <td><span style="color: var(--success)">PROD</span></td>
@@ -722,6 +722,16 @@ function cleanAnsi(text) {
         .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Control chars
 }
 
+// Escape a value for safe interpolation into HTML markup or attributes
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function appendLog(line) {
     const terminal = document.getElementById('terminal-out');
     const div = document.createElement('div');
@@ -738,7 +748,7 @@ function appendLog(line) {
     else if (cleanLine.startsWith('↳') || cleanLine.startsWith('  [')) div.className += ' dim';
 
     const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
-    div.innerHTML = `<span class="t-line time">[${time}]</span>${cleanLine}`;
+    div.innerHTML = `<span class="t-line time">[${time}]</span>${escapeHtml(cleanLine)}`;
 
     terminal.appendChild(div);
     // Cap terminal size so a long build can't grow the DOM unboundedly
@@ -793,16 +803,16 @@ async function loadUsers() {
                         <td>
                             <div style="display: flex; align-items: center; gap: 0.8rem">
                                 <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-glow); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800">
-                                    ${u.username[0].toUpperCase()}
+                                    ${escapeHtml(u.username[0].toUpperCase())}
                                 </div>
-                                <span>${u.username}</span>
+                                <span>${escapeHtml(u.username)}</span>
                             </div>
                         </td>
                         <td><span class="badge" style="background: ${u.role === 'admin' ? 'rgba(0, 217, 163, 0.1)' : 'rgba(255,255,255,0.05)'}; color: ${u.role === 'admin' ? 'var(--accent)' : 'var(--text-secondary)'}">${u.role.toUpperCase()}</span></td>
                         <td><span class="badge" style="background: ${u.mfaEnabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${u.mfaEnabled ? 'var(--success)' : 'var(--error)'}">${u.mfaEnabled ? 'ENFORCED' : 'UNSECURED'}</span></td>
                         <td>${new Date(u.createdAt).toLocaleDateString()}</td>
                         <td>
-                            <button class="btn btn-sm" data-action="delete-user" data-username="${u.username}" style="padding: 0.4rem; background: transparent; border-color: rgba(239, 68, 68, 0.3); color: var(--error); width: auto;">
+                            <button class="btn btn-sm" data-action="delete-user" data-username="${escapeHtml(u.username)}" style="padding: 0.4rem; background: transparent; border-color: rgba(239, 68, 68, 0.3); color: var(--error); width: auto;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                             </button>
                         </td>
@@ -965,7 +975,7 @@ async function deleteUser(username) {
     }
     if (!confirm(`Are you sure you want to revoke access for ${username}?`)) return;
     try {
-        const res = await fetch(`/api/auth/users/${username}`, {
+        const res = await fetch(`/api/auth/users/${encodeURIComponent(username)}`, {
             method: 'DELETE',
             headers: { 'Authorization': 'Bearer ' + token }
         });
@@ -1058,7 +1068,7 @@ function renderMiniList(id, stats) {
     }
     el.innerHTML = sorted.map(([label, value]) => `
         <div class="mini-item">
-            <span class="mini-label">${label}</span>
+            <span class="mini-label">${escapeHtml(label)}</span>
             <span class="mini-value">${value.toLocaleString()}</span>
         </div>
     `).join('');
@@ -1198,7 +1208,7 @@ if (savedToken) {
     }).then(data => {
         currentUser = data.user;
         checkAuth();
-    }).catch(err => {
+    }).catch(() => {
         token = null;
         localStorage.removeItem('redball_admin_token');
         checkAuth();

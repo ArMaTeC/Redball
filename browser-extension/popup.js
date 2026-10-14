@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function init() {
         showPanel('loading');
         await checkStatus();
-        
+
         // Set up periodic status checks
         statusCheckInterval = setInterval(checkStatus, 5000);
     }
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function checkStatus() {
         try {
             const response = await sendMessage({ type: 'GET_STATUS' });
-            
+
             if (response.success && response.data.connected) {
                 showPanel('connected');
                 updateConnectionStatus(true);
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showPanel('disconnected');
                 updateConnectionStatus(false);
             }
-        } catch (error) {
+        } catch {
             showPanel('disconnected');
             updateConnectionStatus(false);
         }
@@ -55,24 +55,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Update UI with status data
     function updateUI(data) {
-        // Update keep-awake status
         const isActive = data.isActive || false;
         ui.keepAwakeStatus.className = `status-indicator ${isActive ? 'active' : ''}`;
         ui.keepAwakeStatus.querySelector('.status-text').textContent = isActive ? 'Active' : 'Inactive';
-        
-        // Update session time
-        if (isActive && data.sessionDuration) {
-            ui.sessionTime.textContent = formatDuration(data.sessionDuration);
+
+        updateSessionTime(isActive, data.sessionDuration);
+        updateToggleButton(isActive);
+        updateInfoSection(data);
+    }
+
+    // Update session-time readout from the active session's duration
+    function updateSessionTime(isActive, sessionDuration) {
+        if (isActive && sessionDuration) {
+            ui.sessionTime.textContent = formatDuration(sessionDuration);
             ui.sessionTime.classList.add('active');
         } else {
             ui.sessionTime.textContent = '--:--';
             ui.sessionTime.classList.remove('active');
         }
-        
-        // Update toggle button
-        updateToggleButton(isActive);
-        
-        // Update info section if available
+    }
+
+    // Update optional info fields when the desktop app reports them
+    function updateInfoSection(data) {
         if (data.heartbeatMode) {
             ui.heartbeatMode.textContent = data.heartbeatMode;
         }
@@ -103,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.loadingPanel.classList.add('hidden');
         ui.connectedPanel.classList.add('hidden');
         ui.disconnectedPanel.classList.add('hidden');
-        
+
         switch (panelName) {
             case 'loading':
                 ui.loadingPanel.classList.remove('hidden');
@@ -122,7 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = totalSeconds % 60;
-        
+
         if (hours > 0) {
             return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
@@ -147,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             ui.toggleBtn.disabled = true;
             const response = await sendMessage({ type: 'TOGGLE_KEEP_AWAKE' });
-            
+
             if (response.success) {
                 updateUI(response.data);
             }
@@ -163,11 +167,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const minutes = parseInt(btn.dataset.minutes);
             try {
                 btn.disabled = true;
-                const response = await sendMessage({ 
-                    type: 'START_TIMED', 
-                    minutes 
+                const response = await sendMessage({
+                    type: 'START_TIMED',
+                    minutes
                 });
-                
+
                 if (response.success) {
                     updateUI(response.data);
                 }

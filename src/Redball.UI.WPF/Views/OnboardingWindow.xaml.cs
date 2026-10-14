@@ -45,14 +45,14 @@ public partial class OnboardingWindow : Window
     {
         _isLoading = true;
         var config = ConfigService.Instance.Config;
-        
+
         PreventDisplaySleepCheck.IsChecked = config.PreventDisplaySleep;
         UseHeartbeatCheck.IsChecked = config.UseHeartbeatKeypress;
         StartWithWindowsCheck.IsChecked = StartupService.IsInstalledAtStartup();
         BatteryAwareCheck.IsChecked = config.BatteryAware;
         NetworkAwareCheck.IsChecked = config.NetworkAware;
         ShowOnStartupCheck.IsChecked = false;
-        
+
         ThemeCombo.SelectedIndex = config.Theme switch
         {
             "System" => 0,
@@ -67,6 +67,7 @@ public partial class OnboardingWindow : Window
             "Cyberpunk" => 10,
             "Coffee" => 11,
             "ArcticFrost" => 12,
+            "HighContrast" => 13,
             _ => 1
         };
         _isLoading = false;
@@ -87,6 +88,7 @@ public partial class OnboardingWindow : Window
             10 => "Cyberpunk",
             11 => "Coffee",
             12 => "ArcticFrost",
+            13 => "HighContrast",
             2 => "Light",
             _ => "Dark"
         };
@@ -183,13 +185,13 @@ public partial class OnboardingWindow : Window
         {
             _analytics.TrackFeature("startup.enabled");
         }
-        
+
         Logger.Info("OnboardingWindow", "First-run onboarding completed, settings saved");
-        
+
         // Ensure the FirstRun flag is permanently disabled after successful completion
         ConfigService.Instance.Config.FirstRun = false;
         ConfigService.Instance.Save();
-        
+
         DialogResult = true;
         Close();
     }

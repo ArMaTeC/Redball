@@ -2,7 +2,6 @@
 // Handles communication with desktop app and manages keep-awake state
 
 const REDBALL_API_URL = 'http://localhost:5000';
-const CHECK_INTERVAL_MS = 30000; // Check connection every 30 seconds
 
 class RedballBackgroundService {
     constructor() {
@@ -14,19 +13,19 @@ class RedballBackgroundService {
 
     async init() {
         console.log('[Redball Extension] Background service initializing...');
-        
+
         // Set up alarm for periodic checks
         chrome.alarms.create('checkConnection', { periodInMinutes: 0.5 });
         chrome.alarms.create('keepAlive', { periodInMinutes: 1 });
-        
+
         // Event listeners
         chrome.alarms.onAlarm.addListener((alarm) => this.handleAlarm(alarm));
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => 
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) =>
             this.handleMessage(message, sender, sendResponse));
-        
+
         // Initial connection check
         await this.checkConnection();
-        
+
         console.log('[Redball Extension] Background service initialized');
     }
 
@@ -43,32 +42,32 @@ class RedballBackgroundService {
 
     async handleMessage(message, sender, sendResponse) {
         console.log('[Redball Extension] Received message:', message);
-        
+
         switch (message.type) {
             case 'GET_STATUS':
                 const status = await this.getStatus();
                 sendResponse({ success: true, data: status });
                 break;
-                
+
             case 'TOGGLE_KEEP_AWAKE':
                 const result = await this.toggleKeepAwake();
                 sendResponse({ success: true, data: result });
                 break;
-                
+
             case 'START_TIMED':
                 const timedResult = await this.startTimed(message.minutes);
                 sendResponse({ success: true, data: timedResult });
                 break;
-                
+
             case 'STOP_KEEP_AWAKE':
                 const stopResult = await this.stopKeepAwake();
                 sendResponse({ success: true, data: stopResult });
                 break;
-                
+
             default:
                 sendResponse({ success: false, error: 'Unknown message type' });
         }
-        
+
         return true; // Keep channel open for async
     }
 
@@ -78,21 +77,21 @@ class RedballBackgroundService {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
-            
+
             if (response.ok) {
                 const data = await response.json();
                 this.isConnected = true;
                 this.desktopState = data;
-                
+
                 // Update extension icon based on state
                 this.updateIcon(data.isActive);
-                
+
                 console.log('[Redball Extension] Connected to desktop app');
             } else {
                 this.isConnected = false;
                 this.updateIcon(false);
             }
-        } catch (error) {
+        } catch {
             this.isConnected = false;
             this.updateIcon(false);
             console.log('[Redball Extension] Desktop app not available');
@@ -111,7 +110,7 @@ class RedballBackgroundService {
         if (!this.isConnected) {
             return { connected: false, error: 'Desktop app not running' };
         }
-        
+
         try {
             const response = await fetch(`${REDBALL_API_URL}/api/status`);
             const data = await response.json();
@@ -125,13 +124,13 @@ class RedballBackgroundService {
         if (!this.isConnected) {
             return { success: false, error: 'Desktop app not running' };
         }
-        
+
         try {
             const response = await fetch(`${REDBALL_API_URL}/api/toggle`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
-            
+
             const data = await response.json();
             this.updateIcon(data.isActive);
             return { success: true, ...data };
@@ -144,14 +143,14 @@ class RedballBackgroundService {
         if (!this.isConnected) {
             return { success: false, error: 'Desktop app not running' };
         }
-        
+
         try {
             const response = await fetch(`${REDBALL_API_URL}/api/timed`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ minutes })
             });
-            
+
             const data = await response.json();
             return { success: true, ...data };
         } catch (error) {
@@ -163,13 +162,13 @@ class RedballBackgroundService {
         if (!this.isConnected) {
             return { success: false, error: 'Desktop app not running' };
         }
-        
+
         try {
             const response = await fetch(`${REDBALL_API_URL}/api/stop`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
-            
+
             const data = await response.json();
             this.updateIcon(false);
             return { success: true, ...data };
@@ -180,7 +179,7 @@ class RedballBackgroundService {
 
     updateIcon(isActive) {
         const iconPath = isActive ? 'icons/active/' : 'icons/inactive/';
-        
+
         chrome.action.setIcon({
             path: {
                 '16': `${iconPath}icon16.png`,
@@ -189,11 +188,11 @@ class RedballBackgroundService {
                 '128': `${iconPath}icon128.png`
             }
         });
-        
+
         chrome.action.setBadgeText({
             text: isActive ? 'ON' : ''
         });
-        
+
         chrome.action.setBadgeBackgroundColor({
             color: isActive ? '#00AA00' : '#888888'
         });
@@ -201,12 +200,12 @@ class RedballBackgroundService {
 }
 
 // Initialize the background service
-const redballService = new RedballBackgroundService();
+new RedballBackgroundService();
 
 // Handle extension installation
 chrome.runtime.onInstalled.addListener((details) => {
     console.log('[Redball Extension] Installed:', details.reason);
-    
+
     if (details.reason === 'install') {
         // First install - show welcome notification
         chrome.notifications.create({

@@ -121,3 +121,4 @@ cleanup_report.txt
 x64/
 Roadmap_PC.md
 node_modules/
+audit-run/*
