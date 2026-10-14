@@ -569,16 +569,18 @@ auto_release() {
         log_info "[DRY RUN] Would restart update server"
     else
         local server_dir="$PROJECT_ROOT/update-server"
-        if command -v pm2 &>/dev/null; then
+        if [[ -n "${BUILD_BY_SERVICE:-}" ]]; then
+            # This build is a child of the update-server process itself; never
+            # pkill it or spawn a duplicate. Signal the parent so it can exit
+            # and let its supervisor (systemd/pm2) bring it back up.
+            log_info "Running under update-server, signaling parent to restart after build..."
+            echo "[SIGNAL] RESTART_NEEDED"
+            log_success "Update server restart process initiated"
+        elif command -v pm2 &>/dev/null; then
             # Check if already running with pm2
             if pm2 list | grep -q "redball-update-server"; then
-                if [[ -n "${BUILD_BY_SERVICE:-}" ]]; then
-                    log_info "Running under update-server, signaling parent to restart after build..."
-                    echo "[SIGNAL] RESTART_NEEDED"
-                else
-                    log_info "Restarting update server via PM2..."
-                    pm2 restart redball-update-server 2>&1 | while IFS= read -r line; do log_detail "$line"; done
-                fi
+                log_info "Restarting update server via PM2..."
+                pm2 restart redball-update-server 2>&1 | while IFS= read -r line; do log_detail "$line"; done
                 log_success "Update server restart process initiated"
             else
                 log_info "Starting update server via PM2..."

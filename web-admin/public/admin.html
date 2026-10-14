@@ -10,7 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
         rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/admin/vendor/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -38,6 +38,22 @@
 
         .hidden {
             display: none !important;
+        }
+
+        .login-error {
+            display: none;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--error, #ef4444);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .login-error.show {
+            display: block;
         }
 
         body {
@@ -1379,7 +1395,7 @@
     </div>
 
     <!-- Login -->
-    <div id="login-overlay" class="login-overlay hidden">
+    <div id="login-overlay" class="login-overlay">
         <div class="login-box">
             <div style="margin-bottom: 2rem">
                 <svg width="60" height="60" viewBox="0 0 100 100">
@@ -1393,7 +1409,7 @@
             <div id="login-fields">
                 <input type="text" id="username" placeholder="Username" autocomplete="username">
                 <input type="password" id="password" placeholder="Key Password" autocomplete="current-password">
-                <button onclick="handleLogin()">Unlock Access</button>
+                <button data-action="login">Unlock Access</button>
             </div>
             <div id="mfa-fields" class="hidden">
                 <p>MFA is enabled for this account. Enter your verification code.</p>
@@ -1402,8 +1418,8 @@
                     <input type="checkbox" id="mfa-remember">
                     <span style="font-size: 0.8rem; opacity: 0.8">Remember this device for 30 days</span>
                 </label>
-                <button onclick="handleMfaLogin()">Verify & Unlock</button>
-                <button onclick="cancelMfa()" style="margin-top: 1rem; background: transparent; color: var(--text-secondary); border: 1px solid var(--border)">Back to Login</button>
+                <button data-action="mfa-login">Verify & Unlock</button>
+                <button data-action="cancel-mfa" style="margin-top: 1rem; background: transparent; color: var(--text-secondary); border: 1px solid var(--border)">Back to Login</button>
             </div>
             <div id="login-error" class="login-error">Invalid authorization key</div>
         </div>
@@ -1416,12 +1432,12 @@
         </a>
 
         <div class="nav">
-            <button class="nav-btn active" onclick="showSection('dashboard', this)">Infrastructure</button>
-            <button class="nav-btn" onclick="showSection('build', this)">Build Pipeline</button>
-            <button class="nav-btn" onclick="showSection('analytics', this)">Visitor Analytics</button>
-            <button class="nav-btn" onclick="showSection('releases', this)">Release Control</button>
-            <button class="nav-btn" onclick="showSection('users', this)">Identity & Access</button>
-            <button class="nav-btn" onclick="showSection('config', this)">System Config</button>
+            <button class="nav-btn active" data-section="dashboard">Infrastructure</button>
+            <button class="nav-btn" data-section="build">Build Pipeline</button>
+            <button class="nav-btn" data-section="analytics">Visitor Analytics</button>
+            <button class="nav-btn" data-section="releases">Release Control</button>
+            <button class="nav-btn" data-section="users">Identity & Access</button>
+            <button class="nav-btn" data-section="config">System Config</button>
         </div>
 
         <div class="user-actions">
@@ -1429,7 +1445,7 @@
                 <div id="connection-dot" class="connection-dot"></div>
                 <span id="connection-text">Synchronizing...</span>
             </div>
-            <button class="logout-btn" onclick="handleLogout()">Exit</button>
+            <button class="logout-btn" data-action="logout">Exit</button>
         </div>
     </header>
 
@@ -1575,13 +1591,13 @@
                         Operations Control</h3>
 
                     <div id="initial-controls">
-                        <button class="btn btn-build" id="start-btn" onclick="startBuild()">
+                        <button class="btn btn-build" id="start-btn" data-action="start-build">
                             <span style="font-size: 1.4rem">▶</span> Initialize Full Build
                         </button>
                     </div>
 
                     <div id="active-controls" style="display: none;">
-                        <button class="btn btn-stop" id="stop-btn" onclick="stopBuild()">
+                        <button class="btn btn-stop" id="stop-btn" data-action="stop-build">
                             <span style="font-size: 1.4rem">■</span> Terminate Pipeline
                         </button>
                     </div>
@@ -1613,7 +1629,7 @@
                 </div>
             </div>
         </section>
-        
+
         <!-- Visitor Analytics Section -->
         <section id="analytics-section" class="section">
             <div class="section-header">
@@ -1622,7 +1638,7 @@
                     <p style="color: var(--text-secondary);">Monitor global engagement and download trends.</p>
                 </div>
                 <div style="display: flex; gap: 1rem;">
-                    <select id="analytics-range" class="btn" style="width: auto; background: var(--bg-card); border: 1px solid var(--border); padding: 0.5rem 1.5rem;" onchange="loadAnalytics()">
+                    <select id="analytics-range" class="btn" style="width: auto; background: var(--bg-card); border: 1px solid var(--border); padding: 0.5rem 1.5rem;">
                         <option value="7">Last 7 Days</option>
                         <option value="30" selected>Last 30 Days</option>
                         <option value="90">Last 90 Days</option>
@@ -1718,7 +1734,7 @@
                         <h2 class="panel-title">Identity & Access</h2>
                         <p class="panel-subtitle">Manage system users, roles, and security protocols</p>
                     </div>
-                    <button class="btn btn-build" style="width: auto; padding: 0.75rem 2rem;" onclick="showAddUserModal()">+ Create Identity</button>
+                    <button class="btn btn-build" style="width: auto; padding: 0.75rem 2rem;" data-action="add-user">+ Create Identity</button>
                 </div>
 
                 <div class="grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; padding: 2.5rem;">
@@ -1753,19 +1769,19 @@
                             <div id="mfa-status-value" class="stat-value" style="color: var(--danger); font-size: 1.5rem;">Inactive</div>
                             <p id="mfa-status-desc" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Enhance your account security by enabling TOTP authentication.</p>
                         </div>
-                        
+
                         <div id="mfa-setup-controls" style="padding: 0; display: flex; flex-direction: column; gap: 0.75rem;">
-                            <button id="mfa-setup-btn" class="btn btn-build" style="width: 100%" onclick="initMfaSetup()">Setup MFA Protocol</button>
-                            <button class="btn btn-sm" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-secondary)" onclick="changePassword()">Change Access Key</button>
+                            <button id="mfa-setup-btn" class="btn btn-build" style="width: 100%">Setup MFA Protocol</button>
+                            <button class="btn btn-sm" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-secondary)" data-action="change-password">Change Access Key</button>
                         </div>
-                        
+
                         <div id="mfa-qr-container" class="hidden" style="text-align: center; background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; border: 1px dashed var(--border);">
                             <p style="font-size: 0.8rem; margin-bottom: 1rem;">Scan this QR code with your authenticator app:</p>
                             <img id="mfa-qr-img" src="" alt="MFA QR Code" style="width: 150px; height: 150px; background: white; padding: 10px; border-radius: 8px;">
                             <div style="margin-top: 1.5rem;">
                                 <input type="text" id="mfa-setup-token" placeholder="Enter 6-digit code" style="width: 100%; text-align: center; margin-bottom: 0.5rem; padding: 0.75rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: white;">
-                                <button class="btn btn-build" style="width: 100%" onclick="verifyMfaSetup()">Verify & Enable</button>
-                                <button class="btn btn-sm" style="width: 100%; margin-top: 0.5rem; background: transparent; border: 1px solid var(--border); color: var(--text-secondary)" onclick="cancelMfaSetup()">Cancel</button>
+                                <button class="btn btn-build" style="width: 100%" data-action="verify-mfa-setup">Verify & Enable</button>
+                                <button class="btn btn-sm" style="width: 100%; margin-top: 0.5rem; background: transparent; border: 1px solid var(--border); color: var(--text-secondary)" data-action="cancel-mfa-setup">Cancel</button>
                             </div>
                         </div>
                     </div>
@@ -1779,7 +1795,7 @@
             <div class="panel">
                 <div class="panel-header">
                     <h3 class="panel-title">System Settings & Client Profiles</h3>
-                    <button class="btn btn-build" onclick="saveConfiguration()"
+                    <button class="btn btn-build" data-action="save-config"
                         style="width: auto; padding: 0.75rem 2rem;">Apply System-Wide</button>
                 </div>
                 <div class="panel-body">
@@ -1793,1151 +1809,7 @@
         </section>
     </main>
 
-    <script>
-        let socket;
-        let token = localStorage.getItem('redball_admin_token');
-        let buildRunning = false;
-        let timerInterval;
-
-        // --- Toast Notifications ---
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.style.cssText = `
-                position: fixed;
-                bottom: 24px;
-                right: 24px;
-                padding: 14px 24px;
-                border-radius: 10px;
-                font-weight: 500;
-                z-index: 10000;
-                animation: slideIn 0.3s ease;
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(148, 163, 184, 0.12);
-                max-width: 320px;
-                word-wrap: break-word;
-            `;
-            if (type === 'success') {
-                toast.style.background = 'rgba(16, 185, 129, 0.15)';
-                toast.style.color = '#34d399';
-                toast.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-            } else if (type === 'error') {
-                toast.style.background = 'rgba(239, 68, 68, 0.15)';
-                toast.style.color = '#f87171';
-                toast.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-            } else {
-                toast.style.background = 'rgba(45, 127, 249, 0.15)';
-                toast.style.color = '#5a9dff';
-                toast.style.borderColor = 'rgba(45, 127, 249, 0.3)';
-            }
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.style.animation = 'slideOut 0.3s ease forwards';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // Add slide animations
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(400px); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(400px); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // --- Sections & Deep Linking ---
-        function showSection(id, btn, pushState = true) {
-            const section = document.getElementById(id + '-section');
-            if (!section) return;
-
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            
-            section.classList.add('active');
-            
-            if (btn) {
-                btn.classList.add('active');
-            } else {
-                // Find button by onclick handler if not provided
-                const btns = document.querySelectorAll('.nav-btn');
-                for (const b of btns) {
-                    if (b.getAttribute('onclick')?.includes(`'${id}'`)) {
-                        b.classList.add('active');
-                        break;
-                    }
-                }
-            }
-
-            if (pushState) {
-                const url = new URL(window.location);
-                url.searchParams.set('tab', id);
-                window.history.pushState({}, '', url);
-            }
-
-            if (id === 'dashboard' || id === 'releases') fetchStats();
-            if (id === 'config') loadConfiguration();
-            if (id === 'users') loadUsers();
-            if (id === 'analytics') loadAnalytics();
-            
-            resetIdleTimer();
-        }
-
-        window.onpopstate = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tab = urlParams.get('tab') || 'dashboard';
-            showSection(tab, null, false);
-        };
-
-        // --- Activity Tracking & Live Polling ---
-        let lastActivity = Date.now();
-        let isIdle = false;
-        let pollInterval = null;
-        const IDLE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
-        const POLL_INTERVAL = 15 * 1000; // 15 seconds
-
-        function resetIdleTimer() {
-            lastActivity = Date.now();
-            if (isIdle) {
-                isIdle = false;
-                console.log('[System] Activity detected. Resuming telemetry.');
-                startPolling();
-                showToast('Activity detected. Live updates resumed.', 'info');
-            }
-        }
-
-        function startPolling() {
-            if (pollInterval) clearInterval(pollInterval);
-            pollInterval = setInterval(() => {
-                if (Date.now() - lastActivity > IDLE_THRESHOLD) {
-                    isIdle = true;
-                    clearInterval(pollInterval);
-                    pollInterval = null;
-                    console.log('[System] Idle detected. Pausing telemetry.');
-                    showToast('System idle. Pausing live updates.', 'info');
-                    return;
-                }
-
-                // Selective polling based on active tab
-                const active = document.querySelector('.section.active');
-                if (!active) return;
-                
-                const id = active.id.replace('-section', '');
-                if (id === 'dashboard' || id === 'releases') fetchStats();
-                if (id === 'analytics') loadAnalytics();
-                if (id === 'build' && buildRunning) fetchStatus();
-            }, POLL_INTERVAL);
-        }
-
-        // Listen for user interaction
-        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(type => {
-            document.addEventListener(type, resetIdleTimer, { passive: true });
-        });
-
-        // --- Configuration ---
-        let currentConfig = {};
-        async function loadConfiguration() {
-            try {
-                const res = await fetch('/api/config', { headers: { 'Authorization': 'Bearer ' + token } });
-                if (res.ok) {
-                    currentConfig = await res.json();
-                    renderConfig();
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        function renderConfig() {
-            const root = document.getElementById('config-root');
-            root.innerHTML = `
-                <div class="config-group">
-                    <div class="group-header">
-                        <div class="group-icon">⚡</div>
-                        <div class="group-title">Pulse & Power</div>
-                    </div>
-                    <div class="config-row">
-                        <div class="config-field">
-                            <label>Heartbeat Sync (Seconds)</label>
-                            <input type="number" id="cfg-HeartbeatSeconds" value="${currentConfig.HeartbeatSeconds}">
-                        </div>
-                        <div class="config-field">
-                            <label>Default Op Duration (Min)</label>
-                            <input type="number" id="cfg-DefaultDuration" value="${currentConfig.DefaultDuration}">
-                        </div>
-                    </div>
-                    <div class="config-field">
-                        <label>Heartbeat Input Mode</label>
-                        <select id="cfg-HeartbeatInputMode">
-                            <option value="F15" ${currentConfig.HeartbeatInputMode === 'F15' ? 'selected' : ''}>F15 (Ghost Key)</option>
-                            <option value="F24" ${currentConfig.HeartbeatInputMode === 'F24' ? 'selected' : ''}>F24 (Phantom Key)</option>
-                            <option value="Mouse" ${currentConfig.HeartbeatInputMode === 'Mouse' ? 'selected' : ''}>Mouse Jiggle</option>
-                        </select>
-                    </div>
-                    <div class="config-row">
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-PreventDisplaySleep" ${currentConfig.PreventDisplaySleep ? 'checked' : ''}>
-                            <span>Prevent System Hibernation</span>
-                        </label>
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-UseHeartbeatKeypress" ${currentConfig.UseHeartbeatKeypress ? 'checked' : ''}>
-                            <span>Simulate User Activity</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="config-group">
-                    <div class="group-header">
-                        <div class="group-icon">🧠</div>
-                        <div class="group-title">Intelligence Engine</div>
-                    </div>
-                    <div class="config-row">
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-TypeThingEnabled" ${currentConfig.TypeThingEnabled ? 'checked' : ''}>
-                            <span>Enable Virtual Input Logic</span>
-                        </label>
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-TypeThingNotifications" ${currentConfig.TypeThingNotifications ? 'checked' : ''}>
-                            <span>Virtual Input Notifications</span>
-                        </label>
-                    </div>
-                    <div class="config-row">
-                        <div class="config-field">
-                            <label>Min Key Delay (ms)</label>
-                            <input type="number" id="cfg-TypeThingMinDelayMs" value="${currentConfig.TypeThingMinDelayMs}">
-                        </div>
-                        <div class="config-field">
-                            <label>Max Key Delay (ms)</label>
-                            <input type="number" id="cfg-TypeThingMaxDelayMs" value="${currentConfig.TypeThingMaxDelayMs}">
-                        </div>
-                    </div>
-                    <div class="config-field">
-                        <label>Input Theme</label>
-                        <select id="cfg-TypeThingTheme">
-                            <option value="dark" ${currentConfig.TypeThingTheme === 'dark' ? 'selected' : ''}>Dark</option>
-                            <option value="light" ${currentConfig.TypeThingTheme === 'light' ? 'selected' : ''}>Light</option>
-                        </select>
-                    </div>
-                    <hr style="border: 1px solid var(--border); margin: 0.5rem 0;">
-                    <div class="config-row">
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-IdleDetection" ${currentConfig.IdleDetection ? 'checked' : ''}>
-                            <span>Automatic Idle Migration</span>
-                        </label>
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-BatteryAware" ${currentConfig.BatteryAware ? 'checked' : ''}>
-                            <span>Battery Mode Awareness</span>
-                        </label>
-                    </div>
-                    <div class="config-row">
-                        <div class="config-field">
-                            <label>Idle Threshold (Sec)</label>
-                            <input type="number" id="cfg-IdleThreshold" value="${currentConfig.IdleThreshold}">
-                        </div>
-                        <div class="config-field">
-                            <label>Battery Threshold (%)</label>
-                            <input type="number" id="cfg-BatteryThreshold" value="${currentConfig.BatteryThreshold}">
-                        </div>
-                    </div>
-                    <div class="config-row">
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-NetworkAware" ${currentConfig.NetworkAware ? 'checked' : ''}>
-                            <span>Network Context Awareness</span>
-                        </label>
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-PresentationModeDetection" ${currentConfig.PresentationModeDetection ? 'checked' : ''}>
-                            <span>Suppress in Presentation Mode</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="config-group">
-                    <div class="group-header">
-                        <div class="group-icon">🌐</div>
-                        <div class="group-title">System Infrastructure</div>
-                    </div>
-                    <div class="config-row">
-                        <div class="config-field">
-                            <label>GitHub Repository Owner</label>
-                            <input type="text" id="cfg-UpdateRepoOwner" value="${currentConfig.UpdateRepoOwner}">
-                        </div>
-                        <div class="config-field">
-                            <label>GitHub Repository Name</label>
-                            <input type="text" id="cfg-UpdateRepoName" value="${currentConfig.UpdateRepoName}">
-                        </div>
-                    </div>
-                    <div class="config-field">
-                        <label>Update Channel</label>
-                        <select id="cfg-UpdateChannel">
-                            <option value="stable" ${currentConfig.UpdateChannel === 'stable' ? 'selected' : ''}>Stable (Production)</option>
-                            <option value="beta" ${currentConfig.UpdateChannel === 'beta' ? 'selected' : ''}>Beta (Preview)</option>
-                            <option value="dev" ${currentConfig.UpdateChannel === 'dev' ? 'selected' : ''}>Development</option>
-                        </select>
-                    </div>
-                    <label class="cb-field">
-                        <input type="checkbox" id="cfg-VerifyUpdateSignature" ${currentConfig.VerifyUpdateSignature ? 'checked' : ''}>
-                        <span>Strict Binary Signature Verification</span>
-                    </label>
-                </div>
-
-                <div class="config-group">
-                    <div class="group-header">
-                        <div class="group-icon">🖥️</div>
-                        <div class="group-title">Client Interface</div>
-                    </div>
-                    <div class="config-row">
-                        <div class="config-field">
-                            <label>System Theme</label>
-                            <select id="cfg-Theme">
-                                <option value="System" ${currentConfig.Theme === 'System' ? 'selected' : ''}>System Default</option>
-                                <option value="Dark" ${currentConfig.Theme === 'Dark' ? 'selected' : ''}>Dark Mode</option>
-                                <option value="Light" ${currentConfig.Theme === 'Light' ? 'selected' : ''}>Light Mode</option>
-                            </select>
-                        </div>
-                        <div class="config-field">
-                            <label>Locale</label>
-                            <input type="text" id="cfg-Locale" value="${currentConfig.Locale}">
-                        </div>
-                    </div>
-                    <div class="config-row">
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-MinimizeToTray" ${currentConfig.MinimizeToTray ? 'checked' : ''}>
-                            <span>Minimize to Tray</span>
-                        </label>
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-MinimizeOnStart" ${currentConfig.MinimizeOnStart ? 'checked' : ''}>
-                            <span>Minimize on Start</span>
-                        </label>
-                    </div>
-                    <div class="config-row">
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-ShowNotifications" ${currentConfig.ShowNotifications ? 'checked' : ''}>
-                            <span>Show Notifications</span>
-                        </label>
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-ShowBalloonOnStart" ${currentConfig.ShowBalloonOnStart ? 'checked' : ''}>
-                            <span>Show Balloon on Start</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="config-group">
-                    <div class="group-header">
-                        <div class="group-icon">📊</div>
-                        <div class="group-title">Telemetry & Diagnostics</div>
-                    </div>
-                    <div class="config-row">
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-VerboseLogging" ${currentConfig.VerboseLogging ? 'checked' : ''}>
-                            <span>Verbose Logging</span>
-                        </label>
-                        <label class="cb-field">
-                            <input type="checkbox" id="cfg-EnableTelemetry" ${currentConfig.EnableTelemetry ? 'checked' : ''}>
-                            <span>Enable Telemetry</span>
-                        </label>
-                    </div>
-                    <label class="cb-field">
-                        <input type="checkbox" id="cfg-EnablePerformanceMetrics" ${currentConfig.EnablePerformanceMetrics ? 'checked' : ''}>
-                        <span>Collect Performance Metrics</span>
-                    </label>
-                    <div class="config-field">
-                        <label>Max Log Size (MB)</label>
-                        <input type="number" id="cfg-MaxLogSizeMB" value="${currentConfig.MaxLogSizeMB}">
-                    </div>
-                </div>
-            `;
-        }
-
-        async function saveConfiguration() {
-            const updates = {};
-            const inputs = document.querySelectorAll('[id^="cfg-"]');
-            inputs.forEach(input => {
-                const key = input.id.replace('cfg-', '');
-                if (input.type === 'checkbox') updates[key] = input.checked;
-                else if (input.type === 'number') updates[key] = parseInt(input.value);
-                else updates[key] = input.value;
-            });
-
-            try {
-                const res = await fetch('/api/config', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updates)
-                });
-                if (res.ok) {
-                    showToast('Configuration synchronized successfully', 'success');
-                    loadConfiguration();
-                } else {
-                    showToast('Failed to synchronize configuration', 'error');
-                }
-            } catch (e) {
-                console.error(e);
-                showToast('Network error during synchronization', 'error');
-            }
-        }
-
-        // --- Auth ---
-        function checkAuth() {
-            if (!token) {
-                document.getElementById('login-overlay').classList.remove('hidden');
-            } else {
-                initSocket();
-                startPolling();
-                
-                // Handle deep linking on startup
-                const urlParams = new URLSearchParams(window.location.search);
-                const tab = urlParams.get('tab') || 'dashboard';
-                showSection(tab, null, false);
-            }
-        }
-
-        async function handleLogin() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            const errEl = document.getElementById('login-error');
-            errEl.classList.remove('show');
-            
-            try {
-                const tdt = localStorage.getItem('redball_tdt_' + user);
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user, password: pass, tdt })
-                });
-                const data = await res.json();
-                
-                if (res.ok) {
-                    if (data.mfaRequired) {
-                        // Switch to MFA view
-                        tempToken = data.tempToken;
-                        document.getElementById('login-fields').classList.add('hidden');
-                        document.getElementById('mfa-fields').classList.remove('hidden');
-                    } else {
-                        loginSuccess(data);
-                    }
-                } else {
-                    errEl.innerText = data.error || 'Invalid authorization key';
-                    errEl.classList.add('show');
-                }
-            } catch (e) {
-                console.error(e);
-                errEl.innerText = 'Network error';
-                errEl.classList.add('show');
-            }
-        }
-
-        async function handleMfaLogin() {
-            const code = document.getElementById('mfa-token').value;
-            const errEl = document.getElementById('login-error');
-            
-            try {
-                const remember = document.getElementById('mfa-remember').checked;
-                const res = await fetch('/api/auth/mfa/verify', {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': 'Bearer ' + tempToken,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ token: code, rememberDevice: remember })
-                });
-                const data = await res.json();
-                
-                if (res.ok) {
-                    if (data.tdt) {
-                        localStorage.setItem('redball_tdt_' + data.user.username, data.tdt);
-                    }
-                    loginSuccess(data);
-                } else {
-                    errEl.innerText = data.error || 'Invalid MFA code';
-                    errEl.classList.add('show');
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        function loginSuccess(data) {
-            token = data.token;
-            currentUser = data.user;
-            localStorage.setItem('redball_admin_token', token);
-            document.getElementById('login-overlay').classList.add('hidden');
-            initSocket();
-            fetchStats();
-            showToast(`Welcome back, ${currentUser.username}`, 'success');
-        }
-
-        function cancelMfa() {
-            tempToken = null;
-            document.getElementById('mfa-fields').classList.add('hidden');
-            document.getElementById('login-fields').classList.remove('hidden');
-            document.getElementById('login-error').classList.remove('show');
-        }
-
-        function handleLogout() {
-            localStorage.removeItem('redball_admin_token');
-            location.reload();
-        }
-
-        // --- Stats ---
-        async function fetchStats() {
-            try {
-                const res = await fetch('/api/stats', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-
-                    // Animate stat value updates
-                    const downloadsEl = document.getElementById('stat-downloads');
-                    const versionEl = document.getElementById('stat-version');
-
-                    if (downloadsEl.innerText !== data.totalDownloads.toLocaleString()) {
-                        downloadsEl.classList.add('updating');
-                        downloadsEl.innerText = data.totalDownloads.toLocaleString();
-                        setTimeout(() => downloadsEl.classList.remove('updating'), 800);
-                    }
-
-                    if (versionEl.innerText !== 'v' + data.latestVersion) {
-                        versionEl.classList.add('updating');
-                        versionEl.innerText = 'v' + data.latestVersion;
-                        setTimeout(() => versionEl.classList.remove('updating'), 800);
-                    }
-
-                    const tbody = document.getElementById('releases-body');
-                    tbody.innerHTML = data.releases.map(r => `
-                        <tr>
-                            <td><span class="badge badge-ver">v${r.version}</span></td>
-                            <td>${new Date(r.date).toLocaleDateString()}</td>
-                            <td><span class="badge badge-dl">${r.totalDownloads.toLocaleString()} dl</span></td>
-                            <td><span style="color: var(--success)">PROD</span></td>
-                        </tr>
-                    `).join('');
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        // --- Keyboard ---
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !document.getElementById('login-overlay').classList.contains('hidden')) {
-                if (!document.getElementById('mfa-fields').classList.contains('hidden')) {
-                    handleMfaLogin();
-                } else {
-                    handleLogin();
-                }
-            }
-        });
-
-        // --- Socket & Build ---
-        function initSocket() {
-            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            socket = new WebSocket(`${protocol}//${location.host}/ws?token=${token}`);
-
-            socket.onopen = () => {
-                document.getElementById('connection-dot').className = 'connection-dot connected';
-                document.getElementById('connection-text').innerText = 'Live Link Established';
-                // Sync current state
-                fetchStatus();
-            };
-
-            socket.onclose = () => {
-                document.getElementById('connection-dot').className = 'connection-dot disconnected';
-                document.getElementById('connection-text').innerText = 'Link Connection Lost';
-                setTimeout(initSocket, 3000);
-            };
-
-            socket.onmessage = (e) => {
-                const msg = JSON.parse(e.data);
-                handleMessage(msg);
-            };
-        }
-
-        async function fetchStatus() {
-            const res = await fetch('/api/build/status', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            if (res.ok) {
-                const status = await res.json();
-                syncState(status);
-            }
-        }
-
-        function handleMessage(msg) {
-            switch (msg.type) {
-                case 'state':
-                    // Initial state on WebSocket connect
-                    syncState(msg.data);
-                    break;
-                case 'build-started':
-                    syncState(msg.data);
-                    break;
-                case 'build-output':
-                    appendLog(msg.data.line);
-                    updatePipeline(msg.data.stage, msg.data.progress, buildRunning ? 'running' : 'idle');
-
-                    // Update current operation display with clean text
-                    const cleanOp = cleanAnsi(msg.data.line).trim();
-                    if (cleanOp && !cleanOp.startsWith('[') && cleanOp.length < 100 && !/^\([0-9.]+s\)$/.test(cleanOp)) {
-                        document.getElementById('current-op').innerText = cleanOp;
-                    }
-                    break;
-                case 'build-complete':
-                    syncState({ status: msg.data.status, progress: 100, stage: 'complete' });
-                    stopTimer();
-                    fetchStats(); // Update stats grid
-                    break;
-                case 'build-stopped':
-                    syncState(msg.data);
-                    stopTimer();
-                    break;
-            }
-        }
-
-        function syncState(state) {
-            const isRunning = state.status === 'running';
-            buildRunning = isRunning;
-
-            document.getElementById('stat-active').innerText = isRunning ? '1' : '0';
-            document.getElementById('start-btn').disabled = isRunning;
-            document.getElementById('stop-btn').disabled = !isRunning;
-
-            document.getElementById('initial-controls').style.display = isRunning ? 'none' : 'block';
-            document.getElementById('active-controls').style.display = isRunning ? 'block' : 'none';
-
-            if (state.stage) updatePipeline(state.stage, state.progress, state.status);
-            if (state.status === 'success') {
-                document.getElementById('last-status').innerText = 'SUCCESS';
-                document.getElementById('last-status').style.color = 'var(--success)';
-            } else if (state.status === 'failed') {
-                document.getElementById('last-status').innerText = 'FAILED';
-                document.getElementById('last-status').style.color = 'var(--danger)';
-            }
-
-            if (isRunning) {
-                if (state.log) {
-                    const terminal = document.getElementById('terminal-out');
-                    terminal.innerHTML = '';
-                    state.log.forEach(l => appendLog(l.message));
-                }
-                startTimer(state.startTime);
-            } else {
-                stopTimer();
-                if (state.stage === 'complete' || state.status === 'success') {
-                    document.getElementById('current-op').innerText = 'System idle. Readiness 100%';
-                }
-            }
-        }
-
-        function updatePipeline(stage, progress, status) {
-            const steps = Array.from(document.querySelectorAll('.pipeline-step'));
-            let foundCurrent = false;
-
-            document.getElementById('progress-percent').innerText = Math.round(progress) + '%';
-            const fill = document.getElementById('progress-fill');
-            fill.style.width = progress + '%';
-            document.getElementById('pipeline-progress').style.width = progress + '%';
-
-            // Add/remove running class for liquid wave animation
-            if (status === 'running') {
-                fill.classList.add('running');
-            } else {
-                fill.classList.remove('running');
-            }
-
-            if (status === 'failed') {
-                fill.style.background = 'var(--danger)';
-            } else {
-                fill.style.background = 'linear-gradient(90deg, var(--accent), #10b981)';
-            }
-
-            steps.forEach(step => {
-                const s = step.dataset.stage;
-                step.classList.remove('active', 'complete', 'error');
-
-                if (stage === 'complete' && status !== 'failed') {
-                    step.classList.add('complete');
-                    return;
-                }
-
-                if (s === stage) {
-                    foundCurrent = true;
-                    if (status === 'failed') {
-                        step.classList.add('error');
-                    } else if (progress === 100) {
-                        step.classList.add('complete');
-                    } else {
-                        step.classList.add('active');
-                    }
-                } else if (!foundCurrent) {
-                    step.classList.add('complete');
-                }
-            });
-        }
-
-        function cleanAnsi(text) {
-            if (typeof text !== 'string') return text;
-            return text
-                .replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '') // CSI
-                .replace(/\u001b\].*?(\u001b\\|\x07)/g, '') // OSC
-                .replace(/\u001b[PX^_].*?\u001b\\/g, '') // DCS, SOS, PM, APC
-                .replace(/\u001b./g, '') // Other Esc
-                .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Control chars
-        }
-
-        function appendLog(line) {
-            const terminal = document.getElementById('terminal-out');
-            const div = document.createElement('div');
-
-            // Comprehensive ANSI cleaning
-            const cleanLine = cleanAnsi(line).trim();
-            if (!cleanLine || /^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]*[a-zA-Z]/.test(cleanLine)) return;
-
-            div.className = 't-line new';
-            if (cleanLine.includes('ERROR') || cleanLine.includes('failed')) div.className += ' error';
-            else if (cleanLine.includes('OK') || cleanLine.includes('success')) div.className += ' success';
-            else if (cleanLine.includes('Phase')) div.className += ' phase';
-            else if (cleanLine.startsWith('↳') || cleanLine.startsWith('  [')) div.className += ' dim';
-
-            const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
-            div.innerHTML = `<span class="t-line time">[${time}]</span>${cleanLine}`;
-
-            terminal.appendChild(div);
-            terminal.scrollTop = terminal.scrollHeight;
-
-            // Remove animation class after animation completes
-            setTimeout(() => div.classList.remove('new'), 500);
-        }
-
-        async function startBuild() {
-            document.getElementById('terminal-out').innerHTML = '';
-            fetch('/api/build/start', {
-                method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-        }
-
-        async function stopBuild() {
-            fetch('/api/build/stop', {
-                method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-        }
-
-        function startTimer(startTime) {
-            clearInterval(timerInterval);
-            const start = startTime || Date.now();
-            timerInterval = setInterval(() => {
-                const elapsed = Date.now() - start;
-                const m = Math.floor(elapsed / 60000);
-                const s = Math.floor((elapsed % 60000) / 1000);
-                document.getElementById('build-timer').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-            }, 1000);
-        }
-
-        function stopTimer() {
-            clearInterval(timerInterval);
-        }
-
-        // --- Identity & Access ---
-        async function loadUsers() {
-            try {
-                const res = await fetch('/api/auth/users', { headers: { 'Authorization': 'Bearer ' + token } });
-                if (res.ok) {
-                    const users = await res.json();
-                    console.log('[Users] Loaded:', users.length);
-                    const tbody = document.getElementById('users-table-body');
-                    if (tbody) {
-                        tbody.innerHTML = users.map(u => `
-                            <tr>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 0.8rem">
-                                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-glow); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800">
-                                            ${u.username[0].toUpperCase()}
-                                        </div>
-                                        <span>${u.username}</span>
-                                    </div>
-                                </td>
-                                <td><span class="badge" style="background: ${u.role === 'admin' ? 'rgba(0, 217, 163, 0.1)' : 'rgba(255,255,255,0.05)'}; color: ${u.role === 'admin' ? 'var(--accent)' : 'var(--text-secondary)'}">${u.role.toUpperCase()}</span></td>
-                                <td><span class="badge" style="background: ${u.mfaEnabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${u.mfaEnabled ? 'var(--success)' : 'var(--error)'}">${u.mfaEnabled ? 'ENFORCED' : 'UNSECURED'}</span></td>
-                                <td>${new Date(u.createdAt).toLocaleDateString()}</td>
-                                <td>
-                                    <button class="btn btn-sm" onclick="deleteUser('${u.username}')" style="padding: 0.4rem; background: transparent; border-color: rgba(239, 68, 68, 0.3); color: var(--error); width: auto;">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                                    </button>
-                                </td>
-                            </tr>
-                        `).join('');
-                    }
-
-                    // Update current user MFA status in the side panel
-                    if (currentUser) {
-                        const self = users.find(u => u.username === currentUser.username);
-                        if (self) {
-                            console.log('[MFA] Status for', self.username, ':', self.mfaEnabled);
-                            const statusVal = document.getElementById('mfa-status-value');
-                            const statusLbl = document.getElementById('mfa-status-label');
-                            const statusBtn = document.getElementById('mfa-setup-btn');
-                            
-                            if (self.mfaEnabled) {
-                                statusVal.innerText = 'Active';
-                                statusVal.style.color = 'var(--success)';
-                                statusLbl.innerText = 'Security Verified';
-                                statusBtn.innerText = 'Disable MFA Protocol';
-                                statusBtn.onclick = disableMfa;
-                            } else {
-                                statusVal.innerText = 'Inactive';
-                                statusVal.style.color = 'var(--error)';
-                                statusLbl.innerText = 'Multi-Factor Status';
-                                statusBtn.innerText = 'Setup MFA Protocol';
-                                statusBtn.onclick = initMfaSetup;
-                            }
-                        } else {
-                            console.warn('[MFA] Current user not found in user list:', currentUser.username);
-                        }
-                    }
-                } else {
-                    console.error('[Users] Failed to load:', res.status);
-                    if (res.status === 401 || res.status === 403) {
-                        showToast('Session expired or access denied', 'error');
-                    }
-                }
-            } catch (e) {
-                console.error('[Users] Error:', e);
-            }
-        }
-
-        let mfaSecret = null;
-        async function initMfaSetup() {
-            try {
-                const res = await fetch('/api/auth/mfa/setup', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    mfaSecret = data.secret;
-                    document.getElementById('mfa-qr-img').src = data.qrCode;
-                    document.getElementById('mfa-qr-container').classList.remove('hidden');
-                    document.getElementById('mfa-setup-controls').classList.add('hidden');
-                    showToast('MFA Secret generated. Scan the QR code.', 'success');
-                } else {
-                    const data = await res.json();
-                    showToast(data.error || 'Failed to initialize MFA setup', 'error');
-                }
-            } catch (e) {
-                console.error('[MFA Setup Error]', e);
-                showToast('Network error during MFA setup', 'error');
-            }
-        }
-
-        function cancelMfaSetup() {
-            document.getElementById('mfa-qr-container').classList.add('hidden');
-            document.getElementById('mfa-setup-controls').classList.remove('hidden');
-            mfaSecret = null;
-        }
-
-        async function verifyMfaSetup() {
-            const code = document.getElementById('mfa-setup-token').value;
-            try {
-                const res = await fetch('/api/auth/mfa/verify-setup', {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ secret: mfaSecret, token: code })
-                });
-                if (res.ok) {
-                    showToast('MFA enabled successfully', 'success');
-                    cancelMfaSetup();
-                    loadUsers();
-                } else {
-                    showToast('Invalid MFA code', 'error');
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        async function disableMfa() {
-            if (!confirm('Are you sure you want to disable MFA? This will reduce your account security.')) return;
-            const code = prompt('Enter current 6-digit MFA code to confirm:');
-            if (!code) return;
-            
-            try {
-                const res = await fetch('/api/auth/mfa/disable', {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ token: code })
-                });
-                if (res.ok) {
-                    showToast('MFA disabled', 'success');
-                    loadUsers();
-                } else {
-                    const data = await res.json();
-                    showToast(data.error || 'Failed to disable MFA', 'error');
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        async function changePassword() {
-            const currentPassword = prompt('Enter CURRENT access key:');
-            if (!currentPassword) return;
-            const newPassword = prompt('Enter NEW access key:');
-            if (!newPassword) return;
-            const confirmPass = prompt('Confirm NEW access key:');
-            if (newPassword !== confirmPass) {
-                showToast('Passwords do not match', 'error');
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/auth/change-password', {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ currentPassword, newPassword })
-                });
-                if (res.ok) {
-                    showToast('Access key updated successfully', 'success');
-                } else {
-                    const data = await res.json();
-                    showToast(data.error || 'Failed to update access key', 'error');
-                }
-            } catch (e) {
-                console.error(e);
-                showToast('Network error', 'error');
-            }
-        }
-
-        async function deleteUser(username) {
-            if (username === currentUser.username) {
-                showToast('Cannot delete self', 'error');
-                return;
-            }
-            if (!confirm(`Are you sure you want to revoke access for ${username}?`)) return;
-            try {
-                const res = await fetch(`/api/auth/users/${username}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (res.ok) {
-                    showToast('Identity revoked', 'success');
-                    loadUsers();
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        function showAddUserModal() {
-            const username = prompt('Enter username:');
-            if (!username) return;
-            const password = prompt('Enter temporary password:');
-            if (!password) return;
-            const role = prompt('Enter role (admin/viewer):', 'viewer');
-            
-            addUser(username, password, role);
-        }
-
-        async function addUser(username, password, role) {
-            try {
-                const res = await fetch('/api/auth/users', {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password, role })
-                });
-                if (res.ok) {
-                    showToast('Identity created', 'success');
-                    loadUsers();
-                } else {
-                    const data = await res.json();
-                    showToast(data.error || 'Failed to create identity', 'error');
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        // --- Analytics ---
-        let trendChart = null;
-        let geoChart = null;
-
-        async function loadAnalytics() {
-            const range = document.getElementById('analytics-range').value;
-            try {
-                const res = await fetch(`/api/analytics/stats?days=${range}`, {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    updateAnalyticsUI(data);
-                }
-            } catch (e) {
-                console.error('[Analytics] Fetch failed:', e);
-                showToast('Failed to load analytics cluster', 'error');
-            }
-        }
-
-        function updateAnalyticsUI(data) {
-            document.getElementById('ana-total-visits').innerText = (data.totalVisits || 0).toLocaleString();
-            document.getElementById('ana-unique-visitors').innerText = (data.uniqueVisitorsCount || 0).toLocaleString();
-            document.getElementById('ana-downloads').innerText = (data.downloads || 0).toLocaleString();
-            document.getElementById('ana-avg-time').innerText = Math.round(data.avgTimeOnSite || 0) + 's';
-            
-            // Trends List
-            document.getElementById('ana-visits-trend').innerText = `Active trends in last ${document.getElementById('analytics-range').value} days`;
-
-            // Render Charts
-            renderTrendChart(data.trends || {}, data.downloadTrends || {});
-            renderGeoChart(data.geoDistribution || {});
-
-            // Mini Lists
-            renderMiniList('browser-list', data.browsers || {});
-            renderMiniList('os-list', data.os || {});
-            renderMiniList('geo-list', data.geoDistribution || {});
-        }
-
-        function renderMiniList(id, stats) {
-            const el = document.getElementById(id);
-            const sorted = Object.entries(stats).sort((a, b) => b[1] - a[1]).slice(0, 5);
-            if (sorted.length === 0) {
-                el.innerHTML = '<div style="opacity: 0.3; font-size: 0.8rem;">No data available</div>';
-                return;
-            }
-            el.innerHTML = sorted.map(([label, value]) => `
-                <div class="mini-item">
-                    <span class="mini-label">${label}</span>
-                    <span class="mini-value">${value.toLocaleString()}</span>
-                </div>
-            `).join('');
-        }
-
-        function renderTrendChart(trends, dlTrends) {
-            const ctx = document.getElementById('trendChart').getContext('2d');
-            const labels = Object.keys(trends).sort();
-            const visitData = labels.map(l => trends[l]);
-            const downloadData = labels.map(l => dlTrends[l] || 0);
-
-            if (trendChart) trendChart.destroy();
-
-            trendChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Site Visits',
-                            data: visitData,
-                            borderColor: '#00d9a3',
-                            backgroundColor: 'rgba(0, 217, 163, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Downloads',
-                            data: downloadData,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { color: '#94a3b8', font: { family: 'Outfit' } } }
-                    },
-                    scales: {
-                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
-                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
-                    }
-                }
-            });
-        }
-
-        function renderGeoChart(geo) {
-            const ctx = document.getElementById('geoChart').getContext('2d');
-            const labels = Object.keys(geo);
-            const values = Object.values(geo);
-
-            if (geoChart) geoChart.destroy();
-
-            if (labels.length === 0) {
-                // Placeholder
-                return;
-            }
-
-            geoChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: [
-                            '#00d9a3', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'Outfit' } } }
-                    }
-                }
-            });
-        }
-
-        // --- Startup ---
-        let currentUser = null;
-        let tempToken = null;
-
-        const savedToken = localStorage.getItem('redball_admin_token');
-        if (savedToken) {
-            token = savedToken;
-            fetch('/api/auth/me', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            }).then(res => {
-                if (res.ok) return res.json();
-                else throw new Error('Token expired');
-            }).then(data => {
-                currentUser = data.user;
-                checkAuth();
-            }).catch(err => {
-                token = null;
-                localStorage.removeItem('redball_admin_token');
-                checkAuth();
-            });
-        } else {
-            checkAuth();
-        }
-
-        setInterval(() => {
-            const timeEl = document.getElementById('live-time');
-            if (timeEl) timeEl.innerText = 'LIVE: ' + new Date().toLocaleTimeString();
-        }, 1000);
-    </script>
+    <script src="/admin/admin.js"></script>
 </body>
 
 </html>

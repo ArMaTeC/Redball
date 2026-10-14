@@ -21,7 +21,14 @@ const authRoutes = require('./routes/api/auth');
 const buildRoutes = require('./routes/api/build');
 
 const app = express();
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+            'connect-src': ["'self'", 'https://api.github.com']
+        }
+    }
+}));
 
 function isValidVersion(version) {
   return /^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9._-]+)?$/.test(version);
@@ -265,7 +272,8 @@ function broadcastThrottled(message) {
                         data: {
                             lines: buildOutputs.map(m => m.data.line),
                             stage: buildOutputs[buildOutputs.length - 1].data.stage,
-                            progress: buildOutputs[buildOutputs.length - 1].data.progress
+                            progress: buildOutputs[buildOutputs.length - 1].data.progress,
+                            error: buildOutputs.some(m => m.data.error) || undefined
                         }
                     });
                 }
@@ -1416,27 +1424,31 @@ async function getSystemStats() {
 // --- Build Orchestration Logic ---
 function parseBuildStage(line) {
     const stages = [
-        { name: 'setup', pattern: /Phase 1|Checking build dependencies|Repairing missing.*Wine .NET SDK/i, progress: 3 },
-        { name: 'version', pattern: /Phase 0|Bumping version/i, progress: 6 },
-        { name: 'restore', pattern: /Restoring NuGet packages/i, progress: 12 },
+        { name: 'setup', pattern: /Checking build dependencies|Repairing missing.*Wine/i, progress: 3 },
+        { name: 'version', pattern: /Phase 0:|Bumping version/i, progress: 6 },
+        { name: 'restore', pattern: /Phase 1:|Restoring NuGet packages/i, progress: 12 },
         { name: 'wpf-build', pattern: /Building WPF Application|Compiling WPF project/i, progress: 25 },
-        { name: 'service-build', pattern: /Building Redball Service/i, progress: 45 },
+        { name: 'service-build', pattern: /Building Redball Service|Building Custom Actions|Building update-server/i, progress: 45 },
         { name: 'manifest', pattern: /Generating manifest\.json/i, progress: 55 },
         { name: 'zip-bundle', pattern: /Creating portable ZIP package/i, progress: 62 },
         { name: 'installer', pattern: /Building NSIS Installer|Creating Windows installer package/i, progress: 75 },
-        { name: 'update-server', pattern: /Phase 4|Update Server/i, progress: 82 },
-        { name: 'publish', pattern: /Phase 5|Publish to Update Server/i, progress: 88 },
-        { name: 'github', pattern: /Phase 6|Publish to GitHub/i, progress: 94 },
-        { name: 'restart', pattern: /Phase 7|Restarting update server/i, progress: 97 },
-        { name: 'health', pattern: /Phase 9|Final health status check/i, progress: 99 },
-        { name: 'complete', pattern: /AUTO-RELEASE COMPLETED/i, progress: 100 }
+        { name: 'update-server', pattern: /Phase 4:|Ensuring update-server/i, progress: 82 },
+        { name: 'publish', pattern: /Phase 5:|Publishing to update-server|Publish to Update Server/i, progress: 88 },
+        { name: 'github', pattern: /Phase 6:|Publishing to GitHub/i, progress: 94 },
+        { name: 'restart', pattern: /Phase 7:|Restarting update server/i, progress: 97 },
+        { name: 'health', pattern: /Phase 9:|Final health status check/i, progress: 99 },
+        { name: 'complete', pattern: /AUTO-RELEASE COMPLETED|BUILD COMPLETED SUCCESSFULLY|Windows build completed/i, progress: 100 }
     ];
 
 
     for (const s of stages) {
         if (s.pattern.test(line)) return s;
     }
-    if (/(?<!0\s)(error|failed|abort)/i.test(line)) return { name: 'error', progress: buildState.progress };
+    // Word-boundary match avoids false positives (e.g. 'NETStandardCompatError_*');
+    // '0 errors'/'0 failed' summary lines are not failures
+    if (/\b(errors?|failed|aborted|aborting)\b/i.test(line) && !/\b0\s+(errors?|failed)\b/i.test(line)) {
+        return { name: 'error', progress: buildState.progress, error: true };
+    }
     return null;
 }
 
@@ -1453,8 +1465,11 @@ function startBuild(body = {}) {
     saveBuildStateImmediate();
     broadcast({ type: 'build-started', data: buildState });
 
-    const allowedBuildTypes = ['windows', 'linux', 'macos', 'test'];
-    const buildType = allowedBuildTypes.includes(body?.type) ? body.type : 'windows';
+    // Must match commands handled by scripts/build.sh's case statement.
+    // Default is the full auto-release so the dashboard button actually
+    // builds AND publishes (update-server release dir, patches, GitHub).
+    const allowedBuildTypes = ['auto-release', 'all', 'windows', 'update-server', 'website', 'publish', 'clean'];
+    const buildType = allowedBuildTypes.includes(body?.type) ? body.type : 'auto-release';
 
     const scriptPath = path.join(PROJECT_ROOT, 'scripts', 'build.sh');
     const ptyProcess = pty.spawn('bash', [scriptPath, buildType], {
@@ -1483,14 +1498,21 @@ function startBuild(body = {}) {
             const cleanLine = line.replace(/\u001b\[[0-9;?]*[a-zA-Z]/g, '').trim();
             if (!cleanLine) continue;
 
-            // Ignore noise lines like MSBuild progress timer (1.4s) or left-over ANSI fragments
-            if (/^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]*[a-zA-Z]/.test(cleanLine)) continue;
+            // Ignore noise lines like MSBuild progress timer (1.4s) or left-over ANSI fragments.
+            // The fragment pattern must be end-anchored and require digits, otherwise real
+            // log prefixes like [STEP], [INFO], [ERROR] would be silently dropped.
+            if (/^\([0-9.]+s\)$/.test(cleanLine) || /^\[[0-9;?]+[a-zA-Z]$/.test(cleanLine)) continue;
 
             buildState.log.push({ timestamp: Date.now(), message: line });
             const stage = parseBuildStage(cleanLine);
             if (stage) {
-                buildState.stage = stage.name;
-                buildState.progress = stage.progress;
+                if (stage.error) {
+                    buildState.error = true;
+                } else if (stage.progress >= buildState.progress) {
+                    // Monotonic: never let a late low-progress line regress the stage
+                    buildState.stage = stage.name;
+                    buildState.progress = stage.progress;
+                }
             }
 
             // Efficient log truncation: remove oldest entries instead of slicing
@@ -1514,7 +1536,8 @@ function startBuild(body = {}) {
                 data: {
                     line,
                     stage: buildState.stage,
-                    progress: buildState.progress
+                    progress: buildState.progress,
+                    error: buildState.error
                 }
             });
         }
@@ -1533,9 +1556,12 @@ function startBuild(body = {}) {
         });
 
         if (exitCode === 0 && restartNeeded) {
-            console.log('[BUILD] Restart signaled. Manual restart is required to apply the update.');
-            buildState.log.push({ timestamp: Date.now(), message: '[SYSTEM] Build succeeded; manual restart required.' });
+            console.log('[BUILD] Restart signaled. Restarting server to apply update.');
+            buildState.log.push({ timestamp: Date.now(), message: '[SYSTEM] Build succeeded; restarting update-server to apply update.' });
             saveBuildStateImmediate();
+            // systemd Restart=on-failure brings us back up on the new code.
+            // Exit non-zero on a short delay so build-complete flushes to clients first.
+            setTimeout(() => process.exit(1), 2000);
         }
     });
 } function stopBuild() {

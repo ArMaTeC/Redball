@@ -7,7 +7,7 @@ const path = require('path');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { authenticator } = require('otplib');
+const { generateSecret, generateURI, verifySync } = require('otplib');
 const qrcode = require('qrcode');
 const { LOGS_DIR, AUTH_FILE } = require('../config');
 
@@ -140,8 +140,8 @@ function deleteUser(username) {
  * MFA (TOTP)
  */
 function generateMfaSecret(username) {
-    const secret = authenticator.generateSecret();
-    const otpauth = authenticator.keyuri(username, 'Redball Admin', secret);
+    const secret = generateSecret();
+    const otpauth = generateURI({ issuer: 'Redball Admin', label: username, secret });
     return { secret, otpauth };
 }
 
@@ -150,7 +150,13 @@ async function generateQrCode(otpauth) {
 }
 
 function verifyMfaToken(token, secret) {
-    return authenticator.check(token, secret);
+    try {
+        // epochTolerance of 30s allows one time-step of clock drift in each direction
+        const result = verifySync({ secret, token: String(token), epochTolerance: 30 });
+        return result.valid === true;
+    } catch (e) {
+        return false;
+    }
 }
 
 /**
