@@ -1437,7 +1437,7 @@ function parseBuildStage(line) {
         { name: 'github', pattern: /Phase 6:|Publishing to GitHub/i, progress: 94 },
         { name: 'restart', pattern: /Phase 7:|Restarting update server/i, progress: 97 },
         { name: 'health', pattern: /Phase 9:|Final health status check/i, progress: 99 },
-        { name: 'complete', pattern: /AUTO-RELEASE COMPLETED|BUILD COMPLETED SUCCESSFULLY|Windows build completed/i, progress: 100 }
+        { name: 'complete', pattern: /AUTO-RELEASE COMPLETED|Windows build completed in|\u2551\s*BUILD COMPLETED SUCCESSFULLY/i, progress: 100 }
     ];
 
 
@@ -1453,15 +1453,19 @@ function parseBuildStage(line) {
 }
 
 function startBuild(body = {}) {
-    buildState = {
+    // Mutate in place — routes/api/build.js holds a reference to this object
+    // via setBuildState(), so reassigning `buildState` would orphan it and the
+    // status endpoint would serve stale data for the rest of the process life.
+    Object.assign(buildState, {
         status: 'running',
         stage: 'setup',
         progress: 0,
         log: [],
         pid: null,
         startTime: Date.now(),
-        endTime: null
-    };
+        endTime: null,
+        error: false
+    });
     saveBuildStateImmediate();
     broadcast({ type: 'build-started', data: buildState });
 
